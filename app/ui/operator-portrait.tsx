@@ -1,4 +1,6 @@
 import type { OperatorVariant } from "./_svg-shared";
+import type { VisibleGear } from "./operator-parts";
+import { partSvgPath } from "./operator-parts";
 import { FemaleFlowing, FemaleBob, FemalePonytail } from "./_unified-female";
 import { MaleSwept, MaleSpiky, MaleUndercut } from "./_unified-male";
 import { NeutralTousled, NeutralSideshave } from "./_unified-neutral";
@@ -10,6 +12,9 @@ import { NeutralTousled, NeutralSideshave } from "./_unified-neutral";
    The role determines the palette. The build is derived from the role.
    Hair/eye style comes from the preset — each preset maps to a specific
    unified renderer.
+
+   Raid-context portraits may include visible gear overlays when present.
+   HQ/non-raid contexts omit gear (pass no visibleGear prop).
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const PRESET_RENDERERS: Record<string, React.ComponentType<{ variant: OperatorVariant }>> = {
@@ -43,6 +48,24 @@ interface OperatorPortraitProps {
   roleTag: string;
   presetId: string;
   size?: keyof typeof SIZE_CLASS;
+  /** Visible gear overlays for raid-context portraits. Omit for HQ/base. */
+  visibleGear?: VisibleGear;
+}
+
+/** Render a single gear overlay SVG as an absolutely positioned image layer.
+ *  Broken or missing assets are hidden gracefully so the base portrait remains visible. */
+function GearOverlay({ partId }: { partId: string }) {
+  return (
+    <img
+      src={partSvgPath(partId)}
+      alt=""
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      aria-hidden="true"
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+    />
+  );
 }
 
 export function OperatorPortrait({
@@ -50,6 +73,7 @@ export function OperatorPortrait({
   roleTag,
   presetId,
   size = "detail",
+  visibleGear,
 }: OperatorPortraitProps) {
   const Renderer = PRESET_RENDERERS[presetId] ?? PRESET_RENDERERS["male-swept"];
   const rawRole = roleTag.replace(/^role:/, "").toLowerCase();
@@ -60,11 +84,27 @@ export function OperatorPortrait({
     build: defaults.build,
   };
 
+  const hasGear =
+    visibleGear &&
+    (visibleGear.weaponPartId || visibleGear.outfitOverlayPartId || visibleGear.accessoryPartId);
+
   return (
     <div
-      className={`${SIZE_CLASS[size]} shrink-0 overflow-hidden rounded-lg border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)]`}
+      className={`${SIZE_CLASS[size]} relative shrink-0 overflow-hidden rounded-lg border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)]`}
     >
+      {/* Base portrait */}
       <Renderer variant={variant} />
+
+      {/* Gear overlays — raid-context only, layered on top of base */}
+      {hasGear && (
+        <>
+          {visibleGear.outfitOverlayPartId && (
+            <GearOverlay partId={visibleGear.outfitOverlayPartId} />
+          )}
+          {visibleGear.weaponPartId && <GearOverlay partId={visibleGear.weaponPartId} />}
+          {visibleGear.accessoryPartId && <GearOverlay partId={visibleGear.accessoryPartId} />}
+        </>
+      )}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
 
+import operatorPresetsManifest from "../../content/data/operator-presets.json";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
 import { stableStringHash } from "lib/stable-hash";
-import { selectOperatorAppearancePresetId } from "save";
 
 import type { SimCommand } from "../commands";
 import {
@@ -39,6 +39,22 @@ const PREFERRED_MISSION_TAGS = [
 
 export const scoreString = stableStringHash;
 
+interface OperatorPresetManifest {
+  presets: Array<{
+    id: string;
+  }>;
+}
+
+const runtimeOperatorPresetIds = (operatorPresetsManifest as OperatorPresetManifest).presets.map(
+  (preset) => preset.id,
+);
+const runtimeOperatorPresetIdSet = new Set(runtimeOperatorPresetIds);
+const runtimeOperatorFallbackPresetId = runtimeOperatorPresetIds[0] ?? "male-swept";
+
+export const RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS = [
+  ...runtimeOperatorPresetIds,
+] as readonly string[];
+
 export interface VisitorSeed {
   id?: string;
   name: string;
@@ -71,6 +87,22 @@ export interface RelationshipRecordData {
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+export function isRuntimeOperatorAppearancePresetId(value: unknown): value is string {
+  return typeof value === "string" && runtimeOperatorPresetIdSet.has(value);
+}
+
+export function selectRuntimeOperatorAppearancePresetId(input: { stableKey?: string }): string {
+  const stableKey = input.stableKey?.trim();
+  if (!stableKey) {
+    return runtimeOperatorFallbackPresetId;
+  }
+
+  return (
+    runtimeOperatorPresetIds[stableStringHash(stableKey) % runtimeOperatorPresetIds.length] ??
+    runtimeOperatorFallbackPresetId
+  );
 }
 
 export function getPairOrder(leftId: string, rightId: string) {
@@ -288,7 +320,9 @@ export function buildRequirementContext(context: SimSystemContext): RequirementE
     roomCounts: getRoomCounts(context),
     roomTiers: getRoomTiers(context),
     staffRoleCounts: getStaffRoleCounts(context),
-    operatorCount: context.runtimeState.operatorEntities.length,
+    operatorCount: context.runtimeState.operatorEntities.filter(
+      (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+    ).length,
     unlockedTemplateTags,
   };
 }
@@ -399,6 +433,11 @@ function createOperatorEntity(
     roleTag: string;
     specialtyTag: string;
     appearancePresetId: string;
+    visibleGear?: {
+      weaponPartId?: string;
+      outfitOverlayPartId?: string;
+      accessoryPartId?: string;
+    };
     preferences?: PreferenceProfileRecord;
     morale: number;
     loyalty: number;
@@ -436,6 +475,13 @@ function createOperatorEntity(
   OperatorIdentity.roleTag[entity] = source.roleTag;
   OperatorIdentity.specialtyTag[entity] = source.specialtyTag;
   OperatorIdentity.appearancePresetId[entity] = source.appearancePresetId;
+  OperatorIdentity.appearanceWeaponPartId[entity] = source.visibleGear?.weaponPartId ?? "";
+  OperatorIdentity.appearanceOutfitOverlayPartId[entity] =
+    source.visibleGear?.outfitOverlayPartId ?? "";
+  OperatorIdentity.appearanceAccessoryPartId[entity] = source.visibleGear?.accessoryPartId ?? "";
+  OperatorIdentity.lifecycleStatus[entity] = "active";
+  OperatorIdentity.deathTick[entity] = 0;
+  OperatorIdentity.deathRaidSummaryId[entity] = "";
   NeedState.hunger[entity] = source.hunger;
   NeedState.fatigue[entity] = source.fatigue;
   NeedState.stress[entity] = source.stress;
@@ -661,16 +707,20 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
     }
     case "sim/accept-recruit": {
       const visitorEntity = findVisitorEntityById(context, command.visitorId);
+      const livingOperatorCount = context.runtimeState.operatorEntities.filter(
+        (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+      ).length;
       if (
         visitorEntity === undefined ||
-        context.runtimeState.operatorEntities.length >=
-          BuildingAuthority.operatorSlotCount[buildingEntity] ||
+        livingOperatorCount >= BuildingAuthority.operatorSlotCount[buildingEntity] ||
         !hasOperationalRecruitmentRoom(context)
       ) {
         return;
       }
 
-      const existingOperators = context.runtimeState.operatorEntities.slice();
+      const existingOperators = context.runtimeState.operatorEntities.filter(
+        (entity) => entity !== undefined && OperatorIdentity.lifecycleStatus[entity] !== "dead",
+      );
       const preferences = buildDefaultPreferenceProfile({
         name: VisitorState.name[visitorEntity],
         roleTag: VisitorState.desiredRoleTag[visitorEntity],
@@ -681,7 +731,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         name: VisitorState.name[visitorEntity],
         roleTag: VisitorState.desiredRoleTag[visitorEntity],
         specialtyTag: recruitSpecialtyTag,
-        appearancePresetId: selectOperatorAppearancePresetId({
+        appearancePresetId: selectRuntimeOperatorAppearancePresetId({
           stableKey: [
             VisitorState.id[visitorEntity],
             VisitorState.name[visitorEntity],
@@ -780,6 +830,24 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       AssignmentState.kind[staffEntity] = "room";
       AssignmentState.targetId[staffEntity] = command.roomId;
+      return;
+    }
+
+    case "sim/dev-set-resource": {
+      const guildEntity = context.singletonEntities.guild;
+
+      switch (command.resourceId) {
+        case "resource/cash":
+          GuildState.treasury[guildEntity] = command.amount;
+          return;
+        case "resource/reputation":
+          GuildState.reputation[guildEntity] = command.amount;
+          return;
+        case "resource/intel":
+          GuildState.intel[guildEntity] = command.amount;
+          return;
+      }
+
       return;
     }
   }

@@ -2,6 +2,9 @@ import type { TemplateRegistry } from "content/templates";
 import type { ActiveRaidSnapshot, RaidSummarySnapshot, RoomSnapshot, WorldSnapshot } from "save";
 import type { Phase1RuntimeView } from "sim";
 
+import type { VisibleGear } from "./operator-parts";
+import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
+
 // ── Callbacks ────────────────────────────────────────────────────────────
 
 export interface GameCallbacks {
@@ -114,6 +117,12 @@ export interface ActiveRaidViewModel {
   durationHours: number;
 }
 
+export interface RaidOperatorOutcomeViewModel {
+  operatorId: string;
+  operatorName: string;
+  died: boolean;
+}
+
 export interface RaidSummaryViewModel {
   id: string;
   missionName: string;
@@ -125,6 +134,22 @@ export interface RaidSummaryViewModel {
   cashDelta: number;
   location: string;
   narrativeTags: readonly string[];
+  operatorOutcomes: readonly RaidOperatorOutcomeViewModel[];
+}
+
+export interface OperatorLifecycleViewModel {
+  status: "active" | "dead";
+  deathTick?: number;
+  deathRaidSummaryId?: string;
+}
+
+export interface RosterPressureViewModel {
+  operatorCapacity: number;
+  livingOperatorCount: number;
+  vacancyCount: number;
+  unavailableOperatorIds: readonly string[];
+  recentDeathOperatorIds: readonly string[];
+  replacementPressureLevel: "stable" | "strained" | "critical";
 }
 
 export interface OperatorViewModel {
@@ -150,6 +175,8 @@ export interface OperatorViewModel {
   availableForRaid: boolean;
   readinessScore: number;
   appearancePresetId: string;
+  visibleGear: VisibleGear;
+  lifecycle: OperatorLifecycleViewModel;
 }
 
 export interface StaffViewModel {
@@ -215,6 +242,7 @@ export interface HqViewModel {
   relationships: readonly RelationshipViewModel[];
   activeEvents: readonly ActiveEventViewModel[];
   placeableRoomTemplates: readonly PlaceableRoomTemplate[];
+  rosterPressure: RosterPressureViewModel;
 }
 
 export interface OperationsViewModel {
@@ -394,6 +422,8 @@ export function buildHqViewFromPhase1(
     availableForRaid: op.availableForRaid,
     readinessScore: op.readinessScore,
     appearancePresetId: op.appearance.presetId,
+    visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
+    lifecycle: extractLifecycle(op.lifecycle),
   }));
 
   const operatorNameById = new Map(operators.map((op) => [op.id, op.name]));
@@ -452,6 +482,8 @@ export function buildHqViewFromPhase1(
       tags: t.tags,
     }));
 
+  const rosterPressure = mapRuntimeRosterPressure(view.rosterPressure);
+
   return {
     guild: {
       treasury: view.resources.cash,
@@ -485,6 +517,7 @@ export function buildHqViewFromPhase1(
     relationships,
     activeEvents,
     placeableRoomTemplates,
+    rosterPressure,
   };
 }
 
@@ -531,6 +564,8 @@ export function buildOpsViewFromPhase1(
     durationHours: raid.durationHours,
   }));
 
+  const operatorNameById = new Map(view.operators.map((op) => [op.id, op.identity.name]));
+
   const raidHistory: RaidSummaryViewModel[] = view.raidSummaries.map((summary) => ({
     id: summary.id,
     missionName: resolveMissionName(summary.missionId, registry),
@@ -542,6 +577,14 @@ export function buildOpsViewFromPhase1(
     cashDelta: summary.cashDelta,
     location: summary.location,
     narrativeTags: summary.narrativeTags,
+    operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
+      operatorId: outcome.operatorId,
+      operatorName:
+        operatorNameById.get(outcome.operatorId) ??
+        outcome.operatorId.split("/").pop() ??
+        "Unknown",
+      died: outcome.died === true,
+    })),
   }));
 
   return { opportunities, activeRaids, raidHistory };
@@ -634,6 +677,11 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       availableForRaid: false,
       readinessScore: 0,
       appearancePresetId: str(appearance, "presetId", "male-swept"),
+      visibleGear: resolveVisibleGear(
+        appearance ? extractVisibleGear(appearance) : undefined,
+        getLoadedParts(),
+      ),
+      lifecycle: extractLifecycle(rec(op as Record<string, unknown>, "lifecycle")),
     };
   });
 
@@ -715,6 +763,10 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     relationships,
     activeEvents: [],
     placeableRoomTemplates: [],
+    rosterPressure: buildSafeRosterPressure(
+      snapshot.building.operatorSlotCount,
+      operators.filter((op) => op.lifecycle.status === "active").length,
+    ),
   };
 }
 
@@ -748,6 +800,11 @@ function mapRaidSummary(
     cashDelta: summary.cashDelta,
     location: "",
     narrativeTags: [],
+    operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
+      operatorId: outcome.operatorId,
+      operatorName: outcome.operatorId.split("/").pop() ?? "Unknown",
+      died: outcome.died === true,
+    })),
   };
 }
 
@@ -778,6 +835,69 @@ export function buildOperationsViewModel(
     opportunities,
     activeRaids: snapshot.activeRaidPackets.map((r) => mapActiveRaid(r, registry)),
     raidHistory: snapshot.raidSummaries.map((s) => mapRaidSummary(s, registry)),
+  };
+}
+
+// ── Lifecycle and pressure helpers ─────────────────────────────────────────
+
+function extractLifecycle(
+  raw: { status?: string; deathTick?: number; deathRaidSummaryId?: string } | undefined,
+): OperatorLifecycleViewModel {
+  if (raw && raw.status === "dead") {
+    return {
+      status: "dead",
+      deathTick: typeof raw.deathTick === "number" ? raw.deathTick : undefined,
+      deathRaidSummaryId:
+        typeof raw.deathRaidSummaryId === "string" ? raw.deathRaidSummaryId : undefined,
+    };
+  }
+  return { status: "active" };
+}
+
+function mapRuntimeRosterPressure(
+  rawPressure: Phase1RuntimeView["rosterPressure"],
+): RosterPressureViewModel {
+  return {
+    operatorCapacity: rawPressure.operatorCapacity,
+    livingOperatorCount: rawPressure.livingOperatorCount,
+    vacancyCount: rawPressure.vacancyCount,
+    unavailableOperatorIds: rawPressure.unavailableOperatorIds,
+    recentDeathOperatorIds: rawPressure.recentDeathOperatorIds,
+    replacementPressureLevel: rawPressure.replacementPressureLevel,
+  };
+}
+
+function buildSafeRosterPressure(
+  operatorCapacity: number,
+  livingOperatorCount: number,
+): RosterPressureViewModel {
+  return {
+    operatorCapacity,
+    livingOperatorCount,
+    vacancyCount: Math.max(0, operatorCapacity - livingOperatorCount),
+    unavailableOperatorIds: [],
+    recentDeathOperatorIds: [],
+    replacementPressureLevel: "stable",
+  };
+}
+
+// ── Appearance helpers ────────────────────────────────────────────────────
+
+/** Safely extract optional visibleGear from an appearance object.
+ *  The runtime type may not yet include these fields, but when the runtime
+ *  track adds them they will flow through here automatically. */
+function extractVisibleGear(appearance: Record<string, unknown>): VisibleGear {
+  const gear = appearance.visibleGear;
+  if (typeof gear !== "object" || gear === null || Array.isArray(gear)) return {};
+  const g = gear as Record<string, unknown>;
+  return {
+    weaponPartId: typeof g.weaponPartId === "string" && g.weaponPartId ? g.weaponPartId : undefined,
+    outfitOverlayPartId:
+      typeof g.outfitOverlayPartId === "string" && g.outfitOverlayPartId
+        ? g.outfitOverlayPartId
+        : undefined,
+    accessoryPartId:
+      typeof g.accessoryPartId === "string" && g.accessoryPartId ? g.accessoryPartId : undefined,
   };
 }
 

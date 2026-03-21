@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { OPERATOR_APPEARANCE_PRESET_IDS, saveStorage, type PersistedSaveGame } from "save";
+import { templateRegistry } from "content/templates";
+import {
+  CURRENT_CONTENT_COMPATIBILITY,
+  CURRENT_SAVE_SCHEMA_VERSION,
+  saveStorage,
+  type PersistedSaveGame,
+} from "save";
+import { createBootstrapWorldSnapshot } from "sim";
+import { RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS } from "sim/systems/commands";
 
 import { parseRuntimeRouteRequest, resolveRuntimeSession } from "./session";
 
@@ -57,15 +65,79 @@ describe("runtime session lifecycle", () => {
     expect(session.state.phase1View.visitors.length).toBeGreaterThan(0);
     expect(
       session.state.phase1View.operators.every((operator) =>
-        OPERATOR_APPEARANCE_PRESET_IDS.includes(operator.appearance.presetId),
+        RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS.includes(operator.appearance.presetId),
       ),
     ).toBe(true);
+    expect(
+      session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
+        ?.appearance.visibleGear,
+    ).toEqual({
+      weaponPartId: "weapon/tactical-rifle",
+      outfitOverlayPartId: "outfit-overlay/tactical-vest",
+    });
     expect("svgCatalog" in session).toBe(false);
     expect("operatorDetailRecipe" in session.state).toBe(false);
     expect(session.registry.missions.length).toBeGreaterThan(0);
     expect(session.stableCommandTypes).toContain("sim/place-room");
     expect(session.stableCommandTypes).toContain("sim/accept-recruit");
     expect(session.stableCommandTypes).toContain("sim/assign-staff");
+
+    session.dispose();
+  });
+
+  it("keeps unknown visible gear ids intact when loading a save-backed runtime session", async () => {
+    const world = createBootstrapWorldSnapshot(templateRegistry);
+    world.operators = world.operators?.map((operator) =>
+      operator.id === "operator/rose-vega"
+        ? ({
+            ...operator,
+            appearance: {
+              presetId: "female-flowing",
+              visibleGear: {
+                weaponPartId: "weapon/unknown-prototype",
+                outfitOverlayPartId: 42,
+              },
+            },
+          } as typeof operator)
+        : operator,
+    );
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-21T00:00:00.000Z",
+      },
+      world,
+    });
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
+    expect(
+      session.worldSnapshot.operators?.find((operator) => operator.id === "operator/rose-vega")
+        ?.appearance,
+    ).toEqual({
+      presetId: "female-flowing",
+      visibleGear: {
+        weaponPartId: "weapon/unknown-prototype",
+      },
+    });
+    expect(
+      session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
+        ?.appearance,
+    ).toEqual({
+      presetId: "female-flowing",
+      visibleGear: {
+        weaponPartId: "weapon/unknown-prototype",
+      },
+    });
 
     session.dispose();
   });

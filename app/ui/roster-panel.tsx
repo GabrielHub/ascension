@@ -3,19 +3,20 @@ import type {
   OperatorViewModel,
   RelationshipViewModel,
   RoomViewModel,
+  RosterPressureViewModel,
   StaffViewModel,
   VisitorViewModel,
 } from "./view-models";
 import { OperatorPortrait } from "./operator-portrait";
 
 interface RosterPanelProps {
-  operatorSlots: number;
   operators: readonly OperatorViewModel[];
   staff: readonly StaffViewModel[];
   visitors: readonly VisitorViewModel[];
   relationships: readonly RelationshipViewModel[];
   rooms: readonly RoomViewModel[];
   callbacks: GameCallbacks;
+  rosterPressure: RosterPressureViewModel;
 }
 
 function StatBar({ label, value, max }: { label: string; value: number; max: number }) {
@@ -151,6 +152,29 @@ function RelationshipRow({ rel }: { rel: RelationshipViewModel }) {
   );
 }
 
+function FallenOperatorRow({ op }: { op: OperatorViewModel }) {
+  return (
+    <div className="glass-card-inset px-3 py-2 opacity-70">
+      <div className="flex items-center gap-2.5">
+        <div className="relative">
+          <OperatorPortrait
+            name={op.name}
+            roleTag={op.roleTag}
+            presetId={op.appearancePresetId}
+            size="roster"
+          />
+          <div className="absolute inset-0 rounded bg-void/50" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <span className="text-xs text-silver/60 line-through">{op.name}</span>
+          <span className="ml-1.5 text-[0.6875rem] text-magma">KIA</span>
+        </div>
+        <span className="text-[0.6875rem] text-silver/60">{formatRoleTag(op.roleTag)}</span>
+      </div>
+    </div>
+  );
+}
+
 function VisitorRow({
   visitor,
   onAccept,
@@ -250,30 +274,71 @@ function StaffRow({
 }
 
 export function RosterPanel({
-  operatorSlots,
   operators,
   staff,
   visitors,
   relationships,
   rooms,
   callbacks,
+  rosterPressure,
 }: RosterPanelProps) {
+  const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
+  const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
+
   return (
     <div className="animate-enter space-y-4">
+      {/* ── Vacancy / pressure banner ─────────────────── */}
+      {rosterPressure.replacementPressureLevel !== "stable" && (
+        <div
+          className={`glass-card-inset flex items-center gap-2 px-3 py-2 ${
+            rosterPressure.replacementPressureLevel === "critical"
+              ? "border-l-2 border-l-magma"
+              : "border-l-2 border-l-ember"
+          }`}
+        >
+          <span
+            className={`text-xs font-medium ${
+              rosterPressure.replacementPressureLevel === "critical" ? "text-magma" : "text-ember"
+            }`}
+          >
+            {rosterPressure.replacementPressureLevel === "critical"
+              ? "Roster critical"
+              : "Roster strained"}
+          </span>
+          <span className="text-[0.6875rem] text-silver/60">
+            {rosterPressure.vacancyCount > 0 &&
+              `${rosterPressure.vacancyCount} ${rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}`}
+            {rosterPressure.vacancyCount > 0 &&
+              rosterPressure.recentDeathOperatorIds.length > 0 &&
+              " · "}
+            {rosterPressure.recentDeathOperatorIds.length > 0 &&
+              `${rosterPressure.recentDeathOperatorIds.length} recent ${rosterPressure.recentDeathOperatorIds.length === 1 ? "loss" : "losses"}`}
+          </span>
+        </div>
+      )}
+
       {/* ── Operators ─────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between">
           <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
             Roster
           </h3>
-          <span className="text-xs text-gold/80">
-            {operators.length}/{operatorSlots} operators
+          <span
+            className={`text-xs ${
+              rosterPressure.replacementPressureLevel === "critical"
+                ? "text-ember"
+                : rosterPressure.replacementPressureLevel === "strained"
+                  ? "text-smolder"
+                  : "text-gold/80"
+            }`}
+          >
+            {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} operators
           </span>
         </div>
 
-        {operators.length > 0 ? (
+        {livingOperators.length > 0 ? (
           <div className="mt-2 space-y-2">
-            {operators.map((op) => (
+            {livingOperators.map((op) => (
               <OperatorRow key={op.id} op={op} />
             ))}
           </div>
@@ -296,6 +361,20 @@ export function RosterPanel({
           </div>
         )}
       </div>
+
+      {/* ── Fallen operators ──────────────────────────── */}
+      {fallenOperators.length > 0 && (
+        <div>
+          <h4 className="mb-1.5 text-xs font-medium uppercase tracking-[0.15em] text-silver/60">
+            Fallen ({fallenOperators.length})
+          </h4>
+          <div className="space-y-1.5">
+            {fallenOperators.map((op) => (
+              <FallenOperatorRow key={op.id} op={op} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Relationships / Cohesion ──────────────────── */}
       {relationships.length > 0 && (
@@ -348,9 +427,27 @@ export function RosterPanel({
 
       {/* ── Visitors / Recruitment ────────────────────── */}
       <div>
-        <h4 className="mb-1.5 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-          Visitors ({visitors.length})
-        </h4>
+        <div className="mb-1.5 flex items-center justify-between">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Visitors ({visitors.length})
+          </h4>
+          {rosterPressure.vacancyCount > 0 && (
+            <span className="text-[0.6875rem] text-ember">
+              {rosterPressure.vacancyCount} {rosterPressure.vacancyCount === 1 ? "slot" : "slots"}{" "}
+              to fill
+            </span>
+          )}
+        </div>
+        {rosterPressure.vacancyCount > 0 && visitors.length === 0 && (
+          <div className="mb-1.5 glass-card-inset border-l-2 border-l-ember px-3 py-2">
+            <p className="text-xs text-ember">Recruitment urgency</p>
+            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
+              {rosterPressure.recentDeathOperatorIds.length > 0
+                ? "The guild has suffered losses. Rebuild the roster before the next operation."
+                : "Vacancies weaken operational capacity. Attract new talent to fill the gaps."}
+            </p>
+          </div>
+        )}
         {visitors.length > 0 ? (
           <div className="space-y-1.5">
             {visitors.map((v) => (

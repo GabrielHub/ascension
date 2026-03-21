@@ -7,6 +7,7 @@ import {
   type ActiveRaidSnapshot,
   type BuildingSnapshot,
   type GuildSnapshot,
+  type OperatorLifecycleSnapshot,
   type OperatorSnapshot,
   type OperatorRelationshipSnapshot,
   type PersistedSaveGame,
@@ -23,7 +24,15 @@ import {
   type WorldSnapshot,
   type WorldTimeSnapshot,
 } from "./types";
-import { isOperatorAppearancePresetId, normalizeOperatorAppearance } from "./appearance";
+import {
+  OPERATOR_VISIBLE_GEAR_SLOT_IDS,
+  getDefaultOperatorAppearancePartsIndex,
+  getOperatorVisibleGearPartCategory,
+  isOperatorAppearancePresetId,
+  normalizeOperatorAppearance,
+  parseOperatorAppearancePartIndex,
+  type OperatorAppearancePartIndexEntry,
+} from "./appearance";
 
 export class SaveValidationError extends Error {
   constructor(message: string) {
@@ -37,12 +46,21 @@ export interface SaveHydrationResult {
   changed: boolean;
 }
 
+export interface SaveCodecOptions {
+  operatorAppearancePartsIndex?: unknown;
+}
+
 type ParsedActiveRaidSnapshot = ActiveRaidSnapshot & { _changed: boolean };
 type ParsedOperatorSnapshot = OperatorSnapshot & { _changed: boolean };
 type ParsedOperatorRelationshipSnapshot = OperatorRelationshipSnapshot & { _changed: boolean };
 type ParsedRaidOperatorOutcomeSnapshot = RaidOperatorOutcomeSnapshot & { _changed: boolean };
 type ParsedRaidOpportunitySnapshot = RaidOpportunitySnapshot & { _changed: boolean };
 type ParsedRaidSummarySnapshot = RaidSummarySnapshot & { _changed: boolean };
+
+interface OperatorAppearanceParseContext {
+  schemaVersion: number;
+  getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
+}
 
 function fail(path: string, message: string): never {
   throw new SaveValidationError(`${path} ${message}`);
@@ -93,6 +111,16 @@ function expectInteger(value: unknown, path: string): number {
 
   if (!Number.isInteger(number)) {
     fail(path, "must be an integer.");
+  }
+
+  return number;
+}
+
+function expectPositiveInteger(value: unknown, path: string): number {
+  const number = expectInteger(value, path);
+
+  if (number <= 0) {
+    fail(path, "must be greater than 0.");
   }
 
   return number;
@@ -228,6 +256,98 @@ function getRecordString(
   return typeof value === "string" ? value : undefined;
 }
 
+function parseOperatorAppearancePartsIndex(
+  options: SaveCodecOptions,
+): Map<string, OperatorAppearancePartIndexEntry> {
+  try {
+    return parseOperatorAppearancePartIndex(
+      options.operatorAppearancePartsIndex ?? getDefaultOperatorAppearancePartsIndex(),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "must be a valid operator part index.";
+    fail("save.appearancePartsIndex", message);
+  }
+}
+
+function createOperatorAppearanceParseContext(
+  schemaVersion: number,
+  options: SaveCodecOptions,
+): OperatorAppearanceParseContext {
+  let partsIndex: Map<string, OperatorAppearancePartIndexEntry> | undefined;
+
+  return {
+    schemaVersion,
+    getPartsIndex() {
+      if (!partsIndex) {
+        partsIndex = parseOperatorAppearancePartsIndex(options);
+      }
+
+      return partsIndex;
+    },
+  };
+}
+
+function parseOperatorVisibleGearSnapshot(
+  value: unknown,
+  path: string,
+  appearanceContext: OperatorAppearanceParseContext,
+): { visibleGear?: OperatorAppearanceSnapshot["visibleGear"]; changed: boolean } {
+  if (value === undefined) {
+    return {
+      visibleGear: undefined,
+      changed: false,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  const visibleGear: NonNullable<OperatorAppearanceSnapshot["visibleGear"]> = {};
+  const unknownKeys = Object.keys(record).filter(
+    (key) => !OPERATOR_VISIBLE_GEAR_SLOT_IDS.some((candidate) => candidate === key),
+  );
+
+  if (unknownKeys[0]) {
+    fail(path, `contains unknown field "${unknownKeys[0]}".`);
+  }
+
+  let changed = false;
+  let hasVisibleGear = false;
+
+  OPERATOR_VISIBLE_GEAR_SLOT_IDS.forEach((slot) => {
+    const partId = record[slot];
+
+    if (partId === undefined) {
+      return;
+    }
+
+    const validatedPartId = expectString(partId, `${path}.${slot}`);
+    const expectedCategory = getOperatorVisibleGearPartCategory(slot);
+    const part = appearanceContext.getPartsIndex().get(validatedPartId);
+
+    if (!part) {
+      fail(`${path}.${slot}`, `must reference a known ${expectedCategory} part id.`);
+    }
+
+    if (part.category !== expectedCategory) {
+      fail(
+        `${path}.${slot}`,
+        `must reference a ${expectedCategory} part id, but "${validatedPartId}" is "${part.category}".`,
+      );
+    }
+
+    visibleGear[slot] = validatedPartId;
+    hasVisibleGear = true;
+  });
+
+  if (!hasVisibleGear) {
+    changed = Object.keys(record).length > 0;
+  }
+
+  return {
+    visibleGear: hasVisibleGear ? visibleGear : undefined,
+    changed,
+  };
+}
+
 function parseOperatorAppearanceSnapshot(
   value: unknown,
   path: string,
@@ -235,8 +355,27 @@ function parseOperatorAppearanceSnapshot(
     operatorId: string;
     identity?: SaveStructuredRecord;
   },
+  appearanceContext: OperatorAppearanceParseContext,
 ): { appearance: OperatorAppearanceSnapshot; changed: boolean } {
+  const allowLegacyPresetFallback = appearanceContext.schemaVersion < CURRENT_SAVE_SCHEMA_VERSION;
   const record = value === undefined ? undefined : expectRecord(value, path);
+
+  if (record === undefined && !allowLegacyPresetFallback) {
+    fail(path, "must be an object.");
+  }
+
+  const allowedKeys = new Set(
+    allowLegacyPresetFallback
+      ? ["presetId", "visibleGear", "portraitId", "seed"]
+      : ["presetId", "visibleGear"],
+  );
+
+  const unknownKeys = Object.keys(record ?? {}).filter((key) => !allowedKeys.has(key));
+
+  if (unknownKeys[0]) {
+    fail(path, `contains unknown field "${unknownKeys[0]}".`);
+  }
+
   const normalized = normalizeOperatorAppearance({
     presetId: record?.presetId,
     legacySeed: record?.seed,
@@ -258,25 +397,102 @@ function parseOperatorAppearanceSnapshot(
     };
   }
 
+  if (!isOperatorAppearancePresetId(record.presetId) && !allowLegacyPresetFallback) {
+    fail(`${path}.presetId`, "must reference a known operator appearance preset id.");
+  }
+
+  const visibleGear = parseOperatorVisibleGearSnapshot(
+    record.visibleGear,
+    `${path}.visibleGear`,
+    appearanceContext,
+  );
+  const legacyKeyChanged =
+    allowLegacyPresetFallback &&
+    Object.keys(record).some((key) => key === "portraitId" || key === "seed");
+
   return {
-    appearance: normalized.appearance,
-    changed:
-      normalized.changed ||
-      !isOperatorAppearancePresetId(record.presetId) ||
-      Object.keys(record).some((key) => key !== "presetId"),
+    appearance: {
+      presetId: normalized.appearance.presetId,
+      ...(visibleGear.visibleGear === undefined ? {} : { visibleGear: visibleGear.visibleGear }),
+    },
+    changed: normalized.changed || visibleGear.changed || legacyKeyChanged,
   };
 }
 
-function parseOperatorSnapshot(value: unknown, path: string): ParsedOperatorSnapshot {
+function parseOperatorLifecycleSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): { lifecycle: OperatorLifecycleSnapshot; changed: boolean } {
+  if (schemaVersion < 7) {
+    return {
+      lifecycle: { status: "active" },
+      changed: true,
+    };
+  }
+
+  if (value === undefined) {
+    fail(path, "must be an object.");
+  }
+
+  const record = expectRecord(value, path);
+  const status = expectString(record.status, `${path}.status`);
+
+  if (status !== "active" && status !== "dead") {
+    fail(`${path}.status`, 'must be "active" or "dead".');
+  }
+
+  if (status === "dead") {
+    if (record.deathTick === undefined || record.deathRaidSummaryId === undefined) {
+      fail(path, "dead operator must have both deathTick and deathRaidSummaryId.");
+    }
+
+    return {
+      lifecycle: {
+        status: "dead",
+        deathTick: expectPositiveInteger(record.deathTick, `${path}.deathTick`),
+        deathRaidSummaryId: expectString(record.deathRaidSummaryId, `${path}.deathRaidSummaryId`),
+      },
+      changed: false,
+    };
+  }
+
+  if (record.deathTick !== undefined || record.deathRaidSummaryId !== undefined) {
+    fail(path, "active operator must not carry deathTick or deathRaidSummaryId.");
+  }
+
+  return {
+    lifecycle: { status: "active" },
+    changed: false,
+  };
+}
+
+function parseOperatorSnapshot(
+  value: unknown,
+  path: string,
+  appearanceContext: OperatorAppearanceParseContext,
+  schemaVersion: number,
+): ParsedOperatorSnapshot {
   const record = expectRecord(value, path);
   const identity = parseOptionalStructuredRecord(record.identity, `${path}.identity`);
-  const appearance = parseOperatorAppearanceSnapshot(record.appearance, `${path}.appearance`, {
-    operatorId: expectString(record.id, `${path}.id`),
-    identity,
-  });
+  const appearance = parseOperatorAppearanceSnapshot(
+    record.appearance,
+    `${path}.appearance`,
+    {
+      operatorId: expectString(record.id, `${path}.id`),
+      identity,
+    },
+    appearanceContext,
+  );
+  const lifecycle = parseOperatorLifecycleSnapshot(
+    record.lifecycle,
+    `${path}.lifecycle`,
+    schemaVersion,
+  );
 
   return {
     id: expectString(record.id, `${path}.id`),
+    lifecycle: lifecycle.lifecycle,
     identity,
     preferences: parseOptionalStructuredRecord(record.preferences, `${path}.preferences`),
     schedule: parseOptionalStructuredRecord(record.schedule, `${path}.schedule`),
@@ -286,7 +502,7 @@ function parseOperatorSnapshot(value: unknown, path: string): ParsedOperatorSnap
     injury: parseOptionalStructuredRecord(record.injury, `${path}.injury`),
     assignment: parseOptionalStructuredRecord(record.assignment, `${path}.assignment`),
     appearance: appearance.appearance,
-    _changed: appearance.changed,
+    _changed: appearance.changed || lifecycle.changed,
   };
 }
 
@@ -475,9 +691,10 @@ function parseActiveRaidSnapshotWithFallback(
 function parseRaidOperatorOutcomeSnapshot(
   value: unknown,
   path: string,
+  schemaVersion: number,
 ): ParsedRaidOperatorOutcomeSnapshot {
   const record = expectRecord(value, path);
-  const { outcome, ...rest } = record;
+  const { outcome, died, ...rest } = record;
   const normalizedOutcome =
     outcome === undefined ? undefined : expectRecord(outcome, `${path}.outcome`);
 
@@ -485,11 +702,18 @@ function parseRaidOperatorOutcomeSnapshot(
     ...normalizedOutcome,
     ...rest,
     operatorId: expectString(record.operatorId, `${path}.operatorId`),
-    _changed: normalizedOutcome !== undefined,
+    ...(schemaVersion >= 7 && died !== undefined
+      ? { died: expectBoolean(died, `${path}.died`) }
+      : {}),
+    _changed: normalizedOutcome !== undefined || (schemaVersion < 7 && died !== undefined),
   };
 }
 
-function parseRaidSummarySnapshot(value: unknown, path: string): ParsedRaidSummarySnapshot {
+function parseRaidSummarySnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): ParsedRaidSummarySnapshot {
   const record = expectRecord(value, path);
 
   let changed = false;
@@ -500,7 +724,11 @@ function parseRaidSummarySnapshot(value: unknown, path: string): ParsedRaidSumma
     operatorOutcomes === undefined
       ? []
       : expectArray(operatorOutcomes, `${path}.operatorOutcomes`).map((entry, index) =>
-          parseRaidOperatorOutcomeSnapshot(entry, `${path}.operatorOutcomes[${index}]`),
+          parseRaidOperatorOutcomeSnapshot(
+            entry,
+            `${path}.operatorOutcomes[${index}]`,
+            schemaVersion,
+          ),
         );
 
   if (
@@ -567,12 +795,15 @@ function parseOptionalCollection<T>(
 function parseWorldSnapshot(
   value: unknown,
   path: string,
+  schemaVersion: number,
+  options: SaveCodecOptions,
 ): { world: WorldSnapshot; changed: boolean } {
   const record = expectRecord(value, path);
+  const appearanceContext = createOperatorAppearanceParseContext(schemaVersion, options);
   const operators = parseOptionalCollection(
     record.operators,
     `${path}.operators`,
-    parseOperatorSnapshot,
+    (entry, entryPath) => parseOperatorSnapshot(entry, entryPath, appearanceContext, schemaVersion),
   );
   const assignedRaidOperatorIds = collectAssignedRaidOperatorIds(operators.items);
   const operatorRelationships = parseOptionalCollection(
@@ -595,7 +826,7 @@ function parseWorldSnapshot(
   const raidSummaries = parseCollection(
     record.raidSummaries,
     `${path}.raidSummaries`,
-    parseRaidSummarySnapshot,
+    (entry, entryPath) => parseRaidSummarySnapshot(entry, entryPath, schemaVersion),
   );
   const raidOpportunities = parseOptionalCollection(
     record.raidOpportunities,
@@ -607,6 +838,34 @@ function parseWorldSnapshot(
     `${path}.activeEvents`,
     parseActiveEventSnapshot,
   );
+
+  if (schemaVersion >= 7) {
+    const knownOperatorIds = new Set(operators.items.map((op) => op.id));
+    const knownRaidSummaryIds = new Set(raidSummaries.map((summary) => summary.id));
+
+    operators.items.forEach((operator, operatorIndex) => {
+      if (
+        operator.lifecycle.status === "dead" &&
+        !knownRaidSummaryIds.has(operator.lifecycle.deathRaidSummaryId)
+      ) {
+        fail(
+          `${path}.operators[${operatorIndex}].lifecycle.deathRaidSummaryId`,
+          `must reference an existing raid summary id, got "${operator.lifecycle.deathRaidSummaryId}".`,
+        );
+      }
+    });
+
+    raidSummaries.forEach((summary, summaryIndex) => {
+      summary.operatorOutcomes?.forEach((outcome, outcomeIndex) => {
+        if (outcome.died === true && !knownOperatorIds.has(outcome.operatorId)) {
+          fail(
+            `${path}.raidSummaries[${summaryIndex}].operatorOutcomes[${outcomeIndex}]`,
+            `claims died for unknown operatorId "${outcome.operatorId}".`,
+          );
+        }
+      });
+    });
+  }
 
   const activeRaidPacketChanged = activeRaidPackets.some((packet) => packet._changed);
   const operatorChanged = operators.items.some((operator) => operator._changed);
@@ -653,7 +912,10 @@ function parseWorldSnapshot(
   };
 }
 
-export function hydratePersistedSaveGame(value: unknown): SaveHydrationResult {
+export function hydratePersistedSaveGame(
+  value: unknown,
+  options: SaveCodecOptions = {},
+): SaveHydrationResult {
   const record = expectRecord(value, "save");
   const schemaVersion = expectInteger(record.schemaVersion, "save.schemaVersion");
 
@@ -665,7 +927,7 @@ export function hydratePersistedSaveGame(value: unknown): SaveHydrationResult {
     fail("save.schemaVersion", `is newer than supported schema ${CURRENT_SAVE_SCHEMA_VERSION}.`);
   }
 
-  const world = parseWorldSnapshot(record.world, "save.world");
+  const world = parseWorldSnapshot(record.world, "save.world", schemaVersion, options);
 
   return {
     save: {
@@ -682,6 +944,9 @@ export function hydratePersistedSaveGame(value: unknown): SaveHydrationResult {
   };
 }
 
-export function preparePersistedSaveGameForStorage(save: PersistedSaveGame): PersistedSaveGame {
-  return hydratePersistedSaveGame(save).save;
+export function preparePersistedSaveGameForStorage(
+  save: PersistedSaveGame,
+  options: SaveCodecOptions = {},
+): PersistedSaveGame {
+  return hydratePersistedSaveGame(save, options).save;
 }

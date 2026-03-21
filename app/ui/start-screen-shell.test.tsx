@@ -20,14 +20,25 @@ vi.mock("app/features/save-slots/use-save-slots", () => ({
 }));
 
 describe("start screen dev entrypoint", () => {
-  it("renders the Dev Menu link to preview mode", () => {
+  it("renders the Sandbox link to preview mode", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <StartScreenShell />
       </MemoryRouter>,
     );
 
-    expect(html).toContain(">Dev Menu<");
+    expect(html).toContain(">Sandbox<");
     expect(html).toContain('href="/game?mode=preview"');
+  });
+
+  it("renders the SVG Tools link to the asset viewer", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <StartScreenShell />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">SVG Tools<");
+    expect(html).toContain('href="/svg-assets"');
   });
 });

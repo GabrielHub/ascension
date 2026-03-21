@@ -7,7 +7,7 @@ import {
   createBootstrapWorldSnapshot,
 } from "sim";
 
-import { buildHqViewFromPhase1, buildOpsViewFromPhase1 } from "./view-models";
+import { buildHqViewFromPhase1, buildHqViewModel, buildOpsViewFromPhase1 } from "./view-models";
 
 describe("phase 1 view models", () => {
   it("keeps applied room upgrades visible in the HQ panel model", () => {
@@ -57,5 +57,66 @@ describe("phase 1 view models", () => {
         status: "claimed",
       }),
     );
+  });
+
+  it("passes through runtime-owned roster pressure without UI recomputation", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const phase1View = simulation.getPhase1View();
+
+    const hq = buildHqViewFromPhase1(
+      {
+        ...phase1View,
+        rosterPressure: {
+          operatorCapacity: 6,
+          livingOperatorCount: 1,
+          vacancyCount: 5,
+          unavailableOperatorIds: ["operator/unavailable"],
+          recentDeathOperatorIds: ["operator/dead"],
+          replacementPressureLevel: "critical",
+        },
+      },
+      templateRegistry,
+    );
+
+    expect(hq.rosterPressure).toEqual({
+      operatorCapacity: 6,
+      livingOperatorCount: 1,
+      vacancyCount: 5,
+      unavailableOperatorIds: ["operator/unavailable"],
+      recentDeathOperatorIds: ["operator/dead"],
+      replacementPressureLevel: "critical",
+    });
+  });
+
+  it("keeps legacy WorldSnapshot pressure on a safe stable fallback", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    if (!snapshot.operators || snapshot.operators.length < 2) {
+      throw new Error("expected bootstrap snapshot to include operators");
+    }
+
+    snapshot.building.operatorSlotCount = 3;
+    snapshot.operators = [
+      {
+        ...snapshot.operators[0],
+        lifecycle: {
+          status: "dead",
+          deathTick: 120,
+          deathRaidSummaryId: "raid/legacy-fallback",
+        },
+      },
+      snapshot.operators[1],
+    ];
+
+    const hq = buildHqViewModel(snapshot, templateRegistry);
+
+    expect(hq.rosterPressure).toEqual({
+      operatorCapacity: 3,
+      livingOperatorCount: 1,
+      vacancyCount: 2,
+      unavailableOperatorIds: [],
+      recentDeathOperatorIds: [],
+      replacementPressureLevel: "stable",
+    });
   });
 });

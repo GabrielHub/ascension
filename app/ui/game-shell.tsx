@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { parseRuntimeRouteRequest, useRuntimeSession } from "app/features/runtime";
 
+import { DevMenuOverlay } from "./dev-menu";
 import { HqPanel } from "./hq-panel";
 import { OperationsPanel } from "./raid-panel";
 import { buildHqViewFromPhase1, buildOpsViewFromPhase1 } from "./view-models";
@@ -85,6 +86,22 @@ export function GameShell() {
   const request = parseRuntimeRouteRequest(location.search);
   const { status, session, errorMessage } = useRuntimeSession(request);
   const [activeTab, setActiveTab] = useState<ShellTab>("hq");
+  const [devMenuOpen, setDevMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "`") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      setDevMenuOpen((prev) => !prev);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const callbacks: GameCallbacks | null = useMemo(
     () =>
@@ -200,10 +217,26 @@ export function GameShell() {
               </span>
               <span className="opacity-60">rooms</span>
               <span className="mx-0.5 opacity-40">|</span>
-              <span>
-                {hq.operators.length}/{hq.building.operatorSlots}
+              <span
+                className={
+                  hq.rosterPressure.replacementPressureLevel === "critical"
+                    ? "text-ember"
+                    : hq.rosterPressure.replacementPressureLevel === "strained"
+                      ? "text-smolder"
+                      : ""
+                }
+              >
+                {hq.rosterPressure.livingOperatorCount}/{hq.rosterPressure.operatorCapacity}
               </span>
               <span className="opacity-60">ops</span>
+              {hq.rosterPressure.vacancyCount > 0 && (
+                <span className="text-ember">({hq.rosterPressure.vacancyCount} vacant)</span>
+              )}
+              {hq.rosterPressure.recentDeathOperatorIds.length > 0 && (
+                <span className="text-magma">
+                  &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
+                </span>
+              )}
               {hq.staff.length > 0 && (
                 <>
                   <span className="mx-0.5 opacity-40">|</span>
@@ -237,6 +270,19 @@ export function GameShell() {
 
           {/* Status badges */}
           <div className="ml-auto hidden items-center gap-2 md:flex">
+            {hq.rosterPressure.replacementPressureLevel !== "stable" && (
+              <span
+                className={`badge animate-enter ${
+                  hq.rosterPressure.replacementPressureLevel === "critical"
+                    ? "badge-ember"
+                    : "badge-slate"
+                }`}
+              >
+                {hq.rosterPressure.replacementPressureLevel === "critical"
+                  ? "roster critical"
+                  : "roster strained"}
+              </span>
+            )}
             {operations.activeRaids.length > 0 && (
               <span className="badge badge-ember animate-enter">
                 {operations.activeRaids.length} active
@@ -257,7 +303,13 @@ export function GameShell() {
           {activeTab === "hq" && (
             <HqPanel hq={hq} callbacks={callbacks} worldRenderSnapshot={worldRenderSnapshot} />
           )}
-          {activeTab === "operations" && <OperationsPanel operations={operations} />}
+          {activeTab === "operations" && (
+            <OperationsPanel
+              operations={operations}
+              operators={hq.operators}
+              rosterPressure={hq.rosterPressure}
+            />
+          )}
         </div>
       </main>
 
@@ -266,7 +318,7 @@ export function GameShell() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between">
           <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60">
             {session.mode === "preview"
-              ? "preview session"
+              ? "sandbox session"
               : session.mode === "new"
                 ? "new session"
                 : "saved session"}
@@ -277,6 +329,10 @@ export function GameShell() {
           </span>
         </div>
       </footer>
+
+      {import.meta.env.DEV && devMenuOpen && session && (
+        <DevMenuOverlay session={session} onClose={() => setDevMenuOpen(false)} />
+      )}
     </div>
   );
 }

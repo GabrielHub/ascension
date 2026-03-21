@@ -6,4 +6,10 @@ export const OperatorIdentity = soa({
   roleTag: [] as string[],
   specialtyTag: [] as string[],
   appearancePresetId: [] as string[],
+  appearanceWeaponPartId: [] as string[],
+  appearanceOutfitOverlayPartId: [] as string[],
+  appearanceAccessoryPartId: [] as string[],
+  lifecycleStatus: [] as string[],
+  deathTick: [] as number[],
+  deathRaidSummaryId: [] as string[],
 });

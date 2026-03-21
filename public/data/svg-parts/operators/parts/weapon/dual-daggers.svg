@@ -1,0 +1,20 @@
+<!-- Operator Part: Dual Daggers — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, crossed behind operator's back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Left dagger blade -->
+  <line x1="36" y1="52" x2="24" y2="90" stroke="#b8b0a0" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="35.5" y1="54" x2="24.2" y2="88" stroke="#e0ddd6" stroke-width="0.4" opacity="0.45" />
+  <!-- Left dagger guard -->
+  <line x1="33" y1="50" x2="39" y2="54" stroke="#1a2440" stroke-width="1.4" stroke-linecap="round" />
+  <!-- Left dagger handle -->
+  <line x1="38" y1="47" x2="42" y2="42" stroke="#1a1a20" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- Right dagger blade -->
+  <line x1="84" y1="52" x2="96" y2="90" stroke="#b8b0a0" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="84.5" y1="54" x2="95.8" y2="88" stroke="#e0ddd6" stroke-width="0.4" opacity="0.45" />
+  <!-- Right dagger guard -->
+  <line x1="81" y1="54" x2="87" y2="50" stroke="#1a2440" stroke-width="1.4" stroke-linecap="round" />
+  <!-- Right dagger handle -->
+  <line x1="82" y1="47" x2="78" y2="42" stroke="#1a1a20" stroke-width="2.2" stroke-linecap="round" />
+</svg>

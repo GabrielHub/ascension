@@ -1,0 +1,27 @@
+<!-- Operator Part: Stealth Cloak — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, draped cloak over shoulders -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Cloak back drape (behind body, visible at edges) -->
+  <path
+    d="M20 64 Q16 80 14 120 Q14 145 22 155
+       L98 155
+       Q106 145 106 120 Q104 80 100 64
+       Q80 58 60 60 Q40 58 20 64"
+    fill="#1a1a20" opacity="0.6"
+  />
+  <!-- Left cloak edge fold -->
+  <path
+    d="M20 64 Q18 90 16 130 Q16 148 22 155"
+    stroke="#2a3555" stroke-width="0.8" fill="none" opacity="0.5"
+  />
+  <!-- Right cloak edge fold -->
+  <path
+    d="M100 64 Q102 90 104 130 Q104 148 98 155"
+    stroke="#2a3555" stroke-width="0.8" fill="none" opacity="0.5"
+  />
+  <!-- Collar clasp -->
+  <circle cx="60" cy="62" r="2.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.6" />
+  <!-- Clasp gem -->
+  <circle cx="60" cy="62" r="1" fill="#4a6888" opacity="0.8" />
+</svg>

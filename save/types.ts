@@ -1,7 +1,7 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 5;
+export const CURRENT_SAVE_SCHEMA_VERSION = 7;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-a";
 
 export interface SaveSlotMetadata {
@@ -47,12 +47,26 @@ export interface RoomSnapshot {
 export type SaveStructuredRecord = Record<string, unknown>;
 export type SaveCompactValue = SaveStructuredRecord | string | number | boolean | null;
 
+export interface OperatorVisibleGearSnapshot {
+  weaponPartId?: string;
+  outfitOverlayPartId?: string;
+  accessoryPartId?: string;
+}
+
 export interface OperatorAppearanceSnapshot {
   presetId: string;
+  visibleGear?: OperatorVisibleGearSnapshot;
+}
+
+export interface OperatorLifecycleSnapshot {
+  status: "active" | "dead";
+  deathTick?: number;
+  deathRaidSummaryId?: string;
 }
 
 export interface OperatorSnapshot {
   id: string;
+  lifecycle: OperatorLifecycleSnapshot;
   identity?: SaveStructuredRecord;
   preferences?: SaveStructuredRecord;
   schedule?: SaveStructuredRecord;
@@ -111,6 +125,7 @@ export interface ActiveRaidSnapshot extends SaveStructuredRecord {
 
 export interface RaidOperatorOutcomeSnapshot extends SaveStructuredRecord {
   operatorId: string;
+  died?: boolean;
 }
 
 export interface RaidSummarySnapshot extends SaveStructuredRecord {

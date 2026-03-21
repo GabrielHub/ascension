@@ -109,6 +109,7 @@ function createBaseSave(): PersistedSaveGame {
       operators: [
         {
           id: "operator/1",
+          lifecycle: { status: "active" as const },
           identity: {
             displayName: "Rook",
           },
@@ -194,6 +195,49 @@ function createBaseSave(): PersistedSaveGame {
         },
       ],
     },
+  };
+}
+
+function createOperatorAppearancePartsIndex() {
+  return {
+    parts: [
+      {
+        id: "weapon/cleaver",
+        category: "weapon",
+        tags: ["weapon", "melee"],
+        paletteTags: ["metal"],
+        roleTags: ["role:bruiser"],
+        bodyCompatibility: ["broad"],
+        poseCompatibility: ["raid"],
+        rarity: "common",
+      },
+      {
+        id: "outfit-overlay/apron",
+        category: "outfit-overlay",
+        tags: ["outfit", "utility"],
+        paletteTags: ["cloth"],
+        roleTags: ["role:staff"],
+        bodyCompatibility: ["medium"],
+        poseCompatibility: ["hq", "raid"],
+        rarity: "common",
+      },
+      {
+        id: "accessory/chain",
+        category: "accessory",
+        tags: ["accessory"],
+        paletteTags: ["metal"],
+        roleTags: ["role:scout"],
+        bodyCompatibility: ["lean"],
+        poseCompatibility: ["raid"],
+        rarity: "uncommon",
+      },
+    ],
+  };
+}
+
+function createCodecOptions() {
+  return {
+    operatorAppearancePartsIndex: createOperatorAppearancePartsIndex(),
   };
 }
 
@@ -433,6 +477,44 @@ describe("save codec", () => {
     expect(hydrated.save.world.operators?.[1]?.appearance.presetId).toBeTruthy();
   });
 
+  it("migrates schema 5 appearance saves and preserves approved visible gear ids", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame(
+      {
+        ...base,
+        schemaVersion: 5,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              ...base.world.operators?.[0],
+              appearance: {
+                presetId: "female-flowing",
+                visibleGear: {
+                  weaponPartId: "weapon/cleaver",
+                  outfitOverlayPartId: "outfit-overlay/apron",
+                  accessoryPartId: "accessory/chain",
+                },
+              },
+            },
+          ],
+        },
+      },
+      createCodecOptions(),
+    );
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
+    expect(hydrated.save.world.operators?.[0]?.appearance).toEqual({
+      presetId: "female-flowing",
+      visibleGear: {
+        weaponPartId: "weapon/cleaver",
+        outfitOverlayPartId: "outfit-overlay/apron",
+        accessoryPartId: "accessory/chain",
+      },
+    });
+  });
+
   it("rewrites current-schema legacy raid outcome wrappers during normalization", () => {
     const base = createBaseSave();
     const hydrated = hydratePersistedSaveGame({
@@ -541,6 +623,41 @@ describe("save codec", () => {
     ]);
   });
 
+  it("round-trips approved visible gear without changing preset ids", () => {
+    const base = createBaseSave();
+    const normalized = preparePersistedSaveGameForStorage(
+      {
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              ...base.world.operators?.[0],
+              appearance: {
+                presetId: "female-flowing",
+                visibleGear: {
+                  weaponPartId: "weapon/cleaver",
+                  outfitOverlayPartId: "outfit-overlay/apron",
+                  accessoryPartId: "accessory/chain",
+                },
+              },
+            },
+          ],
+        },
+      },
+      createCodecOptions(),
+    );
+
+    expect(normalized.world.operators?.[0]?.appearance).toEqual({
+      presetId: "female-flowing",
+      visibleGear: {
+        weaponPartId: "weapon/cleaver",
+        outfitOverlayPartId: "outfit-overlay/apron",
+        accessoryPartId: "accessory/chain",
+      },
+    });
+  });
+
   it("keeps completed raid state collapsed into summaries without inventing active packets", () => {
     const base = createBaseSave();
     const hydrated = hydratePersistedSaveGame({
@@ -616,5 +733,551 @@ describe("save codec", () => {
         },
       }),
     ).toThrowError(/save\.world\.raidOpportunities\[0\]\.claimedOperatorIds must be an array\./);
+  });
+
+  it("rejects current-schema appearance payloads with unknown or malformed fields", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              ...base.world.operators?.[0],
+              appearance: {
+                presetId: "portrait/debug",
+              },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.appearance\.presetId must reference a known operator appearance preset id\./,
+    );
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "weapon/cleaver",
+                    cloakPartId: "accessory/chain",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        createCodecOptions(),
+      ),
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.appearance\.visibleGear contains unknown field "cloakPartId"\./,
+    );
+  });
+
+  it("rejects unknown referenced visible gear ids", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "weapon/unknown",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        createCodecOptions(),
+      ),
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.appearance\.visibleGear\.weaponPartId must reference a known weapon part id\./,
+    );
+  });
+
+  it("rejects category-mismatched visible gear ids", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "accessory/chain",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        createCodecOptions(),
+      ),
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.appearance\.visibleGear\.weaponPartId must reference a weapon part id, but "accessory\/chain" is "accessory"\./,
+    );
+  });
+
+  it("rejects empty-string visible gear ids", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        createCodecOptions(),
+      ),
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.appearance\.visibleGear\.weaponPartId must be a non-empty string\./,
+    );
+  });
+
+  it("rejects duplicate appearance part ids in the referenced index", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "weapon/cleaver",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          operatorAppearancePartsIndex: {
+            parts: [
+              {
+                id: "weapon/cleaver",
+                category: "weapon",
+                tags: ["weapon"],
+                paletteTags: ["metal"],
+                roleTags: ["role:bruiser"],
+                bodyCompatibility: ["broad"],
+                poseCompatibility: ["raid"],
+                rarity: "common",
+              },
+              {
+                id: "weapon/cleaver",
+                category: "weapon",
+                tags: ["weapon"],
+                paletteTags: ["metal"],
+                roleTags: ["role:bruiser"],
+                bodyCompatibility: ["broad"],
+                poseCompatibility: ["raid"],
+                rarity: "common",
+              },
+            ],
+          },
+        },
+      ),
+    ).toThrowError(
+      /save\.appearancePartsIndex operator appearance parts index\[1\]\.id duplicates operator appearance part "weapon\/cleaver"\./,
+    );
+  });
+
+  it("rejects malformed appearance part metadata when validating references", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame(
+        {
+          ...base,
+          world: {
+            ...base.world,
+            operators: [
+              {
+                ...base.world.operators?.[0],
+                appearance: {
+                  presetId: "female-flowing",
+                  visibleGear: {
+                    weaponPartId: "weapon/cleaver",
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          operatorAppearancePartsIndex: {
+            parts: [
+              {
+                id: "weapon/cleaver",
+                category: "weapon",
+                tags: "weapon",
+                paletteTags: ["metal"],
+                roleTags: ["role:bruiser"],
+                bodyCompatibility: ["broad"],
+                poseCompatibility: ["raid"],
+                rarity: "common",
+              },
+            ],
+          },
+        },
+      ),
+    ).toThrowError(
+      /save\.appearancePartsIndex operator appearance parts index\[0\]\.tags must be an array\./,
+    );
+  });
+
+  it("retains dead operators in operators[] with lifecycle fields intact", () => {
+    const base = createBaseSave();
+    const deadOperator = {
+      id: "operator/dead-1",
+      lifecycle: {
+        status: "dead" as const,
+        deathTick: 100,
+        deathRaidSummaryId: "raid/0",
+      },
+      identity: { displayName: "Fallen" },
+      appearance: { presetId: "female-flowing" },
+    };
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [...(base.world.operators ?? []), deadOperator],
+      },
+    });
+
+    const dead = hydrated.save.world.operators?.find((op) => op.id === "operator/dead-1");
+    expect(dead).toBeDefined();
+    expect(dead?.lifecycle).toEqual({
+      status: "dead",
+      deathTick: 100,
+      deathRaidSummaryId: "raid/0",
+    });
+  });
+
+  it("preserves deathTick and deathRaidSummaryId through round trips", () => {
+    const base = createBaseSave();
+    const deadOperator = {
+      id: "operator/dead-1",
+      lifecycle: {
+        status: "dead" as const,
+        deathTick: 250,
+        deathRaidSummaryId: "raid/0",
+      },
+      identity: { displayName: "Ghost" },
+      appearance: { presetId: "female-flowing" },
+    };
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [...(base.world.operators ?? []), deadOperator],
+      },
+    });
+    const dead = normalized.world.operators?.find((op) => op.id === "operator/dead-1");
+    expect(dead?.lifecycle.status).toBe("dead");
+    expect(dead?.lifecycle.deathTick).toBe(250);
+    expect(dead?.lifecycle.deathRaidSummaryId).toBe("raid/0");
+  });
+
+  it("preserves raid summary death outcome marker through round trips", () => {
+    const base = createBaseSave();
+    const deadOperator = {
+      id: "operator/dead-1",
+      lifecycle: {
+        status: "dead" as const,
+        deathTick: 100,
+        deathRaidSummaryId: "raid/0",
+      },
+      identity: { displayName: "Fallen" },
+      appearance: { presetId: "female-flowing" },
+    };
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [...(base.world.operators ?? []), deadOperator],
+        raidSummaries: [
+          {
+            ...base.world.raidSummaries[0],
+            operatorOutcomes: [
+              ...(base.world.raidSummaries[0]?.operatorOutcomes ?? []),
+              { operatorId: "operator/dead-1", died: true },
+            ],
+          },
+        ],
+      },
+    });
+
+    const outcome = normalized.world.raidSummaries[0]?.operatorOutcomes?.find(
+      (o) => o.operatorId === "operator/dead-1",
+    );
+    expect(outcome?.died).toBe(true);
+  });
+
+  it("living operators remain active without invented death fields", () => {
+    const hydrated = hydratePersistedSaveGame(createBaseSave());
+    const living = hydrated.save.world.operators?.find((op) => op.id === "operator/1");
+
+    expect(living?.lifecycle).toEqual({ status: "active" });
+    expect(living?.lifecycle.deathTick).toBeUndefined();
+    expect(living?.lifecycle.deathRaidSummaryId).toBeUndefined();
+  });
+
+  it("migrates schema 6 saves to schema 7 with all operators set to active", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 6,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            id: "operator/1",
+            identity: { displayName: "Rook" },
+            assignment: { kind: "raid", targetId: "raid/1" },
+            appearance: { presetId: "female-flowing" },
+          },
+          {
+            id: "operator/2",
+            identity: { displayName: "Bishop" },
+            appearance: { presetId: "female-flowing" },
+          },
+        ],
+        raidSummaries: [
+          {
+            ...base.world.raidSummaries[0],
+            operatorOutcomes: [{ operatorId: "operator/1", status: "steady" }],
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
+
+    hydrated.save.world.operators?.forEach((op) => {
+      expect(op.lifecycle).toEqual({ status: "active" });
+      expect(op.lifecycle.deathTick).toBeUndefined();
+      expect(op.lifecycle.deathRaidSummaryId).toBeUndefined();
+    });
+
+    const outcomes = hydrated.save.world.raidSummaries[0]?.operatorOutcomes;
+    expect(outcomes?.some((o) => "died" in o)).toBe(false);
+  });
+
+  it("strips legacy died markers while migrating schema 6 raid summaries", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 6,
+      world: {
+        ...base.world,
+        raidSummaries: [
+          {
+            ...base.world.raidSummaries[0],
+            operatorOutcomes: [{ operatorId: "operator/nonexistent", died: true }],
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.raidSummaries[0]?.operatorOutcomes).toEqual([
+      { operatorId: "operator/nonexistent" },
+    ]);
+  });
+
+  it("rejects current-schema lifecycle status outside the supported set", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: { status: "injured" },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/save\.world\.operators\[0\]\.lifecycle\.status must be "active" or "dead"\./);
+  });
+
+  it("rejects current-schema dead operator missing deathTick", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: { status: "dead", deathRaidSummaryId: "raid/0" },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/dead operator must have both deathTick and deathRaidSummaryId/);
+  });
+
+  it("rejects current-schema dead operator missing deathRaidSummaryId", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: { status: "dead", deathTick: 100 },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/dead operator must have both deathTick and deathRaidSummaryId/);
+  });
+
+  it("rejects current-schema dead operator with non-positive deathTick", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: {
+                status: "dead",
+                deathTick: 0,
+                deathRaidSummaryId: "raid/0",
+              },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/save\.world\.operators\[0\]\.lifecycle\.deathTick must be greater than 0\./);
+  });
+
+  it("rejects current-schema dead operator referencing an unknown raid summary", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            ...(base.world.operators ?? []),
+            {
+              id: "operator/dead-1",
+              lifecycle: {
+                status: "dead",
+                deathTick: 100,
+                deathRaidSummaryId: "raid/nonexistent",
+              },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(
+      /save\.world\.operators\[1\]\.lifecycle\.deathRaidSummaryId must reference an existing raid summary id, got "raid\/nonexistent"\./,
+    );
+  });
+
+  it("rejects current-schema active operator carrying partial death data", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: { status: "active", deathTick: 50 },
+              appearance: { presetId: "female-flowing" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/active operator must not carry deathTick or deathRaidSummaryId/);
+  });
+
+  it("rejects raid summary claiming death for unknown operator", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          raidSummaries: [
+            {
+              ...base.world.raidSummaries[0],
+              operatorOutcomes: [{ operatorId: "operator/nonexistent", died: true }],
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/claims died for unknown operatorId "operator\/nonexistent"/);
   });
 });

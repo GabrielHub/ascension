@@ -2,6 +2,7 @@ import {
   BuildingAuthority,
   InjuryState,
   NeedState,
+  OperatorIdentity,
   RoomInstance,
   ScheduleState,
 } from "../components";
@@ -132,9 +133,11 @@ export const advanceNeedsSystem: SimSystem = (context, deltaMs) => {
   const elapsedHours = Math.max(1, Math.floor(deltaMs / 1000)) / 60;
   const recoveryRate = getOperationalRecoveryRate(context);
 
-  context.runtimeState.operatorEntities.forEach((entity) => {
-    advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);
-  });
+  context.runtimeState.operatorEntities
+    .filter((entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead")
+    .forEach((entity) => {
+      advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);
+    });
 
   context.runtimeState.staffEntities.forEach((entity) => {
     advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);

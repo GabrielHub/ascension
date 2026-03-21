@@ -1,0 +1,31 @@
+<!-- Operator Part: Heavy Plate — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: uncommon | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, pauldron and chest plate over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Left pauldron -->
+  <path
+    d="M18 72 Q14 66 20 62 Q30 58 38 62 L36 72 Q28 76 18 72"
+    fill="#3d2c20" stroke="#c8a84c" stroke-width="0.8" opacity="0.85"
+  />
+  <!-- Left pauldron rivet -->
+  <circle cx="28" cy="65" r="1.2" fill="#c8a84c" opacity="0.7" />
+
+  <!-- Right pauldron -->
+  <path
+    d="M102 72 Q106 66 100 62 Q90 58 82 62 L84 72 Q92 76 102 72"
+    fill="#3d2c20" stroke="#c8a84c" stroke-width="0.8" opacity="0.85"
+  />
+  <!-- Right pauldron rivet -->
+  <circle cx="92" cy="65" r="1.2" fill="#c8a84c" opacity="0.7" />
+
+  <!-- Upper chest plate accent -->
+  <path
+    d="M42 78 L60 74 L78 78 L74 90 L60 92 L46 90 Z"
+    fill="none" stroke="#c8a84c" stroke-width="0.6" opacity="0.5"
+  />
+  <!-- Center chest emblem -->
+  <path
+    d="M57 80 L60 77 L63 80 L60 83 Z"
+    fill="#c8a84c" opacity="0.4"
+  />
+</svg>

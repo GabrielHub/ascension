@@ -1,6 +1,7 @@
 import {
   BuildingAuthority,
   GuildState,
+  OperatorIdentity,
   RoomInstance,
   StaffState,
   WorldTimeState,
@@ -25,7 +26,10 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
       (total, entity) => total + StaffState.wage[entity],
       0,
     ) +
-    context.runtimeState.operatorEntities.length * 12;
+    context.runtimeState.operatorEntities.filter(
+      (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+    ).length *
+      12;
   const activeReceptionRooms = context.runtimeState.roomEntities.filter((entity) => {
     const template =
       context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];

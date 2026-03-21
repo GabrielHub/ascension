@@ -86,13 +86,13 @@ export function HqPanel({ hq, callbacks, worldRenderSnapshot }: HqPanelProps) {
         )}
         {contextView === "roster" && (
           <RosterPanel
-            operatorSlots={hq.building.operatorSlots}
             operators={hq.operators}
             staff={hq.staff}
             visitors={hq.visitors}
             relationships={hq.relationships}
             rooms={hq.rooms}
             callbacks={callbacks}
+            rosterPressure={hq.rosterPressure}
           />
         )}
       </aside>

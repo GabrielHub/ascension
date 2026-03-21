@@ -1,0 +1,18 @@
+<!-- Operator Part: Comm Earpiece — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, small earpiece on left ear with mic arm -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Earpiece housing -->
+  <ellipse cx="34" cy="42" rx="3" ry="4" fill="#1a2440" stroke="#2a3555" stroke-width="0.6" />
+  <!-- Earpiece inner detail -->
+  <ellipse cx="34" cy="42" rx="1.5" ry="2" fill="#2a3555" opacity="0.6" />
+  <!-- Mic arm -->
+  <path
+    d="M34 46 Q32 50 34 54 Q36 56 38 55"
+    stroke="#1a2440" stroke-width="1.2" fill="none" stroke-linecap="round"
+  />
+  <!-- Mic tip -->
+  <circle cx="38" cy="55" r="1.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.4" />
+  <!-- Status LED -->
+  <circle cx="36" cy="39" r="0.8" fill="#c8a84c" opacity="0.7" />
+</svg>

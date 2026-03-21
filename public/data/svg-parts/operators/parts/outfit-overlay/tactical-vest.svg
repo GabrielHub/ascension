@@ -1,0 +1,21 @@
+<!-- Operator Part: Tactical Vest — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, lightweight vest with pouches over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Vest outline over shoulders -->
+  <path
+    d="M36 66 L38 62 Q48 58 60 58 Q72 58 82 62 L84 66
+       L86 100 Q84 108 78 112 L60 114 L42 112 Q36 108 34 100 Z"
+    fill="none" stroke="#5a4030" stroke-width="0.8" opacity="0.65"
+  />
+  <!-- Left chest pouch -->
+  <rect x="38" y="76" width="10" height="8" rx="1" fill="#3d2c20" opacity="0.5" stroke="#5a4030" stroke-width="0.5" />
+  <!-- Left pouch flap -->
+  <line x1="38" y1="76" x2="48" y2="76" stroke="#5a4030" stroke-width="0.8" opacity="0.6" />
+  <!-- Right chest pouch -->
+  <rect x="72" y="76" width="10" height="8" rx="1" fill="#3d2c20" opacity="0.5" stroke="#5a4030" stroke-width="0.5" />
+  <!-- Right pouch flap -->
+  <line x1="72" y1="76" x2="82" y2="76" stroke="#5a4030" stroke-width="0.8" opacity="0.6" />
+  <!-- Center zipper line -->
+  <line x1="60" y1="62" x2="60" y2="112" stroke="#5a4030" stroke-width="0.4" opacity="0.4" stroke-dasharray="2 2" />
+</svg>

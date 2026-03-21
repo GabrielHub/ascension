@@ -207,7 +207,7 @@ export function SvgPlaygroundPage() {
             &larr; back
           </Link>
           <div className="h-4 w-px bg-[rgba(200,168,76,0.08)]" />
-          <div>
+          <div className="flex-1">
             <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.15em] text-gold">
               SVG Playground &mdash; Operator Style
             </h1>
@@ -216,6 +216,9 @@ export function SvgPlaygroundPage() {
               &amp; eyes as character differentiators
             </p>
           </div>
+          <Link to="/svg-assets" className="btn-ghost text-xs">
+            asset viewer &rarr;
+          </Link>
         </div>
       </header>
 

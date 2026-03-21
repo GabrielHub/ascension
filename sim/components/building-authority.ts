@@ -10,6 +10,7 @@ export interface ActiveRaidResolutionPacket {
     moraleDelta: number;
     loyaltyDelta: number;
     status: "steady" | "shaken" | "hurt";
+    died?: boolean;
   }>;
   narrativeTags: string[];
   intelMismatchTags: string[];

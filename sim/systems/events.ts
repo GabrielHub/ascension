@@ -7,6 +7,7 @@ import {
   InjuryState,
   LoyaltyState,
   MoraleState,
+  OperatorIdentity,
   RoomInstance,
 } from "../components";
 import { getCurrentAbsoluteMinute, getRoleTag, removeTrackedEntity } from "./commands";
@@ -22,24 +23,27 @@ function getAverageValue(values: number[]): number {
 
 function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
   const guildEntity = context.singletonEntities.guild;
+  const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
+    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+  );
   const moraleValues = [
-    ...context.runtimeState.operatorEntities.map((entity) => MoraleState.current[entity]),
+    ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
     ...context.runtimeState.staffEntities.map((entity) => MoraleState.current[entity]),
   ];
   const loyaltyValues = [
-    ...context.runtimeState.operatorEntities.map((entity) => LoyaltyState.current[entity]),
+    ...livingOperatorEntities.map((entity) => LoyaltyState.current[entity]),
     ...context.runtimeState.staffEntities.map((entity) => LoyaltyState.current[entity]),
   ];
-  const activeInjuries = context.runtimeState.operatorEntities.filter(
+  const activeInjuries = livingOperatorEntities.filter(
     (entity) => InjuryState.severity[entity] > 0,
   ).length;
   const tags: string[] = [];
 
-  if (context.runtimeState.operatorEntities.length > 0 && getAverageValue(moraleValues) < 55) {
+  if (livingOperatorEntities.length > 0 && getAverageValue(moraleValues) < 55) {
     tags.push("pressure:morale");
   }
 
-  if (context.runtimeState.operatorEntities.length > 0 && getAverageValue(loyaltyValues) < 55) {
+  if (livingOperatorEntities.length > 0 && getAverageValue(loyaltyValues) < 55) {
     tags.push("pressure:loyalty");
   }
 
@@ -73,12 +77,15 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
 
 function computePressure(context: Parameters<SimSystem>[0]): number {
   const guildEntity = context.singletonEntities.guild;
+  const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
+    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+  );
   const moraleValues = [
-    ...context.runtimeState.operatorEntities.map((entity) => MoraleState.current[entity]),
+    ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
     ...context.runtimeState.staffEntities.map((entity) => MoraleState.current[entity]),
   ];
   const averageMorale = getAverageValue(moraleValues);
-  const activeInjuries = context.runtimeState.operatorEntities.filter(
+  const activeInjuries = livingOperatorEntities.filter(
     (entity) => InjuryState.severity[entity] > 0,
   ).length;
 

@@ -1,7 +1,8 @@
-import type { RaidOpportunityViewModel } from "./view-models";
+import type { RaidOpportunityViewModel, RosterPressureViewModel } from "./view-models";
 
 interface OpportunityBoardProps {
   opportunities: readonly RaidOpportunityViewModel[];
+  rosterPressure: RosterPressureViewModel;
 }
 
 const THREAT_COLORS: Record<string, string> = {
@@ -68,13 +69,16 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
   );
 }
 
-export function OpportunityBoard({ opportunities }: OpportunityBoardProps) {
+export function OpportunityBoard({ opportunities, rosterPressure }: OpportunityBoardProps) {
+  const rosterThin = rosterPressure.replacementPressureLevel !== "stable";
+
   if (opportunities.length === 0) {
     return (
       <div className="space-y-3">
         <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
           Raid Opportunities
         </h3>
+        {rosterThin && <RosterThinWarning rosterPressure={rosterPressure} />}
         <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
           <div className="empty-state-icon">&#9672;</div>
           <p className="text-[0.7rem] font-medium text-gold/70">No opportunities posted</p>
@@ -98,11 +102,32 @@ export function OpportunityBoard({ opportunities }: OpportunityBoardProps) {
           Operators evaluate and claim opportunities autonomously
         </p>
       </div>
+      {rosterThin && <RosterThinWarning rosterPressure={rosterPressure} />}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((opp) => (
           <OpportunityCard key={opp.id} opportunity={opp} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function RosterThinWarning({ rosterPressure }: { rosterPressure: RosterPressureViewModel }) {
+  const isCritical = rosterPressure.replacementPressureLevel === "critical";
+  return (
+    <div
+      className={`glass-card-inset flex items-center gap-2 px-3 py-2 ${
+        isCritical ? "border-l-2 border-l-magma" : "border-l-2 border-l-ember"
+      }`}
+    >
+      <span className={`text-xs font-medium ${isCritical ? "text-magma" : "text-ember"}`}>
+        {isCritical ? "Roster critical" : "Roster strained"}
+      </span>
+      <span className="text-[0.6875rem] text-silver/60">
+        {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} operators available
+        {rosterPressure.vacancyCount > 0 &&
+          ` · ${rosterPressure.vacancyCount} ${rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}`}
+      </span>
     </div>
   );
 }

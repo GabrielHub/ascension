@@ -1,4 +1,4 @@
-import type { RaidSummaryViewModel } from "./view-models";
+import type { RaidOperatorOutcomeViewModel, RaidSummaryViewModel } from "./view-models";
 
 interface RaidLogProps {
   history: readonly RaidSummaryViewModel[];
@@ -10,8 +10,25 @@ const RESULT_STYLES: Record<string, { badge: string; label: string }> = {
   mixed: { badge: "badge-slate", label: "Mixed" },
 };
 
+function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewModel }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`h-1.5 w-1.5 rounded-full ${outcome.died ? "bg-magma" : "bg-gold/40"}`} />
+      <span
+        className={`text-[0.6875rem] ${
+          outcome.died ? "text-magma line-through" : "text-silver/60"
+        }`}
+      >
+        {outcome.operatorName}
+      </span>
+      {outcome.died && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
+    </div>
+  );
+}
+
 function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
   const style = RESULT_STYLES[summary.result] ?? RESULT_STYLES.mixed;
+  const casualties = summary.operatorOutcomes.filter((o) => o.died);
 
   return (
     <div className="glass-card-inset p-3">
@@ -22,7 +39,12 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
             {summary.location || new Date(summary.endedAt).toLocaleDateString()}
           </p>
         </div>
-        <span className={`badge ${style.badge}`}>{style.label}</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {casualties.length > 0 && (
+            <span className="badge badge-ember">{casualties.length} KIA</span>
+          )}
+          <span className={`badge ${style.badge}`}>{style.label}</span>
+        </div>
       </div>
 
       <div className="mt-2 flex items-center gap-3 text-xs">
@@ -35,6 +57,15 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
           {summary.reputationDelta} rep
         </span>
       </div>
+
+      {/* Per-operator outcome lines */}
+      {summary.operatorOutcomes.length > 0 && (
+        <div className="mt-2 space-y-0.5 border-t border-[rgba(200,168,76,0.04)] pt-2">
+          {summary.operatorOutcomes.map((outcome) => (
+            <OperatorOutcomeLine key={outcome.operatorId} outcome={outcome} />
+          ))}
+        </div>
+      )}
 
       {summary.narrativeTags.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1">

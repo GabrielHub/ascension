@@ -1,14 +1,29 @@
 import { bootstrapScenario } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
-import { type OperatorAppearanceSnapshot } from "save";
 
 import type { WorldSnapshot } from "save";
 
-import { createAscensionSimulation, type Phase1RuntimeWorldSnapshot } from "./runtime";
+import {
+  createAscensionSimulation,
+  type Phase1OperatorSnapshot,
+  type Phase1RuntimeWorldSnapshot,
+} from "./runtime";
 
-const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, OperatorAppearanceSnapshot> = {
-  "operator/rose-vega": { presetId: "female-flowing" },
-  "operator/milo-hart": { presetId: "male-undercut" },
+const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, Phase1OperatorSnapshot["appearance"]> = {
+  "operator/rose-vega": {
+    presetId: "female-flowing",
+    visibleGear: {
+      weaponPartId: "weapon/tactical-rifle",
+      outfitOverlayPartId: "outfit-overlay/tactical-vest",
+    },
+  },
+  "operator/milo-hart": {
+    presetId: "male-undercut",
+    visibleGear: {
+      weaponPartId: "weapon/dual-daggers",
+      accessoryPartId: "accessory/comm-earpiece",
+    },
+  },
 };
 
 export * from "./commands";
@@ -56,6 +71,7 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     operators: bootstrapScenario.operators.map((operator) => ({
       ...operator,
       appearance: BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id] ?? { presetId: "male-swept" },
+      lifecycle: { status: "active" as const },
     })),
     operatorRelationships: [...bootstrapScenario.operatorRelationships],
     staff: [...bootstrapScenario.staff],

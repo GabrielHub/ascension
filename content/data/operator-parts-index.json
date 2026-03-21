@@ -1,0 +1,98 @@
+{
+  "description": "Modular operator SVG parts index. Each entry validates against the locked metadata shape from the appearance contract.",
+  "locked": "2026-03-21",
+  "style": "ascension-anime-unified",
+  "viewBox": "0 0 120 160",
+  "parts": [
+    {
+      "id": "weapon/katana",
+      "category": "weapon",
+      "tags": ["melee", "blade", "japanese", "slashing"],
+      "paletteTags": ["bruiser", "strategist"],
+      "roleTags": ["bruiser", "strategist"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/dual-daggers",
+      "category": "weapon",
+      "tags": ["melee", "blade", "dual-wield", "piercing"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/tactical-rifle",
+      "category": "weapon",
+      "tags": ["ranged", "firearm", "precision", "tactical"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "outfit-overlay/heavy-plate",
+      "category": "outfit-overlay",
+      "tags": ["armor", "heavy", "protective", "pauldrons"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "outfit-overlay/stealth-cloak",
+      "category": "outfit-overlay",
+      "tags": ["cloak", "stealth", "concealment", "dark"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/tactical-vest",
+      "category": "outfit-overlay",
+      "tags": ["vest", "tactical", "utility", "pouches"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "accessory/eye-visor",
+      "category": "accessory",
+      "tags": ["visor", "tactical", "tech", "eyes"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/tactical-scarf",
+      "category": "accessory",
+      "tags": ["scarf", "neck", "concealment", "tactical"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "accessory/comm-earpiece",
+      "category": "accessory",
+      "tags": ["earpiece", "communication", "tech", "tactical"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    }
+  ]
+}

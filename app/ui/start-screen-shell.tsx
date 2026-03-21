@@ -443,7 +443,7 @@ function FooterLink({
   return (
     <button
       type="button"
-      className="cursor-default rounded-md px-2.5 py-1 transition-all duration-300"
+      className="cursor-pointer rounded-md px-2.5 py-1 transition-all duration-300"
       style={sharedStyle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -644,7 +644,12 @@ export function StartScreenShell() {
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
                 />
-                <FooterLink label="Dev Menu" subtle to={buildGameShellHref({ mode: "preview" })} />
+                <FooterLink label="Sandbox" subtle to={buildGameShellHref({ mode: "preview" })} />
+                <span
+                  className="inline-block h-0.5 w-0.5 rounded-full"
+                  style={{ background: P.dimGold, opacity: 0.3 }}
+                />
+                <FooterLink label="SVG Tools" subtle to="/svg-assets" />
               </div>
 
               <div className="text-right">

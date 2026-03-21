@@ -19,11 +19,20 @@ function getAverageRelationshipSignal(
   context: Parameters<SimSystem>[0],
   operatorId: string,
 ): number {
+  const livingOperatorIds = new Set(
+    context.runtimeState.operatorEntities
+      .filter((entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead")
+      .map((entity) => OperatorIdentity.id[entity]),
+  );
   const signals = context.runtimeState.relationshipEntities
     .filter((entity) => {
+      const operatorAId = RelationshipState.operatorAId[entity];
+      const operatorBId = RelationshipState.operatorBId[entity];
+
       return (
-        RelationshipState.operatorAId[entity] === operatorId ||
-        RelationshipState.operatorBId[entity] === operatorId
+        livingOperatorIds.has(operatorAId) &&
+        livingOperatorIds.has(operatorBId) &&
+        (operatorAId === operatorId || operatorBId === operatorId)
       );
     })
     .map((entity) => {
@@ -143,6 +152,10 @@ export const reconcileAssignmentsSystem: SimSystem = (context) => {
   });
 
   context.runtimeState.operatorEntities.forEach((entity) => {
+    if (OperatorIdentity.lifecycleStatus[entity] === "dead") {
+      return;
+    }
+
     if (
       RaidParticipationState.activeRaidId[entity].length > 0 &&
       currentMinute < RaidParticipationState.returnTick[entity]

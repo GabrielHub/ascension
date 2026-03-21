@@ -18,24 +18,30 @@ Repo-specific correctional guidance only.
 - Save code owns serialization and migration, not gameplay repair.
 - Render and SVG code must not become alternate rule engines.
 
+## Documentation Policy
+
+- Code, tests, templates, and assets are the source of truth for implemented behavior.
+- Do not write docs that duplicate behavior already explained by the implementation.
+- Keep `docs/` for roadmap, future-facing questions, and research only.
+- Keep repo workflow rules in `AGENTS.md` and `CLAUDE.md`.
+
 ## Forbidden Mistakes
 
 - gameplay logic in React components
 - direct UI-owned gameplay mutation
 - router-owned gameplay state
 - named-content branches without documentation
-- architecture changes without doc updates
 - `as any`
 
 ## Phase Target
 
-- Current phase: Phase 1 bodega vertical slice
-- Aim at the first playable bodega loop
+- Current phase: Phase 1 bodega world rendering
+- Finish the bodega slice visually before expanding or deepening it
 
 ## UI Rule
 
 - Always use the `/frontend-design` skill when creating or heavily refactoring UI components or screens
-- Always check `docs/style-guide.md` so UI work stays consistent with the project style guide
+- Preserve and extend the established visual language already present in `app/ui`, `app/app.css`, and the shipped SVG assets
 
 ## Verification
 
@@ -55,8 +61,9 @@ Repo-specific correctional guidance only.
 - Never start dev servers autonomously for Playwright work
 - Treat Playwright as a single-owner shared resource by default
 - Do not run concurrent Playwright sessions or parallel Playwright agents unless the user explicitly wants that coordination and the active owner releases the browser first
-- Prefer the existing dev menu and preview-mode entrypoints during browser testing when they help reach relevant game states faster
+- Prefer the existing sandbox and dev menu entrypoints during browser testing when they help reach relevant game states faster
 - Use the dev menu deliberately as a testing aid, not as an excuse to bypass the real user flow when the flow itself is what needs validation
+- The dev menu (backtick key in-game, dev builds only) provides cheat actions; the sandbox is the non-persistent preview session
 - Store Playwright artifacts under `playwright/`, not in the repo root
 - Put screenshots in `playwright/screenshots/`
 - Put logs and network captures in `playwright/logs/`
@@ -65,11 +72,10 @@ Repo-specific correctional guidance only.
 
 ## References
 
-- `docs/architecture-rules.md`
-- `docs/technical-architecture.md`
-- `docs/technical-ecs-and-systems.md`
-- `docs/technical-rendering-and-assets.md`
-- `docs/technical-save-and-data.md`
+- `docs/index.md`
+- `docs/roadmap.md`
 - `docs/product-plan.md`
-- `docs/style-guide.md`
 - `docs/plans/index.md`
+- `docs/research-notes.md`
+- `docs/genre-research.md`
+- `docs/research-audio.md`

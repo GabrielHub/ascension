@@ -1,77 +1,50 @@
 # Ascension Roadmap
 
-## Phase 0: Preproduction
+## Already Implemented
 
-Goal: prove the stack and lock the production shape of the first playable slice.
+This section is intentionally summary-level. The implementation itself is the source of truth.
 
-Deliverables:
+- `Vite+`, React, and React Router are in place for the local-first client shell.
+- The start screen supports new game, load, delete, preview/dev access, and SVG tooling entry points.
+- IndexedDB-backed save slots, slot metadata, schema migration, and strict save validation are implemented.
+- The template registry covers resources, buildings, rooms, upgrades, missions, and events with deterministic validation.
+- The playable bodega slice exists with seeded rooms, operators, staff, visitors, and headquarters state.
+- The ECS runtime owns guild, time, building, room, operator, staff, visitor, raid, relationship, and event state.
+- The stable gameplay command surface includes ticking time, placing rooms, toggling room activation, buying upgrades, recruiting, hiring staff, and assigning staff.
+- Room progression is data-driven through building and room upgrades plus generic requirement and effect evaluation.
+- Operators already have needs, morale, loyalty, injury, schedule, preference, and relationship state.
+- Operators autonomously evaluate raid opportunities, form teams, launch raids, and return with persistent summaries.
+- Active raid packets, hidden resolution data, and collapsed raid history persist through saves.
+- Permanent operator death and roster replacement pressure are already implemented.
+- Pressure events are generated from runtime state rather than hand-authored UI triggers.
+- Operator portraits use the shipped preset-based SVG pipeline, including visible gear overlays where present.
 
-- public GitHub repository is initialized with the baseline project structure so roadmap work can be committed incrementally
-- repository setup instructions exist for the few manual steps that must happen before agent-driven code work
-- `Vite+` app boots reliably with React and TypeScript
-- React Router is installed and owns only app-shell navigation
-- linting, formatting, and typechecking are installed and runnable before broader feature work starts
-- Start screen exists with new game, load save, and delete save flows
-- Start screen includes the save-slot shell and a dev-menu entry point, while feature-specific dev tools remain deferred until each feature exists
-- local save infrastructure exists with IndexedDB plus manual import/export
-- Canvas floor view mounts inside the app shell
-- Hybrid rendering boundaries are documented and tested at a prototype level
-- Basic camera, selection, and grid rendering work
-- Save/load round-trip works
-- Typed template registries exist for resources, buildings, rooms, and upgrades
-- Template registries also cover missions and early event definitions
-- Generic requirement and effect evaluation works on at least one simple path
-- Architecture rules are documented and reflected in folder structure
-- Stable id conventions, command boundaries, and singleton ownership rules are documented before broader feature work begins
-- One content bundle can be loaded from disk
-- The first modular SVG parts bundle can be validated and assembled into an operator visual
-- Tagged SVG-part search works through a cached local tool path
-- Event or storyteller scaffolding exists with hardcoded event definitions and deterministic validation
-- Morale and loyalty are both represented in the baseline runtime model
+## Phase 1: Bodega World Rendering
 
-Exit criteria:
-
-- no critical build instability from the toolchain
-- lint, format, and typecheck can run as baseline quality gates
-- shell routing is working without introducing non-client framework architecture
-- no unresolved decision about ECS vs non-ECS state boundaries
-- adding a second room or upgrade definition does not require architectural changes
-- the project has a stable shell for normal play and development entry points
-- the repository workflow is in place early enough that roadmap milestones can be committed cleanly as they land
-- registry validation and save round-trip validation are part of the baseline infrastructure
-
-## Phase 1: Bodega Vertical Slice
-
-Goal: prove the management loop.
+Goal: finish the first playable slice visually before deepening or expanding it.
 
 Deliverables:
 
-- one playable building instance built from generic building templates
-- one playable floor
-- room placement and upgrades driven by generic room and upgrade templates
-- visitor arrival logic
-- operator recruitment flow
-- staff hiring and room activation
-- needs-driven schedules and movement
-- morale and loyalty both affect the early management loop
-- a small event pool applies external pressure through the storyteller skeleton
-- operator profiles with richer SVG detail presentation
-- raid watch mode with zoomed-out tactical readability and click-to-focus team inspection
-- metadata-to-part-search-to-assembly operator generation works in-game
-- short breach assignments
-- a small mission set built from generic mission definitions
-- raid results and economy loop using the generic resource system with `cash`
-- operator visuals assembled from shipped SVG parts, not live raw SVG generation
-- permanent operator death and roster replacement pressure are present in the loop
-- equipment changes can update both operator data and visible composed visuals
-- headquarters views keep operators in casual/base appearance while raid-focused views can resolve visible raid gear
-- pre-raid intel uses confidence labels, while deeper intel systems remain deferred beyond the bodega phase
+- the bodega headquarters is rendered as the actual game world, not just abstract room cards plus a schematic canvas
+- authored environment assets exist for the bodega shell, room cross-sections, room kits, props, fixtures, and interior composition rules
+- headquarters play is world-first and full screen, with UI layered over the rendered world instead of boxing the world into a secondary panel
+- rooms read as real spaces in the world view, not only as labeled rectangles
+- operators render inside the headquarters world in a way that matches the current operator portrait/style language
+- the operator asset pipeline is upgraded from fixed portrait presets to authored modular parts for at least head shape, hair, eyes, face details, and body silhouette, with deterministic assembly and seeded default operators for the initial roster
+- initial operators and default seeded recruits are deliberately authored and locked so the slice proves real character identity, not only hashed placeholder variation
+- raid-facing environment assets exist for the first playable raid presentation layer, even if raid presentation remains lighter than HQ
+- the headquarters renderer consumes simulation state and room/building templates without inventing gameplay rules
+- camera, framing, zoom, and panning rules are locked for the bodega slice so later UI work builds on the right presentation model
+- first-pass lighting is present only as a pragmatic presentation layer such as baked shading, layered shadows, emissive props, or simple masks; do not begin a full custom lighting shader until the environment art, camera, and composition rules are stable
+- room inspection, roster, and operations overlays remain legible on top of the world-first presentation
 
 Exit criteria:
 
-- the player can lose due to bad management
-- the player can stabilize and grow through good decisions
-- the loop is fun without office or tower content
+- the player can understand the bodega as a place, not just as a set of management panels
+- the initial operator roster looks intentionally authored and visually distinct in-world, not like temporary stand-ins
+- the environment kit is broad enough to build the full bodega slice and the first raid spaces without returning to abstract placeholder blocks
+- the world view is strong enough that further slice improvements build on the intended visual direction instead of a placeholder shell
+- the slice proves the intended relationship between simulation, rendering, and overlay UI before Phase 2 balancing and depth work begins
 
 ## Phase 2: Bodega Depth
 
@@ -142,11 +115,12 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Get the content-definition infrastructure working.
-2. Get the bodega playable on top of that infrastructure.
-3. Make the bodega good.
-4. Expand the building scale.
-5. Add systemic competitors.
-6. Add prestige content.
+1. Completed: get the content-definition infrastructure working.
+2. Completed: get the bodega playable on top of that infrastructure.
+3. Finish the bodega visually.
+4. Make the bodega good.
+5. Expand the building scale.
+6. Add systemic competitors.
+7. Add prestige content.
 
 That order matters more than any specific library choice.

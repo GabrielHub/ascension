@@ -57,6 +57,11 @@ export type SimCommand =
       type: "sim/assign-staff";
       staffId: string;
       roomId?: string;
+    }
+  | {
+      type: "sim/dev-set-resource";
+      resourceId: "resource/cash" | "resource/reputation" | "resource/intel";
+      amount: number;
     };
 
 export interface SimCommandQueue {

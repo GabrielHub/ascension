@@ -1,0 +1,18 @@
+<!-- Operator Part: Katana — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, positioned behind operator's right shoulder -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Blade — diagonal behind right shoulder -->
+  <line x1="88" y1="18" x2="102" y2="140" stroke="#b8b0a0" stroke-width="2.2" stroke-linecap="round" />
+  <!-- Edge highlight -->
+  <line x1="89" y1="20" x2="102.5" y2="138" stroke="#e0ddd6" stroke-width="0.6" opacity="0.5" />
+  <!-- Guard (tsuba) — small cross near shoulder -->
+  <ellipse cx="91" cy="68" rx="5" ry="2.5" fill="#3d2c20" stroke="#c8a84c" stroke-width="0.8" />
+  <!-- Handle wrap -->
+  <line x1="90" y1="70" x2="86" y2="90" stroke="#2a1f18" stroke-width="3" stroke-linecap="round" />
+  <!-- Handle diamond wrap pattern -->
+  <line x1="89" y1="73" x2="87.5" y2="77" stroke="#c8a84c" stroke-width="0.5" opacity="0.6" />
+  <line x1="88.5" y1="79" x2="87" y2="83" stroke="#c8a84c" stroke-width="0.5" opacity="0.6" />
+  <!-- Pommel cap -->
+  <circle cx="85.5" cy="91" r="2" fill="#3d2c20" stroke="#c8a84c" stroke-width="0.6" />
+</svg>

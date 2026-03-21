@@ -1,11 +1,6 @@
 import { addComponent, addEntity, createWorld } from "bitecs";
 
-import {
-  normalizeOperatorAppearance,
-  type ActiveRaidSnapshot,
-  type RaidSummarySnapshot,
-  type WorldSnapshot,
-} from "save";
+import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
 import type { TemplateRegistry } from "content/templates";
 
 import {
@@ -38,8 +33,10 @@ import {
   buildRequirementContext,
   getAdjustedUpgradeCosts,
   getCurrentAbsoluteMinute,
+  isRuntimeOperatorAppearancePresetId,
   getRoleTag,
   meetsRequirements,
+  selectRuntimeOperatorAppearancePresetId,
   type PreferenceProfileRecord,
 } from "./systems/commands";
 import {
@@ -60,6 +57,12 @@ export interface Phase1OperatorScheduleSnapshot {
   currentBlock: string;
   workStartMinute: number;
   workEndMinute: number;
+}
+
+export interface Phase1OperatorVisibleGearSnapshot {
+  weaponPartId?: string;
+  outfitOverlayPartId?: string;
+  accessoryPartId?: string;
 }
 
 export interface Phase1OperatorSnapshot {
@@ -95,6 +98,12 @@ export interface Phase1OperatorSnapshot {
   };
   appearance: {
     presetId: string;
+    visibleGear?: Phase1OperatorVisibleGearSnapshot;
+  };
+  lifecycle: {
+    status: "active" | "dead";
+    deathTick?: number;
+    deathRaidSummaryId?: string;
   };
 }
 
@@ -213,6 +222,15 @@ export interface Phase1RaidOpportunityView extends Phase1RaidOpportunitySnapshot
   claimedCount: number;
 }
 
+export interface Phase1RosterPressureView {
+  operatorCapacity: number;
+  livingOperatorCount: number;
+  vacancyCount: number;
+  unavailableOperatorIds: string[];
+  recentDeathOperatorIds: string[];
+  replacementPressureLevel: "stable" | "strained" | "critical";
+}
+
 export interface Phase1RuntimeView {
   stableCommandTypes: readonly string[];
   clock: {
@@ -281,6 +299,7 @@ export interface Phase1RuntimeView {
   activeRaids: Phase1ActiveRaidSnapshot[];
   raidSummaries: Phase1RaidSummarySnapshot[];
   activeEvents: Phase1ActiveEventSnapshot[];
+  rosterPressure: Phase1RosterPressureView;
 }
 
 export interface AscensionSimulation {
@@ -331,19 +350,19 @@ function normalizeOperatorSnapshot(
   },
 ): Phase1OperatorSnapshot {
   const preferences = normalizePreferenceSnapshot(operator);
-  const normalizedAppearance = normalizeOperatorAppearance({
-    presetId: operator.appearance?.presetId,
-    legacySeed:
-      typeof (operator.appearance as Record<string, unknown> | undefined)?.seed === "number"
-        ? (operator.appearance as Record<string, unknown>).seed
-        : undefined,
-    stableKey: [
-      operator.id,
-      operator.identity.name,
-      operator.identity.roleTag,
-      operator.identity.specialtyTag,
-    ].join(":"),
-  });
+  const appearanceRecord = operator.appearance as Record<string, unknown> | undefined;
+  const presetId = isRuntimeOperatorAppearancePresetId(appearanceRecord?.presetId)
+    ? appearanceRecord.presetId
+    : selectRuntimeOperatorAppearancePresetId({
+        // Legacy seed migration is save-owned. Runtime reconstructs only the locked preset-id contract.
+        stableKey: [
+          operator.id,
+          operator.identity.name,
+          operator.identity.roleTag,
+          operator.identity.specialtyTag,
+        ].join(":"),
+      });
+  const visibleGear = normalizeVisibleGearSnapshot(appearanceRecord?.visibleGear);
 
   return {
     id: operator.id,
@@ -375,8 +394,112 @@ function normalizeOperatorSnapshot(
       kind: operator.assignment?.kind ?? "idle",
       targetId: operator.assignment?.targetId ?? "",
     },
-    appearance: normalizedAppearance.appearance,
+    appearance: {
+      presetId,
+      ...(visibleGear ? { visibleGear } : {}),
+    },
+    lifecycle: normalizeLifecycleSnapshot(operator.lifecycle),
   };
+}
+
+function normalizeLifecycleSnapshot(
+  lifecycle: Phase1OperatorSnapshot["lifecycle"] | undefined,
+): Phase1OperatorSnapshot["lifecycle"] {
+  if (!lifecycle || lifecycle.status !== "dead") {
+    return { status: "active" };
+  }
+
+  return {
+    status: "dead",
+    deathTick: lifecycle.deathTick,
+    deathRaidSummaryId: lifecycle.deathRaidSummaryId,
+  };
+}
+
+function normalizeVisibleGearSnapshot(
+  value: unknown,
+): Phase1OperatorVisibleGearSnapshot | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const visibleGearRecord = value as Record<string, unknown>;
+  const visibleGear: Phase1OperatorVisibleGearSnapshot = {};
+
+  if (
+    typeof visibleGearRecord.weaponPartId === "string" &&
+    visibleGearRecord.weaponPartId.length > 0
+  ) {
+    visibleGear.weaponPartId = visibleGearRecord.weaponPartId;
+  }
+
+  if (
+    typeof visibleGearRecord.outfitOverlayPartId === "string" &&
+    visibleGearRecord.outfitOverlayPartId.length > 0
+  ) {
+    visibleGear.outfitOverlayPartId = visibleGearRecord.outfitOverlayPartId;
+  }
+
+  if (
+    typeof visibleGearRecord.accessoryPartId === "string" &&
+    visibleGearRecord.accessoryPartId.length > 0
+  ) {
+    visibleGear.accessoryPartId = visibleGearRecord.accessoryPartId;
+  }
+
+  return Object.keys(visibleGear).length > 0 ? visibleGear : undefined;
+}
+
+function buildVisibleGearSnapshot(input: {
+  weaponPartId?: string;
+  outfitOverlayPartId?: string;
+  accessoryPartId?: string;
+}): Phase1OperatorVisibleGearSnapshot | undefined {
+  const visibleGear: Phase1OperatorVisibleGearSnapshot = {};
+
+  if (typeof input.weaponPartId === "string" && input.weaponPartId.length > 0) {
+    visibleGear.weaponPartId = input.weaponPartId;
+  }
+
+  if (typeof input.outfitOverlayPartId === "string" && input.outfitOverlayPartId.length > 0) {
+    visibleGear.outfitOverlayPartId = input.outfitOverlayPartId;
+  }
+
+  if (typeof input.accessoryPartId === "string" && input.accessoryPartId.length > 0) {
+    visibleGear.accessoryPartId = input.accessoryPartId;
+  }
+
+  return Object.keys(visibleGear).length > 0 ? visibleGear : undefined;
+}
+
+function buildOperatorAppearanceSnapshot(input: {
+  presetId: string;
+  weaponPartId?: string;
+  outfitOverlayPartId?: string;
+  accessoryPartId?: string;
+}): Phase1OperatorSnapshot["appearance"] {
+  const visibleGear = buildVisibleGearSnapshot({
+    weaponPartId: input.weaponPartId,
+    outfitOverlayPartId: input.outfitOverlayPartId,
+    accessoryPartId: input.accessoryPartId,
+  });
+
+  return {
+    presetId: input.presetId,
+    ...(visibleGear ? { visibleGear } : {}),
+  };
+}
+
+function buildLifecycleSnapshot(entity: number): Phase1OperatorSnapshot["lifecycle"] {
+  if (OperatorIdentity.lifecycleStatus[entity] === "dead") {
+    return {
+      status: "dead",
+      deathTick: OperatorIdentity.deathTick[entity],
+      deathRaidSummaryId: OperatorIdentity.deathRaidSummaryId[entity],
+    };
+  }
+
+  return { status: "active" };
 }
 
 function buildDefaultRelationshipSnapshots(
@@ -600,6 +723,51 @@ function getAvailabilityWithoutOpportunity(snapshot: Phase1OperatorSnapshot) {
   };
 }
 
+const RECENT_DEATH_WINDOW_MINUTES = 1440;
+
+function computeRosterPressure(
+  snapshot: Phase1RuntimeWorldSnapshot,
+  operatorIntentReadiness: Phase1OperatorIntentReadinessView[],
+  operatorCapacity: number,
+  currentAbsoluteMinute: number,
+): Phase1RosterPressureView {
+  const allOperators = snapshot.operators ?? [];
+  const livingOperators = allOperators.filter((op) => op.lifecycle.status !== "dead");
+  const livingOperatorCount = livingOperators.length;
+  const vacancyCount = Math.max(0, operatorCapacity - livingOperatorCount);
+
+  const unavailableOperatorIds = operatorIntentReadiness
+    .filter((entry) => !entry.availableForRaid)
+    .map((entry) => entry.operatorId);
+
+  const recentDeathOperatorIds = allOperators
+    .filter(
+      (op) =>
+        op.lifecycle.status === "dead" &&
+        op.lifecycle.deathTick !== undefined &&
+        currentAbsoluteMinute - op.lifecycle.deathTick < RECENT_DEATH_WINDOW_MINUTES,
+    )
+    .map((op) => op.id);
+
+  const vacancyRatio = operatorCapacity > 0 ? vacancyCount / operatorCapacity : 0;
+  const recentLossWeight = recentDeathOperatorIds.length * 0.15;
+  const unavailableWeight =
+    livingOperatorCount > 0 ? (unavailableOperatorIds.length / livingOperatorCount) * 0.3 : 0;
+  const pressureScore = vacancyRatio + recentLossWeight + unavailableWeight;
+
+  const replacementPressureLevel: Phase1RosterPressureView["replacementPressureLevel"] =
+    pressureScore >= 0.5 ? "critical" : pressureScore >= 0.25 ? "strained" : "stable";
+
+  return {
+    operatorCapacity,
+    livingOperatorCount,
+    vacancyCount,
+    unavailableOperatorIds,
+    recentDeathOperatorIds,
+    replacementPressureLevel,
+  };
+}
+
 function applyWorldSnapshot(
   snapshot: WorldSnapshot,
   registry: TemplateRegistry,
@@ -707,6 +875,15 @@ function applyWorldSnapshot(
     OperatorIdentity.roleTag[entity] = operator.identity.roleTag;
     OperatorIdentity.specialtyTag[entity] = operator.identity.specialtyTag;
     OperatorIdentity.appearancePresetId[entity] = operator.appearance.presetId;
+    OperatorIdentity.appearanceWeaponPartId[entity] =
+      operator.appearance.visibleGear?.weaponPartId ?? "";
+    OperatorIdentity.appearanceOutfitOverlayPartId[entity] =
+      operator.appearance.visibleGear?.outfitOverlayPartId ?? "";
+    OperatorIdentity.appearanceAccessoryPartId[entity] =
+      operator.appearance.visibleGear?.accessoryPartId ?? "";
+    OperatorIdentity.lifecycleStatus[entity] = operator.lifecycle.status;
+    OperatorIdentity.deathTick[entity] = operator.lifecycle.deathTick ?? 0;
+    OperatorIdentity.deathRaidSummaryId[entity] = operator.lifecycle.deathRaidSummaryId ?? "";
     PreferenceState.riskTolerance[entity] = operator.preferences.riskTolerance;
     PreferenceState.rewardFocus[entity] = operator.preferences.rewardFocus;
     PreferenceState.recoveryBias[entity] = operator.preferences.recoveryBias;
@@ -966,9 +1143,13 @@ function applyWorldSnapshot(
             kind: AssignmentState.kind[entity],
             targetId: AssignmentState.targetId[entity],
           },
-          appearance: {
+          appearance: buildOperatorAppearanceSnapshot({
             presetId: OperatorIdentity.appearancePresetId[entity],
-          },
+            weaponPartId: OperatorIdentity.appearanceWeaponPartId[entity],
+            outfitOverlayPartId: OperatorIdentity.appearanceOutfitOverlayPartId[entity],
+            accessoryPartId: OperatorIdentity.appearanceAccessoryPartId[entity],
+          }),
+          lifecycle: buildLifecycleSnapshot(entity),
         })),
         operatorRelationships: runtimeState.relationshipEntities.map((entity) => ({
           operatorAId: RelationshipState.operatorAId[entity],
@@ -1044,7 +1225,10 @@ function applyWorldSnapshot(
           });
         })
         .map((upgrade) => upgrade.id);
-      const operatorIntentReadiness = runtimeState.operatorEntities.map((entity) => {
+      const livingOperatorEntities = runtimeState.operatorEntities.filter(
+        (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+      );
+      const operatorIntentReadiness = livingOperatorEntities.map((entity) => {
         const operatorSnapshot =
           snapshot.operators?.find((operator) => operator.id === OperatorIdentity.id[entity]) ??
           snapshot.operators?.[0];
@@ -1124,7 +1308,8 @@ function applyWorldSnapshot(
           roomSlotCount: snapshot.building.roomSlotCount,
           roomsUsed: snapshot.rooms.length,
           operatorSlotCount: snapshot.building.operatorSlotCount,
-          operatorCount: snapshot.operators?.length ?? 0,
+          operatorCount: (snapshot.operators ?? []).filter((op) => op.lifecycle.status !== "dead")
+            .length,
           appliedUpgradeIds: snapshot.appliedUpgradeIds,
           unlockedRoomTemplateIds: [
             ...(BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] ?? []),
@@ -1216,6 +1401,12 @@ function applyWorldSnapshot(
         activeRaids: snapshot.activeRaidPackets,
         raidSummaries: snapshot.raidSummaries,
         activeEvents: snapshot.activeEvents ?? [],
+        rosterPressure: computeRosterPressure(
+          snapshot,
+          operatorIntentReadiness,
+          BuildingAuthority.operatorSlotCount[buildingEntity],
+          getCurrentAbsoluteMinute(context),
+        ),
       };
     },
     tick(deltaMs) {

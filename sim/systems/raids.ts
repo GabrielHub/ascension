@@ -228,7 +228,10 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   const guildEntity = context.singletonEntities.guild;
   const currentMinute = getCurrentAbsoluteMinute(context);
 
-  if (context.runtimeState.operatorEntities.length < 2) {
+  const livingOperatorCount = context.runtimeState.operatorEntities.filter(
+    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+  ).length;
+  if (livingOperatorCount < 2) {
     return;
   }
 
@@ -326,6 +329,7 @@ function planOpportunityTeam(
   const candidates = context.runtimeState.operatorEntities
     .filter((entity) => {
       return (
+        OperatorIdentity.lifecycleStatus[entity] !== "dead" &&
         !reservedOperatorIds.has(OperatorIdentity.id[entity]) &&
         RaidParticipationState.activeRaidId[entity].length === 0 &&
         InjuryState.severity[entity] < 70
@@ -498,6 +502,8 @@ function createResolutionPacket(
           : result === "mixed"
             ? Math.round(opportunityRisk * 0.12) + 4 + index
             : Math.round(opportunityRisk * 0.05) + index;
+      const totalInjury = InjuryState.severity[entity] + injuryDelta;
+      const died = result === "failure" && totalInjury >= 95 && opportunityRisk >= 70;
 
       return {
         operatorId: OperatorIdentity.id[entity],
@@ -510,6 +516,7 @@ function createResolutionPacket(
               : 6 + Math.round(teamCohesion * 0.04),
         loyaltyDelta: result === "failure" ? -7 : result === "mixed" ? -2 : 3,
         status: injuryDelta >= 16 ? "hurt" : result === "failure" ? "shaken" : "steady",
+        ...(died ? { died: true } : {}),
       };
     }),
     narrativeTags: [
@@ -710,6 +717,17 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         RaidParticipationState.activeRaidId[operatorEntity] = "";
         RaidParticipationState.missionId[operatorEntity] = "";
         RaidParticipationState.returnTick[operatorEntity] = 0;
+
+        if (outcome.died) {
+          OperatorIdentity.lifecycleStatus[operatorEntity] = "dead";
+          OperatorIdentity.deathTick[operatorEntity] = getCurrentAbsoluteMinute(context);
+          OperatorIdentity.deathRaidSummaryId[operatorEntity] = packet.id;
+          AssignmentState.kind[operatorEntity] = "idle";
+          AssignmentState.targetId[operatorEntity] = "";
+          ScheduleState.currentBlock[operatorEntity] = "idle";
+          return;
+        }
+
         AssignmentState.kind[operatorEntity] =
           InjuryState.recoveryHoursRemaining[operatorEntity] > 0 ? "recovery" : "idle";
         AssignmentState.targetId[operatorEntity] = "";

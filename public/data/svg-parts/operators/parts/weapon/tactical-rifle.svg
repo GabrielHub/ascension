@@ -1,0 +1,19 @@
+<!-- Operator Part: Tactical Rifle — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: uncommon | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, slung diagonally across back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Barrel -->
+  <line x1="28" y1="30" x2="18" y2="14" stroke="#2a3555" stroke-width="2" stroke-linecap="round" />
+  <!-- Barrel tip -->
+  <line x1="18" y1="14" x2="15" y2="8" stroke="#384872" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Receiver body -->
+  <rect x="26" y="28" width="20" height="6" rx="1.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.8" transform="rotate(-55 36 31)" />
+  <!-- Stock -->
+  <line x1="75" y1="82" x2="88" y2="100" stroke="#3d2c20" stroke-width="3.5" stroke-linecap="round" />
+  <!-- Stock butt plate -->
+  <line x1="88" y1="100" x2="90" y2="105" stroke="#2a1f18" stroke-width="4" stroke-linecap="round" />
+  <!-- Sling strap -->
+  <path d="M22 22 Q40 60 80 86" stroke="#5a4030" stroke-width="1" fill="none" opacity="0.5" stroke-dasharray="3 2" />
+  <!-- Scope mount -->
+  <circle cx="36" cy="32" r="2" fill="#1a2440" stroke="#384872" stroke-width="0.5" opacity="0.7" />
+</svg>
