@@ -200,38 +200,38 @@ Registry rule:
 
 ## Directory Ownership
 
-### `src/sim/components`
+### `sim/components`
 
 - runtime data only
 - no business logic
 - no UI concerns
 - no derived/cached presentation state unless it is truly simulation-relevant
 
-### `src/sim/systems`
+### `sim/systems`
 
 - all gameplay behavior lives here
 - systems mutate ECS runtime state
 - systems interpret requirements and effects
 - systems should be narrow and named by responsibility, not by phase milestone
 
-### `src/content/templates`
+### `content/templates`
 
 - authored content catalogs
 - no runtime mutation logic
 - no UI logic
 - ids, tags, and payload shapes must validate before use
 
-### `src/content/requirements.ts`
+### `content/requirements.ts`
 
 - generic requirement evaluation only
 - examples: resource thresholds, building tier checks, staffing checks, room tag unlocks
 
-### `src/content/effects.ts`
+### `content/effects.ts`
 
 - generic effect application only
 - examples: add capacity, unlock room tier, modify attraction, change payroll multiplier
 
-### `src/app` and `src/ui`
+### `app/` and `app/ui`
 
 - presentation, interaction, and view-state only
 - may dispatch intents
@@ -240,13 +240,13 @@ Registry rule:
 - no direct template mutation
 - no direct save-schema mutation logic
 
-### `src/save`
+### `save/`
 
 - serialization, deserialization, migrations
 - no content-specific gameplay branching
 - round-trip tests belong near this layer
 
-### `src/features`
+### `app/features`
 
 - features should compose existing contracts
 - a feature folder should not become a shadow architecture with its own rules

@@ -10,6 +10,7 @@ This file is the planning and architecture entry point for the project documenta
 - [Technical Rendering and Assets](./technical-rendering-and-assets.md)
 - [Technical Save and Data Model](./technical-save-and-data.md)
 - [Architecture Rules](./architecture-rules.md)
+- [Style Guide](./style-guide.md)
 - [Roadmap](./roadmap.md)
 - [Research Notes](./research-notes.md)
 - [Plans Index](./plans/index.md)

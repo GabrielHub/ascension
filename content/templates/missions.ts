@@ -1,0 +1,40 @@
+import type { MissionTemplate } from "./shared";
+
+export const missionTemplates = [
+  {
+    id: "mission/clearance",
+    kind: "mission",
+    name: "Clearance",
+    tags: ["mission:combat", "objective:clear"],
+    description: "Remove an entrenched threat from a known site.",
+    objectiveType: "clearance",
+    expectedThreatTags: ["threat:clustered", "threat:hostile"],
+    rewardShape: "hybrid",
+    intelConfidenceFloor: "medium",
+    baseDurationHours: 6,
+  },
+  {
+    id: "mission/containment",
+    kind: "mission",
+    name: "Containment",
+    tags: ["mission:stability", "objective:hold"],
+    description: "Stabilize a volatile site before it escalates or spills.",
+    objectiveType: "containment",
+    expectedThreatTags: ["threat:unstable", "threat:hazard"],
+    rewardShape: "cash",
+    intelConfidenceFloor: "low",
+    baseDurationHours: 4,
+  },
+  {
+    id: "mission/extraction",
+    kind: "mission",
+    name: "Extraction",
+    tags: ["mission:retrieval", "objective:escort"],
+    description: "Recover a target under pressure and bring them out intact.",
+    objectiveType: "extraction",
+    expectedThreatTags: ["threat:mobile", "threat:ambush"],
+    rewardShape: "loot",
+    intelConfidenceFloor: "high",
+    baseDurationHours: 5,
+  },
+] satisfies readonly MissionTemplate[];

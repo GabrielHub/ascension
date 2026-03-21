@@ -206,7 +206,7 @@ Recommended tick groups:
 13. Animation bookkeeping
 14. Rendering
 
-Pathfinding should use queued requests and cached floor walkability, not full A* every frame for everyone.
+Pathfinding should use queued requests and cached floor walkability, not full A\* every frame for everyone.
 
 Command boundary rule:
 

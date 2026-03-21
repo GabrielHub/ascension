@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Dependencies
+/node_modules/
+
+# React Router
+/.react-router/
+
+# Build output
+/build/
+/dist/
+
+# Editor
+*.swp
+*.swo
+*~
+
+# Vite
+vite.config.ts.timestamp-*
+
+# Claude Code local settings
+.claude/settings.local.json

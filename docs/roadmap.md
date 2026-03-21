@@ -8,7 +8,8 @@ Deliverables:
 
 - public GitHub repository is initialized with the baseline project structure so roadmap work can be committed incrementally
 - repository setup instructions exist for the few manual steps that must happen before agent-driven code work
-- Vite 8 app boots reliably with React and TypeScript
+- `Vite+` app boots reliably with React and TypeScript
+- React Router is installed and owns only app-shell navigation
 - linting, formatting, and typechecking are installed and runnable before broader feature work starts
 - Start screen exists with new game, load save, and delete save flows
 - Start screen includes the save-slot shell and a dev-menu entry point, while feature-specific dev tools remain deferred until each feature exists
@@ -32,6 +33,7 @@ Exit criteria:
 
 - no critical build instability from the toolchain
 - lint, format, and typecheck can run as baseline quality gates
+- shell routing is working without introducing non-client framework architecture
 - no unresolved decision about ECS vs non-ECS state boundaries
 - adding a second room or upgrade definition does not require architectural changes
 - the project has a stable shell for normal play and development entry points

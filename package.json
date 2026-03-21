@@ -1,0 +1,42 @@
+{
+  "name": "ascension",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vp build",
+    "check": "vp check",
+    "dev": "vp dev",
+    "typecheck": "react-router typegen && tsc",
+    "start": "vp preview",
+    "test": "vp test",
+    "prepare": "vp config"
+  },
+  "dependencies": {
+    "@react-router/node": "7.13.1",
+    "bitecs": "^0.4.0",
+    "idb": "^8.0.3",
+    "isbot": "^5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router": "7.13.1"
+  },
+  "devDependencies": {
+    "@react-router/dev": "7.13.1",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vite-plus": "latest",
+    "vitest": "latest"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+      "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+    }
+  }
+}

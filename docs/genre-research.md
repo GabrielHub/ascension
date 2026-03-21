@@ -429,14 +429,14 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 1. Economy and Resource Systems
 
-| Pattern | Examples | Notes |
-|---------|----------|-------|
-| Single currency | RimWorld (silver), Songs of Syx (Denaris) | Simple to understand, easy to balance |
-| Multiple resources | Dwarf Fortress (dozens), ONI (dozens) | Creates complex production chains |
-| No currency / barter | Gnomoria | Trade values on goods, quality modifiers |
-| Wealth accumulation = threat | RimWorld, Dwarf Fortress, Gnomoria | Natural difficulty scaling; hoarding has consequences |
-| Production chains | All games | Raw material -> intermediate -> finished good. More steps = higher value |
-| Resource decay/spoilage | RimWorld, Going Medieval, Towns | Creates urgency around food processing and storage |
+| Pattern                      | Examples                                  | Notes                                                                    |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| Single currency              | RimWorld (silver), Songs of Syx (Denaris) | Simple to understand, easy to balance                                    |
+| Multiple resources           | Dwarf Fortress (dozens), ONI (dozens)     | Creates complex production chains                                        |
+| No currency / barter         | Gnomoria                                  | Trade values on goods, quality modifiers                                 |
+| Wealth accumulation = threat | RimWorld, Dwarf Fortress, Gnomoria        | Natural difficulty scaling; hoarding has consequences                    |
+| Production chains            | All games                                 | Raw material -> intermediate -> finished good. More steps = higher value |
+| Resource decay/spoilage      | RimWorld, Going Medieval, Towns           | Creates urgency around food processing and storage                       |
 
 **Key Structural Insight**: The best systems create tension between accumulating resources (needed for growth) and the consequences of wealth (increased threats). RimWorld's wealth-raid scaling is the clearest implementation.
 
@@ -446,15 +446,15 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 2. Citizen/Colonist AI and Needs
 
-| System | Implementation | Games |
-|--------|---------------|-------|
-| **Need hierarchies** | Food > shelter > comfort > social > self-actualization | RimWorld, Dwarf Fortress, ONI |
-| **Mood/happiness as a number** | Aggregate of positive/negative thoughts | RimWorld (0-100%), Dwarf Fortress (stress), Towns (happiness), ONI (stress %) |
-| **Mental breaks** | Low mood triggers destructive behaviors | RimWorld (tantrums, binges, psychotic breaks), Dwarf Fortress (tantrums, violence) |
-| **Traits/personality** | Permanent modifiers to behavior/capability | RimWorld (Pyromaniac, Optimist, etc.), Dwarf Fortress (preferences, values) |
-| **Skill progression** | Skills improve through use | RimWorld, Stonehearth (job leveling), Dwarf Fortress |
-| **Social relationships** | Friendships, rivalries, romance | RimWorld, Dwarf Fortress |
-| **Autonomy** | Citizens make independent decisions | All games. Key tension: player influence vs citizen agency |
+| System                         | Implementation                                         | Games                                                                              |
+| ------------------------------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Need hierarchies**           | Food > shelter > comfort > social > self-actualization | RimWorld, Dwarf Fortress, ONI                                                      |
+| **Mood/happiness as a number** | Aggregate of positive/negative thoughts                | RimWorld (0-100%), Dwarf Fortress (stress), Towns (happiness), ONI (stress %)      |
+| **Mental breaks**              | Low mood triggers destructive behaviors                | RimWorld (tantrums, binges, psychotic breaks), Dwarf Fortress (tantrums, violence) |
+| **Traits/personality**         | Permanent modifiers to behavior/capability             | RimWorld (Pyromaniac, Optimist, etc.), Dwarf Fortress (preferences, values)        |
+| **Skill progression**          | Skills improve through use                             | RimWorld, Stonehearth (job leveling), Dwarf Fortress                               |
+| **Social relationships**       | Friendships, rivalries, romance                        | RimWorld, Dwarf Fortress                                                           |
+| **Autonomy**                   | Citizens make independent decisions                    | All games. Key tension: player influence vs citizen agency                         |
 
 **Key Structural Insight**: The mood system is the primary feedback mechanism. It tells the player whether management is succeeding or failing. The best implementations (RimWorld, Dwarf Fortress) create cascading failure states where one unhappy citizen can destabilize others.
 
@@ -464,14 +464,14 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 3. Building and Construction
 
-| Approach | Games | Tradeoffs |
-|----------|-------|-----------|
-| **Zone/designation** | Dwarf Fortress, Foundation, Towns | Player marks areas, citizens build. Organic growth. |
-| **Direct placement** | RimWorld, Going Medieval | Player places exact structures. More control, less organic. |
-| **Modular/free-form** | Foundation (monuments), Going Medieval (3D blocks) | High creative expression but complexity. |
-| **Templates** | Stonehearth, RimWorld | Reusable designs. Faster building. |
-| **Tiered buildings** | Towns, Stonehearth | Buildings upgrade through tiers, unlocking new capabilities. |
-| **Gridless** | Foundation | Unique organic aesthetic but harder to design systems around. |
+| Approach              | Games                                              | Tradeoffs                                                     |
+| --------------------- | -------------------------------------------------- | ------------------------------------------------------------- |
+| **Zone/designation**  | Dwarf Fortress, Foundation, Towns                  | Player marks areas, citizens build. Organic growth.           |
+| **Direct placement**  | RimWorld, Going Medieval                           | Player places exact structures. More control, less organic.   |
+| **Modular/free-form** | Foundation (monuments), Going Medieval (3D blocks) | High creative expression but complexity.                      |
+| **Templates**         | Stonehearth, RimWorld                              | Reusable designs. Faster building.                            |
+| **Tiered buildings**  | Towns, Stonehearth                                 | Buildings upgrade through tiers, unlocking new capabilities.  |
+| **Gridless**          | Foundation                                         | Unique organic aesthetic but harder to design systems around. |
 
 **Key Structural Insight**: Building systems need to balance creative expression with gameplay legibility. The most successful games make building decisions have gameplay consequences (temperature in Going Medieval, room quality in RimWorld, defense chokepoints in Dwarf Fortress).
 
@@ -481,15 +481,15 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 4. Combat and Defense
 
-| System | Games | Key Feature |
-|--------|-------|-------------|
-| **Direct military control** | Dwarf Fortress (squad orders), RimWorld (draft + direct control) | Most common. Player controls soldiers during fights. |
-| **Autonomous combat** | Towns (heroes fight independently), KeeperRL (adventure mode) | Less player agency, more emergent outcomes. |
-| **Simulated/resolved combat** | Dungeon Settlers (real-time with pause) | Player sets up conditions, resolution is simulated. |
-| **Trap systems** | Dwarf Fortress, Towns, KeeperRL, Going Medieval | Preparation-based defense. |
-| **Body part damage** | Dwarf Fortress, RimWorld | Granular injury tracking. |
-| **Wealth-scaled threats** | RimWorld, Dwarf Fortress, Gnomoria | Threats grow with colony success. |
-| **Siege events** | Towns, Dwarf Fortress, RimWorld, Going Medieval | Periodic large-scale attacks test defenses. |
+| System                        | Games                                                            | Key Feature                                          |
+| ----------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------- |
+| **Direct military control**   | Dwarf Fortress (squad orders), RimWorld (draft + direct control) | Most common. Player controls soldiers during fights. |
+| **Autonomous combat**         | Towns (heroes fight independently), KeeperRL (adventure mode)    | Less player agency, more emergent outcomes.          |
+| **Simulated/resolved combat** | Dungeon Settlers (real-time with pause)                          | Player sets up conditions, resolution is simulated.  |
+| **Trap systems**              | Dwarf Fortress, Towns, KeeperRL, Going Medieval                  | Preparation-based defense.                           |
+| **Body part damage**          | Dwarf Fortress, RimWorld                                         | Granular injury tracking.                            |
+| **Wealth-scaled threats**     | RimWorld, Dwarf Fortress, Gnomoria                               | Threats grow with colony success.                    |
+| **Siege events**              | Towns, Dwarf Fortress, RimWorld, Going Medieval                  | Periodic large-scale attacks test defenses.          |
 
 **Key Structural Insight**: The genre splits between games where combat is directly controlled (RimWorld, DF) and games where combat is autonomous/simulated (Towns heroes). The autonomous approach is rarer but creates a different kind of tension: you prepare and live with outcomes rather than executing tactics.
 
@@ -499,13 +499,13 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 5. Exploration and Discovery
 
-| Pattern | Games | Notes |
-|---------|-------|-------|
-| **Dungeon layers** | Towns, KeeperRL, Dwarf Fortress (caverns) | Progressive difficulty as depth increases |
-| **Overworld map** | RimWorld (world map + caravans), Songs of Syx | External locations to visit/trade/raid |
+| Pattern                | Games                                                 | Notes                                     |
+| ---------------------- | ----------------------------------------------------- | ----------------------------------------- |
+| **Dungeon layers**     | Towns, KeeperRL, Dwarf Fortress (caverns)             | Progressive difficulty as depth increases |
+| **Overworld map**      | RimWorld (world map + caravans), Songs of Syx         | External locations to visit/trade/raid    |
 | **Underground biomes** | Dwarf Fortress (cavern layers), ONI (asteroid biomes) | Distinct environments at different depths |
-| **Fog of war** | Most games | Unexplored areas hidden until visited |
-| **Procedural loot** | Towns (enchanted items), Dwarf Fortress (artifacts) | Randomized rewards from exploration |
+| **Fog of war**         | Most games                                            | Unexplored areas hidden until visited     |
+| **Procedural loot**    | Towns (enchanted items), Dwarf Fortress (artifacts)   | Randomized rewards from exploration       |
 
 **Relevance to Ascension**: The city map for raid selection serves the same structural role as overworld maps in other colony sims, but the urban setting gives it a distinct identity.
 
@@ -513,14 +513,14 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 6. Progression Systems
 
-| Pattern | Games | How It Works |
-|---------|-------|--------------|
-| **Building tier upgrades** | Towns, Stonehearth, Going Medieval | Buildings unlock higher capabilities through upgrades |
-| **Population milestones** | Songs of Syx, Gnomoria | Population triggers new status levels and unlocks |
-| **Research/tech tree** | RimWorld, ONI, KeeperRL | Dedicated research infrastructure unlocks capabilities |
-| **Wealth-based progression** | Dwarf Fortress, Gnomoria | Accumulating value attracts immigrants and unlocks events |
-| **Building relocation** | Ascension (bodega -> office -> tower) | Rare in genre. Most games stay in one location. |
-| **Degradable research** | Songs of Syx | Tech can slip away if not maintained. Unique mechanic. |
+| Pattern                      | Games                                 | How It Works                                              |
+| ---------------------------- | ------------------------------------- | --------------------------------------------------------- |
+| **Building tier upgrades**   | Towns, Stonehearth, Going Medieval    | Buildings unlock higher capabilities through upgrades     |
+| **Population milestones**    | Songs of Syx, Gnomoria                | Population triggers new status levels and unlocks         |
+| **Research/tech tree**       | RimWorld, ONI, KeeperRL               | Dedicated research infrastructure unlocks capabilities    |
+| **Wealth-based progression** | Dwarf Fortress, Gnomoria              | Accumulating value attracts immigrants and unlocks events |
+| **Building relocation**      | Ascension (bodega -> office -> tower) | Rare in genre. Most games stay in one location.           |
+| **Degradable research**      | Songs of Syx                          | Tech can slip away if not maintained. Unique mechanic.    |
 
 **Key Structural Insight**: Most games use a combination of these. RimWorld layers tech tree + wealth + population. The building relocation concept in Ascension is genuinely unusual in the genre and represents a potential differentiator.
 
@@ -530,14 +530,14 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 7. Threat and Challenge Escalation
 
-| Pattern | Games | Mechanism |
-|---------|-------|-----------|
-| **Wealth-scaled raids** | RimWorld | Total colony wealth determines raid difficulty |
-| **Depth-based monsters** | Towns, Gnomoria, Dwarf Fortress | Deeper = harder enemies |
-| **Timed escalation** | RimWorld (Cassandra), Going Medieval | Difficulty increases over time with breathing room |
-| **Random events** | RimWorld (Randy), Going Medieval | Unpredictable crises test preparation |
-| **Environmental pressure** | ONI (heat death, oxygen depletion), Frostpunk | The world itself is the threat |
-| **Immigration pressure** | Dwarf Fortress, Gnomoria | More citizens = more mouths = more problems |
+| Pattern                    | Games                                         | Mechanism                                          |
+| -------------------------- | --------------------------------------------- | -------------------------------------------------- |
+| **Wealth-scaled raids**    | RimWorld                                      | Total colony wealth determines raid difficulty     |
+| **Depth-based monsters**   | Towns, Gnomoria, Dwarf Fortress               | Deeper = harder enemies                            |
+| **Timed escalation**       | RimWorld (Cassandra), Going Medieval          | Difficulty increases over time with breathing room |
+| **Random events**          | RimWorld (Randy), Going Medieval              | Unpredictable crises test preparation              |
+| **Environmental pressure** | ONI (heat death, oxygen depletion), Frostpunk | The world itself is the threat                     |
+| **Immigration pressure**   | Dwarf Fortress, Gnomoria                      | More citizens = more mouths = more problems        |
 
 **Key Structural Insight**: The best escalation systems create a feeling of "I invited this problem through my success." RimWorld's wealth scaling is the gold standard. Pure time-based escalation feels arbitrary.
 
@@ -547,13 +547,13 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 8. World Generation
 
-| Approach | Games | Notes |
-|----------|-------|-------|
-| **Full world history** | Dwarf Fortress | Centuries of generated history, civilizations, events |
-| **Planet-scale** | RimWorld | Generated planet with biomes, factions, settlements |
-| **Map-scale** | Towns, Gnomoria, Going Medieval, Odd Realm | Single play area procedurally generated |
-| **Asteroid/contained** | ONI | Enclosed procedural environment |
-| **Hand-crafted + procedural** | Foundation | Semi-procedural terrain with player-directed growth |
+| Approach                      | Games                                      | Notes                                                 |
+| ----------------------------- | ------------------------------------------ | ----------------------------------------------------- |
+| **Full world history**        | Dwarf Fortress                             | Centuries of generated history, civilizations, events |
+| **Planet-scale**              | RimWorld                                   | Generated planet with biomes, factions, settlements   |
+| **Map-scale**                 | Towns, Gnomoria, Going Medieval, Odd Realm | Single play area procedurally generated               |
+| **Asteroid/contained**        | ONI                                        | Enclosed procedural environment                       |
+| **Hand-crafted + procedural** | Foundation                                 | Semi-procedural terrain with player-directed growth   |
 
 **Relevance to Ascension**: The near-future NYC setting is hand-crafted rather than procedurally generated. This is a deliberate design choice that trades replayability for thematic identity and sense of place.
 
@@ -561,13 +561,13 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 9. Z-Levels / Vertical Gameplay
 
-| Implementation | Games | Depth |
-|----------------|-------|-------|
-| **Extensive z-levels** | Dwarf Fortress (50-600+) | Most complex. Full 3D world navigated one layer at a time |
-| **Moderate z-levels** | Going Medieval (16), Gnomoria (~100+) | Significant but manageable |
-| **Layer-based** | Towns (surface + dungeon floors) | Discrete floors rather than continuous z-levels |
-| **2D side-view** | ONI, RimWorld | Vertical visible simultaneously. No z-level switching needed |
-| **None** | Foundation | Flat plane with organic growth |
+| Implementation         | Games                                 | Depth                                                        |
+| ---------------------- | ------------------------------------- | ------------------------------------------------------------ |
+| **Extensive z-levels** | Dwarf Fortress (50-600+)              | Most complex. Full 3D world navigated one layer at a time    |
+| **Moderate z-levels**  | Going Medieval (16), Gnomoria (~100+) | Significant but manageable                                   |
+| **Layer-based**        | Towns (surface + dungeon floors)      | Discrete floors rather than continuous z-levels              |
+| **2D side-view**       | ONI, RimWorld                         | Vertical visible simultaneously. No z-level switching needed |
+| **None**               | Foundation                            | Flat plane with organic growth                               |
 
 **Key UX Challenge**: Z-level navigation is consistently cited as a pain point across all games that implement it (Dwarf Fortress, Going Medieval, Gnomoria). The camera management burden increases with vertical complexity.
 
@@ -577,12 +577,12 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 10. Storytelling Systems
 
-| Approach | Games | Notes |
-|----------|-------|-------|
-| **AI Storyteller** | RimWorld | Algorithmic event generation based on colony state. Genre-defining. |
-| **Emergent from simulation** | Dwarf Fortress | Stories emerge from deep simulation without explicit storytelling system |
-| **Event system** | Going Medieval, Towns | Random events occur periodically |
-| **Player-projected narrative** | Most colony sims | Players create narratives from what happens |
+| Approach                       | Games                 | Notes                                                                    |
+| ------------------------------ | --------------------- | ------------------------------------------------------------------------ |
+| **AI Storyteller**             | RimWorld              | Algorithmic event generation based on colony state. Genre-defining.      |
+| **Emergent from simulation**   | Dwarf Fortress        | Stories emerge from deep simulation without explicit storytelling system |
+| **Event system**               | Going Medieval, Towns | Random events occur periodically                                         |
+| **Player-projected narrative** | Most colony sims      | Players create narratives from what happens                              |
 
 **Key Structural Insight**: RimWorld's storyteller is the most important innovation in the genre since Dwarf Fortress itself. It creates drama rather than just content. The storyteller adjusts pacing, escalation, and breathing room to create narrative arcs.
 
@@ -592,15 +592,15 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 11. Morale/Happiness Systems
 
-| System | Key Mechanic | Games |
-|--------|-------------|-------|
-| **Aggregate thoughts** | Sum of positive/negative modifiers | RimWorld, Dwarf Fortress |
-| **Room quality** | Better rooms = happier citizens | Dwarf Fortress, RimWorld, Going Medieval |
-| **Food quality** | Better meals = happier citizens | All games (tiered food in Gnomoria, ONI, RimWorld) |
-| **Social needs** | Interaction with others | Dwarf Fortress (taverns, temples), RimWorld |
-| **Work satisfaction** | Passion/preference for assigned work | RimWorld, Dwarf Fortress |
-| **Comfort/luxury** | Decorations, possessions, variety | Dwarf Fortress (variety in drinks/food), Towns (line-of-sight decorations) |
-| **Cascading failures** | One unhappy citizen destabilizes others | RimWorld (social fights), Dwarf Fortress (tantrum spirals) |
+| System                 | Key Mechanic                            | Games                                                                      |
+| ---------------------- | --------------------------------------- | -------------------------------------------------------------------------- |
+| **Aggregate thoughts** | Sum of positive/negative modifiers      | RimWorld, Dwarf Fortress                                                   |
+| **Room quality**       | Better rooms = happier citizens         | Dwarf Fortress, RimWorld, Going Medieval                                   |
+| **Food quality**       | Better meals = happier citizens         | All games (tiered food in Gnomoria, ONI, RimWorld)                         |
+| **Social needs**       | Interaction with others                 | Dwarf Fortress (taverns, temples), RimWorld                                |
+| **Work satisfaction**  | Passion/preference for assigned work    | RimWorld, Dwarf Fortress                                                   |
+| **Comfort/luxury**     | Decorations, possessions, variety       | Dwarf Fortress (variety in drinks/food), Towns (line-of-sight decorations) |
+| **Cascading failures** | One unhappy citizen destabilizes others | RimWorld (social fights), Dwarf Fortress (tantrum spirals)                 |
 
 **Relevance to Ascension**: Operator morale affected by guild quality, salary satisfaction, injury recovery, and raid outcomes maps well onto proven patterns. The "guild ambiance attracts better talent" mechanic is equivalent to room quality driving immigration.
 
@@ -608,26 +608,26 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 12. Trade Systems
 
-| Pattern | Games | Notes |
-|---------|-------|-------|
-| **Visiting traders** | RimWorld, Dwarf Fortress, Gnomoria | Periodic trader arrivals with variable inventory |
-| **Caravan/expedition** | RimWorld, Foundation | Player sends citizens out to trade |
-| **Market building** | Towns, Songs of Syx | Dedicated structure enables trade |
-| **Buy/sell spread** | RimWorld (60%/140%) | Creates economic pressure. Buying is expensive. |
-| **Quality affects value** | Gnomoria, Dwarf Fortress | Higher quality items worth more in trade |
+| Pattern                   | Games                              | Notes                                            |
+| ------------------------- | ---------------------------------- | ------------------------------------------------ |
+| **Visiting traders**      | RimWorld, Dwarf Fortress, Gnomoria | Periodic trader arrivals with variable inventory |
+| **Caravan/expedition**    | RimWorld, Foundation               | Player sends citizens out to trade               |
+| **Market building**       | Towns, Songs of Syx                | Dedicated structure enables trade                |
+| **Buy/sell spread**       | RimWorld (60%/140%)                | Creates economic pressure. Buying is expensive.  |
+| **Quality affects value** | Gnomoria, Dwarf Fortress           | Higher quality items worth more in trade         |
 
 ---
 
 ### 13. Research/Tech Trees
 
-| Approach | Games | Notes |
-|----------|-------|-------|
-| **Branching tree** | RimWorld | Traditional tech tree with prerequisites |
-| **Tiered research stations** | ONI | Different stations for different research tiers |
-| **Strange moods/artifacts** | Dwarf Fortress | Research through inspired creation |
-| **Population-gated** | Songs of Syx | Population thresholds unlock capabilities |
-| **Degradable** | Songs of Syx | Unique: tech can be lost if not maintained |
-| **Multiple unlock methods** | RimWorld (research + schematics + artifacts) | Diverse paths to the same tech |
+| Approach                     | Games                                        | Notes                                           |
+| ---------------------------- | -------------------------------------------- | ----------------------------------------------- |
+| **Branching tree**           | RimWorld                                     | Traditional tech tree with prerequisites        |
+| **Tiered research stations** | ONI                                          | Different stations for different research tiers |
+| **Strange moods/artifacts**  | Dwarf Fortress                               | Research through inspired creation              |
+| **Population-gated**         | Songs of Syx                                 | Population thresholds unlock capabilities       |
+| **Degradable**               | Songs of Syx                                 | Unique: tech can be lost if not maintained      |
+| **Multiple unlock methods**  | RimWorld (research + schematics + artifacts) | Diverse paths to the same tech                  |
 
 **Relevance to Ascension**: The building tier system serves as the primary progression gate rather than a research tree. Building upgrades unlock room tiers, which unlock capabilities. This is structurally similar to population-gated progression in Songs of Syx.
 
@@ -635,14 +635,14 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 14. Seasons/Weather
 
-| Implementation | Games | Impact |
-|----------------|-------|--------|
-| **Full season cycle** | RimWorld, Going Medieval, Odd Realm | Farming windows, temperature challenges, preparation cycles |
-| **Climate zones** | Songs of Syx, RimWorld | Location determines available crops and challenges |
-| **Dynamic weather** | Dwarf Fortress | Wind, humidity, storms, blizzards |
-| **Drought cycles** | Timberborn | Water management as core mechanic |
-| **Temperature simulation** | ONI, Going Medieval | Physics-based heat management |
-| **None** | Towns, Foundation | Focus on other systems instead |
+| Implementation             | Games                               | Impact                                                      |
+| -------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| **Full season cycle**      | RimWorld, Going Medieval, Odd Realm | Farming windows, temperature challenges, preparation cycles |
+| **Climate zones**          | Songs of Syx, RimWorld              | Location determines available crops and challenges          |
+| **Dynamic weather**        | Dwarf Fortress                      | Wind, humidity, storms, blizzards                           |
+| **Drought cycles**         | Timberborn                          | Water management as core mechanic                           |
+| **Temperature simulation** | ONI, Going Medieval                 | Physics-based heat management                               |
+| **None**                   | Towns, Foundation                   | Focus on other systems instead                              |
 
 **Relevance to Ascension**: The near-future NYC setting could support seasons (NYC has distinct seasons), but this is not identified as a core system in the current design. The game's pressure comes from economic and social systems rather than environmental ones.
 
@@ -650,15 +650,15 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 ### 15. Food and Farming Systems
 
-| Pattern | Games | Notes |
-|---------|-------|-------|
+| Pattern                 | Games                                   | Notes                                                  |
+| ----------------------- | --------------------------------------- | ------------------------------------------------------ |
 | **Tiered food quality** | Gnomoria, RimWorld, ONI, Dwarf Fortress | More processing steps = better food = happier citizens |
-| **Spoilage/decay** | RimWorld, Going Medieval, Towns | Creates urgency around food processing and storage |
-| **Seasonal farming** | RimWorld, Going Medieval, Songs of Syx | Limited growing windows create preparation pressure |
-| **Crop variety** | All games | Different crops for different purposes |
-| **Auto-harvest** | Towns, RimWorld | Automation of food collection |
-| **Climate-dependent** | Songs of Syx | Warm/cold climates enable/disable specific crops |
-| **Irrigation** | Songs of Syx | Water adjacency boosts crop production |
+| **Spoilage/decay**      | RimWorld, Going Medieval, Towns         | Creates urgency around food processing and storage     |
+| **Seasonal farming**    | RimWorld, Going Medieval, Songs of Syx  | Limited growing windows create preparation pressure    |
+| **Crop variety**        | All games                               | Different crops for different purposes                 |
+| **Auto-harvest**        | Towns, RimWorld                         | Automation of food collection                          |
+| **Climate-dependent**   | Songs of Syx                            | Warm/cold climates enable/disable specific crops       |
+| **Irrigation**          | Songs of Syx                            | Water adjacency boosts crop production                 |
 
 **Relevance to Ascension**: Food is not a core resource in Ascension's current design (the economy runs on cash). However, the "needs" systems for operators and staff could incorporate analogous satisfaction tiers (quality of facilities, equipment, amenities) that serve the same structural role as food quality tiers.
 
@@ -702,7 +702,8 @@ Ascension's positioning -- a guild management sim where autonomous operators go 
 ## Sources
 
 ### Towns
-- [Towns - Wikipedia](https://en.wikipedia.org/wiki/Towns_(video_game))
+
+- [Towns - Wikipedia](<https://en.wikipedia.org/wiki/Towns_(video_game)>)
 - [Towns on Steam](https://store.steampowered.com/app/221020/Towns/)
 - [Towns Review - New Game Network](https://www.newgamenetwork.com/article/762/towns-review/)
 - [Towns Wiki](https://towns.fandom.com/wiki/Towns)
@@ -713,6 +714,7 @@ Ascension's positioning -- a guild management sim where autonomous operators go 
 - [Towns Dungeon Wiki](https://towns.fandom.com/wiki/Dungeon)
 
 ### Dwarf Fortress
+
 - [Dwarf Fortress - Wikipedia](https://en.wikipedia.org/wiki/Dwarf_Fortress)
 - [Dwarf Fortress on Steam](https://store.steampowered.com/app/975370/Dwarf_Fortress/)
 - [DF Wiki - Z-Level](https://dwarffortresswiki.org/index.php/Z-level)
@@ -721,6 +723,7 @@ Ascension's positioning -- a guild management sim where autonomous operators go 
 - [DF Wiki - Thoughts](https://dwarffortresswiki.org/index.php/DF2014:Thought)
 
 ### RimWorld
+
 - [RimWorld Wiki - Mood](https://rimworldwiki.com/wiki/Mood)
 - [RimWorld Wiki - AI Storytellers](https://rimworldwiki.com/wiki/AI_Storytellers)
 - [RimWorld Wiki - Research](https://rimworldwiki.com/wiki/Research)
@@ -729,50 +732,60 @@ Ascension's positioning -- a guild management sim where autonomous operators go 
 - [RimWorld Colony Psychology Guide](https://gamepadsquire.com/blog/rimworld-colony-psychology-guide)
 
 ### Oxygen Not Included
+
 - [ONI - Klei Entertainment](https://www.klei.com/games/oxygen-not-included)
 - [ONI on Steam](https://store.steampowered.com/app/457140/Oxygen_Not_Included/)
 - [ONI Wiki - Skills](https://oxygennotincluded.wiki.gg/wiki/Skills)
 - [ONI Masterclass Design - NeoGAF](https://www.neogaf.com/threads/oxygen-not-included-is-a-masterclass-in-colony-sim-design.1685195/)
 
 ### Going Medieval
+
 - [Going Medieval on Steam](https://store.steampowered.com/app/1029780/Going_Medieval/)
 - [Going Medieval Review - EIP Gaming](https://eip.gg/going-medieval/reviews/early-access-review-a-colony-sim-for-the-middle-ages/)
 - [Going Medieval 1.0 Review](https://www.allkeyshop.com/blog/going-medieval-1-0-review-must-play-news-l/)
 - [How to Build Underground - Set Ready Game](https://www.setreadygame.com/games/guides/how-to-build-underground-in-going-medieval/)
 
 ### Stonehearth
+
 - [Stonehearth on Steam](https://store.steampowered.com/app/253250/Stonehearth/)
 - [Stonehearth Wiki](https://stonehearth.fandom.com/wiki/Stonehearth)
 
 ### KeeperRL
+
 - [KeeperRL on Steam](https://store.steampowered.com/app/329970/KeeperRL/)
 - [KeeperRL Official Site](https://keeperrl.com/)
 - [KeeperRL - PC Gamer](https://www.pcgamer.com/keeperrl-is-a-dungeon-keeper-inspired-building-sim-and-roguelike/)
 
 ### Odd Realm
+
 - [Odd Realm on Steam](https://store.steampowered.com/app/688060)
 - [Odd Realm - PC Gamer](https://www.pcgamer.com/fantasy-colony-sim-odd-realm-is-quite-charming-and-a-bit-weird/)
 - [Odd Realm Wiki](https://oddrealm.wiki.gg/)
 
 ### Songs of Syx
+
 - [Songs of Syx on Steam](https://store.steampowered.com/app/1162750/Songs_of_Syx/)
 - [Songs of Syx Wiki - Settlement](https://www.songsofsyx.com/wiki/index.php/Settlement)
 - [Songs of Syx Wiki - Agriculture](https://songsofsyx.com/wiki/index.php/Agriculture)
 - [Songs of Syx Review - Reality Remake](https://www.realityremake.com/articles/songs-of-syx-review-a-brutally-complex-colony-sim-with-endless-replay)
 
 ### Foundation
+
 - [Foundation on Steam](https://store.steampowered.com/app/690830/Foundation/)
 - [Foundation - Polymorph Games](https://www.polymorph.games/en/)
 - [Foundation Review - GINX](https://www.ginx.tv/en/video-games/foundation-review-polymorph-games)
 
 ### Timber and Stone
+
 - [Timber and Stone on Steam](https://store.steampowered.com/app/408990/Timber_and_Stone/)
 
 ### Dungeon Settlers
+
 - [Dungeon Settlers on Steam](https://store.steampowered.com/app/2798330/Dungeon_Settlers/)
 - [Dungeon Settlers Review](https://www.ofzenandcomputing.com/dungeon-settlers-pro-review/)
 
 ### Genre Analysis
+
 - [Colony Sims Best Combat - Game Rant](https://gamerant.com/colony-sims-best-combat/)
 - [Best Colony Sims 2026](https://strategyandwargaming.com/2026/03/09/the-10-best-strategy-colony-sims-to-play-in-2026/)
 - [Construction and Management Simulation - Wikipedia](https://en.wikipedia.org/wiki/Construction_and_management_simulation)

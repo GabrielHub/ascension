@@ -146,18 +146,18 @@ Those templates are referenced by ids from runtime components. They are not them
 
 ## Terminology
 
-| Term | Definition |
-| --- | --- |
-| Superhuman | A powered person in the general population. |
-| Operator | A superhuman signed to the guild and available for raid assignment. |
-| Staff | Non-powered workers who keep the guild operating. |
-| Guild | An organization that recruits and deploys operators for dungeon work. |
-| Breach | A small-scale early-game dungeon incident. |
-| Raid | A team deployment resolved by simulation, not direct control. |
-| Resource | A tracked currency or material used by systems such as payroll, upgrades, crafting, or contracts. |
-| Cash | Conventional money used for wages, rent, upkeep, and contracts in the MVP. |
-| Mana crystals | A later resource used for magical tech, crafting, and high-end upgrades. |
-| Rank | E through S. Applies to people, dungeons, and guild reputation tiers. |
+| Term          | Definition                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| Superhuman    | A powered person in the general population.                                                       |
+| Operator      | A superhuman signed to the guild and available for raid assignment.                               |
+| Staff         | Non-powered workers who keep the guild operating.                                                 |
+| Guild         | An organization that recruits and deploys operators for dungeon work.                             |
+| Breach        | A small-scale early-game dungeon incident.                                                        |
+| Raid          | A team deployment resolved by simulation, not direct control.                                     |
+| Resource      | A tracked currency or material used by systems such as payroll, upgrades, crafting, or contracts. |
+| Cash          | Conventional money used for wages, rent, upkeep, and contracts in the MVP.                        |
+| Mana crystals | A later resource used for magical tech, crafting, and high-end upgrades.                          |
+| Rank          | E through S. Applies to people, dungeons, and guild reputation tiers.                             |
 
 ## Economy Direction
 

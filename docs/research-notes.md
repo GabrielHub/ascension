@@ -4,24 +4,31 @@ This file captures the source-backed adjustments that informed the revised plan.
 
 ## Researched Decisions
 
-| Topic | Recommendation | Why |
-| --- | --- | --- |
-| Vite baseline | Use Vite 8. | Vite 8 is the current stable release as of early 2026. The earlier `Vite+` experimental caveat and Vite 7 fallback path are no longer needed. |
-| AI Gateway usage | AI SDK + AI Gateway is valid without Next.js. For this project, local env usage is an acceptable baseline. | Current AI SDK docs show direct `AI_GATEWAY_API_KEY` or `createGateway({ apiKey })` usage with no Next.js requirement. |
-| Runtime hosted AI | Keep it optional for gameplay-critical flows. | The core loop does not need remote inference, and optional runtime AI reduces operational and UX risk. |
-| SVG generation strategy | Prefer pre-generated modular SVG parts over on-demand full-character SVG generation. | Better fit for cheap runtime models, stronger style control, easier validation, and lower in-session cost. |
-| Content authoring | Prefer TypeScript-authored gameplay definitions over JSON for the initial architecture. | This project's abstractions are still evolving, and TypeScript gives stronger refactor safety and validation for a solo developer. |
-| Save layer | Prefer `idb` over `idb-keyval` if save slots gain metadata, migration, or indexing needs. | `idb-keyval` is intentionally tiny and only a key/value wrapper; even its own README points to `idb` for more complex usage. |
-| `bitECS` | Keep it for simulation. | The library is still positioned as minimal, data-oriented, lightweight, and includes serialization support. |
-| `easystarjs` | Acceptable for early pathfinding, but wrap it. | It remains a small asynchronous A* library intended for browser game use. |
-| `@tweenjs/tween.js` | Acceptable for event polish, not as a general animation architecture. | It is intentionally narrow and does not own the animation loop, which makes it easy to integrate sparingly. |
+| Topic                   | Recommendation                                                                                             | Why                                                                                                                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vite baseline           | Use `Vite+` as the unified toolchain. Keep standard Vite 8 as the documented fallback.                     | `Vite+` is alpha (v0.1.x) as of March 2026. It bundles Vite 8, Oxlint, Oxfmt, tsgolint, Vitest, and Rolldown under one CLI (`vp`). Vite 8 is the current stable standalone release if rollback is needed. |
+| Routing layer           | Use React Router 7 as light client-side shell routing.                                                     | The project needs app navigation, not a full-stack framework architecture. Keep routing focused on shell transitions rather than gameplay ownership.                                                      |
+| AI Gateway usage        | AI SDK + AI Gateway is valid without Next.js. For this project, local env usage is an acceptable baseline. | Current AI SDK docs show direct `AI_GATEWAY_API_KEY` or `createGateway({ apiKey })` usage with no Next.js requirement.                                                                                    |
+| Runtime hosted AI       | Keep it optional for gameplay-critical flows.                                                              | The core loop does not need remote inference, and optional runtime AI reduces operational and UX risk.                                                                                                    |
+| SVG generation strategy | Prefer pre-generated modular SVG parts over on-demand full-character SVG generation.                       | Better fit for cheap runtime models, stronger style control, easier validation, and lower in-session cost.                                                                                                |
+| Content authoring       | Prefer TypeScript-authored gameplay definitions over JSON for the initial architecture.                    | This project's abstractions are still evolving, and TypeScript gives stronger refactor safety and validation for a solo developer.                                                                        |
+| Save layer              | Prefer `idb` over `idb-keyval` if save slots gain metadata, migration, or indexing needs.                  | `idb-keyval` is intentionally tiny and only a key/value wrapper; even its own README points to `idb` for more complex usage.                                                                              |
+| `bitECS`                | Keep it for simulation.                                                                                    | The library is still positioned as minimal, data-oriented, lightweight, and includes serialization support.                                                                                               |
+| `easystarjs`            | Acceptable for early pathfinding, but wrap it.                                                             | It remains a small asynchronous A\* library intended for browser game use.                                                                                                                                |
+| `@tweenjs/tween.js`     | Acceptable for event polish, not as a general animation architecture.                                      | It is intentionally narrow and does not own the animation loop, which makes it easy to integrate sparingly.                                                                                               |
 
 ## Sources
 
-### Vite
+### Vite and Vite+
 
-- [Vite 8.0 release](https://vite.dev/blog)
+- [Vite+ guide](https://viteplus.dev/guide)
+- [Vite+ GitHub](https://github.com/voidzero-dev/vite-plus)
 - [Vite blog index](https://vite.dev/blog)
+
+### Routing
+
+- [React Router docs](https://reactrouter.com/home)
+- [React Router modes](https://reactrouter.com/start/modes)
 
 ### Vercel AI SDK and AI Gateway
 
@@ -41,9 +48,18 @@ This file captures the source-backed adjustments that informed the revised plan.
 
 ## Interpretation Notes
 
-### On Vite 8
+### On `Vite+`
 
-Vite 8 is now the stable release. The earlier `Vite+` experimental framing and Vite 7 rollback path are retired. No special risk mitigation is needed for the toolchain baseline.
+`Vite+` is a unified toolchain by VoidZero that wraps Vite 8, Oxlint, Oxfmt, tsgolint, Vitest, and Rolldown under a single `vp` CLI. It is alpha (v0.1.x as of March 2026) but actively maintained by the Vite core team. The fallback path to standard Vite 8 + ESLint + Prettier is straightforward since `Vite+` wraps Vite itself.
+
+### On Routing
+
+The project needs app-shell routing, not a server-oriented framework. The current recommendation is:
+
+- bootstrap with `Vite+` and React
+- add React Router as a library dependency
+- use it for start screen, save management, and game-shell transitions
+- keep simulation ownership inside ECS, not in the router
 
 ### On AI Gateway
 

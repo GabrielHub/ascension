@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Typography --------------------------------------------------- */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Core palette ------------------------------------------------- */
+  --color-void: #060608;
+  --color-gold: #c8a84c;
+  --color-gold-dim: #8a7040;
+  --color-silver: #e0ddd6;
+  --color-silver-bright: #f0ece4;
+
+  /* --- Volcanic accents --------------------------------------------- */
+  --color-ember: #d4541e;
+  --color-magma: #b42c1a;
+  --color-smolder: #ff7b3a;
+  --color-ash: #3d2c20;
+
+  /* --- Navy offset -------------------------------------------------- */
+  --color-midnight: #0d1225;
+  --color-steel: #1a2440;
+  --color-slate: #2a3555;
+
+  /* --- Semantic ------------------------------------------------------ */
+  --color-danger: #8a3030;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  background: var(--color-void);
+}
+
+body {
+  @apply min-h-screen antialiased;
+  background: var(--color-void);
+  color: var(--color-silver);
+}
+
+a {
+  @apply transition-colors duration-150;
+}
+
+::selection {
+  background: rgb(200 168 76 / 0.35);
+}
+
+/* --- Scrollbar -------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-void);
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(200 168 76 / 0.2);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(200 168 76 / 0.35);
+}

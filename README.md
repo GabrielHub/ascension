@@ -1,60 +1,79 @@
 # Ascension
 
-Ascension is a local-first management sim about running a dungeon-clearing guild in near-future New York City. The player builds and operates a headquarters, recruits operators, assigns raids, and grows from a bodega-scale operation into a much larger institution.
+Ascension is a local-first management sim about running a dungeon-clearing guild in near-future New York City.
 
-This repository is documentation-first during preproduction. The real source of truth for design, architecture, and execution lives under [`docs/`](./docs/).
+This repository is currently in preproduction. The scaffold exists, but the primary source of truth is still the documentation under [`docs/`](./docs/).
 
-## Repository Purpose
+## Project Context
 
-This repo exists to:
+- genre: management sim
+- setting: near-future NYC with dungeon breaches
+- player role: guildmaster, not direct combatant
+- technical architecture: ECS simulation with authored templates outside ECS
+- current phase: preproduction
 
-- define the project architecture before broad implementation starts
-- keep the ECS/content/template boundaries explicit
-- support incremental solo development with parallel AI assistance
-- turn roadmap phases into execution plans instead of loose notes
+## Current App Stack
+
+- `Vite+` for the unified toolchain
+- React + TypeScript
+- React Router 7 for app-shell routing
+- Tailwind CSS for styling
+- `bitECS` scaffolding for simulation runtime
+- IndexedDB-backed local save slots
+
+Important constraint:
+
+- this repo is intended to use `Vite+`, not plain standalone Vite, as the normal toolchain
+- `Vite+` is the intended entry point for runtime, package management, install/add/remove flows, and check/build workflows
+- routing is only for shell navigation
+- gameplay state must remain in the simulation layer, not in the router or React component tree
 
 ## Documentation
 
-Start here:
+Start with:
 
 - [Documentation Index](./docs/index.md)
 - [Plans Index](./docs/plans/index.md)
-
-Most implementation questions should be answered by the docs before new architecture is introduced in code.
-
-## Expected Stack
-
-- Vite 8
-- React + TypeScript
-- `bitECS`
-- Canvas 2D for world-scale views
-- live SVG for focused detail views
-- IndexedDB for runtime saves
-
-This is a local-first personal project in a public repo. Keep secrets in local environment files and out of version control.
-
-## Development Status
-
-Current phase:
-
-- preproduction
-
-Current priority:
-
-- establish project scaffolding, quality gates, and execution plans before feature implementation
-
-## Setup
-
-The repo is still in preproduction, so setup is intentionally minimal until the project scaffold is in place.
-
-Planned baseline setup includes:
-
-- formatter
-- linter
-- TypeScript typecheck
-- app shell bootstrap
-- save and registry scaffolding
-
-Use the preproduction execution plan for the current build order:
-
 - [Preproduction Plan](./docs/plans/preproduction.md)
+
+The docs define:
+
+- architecture rules
+- technical boundaries
+- roadmap sequencing
+- execution plans for implementation work
+
+## Current Commands
+
+Intended Vite+ workflow:
+
+```bash
+vp install
+vp dev
+vp check
+vp test
+vp build
+```
+
+Package scripts mirror the same toolchain:
+
+```bash
+pnpm check
+pnpm dev
+pnpm build
+pnpm test
+pnpm typecheck
+```
+
+## Development Expectations
+
+- do not add gameplay rules in UI components
+- do not add named-content special cases in systems unless explicitly documented
+- do not treat generated scaffold conventions as architectural authority over the docs
+- update the docs when architecture decisions change
+
+## Notes
+
+- this is a local-first personal project in a public repository
+- keep secrets in local environment files and out of version control
+- the current scaffold has been normalized around the documented app-shell, save, render, and ECS boundaries
