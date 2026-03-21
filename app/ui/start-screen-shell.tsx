@@ -121,7 +121,7 @@ function SlotStateBadge({ label }: { label: string }) {
         background: "rgba(200,168,76,0.05)",
         fontFamily: "'Inter', sans-serif",
         fontWeight: 500,
-        fontSize: "0.6rem",
+        fontSize: "0.75rem",
         letterSpacing: "0.12em",
         color: P.starGold,
         textTransform: "uppercase",
@@ -206,14 +206,14 @@ function OccupiedCard({
               style={{
                 fontFamily: "'Inter', sans-serif",
                 fontWeight: 500,
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 color: P.dimGold,
                 letterSpacing: "0.04em",
-                opacity: 0.7,
+                opacity: 0.85,
               }}
             >
               <span>Slot {slot.slotNumber}</span>
-              <span style={{ opacity: 0.4 }}>&middot;</span>
+              <span style={{ opacity: 0.6 }}>&middot;</span>
               <span>Est. {formatSaveSlotTimestamp(slot.metadata.createdAt)}</span>
             </div>
           </div>
@@ -236,12 +236,12 @@ function OccupiedCard({
                 style={{
                   fontFamily: "'Inter', sans-serif",
                   fontWeight: 500,
-                  fontSize: "0.55rem",
+                  fontSize: "0.6875rem",
                   color: P.dimGold,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                   marginBottom: "0.2rem",
-                  opacity: 0.6,
+                  opacity: 0.85,
                 }}
               >
                 {stat.label}
@@ -250,7 +250,7 @@ function OccupiedCard({
                 style={{
                   fontFamily: "'Inter', sans-serif",
                   fontWeight: 400,
-                  fontSize: "0.85rem",
+                  fontSize: "0.875rem",
                   color: P.silverBody,
                 }}
               >
@@ -296,12 +296,12 @@ function OccupiedCard({
             style={{
               fontFamily: "'Inter', sans-serif",
               fontWeight: 400,
-              fontSize: "0.7rem",
+              fontSize: "0.75rem",
               letterSpacing: "0.04em",
               color: deleteHover ? P.deleteRedHover : P.dimGold,
               background: "transparent",
               border: "none",
-              opacity: deleteHover ? 1 : 0.6,
+              opacity: deleteHover ? 1 : 0.85,
               textDecoration: deleteHover ? "underline" : "none",
               textUnderlineOffset: "3px",
             }}
@@ -384,10 +384,10 @@ function EmptyCard({ slot }: { slot: StartScreenSaveSlot }) {
             style={{
               fontFamily: "'Inter', sans-serif",
               fontWeight: 400,
-              fontSize: "0.6rem",
+              fontSize: "0.75rem",
               color: P.dimGold,
               letterSpacing: "0.06em",
-              opacity: 0.4,
+              opacity: 0.7,
             }}
           >
             Slot {slot.slotNumber}
@@ -413,10 +413,10 @@ function FooterLink({
   const sharedStyle = {
     fontFamily: "'Inter', sans-serif",
     fontWeight: 400,
-    fontSize: "0.6rem",
+    fontSize: "0.75rem",
     letterSpacing: "0.12em",
     textTransform: "lowercase",
-    color: active ? P.silverBody : subtle ? "rgba(138,112,64,0.3)" : "rgba(138,112,64,0.4)",
+    color: active ? P.silverBody : subtle ? "rgba(200,168,76,0.7)" : "rgba(200,168,76,0.7)",
     background: active ? "rgba(200,168,76,0.04)" : "transparent",
     border: `1px solid ${active ? "rgba(200,168,76,0.1)" : "transparent"}`,
     outline: focused ? "1px solid rgba(200,168,76,0.2)" : "none",
@@ -594,7 +594,7 @@ export function StartScreenShell() {
               </p>
 
               <p
-                className="mt-4 text-[0.58rem] uppercase tracking-[0.28em] text-amber-100/55"
+                className="mt-4 text-xs uppercase tracking-[0.28em] text-silver/60"
                 aria-live="polite"
               >
                 {statusLabel}
@@ -652,10 +652,10 @@ export function StartScreenShell() {
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontWeight: 400,
-                    fontSize: "0.55rem",
+                    fontSize: "0.6875rem",
                     letterSpacing: "0.08em",
                     color: P.dimGold,
-                    opacity: 0.35,
+                    opacity: 0.7,
                   }}
                 >
                   {statusLabel}
@@ -664,10 +664,10 @@ export function StartScreenShell() {
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontWeight: 400,
-                    fontSize: "0.55rem",
+                    fontSize: "0.6875rem",
                     letterSpacing: "0.08em",
                     color: P.dimGold,
-                    opacity: 0.25,
+                    opacity: 0.6,
                     marginTop: "0.3rem",
                   }}
                 >

@@ -1,0 +1,33 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
+import { describe, expect, it, vi } from "vitest";
+
+import { StartScreenShell } from "./start-screen-shell";
+
+vi.mock("app/features/save-slots/use-save-slots", () => ({
+  useSaveSlots: () => ({
+    slots: [
+      { slotId: "slot/1", slotNumber: 1, state: "empty" },
+      { slotId: "slot/2", slotNumber: 2, state: "empty" },
+      { slotId: "slot/3", slotNumber: 3, state: "empty" },
+    ],
+    status: "ready",
+    errorMessage: undefined,
+    busySlotId: undefined,
+    reload: async () => {},
+    deleteSlot: async () => {},
+  }),
+}));
+
+describe("start screen dev entrypoint", () => {
+  it("renders the Dev Menu link to preview mode", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <StartScreenShell />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">Dev Menu<");
+    expect(html).toContain('href="/game?mode=preview"');
+  });
+});

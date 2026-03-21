@@ -26,3 +26,11 @@ vite.config.ts.timestamp-*
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Playwright artifacts
+/playwright/screenshots/*
+!/playwright/screenshots/.gitkeep
+/playwright/logs/*
+!/playwright/logs/.gitkeep
+/playwright/artifacts/*
+!/playwright/artifacts/.gitkeep

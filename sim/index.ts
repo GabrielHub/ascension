@@ -1,9 +1,15 @@
 import { bootstrapScenario } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
+import { type OperatorAppearanceSnapshot } from "save";
 
 import type { WorldSnapshot } from "save";
 
-import { createAscensionSimulation } from "./runtime";
+import { createAscensionSimulation, type Phase1RuntimeWorldSnapshot } from "./runtime";
+
+const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, OperatorAppearanceSnapshot> = {
+  "operator/rose-vega": { presetId: "female-flowing" },
+  "operator/milo-hart": { presetId: "male-undercut" },
+};
 
 export * from "./commands";
 export * from "./components";
@@ -19,7 +25,7 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     );
   }
 
-  return {
+  const snapshot = {
     guild: bootstrapScenario.guild,
     time: bootstrapScenario.time,
     building: {
@@ -47,7 +53,18 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     activeRaidPackets: [],
     raidSummaries: [],
     appliedUpgradeIds: [],
-  };
+    operators: bootstrapScenario.operators.map((operator) => ({
+      ...operator,
+      appearance: BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id] ?? { presetId: "male-swept" },
+    })),
+    operatorRelationships: [...bootstrapScenario.operatorRelationships],
+    staff: [...bootstrapScenario.staff],
+    visitors: [...bootstrapScenario.visitors],
+    raidOpportunities: [...bootstrapScenario.raidOpportunities],
+    activeEvents: [],
+  } satisfies Phase1RuntimeWorldSnapshot;
+
+  return snapshot;
 }
 
 export function createBootstrapSimulation(registry: TemplateRegistry) {

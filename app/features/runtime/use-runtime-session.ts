@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { startTransition, useEffect, useEffectEvent, useState } from "react";
 
 import { resolveRuntimeSession, type RuntimeRouteRequest, type RuntimeSession } from "./session";
 
@@ -17,33 +17,69 @@ export function useRuntimeSession(request: RuntimeRouteRequest): RuntimeSessionS
     status: "loading",
   });
 
-  const loadSession = useCallback(async () => {
+  const publishReadySession = useEffectEvent((session: RuntimeSession) => {
+    startTransition(() => {
+      setState({
+        status: "ready",
+        session,
+      });
+    });
+  });
+
+  const publishErrorState = useEffectEvent((error: unknown) => {
+    startTransition(() => {
+      setState({
+        status: "error",
+        errorMessage: getErrorMessage(error),
+      });
+    });
+  });
+
+  useEffect(() => {
+    let disposed = false;
+    let cleanupSession: (() => void) | undefined;
+
     setState({
       status: "loading",
     });
 
-    try {
-      const session = await resolveRuntimeSession(request);
+    void (async () => {
+      try {
+        const session = await resolveRuntimeSession(request);
 
-      startTransition(() => {
-        setState({
-          status: "ready",
-          session,
+        if (disposed) {
+          session.dispose();
+          return;
+        }
+
+        const unsubscribe = session.subscribe((nextSession) => {
+          if (disposed) {
+            return;
+          }
+
+          publishReadySession(nextSession);
         });
-      });
-    } catch (error) {
-      startTransition(() => {
-        setState({
-          status: "error",
-          errorMessage: getErrorMessage(error),
-        });
-      });
-    }
+
+        session.lifecycle.startAutoTick();
+
+        cleanupSession = () => {
+          unsubscribe();
+          session.dispose();
+        };
+
+        publishReadySession(session);
+      } catch (error) {
+        if (!disposed) {
+          publishErrorState(error);
+        }
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      cleanupSession?.();
+    };
   }, [request.mode, request.slotId]);
-
-  useEffect(() => {
-    void loadSession();
-  }, [loadSession]);
 
   return state;
 }

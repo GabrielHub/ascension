@@ -1,0 +1,356 @@
+<!-- Ascension Operator Reference: Male Presentation (Bruiser · Broad · Swept Hair · Narrow Eyes) -->
+<!-- Canonical exemplar — locked 2026-03-21 -->
+<!-- Style: Unified Anime (E2 Seinen male base) -->
+<!-- Palette: skin=#d4b896 skinShadow=#b89a78 hair=#2a1f18 clothing=#3d2c20 clothingLight=#5a4030 accent=#c8a84c -->
+<!-- Dims: bodyW=76 shoulderW=92 headR=26 neckW=22 | cx=60 headY=40 hr=26 outline=#0a0a0c ow=2.0 irisColor=#9a8040 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" aria-label="Male Bruiser — Swept Hair, Narrow Eyes">
+
+  <!-- ═══ HAIR BACK LAYER (Swept variant) ═══ -->
+  <!-- Main swept silhouette behind head -->
+  <path
+    d="M29 38
+       Q26 10 36 4
+       Q56 -2 64 0
+       Q84 2 90 8
+       Q94 16 92 42
+       L90 58.2
+       L22 58.2
+       Q18 42 29 38"
+    fill="#2a1f18"
+    stroke="#0a0a0c"
+    stroke-width="2.0"
+    stroke-linejoin="round"
+  />
+  <!-- Back hair volume strand lines -->
+  <path
+    d="M88 12 Q92 40 90 53"
+    stroke="#3d2c20"
+    stroke-width="0.7"
+    fill="none"
+    opacity="0.25"
+  />
+  <path
+    d="M32 14 Q28 42 31 53"
+    stroke="#3d2c20"
+    stroke-width="0.7"
+    fill="none"
+    opacity="0.25"
+  />
+
+  <!-- ═══ HEAD — angular jaw with chin definition ═══ -->
+  <path
+    d="M34 18
+       Q60 11 86 18
+       Q89 38 87 46
+       L82 64
+       L64 72
+       L60 73
+       L56 72
+       L38 64
+       L33 46
+       Q31 38 34 18"
+    fill="#d4b896"
+    stroke="#0a0a0c"
+    stroke-width="2.0"
+    stroke-linejoin="round"
+  />
+
+  <!-- Heavy cel shadow — left face -->
+  <path
+    d="M33 46
+       L38 64
+       L56 72
+       L60 73
+       L58 46
+       L36 36
+       Q31 40 33 46"
+    fill="#b89a78"
+    opacity="0.45"
+  />
+  <!-- Secondary shadow under jaw on right -->
+  <path
+    d="M64 72
+       L60 73
+       L62 68
+       L76 62
+       Z"
+    fill="#b89a78"
+    opacity="0.25"
+  />
+
+  <!-- ═══ EYES (Swept variant — narrow, intense) ═══ -->
+  <!-- Left eye — narrow, intense -->
+  <ellipse cx="50" cy="41" rx="5.5" ry="3.5" fill="#f0ece4" />
+  <path
+    d="M44 39 Q50 35 56 39"
+    stroke="#0a0a0c"
+    stroke-width="2.8"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M45 43 Q50 45.5 55 43"
+    stroke="#0a0a0c"
+    stroke-width="1.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <ellipse cx="51" cy="41" rx="3" ry="3.5" fill="#9a8040" />
+  <ellipse cx="51" cy="41" rx="3" ry="3.5" fill="none" stroke="#0a0a0c" stroke-width="0.6" />
+  <ellipse cx="51" cy="41.5" rx="1.4" ry="2.5" fill="#0a0a0c" />
+  <circle cx="49" cy="39.5" r="1.2" fill="#ffffff" />
+  <circle cx="52.5" cy="42.5" r="0.6" fill="#ffffff" opacity="0.5" />
+
+  <!-- Right eye -->
+  <ellipse cx="70" cy="41" rx="5.5" ry="3.5" fill="#f0ece4" />
+  <path
+    d="M64 39 Q70 35 76 39"
+    stroke="#0a0a0c"
+    stroke-width="2.8"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M65 43 Q70 45.5 75 43"
+    stroke="#0a0a0c"
+    stroke-width="1.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <ellipse cx="71" cy="41" rx="3" ry="3.5" fill="#9a8040" />
+  <ellipse cx="71" cy="41" rx="3" ry="3.5" fill="none" stroke="#0a0a0c" stroke-width="0.6" />
+  <ellipse cx="71" cy="41.5" rx="1.4" ry="2.5" fill="#0a0a0c" />
+  <circle cx="69" cy="39.5" r="1.2" fill="#ffffff" />
+  <circle cx="72.5" cy="42.5" r="0.6" fill="#ffffff" opacity="0.5" />
+
+  <!-- ═══ THICK EYEBROWS ═══ -->
+  <path
+    d="M44 35 Q48 30 56 35"
+    stroke="#2a1f18"
+    stroke-width="3.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M64 35 Q72 30 76 35"
+    stroke="#2a1f18"
+    stroke-width="3.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+
+  <!-- ═══ NOSE — bridge line + tip triangle + nostril dot ═══ -->
+  <path
+    d="M59 42 L58.5 50"
+    stroke="#b89a78"
+    stroke-width="1.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M57 50 L60 52 L61 50"
+    stroke="#b89a78"
+    stroke-width="1.2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="58.5" cy="51" r="0.6" fill="#b89a78" opacity="0.5" />
+
+  <!-- ═══ MOUTH — firm line + lower lip shadow ═══ -->
+  <path
+    d="M55 56 L60 55.5 L65 56"
+    stroke="#0a0a0c"
+    stroke-width="1.2"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M57 57.5 Q60 58.5 63 57.5"
+    stroke="#b89a78"
+    stroke-width="0.8"
+    fill="none"
+    opacity="0.4"
+  />
+
+  <!-- ═══ HAIR FRONT LAYER (Swept variant) ═══ -->
+  <path
+    d="M31 16
+       Q36 8 42 34
+       L40 12
+       Q56 6 60 32
+       L58 10
+       Q66 4 82 34
+       L80 14
+       Q88 10 90 18
+       Q88 8 90 18
+       Q60 2 31 16"
+    fill="#2a1f18"
+    stroke="#0a0a0c"
+    stroke-width="2.0"
+    stroke-linejoin="round"
+  />
+  <!-- Hair texture strand lines -->
+  <path
+    d="M38 12 Q42 20 41 36"
+    stroke="#5a4030"
+    stroke-width="0.5"
+    fill="none"
+    opacity="0.3"
+  />
+  <path
+    d="M58 8 Q62 18 61 34"
+    stroke="#5a4030"
+    stroke-width="0.5"
+    fill="none"
+    opacity="0.3"
+  />
+  <path
+    d="M80 12 Q84 18 82 36"
+    stroke="#5a4030"
+    stroke-width="0.5"
+    fill="none"
+    opacity="0.3"
+  />
+  <!-- One dramatic strand falling across forehead -->
+  <path
+    d="M56 12 Q54 34 52 41"
+    stroke="#2a1f18"
+    stroke-width="2.0"
+    fill="none"
+    stroke-linecap="round"
+  />
+
+  <!-- ═══ NECK ═══ -->
+  <rect
+    x="49"
+    y="71"
+    width="22"
+    height="14"
+    fill="#d4b896"
+    stroke="#0a0a0c"
+    stroke-width="2.0"
+  />
+  <rect
+    x="49"
+    y="71"
+    width="22"
+    height="6"
+    fill="#b89a78"
+    opacity="0.4"
+  />
+  <path
+    d="M57 72 L51 84"
+    stroke="#b89a78"
+    stroke-width="0.7"
+    fill="none"
+    opacity="0.3"
+  />
+
+  <!-- ═══ BODY — structured clothing with armor/detail ═══ -->
+  <path
+    d="M14 86
+       Q10 82 20 80
+       L100 80
+       Q110 82 106 86
+       L100 160
+       L20 160 Z"
+    fill="#3d2c20"
+    stroke="#0a0a0c"
+    stroke-width="2.0"
+    stroke-linejoin="round"
+  />
+  <!-- Heavy clothing shadow — large diagonal slab -->
+  <path
+    d="M14 86
+       L20 160
+       L36 160
+       L34 90 Z"
+    fill="#5a4030"
+    opacity="0.35"
+  />
+  <!-- Right body shadow -->
+  <path
+    d="M106 86
+       L100 160
+       L92 160
+       L100 94 Z"
+    fill="#000000"
+    opacity="0.15"
+  />
+
+  <!-- Collar — high stiff collar (left) -->
+  <path
+    d="M45 80
+       L47 73
+       L51 80"
+    fill="#5a4030"
+    stroke="#0a0a0c"
+    stroke-width="1.0"
+  />
+  <!-- Collar — high stiff collar (right) -->
+  <path
+    d="M75 80
+       L73 73
+       L69 80"
+    fill="#5a4030"
+    stroke="#0a0a0c"
+    stroke-width="1.0"
+  />
+
+  <!-- Collar V opening -->
+  <path
+    d="M54 80 L60 96 L66 80"
+    stroke="#c8a84c"
+    stroke-width="1.5"
+    fill="none"
+    opacity="0.7"
+  />
+
+  <!-- Shoulder armor plate — left -->
+  <path
+    d="M20 80
+       L14 86
+       L18 94
+       L28 88
+       Z"
+    fill="#5a4030"
+    stroke="#0a0a0c"
+    stroke-width="0.8"
+    opacity="0.5"
+  />
+  <!-- Shoulder armor plate — right -->
+  <path
+    d="M100 80
+       L106 86
+       L102 94
+       L92 88
+       Z"
+    fill="#5a4030"
+    stroke="#0a0a0c"
+    stroke-width="0.8"
+    opacity="0.5"
+  />
+
+  <!-- Seam lines on body -->
+  <path
+    d="M24 82 L28 158"
+    stroke="#5a4030"
+    stroke-width="0.6"
+    opacity="0.35"
+  />
+  <path
+    d="M96 82 L92 158"
+    stroke="#5a4030"
+    stroke-width="0.6"
+    opacity="0.35"
+  />
+  <!-- Center seam -->
+  <path
+    d="M60 96 L60 158"
+    stroke="#5a4030"
+    stroke-width="0.5"
+    opacity="0.25"
+  />
+
+</svg>

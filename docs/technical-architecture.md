@@ -67,6 +67,10 @@ ascension/
 │   └── data/
 │       ├── operator-pool.json
 │       └── svg-parts/
+│           └── operators/
+│               ├── reference/
+│               ├── recipes/
+│               └── parts/
 └── build/
 ```
 
@@ -85,6 +89,26 @@ That means:
 - keep React Router constrained to shell navigation
 - keep the app in SPA mode for the local-first client
 - do not let scaffold defaults override the documented ECS and template architecture
+
+## SVG Reference Rule
+
+The SVG Playground is for exploration, comparison, and future iteration.
+
+It is not the canonical storage location for approved SVG examples.
+
+Approved category examples should live in data-bearing asset locations such as:
+
+- `public/data/svg-parts/operators/reference/`
+- `public/data/svg-parts/operators/recipes/`
+- `public/data/svg-parts/operators/parts/`
+
+Use that split deliberately:
+
+- `reference/` stores locked exemplar SVGs and manifests that define the chosen category language
+- `recipes/` stores composed presets or reference compositions that can be used by the game
+- `parts/` stores reusable modular production pieces
+
+This keeps the playground disposable for iteration while preserving approved examples as durable project assets.
 
 ## Implementation Rule
 

@@ -161,6 +161,13 @@ Tool-assisted runtime asset search is acceptable, but:
 - gameplay meaning still comes from ECS state and templates
 - the tool should not become a hidden second rule engine
 
+Later AI-assisted narrative review is acceptable only as a proposal layer:
+
+- an LLM may read structured operator history, relationship data, and narrative tags
+- it may propose a structured narrative event, tension event, reconciliation event, or roster-friction event
+- runtime systems must validate and apply only supported event payloads
+- the LLM must not directly rewrite authoritative relationship state or team composition outside the normal event/rule path
+
 ### 6. ECS owns authoritative gameplay state
 
 For gameplay state, there must be one clear owner.
@@ -173,6 +180,12 @@ Rules:
 - save files are snapshots, not alternate sources of truth
 
 If the same gameplay fact exists in multiple writable places, that is a design bug unless the ownership and sync rule is explicitly documented.
+
+Operator relationship and compatibility state follows the same rule:
+
+- one authoritative runtime owner for relationship memory and social compatibility
+- no UI-owned mirrors as the deciding source of who prefers or avoids whom
+- no save-owned repairs that invent missing relationship outcomes
 
 ## Allowed Dependency Flow
 

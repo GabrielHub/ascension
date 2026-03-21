@@ -149,7 +149,7 @@ Those templates are referenced by ids from runtime components. They are not them
 | Term          | Definition                                                                                        |
 | ------------- | ------------------------------------------------------------------------------------------------- |
 | Superhuman    | A powered person in the general population.                                                       |
-| Operator      | A superhuman signed to the guild and available for raid assignment.                               |
+| Operator      | A superhuman signed to the guild who autonomously chooses whether to join raids and other work.   |
 | Staff         | Non-powered workers who keep the guild operating.                                                 |
 | Guild         | An organization that recruits and deploys operators for dungeon work.                             |
 | Breach        | A small-scale early-game dungeon incident.                                                        |
@@ -186,8 +186,8 @@ For ECS purposes, the default assumption should be:
 1. Improve the guild's public-facing spaces so better talent visits.
 2. Recruit operators whose expectations match the guild's current status.
 3. Hire enough staff to keep facilities functional and morale stable.
-4. Assign raid teams to breaches and dungeons on the city map.
-5. Resolve raids through simulation based on rank fit, composition, traits, gear, intel, and randomness.
+4. Let operators evaluate available raid opportunities, form groups, and decide whether to go.
+5. Resolve those raids through simulation based on rank fit, composition, traits, gear, intel, morale, and randomness.
 6. Convert success into resources, experience, and reputation.
 7. Spend those gains on capacity, better conditions, and better odds.
 8. Repeat until the current building is operationally and socially outgrown.
@@ -261,7 +261,7 @@ Recommended supporting views:
 
 - floor view for most play
 - compact building overview for alerts and occupancy
-- city map overlay for raid selection and travel context
+- city map overlay for raid opportunities, travel context, and operator activity pressure
 - raid watch view for observing active fights in a zoomed-out tactical style
 - operator profile/detail view for richer character presentation
 
@@ -369,6 +369,8 @@ Operators should have:
 - salary expectations
 - morale
 - loyalty
+- work and social preferences
+- risk tolerance and raid willingness signals
 - injury state
 - lightweight backstory and visual identity
 
@@ -395,6 +397,13 @@ Staff should stay simpler than operators. They are operational dependencies, not
 
 Operators in the MVP should already behave as autonomous needs-driven agents. The player does not micromanage them. The player provides spaces, upgrades, incentives, and conditions that shape their behavior.
 
+The same operator metadata should drive both:
+
+- what the operator does around the guild
+- who the operator prefers to work with
+- whether the operator is eager, reluctant, or unwilling to join raids
+- how the operator reacts to stress, injury, idle time, comfort, and social friction
+
 Morale and loyalty should stay distinct:
 
 - morale is the short-term condition layer
@@ -410,12 +419,53 @@ Loyalty should accumulate through patterns of treatment such as:
 
 It does not need full balance complexity on day one, but it should exist in the architecture now so it can influence retention, performance, and recruitment reputation later without being bolted on.
 
+Operators should also accumulate pairwise relationship state with other operators over time.
+
+This should support at least:
+
+- trust
+- friction
+- familiarity
+- recent shared outcomes
+- preference for joining or avoiding the same group
+
 Examples:
 
 - an operator with a training-focused trait will spend disproportionate time in training spaces
 - an operator with recovery or comfort preferences will prioritize better lounge, clinic, or quarters access
 - operators should move between rooms to satisfy needs and preferences without direct control
+- an ambitious or cash-hungry operator should be more willing to chase risky raid opportunities
+- a lazy, fearful, injured, or demoralized operator should be more likely to avoid raids or wait for better conditions
+- operators should prefer going with people they trust or find strategically useful rather than obeying direct team assignment
+- repeated good outcomes together should make operators more likely to regroup
+- repeated bad outcomes, favoritism, or interpersonal tension should make operators drift apart or refuse to work together
 - operator growth through training should be real but deliberately capped and slow, so recruiting stronger operators remains strategically important
+
+### Social Dynamics Model
+
+This is a core system, not flavor.
+
+For the first playable, operator behavior should already be driven by a deterministic social model that can answer:
+
+- who spends time with whom at HQ
+- who avoids whom
+- who is likely to form raid groups together
+- who is likely to refuse work, stall, or peel off
+- how recent raids, injuries, pay, and facility quality change those choices over time
+
+The first implementation can stay deterministic and system-driven:
+
+- traits
+- preferences
+- needs
+- morale
+- loyalty
+- relationship values
+- recent shared outcomes
+- schedule alignment
+- opportunity risk versus reward
+
+This should be legible enough that the player can manage toward it, rather than feeling like random hidden behavior.
 
 ### Needs Model
 
@@ -448,9 +498,28 @@ The recommended behavior model is a hybrid:
 
 This gives operators enough routine to feel believable without turning the sim into a heavy life-management game.
 
+That same schedule layer should feed raid autonomy:
+
+- operators who are resting, recovering, training, socializing, or already committed should not behave like freely available units
+- willingness to join a raid should depend partly on whether that opportunity meaningfully conflicts with current needs, schedule, or social context
+
+### Raid Autonomy Model
+
+For the first playable, raids should be autonomous at the operator level.
+
+That means:
+
+- the player does not assemble teams by hand
+- the player does not directly send operators to raids
+- operators evaluate available raid opportunities and decide whether to go
+- operators form groups through simulation logic rather than a manual dispatch screen
+- the player influences raid volume and quality indirectly through hiring, pay, morale, room quality, safety, prestige, staffing, and incentives
+
+This is closer to the original Towns-style inspiration and should be treated as a primary game identity, not a later polish layer.
+
 ## Raid Resolution
 
-The player should assemble teams, choose where to send them, and read outcomes. The sim should care about:
+The player should shape conditions and read outcomes, while operators decide whether to raid and who they go with. The sim should care about:
 
 - rank match
 - team composition
@@ -459,6 +528,17 @@ The player should assemble teams, choose where to send them, and read outcomes. 
 - gear quality
 - dungeon intel quality
 - fatigue, morale, and injuries
+- trust, loyalty, and interpersonal compatibility
+- willingness to work versus idling, training, or recovering
+
+The team-formation layer should be based on explicit deterministic scoring before any future AI assistance:
+
+- opportunity fit
+- current availability
+- social compatibility
+- recent shared success or failure
+- fear, greed, ambition, and comfort preference
+- trust in likely teammates
 
 The player should not micromanage combat.
 
@@ -486,13 +566,30 @@ Intel mismatch should only be surfaced after a raid when it materially affected 
 
 The broader intel-improvement system should wait until the next building phase rather than becoming a major bodega subsystem.
 
-For MVP, a raid can be pre-resolved when it starts. The player never controls it mid-run, so the practical requirement is not a full live combat sim. The game can generate a hidden resolution packet at dispatch time and reveal that outcome over time through the raid watch and focused inspection views.
+For MVP, a raid can be pre-resolved when an operator group commits to it. The player never controls it mid-run, so the practical requirement is not a full live combat sim. The game can generate a hidden resolution packet at launch time and reveal that outcome over time through the raid watch and focused inspection views.
 
 The important constraint is:
 
 - the saved result is durable and authoritative
 - the reveal layer is programmatic and derived from that result
 - the player only sees the outcome when the raid finishes or as the focused inspection view progressively exposes it
+
+## Future Narrative Layer
+
+Later, an LLM-assisted narrative layer may review structured relationship and team-history data and propose narrative events.
+
+Examples:
+
+- two operators drift apart after repeated conflict
+- a veteran refuses to keep carrying an unreliable teammate
+- a rivalry hardens into a split
+- a shared near-death experience strengthens trust
+
+Important constraint:
+
+- the LLM should propose structured events or tags
+- runtime systems remain the authority that validates and applies those proposals
+- this is a later extension, not a replacement for the deterministic social model that Phase 1 should already establish
 
 Ascension should treat operator death as permanent. This is part of the intended roguelike pressure and should happen often enough to matter. Roster churn, loss, recovery, and rebuilding are core to the game loop.
 
@@ -510,6 +607,7 @@ It should include:
 - visitors and recruitment
 - staffing and room activation
 - a simple city map
+- autonomous raid opportunity generation and self-formed operator groups
 - a raid watch mode
 - click-to-focus raid inspection with grouped threat cards, live mixed-style logs, and no player intervention
 - short breach raids
@@ -542,6 +640,7 @@ The project is ready to expand beyond the bodega when these are true:
 - building upgrades and room upgrades interact through generic requirement rules
 - recruiting feels meaningfully different from just buying units
 - staffing mistakes create understandable failure states
-- raid assignment has tension but not opacity
+- autonomous raid choice has tension but not opacity
+- operator grouping and refusal behavior feel systemic, legible, and driven by social state rather than random churn
 - the economy creates pressure without instant death spirals
 - the player wants the next building tier for strategic reasons, not just because the doc says it exists

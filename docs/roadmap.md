@@ -136,7 +136,7 @@ Exit criteria:
 - S-rank endgame content
 - tower-scale 20+ floor management
 - live premium operator generation
-- AI-generated portraits and scene art as core systems
+- FAL-style AI image generation for portraits and scene art as core systems; if external image generation is explored later, constrain portraits to S-rank operators so cost stays bounded and those operators get a uniquely prestigious presentation layer
 - heavy procedural narrative systems
 - fully simulated rival headquarters interiors
 

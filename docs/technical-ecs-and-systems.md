@@ -41,6 +41,8 @@ Recommended rule:
 - components on that entity own the mutable data
 - other systems read from queries, not duplicated mirrors
 
+Raid opportunities should also have one clear runtime owner. If opportunities persist across reloads or over time, they should not be smeared across UI state or inferred ad hoc from unrelated systems.
+
 ## Layer Split
 
 Use three layers:
@@ -153,6 +155,7 @@ Prebuilt office-phase layouts should be fixed, not parameterized by variation at
 - `Staff`
 - `Needs`
 - `Preferences`
+- `RelationshipState`
 - `ScheduleState`
 - `AbilityLoadout`
 - `Cooldowns`
@@ -161,6 +164,7 @@ Prebuilt office-phase layouts should be fixed, not parameterized by variation at
 - `Salary`
 - `RoomOccupancy`
 - `Assignment`
+- `RaidOpportunity`
 - `RaidParticipant`
 - `Injury`
 - `EventState`
@@ -181,6 +185,21 @@ Training and advancement rules:
 - some attributes should progress very slowly
 - recruitment remains the main path to stronger rosters
 
+Autonomous raid-participation rules:
+
+- operators evaluate available raid opportunities through systems, not player assignment
+- willingness should consider needs, morale, loyalty, injuries, incentives, traits, social trust, and current schedule pressure
+- team formation should emerge from runtime state rather than a manual dispatch screen
+- UI may surface interest, readiness, or opportunity state, but it does not choose teams directly in Phase 1
+
+Deterministic social-compatibility rules:
+
+- the same operator metadata should influence HQ behavior and raid behavior
+- pairwise relationship state should capture at least trust, friction, and recent shared-history effects
+- group formation should score both mission fit and social fit
+- operators should be able to decline, hesitate, or split from a likely group when compatibility or readiness is poor
+- these rules should be deterministic and debuggable before any later AI-assisted narrative layer is considered
+
 Morale and loyalty rule:
 
 - morale handles short-term condition swings
@@ -197,14 +216,16 @@ Recommended tick groups:
 4. Room operational status
 5. Schedule block planning
 6. Needs and utility scoring with interrupt checks
-7. Path request generation
-8. Movement resolution
-9. Raid timers and outcome resolution
-10. Economy and payroll
-11. Event pacing and event dispatch
-12. Reputation, morale, and loyalty
-13. Animation bookkeeping
-14. Rendering
+7. Raid opportunity generation and availability updates
+8. Operator willingness, group formation, and launch decisions
+9. Path request generation
+10. Movement resolution
+11. Raid timers and outcome resolution
+12. Economy and payroll
+13. Event pacing and event dispatch
+14. Reputation, morale, and loyalty
+15. Animation bookkeeping
+16. Rendering
 
 Pathfinding should use queued requests and cached floor walkability, not full A\* every frame for everyone.
 
@@ -213,6 +234,7 @@ Command boundary rule:
 - systems own simulation consequences
 - command handlers or app/sim glue may validate and enqueue actions
 - command handlers should not become alternate gameplay rule engines
+- direct player raid-dispatch commands are not part of the Phase 1 target; autonomous raid launch belongs to systems
 
 ## Early Pressure Model
 
@@ -231,6 +253,11 @@ The event layer should exist from the first playable:
 - event pacing should be able to look at reputation, cash pressure, recent casualties, and similar pressure signals
 - runtime AI narration is not required for this layer
 
+Possible later extension:
+
+- an LLM may read structured operator and relationship summaries and propose narrative events
+- those proposals must resolve into normal event definitions or supported event payloads before runtime can apply them
+
 ## Mission And Event Schema
 
 Mission architecture should stay small but extensible.
@@ -248,6 +275,8 @@ These should be normal template definitions with typed fields for:
 - reward shape
 - intel configuration
 - duration or pacing assumptions
+
+Mission or breach opportunities may be surfaced to the player as available work, but operator AI should be the layer that decides who actually claims and launches them in Phase 1.
 
 The storyteller or event system should also use normal definitions rather than hardcoded one-off branching in random files.
 
@@ -268,6 +297,7 @@ Must exist now:
 - generic requirements and effects
 - building progression state
 - morale and loyalty as distinct runtime concerns
+- deterministic operator relationship and compatibility state
 - event or storyteller skeleton with hardcoded definitions
 - mission definitions for the first small mission set
 - equipment slots in runtime data
@@ -283,4 +313,5 @@ Can wait as later content depth:
 - broader intel-improvement systems
 - more building variation within the same phase
 - AI-generated event narration
+- LLM-assisted relationship review that proposes structured narrative events
 - AI-generated portraits and scene art

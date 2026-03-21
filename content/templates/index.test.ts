@@ -9,7 +9,7 @@ describe("template registry", () => {
     expect(registry.resources).toHaveLength(3);
     expect(registry.buildings).toHaveLength(2);
     expect(registry.rooms).toHaveLength(3);
-    expect(registry.upgrades).toHaveLength(2);
+    expect(registry.upgrades).toHaveLength(5);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
       "mission/containment",

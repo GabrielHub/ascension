@@ -7,6 +7,7 @@ export interface WorldRenderNode {
   width: number;
   height: number;
   fill: string;
+  isOccupied: boolean;
 }
 
 export interface WorldRenderSnapshot {

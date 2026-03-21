@@ -1,0 +1,114 @@
+{
+  "style": "ascension-anime-unified",
+  "locked": "2026-03-21",
+  "origin": "E2 Anime Seinen (male) + E3 Anime Shoujo (female), blended for neutral",
+  "viewBox": "0 0 120 160",
+  "referenceExemplars": [
+    "public/data/svg-parts/operators/reference/male-bruiser-swept.svg",
+    "public/data/svg-parts/operators/reference/female-infiltrator-flowing.svg",
+    "public/data/svg-parts/operators/reference/neutral-strategist-tousled.svg"
+  ],
+  "playgroundRoute": "/svg-playground",
+  "reactRenderers": [
+    "app/ui/_unified-male.tsx",
+    "app/ui/_unified-female.tsx",
+    "app/ui/_unified-neutral.tsx"
+  ],
+  "sharedModule": "app/ui/_svg-shared.ts",
+
+  "presentations": {
+    "male": {
+      "headShape": "angular jaw path with pointed chin",
+      "headY": 40,
+      "headRadiusOffset": 0,
+      "outline": { "color": "#0a0a0c", "weight": 2.0 },
+      "celShadowOpacity": 0.45,
+      "eyebrowWeight": 3.0,
+      "noseStyle": "bridge line + tip triangle + nostril dot",
+      "mouthStyle": "firm line + lower lip shadow",
+      "clothingStyle": "structured with shoulder armor plates, high collar, V-collar opening, seam lines",
+      "neckDetail": "thick with sternocleidomastoid hint"
+    },
+    "female": {
+      "headShape": "soft ellipse",
+      "headY": 44,
+      "headRadiusOffset": 3,
+      "outline": { "color": "#2a2228", "weight": 1.3 },
+      "celShadowOpacity": 0.2,
+      "eyebrowWeight": 1.6,
+      "noseStyle": "single tiny delicate stroke",
+      "mouthStyle": "small tinted lips with subtle fill",
+      "clothingStyle": "elegant curved neckline, decorative gem clasp, accent trim, dashed center seam",
+      "neckDetail": "slender with gentle shadow",
+      "blush": true,
+      "blushColor": "#e8a0a0",
+      "lipTint": "#d4a0a0"
+    },
+    "neutral": {
+      "headShape": "moderate jaw path — rounded V-chin between angular and oval",
+      "headY": 42,
+      "headRadiusOffset": 1,
+      "outline": { "color": "#151318", "weight": 1.6 },
+      "celShadowOpacity": 0.3,
+      "eyebrowWeight": 2.2,
+      "noseStyle": "small L-shape stroke",
+      "mouthStyle": "simple curved line, no tint fill",
+      "clothingStyle": "clean mandarin collar with accent-colored piping, center seam",
+      "neckDetail": "medium width with shadow"
+    }
+  },
+
+  "dims": {
+    "broad": { "bodyW": 76, "shoulderW": 92, "headR": 26, "neckW": 22 },
+    "lean": { "bodyW": 52, "shoulderW": 64, "headR": 22, "neckW": 16 },
+    "medium": { "bodyW": 64, "shoulderW": 78, "headR": 24, "neckW": 18 }
+  },
+
+  "palettes": {
+    "Bruiser": {
+      "skin": "#d4b896",
+      "skinShadow": "#b89a78",
+      "hair": "#2a1f18",
+      "clothing": "#3d2c20",
+      "clothingLight": "#5a4030",
+      "accent": "#c8a84c"
+    },
+    "Infiltrator": {
+      "skin": "#c4a882",
+      "skinShadow": "#a89068",
+      "hair": "#1a1a20",
+      "clothing": "#1a2440",
+      "clothingLight": "#263358",
+      "accent": "#2a3555"
+    },
+    "Strategist": {
+      "skin": "#e0c8a8",
+      "skinShadow": "#c4ae8e",
+      "hair": "#4a3628",
+      "clothing": "#2a3555",
+      "clothingLight": "#384872",
+      "accent": "#c8a84c"
+    }
+  },
+
+  "hairAndEyes": {
+    "principle": "Hair and eyes are the primary differentiators between individual operators. The structural base (head, body, clothing) stays consistent within each gender presentation. Hair and eyes are creative territory — new styles are encouraged as long as they fit the overall anime cel-shade language.",
+    "hairGuidelines": [
+      "Hair defines the head silhouette and must read clearly at roster size (h-14 / ~56px tall)",
+      "Render as layered paths: a back layer behind the head, a front layer overlapping the forehead",
+      "Stroke outlines should match the presentation base weight (male 2.0, female 1.3, neutral 1.6)",
+      "Include 1-3 subtle strand/highlight lines for texture (low opacity, clothingLight color)",
+      "Hair color comes from the palette hair field, but creative color variation is welcome for special operators",
+      "Each operator should have a distinct hair silhouette — this is the primary recognition cue at small sizes"
+    ],
+    "eyeGuidelines": [
+      "Eyes define personality: narrow = intense, ornate = beautiful, sharp = fierce, round = warm",
+      "Include a visible iris with at least one white highlight dot",
+      "Upper eyelid line is always the heaviest eye stroke",
+      "Male eyes tend narrower/horizontal, female eyes tend taller/ornate, neutral is between — but these are guidelines, not rules",
+      "Iris color typically derives from the accent palette but creative variation is welcome",
+      "At minimum: eye white shape, iris fill, pupil, one highlight, upper lid stroke"
+    ],
+    "colorFreedom": "Hair color, eye color, and iris detail are intentionally unconstrained. Future operators may have unusual hair colors, heterochromia, glowing eyes, or other distinguishing features. The structural style (cel-shade, outline weights, shadow treatment) is what must stay consistent, not the specific colors."
+  }
+}

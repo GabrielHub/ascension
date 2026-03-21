@@ -493,7 +493,7 @@ Dungeon Settlers explicitly addresses the colony sim/dungeon crawler hybrid gap,
 
 **Key Structural Insight**: The genre splits between games where combat is directly controlled (RimWorld, DF) and games where combat is autonomous/simulated (Towns heroes). The autonomous approach is rarer but creates a different kind of tension: you prepare and live with outcomes rather than executing tactics.
 
-**Relevance to Ascension**: The raid simulation approach (player assembles teams, chooses targets, reads outcomes) is structurally similar to Towns' hero system but with more player agency in preparation. This is a strong design position that differentiates from the majority of the genre.
+**Relevance to Ascension**: The raid simulation approach should stay closer to Towns' hero system, where operators autonomously decide to pursue opportunities while the player manages conditions and reads outcomes. This is a strong design position that differentiates from the majority of the genre.
 
 ---
 

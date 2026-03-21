@@ -66,3 +66,246 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(200 168 76 / 0.35);
 }
+
+/* --- Glass card surface --------------------------------------------------- */
+.glass-card {
+  background: rgba(15, 14, 18, 0.4);
+  border: 1px solid rgba(200, 168, 76, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(30px) saturate(1.2);
+  -webkit-backdrop-filter: blur(30px) saturate(1.2);
+  position: relative;
+  transition:
+    border-color 400ms ease,
+    box-shadow 400ms ease;
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, transparent 30%);
+  transition: opacity 400ms ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(200, 168, 76, 0.18);
+  box-shadow: 0 12px 56px rgba(0, 0, 0, 0.7);
+}
+
+.glass-card:hover::before {
+  opacity: 1;
+}
+
+/* --- Glass card variants -------------------------------------------------- */
+.glass-card-navy {
+  background: var(--color-steel);
+  border: 1px solid var(--color-slate);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card-inset {
+  background: rgba(6, 6, 8, 0.5);
+  border: 1px solid rgba(200, 168, 76, 0.04);
+  border-radius: 0.625rem;
+}
+
+/* --- Button styles -------------------------------------------------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(200, 168, 76, 0.08);
+  border: 1px solid rgba(200, 168, 76, 0.15);
+  border-radius: 0.5rem;
+  color: var(--color-silver-bright);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transition:
+    background 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease,
+    box-shadow 300ms ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-void);
+  box-shadow: 0 0 20px rgba(200, 168, 76, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  color: rgba(200, 168, 76, 0.7);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: lowercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition:
+    color 300ms ease,
+    background 300ms ease;
+}
+
+.btn-ghost:hover {
+  color: var(--color-gold);
+  background: rgba(200, 168, 76, 0.06);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* --- Tab navigation ------------------------------------------------------- */
+.tab-button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(200, 168, 76, 0.75);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition:
+    color 300ms ease,
+    border-color 300ms ease;
+}
+
+.tab-button:hover {
+  color: var(--color-silver-bright);
+}
+
+.tab-button[data-active="true"] {
+  color: var(--color-gold);
+  border-bottom-color: var(--color-gold);
+}
+
+/* --- Entrance animation --------------------------------------------------- */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-enter {
+  animation: fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-enter-delay-1 {
+  animation: fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+.animate-enter-delay-2 {
+  animation: fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+}
+
+.animate-enter-delay-3 {
+  animation: fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
+}
+
+/* --- Progress bar --------------------------------------------------------- */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.progress-bar-fill {
+  background: linear-gradient(
+    90deg,
+    var(--color-gold) 0%,
+    var(--color-gold-dim) 50%,
+    var(--color-gold) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease infinite;
+  border-radius: 2px;
+  height: 100%;
+  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- Badge ---------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.badge-gold {
+  background: rgba(200, 168, 76, 0.12);
+  color: var(--color-gold);
+  border: 1px solid rgba(200, 168, 76, 0.2);
+}
+
+.badge-ember {
+  background: rgba(212, 84, 30, 0.12);
+  color: var(--color-ember);
+  border: 1px solid rgba(212, 84, 30, 0.2);
+}
+
+.badge-slate {
+  background: rgba(42, 53, 85, 0.4);
+  color: rgba(224, 221, 214, 0.75);
+  border: 1px solid rgba(42, 53, 85, 0.5);
+}
+
+/* --- Empty state ---------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-gold-dim);
+}
+
+.empty-state-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}

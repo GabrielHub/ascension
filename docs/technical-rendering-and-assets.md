@@ -18,6 +18,37 @@ This document defines rendering behavior and information exposure, not final sty
 
 Do not rely on runtime full-character SVG generation.
 
+Before producing a real SVG library for a category, run a style-exploration pass first.
+
+Required sequence:
+
+1. create a temporary exploration route or sandbox
+2. generate many controlled style variations for the target category
+3. compare them side by side until one visual language is clearly preferred
+4. lock that style language for the category
+5. promote approved examples into canonical asset locations
+6. only then begin real asset-library production, tagging, and composition work
+
+This should be done separately for major categories such as:
+
+- operators — **LOCKED** (Unified Anime style, 2026-03-21)
+- environments — not started
+- enemies — not started
+- rooms — not started
+- buildings — not started
+
+Do not jump straight from abstract design intent to production SVG parts. The project should first prove that each category has a coherent visual language that can survive repetition and variation.
+
+After a style is chosen, do not leave the approved examples only inside the exploration route.
+
+Canonical asset locations:
+
+- `public/data/svg-parts/<category>/reference/` for locked exemplar SVGs
+- `public/data/svg-parts/<category>/recipes/` for composed reference recipes or presets
+- `public/data/svg-parts/<category>/parts/` for reusable modular production pieces
+
+The SVG Playground route (`/svg-playground`) remains available for comparison, iteration, and validation. The approved references must live outside it.
+
 Use a modular parts library:
 
 - hair
@@ -29,7 +60,34 @@ Use a modular parts library:
 - palette variants
 - pose-ready templates
 
-Runtime flow:
+### Operator Asset Pipeline (Current State)
+
+The operator asset pipeline is bootstrapped but transitional. The locked style is in use in the game via `app/ui/operator-portrait.tsx`, which renders operators using the unified anime renderers.
+
+Current flow:
+
+1. `OperatorPortrait` receives an operator's name, role tag, and `appearanceSeed` from the runtime
+2. `deriveAppearance()` deterministically assigns a visual preset from the runtime-owned `appearance.seed`
+3. The preset maps to a specific unified renderer (e.g., `MaleSwept`, `FemaleFlowing`)
+4. The operator's role determines palette, the role determines build proportions
+5. The unified renderer produces inline SVG JSX
+
+Available presets are listed in `public/data/svg-parts/operators/presets.json`.
+
+What is transitional:
+
+- The deprecated `createPreviewSvgCatalog()` / `buildPreviewDetailRecipe()` in `render/index.ts` still exist for session.ts backwards compatibility — these should be removed when session cleanup happens
+- The `OperatorDetailSvg` recipe-based renderer still exists for potential non-operator SVG categories
+
+What remains before full production:
+
+- Modular parts library in `public/data/svg-parts/operators/parts/` (split renderers into reusable pieces)
+- Tagged asset search for runtime-driven operator visual assembly
+- Per-operator appearance state extensions beyond seed (e.g., explicit preset overrides, equipment overlays)
+- Equipment visibility layer (weapon, armor overlay, accessory)
+- Casual vs raid appearance contexts
+
+Future runtime flow (when parts library is built):
 
 1. generate operator metadata
 2. search the local SVG-part library through a tool
@@ -73,6 +131,41 @@ This keeps operators recognizable while still allowing variety.
 
 The selected visual recipe should be treated as derived structured data, not hand-built ad hoc in UI code.
 
+## Style Discovery Rule
+
+SVG style discovery should operate like theme and design-language discovery, not like direct production implementation.
+
+Rules:
+
+- explore multiple variants in a temporary route or sandbox first
+- keep the exploration intentionally broad enough to reveal silhouette, line-weight, palette, and shape-language differences
+- evaluate consistency across repeated examples, not just one attractive frame
+- lock a category style before building a reusable catalog for it
+- document the chosen style language so later SVG contributors extend it instead of drifting away from it
+- preserve a small locked reference set outside the playground so later human or LLM contributors have concrete examples to study
+
+Reference examples are not just inspirational samples. They should become durable exemplars that future category work can validate against, and where practical they should also become real composed presets the game can use.
+
+Production asset work should be blocked until the relevant category has passed this exploration step.
+
+## Canonical Reference Rule
+
+Each locked SVG category keeps a small canonical reference set.
+
+### Operators (locked)
+
+- `public/data/svg-parts/operators/reference/male-bruiser-swept.svg` — male presentation exemplar
+- `public/data/svg-parts/operators/reference/female-infiltrator-flowing.svg` — female presentation exemplar
+- `public/data/svg-parts/operators/reference/neutral-strategist-tousled.svg` — neutral presentation exemplar
+- `public/data/svg-parts/operators/recipes/operator-style-spec.json` — full style specification
+- Future reusable operator parts: `public/data/svg-parts/operators/parts/`
+
+These reference examples show the approved style traits across all three gender presentations and three role palettes. They are the baseline for future extension work.
+
+The SVG Playground (`/svg-playground`) renders and compares variants but is not the canonical storage location. The reference assets above are the durable source of truth.
+
+For the full operator SVG style specification, see `docs/style-guide.md` § Operator SVG Style.
+
 ## Equipment Visibility Scope
 
 Mechanically, more gear can exist than is shown visually.
@@ -112,6 +205,11 @@ Base raid watch mode should stay minimal:
 
 - teams and enemy groups read as abstract markers first
 - dots, markers, lightweight labels, and status marks are enough
+
+Pre-launch raid surfaces should also stay observational:
+
+- show available opportunities, operator interest, readiness, or commitment state
+- do not build Phase 1 around a manual dispatch wizard
 
 When the player clicks a team marker:
 

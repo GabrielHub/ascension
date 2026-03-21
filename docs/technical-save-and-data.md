@@ -33,6 +33,8 @@ Recommended durable save contents:
 - world snapshot
 - building layout
 - roster data
+- operator relationship data
+- raid opportunity data when opportunities persist across reloads
 - pending raid data
 - raid outcome summaries
 - resource balances
@@ -49,7 +51,7 @@ Every save should also carry:
 
 ## Raid Resolution Model
 
-For MVP, raids can be pre-resolved when dispatched.
+For MVP, raids can be pre-resolved when an operator group autonomously commits to them.
 
 Recommended model:
 
@@ -59,6 +61,8 @@ Recommended model:
 - persist only durable summaries and consequences once the raid is complete
 
 This works because raids are observational only. The player does not intervene mid-run.
+
+If raid opportunities themselves persist across reloads, save them as structured opportunity records. Do not require the player to re-issue a lost manual dispatch because Phase 1 no longer relies on manual raid launch.
 
 ## Durable Raid Summary Contract
 
@@ -74,6 +78,14 @@ Persisted raid summaries should include:
 - per-operator outcomes
 - narrative tags
 - key intel mismatch or anomaly facts when materially relevant
+
+When relationship or team dynamics materially affect the result, summaries should also retain compact structured causes such as:
+
+- trust breakdown
+- refusal
+- panic
+- cohesion bonus
+- rivalry pressure
 
 Do not persist:
 
@@ -111,6 +123,12 @@ That supports:
 
 Operator history should store structured summaries, not presentation strings.
 
+Relationship history should follow the same rule:
+
+- compact structured state
+- compact structured change tags
+- no dependence on saved prose
+
 ## Intel Data Rules
 
 Pre-raid intel should expose:
@@ -131,6 +149,7 @@ Deeper intel-improvement systems are deferred until the post-bodega phase.
 - save authoritative outcomes, not every temporary reveal event
 - prefer structured fields over derived prose
 - let future narrative systems consume summaries and tags instead of raw combat transcripts
+- let future AI-assisted narrative review consume structured operator and relationship state rather than raw unschematized logs
 
 ## Validation Requirements
 

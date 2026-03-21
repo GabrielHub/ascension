@@ -32,11 +32,18 @@ export function buildWorldRenderSnapshot(
         width: room.position.width,
         height: room.position.height,
         fill: room.occupancy > 0 ? "rgba(217, 119, 6, 0.72)" : "rgba(71, 85, 105, 0.68)",
+        isOccupied: room.occupancy > 0,
       };
     }),
   };
 }
 
+/**
+ * @deprecated Operator portraits now use the locked Unified Anime style via
+ * `app/ui/operator-portrait.tsx`. This placeholder catalog remains for
+ * backwards compatibility with session.ts until runtime cleanup.
+ * See `public/data/svg-parts/operators/` for canonical operator assets.
+ */
 export function createPreviewSvgCatalog(): readonly SvgPartDefinition[] {
   return [
     {
@@ -90,6 +97,7 @@ export function createPreviewSvgCatalog(): readonly SvgPartDefinition[] {
   ];
 }
 
+/** @deprecated See `createPreviewSvgCatalog` deprecation note. */
 export function buildPreviewDetailRecipe() {
   const catalog = createPreviewSvgCatalog();
   const clothingMatch = searchSvgParts(catalog, {
