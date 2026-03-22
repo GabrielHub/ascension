@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: Recovery / Infirmary Room
+       4 cols × 3 rows. Origin (200, 100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24)
+       Door on left wall at row 0. Camera views from bottom-left.
+       DESIGN TARGET — not used in game rendering. -->
+
+  <!-- ══ RIGHT WALL ═══════════════════════════════════════════════ -->
+  <polygon points="200,16 392,112 392,196 200,100"
+    fill="#24304a" stroke="#1c2438" stroke-width="1"/>
+
+  <!-- ══ LEFT WALL (rows 1-3 solid, row 0 door) ══════════════════ -->
+  <polygon points="152,40 56,88 56,172 152,124"
+    fill="#20283a" stroke="#1a2030" stroke-width="1"/>
+  <!-- Door frame -->
+  <line x1="200" y1="16" x2="200" y2="100" stroke="#384858" stroke-width="2"/>
+  <line x1="152" y1="40" x2="152" y2="124" stroke="#384858" stroke-width="2"/>
+  <line x1="200" y1="26" x2="152" y2="50" stroke="#384858" stroke-width="1.5"/>
+
+  <!-- Medical cross on right wall -->
+  <line x1="300" y1="68" x2="300" y2="84" stroke="rgba(200,60,60,0.35)" stroke-width="3"/>
+  <line x1="292" y1="76" x2="308" y2="76" stroke="rgba(200,60,60,0.35)" stroke-width="3"/>
+
+  <!-- ══ FLOOR (cool medical blue-gray) ══════════════════════════ -->
+  <polygon points="200,100 392,196 248,268 56,172"
+    fill="#263146" stroke="#1e2838" stroke-width="0.8"/>
+  <!-- Tile grid -->
+  <line x1="248" y1="124" x2="104" y2="196" stroke="#223040" stroke-width="0.3" opacity="0.5"/>
+  <line x1="296" y1="148" x2="152" y2="220" stroke="#223040" stroke-width="0.3" opacity="0.5"/>
+  <line x1="344" y1="172" x2="200" y2="244" stroke="#223040" stroke-width="0.3" opacity="0.5"/>
+  <line x1="152" y1="124" x2="344" y2="220" stroke="#223040" stroke-width="0.3" opacity="0.5"/>
+  <line x1="104" y1="148" x2="296" y2="244" stroke="#223040" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- ══ FLOOR MAT (beside cot, cols 1.5-3.0, rows 2.0-2.6) ═════ -->
+  <polygon points="176,184 248,220 230,230 158,194"
+    fill="#2a3028" stroke="#1e2620" stroke-width="0.5" opacity="0.7"/>
+
+  <!-- ══ HERO: MEDICAL COT (cols 1.0-3.2, rows 0.8-1.6) ═════════ -->
+  <!-- Long bed oriented along col axis -->
+  <!-- iso(1.0,0.8)=(210,143) iso(3.2,0.8)=(315,196) iso(3.2,1.6)=(277,215) iso(1.0,1.6)=(171,162) -->
+
+  <!-- Bed frame - left face (main visible) -->
+  <polygon points="171,162 277,215 277,238 171,185"
+    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
+  <!-- Bed frame - right face -->
+  <polygon points="315,196 277,215 277,238 315,219"
+    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <!-- Frame legs -->
+  <line x1="178" y1="172" x2="178" y2="190" stroke="#3a3838" stroke-width="2"/>
+  <line x1="310" y1="202" x2="310" y2="220" stroke="#3a3838" stroke-width="2"/>
+  <line x1="270" y1="220" x2="270" y2="240" stroke="#333030" stroke-width="2"/>
+
+  <!-- Mattress surface -->
+  <polygon points="210,143 315,196 277,215 171,162"
+    fill="#c8c4b8" stroke="#b0aca0" stroke-width="0.6" opacity="0.85"/>
+  <!-- Pillow -->
+  <polygon points="278,177 310,193 300,198 268,182"
+    fill="#d4d0c4" stroke="#b0aca0" stroke-width="0.4" opacity="0.9"/>
+  <!-- Sheet fold line -->
+  <line x1="220" y1="155" x2="290" y2="190" stroke="#b0aca0" stroke-width="0.4" opacity="0.4"/>
+  <!-- Blanket fold -->
+  <polygon points="210,143 260,168 250,173 200,148"
+    fill="#384858" opacity="0.25"/>
+
+  <!-- ══ IV STAND (col 0.8, row 0.6) ═════════════════════════════ -->
+  <!-- iso(0.8,0.6) = (210,134) - near head of bed -->
+  <!-- Tripod base -->
+  <line x1="210" y1="176" x2="204" y2="180" stroke="#5a5a62" stroke-width="1"/>
+  <line x1="210" y1="176" x2="216" y2="180" stroke="#5a5a62" stroke-width="1"/>
+  <line x1="210" y1="176" x2="210" y2="182" stroke="#5a5a62" stroke-width="1"/>
+  <!-- Pole -->
+  <line x1="210" y1="176" x2="210" y2="118" stroke="#5a5a62" stroke-width="1.5"/>
+  <!-- Hook arms -->
+  <line x1="210" y1="118" x2="204" y2="116" stroke="#5a5a62" stroke-width="1"/>
+  <line x1="210" y1="118" x2="216" y2="116" stroke="#5a5a62" stroke-width="1"/>
+  <!-- IV bag -->
+  <rect x="198" y="118" width="8" height="10" rx="1.5" fill="#384858" opacity="0.5" stroke="#304050" stroke-width="0.3"/>
+  <!-- Tube -->
+  <path d="M202,128 Q202,140 205,155" fill="none" stroke="#4a5a6a" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- ══ MEDICAL CABINET (cols 3.0-3.8, rows 0.1-0.5) ═══════════ -->
+  <!-- iso(3.0,0.1)=(339,174) iso(3.8,0.1)=(378,194) iso(3.8,0.5)=(358,203) iso(3.0,0.5)=(320,183) -->
+  <!-- Against back-right wall -->
+  <!-- Top -->
+  <polygon points="339,126 378,146 358,155 320,135"
+    fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
+  <!-- Left face -->
+  <polygon points="320,135 358,155 358,200 320,180"
+    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
+  <!-- Right face -->
+  <polygon points="378,146 358,155 358,200 378,191"
+    fill="#333030" stroke="#252525" stroke-width="0.5"/>
+  <!-- Glass panel on left face -->
+  <polygon points="324,139 354,153 354,196 324,176"
+    fill="rgba(26,36,64,0.2)" stroke="#3a3838" stroke-width="0.3"/>
+  <!-- Shelf line -->
+  <line x1="324" y1="157" x2="354" y2="171" stroke="#3a3838" stroke-width="0.3"/>
+  <!-- Medical cross -->
+  <line x1="336" y1="143" x2="336" y2="153" stroke="rgba(200,60,60,0.4)" stroke-width="1.5"/>
+  <line x1="331" y1="148" x2="341" y2="148" stroke="rgba(200,60,60,0.4)" stroke-width="1.5"/>
+
+  <!-- ══ TRAY TABLE (col 2.0, row 2.0) ══════════════════════════ -->
+  <!-- iso(2.0, 2.0) = (200, 196) -->
+  <!-- Legs -->
+  <line x1="194" y1="216" x2="196" y2="200" stroke="#4a4a52" stroke-width="1"/>
+  <line x1="210" y1="216" x2="208" y2="200" stroke="#4a4a52" stroke-width="1"/>
+  <!-- Tray surface (iso parallelogram) -->
+  <polygon points="188,196 216,210 210,213 182,199"
+    fill="#4a4a52" stroke="#3a3a42" stroke-width="0.4"/>
+  <!-- Items on tray -->
+  <rect x="192" y="194" width="5" height="4" rx="0.5" fill="#2a3a2a" opacity="0.6"/>
+  <ellipse cx="204" cy="198" rx="2.5" ry="1.5" fill="#c8c4b8" opacity="0.3"/>
+
+  <!-- ══ BANDAGE BOX (col 0.5, row 1.8) ═════════════════════════ -->
+  <!-- iso(0.5, 1.8) = (200+(0.5-1.8)*48, 100+(0.5+1.8)*24) = (138, 155) -->
+  <polygon points="132,152 144,158 138,161 126,155"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.4"/>
+  <polygon points="126,155 138,161 138,168 126,162"
+    fill="#342c1e" stroke="#281e14" stroke-width="0.3"/>
+  <polygon points="144,158 138,161 138,168 144,165"
+    fill="#302818" stroke="#281e14" stroke-width="0.3"/>
+  <!-- Red cross -->
+  <line x1="131" y1="157" x2="131" y2="161" stroke="rgba(180,60,60,0.4)" stroke-width="0.8"/>
+  <line x1="129" y1="159" x2="133" y2="159" stroke="rgba(180,60,60,0.4)" stroke-width="0.8"/>
+
+  <!-- ══ BUCKET (col 3.5, row 2.5) ══════════════════════════════ -->
+  <!-- iso(3.5, 2.5) = (200+1*48, 100+6*24) = (248, 244) -->
+  <ellipse cx="248" cy="248" rx="6" ry="3" fill="#2a3038" stroke="#222830" stroke-width="0.4"/>
+  <rect x="242" y="240" width="12" height="8" fill="#2a3038"/>
+  <ellipse cx="248" cy="240" rx="6" ry="3" fill="#323a42" stroke="#2a3038" stroke-width="0.4"/>
+  <ellipse cx="248" cy="240" rx="4.5" ry="2" fill="#1a2028"/>
+
+  <!-- ══ LABELS ═══════════════════════════════════════════════════ -->
+  <text x="220" y="295" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.8">RECOVERY — INFIRMARY</text>
+  <text x="220" y="14" font-family="monospace" font-size="7" fill="#888" text-anchor="middle">Reference fixture — not used in game</text>
+</svg>

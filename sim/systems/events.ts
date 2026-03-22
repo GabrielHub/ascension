@@ -10,7 +10,13 @@ import {
   OperatorIdentity,
   RoomInstance,
 } from "../components";
-import { getCurrentAbsoluteMinute, getRoleTag, removeTrackedEntity } from "./commands";
+import {
+  getCurrentAbsoluteMinute,
+  getRoomTemplateForEntity,
+  getStaffRoleTag,
+  removeTrackedEntity,
+} from "./commands";
+import { SeededRng, weightedChoice, seedFromKey } from "../uncertainty";
 import type { SimSystem } from "./types";
 
 function getAverageValue(values: number[]): number {
@@ -53,7 +59,6 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
 
   if (GuildState.treasury[guildEntity] < 80) {
     tags.push("pressure:cash");
-    tags.push("pressure:payroll");
   }
 
   if (GuildState.reputation[guildEntity] >= 8) {
@@ -62,14 +67,14 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
 
   if (
     context.runtimeState.roomEntities.some((entity) => {
-      const template =
-        context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
+      const template = getRoomTemplateForEntity(context, entity);
       return (
-        getRoleTag(template.tags) === "role:reception" && RoomInstance.isOperational[entity] === 0
+        getStaffRoleTag(template.tags) === "staff:reception" &&
+        RoomInstance.isOperational[entity] === 0
       );
     })
   ) {
-    tags.push("pressure:public");
+    tags.push("pressure:reputation");
   }
 
   return tags;
@@ -131,16 +136,25 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
     context.runtimeState.eventEntities.map((entity) => EventState.templateIndex[entity]),
   );
   const pressureTags = new Set(getPressureTags(context));
-  const nextTemplateIndex = context.registry.events.findIndex((template, index) => {
-    return (
-      !activeTemplateIndexes.has(index) &&
-      template.pressureTags.some((tag) => pressureTags.has(tag))
-    );
-  });
-  if (nextTemplateIndex < 0) {
+  const candidateTemplates = context.registry.events
+    .map((template, index) => ({ template, index }))
+    .filter(({ template, index }) => {
+      return (
+        !activeTemplateIndexes.has(index) &&
+        template.pressureTags.some((tag) => pressureTags.has(tag))
+      );
+    });
+  if (candidateTemplates.length === 0) {
     return;
   }
 
+  const selection = weightedChoice(
+    new SeededRng(
+      seedFromKey(`event:${currentMinute}:${BuildingAuthority.pressure[buildingEntity]}`),
+    ),
+    candidateTemplates.map(({ index, template }) => ({ item: index, weight: template.weight })),
+  );
+  const nextTemplateIndex = selection.outcome;
   const template = context.registry.events[nextTemplateIndex];
   const entity = addEntity(context.world);
   addComponent(context.world, entity, EventState);
@@ -153,4 +167,5 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
   context.runtimeState.eventEntities.push(entity);
   context.runtimeState.nextEventSequence += 1;
   BuildingAuthority.lastEventTick[buildingEntity] = currentMinute;
+  context.runtimeState.pendingCueIds.push("event.pressure");
 };

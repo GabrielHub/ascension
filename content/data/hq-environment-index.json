@@ -1,0 +1,237 @@
+{
+  "description": "HQ environment asset index — modular tile-based bodega composition system. Canvas-rendered floor tiles, wall segments, and perimeter tiles snap to a 96x48 isometric grid. SVG sprites used for props, scenery, and reference assets.",
+  "locked": null,
+  "style": "bodega-angled-isometric",
+  "building": "bodega",
+  "composition": {
+    "tileWidth": 96,
+    "tileHeight": 48,
+    "wallHeight": 84,
+    "rendering": "canvas-modular",
+    "roomRecipes": [
+      "room:operations",
+      "room:recovery",
+      "room:social",
+      "room:staffing",
+      "room:training"
+    ]
+  },
+  "parts": [
+    {
+      "id": "shell/iso-bodega-shell",
+      "category": "shell",
+      "tags": ["interior", "isometric", "building", "cutaway", "room-box", "reference-only"],
+      "scale": "building",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "structure/iso-wall-corner",
+      "category": "structure",
+      "tags": ["wall", "corner", "isometric", "reusable"],
+      "scale": "structure",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "structure/iso-floor-concrete",
+      "category": "structure",
+      "tags": ["floor", "concrete", "isometric", "reusable"],
+      "scale": "structure",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "structure/iso-door-interior",
+      "category": "structure",
+      "tags": ["door", "interior", "isometric", "passage"],
+      "scale": "structure",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "structure/iso-window-barred",
+      "category": "structure",
+      "tags": ["window", "barred", "isometric", "security"],
+      "scale": "structure",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-desk-reception",
+      "category": "prop",
+      "tags": ["desk", "counter", "reception", "furniture", "isometric"],
+      "scale": "prop",
+      "roomFamily": "front-desk",
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-chair-office",
+      "category": "prop",
+      "tags": ["chair", "seating", "office", "furniture", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-cabinet-filing",
+      "category": "prop",
+      "tags": ["cabinet", "storage", "filing", "furniture", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-bed-medical",
+      "category": "prop",
+      "tags": ["bed", "medical", "cot", "recovery", "isometric"],
+      "scale": "prop",
+      "roomFamily": "infirmary",
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-cabinet-medical",
+      "category": "prop",
+      "tags": ["cabinet", "medical", "supplies", "storage", "isometric"],
+      "scale": "prop",
+      "roomFamily": "infirmary",
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-light-pendant",
+      "category": "prop",
+      "tags": ["light", "pendant", "fixture", "lighting", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-plant-potted",
+      "category": "prop",
+      "tags": ["plant", "potted", "decor", "foliage", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "props/iso-sign-neon",
+      "category": "prop",
+      "tags": ["sign", "signage", "neon", "bodega", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-sky",
+      "category": "background",
+      "tags": ["sky", "atmosphere", "skyline", "isometric", "backdrop"],
+      "scale": "backdrop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-tenement-left",
+      "category": "background",
+      "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
+      "scale": "backdrop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-tenement-right",
+      "category": "background",
+      "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
+      "scale": "backdrop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-sidewalk",
+      "category": "background",
+      "tags": ["sidewalk", "ground", "concrete", "curb", "isometric", "backdrop"],
+      "scale": "backdrop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-street",
+      "category": "background",
+      "tags": ["street", "asphalt", "road", "isometric", "backdrop"],
+      "scale": "backdrop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-hydrant",
+      "category": "background",
+      "tags": ["hydrant", "prop", "street-furniture", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-lamppost",
+      "category": "background",
+      "tags": ["lamppost", "light", "street-furniture", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-trash-bags",
+      "category": "background",
+      "tags": ["trash", "garbage", "bags", "street-detail", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-awning",
+      "category": "background",
+      "tags": ["awning", "canopy", "storefront", "bodega", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-dumpster",
+      "category": "background",
+      "tags": ["dumpster", "alley", "trash", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "background/iso-bg-steam-vent",
+      "category": "background",
+      "tags": ["steam", "vent", "atmosphere", "street-detail", "isometric"],
+      "scale": "prop",
+      "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "actor-markers/marker-chibi-broad",
+      "category": "actor-marker",
+      "tags": ["chibi", "token", "operator", "broad", "in-world"],
+      "scale": "marker",
+      "roomFamily": null,
+      "status": "exploration"
+    },
+    {
+      "id": "actor-markers/marker-chibi-medium",
+      "category": "actor-marker",
+      "tags": ["chibi", "token", "operator", "medium", "in-world"],
+      "scale": "marker",
+      "roomFamily": null,
+      "status": "exploration"
+    },
+    {
+      "id": "actor-markers/marker-chibi-lean",
+      "category": "actor-marker",
+      "tags": ["chibi", "token", "operator", "lean", "in-world"],
+      "scale": "marker",
+      "roomFamily": null,
+      "status": "exploration"
+    }
+  ]
+}

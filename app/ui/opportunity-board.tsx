@@ -51,7 +51,7 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
       {(opportunity.reward > 0 || opportunity.risk > 0) && (
         <div className="mt-2 flex items-center gap-3 text-xs">
           {opportunity.reward > 0 && (
-            <span className="text-gold/70">Reward {opportunity.reward}</span>
+            <span className="text-gold/70">Reward {Math.round(opportunity.reward)}</span>
           )}
           {opportunity.risk > 0 && (
             <span className="text-ember">Risk {Math.round(opportunity.risk)}</span>

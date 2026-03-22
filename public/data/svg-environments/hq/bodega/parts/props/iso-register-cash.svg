@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 48">
+  <!-- Isometric cash register. Chunky old-school register on the counter. -->
+
+  <!-- Body base (iso box) -->
+  <polygon points="10,24 28,33 46,24 28,15"
+    fill="#2a2830" stroke="#222028" stroke-width="0.6"/>
+  <!-- Front face -->
+  <polygon points="28,33 46,24 46,38 28,47"
+    fill="#222028" stroke="#1c1a22" stroke-width="0.5"/>
+  <!-- Left face -->
+  <polygon points="10,24 28,33 28,47 10,38"
+    fill="#26242c" stroke="#1c1a22" stroke-width="0.5"/>
+
+  <!-- Key buttons row (top face detail) -->
+  <rect x="16" y="19" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+  <rect x="20" y="18" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+  <rect x="24" y="17" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+  <rect x="28" y="16" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+  <rect x="32" y="17" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+  <rect x="36" y="18" width="3" height="2" rx="0.3" fill="#3a3838" opacity="0.7"/>
+
+  <!-- Display screen -->
+  <rect x="18" y="12" width="16" height="6" rx="1" fill="#0a0e0a"/>
+  <rect x="19" y="13" width="14" height="4" rx="0.5" fill="rgba(100,180,120,0.12)"/>
+  <!-- Number glints on display -->
+  <line x1="22" y1="14" x2="22" y2="16" stroke="rgba(100,180,120,0.25)" stroke-width="0.6"/>
+  <line x1="25" y1="14" x2="25" y2="16" stroke="rgba(100,180,120,0.25)" stroke-width="0.6"/>
+  <line x1="28" y1="14" x2="28" y2="16" stroke="rgba(100,180,120,0.25)" stroke-width="0.6"/>
+
+  <!-- Drawer pull -->
+  <rect x="33" y="38" width="8" height="2" rx="0.5" fill="#c8a84c" opacity="0.25"/>
+
+  <!-- Shadow -->
+  <ellipse cx="28" cy="46" rx="14" ry="2.5" fill="rgba(0,0,0,0.1)"/>
+</svg>

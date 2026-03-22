@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- Isometric monitor/screen on stand. For operations rooms. -->
+
+  <!-- Monitor bezel - back -->
+  <polygon points="26,28 48,18 70,28 48,38"
+    fill="#0e1018" stroke="#0a0c14" stroke-width="0.6"/>
+  <!-- Monitor face left (screen) -->
+  <polygon points="26,28 48,38 48,58 26,48"
+    fill="#0c1020" stroke="#0a0c14" stroke-width="0.6"/>
+  <!-- Monitor face right -->
+  <polygon points="48,38 70,28 70,48 48,58"
+    fill="#080a12" stroke="#0a0c14" stroke-width="0.6"/>
+
+  <!-- Screen glow (inner panel, left face) -->
+  <polygon points="29,30 46,39 46,55 29,46"
+    fill="#14203a" opacity="0.7"/>
+  <!-- Scan line hints -->
+  <line x1="30" y1="36" x2="45" y2="44" stroke="rgba(200,168,76,0.06)" stroke-width="0.4"/>
+  <line x1="30" y1="42" x2="45" y2="50" stroke="rgba(200,168,76,0.04)" stroke-width="0.4"/>
+
+  <!-- Data dots on screen -->
+  <circle cx="34" cy="34" r="1" fill="rgba(200,168,76,0.25)"/>
+  <circle cx="38" cy="40" r="0.8" fill="rgba(120,200,140,0.2)"/>
+  <circle cx="42" cy="37" r="0.8" fill="rgba(200,168,76,0.15)"/>
+
+  <!-- Stand post -->
+  <line x1="48" y1="58" x2="48" y2="70" stroke="#252525" stroke-width="2.5"/>
+  <!-- Base -->
+  <ellipse cx="48" cy="72" rx="10" ry="3.5" fill="#252525" opacity="0.85"/>
+
+  <!-- Shadow -->
+  <ellipse cx="48" cy="76" rx="14" ry="4" fill="rgba(0,0,0,0.1)"/>
+</svg>

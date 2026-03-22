@@ -5,7 +5,8 @@ export function meta() {
     { title: "Ascension | SVG Asset Viewer" },
     {
       name: "description",
-      content: "Browse shipped operator SVG assets — references, presets, and modular parts.",
+      content:
+        "Browse shipped SVG assets — operator parts, operator recipes, and HQ environment pieces.",
     },
   ];
 }

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="ch-floor" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#181c2c"/>
+      <stop offset="100%" stop-color="#121624"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#ch-floor)"/>
+  <!-- Walls -->
+  <rect x="0" y="0" width="64" height="2" fill="#1e2540" opacity="0.55"/>
+  <rect x="0" y="62" width="64" height="2" fill="#1e2540" opacity="0.55"/>
+  <rect x="0" y="0" width="2" height="64" fill="#1e2540" opacity="0.55"/>
+  <rect x="62" y="0" width="2" height="64" fill="#1e2540" opacity="0.55"/>
+  <!-- Center floor texture -->
+  <circle cx="32" cy="32" r="12" fill="none" stroke="rgba(200,168,76,0.03)" stroke-width="0.5"/>
+  <circle cx="32" cy="32" r="1.5" fill="rgba(200,168,76,0.05)"/>
+  <!-- Corner debris -->
+  <circle cx="6" cy="6" r="1" fill="#1a1e30" opacity="0.3"/>
+  <circle cx="58" cy="58" r="0.8" fill="#1a1e30" opacity="0.25"/>
+  <circle cx="58" cy="6" r="0.6" fill="#1a1e30" opacity="0.2"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 48">
+  <!-- Isometric floor rug. Diamond-shaped rug matching iso grid. -->
+
+  <!-- Rug body (iso diamond) -->
+  <polygon points="48,4 92,26 48,48 4,26"
+    fill="#342820" stroke="#2c2018" stroke-width="0.6"/>
+
+  <!-- Inner border pattern -->
+  <polygon points="48,10 82,26 48,42 14,26"
+    fill="none" stroke="rgba(200,168,76,0.1)" stroke-width="0.6"/>
+
+  <!-- Center pattern (subtle geometric) -->
+  <polygon points="48,18 66,26 48,34 30,26"
+    fill="rgba(200,168,76,0.03)"/>
+
+  <!-- Fringe edges (top-left and bottom-right) -->
+  <line x1="4" y1="26" x2="2" y2="27" stroke="#342820" stroke-width="0.4"/>
+  <line x1="92" y1="26" x2="94" y2="27" stroke="#342820" stroke-width="0.4"/>
+
+  <!-- Worn patch -->
+  <ellipse cx="52" cy="28" rx="8" ry="3" fill="rgba(0,0,0,0.04)"/>
+</svg>

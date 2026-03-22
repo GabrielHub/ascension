@@ -11,12 +11,7 @@ import type { SimSystem } from "./types";
 
 const VISITOR_NAMES = ["Ari Sol", "Bex Mercer", "Corin Vale", "Dima Rook", "Esme Calder"] as const;
 
-const VISITOR_ROLE_CYCLE = [
-  "role:recruitment",
-  "role:medic",
-  "role:scout",
-  "role:reception",
-] as const;
+const VISITOR_ROLE_CYCLE = ["role:field_lead", "role:scout", "role:medic"] as const;
 
 export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   const buildingEntity = context.singletonEntities.building;
@@ -29,6 +24,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
     if (VisitorState.patience[entity] <= 0) {
       removeEntity(context.world, entity);
       removeTrackedEntity(context.runtimeState.visitorEntities, entity);
+      context.runtimeState.pendingCueIds.push("hq.dismiss");
     }
   });
 
@@ -60,4 +56,5 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   });
 
   BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = currentMinute;
+  context.runtimeState.pendingCueIds.push("hq.visitor");
 };

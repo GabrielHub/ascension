@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24">
+  <!-- Isometric manhole cover. Flat on street surface. Iso diamond shape. -->
+
+  <!-- Outer rim -->
+  <polygon points="20,2 38,12 20,22 2,12"
+    fill="#1e1e24" stroke="#2a2a30" stroke-width="0.6"/>
+
+  <!-- Inner circle (projected as ellipse) -->
+  <ellipse cx="20" cy="12" rx="14" ry="7" fill="#16161c" stroke="#22222a" stroke-width="0.5"/>
+
+  <!-- Grid pattern (cross lines) -->
+  <line x1="10" y1="9" x2="30" y2="15" stroke="#22222a" stroke-width="0.4"/>
+  <line x1="10" y1="15" x2="30" y2="9" stroke="#22222a" stroke-width="0.4"/>
+  <line x1="20" y1="6" x2="20" y2="18" stroke="#22222a" stroke-width="0.4"/>
+  <line x1="8" y1="12" x2="32" y2="12" stroke="#22222a" stroke-width="0.4"/>
+
+  <!-- Center bolt -->
+  <ellipse cx="20" cy="12" rx="2" ry="1" fill="#2a2a30"/>
+
+  <!-- Highlight edge -->
+  <line x1="20" y1="2" x2="2" y2="12" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
+</svg>

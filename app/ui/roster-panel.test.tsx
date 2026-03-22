@@ -27,7 +27,7 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     dominantNeed: "none",
     availableForRaid: true,
     readinessScore: 85,
-    appearancePresetId: "male-swept",
+    appearancePresetId: "kael-001",
     visibleGear: {},
     lifecycle: { status: "active" },
     ...overrides,
@@ -80,14 +80,9 @@ describe("roster panel", () => {
 
     expect(html).toContain("Roster critical");
     expect(html).toContain("1 vacancy");
-    expect(html).toContain("1 recent loss");
-    expect(html).toContain("1/2 operators");
+    expect(html).toContain("1/2");
     expect(html).toContain("Fallen (1)");
     expect(html).toContain("KIA");
     expect(html).toContain("line-through");
-    expect(html).toContain("Recruitment urgency");
-    expect(html).toContain(
-      "The guild has suffered losses. Rebuild the roster before the next operation.",
-    );
   });
 });

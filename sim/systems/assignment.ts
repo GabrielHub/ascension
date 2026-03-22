@@ -12,7 +12,7 @@ import {
   ScheduleState,
   StaffState,
 } from "../components";
-import { getCurrentAbsoluteMinute, getRoleTag } from "./commands";
+import { getCurrentAbsoluteMinute, getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
 import type { SimSystem } from "./types";
 
 function getAverageRelationshipSignal(
@@ -51,11 +51,23 @@ function getAverageRelationshipSignal(
   return signals.reduce((total, value) => total + value, 0) / signals.length;
 }
 
-function hasOperationalRoomForRole(context: Parameters<SimSystem>[0], roleTag: string): boolean {
+function hasOperationalRoomForStaffRole(
+  context: Parameters<SimSystem>[0],
+  roleTag: string,
+): boolean {
   return context.runtimeState.roomEntities.some((entity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
-    return getRoleTag(template.tags) === roleTag && RoomInstance.isOperational[entity] === 1;
+    const template = getRoomTemplateForEntity(context, entity);
+    return getStaffRoleTag(template.tags) === roleTag && RoomInstance.isOperational[entity] === 1;
+  });
+}
+
+function hasOperationalRoomForFunction(
+  context: Parameters<SimSystem>[0],
+  functionTag: string,
+): boolean {
+  return context.runtimeState.roomEntities.some((entity) => {
+    const template = getRoomTemplateForEntity(context, entity);
+    return template.tags.includes(functionTag) && RoomInstance.isOperational[entity] === 1;
   });
 }
 
@@ -108,15 +120,19 @@ function chooseOperatorBlock(
 
   const preferred = ranked[0]?.block ?? "rest";
 
-  if (preferred === "recovery" && !hasOperationalRoomForRole(context, "role:medic")) {
+  if (preferred === "recovery" && !hasOperationalRoomForStaffRole(context, "staff:medical")) {
     return "rest";
   }
 
-  if (preferred === "social" && !hasOperationalRoomForRole(context, "role:recruitment")) {
+  if (
+    preferred === "social" &&
+    !hasOperationalRoomForFunction(context, "room:social") &&
+    !hasOperationalRoomForFunction(context, "room:staffing")
+  ) {
     return inShift ? "work" : "rest";
   }
 
-  if (preferred === "training") {
+  if (preferred === "training" && !hasOperationalRoomForFunction(context, "room:training")) {
     return inShift ? "work" : "rest";
   }
 

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 80">
+  <!-- Isometric shelf rack with bottles/cans. 2-tier metal rack.
+       Proper 2:1 iso with angled faces. Reads as "bodega shelving." -->
+
+  <!-- Frame uprights (iso-aligned) -->
+  <line x1="10" y1="16" x2="10" y2="72" stroke="#3a3838" stroke-width="1.4"/>
+  <line x1="34" y1="28" x2="34" y2="72" stroke="#3a3838" stroke-width="1"/>
+  <line x1="58" y1="16" x2="58" y2="72" stroke="#3a3838" stroke-width="1.4"/>
+
+  <!-- Top rail (iso parallelogram) -->
+  <polygon points="10,16 34,4 58,16 34,28"
+    fill="none" stroke="#3a3838" stroke-width="1"/>
+
+  <!-- Upper shelf surface (iso parallelogram) -->
+  <polygon points="10,32 34,20 58,32 34,44"
+    fill="#333030" stroke="#3a3838" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Lower shelf surface -->
+  <polygon points="10,52 34,40 58,52 34,64"
+    fill="#333030" stroke="#3a3838" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Upper shelf bottles (tall, iso-aligned) -->
+  <!-- Back row -->
+  <polygon points="20,18 28,14 28,28 20,32" fill="#2a3828" opacity="0.8"/>
+  <polygon points="29,14 36,11 36,26 29,29" fill="#382a2a" opacity="0.7"/>
+  <polygon points="37,12 44,9 44,24 37,27" fill="#2a2a38" opacity="0.8"/>
+  <polygon points="45,10 52,7 52,22 45,25" fill="#2a3828" opacity="0.7"/>
+  <!-- Front row (offset slightly) -->
+  <polygon points="22,24 30,20 30,30 22,34" fill="#38302a" opacity="0.6"/>
+  <polygon points="34,20 42,16 42,27 34,31" fill="#302a38" opacity="0.6"/>
+  <polygon points="44,16 50,13 50,25 44,28" fill="#2a3030" opacity="0.6"/>
+
+  <!-- Lower shelf items (shorter, cans/boxes) -->
+  <polygon points="18,40 28,35 28,48 18,53" fill="#383028" opacity="0.7"/>
+  <polygon points="30,36 38,32 38,46 30,50" fill="#283830" opacity="0.7"/>
+  <polygon points="40,33 50,28 50,44 40,48" fill="#302830" opacity="0.7"/>
+  <polygon points="24,44 34,39 34,50 24,55" fill="#383828" opacity="0.6"/>
+  <polygon points="42,37 50,33 50,48 42,52" fill="#2a3038" opacity="0.6"/>
+
+  <!-- Label strips on some bottles -->
+  <rect x="22" y="22" width="3" height="2" rx="0.2" fill="rgba(200,168,76,0.12)"/>
+  <rect x="40" y="18" width="3" height="2" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+
+  <!-- Shadow -->
+  <ellipse cx="34" cy="76" rx="22" ry="2.5" fill="rgba(0,0,0,0.08)"/>
+</svg>

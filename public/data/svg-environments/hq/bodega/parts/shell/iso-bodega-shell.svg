@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+  <defs>
+    <linearGradient id="bs-extL" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#3d2c20"/>
+      <stop offset="100%" stop-color="#2a1f18"/>
+    </linearGradient>
+    <linearGradient id="bs-extR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#332418"/>
+      <stop offset="100%" stop-color="#241a12"/>
+    </linearGradient>
+    <linearGradient id="bs-roof" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#252525"/>
+      <stop offset="100%" stop-color="#1a1818"/>
+    </linearGradient>
+    <linearGradient id="bs-floor" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e1c18"/>
+      <stop offset="100%" stop-color="#16140f"/>
+    </linearGradient>
+    <radialGradient id="bs-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(200,168,76,0.06)"/>
+      <stop offset="100%" stop-color="rgba(200,168,76,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!--
+    BODEGA SHELL — perimeter container for 2×2 tiled room modules.
+
+    The bodega is a 2×2 grid of room modules.
+    Each room module has a floor diamond: 300w × 100h.
+
+    Room grid positions (isometric):
+      NW room (back-left):  offset (0, 0)    → floor center at (250, 190)
+      NE room (back-right): offset (300, 0)  → floor center at (550, 190)
+      SW room (front-left): offset (0, 100)  → floor center at (250, 290)
+      SE room (front-right):offset (300,100) → floor center at (550, 290)
+
+    But in isometric, east neighbor shifts (+150, +50).
+    Full 2×2 building floor diamond:
+      North: (400, 140)
+      East:  (700, 290)
+      South: (400, 440)
+      West:  (100, 290)
+
+    Exterior wall height: 150px
+    Shell viewBox sized to contain building + walls + roof.
+  -->
+
+  <!-- ═══ SIDEWALK / GROUND ═══ -->
+  <polygon points="400,460 720,300 700,290 400,440 100,290 80,300"
+    fill="#1a1816" stroke="#141210" stroke-width="1"/>
+
+  <!-- ═══ EXTERIOR BACK WALLS ═══ -->
+  <!-- Left exterior wall (NW side) -->
+  <polygon points="100,290 400,140 400,0 100,110"
+    fill="url(#bs-extL)" stroke="#2a1f18" stroke-width="2"/>
+  <!-- Right exterior wall (NE side) -->
+  <polygon points="700,290 400,140 400,0 700,110"
+    fill="url(#bs-extR)" stroke="#2a1f18" stroke-width="2"/>
+
+  <!-- Brick pattern hints -->
+  <g opacity="0.12" stroke="#2a1f18" stroke-width="0.5">
+    <line x1="150" y1="280" x2="400" y2="135"/>
+    <line x1="200" y1="280" x2="400" y2="120"/>
+    <line x1="250" y1="280" x2="400" y2="105"/>
+    <line x1="650" y1="280" x2="400" y2="135"/>
+    <line x1="600" y1="280" x2="400" y2="120"/>
+    <line x1="550" y1="280" x2="400" y2="105"/>
+  </g>
+
+  <!-- ═══ ROOF ═══ -->
+  <polygon points="400,0 700,110 400,140 100,110"
+    fill="url(#bs-roof)" stroke="#252525" stroke-width="1.5" opacity="0.5"/>
+  <!-- Roof details -->
+  <g opacity="0.4">
+    <polygon points="280,55 310,70 325,62 295,47" fill="#2a2828" stroke="#252525" stroke-width="0.6"/>
+    <polygon points="500,70 530,85 545,77 515,62" fill="#2a2828" stroke="#252525" stroke-width="0.6"/>
+    <line x1="400" y1="10" x2="400" y2="0" stroke="#3a3838" stroke-width="2"/>
+  </g>
+
+  <!-- ═══ INTERIOR FLOOR (full 2×2 building footprint) ═══ -->
+  <polygon points="400,140 700,290 400,440 100,290"
+    fill="url(#bs-floor)" stroke="#2a2520" stroke-width="1.5"/>
+
+  <!-- Interior glow -->
+  <polygon points="400,140 700,290 400,440 100,290"
+    fill="url(#bs-glow)"/>
+
+  <!-- ═══ INTERIOR PARTITION WALLS ═══ -->
+  <!--
+    Center divider (NW-SE): splits left column from right column.
+    Goes from back floor midpoint to front floor midpoint.
+    Midpoint of north edge to midpoint of south edge:
+      (250, 215) to (550, 365) — no, let me recalculate.
+
+    For 2×2 grid, the partition runs through the center of the building diamond.
+    Center vertical partition (divides left rooms from right rooms):
+      From (400,140) straight down to (400,440) on the floor plane.
+      This is the building's north-south axis.
+
+    Center horizontal partition (divides back rooms from front rooms):
+      From (100,290) to (700,290) on the floor plane.
+      This is the building's east-west axis.
+  -->
+
+  <!-- Vertical partition (N-S, divides left/right columns) -->
+  <line x1="400" y1="140" x2="400" y2="440" stroke="#2a2520" stroke-width="1.5" opacity="0.6"/>
+  <!-- Partition wall face (thin wall with height) -->
+  <polygon points="400,140 400,440 400,425 400,130"
+    fill="#1e1a16" stroke="#2a2520" stroke-width="0.8" opacity="0.5"/>
+  <!-- Wall height visible as edge -->
+  <line x1="400" y1="130" x2="400" y2="425" stroke="#2a2520" stroke-width="1" opacity="0.4"/>
+
+  <!-- Horizontal partition (E-W, divides back/front rows) -->
+  <line x1="100" y1="290" x2="700" y2="290" stroke="#2a2520" stroke-width="1.5" opacity="0.6"/>
+  <!-- Partition wall face -->
+  <polygon points="100,290 700,290 700,278 100,278"
+    fill="#1e1a16" stroke="#2a2520" stroke-width="0.6" opacity="0.4"/>
+
+  <!-- ═══ ROOM LABELS ═══ -->
+  <g font-family="sans-serif" font-size="10" letter-spacing="1.5" fill="#c8a84c" opacity="0.35">
+    <text x="260" y="210" text-anchor="middle">FRONT DESK</text>
+    <text x="540" y="210" text-anchor="middle">INFIRMARY</text>
+    <text x="260" y="360" text-anchor="middle">LOUNGE</text>
+    <text x="540" y="360" text-anchor="middle">EMPTY</text>
+  </g>
+
+  <!-- ═══ ROOM FURNITURE HINTS (simplified silhouettes) ═══ -->
+  <!-- Front Desk (NW) -->
+  <g opacity="0.35">
+    <polygon points="220,230 270,250 295,240 245,220" fill="#2c2218"/>
+    <polygon points="260,255 275,262 282,258 267,252" fill="#1a2440"/>
+    <polygon points="310,230 325,236 332,232 317,226" fill="#3a3838"/>
+  </g>
+
+  <!-- Infirmary (NE) -->
+  <g opacity="0.35">
+    <polygon points="480,240 560,270 590,258 510,228" fill="#c8c4b8" opacity="0.6" stroke="#3a3838" stroke-width="0.4"/>
+    <polygon points="600,225 618,233 625,228 607,222" fill="#3a3838"/>
+  </g>
+
+  <!-- Lounge (SW) -->
+  <g opacity="0.35">
+    <polygon points="200,340 260,368 285,356 225,328" fill="#1a2440"/>
+    <polygon points="285,360 310,372 328,364 303,352" fill="#2c2218"/>
+  </g>
+
+  <!-- Empty (SE) -->
+  <g opacity="0.25">
+    <polygon points="540,375 560,384 574,378 554,369" fill="#231e18"/>
+    <polygon points="546,368 560,374 568,370 554,364" fill="#2c2218"/>
+  </g>
+
+  <!-- ═══ PER-ROOM CEILING LIGHTS ═══ -->
+  <g opacity="0.4">
+    <rect x="253" y="175" width="14" height="4" fill="#c8a84c" opacity="0.4" rx="1"/>
+    <rect x="533" y="175" width="14" height="4" fill="#c8c4b8" opacity="0.3" rx="1"/>
+    <rect x="253" y="325" width="10" height="3" fill="#c8a84c" opacity="0.3" rx="1"/>
+    <circle cx="545" cy="330" r="3" fill="#8a7040" opacity="0.15"/>
+  </g>
+
+  <!-- ═══ BUILDING CORNER SEAMS ═══ -->
+  <line x1="400" y1="0" x2="400" y2="140" stroke="#2a1f18" stroke-width="2"/>
+  <line x1="100" y1="110" x2="100" y2="290" stroke="#2a1f18" stroke-width="1.5"/>
+  <line x1="700" y1="110" x2="700" y2="290" stroke="#2a1f18" stroke-width="1.5"/>
+  <line x1="100" y1="110" x2="400" y2="0" stroke="#252525" stroke-width="2"/>
+  <line x1="400" y1="0" x2="700" y2="110" stroke="#252525" stroke-width="2"/>
+
+  <!-- ═══ ENTRANCE ═══ -->
+  <g>
+    <polygon points="100,250 170,282 170,272 100,240"
+      fill="#3d2c20" stroke="#2a1f18" stroke-width="0.8" opacity="0.5"/>
+    <polygon points="102,288 138,306 138,254 102,240"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.8"/>
+    <polygon points="106,284 134,300 134,258 106,246"
+      fill="rgba(26,36,64,0.25)"/>
+  </g>
+
+  <!-- ═══ NEON SIGN ═══ -->
+  <polygon points="145,238 210,270 210,258 145,228"
+    fill="#0e0d0c" stroke="#3a3838" stroke-width="0.5"/>
+  <line x1="152" y1="234" x2="202" y2="264" stroke="#c8a84c" stroke-width="1.2" opacity="0.45"/>
+  <line x1="152" y1="230" x2="202" y2="260" stroke="#d4541e" stroke-width="0.8" opacity="0.3"/>
+</svg>

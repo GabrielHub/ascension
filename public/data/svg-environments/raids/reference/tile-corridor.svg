@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="corr-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161a28"/>
+      <stop offset="100%" stop-color="#121624"/>
+    </linearGradient>
+  </defs>
+  <!-- Floor -->
+  <rect width="32" height="32" fill="url(#corr-floor)"/>
+  <!-- Wall edges (top and bottom for horizontal corridor) -->
+  <rect x="0" y="0" width="32" height="2" fill="#1e2540" opacity="0.6"/>
+  <rect x="0" y="30" width="32" height="2" fill="#1e2540" opacity="0.6"/>
+  <!-- Faint center line -->
+  <line x1="0" y1="16" x2="32" y2="16" stroke="rgba(200,168,76,0.03)" stroke-width="0.5" stroke-dasharray="4,4"/>
+  <!-- Corner wear marks -->
+  <circle cx="2" cy="2" r="0.8" fill="#1a1e30" opacity="0.4"/>
+  <circle cx="30" cy="30" r="0.8" fill="#1a1e30" opacity="0.4"/>
+</svg>

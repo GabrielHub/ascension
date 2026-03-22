@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 2 24 60">
+  <!-- Isometric bar stool. Simple round-seat stool for behind a counter. -->
+
+  <!-- Legs -->
+  <line x1="18" y1="56" x2="20" y2="36" stroke="#3a3020" stroke-width="1.5"/>
+  <line x1="30" y1="56" x2="28" y2="36" stroke="#3a3020" stroke-width="1.5"/>
+  <line x1="14" y1="52" x2="20" y2="36" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="34" y1="52" x2="28" y2="36" stroke="#3a3020" stroke-width="1.2"/>
+
+  <!-- Crossbar -->
+  <line x1="17" y1="48" x2="31" y2="48" stroke="#2c2418" stroke-width="1"/>
+
+  <!-- Seat (iso ellipse) -->
+  <ellipse cx="24" cy="34" rx="10" ry="5" fill="#342c20" stroke="#2c2418" stroke-width="0.6"/>
+  <!-- Seat highlight -->
+  <ellipse cx="23" cy="33" rx="6" ry="3" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Shadow -->
+  <ellipse cx="24" cy="58" rx="8" ry="2.5" fill="rgba(0,0,0,0.1)"/>
+</svg>

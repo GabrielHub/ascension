@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 100">
+  <defs>
+    <linearGradient id="st-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#121010"/>
+      <stop offset="100%" stop-color="#0e0c0a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Asphalt surface -->
+  <rect width="900" height="100" fill="url(#st-grad)"/>
+
+  <!-- Asphalt texture noise (subtle patches) -->
+  <g opacity="0.06">
+    <rect x="50" y="10" width="80" height="15" rx="3" fill="#1a1816"/>
+    <rect x="200" y="40" width="60" height="12" rx="3" fill="#1a1816"/>
+    <rect x="400" y="25" width="90" height="10" rx="3" fill="#1a1816"/>
+    <rect x="600" y="50" width="70" height="14" rx="3" fill="#1a1816"/>
+    <rect x="750" y="15" width="50" height="10" rx="3" fill="#1a1816"/>
+  </g>
+
+  <!-- Faded lane marking (center dashes) -->
+  <g stroke="#2a2520" stroke-width="2" opacity="0.12" stroke-dasharray="20,15">
+    <line x1="0" y1="50" x2="900" y2="50"/>
+  </g>
+
+  <!-- Manhole cover -->
+  <g transform="translate(580, 35)" opacity="0.35">
+    <circle r="14" fill="#1a1816" stroke="#252525" stroke-width="1"/>
+    <circle r="10" fill="none" stroke="#252525" stroke-width="0.4"/>
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#252525" stroke-width="0.5"/>
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#252525" stroke-width="0.5"/>
+  </g>
+
+  <!-- Pothole -->
+  <ellipse cx="200" cy="60" rx="18" ry="8" fill="#0a0908" opacity="0.3"/>
+
+  <!-- Tire marks -->
+  <g stroke="#0a0908" stroke-width="2" opacity="0.08">
+    <line x1="100" y1="30" x2="350" y2="32"/>
+    <line x1="100" y1="70" x2="350" y2="72"/>
+  </g>
+
+  <!-- Far curb hint (opposite side of street) -->
+  <line x1="0" y1="98" x2="900" y2="98" stroke="#1a1816" stroke-width="2" opacity="0.3"/>
+</svg>

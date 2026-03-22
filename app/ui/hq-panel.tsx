@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { WorldCanvasSurface } from "render";
-import type { WorldRenderSnapshot } from "render";
+import type { FocusPayload } from "render";
 
 import { BodegaFloor } from "./bodega-floor";
 import { RoomDetailPanel } from "./room-detail-panel";
@@ -11,52 +10,64 @@ import type { GameCallbacks, HqViewModel } from "./view-models";
 interface HqPanelProps {
   hq: HqViewModel;
   callbacks: GameCallbacks;
-  worldRenderSnapshot: WorldRenderSnapshot;
+  focus: FocusPayload | null;
 }
 
 type HqContextView = "rooms" | "roster";
 
-export function HqPanel({ hq, callbacks, worldRenderSnapshot }: HqPanelProps) {
+export function HqPanel({ hq, callbacks, focus }: HqPanelProps) {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [contextView, setContextView] = useState<HqContextView>("rooms");
 
-  const selectedRoom = hq.rooms.find((r) => r.id === selectedRoomId) ?? null;
+  useEffect(() => {
+    if (!focus) return;
+
+    if (focus.targetKind === "room") {
+      setSelectedRoomId(focus.targetId);
+      setContextView("rooms");
+      return;
+    }
+
+    if (focus.targetKind === "operator" || focus.targetKind === "staff") {
+      setContextView("roster");
+    }
+  }, [focus]);
+
+  // Sync selection from world canvas focus
+  const effectiveRoomId = focus?.targetKind === "room" ? focus.targetId : selectedRoomId;
+
+  const selectedRoom = hq.rooms.find((r) => r.id === effectiveRoomId) ?? null;
+  const focusedOperatorId =
+    focus?.targetKind === "operator" || focus?.targetKind === "staff" ? focus.targetId : null;
 
   const selectedRoomUpgrades = selectedRoom
     ? hq.roomUpgrades.filter((u) => u.targetId === selectedRoom.templateId)
     : [];
 
   return (
-    <div className="animate-enter grid gap-4 lg:grid-cols-[1fr_300px]">
-      <div className="space-y-4">
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-gold/80">
-              Floor Plan
-            </h2>
-            <span className="text-xs tabular-nums text-silver/60">
-              {hq.rooms.filter((r) => r.isActive).length}/{hq.rooms.length} rooms active
-            </span>
-          </div>
-          <WorldCanvasSurface snapshot={worldRenderSnapshot} />
+    <div className="animate-enter pointer-events-none relative h-full">
+      {/* Bottom strip: horizontal room management bar */}
+      <div className="pointer-events-auto absolute bottom-0 left-0 right-[336px] max-h-[220px] overflow-hidden rounded-tr-xl border-r border-t border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.78)] backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.04)] px-5 py-2.5">
+          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-gold/80">Rooms</h2>
+          <span className="text-xs tabular-nums text-silver/60">
+            {hq.rooms.filter((r) => r.isActive).length}/{hq.rooms.length} active
+          </span>
         </div>
-
-        <div>
-          <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-gold/80">
-            Room Management
-          </h2>
+        <div className="overflow-x-auto overflow-y-hidden px-4 py-3">
           <BodegaFloor
             rooms={hq.rooms}
             emptySlots={hq.emptySlots}
             placeableTemplates={hq.placeableRoomTemplates}
-            selectedRoomId={selectedRoomId}
+            selectedRoomId={effectiveRoomId}
             onSelectRoom={setSelectedRoomId}
             onPlaceRoom={callbacks.placeRoom}
           />
         </div>
       </div>
 
-      <aside className="glass-card p-4">
+      {/* Right: context panel (inspect / roster) */}
+      <aside className="pointer-events-auto absolute right-0 top-0 max-h-full w-[320px] overflow-y-auto rounded-bl-xl border-b border-l border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.78)] p-4 backdrop-blur-xl">
         <div className="mb-4 flex gap-1 border-b border-[rgba(200,168,76,0.06)] pb-2">
           <button
             type="button"
@@ -93,6 +104,7 @@ export function HqPanel({ hq, callbacks, worldRenderSnapshot }: HqPanelProps) {
             rooms={hq.rooms}
             callbacks={callbacks}
             rosterPressure={hq.rosterPressure}
+            focusedOperatorId={focusedOperatorId}
           />
         )}
       </aside>

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { OperatorPortrait } from "./operator-portrait";
 import type { ActiveRaidViewModel, OperatorViewModel } from "./view-models";
+import { formatTag } from "./view-models";
 
 interface RaidWatchProps {
   activeRaids: readonly ActiveRaidViewModel[];
@@ -9,6 +10,8 @@ interface RaidWatchProps {
   operators: readonly OperatorViewModel[];
   /** For testing: seed the initial selection state. */
   defaultSelectedRaidId?: string;
+  /** When present, sync map focus into the selected raid card. */
+  selectedRaidId?: string | null;
 }
 
 // ── Compact deployed portrait (used in zoomed-out card list) ─────────────
@@ -114,10 +117,6 @@ function ActiveRaidCard({
 
 // ── Inspection row (detailed per-operator view in focused panel) ─────────
 
-function formatRole(roleTag: string): string {
-  return roleTag.replace("role:", "");
-}
-
 function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
   const isDead = op.lifecycle.status === "dead";
 
@@ -146,7 +145,7 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
           >
             {op.name}
           </span>
-          <span className="text-[0.6875rem] text-gold/70">{formatRole(op.roleTag)}</span>
+          <span className="text-[0.6875rem] text-gold/70">{formatTag(op.roleTag)}</span>
           {op.specialtyTag && (
             <span className="text-[0.6875rem] text-silver/60">{op.specialtyTag}</span>
           )}
@@ -204,7 +203,7 @@ function RaidTeamInspection({
 
   const roleBreakdown = new Map<string, number>();
   for (const op of deployedOps) {
-    const role = formatRole(op.roleTag);
+    const role = formatTag(op.roleTag);
     roleBreakdown.set(role, (roleBreakdown.get(role) ?? 0) + 1);
   }
 
@@ -265,7 +264,12 @@ function RaidTeamInspection({
 
 // ── Main RaidWatch component ─────────────────────────────────────────────
 
-export function RaidWatch({ activeRaids, operators, defaultSelectedRaidId }: RaidWatchProps) {
+export function RaidWatch({
+  activeRaids,
+  operators,
+  defaultSelectedRaidId,
+  selectedRaidId,
+}: RaidWatchProps) {
   const [rawSelectedId, setRawSelectedId] = useState<string | null>(defaultSelectedRaidId ?? null);
 
   if (activeRaids.length === 0) {
@@ -278,14 +282,17 @@ export function RaidWatch({ activeRaids, operators, defaultSelectedRaidId }: Rai
     );
   }
 
-  const operatorMap = new Map(operators.map((op) => [op.id, op]));
+  const operatorMap = useMemo(() => new Map(operators.map((op) => [op.id, op])), [operators]);
   const activeRaidIds = new Set(activeRaids.map((r) => r.id));
 
   // Derived selection: clears automatically when the focused raid disappears
-  const selectedRaidId =
-    rawSelectedId !== null && activeRaidIds.has(rawSelectedId) ? rawSelectedId : null;
-  const selectedRaid = selectedRaidId
-    ? (activeRaids.find((r) => r.id === selectedRaidId) ?? null)
+  const effectiveSelectedRaidId = selectedRaidId ?? rawSelectedId;
+  const normalizedSelectedRaidId =
+    effectiveSelectedRaidId !== null && activeRaidIds.has(effectiveSelectedRaidId)
+      ? effectiveSelectedRaidId
+      : null;
+  const selectedRaid = normalizedSelectedRaidId
+    ? (activeRaids.find((r) => r.id === normalizedSelectedRaidId) ?? null)
     : null;
 
   function handleSelectRaid(raidId: string) {
@@ -302,7 +309,7 @@ export function RaidWatch({ activeRaids, operators, defaultSelectedRaidId }: Rai
           key={raid.id}
           raid={raid}
           operatorMap={operatorMap}
-          isSelected={raid.id === selectedRaidId}
+          isSelected={raid.id === normalizedSelectedRaidId}
           onSelect={() => handleSelectRaid(raid.id)}
         />
       ))}

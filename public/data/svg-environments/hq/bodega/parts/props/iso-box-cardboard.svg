@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="26 26 42 56">
+  <!-- Isometric cardboard box. General clutter/storage. -->
+
+  <!-- Box top -->
+  <polygon points="30,40 48,50 66,40 48,30"
+    fill="#3a3020" stroke="#302818" stroke-width="0.6"/>
+  <!-- Box front-right face -->
+  <polygon points="48,50 66,40 66,60 48,70"
+    fill="#302818" stroke="#281e14" stroke-width="0.5"/>
+  <!-- Box front-left face -->
+  <polygon points="30,40 48,50 48,70 30,60"
+    fill="#342c20" stroke="#281e14" stroke-width="0.5"/>
+
+  <!-- Top flap lines (partially open) -->
+  <line x1="38" y1="35" x2="48" y2="42" stroke="#2c2418" stroke-width="0.6"/>
+  <line x1="58" y1="35" x2="48" y2="42" stroke="#2c2418" stroke-width="0.6"/>
+  <!-- Top flap fold -->
+  <polygon points="30,40 38,35 48,42 48,50"
+    fill="#3e3424" opacity="0.4"/>
+
+  <!-- Tape strip -->
+  <line x1="48" y1="30" x2="48" y2="50" stroke="rgba(200,168,76,0.1)" stroke-width="2"/>
+
+  <!-- Label area -->
+  <rect x="51" y="46" width="10" height="6" fill="#3a3428" rx="0.5" opacity="0.5"/>
+
+  <!-- Shadow -->
+  <ellipse cx="48" cy="74" rx="14" ry="4" fill="rgba(0,0,0,0.1)"/>
+</svg>

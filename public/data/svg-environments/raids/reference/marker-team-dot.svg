@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <defs>
+    <radialGradient id="td-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(200,168,76,0.3)"/>
+      <stop offset="100%" stop-color="rgba(200,168,76,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Ambient glow -->
+  <circle cx="10" cy="10" r="9" fill="url(#td-glow)"/>
+  <!-- Team dot — gold, readable at small scale -->
+  <circle cx="10" cy="10" r="4" fill="#c8a84c"/>
+  <circle cx="10" cy="10" r="4" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+  <!-- Inner bright point -->
+  <circle cx="9" cy="9" r="1.2" fill="rgba(255,255,255,0.15)"/>
+</svg>

@@ -1,5 +1,14 @@
 import { templateRegistry } from "content/templates";
-import { buildWorldRenderSnapshot } from "render";
+import { buildRaidWorldSnapshot, composeHqWorldGeometry, createHqWorldSnapshot } from "render";
+import type {
+  ActorMarker,
+  ActorState,
+  FogCell,
+  HqWorldSnapshot,
+  NavAnchorKind,
+  RaidTeamMarker,
+  RaidWorldSnapshot,
+} from "render";
 import {
   CURRENT_CONTENT_COMPATIBILITY,
   CURRENT_SAVE_SCHEMA_VERSION,
@@ -13,15 +22,36 @@ import {
   STABLE_SIM_COMMAND_TYPES,
   createAscensionSimulation,
   createBootstrapWorldSnapshot,
+  findPath,
+  interpolatePathPosition,
+  resolveRoomAnchor,
   type AscensionSimulation,
+  type NavPath,
   type SimCommand,
   type StableSimCommandType,
 } from "sim";
+import { stableStringHash } from "lib/stable-hash";
+import type { AudioCueId } from "app/features/audio";
 
 const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
+const PRESENTATION_FRAME_INTERVAL_MS = 50;
+
+/** Duration for an actor to travel between rooms (ms). */
+const ACTOR_MOVE_DURATION_MS = 800;
+
+/**
+ * Transient per-actor movement state.
+ * Not persisted; purely presentation-layer animation.
+ */
+interface ActorMovement {
+  fromRoomId: string;
+  toRoomId: string;
+  path: NavPath;
+  startedAtMs: number;
+  durationMs: number;
+}
 
 type RuntimePhase1View = ReturnType<AscensionSimulation["getPhase1View"]>;
-type RuntimeWorldRenderSnapshot = ReturnType<typeof buildWorldRenderSnapshot>;
 type RuntimeSessionListener = (session: RuntimeSession) => void;
 
 export type RuntimeRouteMode = "preview" | "new" | "load";
@@ -40,7 +70,8 @@ export interface RuntimeSessionPersistenceState {
 export interface RuntimeSessionViewState {
   worldSnapshot: WorldSnapshot;
   phase1View: RuntimePhase1View;
-  worldRenderSnapshot: RuntimeWorldRenderSnapshot;
+  hqWorldSnapshot: HqWorldSnapshot | null;
+  raidWorldSnapshot: RaidWorldSnapshot | null;
   isPreview: boolean;
   isSaveBacked: boolean;
   isAutoTicking: boolean;
@@ -89,7 +120,6 @@ export interface RuntimeSession {
   state: RuntimeSessionViewState;
   phase1View: RuntimePhase1View;
   worldSnapshot: WorldSnapshot;
-  worldRenderSnapshot: RuntimeWorldRenderSnapshot;
   isPreview: boolean;
   isSaveBacked: boolean;
   isAutoTicking: boolean;
@@ -97,6 +127,7 @@ export interface RuntimeSession {
   commands: RuntimeSessionCommands;
   lifecycle: RuntimeSessionLifecycle;
   subscribe(listener: RuntimeSessionListener): () => void;
+  drainPendingCues(): readonly AudioCueId[];
   dispose(): void;
 }
 
@@ -154,7 +185,8 @@ function buildRuntimeSessionState(session: RuntimeSession): RuntimeSessionViewSt
   return {
     worldSnapshot: session.worldSnapshot,
     phase1View: session.phase1View,
-    worldRenderSnapshot: session.worldRenderSnapshot,
+    hqWorldSnapshot: session.state.hqWorldSnapshot,
+    raidWorldSnapshot: session.state.raidWorldSnapshot,
     isPreview: session.isPreview,
     isSaveBacked: session.isSaveBacked,
     isAutoTicking: session.isAutoTicking,
@@ -177,6 +209,78 @@ function createPersistedSessionSave(session: RuntimeSession): PersistedSaveGame 
   };
 }
 
+function resolveCuesForCommand(
+  command: SimCommand,
+  beforeWorldSnapshot: WorldSnapshot,
+  afterWorldSnapshot: WorldSnapshot,
+  beforePhase1View: RuntimePhase1View,
+  afterPhase1View: RuntimePhase1View,
+): AudioCueId[] {
+  switch (command.type) {
+    case "sim/place-room": {
+      return afterPhase1View.rooms.length > beforePhase1View.rooms.length ? ["room.place"] : [];
+    }
+    case "sim/set-room-active": {
+      const previousRoom = beforePhase1View.rooms.find((room) => room.id === command.roomId);
+      const nextRoom = afterPhase1View.rooms.find((room) => room.id === command.roomId);
+      if (!previousRoom || !nextRoom || previousRoom.isOperational === nextRoom.isOperational) {
+        return [];
+      }
+
+      return [nextRoom.isOperational ? "room.activate" : "room.deactivate"];
+    }
+    case "sim/accept-recruit": {
+      const previousOperatorCount = beforePhase1View.operators.filter(
+        (operator) => operator.lifecycle.status !== "dead",
+      ).length;
+      const nextOperatorCount = afterPhase1View.operators.filter(
+        (operator) => operator.lifecycle.status !== "dead",
+      ).length;
+      return nextOperatorCount > previousOperatorCount ? ["operator.recruit"] : [];
+    }
+    case "sim/hire-staff": {
+      return afterWorldSnapshot.staff.length > beforeWorldSnapshot.staff.length
+        ? ["staff.hire"]
+        : [];
+    }
+    case "sim/assign-staff": {
+      const previousStaff = beforeWorldSnapshot.staff.find((staff) => staff.id === command.staffId);
+      const nextStaff = afterWorldSnapshot.staff.find((staff) => staff.id === command.staffId);
+      if (
+        !previousStaff ||
+        !nextStaff ||
+        (previousStaff.assignment.kind === nextStaff.assignment.kind &&
+          previousStaff.assignment.targetId === nextStaff.assignment.targetId)
+      ) {
+        return [];
+      }
+
+      return ["staff.assign"];
+    }
+    case "sim/purchase-building-upgrade": {
+      return afterWorldSnapshot.appliedUpgradeIds.length >
+        beforeWorldSnapshot.appliedUpgradeIds.length
+        ? ["hq.upgrade"]
+        : [];
+    }
+    case "sim/purchase-room-upgrade": {
+      const previousRoom = beforeWorldSnapshot.rooms.find((room) => room.id === command.roomId);
+      const nextRoom = afterWorldSnapshot.rooms.find((room) => room.id === command.roomId);
+      if (!previousRoom || !nextRoom) return [];
+      const prevCount = previousRoom.appliedUpgradeIds?.length ?? 0;
+      const nextCount = nextRoom.appliedUpgradeIds?.length ?? 0;
+      return nextCount > prevCount ? ["hq.upgrade"] : [];
+    }
+    case "sim/reject-recruit": {
+      return afterPhase1View.visitors.length < beforePhase1View.visitors.length
+        ? ["hq.dismiss"]
+        : [];
+    }
+    default:
+      return [];
+  }
+}
+
 function createRuntimeSession(
   worldSnapshot: WorldSnapshot,
   options: {
@@ -192,20 +296,395 @@ function createRuntimeSession(
 
   let closed = false;
   let autoTickInterval: ReturnType<typeof setInterval> | undefined;
+  let presentationRefreshInterval: ReturnType<typeof setInterval> | undefined;
   let autoTickPending = false;
   let mutationQueue = Promise.resolve();
   let persistQueued = false;
   let persistPromise: Promise<void> | undefined;
+  const pendingCues: AudioCueId[] = [];
+  /** Transient movement state per actor. Key is actor id. */
+  const actorMovements = new Map<string, ActorMovement>();
+  /** Previous room assignment per actor. Key is actor id. */
+  const actorPreviousRoomId = new Map<string, string>();
   let session!: RuntimeSession;
 
-  const refreshDerivedState = () => {
+  const syncPresentationRefresh = () => {
+    if (closed || actorMovements.size === 0) {
+      if (presentationRefreshInterval) {
+        clearInterval(presentationRefreshInterval);
+        presentationRefreshInterval = undefined;
+      }
+      return;
+    }
+
+    if (presentationRefreshInterval) {
+      return;
+    }
+
+    presentationRefreshInterval = setInterval(() => {
+      if (closed) {
+        clearInterval(presentationRefreshInterval);
+        presentationRefreshInterval = undefined;
+        return;
+      }
+
+      session.state.hqWorldSnapshot = deriveHqWorldSnapshot(session.phase1View, Date.now());
+      session.state = buildRuntimeSessionState(session);
+      notifyListeners();
+
+      if (actorMovements.size === 0 && presentationRefreshInterval) {
+        clearInterval(presentationRefreshInterval);
+        presentationRefreshInterval = undefined;
+      }
+    }, PRESENTATION_FRAME_INTERVAL_MS);
+  };
+
+  const refreshDerivedState = (nowMs = Date.now()) => {
     const nextWorldSnapshot = simulation.getWorldSnapshot();
+    const nextPhase1View = simulation.getPhase1View(nextWorldSnapshot);
 
     session.worldSnapshot = nextWorldSnapshot;
-    session.phase1View = simulation.getPhase1View(nextWorldSnapshot);
-    session.worldRenderSnapshot = buildWorldRenderSnapshot(nextWorldSnapshot, templateRegistry);
+    session.phase1View = nextPhase1View;
+    session.state.hqWorldSnapshot = deriveHqWorldSnapshot(nextPhase1View, nowMs);
+    session.state.raidWorldSnapshot = deriveRaidWorldSnapshot(nextPhase1View);
+    syncPresentationRefresh();
     session.state = buildRuntimeSessionState(session);
   };
+
+  function resolveActorState(scheduleBlock: string): ActorState {
+    switch (scheduleBlock) {
+      case "raid":
+        return "deployed";
+      case "recovery":
+        return "recovering";
+      case "social":
+        return "socializing";
+      case "work":
+        return "working";
+      case "rest":
+        return "resting";
+      case "training":
+        return "training";
+      default:
+        return "idle";
+    }
+  }
+
+  function computeRoomAnchorPosition(
+    roomId: string,
+    actorId: string,
+    navGraph: ReturnType<typeof composeHqWorldGeometry>["navGraph"],
+    preferredKind: NavAnchorKind = "idle",
+  ): { x: number; y: number } {
+    const roomAnchors = navGraph.anchors.filter((anchor) => anchor.roomId === roomId);
+    if (roomAnchors.length === 0) {
+      // Fallback: use any available anchor, or the center of the first room.
+      const anyAnchor = navGraph.anchors[0];
+      if (anyAnchor) return { x: anyAnchor.x, y: anyAnchor.y + 26 };
+      return { x: 400, y: 400 };
+    }
+
+    const orderedAnchors = [
+      ...roomAnchors.filter((anchor) => anchor.kind === preferredKind),
+      ...roomAnchors.filter((anchor) => anchor.kind === "work" && preferredKind !== "work"),
+      ...roomAnchors.filter((anchor) => anchor.kind === "social" && preferredKind !== "social"),
+      ...roomAnchors.filter((anchor) => anchor.kind === "recovery" && preferredKind !== "recovery"),
+      ...roomAnchors.filter((anchor) => anchor.kind === "idle" && preferredKind !== "idle"),
+      ...roomAnchors.filter((anchor) => anchor.kind === "entry" && preferredKind !== "entry"),
+    ];
+    const hash = stableStringHash(actorId);
+    const anchor = orderedAnchors[hash % orderedAnchors.length] ?? roomAnchors[0];
+    // Apply deterministic jitter so co-located actors don't stack exactly
+    const jitterX = ((hash % 11) - 5) * 12;
+    const jitterY = ((hash % 7) - 3) * 10;
+    return { x: anchor.x + jitterX, y: anchor.y + 26 + jitterY };
+  }
+
+  function getPreferredAnchorKind(scheduleBlock: string): NavAnchorKind {
+    switch (scheduleBlock) {
+      case "work":
+      case "training":
+        return "work";
+      case "social":
+        return "social";
+      case "recovery":
+        return "recovery";
+      default:
+        return "idle";
+    }
+  }
+
+  type RoomEntry = { id: string; isOperational: boolean; functionTag: string };
+
+  function pickRoom(
+    rooms: ReadonlyArray<RoomEntry>,
+    hash: number,
+    predicate: (room: RoomEntry) => boolean,
+  ): string | null {
+    const matches = rooms.filter(predicate);
+    return matches.length === 0 ? null : (matches[hash % matches.length]?.id ?? null);
+  }
+
+  function pickByTagPreference(
+    rooms: ReadonlyArray<RoomEntry>,
+    hash: number,
+    preferredTags: string[],
+  ): string | null {
+    for (const functionTag of preferredTags) {
+      const roomId =
+        pickRoom(rooms, hash, (r) => r.isOperational && r.functionTag === functionTag) ??
+        pickRoom(rooms, hash, (r) => r.functionTag === functionTag);
+      if (roomId) return roomId;
+    }
+    return pickRoom(rooms, hash, (r) => r.isOperational) ?? pickRoom(rooms, hash, () => true);
+  }
+
+  function resolveOperatorRoomId(
+    operator: RuntimePhase1View["operators"][number],
+    rooms: ReadonlyArray<RoomEntry>,
+  ): string | null {
+    if (operator.schedule.currentBlock === "raid" || operator.assignment.kind === "raid") {
+      return null;
+    }
+
+    if (
+      operator.assignment.targetId &&
+      rooms.some((room) => room.id === operator.assignment.targetId)
+    ) {
+      return operator.assignment.targetId;
+    }
+
+    const needsRecovery =
+      operator.schedule.currentBlock === "recovery" ||
+      operator.injury.recoveryHoursRemaining > 0 ||
+      operator.injury.severity >= 25;
+    const preferredRoomTags = needsRecovery
+      ? ["room:recovery", "room:social"]
+      : operator.schedule.currentBlock === "social"
+        ? ["room:social", "room:staffing"]
+        : operator.schedule.currentBlock === "work" ||
+            operator.schedule.currentBlock === "training" ||
+            operator.schedule.currentBlock === "raid"
+          ? ["room:operations", "room:training", "room:staffing"]
+          : ["room:social", "room:staffing", "room:operations", "room:recovery"];
+
+    return pickByTagPreference(rooms, stableStringHash(operator.id), preferredRoomTags);
+  }
+
+  function resolveStaffRoomId(
+    staff: RuntimePhase1View["staff"][number],
+    rooms: ReadonlyArray<RoomEntry>,
+  ): string | null {
+    if (staff.assignment.targetId && rooms.some((room) => room.id === staff.assignment.targetId)) {
+      return staff.assignment.targetId;
+    }
+
+    const preferredRoomTags =
+      staff.roleTag === "staff:medical"
+        ? ["room:recovery", "room:operations"]
+        : staff.roleTag === "staff:reception"
+          ? ["room:operations", "room:staffing"]
+          : staff.roleTag === "staff:admin" ||
+              staff.roleTag === "staff:logistics" ||
+              staff.roleTag === "staff:maintenance"
+            ? ["room:staffing", "room:operations", "room:social"]
+            : ["room:operations", "room:staffing", "room:social"];
+
+    return pickByTagPreference(rooms, stableStringHash(staff.id), preferredRoomTags);
+  }
+
+  function deriveHqWorldSnapshot(view: RuntimePhase1View, nowMs = Date.now()): HqWorldSnapshot {
+    const rooms = view.rooms.map((room) => {
+      const template = templateRegistry.roomById.get(room.templateId) ?? templateRegistry.rooms[0];
+      const functionTag = template.tags.find((t) => t.startsWith("room:")) ?? "room:operations";
+      return {
+        id: room.id,
+        templateId: room.templateId,
+        name: room.name,
+        tier: room.tier,
+        isOperational: room.isOperational,
+        functionTag,
+        footprint: room.footprint,
+      };
+    });
+
+    const buildingName =
+      templateRegistry.buildingById.get(view.building.activeBuildingId)?.name ?? "Bodega HQ";
+    const geometry = composeHqWorldGeometry(rooms);
+    const navGraph = geometry.navGraph;
+
+    const operatorActors: ActorMarker[] = view.operators
+      .filter((op) => op.lifecycle.status !== "dead")
+      .flatMap((op) => {
+        const currentRoomId = resolveOperatorRoomId(op, rooms);
+        if (!currentRoomId) {
+          actorPreviousRoomId.delete(op.id);
+          actorMovements.delete(op.id);
+          return [];
+        }
+
+        const preferredAnchorKind = getPreferredAnchorKind(op.schedule.currentBlock);
+        const previousRoomId = actorPreviousRoomId.get(op.id);
+
+        // Detect room change and initiate movement
+        if (
+          previousRoomId !== undefined &&
+          previousRoomId !== currentRoomId &&
+          currentRoomId !== ""
+        ) {
+          const fromAnchor = resolveRoomAnchor(navGraph, previousRoomId, "idle");
+          const toAnchor = resolveRoomAnchor(navGraph, currentRoomId, preferredAnchorKind);
+          if (fromAnchor && toAnchor) {
+            const path = findPath(navGraph, fromAnchor.id, toAnchor.id);
+            if (path && path.totalMs > 0) {
+              actorMovements.set(op.id, {
+                fromRoomId: previousRoomId,
+                toRoomId: currentRoomId,
+                path,
+                startedAtMs: nowMs,
+                durationMs: Math.max(ACTOR_MOVE_DURATION_MS, path.totalMs),
+              });
+            }
+          }
+        }
+        actorPreviousRoomId.set(op.id, currentRoomId);
+
+        // Apply movement animation
+        const movement = actorMovements.get(op.id);
+        if (movement) {
+          const progress = Math.min(1, (nowMs - movement.startedAtMs) / movement.durationMs);
+
+          if (progress >= 1) {
+            actorMovements.delete(op.id);
+          } else {
+            const pos = interpolatePathPosition(navGraph, movement.path, progress);
+            const targetPos = computeRoomAnchorPosition(
+              currentRoomId,
+              op.id,
+              navGraph,
+              preferredAnchorKind,
+            );
+            return {
+              id: op.id,
+              kind: "operator" as const,
+              x: pos.x,
+              y: pos.y,
+              targetX: targetPos.x,
+              targetY: targetPos.y,
+              roomId: currentRoomId,
+              label: op.identity.name,
+              presetId: op.appearance.presetId,
+              roleTag: op.identity.roleTag,
+              state: "moving" as ActorState,
+              moveProgress: progress,
+            };
+          }
+        }
+
+        // Static position at current room anchor
+        const pos = computeRoomAnchorPosition(currentRoomId, op.id, navGraph, preferredAnchorKind);
+        return {
+          id: op.id,
+          kind: "operator" as const,
+          x: pos.x,
+          y: pos.y,
+          targetX: pos.x,
+          targetY: pos.y,
+          roomId: currentRoomId,
+          label: op.identity.name,
+          presetId: op.appearance.presetId,
+          roleTag: op.identity.roleTag,
+          state: resolveActorState(op.schedule.currentBlock),
+          moveProgress: 1,
+        };
+      });
+
+    // Clean up stale entries for operators no longer alive
+    const liveOperatorIds = new Set(operatorActors.map((a) => a.id));
+    for (const id of actorPreviousRoomId.keys()) {
+      if (!liveOperatorIds.has(id)) {
+        actorPreviousRoomId.delete(id);
+        actorMovements.delete(id);
+      }
+    }
+
+    // ── Staff actors ─────────────────────────────────────────────────
+    const staffActors: ActorMarker[] = view.staff.flatMap((staff) => {
+      const roomId = resolveStaffRoomId(staff, rooms);
+      if (!roomId) {
+        return [];
+      }
+      const pos = computeRoomAnchorPosition(
+        roomId,
+        staff.id,
+        navGraph,
+        staff.assignment.kind === "room" ? "work" : "idle",
+      );
+      return {
+        id: staff.id,
+        kind: "staff" as const,
+        x: pos.x,
+        y: pos.y,
+        targetX: pos.x,
+        targetY: pos.y,
+        roomId,
+        label: staff.name,
+        presetId: "",
+        roleTag: staff.roleTag,
+        state: staff.assignment.kind === "room" ? "working" : ("idle" as ActorState),
+        moveProgress: 1,
+      };
+    });
+
+    const actors: ActorMarker[] = [...operatorActors, ...staffActors];
+
+    return createHqWorldSnapshot(buildingName, geometry, actors);
+  }
+
+  function deriveRaidWorldSnapshot(view: RuntimePhase1View): RaidWorldSnapshot | null {
+    if (!view.contractSite || !view.fogOfWar) {
+      return null;
+    }
+
+    const teams: RaidTeamMarker[] = view.activeRaids.map((raid) => ({
+      teamId: raid.id,
+      raidId: raid.id,
+      operatorIds: raid.operatorIds,
+      x: raid.x,
+      y: raid.y,
+      goal: raid.teamGoal,
+      state: raid.teamState,
+    }));
+
+    // Derive fog-of-war from authoritative simulation state
+    const fog = view.fogOfWar;
+    const fogCells: FogCell[] = [];
+    for (let y = 0; y < fog.gridHeight; y++) {
+      for (let x = 0; x < fog.gridWidth; x++) {
+        fogCells.push({ x, y, revealed: fog.revealed[y * fog.gridWidth + x] ?? false });
+      }
+    }
+
+    return buildRaidWorldSnapshot(
+      view.contractSite.location,
+      view.contractSite.contractSiteId,
+      fog.gridWidth * 32,
+      fog.gridHeight * 32,
+      teams,
+      view.raidWorld?.enemyMarkers ?? [],
+      view.raidWorld?.featureMarkers ?? [],
+      fogCells,
+    );
+  }
+
+  function appendSimulationCues(): void {
+    const runtimeCues = simulation.drainRuntimeCues();
+    if (runtimeCues.length === 0) {
+      return;
+    }
+
+    pendingCues.push(...runtimeCues);
+  }
 
   const notifyListeners = () => {
     listeners.forEach((listener) => listener(session));
@@ -267,8 +746,21 @@ function createRuntimeSession(
     const nextMutation = mutationQueue
       .catch(() => undefined)
       .then(() => {
+        const beforeWorldSnapshot = session.worldSnapshot;
+        const beforePhase1View = session.phase1View;
+
         simulation.dispatch(command);
         refreshDerivedState();
+        pendingCues.push(
+          ...resolveCuesForCommand(
+            command,
+            beforeWorldSnapshot,
+            session.worldSnapshot,
+            beforePhase1View,
+            session.phase1View,
+          ),
+        );
+        appendSimulationCues();
         notifyListeners();
         schedulePersist();
       });
@@ -399,10 +891,6 @@ function createRuntimeSession(
 
   const initialWorldSnapshot = simulation.getWorldSnapshot();
   const initialPhase1View = simulation.getPhase1View();
-  const initialWorldRenderSnapshot = buildWorldRenderSnapshot(
-    initialWorldSnapshot,
-    templateRegistry,
-  );
   const initialPersistence: RuntimeSessionPersistenceState =
     isSaveBacked && options.save
       ? {
@@ -412,6 +900,9 @@ function createRuntimeSession(
       : {
           status: "idle",
         };
+
+  const initialHqWorld = deriveHqWorldSnapshot(initialPhase1View);
+  const initialRaidWorld = deriveRaidWorldSnapshot(initialPhase1View);
 
   session = {
     mode: options.mode,
@@ -423,7 +914,8 @@ function createRuntimeSession(
     state: {
       worldSnapshot: initialWorldSnapshot,
       phase1View: initialPhase1View,
-      worldRenderSnapshot: initialWorldRenderSnapshot,
+      hqWorldSnapshot: initialHqWorld,
+      raidWorldSnapshot: initialRaidWorld,
       isPreview,
       isSaveBacked,
       isAutoTicking: false,
@@ -431,7 +923,6 @@ function createRuntimeSession(
     },
     phase1View: initialPhase1View,
     worldSnapshot: initialWorldSnapshot,
-    worldRenderSnapshot: initialWorldRenderSnapshot,
     isPreview,
     isSaveBacked,
     isAutoTicking: false,
@@ -445,12 +936,21 @@ function createRuntimeSession(
         listeners.delete(listener);
       };
     },
+    drainPendingCues() {
+      const drained = pendingCues.slice();
+      pendingCues.length = 0;
+      return drained;
+    },
     dispose() {
       if (closed) {
         return;
       }
 
       closed = true;
+      if (presentationRefreshInterval) {
+        clearInterval(presentationRefreshInterval);
+        presentationRefreshInterval = undefined;
+      }
       lifecycle.stopAutoTick();
       listeners.clear();
     },

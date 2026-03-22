@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Team position dot — gold, readable at base zoom -->
+  <circle cx="8" cy="8" r="4" fill="rgba(200,168,76,0.2)"/>
+  <circle cx="8" cy="8" r="2.5" fill="#c8a84c"/>
+  <circle cx="8" cy="7" r="1" fill="rgba(255,255,255,0.15)"/>
+</svg>

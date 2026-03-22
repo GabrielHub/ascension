@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <radialGradient id="cham-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(200,168,76,0.04)"/>
+      <stop offset="100%" stop-color="rgba(200,168,76,0)"/>
+    </radialGradient>
+    <linearGradient id="cham-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#181c2c"/>
+      <stop offset="100%" stop-color="#141828"/>
+    </linearGradient>
+  </defs>
+  <!-- Floor — slightly warmer than corridor -->
+  <rect width="32" height="32" fill="url(#cham-floor)"/>
+  <!-- Ambient glow suggesting open space -->
+  <rect width="32" height="32" fill="url(#cham-glow)"/>
+  <!-- Subtle floor pattern -->
+  <rect x="4" y="4" width="24" height="24" fill="none" stroke="rgba(42,53,85,0.15)" stroke-width="0.5" rx="1"/>
+  <!-- Corner accents -->
+  <rect x="2" y="2" width="3" height="1" fill="rgba(42,53,85,0.2)" rx="0.5"/>
+  <rect x="27" y="2" width="3" height="1" fill="rgba(42,53,85,0.2)" rx="0.5"/>
+  <rect x="2" y="29" width="3" height="1" fill="rgba(42,53,85,0.2)" rx="0.5"/>
+  <rect x="27" y="29" width="3" height="1" fill="rgba(42,53,85,0.2)" rx="0.5"/>
+</svg>

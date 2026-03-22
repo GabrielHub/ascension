@@ -5,7 +5,8 @@ export function meta() {
     { title: "Ascension | SVG Playground" },
     {
       name: "description",
-      content: "Operator SVG style playground — comparison, iteration, and validation.",
+      content:
+        "SVG experimentation playground — operators, HQ angled-isometric environments, and visual asset review.",
     },
   ];
 }

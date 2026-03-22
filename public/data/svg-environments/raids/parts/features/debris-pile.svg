@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Lightweight debris cluster — reads as rubble at minimap scale -->
+  <circle cx="5" cy="10" r="2.5" fill="#1a1e30" opacity="0.5"/>
+  <circle cx="10" cy="9" r="2" fill="#1a1e30" opacity="0.4"/>
+  <circle cx="7" cy="7" r="1.5" fill="#1e2540" opacity="0.45"/>
+  <line x1="3" y1="12" x2="12" y2="12" stroke="rgba(200,168,76,0.03)" stroke-width="0.5"/>
+</svg>

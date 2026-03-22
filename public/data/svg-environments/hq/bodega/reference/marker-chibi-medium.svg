@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" fill="none">
+  <!-- Medium-build chibi marker — exploration asset for HQ actor tokens -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="16" cy="37" rx="7.5" ry="2.2" fill="#000" opacity="0.18"/>
+
+  <!-- Body (medium rectangle) -->
+  <path d="M9.5 22 Q9.5 20 11 19 L21 19 Q22.5 20 22.5 22 L22.5 34 Q22.5 36 21 36 L11 36 Q9.5 36 9.5 34 Z"
+        fill="#3d2c20" stroke="#0a0a0c" stroke-width="0.8"/>
+  <!-- Collar accent stripe -->
+  <rect x="11" y="19" width="10" height="2.5" rx="1" fill="#c8a84c" opacity="0.85"/>
+
+  <!-- Neck -->
+  <rect x="14" y="16" width="4" height="4" rx="1.2" fill="#c4956a"/>
+
+  <!-- Head circle -->
+  <circle cx="16" cy="12" r="7.5" fill="#c4956a" stroke="#0a0a0c" stroke-width="0.8"/>
+  <!-- Face shadow -->
+  <path d="M10.5 14 Q16 17.5 21.5 14 Q20 8.5 16 6.5 Q12 8.5 10.5 14" fill="#000" opacity="0.08"/>
+
+  <!-- Hair cap -->
+  <path d="M9 10 Q8.5 4.5 16 3.5 Q23.5 4.5 23 10 Q21.5 7.5 16 7 Q10.5 7.5 9 10"
+        fill="#2a1f18" stroke="#0a0a0c" stroke-width="0.6"/>
+
+  <!-- Eyes -->
+  <circle cx="13.5" cy="12.5" r="1.1" fill="#0a0a0c"/>
+  <circle cx="18.5" cy="12.5" r="1.1" fill="#0a0a0c"/>
+  <circle cx="14" cy="12" r="0.35" fill="#fff" opacity="0.7"/>
+  <circle cx="19" cy="12" r="0.35" fill="#fff" opacity="0.7"/>
+</svg>

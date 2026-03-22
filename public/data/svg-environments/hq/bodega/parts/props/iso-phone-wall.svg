@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32">
+  <!-- Wall-mounted phone. Small wall detail for back-office rooms. -->
+
+  <!-- Phone body -->
+  <rect x="4" y="6" width="16" height="20" rx="1.5" fill="#1e1e26" stroke="#2a2a32" stroke-width="0.5"/>
+
+  <!-- Handset cradle area -->
+  <rect x="6" y="8" width="12" height="6" rx="1" fill="#16161e"/>
+  <!-- Handset (slightly lifted) -->
+  <rect x="7" y="7" width="10" height="4" rx="2" fill="#2a2a32" stroke="#3a3a42" stroke-width="0.4"/>
+
+  <!-- Keypad buttons (3x3 grid) -->
+  <rect x="7" y="16" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="11" y="16" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="15" y="16" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="7" y="19" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="11" y="19" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="15" y="19" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="7" y="22" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="11" y="22" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+  <rect x="15" y="22" width="3" height="2" rx="0.3" fill="#2a2a32"/>
+
+  <!-- Cord (dangling down) -->
+  <path d="M12,26 Q14,30 12,32" fill="none" stroke="#3a3a42" stroke-width="0.6"/>
+
+  <!-- Indicator light -->
+  <circle cx="18" cy="9" r="0.8" fill="#c8a84c" opacity="0.3"/>
+</svg>

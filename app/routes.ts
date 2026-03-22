@@ -5,4 +5,5 @@ export default [
   route("game", "routes/game.tsx"),
   route("svg-playground", "routes/svg-playground.tsx"),
   route("svg-assets", "routes/svg-assets.tsx"),
+  route("audio-playground", "routes/audio-playground.tsx"),
 ] satisfies RouteConfig;

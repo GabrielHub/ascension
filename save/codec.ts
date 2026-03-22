@@ -5,6 +5,8 @@ import {
   type OperatorAppearanceSnapshot,
   type ActiveEventSnapshot,
   type ActiveRaidSnapshot,
+  type ContractSiteSnapshot,
+  type FogOfWarSnapshot,
   type BuildingSnapshot,
   type GuildSnapshot,
   type OperatorLifecycleSnapshot,
@@ -22,14 +24,15 @@ import {
   type StaffSnapshot,
   type VisitorSnapshot,
   type WorldSnapshot,
+  type WorldSchedulerSnapshot,
   type WorldTimeSnapshot,
 } from "./types";
 import {
-  OPERATOR_VISIBLE_GEAR_SLOT_IDS,
   getDefaultOperatorAppearancePartsIndex,
   getOperatorVisibleGearPartCategory,
-  isOperatorAppearancePresetId,
+  isOperatorAppearanceRecipeId,
   normalizeOperatorAppearance,
+  OPERATOR_VISIBLE_GEAR_SLOT_IDS,
   parseOperatorAppearancePartIndex,
   type OperatorAppearancePartIndexEntry,
 } from "./appearance";
@@ -58,7 +61,6 @@ type ParsedRaidOpportunitySnapshot = RaidOpportunitySnapshot & { _changed: boole
 type ParsedRaidSummarySnapshot = RaidSummarySnapshot & { _changed: boolean };
 
 interface OperatorAppearanceParseContext {
-  schemaVersion: number;
   getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
 }
 
@@ -121,6 +123,16 @@ function expectPositiveInteger(value: unknown, path: string): number {
 
   if (number <= 0) {
     fail(path, "must be greater than 0.");
+  }
+
+  return number;
+}
+
+function expectNonNegativeInteger(value: unknown, path: string): number {
+  const number = expectInteger(value, path);
+
+  if (number < 0) {
+    fail(path, "must be greater than or equal to 0.");
   }
 
   return number;
@@ -207,11 +219,18 @@ function parseGuildSnapshot(value: unknown, path: string): GuildSnapshot {
 
 function parseWorldTimeSnapshot(value: unknown, path: string): WorldTimeSnapshot {
   const record = expectRecord(value, path);
+  const tick = expectNonNegativeInteger(record.tick, `${path}.tick`);
+  const day = expectPositiveInteger(record.day, `${path}.day`);
+  const minuteOfDay = expectInteger(record.minuteOfDay, `${path}.minuteOfDay`);
+
+  if (minuteOfDay < 0 || minuteOfDay >= 1440) {
+    fail(`${path}.minuteOfDay`, "must be between 0 and 1439.");
+  }
 
   return {
-    tick: expectNumber(record.tick, `${path}.tick`),
-    day: expectNumber(record.day, `${path}.day`),
-    minuteOfDay: expectNumber(record.minuteOfDay, `${path}.minuteOfDay`),
+    tick,
+    day,
+    minuteOfDay,
   };
 }
 
@@ -228,8 +247,9 @@ function parseBuildingSnapshot(value: unknown, path: string): BuildingSnapshot {
 
 function parseRoomSnapshot(value: unknown, path: string): RoomSnapshot {
   const record = expectRecord(value, path);
-  const position = expectRecord(record.position, `${path}.position`);
+  const footprint = expectRecord(record.footprint, `${path}.footprint`);
   const isActive = record.isActive;
+  const appliedUpgradeIds = record.appliedUpgradeIds;
 
   return {
     id: expectString(record.id, `${path}.id`),
@@ -237,13 +257,104 @@ function parseRoomSnapshot(value: unknown, path: string): RoomSnapshot {
     tier: expectNumber(record.tier, `${path}.tier`),
     capacity: expectNumber(record.capacity, `${path}.capacity`),
     occupancy: expectNumber(record.occupancy, `${path}.occupancy`),
-    position: {
-      x: expectNumber(position.x, `${path}.position.x`),
-      y: expectNumber(position.y, `${path}.position.y`),
-      width: expectNumber(position.width, `${path}.position.width`),
-      height: expectNumber(position.height, `${path}.position.height`),
+    footprint: {
+      col: expectInteger(footprint.col, `${path}.footprint.col`),
+      row: expectInteger(footprint.row, `${path}.footprint.row`),
+      cols: expectPositiveInteger(footprint.cols, `${path}.footprint.cols`),
+      rows: expectPositiveInteger(footprint.rows, `${path}.footprint.rows`),
     },
     ...(isActive === undefined ? {} : { isActive: expectBoolean(isActive, `${path}.isActive`) }),
+    ...(appliedUpgradeIds === undefined
+      ? {}
+      : { appliedUpgradeIds: expectStringArray(appliedUpgradeIds, `${path}.appliedUpgradeIds`) }),
+  };
+}
+
+function parseContractSiteSnapshot(
+  value: unknown,
+  path: string,
+): { contractSite: ContractSiteSnapshot | null; changed: boolean } {
+  if (value == null) {
+    return { contractSite: null, changed: false };
+  }
+
+  const record = expectRecord(value, path);
+
+  return {
+    contractSite: {
+      contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`),
+      missionId: expectString(record.missionId, `${path}.missionId`),
+      location: expectString(record.location, `${path}.location`),
+      bossDefeated: expectBoolean(record.bossDefeated, `${path}.bossDefeated`),
+      contractLost: expectBoolean(record.contractLost, `${path}.contractLost`),
+      threat: expectNumber(record.threat, `${path}.threat`),
+      intel: expectNumber(record.intel, `${path}.intel`),
+      reward: expectNumber(record.reward, `${path}.reward`),
+      securedAtTick: expectInteger(record.securedAtTick, `${path}.securedAtTick`),
+    },
+    changed: false,
+  };
+}
+
+function parseFogOfWarSnapshot(
+  value: unknown,
+  path: string,
+): { fogOfWar: FogOfWarSnapshot | null; changed: boolean } {
+  if (value == null) {
+    return { fogOfWar: null, changed: false };
+  }
+
+  const record = expectRecord(value, path);
+  const gridWidth = expectPositiveInteger(record.gridWidth, `${path}.gridWidth`);
+  const gridHeight = expectPositiveInteger(record.gridHeight, `${path}.gridHeight`);
+  const revealed = expectArray(record.revealed, `${path}.revealed`).map((entry, index) =>
+    expectBoolean(entry, `${path}.revealed[${index}]`),
+  );
+  const expectedCellCount = gridWidth * gridHeight;
+  if (revealed.length !== expectedCellCount) {
+    fail(`${path}.revealed`, `must contain exactly ${expectedCellCount} cells.`);
+  }
+  const revealedCount = expectNonNegativeInteger(record.revealedCount, `${path}.revealedCount`);
+  const actualRevealedCount = revealed.filter(Boolean).length;
+  if (revealedCount !== actualRevealedCount) {
+    fail(`${path}.revealedCount`, `must match the ${actualRevealedCount} revealed cells.`);
+  }
+
+  return {
+    fogOfWar: {
+      gridWidth,
+      gridHeight,
+      revealed,
+      revealedCount,
+    },
+    changed: false,
+  };
+}
+
+function parseSchedulerSnapshot(
+  value: unknown,
+  path: string,
+): { scheduler: WorldSchedulerSnapshot | undefined; changed: boolean } {
+  if (value === undefined) {
+    return { scheduler: undefined, changed: false };
+  }
+
+  const record = expectRecord(value, path);
+
+  return {
+    scheduler: {
+      lastPayrollDay: expectInteger(record.lastPayrollDay, `${path}.lastPayrollDay`),
+      lastVisitorSpawnTick: expectInteger(
+        record.lastVisitorSpawnTick,
+        `${path}.lastVisitorSpawnTick`,
+      ),
+      lastEventTick: expectInteger(record.lastEventTick, `${path}.lastEventTick`),
+      lastRaidOpportunityTick: expectInteger(
+        record.lastRaidOpportunityTick,
+        `${path}.lastRaidOpportunityTick`,
+      ),
+    },
+    changed: false,
   };
 }
 
@@ -270,13 +381,11 @@ function parseOperatorAppearancePartsIndex(
 }
 
 function createOperatorAppearanceParseContext(
-  schemaVersion: number,
   options: SaveCodecOptions,
 ): OperatorAppearanceParseContext {
   let partsIndex: Map<string, OperatorAppearancePartIndexEntry> | undefined;
 
   return {
-    schemaVersion,
     getPartsIndex() {
       if (!partsIndex) {
         partsIndex = parseOperatorAppearancePartsIndex(options);
@@ -357,28 +466,18 @@ function parseOperatorAppearanceSnapshot(
   },
   appearanceContext: OperatorAppearanceParseContext,
 ): { appearance: OperatorAppearanceSnapshot; changed: boolean } {
-  const allowLegacyPresetFallback = appearanceContext.schemaVersion < CURRENT_SAVE_SCHEMA_VERSION;
   const record = value === undefined ? undefined : expectRecord(value, path);
 
-  if (record === undefined && !allowLegacyPresetFallback) {
+  if (record === undefined) {
     fail(path, "must be an object.");
   }
 
-  const allowedKeys = new Set(
-    allowLegacyPresetFallback
-      ? ["presetId", "visibleGear", "portraitId", "seed"]
-      : ["presetId", "visibleGear"],
-  );
+  const allowedKeys = new Set(["presetId", "visibleGear"]);
 
-  const unknownKeys = Object.keys(record ?? {}).filter((key) => !allowedKeys.has(key));
-
-  if (unknownKeys[0]) {
-    fail(path, `contains unknown field "${unknownKeys[0]}".`);
-  }
+  const hadUnknownKeys = Object.keys(record).some((key) => !allowedKeys.has(key));
 
   const normalized = normalizeOperatorAppearance({
     presetId: record?.presetId,
-    legacySeed: record?.seed,
     stableKey: [
       fallback.operatorId,
       getRecordString(fallback.identity, "name") ??
@@ -390,15 +489,8 @@ function parseOperatorAppearanceSnapshot(
       .join(":"),
   });
 
-  if (record === undefined) {
-    return {
-      appearance: normalized.appearance,
-      changed: true,
-    };
-  }
-
-  if (!isOperatorAppearancePresetId(record.presetId) && !allowLegacyPresetFallback) {
-    fail(`${path}.presetId`, "must reference a known operator appearance preset id.");
+  if (!isOperatorAppearanceRecipeId(normalized.appearance.presetId)) {
+    fail(`${path}.presetId`, "must reference a known operator appearance recipe id.");
   }
 
   const visibleGear = parseOperatorVisibleGearSnapshot(
@@ -406,16 +498,13 @@ function parseOperatorAppearanceSnapshot(
     `${path}.visibleGear`,
     appearanceContext,
   );
-  const legacyKeyChanged =
-    allowLegacyPresetFallback &&
-    Object.keys(record).some((key) => key === "portraitId" || key === "seed");
 
   return {
     appearance: {
       presetId: normalized.appearance.presetId,
       ...(visibleGear.visibleGear === undefined ? {} : { visibleGear: visibleGear.visibleGear }),
     },
-    changed: normalized.changed || visibleGear.changed || legacyKeyChanged,
+    changed: normalized.changed || visibleGear.changed || hadUnknownKeys,
   };
 }
 
@@ -450,7 +539,7 @@ function parseOperatorLifecycleSnapshot(
     return {
       lifecycle: {
         status: "dead",
-        deathTick: expectPositiveInteger(record.deathTick, `${path}.deathTick`),
+        deathTick: expectNonNegativeInteger(record.deathTick, `${path}.deathTick`),
         deathRaidSummaryId: expectString(record.deathRaidSummaryId, `${path}.deathRaidSummaryId`),
       },
       changed: false,
@@ -535,14 +624,28 @@ function parseOperatorRelationshipSnapshot(
 
 function parseStaffSnapshot(value: unknown, path: string): StaffSnapshot {
   const record = expectRecord(value, path);
+  const assignment = expectRecord(record.assignment, `${path}.assignment`);
+  const targetId = assignment.targetId;
+
+  if (typeof targetId !== "string") {
+    fail(`${path}.assignment.targetId`, "must be a string.");
+  }
 
   return {
     id: expectString(record.id, `${path}.id`),
-    name: typeof record.name === "string" ? record.name : undefined,
-    roleTag: typeof record.roleTag === "string" ? record.roleTag : undefined,
-    status: typeof record.status === "string" ? record.status : undefined,
-    wage: typeof record.wage === "number" ? record.wage : undefined,
-    assignment: parseOptionalStructuredRecord(record.assignment, `${path}.assignment`),
+    name: expectString(record.name, `${path}.name`),
+    roleTag: expectString(record.roleTag, `${path}.roleTag`),
+    status: expectString(record.status, `${path}.status`),
+    wage: expectNumber(record.wage, `${path}.wage`),
+    assignment: {
+      kind: expectString(assignment.kind, `${path}.assignment.kind`),
+      targetId,
+    },
+    schedule: parseOptionalStructuredRecord(record.schedule, `${path}.schedule`),
+    needs: parseOptionalStructuredRecord(record.needs, `${path}.needs`),
+    morale: parseOptionalStructuredRecord(record.morale, `${path}.morale`),
+    loyalty: parseOptionalStructuredRecord(record.loyalty, `${path}.loyalty`),
+    injury: parseOptionalStructuredRecord(record.injury, `${path}.injury`),
   };
 }
 
@@ -550,6 +653,7 @@ function parseVisitorSnapshot(value: unknown, path: string): VisitorSnapshot {
   const record = expectRecord(value, path);
 
   return {
+    ...record,
     id: expectString(record.id, `${path}.id`),
   };
 }
@@ -558,6 +662,7 @@ function parseActiveEventSnapshot(value: unknown, path: string): ActiveEventSnap
   const record = expectRecord(value, path);
 
   return {
+    ...record,
     id: expectString(record.id, `${path}.id`),
   };
 }
@@ -566,13 +671,19 @@ function parseRaidOpportunitySnapshot(value: unknown, path: string): ParsedRaidO
   const record = expectRecord(value, path);
   const interestedOperatorIds = record.interestedOperatorIds;
   const claimedOperatorIds = record.claimedOperatorIds;
-  const changed = interestedOperatorIds === undefined || claimedOperatorIds === undefined;
+  const hadId = typeof record.id === "string" && record.id.length > 0;
+  const indexMatch = path.match(/\[(\d+)\]$/);
+  const fallbackIndex = indexMatch ? Number(indexMatch[1]) + 1 : 1;
+  const changed = interestedOperatorIds === undefined || claimedOperatorIds === undefined || !hadId;
 
   return {
+    id: hadId ? (record.id as string) : `opportunity/${fallbackIndex}`,
     missionId: expectString(record.missionId, `${path}.missionId`),
     location: parseOptionalCompactValue(record.location, `${path}.location`),
     threat: parseOptionalCompactValue(record.threat, `${path}.threat`),
     intel: parseOptionalCompactValue(record.intel, `${path}.intel`),
+    reward: parseOptionalCompactValue(record.reward, `${path}.reward`),
+    risk: parseOptionalCompactValue(record.risk, `${path}.risk`),
     status: parseOptionalCompactValue(record.status, `${path}.status`),
     interestedOperatorIds:
       interestedOperatorIds === undefined
@@ -582,6 +693,12 @@ function parseRaidOpportunitySnapshot(value: unknown, path: string): ParsedRaidO
       claimedOperatorIds === undefined
         ? []
         : expectStringArray(claimedOperatorIds, `${path}.claimedOperatorIds`),
+    ...(record.createdTick === undefined
+      ? {}
+      : { createdTick: expectInteger(record.createdTick, `${path}.createdTick`) }),
+    ...(record.expiresAtTick === undefined
+      ? {}
+      : { expiresAtTick: expectInteger(record.expiresAtTick, `${path}.expiresAtTick`) }),
     _changed: changed,
   };
 }
@@ -673,6 +790,9 @@ function parseActiveRaidSnapshotWithFallback(
 
   return {
     id: packetId,
+    ...(record.contractSiteId === undefined
+      ? {}
+      : { contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`) }),
     missionId: expectString(record.missionId, `${path}.missionId`),
     startedAt: expectString(record.startedAt, `${path}.startedAt`),
     startedTick: expectInteger(startedTick, `${path}.startedTick`),
@@ -742,6 +862,9 @@ function parseRaidSummarySnapshot(
 
   return {
     id: expectString(record.id, `${path}.id`),
+    ...(record.contractSiteId === undefined
+      ? {}
+      : { contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`) }),
     missionId: expectString(record.missionId, `${path}.missionId`),
     startedAt: expectString(record.startedAt, `${path}.startedAt`),
     endedAt: expectString(record.endedAt, `${path}.endedAt`),
@@ -799,7 +922,7 @@ function parseWorldSnapshot(
   options: SaveCodecOptions,
 ): { world: WorldSnapshot; changed: boolean } {
   const record = expectRecord(value, path);
-  const appearanceContext = createOperatorAppearanceParseContext(schemaVersion, options);
+  const appearanceContext = createOperatorAppearanceParseContext(options);
   const operators = parseOptionalCollection(
     record.operators,
     `${path}.operators`,
@@ -838,9 +961,15 @@ function parseWorldSnapshot(
     `${path}.activeEvents`,
     parseActiveEventSnapshot,
   );
+  const contractSite = parseContractSiteSnapshot(record.contractSite, `${path}.contractSite`);
+  const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
+  const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
 
   if (schemaVersion >= 7) {
     const knownOperatorIds = new Set(operators.items.map((op) => op.id));
+    const livingOperatorIds = new Set(
+      operators.items.filter((op) => op.lifecycle.status !== "dead").map((op) => op.id),
+    );
     const knownRaidSummaryIds = new Set(raidSummaries.map((summary) => summary.id));
 
     operators.items.forEach((operator, operatorIndex) => {
@@ -861,6 +990,44 @@ function parseWorldSnapshot(
           fail(
             `${path}.raidSummaries[${summaryIndex}].operatorOutcomes[${outcomeIndex}]`,
             `claims died for unknown operatorId "${outcome.operatorId}".`,
+          );
+        }
+      });
+    });
+
+    activeRaidPackets.forEach((packet, packetIndex) => {
+      if (packet.operatorIds.length === 0) {
+        fail(`${path}.activeRaidPackets[${packetIndex}].operatorIds`, "must not be empty.");
+      }
+
+      packet.operatorIds.forEach((operatorId, operatorIndex) => {
+        if (!livingOperatorIds.has(operatorId)) {
+          fail(
+            `${path}.activeRaidPackets[${packetIndex}].operatorIds[${operatorIndex}]`,
+            `must reference an existing living operator id, got "${operatorId}".`,
+          );
+        }
+      });
+
+      const outcomeRecords = packet.resolutionPacket.operatorOutcomes;
+      if (!Array.isArray(outcomeRecords)) {
+        return;
+      }
+
+      outcomeRecords.forEach((outcome, outcomeIndex) => {
+        const outcomeRecord = expectRecord(
+          outcome,
+          `${path}.activeRaidPackets[${packetIndex}].resolutionPacket.operatorOutcomes[${outcomeIndex}]`,
+        );
+        const operatorId = expectString(
+          outcomeRecord.operatorId,
+          `${path}.activeRaidPackets[${packetIndex}].resolutionPacket.operatorOutcomes[${outcomeIndex}].operatorId`,
+        );
+
+        if (!packet.operatorIds.includes(operatorId)) {
+          fail(
+            `${path}.activeRaidPackets[${packetIndex}].resolutionPacket.operatorOutcomes[${outcomeIndex}].operatorId`,
+            `must belong to the raid team, got "${operatorId}".`,
           );
         }
       });
@@ -886,16 +1053,29 @@ function parseWorldSnapshot(
       activeRaidPackets: activeRaidPackets.map(({ _changed: _ignored, ...packet }) => packet),
       raidSummaries: raidSummaries.map(({ _changed: _ignored, ...summary }) => summary),
       appliedUpgradeIds: expectStringArray(record.appliedUpgradeIds, `${path}.appliedUpgradeIds`),
-      operators: operators.items.map(({ _changed: _ignored, ...operator }) => operator),
-      operatorRelationships: operatorRelationships.items.map(
-        ({ _changed: _ignored, ...relationship }) => relationship,
-      ),
-      staff: staff.items,
-      visitors: visitors.items,
-      raidOpportunities: raidOpportunities.items.map(
-        ({ _changed: _ignored, ...opportunity }) => opportunity,
-      ),
-      activeEvents: activeEvents.items,
+      ...(record.operators === undefined
+        ? {}
+        : { operators: operators.items.map(({ _changed: _ignored, ...operator }) => operator) }),
+      ...(record.operatorRelationships === undefined
+        ? {}
+        : {
+            operatorRelationships: operatorRelationships.items.map(
+              ({ _changed: _ignored, ...relationship }) => relationship,
+            ),
+          }),
+      ...(record.staff === undefined ? {} : { staff: staff.items }),
+      ...(record.visitors === undefined ? {} : { visitors: visitors.items }),
+      ...(record.raidOpportunities === undefined
+        ? {}
+        : {
+            raidOpportunities: raidOpportunities.items.map(
+              ({ _changed: _ignored, ...opportunity }) => opportunity,
+            ),
+          }),
+      ...(record.activeEvents === undefined ? {} : { activeEvents: activeEvents.items }),
+      contractSite: contractSite.contractSite,
+      fogOfWar: fogOfWar.fogOfWar,
+      ...(scheduler.scheduler === undefined ? {} : { scheduler: scheduler.scheduler }),
     },
     changed:
       operators.changed ||
@@ -908,6 +1088,9 @@ function parseWorldSnapshot(
       activeRaidPacketChanged ||
       operatorRelationshipChanged ||
       raidOpportunityChanged ||
+      contractSite.changed ||
+      fogOfWar.changed ||
+      scheduler.changed ||
       raidSummaryChanged,
   };
 }

@@ -71,7 +71,8 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - `docs/index.md`
 - `docs/roadmap.md`
 - `docs/product-plan.md`
+- `docs/product/index.md`
+- `docs/world-foundation.md`
+- `docs/world/index.md`
 - `docs/plans/index.md`
-- `docs/research-notes.md`
-- `docs/genre-research.md`
-- `docs/research-audio.md`
+- `README.md`

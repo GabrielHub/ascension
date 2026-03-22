@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 28 36 58">
+  <!-- Isometric potted plant. Scraggly bodega plant. -->
+
+  <!-- Pot (isometric box) -->
+  <polygon points="38,58 48,63 58,58 48,53"
+    fill="#2c2218"/>
+  <polygon points="48,63 58,58 58,74 48,79"
+    fill="#2c2218" stroke="#231e18" stroke-width="0.5"/>
+  <polygon points="38,58 48,63 48,79 38,74"
+    fill="#3d2c20" stroke="#231e18" stroke-width="0.5"/>
+
+  <!-- Soil surface -->
+  <polygon points="40,59 48,63 56,59 48,55"
+    fill="#1e1a16" opacity="0.4"/>
+
+  <!-- Foliage cluster -->
+  <ellipse cx="48" cy="46" rx="16" ry="12" fill="#1a3028"/>
+  <ellipse cx="43" cy="40" rx="8" ry="10" fill="#1a3028"/>
+  <ellipse cx="55" cy="42" rx="7" ry="8" fill="#1c3830"/>
+  <!-- Leaf highlights -->
+  <ellipse cx="40" cy="38" rx="4" ry="5" fill="#1c3830" opacity="0.5"/>
+  <ellipse cx="52" cy="36" rx="3" ry="4" fill="#223a30" opacity="0.3"/>
+
+  <!-- Shadow beneath pot -->
+  <ellipse cx="48" cy="80" rx="10" ry="3" fill="rgba(0,0,0,0.15)"/>
+</svg>

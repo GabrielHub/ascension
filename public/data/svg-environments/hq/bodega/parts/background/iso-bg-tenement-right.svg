@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 480">
+  <defs>
+    <linearGradient id="tr-brick" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#352618"/>
+      <stop offset="100%" stop-color="#2a1e14"/>
+    </linearGradient>
+    <linearGradient id="tr-side" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#201610"/>
+      <stop offset="100%" stop-color="#2a1e14"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Side face (left, darker) -->
+  <polygon points="10,120 80,90 80,420 10,450"
+    fill="url(#tr-side)" stroke="#2a1f18" stroke-width="1"/>
+
+  <!-- Main facade (isometric right face) -->
+  <polygon points="80,90 240,170 240,480 80,400"
+    fill="url(#tr-brick)" stroke="#2a1f18" stroke-width="1.5"/>
+
+  <!-- Roof -->
+  <polygon points="10,120 80,90 240,170 170,200"
+    fill="#1e1a18" stroke="#252525" stroke-width="1.5"/>
+
+  <!-- Cornice -->
+  <polygon points="80,90 240,170 240,176 80,96"
+    fill="#3a3838" stroke="#252525" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Brick lines -->
+  <g opacity="0.1" stroke="#2a1f18" stroke-width="0.4">
+    <line x1="90" y1="150" x2="230" y2="220"/>
+    <line x1="90" y1="190" x2="230" y2="260"/>
+    <line x1="90" y1="230" x2="230" y2="300"/>
+    <line x1="90" y1="270" x2="230" y2="340"/>
+    <line x1="90" y1="310" x2="230" y2="380"/>
+    <line x1="90" y1="350" x2="230" y2="420"/>
+  </g>
+
+  <!-- Windows — 5 floors, 2 per floor (taller building) -->
+  <g>
+    <!-- Floor 5 (top) -->
+    <rect x="105" y="98" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="155" y="98" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 4 -->
+    <rect x="105" y="158" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="155" y="158" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 3 -->
+    <rect x="105" y="218" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="155" y="218" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 2 -->
+    <rect x="105" y="278" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="155" y="278" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 1 (ground) -->
+    <rect x="105" y="338" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="155" y="338" width="22" height="26" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+  </g>
+
+  <!-- Lit windows -->
+  <g opacity="0.18">
+    <rect x="107" y="160" width="18" height="22" rx="1"
+      fill="#c8a84c" transform="skewY(22)"/>
+    <rect x="157" y="100" width="18" height="22" rx="1"
+      fill="#8a7a50" transform="skewY(22)"/>
+    <rect x="107" y="280" width="18" height="22" rx="1"
+      fill="#c8a84c" transform="skewY(22)"/>
+    <rect x="157" y="340" width="18" height="22" rx="1"
+      fill="#9a8040" transform="skewY(22)"/>
+  </g>
+
+  <!-- AC units on side -->
+  <g opacity="0.45">
+    <rect x="25" y="180" width="28" height="18" rx="2"
+      fill="#252525" stroke="#3a3838" stroke-width="0.5"/>
+    <rect x="25" y="310" width="28" height="18" rx="2"
+      fill="#252525" stroke="#3a3838" stroke-width="0.5"/>
+  </g>
+
+  <!-- Downspout / pipe -->
+  <line x1="82" y1="95" x2="82" y2="400"
+    stroke="#3a3838" stroke-width="1.5" opacity="0.35"/>
+
+  <!-- Ground-floor storefront (closed shutter) -->
+  <rect x="95" y="360" width="60" height="38" rx="1"
+    fill="#1a1816" stroke="#3a3838" stroke-width="0.8" opacity="0.6" transform="skewY(22)"/>
+  <!-- Shutter lines -->
+  <g stroke="#252525" stroke-width="0.3" opacity="0.4" transform="skewY(22)">
+    <line x1="97" y1="370" x2="153" y2="370"/>
+    <line x1="97" y1="378" x2="153" y2="378"/>
+    <line x1="97" y1="386" x2="153" y2="386"/>
+    <line x1="97" y1="394" x2="153" y2="394"/>
+  </g>
+
+  <!-- Rooftop details -->
+  <g opacity="0.3">
+    <!-- Chimney -->
+    <rect x="140" y="64" width="16" height="24" rx="1" fill="#2a2828" stroke="#252525" stroke-width="0.5"/>
+    <!-- Satellite dish -->
+    <circle cx="200" cy="80" r="8" fill="none" stroke="#3a3838" stroke-width="0.8"/>
+    <line x1="200" y1="80" x2="200" y2="72" stroke="#3a3838" stroke-width="0.6"/>
+  </g>
+</svg>

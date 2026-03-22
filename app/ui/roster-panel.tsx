@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import type {
   GameCallbacks,
   OperatorViewModel,
@@ -7,6 +9,8 @@ import type {
   StaffViewModel,
   VisitorViewModel,
 } from "./view-models";
+import { formatTag } from "./view-models";
+import { StatBar } from "./_stat-bar";
 import { OperatorPortrait } from "./operator-portrait";
 
 interface RosterPanelProps {
@@ -17,163 +21,227 @@ interface RosterPanelProps {
   rooms: readonly RoomViewModel[];
   callbacks: GameCallbacks;
   rosterPressure: RosterPressureViewModel;
+  focusedOperatorId?: string | null;
 }
 
-function StatBar({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+function statusDotColor(op: OperatorViewModel): string {
+  if (op.injurySeverity > 0) return "bg-ember";
+  if (op.assignmentKind === "raid") return "bg-smolder";
+  if (op.assignmentKind === "recovery") return "bg-gold-dim/60";
+  if (op.assignmentKind === "room") return "bg-gold shadow-[0_0_4px_rgba(200,168,76,0.3)]";
+  return "bg-silver/30";
+}
+
+function statusLabel(op: OperatorViewModel): string {
+  if (op.injurySeverity > 0) return `Injured (${Math.ceil(op.injuryRecoveryHours)}h)`;
+  if (op.assignmentKind === "raid") return "On raid";
+  if (op.assignmentKind === "recovery") return "Recovering";
+  if (op.assignmentKind === "room") return "On duty";
+  return "Idle";
+}
+
+function statusLabelClass(op: OperatorViewModel): string {
+  if (op.injurySeverity > 0) return "text-ember";
+  if (op.assignmentKind === "raid") return "text-smolder";
+  return "text-silver/50";
+}
+
+// ── Operator compact row ─────────────────────────────────────────────────
+
+function OperatorRow({
+  op,
+  isExpanded,
+  onToggle,
+  bonds,
+}: {
+  op: OperatorViewModel;
+  isExpanded: boolean;
+  onToggle: () => void;
+  bonds: readonly RelationshipViewModel[];
+}) {
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
-        <span className="text-xs tabular-nums text-silver/60">{Math.round(value)}</span>
-      </div>
-      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
-        <div
-          className="h-full rounded-full bg-gold/40 transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 ${
+          isExpanded
+            ? "bg-[rgba(200,168,76,0.06)] shadow-[inset_2px_0_0_var(--color-gold)]"
+            : "hover:bg-[rgba(200,168,76,0.03)]"
+        }`}
+      >
+        <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotColor(op)}`} />
+        <span className="min-w-0 truncate text-xs font-medium text-silver-bright">{op.name}</span>
+        <span className="badge badge-gold ml-auto shrink-0">{formatTag(op.roleTag)}</span>
+        <span className={`shrink-0 text-[0.6875rem] ${statusLabelClass(op)}`}>
+          {statusLabel(op)}
+        </span>
+      </button>
 
-function formatRoleTag(tag: string): string {
-  return tag.replace("role:", "").replace(/_/g, " ");
-}
-
-function formatAssignment(kind: string): string {
-  if (kind === "idle") return "Idle";
-  if (kind === "room") return "On duty";
-  if (kind === "recovery") return "Recovering";
-  if (kind === "raid") return "On raid";
-  return kind;
-}
-
-function formatIntent(intent: string): string {
-  if (intent === "idle") return "Resting";
-  if (intent === "working") return "Working";
-  if (intent === "available") return "Available";
-  if (intent === "recovering") return "Recovering";
-  return intent.replace(/_/g, " ");
-}
-
-function OperatorRow({ op }: { op: OperatorViewModel }) {
-  const injured = op.injurySeverity > 0;
-
-  return (
-    <div className="glass-card-inset p-3">
-      <div className="flex items-start gap-3">
-        <OperatorPortrait
-          name={op.name}
-          roleTag={op.roleTag}
-          presetId={op.appearancePresetId}
-          size="card"
-        />
-        <div className="min-w-0 flex-1">
-          <h4 className="truncate text-xs font-medium text-silver-bright">{op.name}</h4>
-          <div className="mt-0.5 flex items-center gap-1.5">
-            <span className="badge badge-gold">{formatRoleTag(op.roleTag)}</span>
-            {op.specialtyTag && (
-              <span className="text-[0.6875rem] text-gold/70">
-                {op.specialtyTag.replace("focus:", "")}
-              </span>
-            )}
+      {isExpanded && (
+        <div className="animate-enter ml-4 mt-1.5 space-y-2.5 border-l border-gold/10 pl-3 pb-2">
+          {/* Portrait + identity */}
+          <div className="flex items-start gap-3">
+            <OperatorPortrait
+              name={op.name}
+              roleTag={op.roleTag}
+              presetId={op.appearancePresetId}
+              size="card"
+            />
+            <div className="min-w-0 flex-1 pt-0.5">
+              <div className="text-xs text-silver-bright">{op.name}</div>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="badge badge-gold">{formatTag(op.roleTag)}</span>
+                {op.specialtyTag && (
+                  <span className="text-[0.6875rem] text-gold/60">
+                    {formatTag(op.specialtyTag)}
+                  </span>
+                )}
+              </div>
+              {op.availableForRaid && (
+                <span className="mt-1 inline-block text-[0.6875rem] text-gold/70">Raid-ready</span>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="text-[0.6875rem] text-silver/60">
-            {formatAssignment(op.assignmentKind)}
-          </span>
-          {injured && (
-            <span className="text-[0.6875rem] text-ember">
-              Injured ({Math.ceil(op.injuryRecoveryHours)}h)
-            </span>
+
+          {/* Stat bars */}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+            <StatBar label="Morale" value={Math.round(op.moraleCurrent)} max={100} />
+            <StatBar label="Loyalty" value={Math.round(op.loyaltyCurrent)} max={100} />
+          </div>
+
+          {/* Needs */}
+          <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
+            <span>Fatigue {Math.round(op.needFatigue)}</span>
+            <span className="opacity-30">&middot;</span>
+            <span>Stress {Math.round(op.needStress)}</span>
+          </div>
+
+          {/* Bonds for this operator */}
+          {bonds.length > 0 && (
+            <div>
+              <div className="mb-1 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/50">
+                Bonds
+              </div>
+              {bonds.map((rel) => {
+                const partnerName =
+                  rel.operatorAId === op.id ? rel.operatorBName : rel.operatorAName;
+                const cohesionLabel =
+                  rel.cohesion >= 50 ? "Strong" : rel.cohesion >= 20 ? "Fair" : "Fragile";
+                const cohesionClass =
+                  rel.cohesion >= 50
+                    ? "text-gold/70"
+                    : rel.cohesion >= 20
+                      ? "text-silver/50"
+                      : "text-ember";
+                return (
+                  <div
+                    key={`${rel.operatorAId}-${rel.operatorBId}`}
+                    className="flex items-center justify-between py-0.5 text-[0.6875rem]"
+                  >
+                    <span className="text-silver/70">{partnerName}</span>
+                    <span className={cohesionClass}>{cohesionLabel}</span>
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </div>
-      </div>
-
-      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-        <StatBar label="Morale" value={op.moraleCurrent} max={100} />
-        <StatBar label="Loyalty" value={op.loyaltyCurrent} max={100} />
-      </div>
-
-      <div className="mt-1.5 flex items-center gap-1.5 text-[0.6875rem] text-silver/60">
-        <span>{formatIntent(op.intent)}</span>
-        <span className="opacity-30">|</span>
-        <span>Fatigue {Math.round(op.needFatigue)}</span>
-        <span className="opacity-30">&middot;</span>
-        <span>Stress {Math.round(op.needStress)}</span>
-        {op.availableForRaid && (
-          <>
-            <span className="opacity-30">|</span>
-            <span className="text-gold/70">Raid-ready</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RelationshipRow({ rel }: { rel: RelationshipViewModel }) {
-  const cohesionLabel = rel.cohesion >= 50 ? "Strong" : rel.cohesion >= 20 ? "Fair" : "Fragile";
-
-  return (
-    <div className="glass-card-inset px-3 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-silver-bright">
-          {rel.operatorAName} &amp; {rel.operatorBName}
-        </span>
-        <span
-          className={`text-xs ${
-            rel.cohesion >= 50
-              ? "text-gold/70"
-              : rel.cohesion >= 20
-                ? "text-silver/60"
-                : "text-ember"
-          }`}
-        >
-          {cohesionLabel}
-        </span>
-      </div>
-      <div className="mt-1 flex items-center gap-2 text-xs tabular-nums">
-        <span className="text-gold/70">Trust {rel.trust}</span>
-        <span className="text-ember">Friction {rel.friction}</span>
-      </div>
-      {rel.historyTags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1">
-          {rel.historyTags.map((tag) => (
-            <span key={tag} className="text-[0.6875rem] text-silver/60">
-              {tag.replace("history:", "").replace("bond:", "").replace(/_/g, " ")}
-            </span>
-          ))}
         </div>
       )}
     </div>
   );
 }
 
-function FallenOperatorRow({ op }: { op: OperatorViewModel }) {
+// ── Fallen operator (memorial line) ──────────────────────────────────────
+
+function FallenRow({ op }: { op: OperatorViewModel }) {
   return (
-    <div className="glass-card-inset px-3 py-2 opacity-70">
-      <div className="flex items-center gap-2.5">
-        <div className="relative">
-          <OperatorPortrait
-            name={op.name}
-            roleTag={op.roleTag}
-            presetId={op.appearancePresetId}
-            size="roster"
-          />
-          <div className="absolute inset-0 rounded bg-void/50" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <span className="text-xs text-silver/60 line-through">{op.name}</span>
-          <span className="ml-1.5 text-[0.6875rem] text-magma">KIA</span>
-        </div>
-        <span className="text-[0.6875rem] text-silver/60">{formatRoleTag(op.roleTag)}</span>
-      </div>
+    <div className="flex items-center gap-2 px-2.5 py-1 opacity-60">
+      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-magma/50" />
+      <span className="min-w-0 truncate text-xs text-silver/50 line-through">{op.name}</span>
+      <span className="ml-auto text-[0.6875rem] text-magma/70">KIA</span>
     </div>
   );
 }
+
+// ── Staff row (compact, expandable assignment) ───────────────────────────
+
+function StaffRow({
+  member,
+  rooms,
+  isExpanded,
+  onToggle,
+  onAssign,
+}: {
+  member: StaffViewModel;
+  rooms: readonly RoomViewModel[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onAssign: (roomId?: string) => void;
+}) {
+  const assignableRooms = rooms.filter(
+    (r) => r.isActive && r.occupancy < r.capacity && r.requiredStaffTag === member.roleTag,
+  );
+  const isAssigned = member.assignmentKind === "room";
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 ${
+          isExpanded
+            ? "bg-[rgba(200,168,76,0.06)] shadow-[inset_2px_0_0_var(--color-gold)]"
+            : "hover:bg-[rgba(200,168,76,0.03)]"
+        }`}
+      >
+        <span className="min-w-0 truncate text-xs text-silver-bright">{member.name}</span>
+        <span className="badge badge-slate ml-auto shrink-0">{formatTag(member.roleTag)}</span>
+        <span className="shrink-0 text-[0.6875rem] text-silver/40">
+          {isAssigned ? "assigned" : member.status}
+        </span>
+      </button>
+
+      {isExpanded && (
+        <div className="animate-enter ml-4 mt-1 border-l border-gold/10 pl-3 pb-1.5">
+          <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
+            <span>${member.wage}/day</span>
+            <span className="opacity-30">&middot;</span>
+            <span>{member.status}</span>
+          </div>
+          {(assignableRooms.length > 0 || isAssigned) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {isAssigned && (
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
+                  onClick={() => onAssign(undefined)}
+                >
+                  unassign
+                </button>
+              )}
+              {assignableRooms.map((room) => (
+                <button
+                  key={room.id}
+                  type="button"
+                  className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
+                  onClick={() => onAssign(room.id)}
+                  title={`Assign to ${room.name}`}
+                >
+                  {room.name.toLowerCase()}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Visitor row (compact with inline actions) ────────────────────────────
 
 function VisitorRow({
   visitor,
@@ -185,93 +253,32 @@ function VisitorRow({
   onReject: () => void;
 }) {
   return (
-    <div className="glass-card-inset px-3 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
-          <span className="ml-1.5 text-[0.6875rem] text-gold/70">
-            seeking {formatRoleTag(visitor.desiredRoleTag)}
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs tabular-nums">
-          <span className="text-gold/70">Quality {visitor.quality}</span>
-          <span className="text-silver/60">Patience {visitor.patience}</span>
-        </div>
-      </div>
-      <div className="mt-1.5 flex items-center justify-between">
-        <span className="text-[0.6875rem] text-silver/60">
-          Expected loyalty: {visitor.expectedLoyalty}
+    <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5">
+      <div className="min-w-0 flex-1">
+        <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
+        <span className="ml-1.5 text-[0.6875rem] text-gold/60">
+          {formatTag(visitor.desiredRoleTag)}
         </span>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            className="btn-primary px-2.5 py-1 text-[0.6875rem]"
-            onClick={onAccept}
-          >
-            Recruit
-          </button>
-          <button type="button" className="btn-ghost px-2 py-1 text-[0.6875rem]" onClick={onReject}>
-            pass
-          </button>
-        </div>
       </div>
+      <button
+        type="button"
+        className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
+        onClick={onAccept}
+      >
+        Recruit
+      </button>
+      <button
+        type="button"
+        className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+        onClick={onReject}
+      >
+        pass
+      </button>
     </div>
   );
 }
 
-function StaffRow({
-  member,
-  rooms,
-  onAssign,
-}: {
-  member: StaffViewModel;
-  rooms: readonly RoomViewModel[];
-  onAssign: (roomId?: string) => void;
-}) {
-  const assignableRooms = rooms.filter(
-    (r) => r.isActive && r.occupancy < r.capacity && r.requiredRoleTag === member.roleTag,
-  );
-  const isAssigned = member.assignmentKind === "room";
-
-  return (
-    <div className="glass-card-inset px-3 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <span className="text-xs text-silver-bright">{member.name}</span>
-          <span className="ml-1.5 badge badge-slate">{formatRoleTag(member.roleTag)}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-[0.6875rem]">
-          <span className="text-silver/60">{member.status}</span>
-          <span className="text-silver/60">${member.wage}/day</span>
-        </div>
-      </div>
-      {(assignableRooms.length > 0 || isAssigned) && (
-        <div className="mt-1.5 flex items-center gap-1.5">
-          {isAssigned && (
-            <button
-              type="button"
-              className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
-              onClick={() => onAssign(undefined)}
-            >
-              unassign
-            </button>
-          )}
-          {assignableRooms.map((room) => (
-            <button
-              key={room.id}
-              type="button"
-              className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
-              onClick={() => onAssign(room.id)}
-              title={`Assign to ${room.name}`}
-            >
-              {room.name.toLowerCase()}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// ── Main panel ───────────────────────────────────────────────────────────
 
 export function RosterPanel({
   operators,
@@ -281,175 +288,147 @@ export function RosterPanel({
   rooms,
   callbacks,
   rosterPressure,
+  focusedOperatorId = null,
 }: RosterPanelProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
   const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
 
+  useEffect(() => {
+    if (!focusedOperatorId) return;
+    setExpandedId(focusedOperatorId);
+  }, [focusedOperatorId]);
+
+  const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
+
   return (
-    <div className="animate-enter space-y-4">
-      {/* ── Vacancy / pressure banner ─────────────────── */}
+    <div className="animate-enter space-y-3">
+      {/* ── Pressure banner ─────────────────────────────── */}
       {rosterPressure.replacementPressureLevel !== "stable" && (
         <div
-          className={`glass-card-inset flex items-center gap-2 px-3 py-2 ${
+          className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-[0.6875rem] ${
             rosterPressure.replacementPressureLevel === "critical"
-              ? "border-l-2 border-l-magma"
-              : "border-l-2 border-l-ember"
+              ? "bg-magma/8 text-magma shadow-[inset_2px_0_0_var(--color-magma)]"
+              : "bg-ember/6 text-ember shadow-[inset_2px_0_0_var(--color-ember)]"
           }`}
         >
-          <span
-            className={`text-xs font-medium ${
-              rosterPressure.replacementPressureLevel === "critical" ? "text-magma" : "text-ember"
-            }`}
-          >
-            {rosterPressure.replacementPressureLevel === "critical"
-              ? "Roster critical"
-              : "Roster strained"}
-          </span>
-          <span className="text-[0.6875rem] text-silver/60">
-            {rosterPressure.vacancyCount > 0 &&
-              `${rosterPressure.vacancyCount} ${rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}`}
-            {rosterPressure.vacancyCount > 0 &&
-              rosterPressure.recentDeathOperatorIds.length > 0 &&
-              " · "}
-            {rosterPressure.recentDeathOperatorIds.length > 0 &&
-              `${rosterPressure.recentDeathOperatorIds.length} recent ${rosterPressure.recentDeathOperatorIds.length === 1 ? "loss" : "losses"}`}
-          </span>
+          {rosterPressure.replacementPressureLevel === "critical"
+            ? "Roster critical"
+            : "Roster strained"}
+          {rosterPressure.vacancyCount > 0 && (
+            <span className="ml-auto text-silver/40">
+              {rosterPressure.vacancyCount}{" "}
+              {rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}
+            </span>
+          )}
         </div>
       )}
 
-      {/* ── Operators ─────────────────────────────────── */}
+      {/* ── Operators ─────────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between">
-          <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
-            Roster
+        <div className="mb-1.5 flex items-center justify-between px-1">
+          <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
+            Operators
           </h3>
           <span
-            className={`text-xs ${
+            className={`text-[0.6875rem] tabular-nums ${
               rosterPressure.replacementPressureLevel === "critical"
                 ? "text-ember"
                 : rosterPressure.replacementPressureLevel === "strained"
                   ? "text-smolder"
-                  : "text-gold/80"
+                  : "text-gold/60"
             }`}
           >
-            {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} operators
+            {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity}
           </span>
         </div>
 
         {livingOperators.length > 0 ? (
-          <div className="mt-2 space-y-2">
+          <div className="space-y-0.5">
             {livingOperators.map((op) => (
-              <OperatorRow key={op.id} op={op} />
+              <OperatorRow
+                key={op.id}
+                op={op}
+                isExpanded={expandedId === op.id}
+                onToggle={() => toggle(op.id)}
+                bonds={relationships.filter(
+                  (r) => r.operatorAId === op.id || r.operatorBId === op.id,
+                )}
+              />
             ))}
           </div>
         ) : (
-          <div className="mt-2 glass-card-inset p-4">
-            <div className="flex flex-col items-center gap-3">
-              <OperatorPortrait
-                name="Recruit"
-                roleTag="role:bruiser"
-                presetId="male-swept"
-                size="card"
-              />
-              <div className="text-center">
-                <p className="text-xs font-medium text-silver/70">No operators yet</p>
-                <p className="mt-0.5 text-xs text-gold/70">
-                  Recruit talent through your facilities
-                </p>
-              </div>
-            </div>
+          <div className="px-2.5 py-4 text-center">
+            <p className="text-xs text-silver/40">No operators yet</p>
+            <p className="mt-0.5 text-[0.6875rem] text-gold/50">
+              Recruit talent through your facilities
+            </p>
           </div>
         )}
       </div>
 
-      {/* ── Fallen operators ──────────────────────────── */}
+      {/* ── Fallen ────────────────────────────────────────── */}
       {fallenOperators.length > 0 && (
         <div>
-          <h4 className="mb-1.5 text-xs font-medium uppercase tracking-[0.15em] text-silver/60">
+          <div className="mb-0.5 px-1 text-[0.6875rem] uppercase tracking-[0.15em] text-silver/30">
             Fallen ({fallenOperators.length})
-          </h4>
-          <div className="space-y-1.5">
-            {fallenOperators.map((op) => (
-              <FallenOperatorRow key={op.id} op={op} />
-            ))}
           </div>
+          {fallenOperators.map((op) => (
+            <FallenRow key={op.id} op={op} />
+          ))}
         </div>
       )}
 
-      {/* ── Relationships / Cohesion ──────────────────── */}
-      {relationships.length > 0 && (
-        <div>
-          <h4 className="mb-1.5 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            Social Bonds
-          </h4>
-          <div className="space-y-1.5">
-            {relationships.map((rel) => (
-              <RelationshipRow key={`${rel.operatorAId}-${rel.operatorBId}`} rel={rel} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Divider ───────────────────────────────────────── */}
+      <div className="h-px bg-gold/6" />
 
-      {/* ── Staff ─────────────────────────────────────── */}
+      {/* ── Staff ─────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+        <div className="mb-1 flex items-center justify-between px-1">
+          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
             Staff ({staff.length})
-          </h4>
+          </span>
           <button
             type="button"
-            className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
-            onClick={() => callbacks.hireStaff("general")}
+            className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+            onClick={() => callbacks.hireStaff("staff:admin")}
           >
             + hire
           </button>
         </div>
         {staff.length > 0 ? (
-          <div className="mt-1.5 space-y-1.5">
+          <div className="space-y-0.5">
             {staff.map((s) => (
               <StaffRow
                 key={s.id}
                 member={s}
                 rooms={rooms}
+                isExpanded={expandedId === s.id}
+                onToggle={() => toggle(s.id)}
                 onAssign={(roomId) => callbacks.assignStaff(s.id, roomId)}
               />
             ))}
           </div>
         ) : (
-          <div className="mt-1.5 empty-state rounded-lg border border-dashed border-gold-dim/15 py-4">
-            <p className="text-xs text-gold/70">No staff hired yet</p>
-            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
-              Hire staff to keep rooms running
-            </p>
-          </div>
+          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">No staff hired</p>
         )}
       </div>
 
-      {/* ── Visitors / Recruitment ────────────────────── */}
+      {/* ── Visitors ──────────────────────────────────────── */}
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+        <div className="mb-1 flex items-center justify-between px-1">
+          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
             Visitors ({visitors.length})
-          </h4>
+          </span>
           {rosterPressure.vacancyCount > 0 && (
-            <span className="text-[0.6875rem] text-ember">
-              {rosterPressure.vacancyCount} {rosterPressure.vacancyCount === 1 ? "slot" : "slots"}{" "}
-              to fill
+            <span className="text-[0.6875rem] text-ember/70">
+              {rosterPressure.vacancyCount} to fill
             </span>
           )}
         </div>
-        {rosterPressure.vacancyCount > 0 && visitors.length === 0 && (
-          <div className="mb-1.5 glass-card-inset border-l-2 border-l-ember px-3 py-2">
-            <p className="text-xs text-ember">Recruitment urgency</p>
-            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
-              {rosterPressure.recentDeathOperatorIds.length > 0
-                ? "The guild has suffered losses. Rebuild the roster before the next operation."
-                : "Vacancies weaken operational capacity. Attract new talent to fill the gaps."}
-            </p>
-          </div>
-        )}
         {visitors.length > 0 ? (
-          <div className="space-y-1.5">
+          <div className="space-y-0.5">
             {visitors.map((v) => (
               <VisitorRow
                 key={v.id}
@@ -460,12 +439,9 @@ export function RosterPanel({
             ))}
           </div>
         ) : (
-          <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-4">
-            <p className="text-xs text-gold/70">No visitors right now</p>
-            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
-              Talent arrives as the guild grows
-            </p>
-          </div>
+          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">
+            {rosterPressure.vacancyCount > 0 ? "Waiting for visitors..." : "No visitors right now"}
+          </p>
         )}
       </div>
     </div>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <radialGradient id="fog-edge" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0%" stop-color="rgba(6,6,8,0)"/>
+      <stop offset="60%" stop-color="rgba(6,6,8,0.4)"/>
+      <stop offset="100%" stop-color="rgba(6,6,8,0.85)"/>
+    </radialGradient>
+  </defs>
+  <!-- Soft fog edge — applied at fog/revealed boundary cells -->
+  <rect width="32" height="32" fill="url(#fog-edge)"/>
+</svg>

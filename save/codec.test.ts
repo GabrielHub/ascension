@@ -5,7 +5,6 @@ import {
   CURRENT_SAVE_SCHEMA_VERSION,
   type PersistedSaveGame,
 } from "./types";
-import { OPERATOR_APPEARANCE_PRESET_IDS } from "./appearance";
 import {
   SaveValidationError,
   hydratePersistedSaveGame,
@@ -47,11 +46,11 @@ function createBaseSave(): PersistedSaveGame {
           capacity: 2,
           occupancy: 1,
           isActive: true,
-          position: {
-            x: 0,
-            y: 0,
-            width: 4,
-            height: 3,
+          footprint: {
+            col: 0,
+            row: 0,
+            cols: 4,
+            rows: 3,
           },
         },
       ],
@@ -138,7 +137,7 @@ function createBaseSave(): PersistedSaveGame {
             targetId: "raid/1",
           },
           appearance: {
-            presetId: "female-flowing",
+            presetId: "mira-002",
           },
         },
       ],
@@ -156,11 +155,36 @@ function createBaseSave(): PersistedSaveGame {
       staff: [
         {
           id: "staff/1",
-          assignment: {
-            roomId: "room-instance/front-desk",
+          name: "Aina Solis",
+          roleTag: "staff:reception",
+          status: "assigned",
+          wage: 18,
+          schedule: {
+            currentBlock: "work",
+            workStartMinute: 480,
+            workEndMinute: 1080,
           },
-          status: {
-            employed: true,
+          needs: {
+            hunger: 18,
+            fatigue: 24,
+            stress: 14,
+          },
+          morale: {
+            current: 56,
+            baseline: 56,
+          },
+          loyalty: {
+            current: 52,
+            baseline: 52,
+          },
+          injury: {
+            severity: 0,
+            recoveryHoursRemaining: 0,
+            treated: false,
+          },
+          assignment: {
+            kind: "room",
+            targetId: "room-instance/front-desk",
           },
         },
       ],
@@ -172,6 +196,7 @@ function createBaseSave(): PersistedSaveGame {
       ],
       raidOpportunities: [
         {
+          id: "opportunity/1",
           missionId: "mission/containment",
           location: {
             district: "harbor",
@@ -258,12 +283,12 @@ describe("save codec", () => {
     });
 
     expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
-    expect(normalized.world.operators).toEqual([]);
-    expect(normalized.world.operatorRelationships).toEqual([]);
-    expect(normalized.world.staff).toEqual([]);
-    expect(normalized.world.visitors).toEqual([]);
-    expect(normalized.world.raidOpportunities).toEqual([]);
-    expect(normalized.world.activeEvents).toEqual([]);
+    expect(normalized.world.operators).toBeUndefined();
+    expect(normalized.world.operatorRelationships).toBeUndefined();
+    expect(normalized.world.staff).toBeUndefined();
+    expect(normalized.world.visitors).toBeUndefined();
+    expect(normalized.world.raidOpportunities).toBeUndefined();
+    expect(normalized.world.activeEvents).toBeUndefined();
   });
 
   it("migrates schema 2 saves by deriving raid membership and flattening legacy outcomes", () => {
@@ -300,11 +325,11 @@ describe("save codec", () => {
             tier: 1,
             capacity: 2,
             occupancy: 0,
-            position: {
-              x: 0,
-              y: 0,
-              width: 4,
-              height: 3,
+            footprint: {
+              col: 0,
+              row: 0,
+              cols: 4,
+              rows: 3,
             },
           },
         ],
@@ -355,6 +380,9 @@ describe("save codec", () => {
               kind: "raid",
               targetId: "raid/legacy",
             },
+            appearance: {
+              presetId: "mira-002",
+            },
           },
         ],
       },
@@ -402,9 +430,9 @@ describe("save codec", () => {
         intelMismatchTags: [],
       },
     ]);
-    expect(hydrated.save.world.operatorRelationships).toEqual([]);
-    expect(hydrated.save.world.raidOpportunities).toEqual([]);
-    expect(hydrated.save.world.activeEvents).toEqual([]);
+    expect(hydrated.save.world.operatorRelationships).toBeUndefined();
+    expect(hydrated.save.world.raidOpportunities).toBeUndefined();
+    expect(hydrated.save.world.activeEvents).toBeUndefined();
   });
 
   it("migrates schema 3 relationship memory saves by defaulting missing fields", () => {
@@ -441,8 +469,9 @@ describe("save codec", () => {
     ]);
   });
 
-  it("migrates schema 4 operator appearance saves to preset ids", () => {
+  it("strips legacy seed appearance keys and marks changed", () => {
     const base = createBaseSave();
+
     const hydrated = hydratePersistedSaveGame({
       ...base,
       schemaVersion: 4,
@@ -455,6 +484,23 @@ describe("save codec", () => {
               seed: 7,
             },
           },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.operators[0].appearance.presetId).toBeTruthy();
+  });
+
+  it("strips legacy portraitId appearance keys and marks changed", () => {
+    const base = createBaseSave();
+
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 4,
+      world: {
+        ...base.world,
+        operators: [
           {
             id: "operator/2",
             identity: {
@@ -470,11 +516,7 @@ describe("save codec", () => {
     });
 
     expect(hydrated.changed).toBe(true);
-    expect(hydrated.save.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
-    expect(hydrated.save.world.operators?.[0]?.appearance.presetId).toBe(
-      OPERATOR_APPEARANCE_PRESET_IDS[7 % OPERATOR_APPEARANCE_PRESET_IDS.length],
-    );
-    expect(hydrated.save.world.operators?.[1]?.appearance.presetId).toBeTruthy();
+    expect(hydrated.save.world.operators[0].appearance.presetId).toBeTruthy();
   });
 
   it("migrates schema 5 appearance saves and preserves approved visible gear ids", () => {
@@ -489,7 +531,7 @@ describe("save codec", () => {
             {
               ...base.world.operators?.[0],
               appearance: {
-                presetId: "female-flowing",
+                presetId: "mira-002",
                 visibleGear: {
                   weaponPartId: "weapon/cleaver",
                   outfitOverlayPartId: "outfit-overlay/apron",
@@ -506,7 +548,7 @@ describe("save codec", () => {
     expect(hydrated.changed).toBe(true);
     expect(hydrated.save.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
     expect(hydrated.save.world.operators?.[0]?.appearance).toEqual({
-      presetId: "female-flowing",
+      presetId: "mira-002",
       visibleGear: {
         weaponPartId: "weapon/cleaver",
         outfitOverlayPartId: "outfit-overlay/apron",
@@ -590,7 +632,7 @@ describe("save codec", () => {
       currentBlock: "raid",
     });
     expect(normalized.world.operators?.[0]?.appearance).toEqual({
-      presetId: "female-flowing",
+      presetId: "mira-002",
     });
     expect(normalized.world.operatorRelationships).toEqual([
       {
@@ -605,6 +647,7 @@ describe("save codec", () => {
     ]);
     expect(normalized.world.raidOpportunities).toEqual([
       {
+        id: "opportunity/1",
         missionId: "mission/containment",
         location: {
           district: "harbor",
@@ -623,7 +666,85 @@ describe("save codec", () => {
     ]);
   });
 
-  it("round-trips approved visible gear without changing preset ids", () => {
+  it("round-trips contract, fog, scheduler, and room upgrade state", () => {
+    const base = createBaseSave();
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        rooms: [
+          {
+            ...base.world.rooms[0],
+            appliedUpgradeIds: ["upgrade/room/front_desk:records_wall"],
+          },
+        ],
+        contractSite: {
+          contractSiteId: "contract/test-site",
+          missionId: "mission/clearance",
+          location: "district/lower-east-side",
+          bossDefeated: false,
+          contractLost: false,
+          threat: 80,
+          intel: 44,
+          reward: 150,
+          securedAtTick: 480,
+        },
+        fogOfWar: {
+          gridWidth: 4,
+          gridHeight: 4,
+          revealed: [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+          ],
+          revealedCount: 2,
+        },
+        scheduler: {
+          lastPayrollDay: 3,
+          lastVisitorSpawnTick: 660,
+          lastEventTick: 720,
+          lastRaidOpportunityTick: 780,
+        },
+      },
+    });
+
+    expect(normalized.world.rooms[0]?.appliedUpgradeIds).toEqual([
+      "upgrade/room/front_desk:records_wall",
+    ]);
+    expect(normalized.world.contractSite).toEqual({
+      contractSiteId: "contract/test-site",
+      missionId: "mission/clearance",
+      location: "district/lower-east-side",
+      bossDefeated: false,
+      contractLost: false,
+      threat: 80,
+      intel: 44,
+      reward: 150,
+      securedAtTick: 480,
+    });
+    expect(normalized.world.fogOfWar?.revealedCount).toBe(2);
+    expect(normalized.world.scheduler).toEqual({
+      lastPayrollDay: 3,
+      lastVisitorSpawnTick: 660,
+      lastEventTick: 720,
+      lastRaidOpportunityTick: 780,
+    });
+  });
+
+  it("round-trips approved visible gear without changing recipe ids", () => {
     const base = createBaseSave();
     const normalized = preparePersistedSaveGameForStorage(
       {
@@ -634,7 +755,7 @@ describe("save codec", () => {
             {
               ...base.world.operators?.[0],
               appearance: {
-                presetId: "female-flowing",
+                presetId: "mira-002",
                 visibleGear: {
                   weaponPartId: "weapon/cleaver",
                   outfitOverlayPartId: "outfit-overlay/apron",
@@ -649,7 +770,7 @@ describe("save codec", () => {
     );
 
     expect(normalized.world.operators?.[0]?.appearance).toEqual({
-      presetId: "female-flowing",
+      presetId: "mira-002",
       visibleGear: {
         weaponPartId: "weapon/cleaver",
         outfitOverlayPartId: "outfit-overlay/apron",
@@ -705,6 +826,39 @@ describe("save codec", () => {
     );
   });
 
+  it("rejects active raids that reference unknown living operators", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          activeRaidPackets: [
+            {
+              ...base.world.activeRaidPackets[0],
+              operatorIds: ["operator/missing"],
+              resolutionPacket: {
+                ...base.world.activeRaidPackets[0].resolutionPacket,
+                operatorOutcomes: [
+                  {
+                    operatorId: "operator/missing",
+                    injuryDelta: 0,
+                    moraleDelta: 0,
+                    loyaltyDelta: 0,
+                    status: "steady",
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(
+      /save\.world\.activeRaidPackets\[0\]\.operatorIds\[0\] must reference an existing living operator id, got "operator\/missing"\./,
+    );
+  });
+
   it("rejects malformed saves with clear validation errors", () => {
     expect(() =>
       hydratePersistedSaveGame({
@@ -735,28 +889,28 @@ describe("save codec", () => {
     ).toThrowError(/save\.world\.raidOpportunities\[0\]\.claimedOperatorIds must be an array\./);
   });
 
-  it("rejects current-schema appearance payloads with unknown or malformed fields", () => {
+  it("normalizes invalid presetIds via stableKey and rejects unknown visibleGear fields", () => {
     const base = createBaseSave();
 
-    expect(() =>
-      hydratePersistedSaveGame({
-        ...base,
-        world: {
-          ...base.world,
-          operators: [
-            {
-              ...base.world.operators?.[0],
-              appearance: {
-                presetId: "portrait/debug",
-              },
+    // Invalid presetId gets normalized to a valid recipe via stableKey
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            ...base.world.operators?.[0],
+            appearance: {
+              presetId: "portrait/debug",
             },
-          ],
-        },
-      }),
-    ).toThrowError(
-      /save\.world\.operators\[0\]\.appearance\.presetId must reference a known operator appearance preset id\./,
-    );
+          },
+        ],
+      },
+    });
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.operators[0].appearance.presetId).not.toBe("portrait/debug");
 
+    // Unknown visibleGear fields still fail
     expect(() =>
       hydratePersistedSaveGame(
         {
@@ -767,7 +921,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "weapon/cleaver",
                     cloakPartId: "accessory/chain",
@@ -797,7 +951,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "weapon/unknown",
                   },
@@ -826,7 +980,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "accessory/chain",
                   },
@@ -855,7 +1009,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "",
                   },
@@ -884,7 +1038,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "weapon/cleaver",
                   },
@@ -938,7 +1092,7 @@ describe("save codec", () => {
               {
                 ...base.world.operators?.[0],
                 appearance: {
-                  presetId: "female-flowing",
+                  presetId: "mira-002",
                   visibleGear: {
                     weaponPartId: "weapon/cleaver",
                   },
@@ -979,7 +1133,7 @@ describe("save codec", () => {
         deathRaidSummaryId: "raid/0",
       },
       identity: { displayName: "Fallen" },
-      appearance: { presetId: "female-flowing" },
+      appearance: { presetId: "mira-002" },
     };
     const hydrated = hydratePersistedSaveGame({
       ...base,
@@ -1008,7 +1162,7 @@ describe("save codec", () => {
         deathRaidSummaryId: "raid/0",
       },
       identity: { displayName: "Ghost" },
-      appearance: { presetId: "female-flowing" },
+      appearance: { presetId: "mira-002" },
     };
     const normalized = preparePersistedSaveGameForStorage({
       ...base,
@@ -1033,7 +1187,7 @@ describe("save codec", () => {
         deathRaidSummaryId: "raid/0",
       },
       identity: { displayName: "Fallen" },
-      appearance: { presetId: "female-flowing" },
+      appearance: { presetId: "mira-002" },
     };
     const normalized = preparePersistedSaveGameForStorage({
       ...base,
@@ -1079,12 +1233,12 @@ describe("save codec", () => {
             id: "operator/1",
             identity: { displayName: "Rook" },
             assignment: { kind: "raid", targetId: "raid/1" },
-            appearance: { presetId: "female-flowing" },
+            appearance: { presetId: "mira-002" },
           },
           {
             id: "operator/2",
             identity: { displayName: "Bishop" },
-            appearance: { presetId: "female-flowing" },
+            appearance: { presetId: "mira-002" },
           },
         ],
         raidSummaries: [
@@ -1143,7 +1297,7 @@ describe("save codec", () => {
             {
               id: "operator/bad",
               lifecycle: { status: "injured" },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },
@@ -1163,7 +1317,7 @@ describe("save codec", () => {
             {
               id: "operator/bad",
               lifecycle: { status: "dead", deathRaidSummaryId: "raid/0" },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },
@@ -1183,7 +1337,7 @@ describe("save codec", () => {
             {
               id: "operator/bad",
               lifecycle: { status: "dead", deathTick: 100 },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },
@@ -1191,7 +1345,7 @@ describe("save codec", () => {
     ).toThrowError(/dead operator must have both deathTick and deathRaidSummaryId/);
   });
 
-  it("rejects current-schema dead operator with non-positive deathTick", () => {
+  it("rejects current-schema dead operator with negative deathTick", () => {
     const base = createBaseSave();
 
     expect(() =>
@@ -1204,15 +1358,65 @@ describe("save codec", () => {
               id: "operator/bad",
               lifecycle: {
                 status: "dead",
-                deathTick: 0,
+                deathTick: -1,
                 deathRaidSummaryId: "raid/0",
               },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },
       }),
-    ).toThrowError(/save\.world\.operators\[0\]\.lifecycle\.deathTick must be greater than 0\./);
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.lifecycle\.deathTick must be greater than or equal to 0\./,
+    );
+  });
+
+  it("rejects invalid world time and inconsistent fog snapshots", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          time: {
+            tick: -1,
+            day: 1,
+            minuteOfDay: 720,
+          },
+        },
+      }),
+    ).toThrowError(/save\.world\.time\.tick must be greater than or equal to 0\./);
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          fogOfWar: {
+            gridWidth: 2,
+            gridHeight: 2,
+            revealed: [true, false, false],
+            revealedCount: 1,
+          },
+        },
+      }),
+    ).toThrowError(/save\.world\.fogOfWar\.revealed must contain exactly 4 cells\./);
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          fogOfWar: {
+            gridWidth: 2,
+            gridHeight: 2,
+            revealed: [true, false, false, false],
+            revealedCount: 2,
+          },
+        },
+      }),
+    ).toThrowError(/save\.world\.fogOfWar\.revealedCount must match the 1 revealed cells\./);
   });
 
   it("rejects current-schema dead operator referencing an unknown raid summary", () => {
@@ -1232,7 +1436,7 @@ describe("save codec", () => {
                 deathTick: 100,
                 deathRaidSummaryId: "raid/nonexistent",
               },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },
@@ -1254,7 +1458,7 @@ describe("save codec", () => {
             {
               id: "operator/bad",
               lifecycle: { status: "active", deathTick: 50 },
-              appearance: { presetId: "female-flowing" },
+              appearance: { presetId: "mira-002" },
             },
           ],
         },

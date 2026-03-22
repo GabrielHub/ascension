@@ -29,6 +29,13 @@ export interface BuildingSnapshot {
   operatorSlotCount: number;
 }
 
+export interface RoomFootprintSnapshot {
+  col: number;
+  row: number;
+  cols: number;
+  rows: number;
+}
+
 export interface RoomSnapshot {
   id: string;
   templateId: string;
@@ -36,12 +43,8 @@ export interface RoomSnapshot {
   capacity: number;
   occupancy: number;
   isActive?: boolean;
-  position: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  appliedUpgradeIds?: string[];
+  footprint: RoomFootprintSnapshot;
 }
 
 export type SaveStructuredRecord = Record<string, unknown>;
@@ -90,11 +93,16 @@ export interface OperatorRelationshipSnapshot {
 
 export interface StaffSnapshot {
   id: string;
-  name?: string;
-  roleTag?: string;
-  status?: string;
-  wage?: number;
-  assignment?: SaveStructuredRecord;
+  name: string;
+  roleTag: string;
+  status: string;
+  wage: number;
+  assignment: SaveStructuredRecord;
+  schedule?: SaveStructuredRecord;
+  needs?: SaveStructuredRecord;
+  morale?: SaveStructuredRecord;
+  loyalty?: SaveStructuredRecord;
+  injury?: SaveStructuredRecord;
 }
 
 export type VisitorSnapshot = { id: string } & Record<string, unknown>;
@@ -102,17 +110,23 @@ export type VisitorSnapshot = { id: string } & Record<string, unknown>;
 export type ActiveEventSnapshot = { id: string } & Record<string, unknown>;
 
 export interface RaidOpportunitySnapshot extends SaveStructuredRecord {
+  id?: string;
   missionId: string;
   location?: SaveCompactValue;
   threat?: SaveCompactValue;
   intel?: SaveCompactValue;
+  reward?: SaveCompactValue;
+  risk?: SaveCompactValue;
   status?: SaveCompactValue;
   interestedOperatorIds?: string[];
   claimedOperatorIds?: string[];
+  createdTick?: number;
+  expiresAtTick?: number;
 }
 
 export interface ActiveRaidSnapshot extends SaveStructuredRecord {
   id: string;
+  contractSiteId?: string;
   missionId: string;
   startedAt: string;
   startedTick?: number;
@@ -130,6 +144,7 @@ export interface RaidOperatorOutcomeSnapshot extends SaveStructuredRecord {
 
 export interface RaidSummarySnapshot extends SaveStructuredRecord {
   id: string;
+  contractSiteId?: string;
   missionId: string;
   startedAt: string;
   endedAt: string;
@@ -139,6 +154,32 @@ export interface RaidSummarySnapshot extends SaveStructuredRecord {
   operatorOutcomes?: RaidOperatorOutcomeSnapshot[];
   narrativeTags?: string[];
   intelMismatchTags?: string[];
+}
+
+export interface ContractSiteSnapshot {
+  contractSiteId: string;
+  missionId: string;
+  location: string;
+  bossDefeated: boolean;
+  contractLost: boolean;
+  threat: number;
+  intel: number;
+  reward: number;
+  securedAtTick: number;
+}
+
+export interface FogOfWarSnapshot {
+  gridWidth: number;
+  gridHeight: number;
+  revealed: boolean[];
+  revealedCount: number;
+}
+
+export interface WorldSchedulerSnapshot {
+  lastPayrollDay: number;
+  lastVisitorSpawnTick: number;
+  lastEventTick: number;
+  lastRaidOpportunityTick: number;
 }
 
 export interface WorldSnapshot {
@@ -155,6 +196,9 @@ export interface WorldSnapshot {
   visitors?: VisitorSnapshot[];
   raidOpportunities?: RaidOpportunitySnapshot[];
   activeEvents?: ActiveEventSnapshot[];
+  contractSite?: ContractSiteSnapshot | null;
+  fogOfWar?: FogOfWarSnapshot | null;
+  scheduler?: WorldSchedulerSnapshot;
 }
 
 export interface PersistedSaveGame {

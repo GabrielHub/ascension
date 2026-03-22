@@ -8,10 +8,18 @@
 
 // Imported via content mirror; the canonical copy in public/ is served at runtime by URL.
 import partsIndexData from "../../content/data/operator-parts-index.json";
+import operatorRecipesData from "../../content/data/operator-recipes.json";
 
 // ── Types matching the locked metadata shape ─────────────────────────────
 
-export type PartCategory = "weapon" | "outfit-overlay" | "accessory";
+export type GearPartCategory = "weapon" | "outfit-overlay" | "accessory";
+export type PortraitPartCategory =
+  | "head-shape"
+  | "hair"
+  | "eyes"
+  | "face-detail"
+  | "body-silhouette";
+export type PartCategory = GearPartCategory | PortraitPartCategory;
 export type PartRarity = "common" | "uncommon" | "rare";
 export type BodyBuild = "broad" | "medium" | "lean";
 
@@ -48,6 +56,11 @@ const VALID_CATEGORIES: ReadonlySet<string> = new Set<PartCategory>([
   "weapon",
   "outfit-overlay",
   "accessory",
+  "head-shape",
+  "hair",
+  "eyes",
+  "face-detail",
+  "body-silhouette",
 ]);
 const VALID_RARITIES: ReadonlySet<string> = new Set<PartRarity>(["common", "uncommon", "rare"]);
 const VALID_BUILDS: ReadonlySet<string> = new Set<BodyBuild>(["broad", "medium", "lean"]);
@@ -190,4 +203,57 @@ export function getLoadedPartsIndex(): OperatorPartsIndex {
 /** Returns the parts array from the shipped index. */
 export function getLoadedParts(): readonly OperatorPartMeta[] {
   return getLoadedPartsIndex().parts;
+}
+
+// ── Appearance recipe system ──────────────────────────────────────────────
+
+export interface AppearanceRecipeData {
+  id: string;
+  name: string;
+  headShape: string;
+  hair: string;
+  eyes: string;
+  faceDetail: string;
+  bodySilhouette: string;
+  palette: string;
+  skinTone: string;
+}
+
+interface RecipeManifest {
+  description: string;
+  locked: string;
+  style: string;
+  recipes: AppearanceRecipeData[];
+}
+
+export const DEFAULT_OPERATOR_RECIPE_ID = "kael-001";
+
+const recipeManifest = operatorRecipesData as unknown as RecipeManifest;
+
+const loadedRecipes = recipeManifest.recipes ?? [];
+
+const recipeMap = new Map<string, AppearanceRecipeData>(loadedRecipes.map((r) => [r.id, r]));
+
+/** Look up a recipe by its id. */
+export function getRecipeById(recipeId: string): AppearanceRecipeData | undefined {
+  return recipeMap.get(recipeId);
+}
+
+/** Returns all shipped appearance recipes. */
+export function getLoadedRecipes(): readonly AppearanceRecipeData[] {
+  return loadedRecipes;
+}
+
+/** Returns all valid recipe ids. */
+export function getAllRecipeIds(): string[] {
+  return loadedRecipes.map((recipe) => recipe.id);
+}
+
+/** Returns the default recipe used for graceful fallback. */
+export function getDefaultRecipe(): AppearanceRecipeData {
+  const fallback = recipeMap.get(DEFAULT_OPERATOR_RECIPE_ID) ?? loadedRecipes[0];
+  if (!fallback) {
+    throw new Error("No operator recipes are loaded.");
+  }
+  return fallback;
 }

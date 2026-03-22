@@ -1,9 +1,9 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
 
-import operatorPresetsManifest from "../../content/data/operator-presets.json";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
 import { stableStringHash } from "lib/stable-hash";
+import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
 import type { SimCommand } from "../commands";
 import {
@@ -28,6 +28,34 @@ import {
 import type { SimSystemContext } from "./types";
 
 const ROLE_TAG_PREFIX = "role:";
+const STAFF_TAG_PREFIX = "staff:";
+const CANONICAL_STAFF_ROLE_TAGS = [
+  "staff:reception",
+  "staff:logistics",
+  "staff:maintenance",
+  "staff:medical",
+  "staff:admin",
+] as const;
+type CanonicalStaffRoleTag = (typeof CANONICAL_STAFF_ROLE_TAGS)[number];
+const canonicalStaffRoleTagSet = new Set<string>(CANONICAL_STAFF_ROLE_TAGS);
+const STAFF_ROLE_TAG_ALIASES: Record<string, CanonicalStaffRoleTag> = {
+  reception: "staff:reception",
+  "role:reception": "staff:reception",
+  "staff:reception": "staff:reception",
+  logistics: "staff:logistics",
+  "staff:logistics": "staff:logistics",
+  maintenance: "staff:maintenance",
+  "staff:maintenance": "staff:maintenance",
+  medical: "staff:medical",
+  "role:medic": "staff:medical",
+  "staff:medical": "staff:medical",
+  admin: "staff:admin",
+  administrative: "staff:admin",
+  general: "staff:admin",
+  recruitment: "staff:admin",
+  "role:recruitment": "staff:admin",
+  "staff:admin": "staff:admin",
+};
 const DEFAULT_SHIFT_START = 480;
 const DEFAULT_SHIFT_END = 1080;
 const DEFAULT_HISTORY_TAG_LIMIT = 6;
@@ -38,22 +66,6 @@ const PREFERRED_MISSION_TAGS = [
 ] as const;
 
 export const scoreString = stableStringHash;
-
-interface OperatorPresetManifest {
-  presets: Array<{
-    id: string;
-  }>;
-}
-
-const runtimeOperatorPresetIds = (operatorPresetsManifest as OperatorPresetManifest).presets.map(
-  (preset) => preset.id,
-);
-const runtimeOperatorPresetIdSet = new Set(runtimeOperatorPresetIds);
-const runtimeOperatorFallbackPresetId = runtimeOperatorPresetIds[0] ?? "male-swept";
-
-export const RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS = [
-  ...runtimeOperatorPresetIds,
-] as readonly string[];
 
 export interface VisitorSeed {
   id?: string;
@@ -87,22 +99,6 @@ export interface RelationshipRecordData {
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
-}
-
-export function isRuntimeOperatorAppearancePresetId(value: unknown): value is string {
-  return typeof value === "string" && runtimeOperatorPresetIdSet.has(value);
-}
-
-export function selectRuntimeOperatorAppearancePresetId(input: { stableKey?: string }): string {
-  const stableKey = input.stableKey?.trim();
-  if (!stableKey) {
-    return runtimeOperatorFallbackPresetId;
-  }
-
-  return (
-    runtimeOperatorPresetIds[stableStringHash(stableKey) % runtimeOperatorPresetIds.length] ??
-    runtimeOperatorFallbackPresetId
-  );
 }
 
 export function getPairOrder(leftId: string, rightId: string) {
@@ -220,16 +216,45 @@ export function getRoleTag(tags: readonly string[]): string {
   return tags.find((tag) => tag.startsWith(ROLE_TAG_PREFIX)) ?? "role:general";
 }
 
+export function getStaffRoleTag(tags: readonly string[]): CanonicalStaffRoleTag | "" {
+  const tag = tags.find((candidate) => candidate.startsWith(STAFF_TAG_PREFIX)) ?? "";
+  return isCanonicalStaffRoleTag(tag) ? tag : "";
+}
+
+export function isCanonicalStaffRoleTag(value: string): value is CanonicalStaffRoleTag {
+  return canonicalStaffRoleTagSet.has(value);
+}
+
+export function normalizeStaffRoleTag(value: string): CanonicalStaffRoleTag | null {
+  const normalized = STAFF_ROLE_TAG_ALIASES[value.trim()];
+  return normalized ?? null;
+}
+
 function getBuildingEntity(context: SimSystemContext): number {
   return context.singletonEntities.building;
 }
 
-function getActiveBuildingTemplate(context: SimSystemContext) {
-  return (
+export function getActiveBuildingTemplate(context: SimSystemContext) {
+  const template =
     context.registry.buildings[
       BuildingAuthority.activeBuildingTemplateIndex[getBuildingEntity(context)]
-    ] ?? context.registry.buildings[0]
-  );
+    ];
+  if (!template) {
+    throw new Error("Simulation references an unknown active building template index.");
+  }
+
+  return template;
+}
+
+export function getRoomTemplateForEntity(context: SimSystemContext, entity: number) {
+  const template = context.registry.rooms[RoomInstance.templateIndex[entity]];
+  if (!template) {
+    throw new Error(
+      `Simulation references an unknown room template index for room "${RoomInstance.id[entity]}".`,
+    );
+  }
+
+  return template;
 }
 
 function readResourceBalance(context: SimSystemContext, resourceId: string): number {
@@ -267,8 +292,7 @@ function getRoomCounts(context: SimSystemContext): Map<string, number> {
   const counts = new Map<string, number>();
 
   context.runtimeState.roomEntities.forEach((entity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
+    const template = getRoomTemplateForEntity(context, entity);
     counts.set(template.id, (counts.get(template.id) ?? 0) + 1);
   });
 
@@ -279,8 +303,7 @@ function getRoomTiers(context: SimSystemContext): Map<string, number> {
   const tiers = new Map<string, number>();
 
   context.runtimeState.roomEntities.forEach((entity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
+    const template = getRoomTemplateForEntity(context, entity);
     tiers.set(template.id, Math.max(tiers.get(template.id) ?? 0, RoomInstance.tier[entity]));
   });
 
@@ -370,26 +393,26 @@ function applyCosts(context: SimSystemContext, costs: Map<string, number>): void
   });
 }
 
-function getDefaultRoomPosition(slotIndex: number) {
+function getDefaultRoomFootprint(slotIndex: number) {
   const column = slotIndex % 2;
   const row = Math.floor(slotIndex / 2);
 
   return {
-    x: 80 + column * 212,
-    y: 72 + row * 124,
-    width: 196,
-    height: 108,
+    col: column * 4,
+    row: row * 3,
+    cols: 4,
+    rows: 3,
   };
 }
 
 function createRoomInstanceEntity(
   context: SimSystemContext,
   templateId: string,
-  position?: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
+  footprint?: {
+    col?: number;
+    row?: number;
+    cols?: number;
+    rows?: number;
   },
 ): void {
   const template = context.registry.roomById.get(templateId);
@@ -399,14 +422,19 @@ function createRoomInstanceEntity(
 
   const entity = addEntity(context.world);
   const slotIndex = context.runtimeState.roomEntities.length;
-  const fallbackPosition = getDefaultRoomPosition(slotIndex);
+  const fallbackFootprint = getDefaultRoomFootprint(slotIndex);
 
   addComponent(context.world, entity, RoomInstance);
   addComponent(context.world, entity, Renderable);
 
   RoomInstance.id[entity] =
     `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence}`;
-  RoomInstance.templateIndex[entity] = context.registry.roomIndexById.get(template.id) ?? 0;
+  const templateIndex = context.registry.roomIndexById.get(template.id);
+  if (templateIndex === undefined) {
+    throw new Error(`Simulation cannot place room with unknown template "${template.id}".`);
+  }
+
+  RoomInstance.templateIndex[entity] = templateIndex;
   RoomInstance.tier[entity] = template.tier;
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
@@ -416,10 +444,10 @@ function createRoomInstanceEntity(
   RoomInstance.appliedUpgradeIds[entity] = [];
   RoomInstance.slotIndex[entity] = slotIndex;
 
-  Renderable.x[entity] = position?.x ?? fallbackPosition.x;
-  Renderable.y[entity] = position?.y ?? fallbackPosition.y;
-  Renderable.width[entity] = position?.width ?? fallbackPosition.width;
-  Renderable.height[entity] = position?.height ?? fallbackPosition.height;
+  Renderable.col[entity] = footprint?.col ?? fallbackFootprint.col;
+  Renderable.row[entity] = footprint?.row ?? fallbackFootprint.row;
+  Renderable.cols[entity] = footprint?.cols ?? fallbackFootprint.cols;
+  Renderable.rows[entity] = footprint?.rows ?? fallbackFootprint.rows;
   Renderable.layer[entity] = 1;
 
   context.runtimeState.roomEntities.push(entity);
@@ -514,12 +542,14 @@ function createOperatorEntity(
   return entity;
 }
 
-function createStaffEntity(context: SimSystemContext, roleTag: string): void {
+function createStaffEntity(context: SimSystemContext, roleTag: string): boolean {
+  const normalizedRoleTag = normalizeStaffRoleTag(roleTag);
+  if (!normalizedRoleTag) {
+    return false;
+  }
+
   const entity = addEntity(context.world);
-  const normalizedRoleTag = roleTag.startsWith(ROLE_TAG_PREFIX)
-    ? roleTag
-    : `${ROLE_TAG_PREFIX}${roleTag}`;
-  const roleName = normalizedRoleTag.slice(ROLE_TAG_PREFIX.length).replace(/_/g, " ");
+  const roleName = normalizedRoleTag.slice(STAFF_TAG_PREFIX.length).replace(/_/g, " ");
 
   addComponent(context.world, entity, StaffState);
   addComponent(context.world, entity, MoraleState);
@@ -552,6 +582,7 @@ function createStaffEntity(context: SimSystemContext, roleTag: string): void {
 
   context.runtimeState.staffEntities.push(entity);
   context.runtimeState.nextStaffSequence += 1;
+  return true;
 }
 
 export function spawnVisitorEntity(context: SimSystemContext, seed: VisitorSeed): void {
@@ -604,11 +635,8 @@ function createRelationshipEntity(
 
 export function hasOperationalRecruitmentRoom(context: SimSystemContext): boolean {
   return context.runtimeState.roomEntities.some((entity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
-    return (
-      getRoleTag(template.tags) === "role:recruitment" && RoomInstance.isOperational[entity] === 1
-    );
+    const template = getRoomTemplateForEntity(context, entity);
+    return template.tags.includes("room:staffing") && RoomInstance.isOperational[entity] === 1;
   });
 }
 
@@ -636,7 +664,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      createRoomInstanceEntity(context, template.id, command.position);
+      createRoomInstanceEntity(context, template.id, command.footprint);
       return;
     }
     case "sim/set-room-active": {
@@ -682,8 +710,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      const template =
-        context.registry.rooms[RoomInstance.templateIndex[roomEntity]] ?? context.registry.rooms[0];
+      const template = getRoomTemplateForEntity(context, roomEntity);
       if (upgrade.targetId !== template.id) {
         return;
       }
@@ -731,7 +758,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         name: VisitorState.name[visitorEntity],
         roleTag: VisitorState.desiredRoleTag[visitorEntity],
         specialtyTag: recruitSpecialtyTag,
-        appearancePresetId: selectRuntimeOperatorAppearancePresetId({
+        appearancePresetId: selectOperatorAppearanceRecipeId({
           stableKey: [
             VisitorState.id[visitorEntity],
             VisitorState.name[visitorEntity],
@@ -796,13 +823,18 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       return;
     }
     case "sim/hire-staff": {
+      const normalizedRoleTag = normalizeStaffRoleTag(command.roleTag);
+      if (!normalizedRoleTag) {
+        return;
+      }
+
       const hiringCost = 28 + (scoreString(command.roleTag) % 9);
       if (readResourceBalance(context, "resource/cash") < hiringCost) {
         return;
       }
 
       spendResourceBalance(context, "resource/cash", hiringCost);
-      createStaffEntity(context, command.roleTag);
+      createStaffEntity(context, normalizedRoleTag);
       return;
     }
     case "sim/assign-staff": {
@@ -822,9 +854,9 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      const template =
-        context.registry.rooms[RoomInstance.templateIndex[roomEntity]] ?? context.registry.rooms[0];
-      if (StaffState.roleTag[staffEntity] !== getRoleTag(template.tags)) {
+      const template = getRoomTemplateForEntity(context, roomEntity);
+      const requiredStaffRoleTag = getStaffRoleTag(template.tags);
+      if (!requiredStaffRoleTag || StaffState.roleTag[staffEntity] !== requiredStaffRoleTag) {
         return;
       }
 

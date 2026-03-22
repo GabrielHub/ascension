@@ -4,6 +4,9 @@ import {
   findPartById,
   getLoadedParts,
   getLoadedPartsIndex,
+  getLoadedRecipes,
+  getRecipeById,
+  getAllRecipeIds,
   partSvgPath,
   resolveVisibleGear,
   searchParts,
@@ -12,6 +15,15 @@ import {
   type OperatorPartsIndex,
   type VisibleGear,
 } from "./operator-parts";
+import {
+  validateRecipe,
+  deriveActorMarker,
+  HEAD_SHAPES,
+  EYES,
+  HAIR,
+  FACE_DETAILS,
+  BODIES,
+} from "./_portrait-parts";
 
 // ── Shipped index validation ──────────────────────────────────────────────
 
@@ -22,12 +34,22 @@ describe("validatePartsIndex against shipped index", () => {
     expect(errors).toEqual([]);
   });
 
-  it("shipped index contains at least one part per category", () => {
+  it("shipped index contains at least one part per gear category", () => {
     const parts = getLoadedParts();
     const categories = new Set(parts.map((p) => p.category));
     expect(categories).toContain("weapon");
     expect(categories).toContain("outfit-overlay");
     expect(categories).toContain("accessory");
+  });
+
+  it("shipped index contains at least one part per portrait category", () => {
+    const parts = getLoadedParts();
+    const categories = new Set(parts.map((p) => p.category));
+    expect(categories).toContain("head-shape");
+    expect(categories).toContain("hair");
+    expect(categories).toContain("eyes");
+    expect(categories).toContain("face-detail");
+    expect(categories).toContain("body-silhouette");
   });
 });
 
@@ -251,3 +273,122 @@ function makeIndex(parts: OperatorPartMeta[]): OperatorPartsIndex {
     parts,
   };
 }
+
+// ── Appearance recipe tests ──────────────────────────────────────────────
+
+describe("shipped recipes", () => {
+  it("ships at least 20 recipes", () => {
+    const recipes = getLoadedRecipes();
+    expect(recipes.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("all shipped recipes validate with no errors", () => {
+    const recipes = getLoadedRecipes();
+    for (const recipe of recipes) {
+      const errors = validateRecipe(recipe);
+      expect(errors).toEqual([]);
+    }
+  });
+
+  it("all recipe ids are unique", () => {
+    const recipes = getLoadedRecipes();
+    const ids = recipes.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("recipe ids are unique across the full shipped recipe set", () => {
+    const allIds = getAllRecipeIds();
+    expect(new Set(allIds).size).toBe(allIds.length);
+  });
+});
+
+describe("getRecipeById", () => {
+  it("returns a recipe for a known recipe id", () => {
+    const recipe = getRecipeById("kael-001");
+    expect(recipe).toBeDefined();
+    expect(recipe?.name).toBe("Kael");
+  });
+
+  it("returns undefined for an unknown id", () => {
+    expect(getRecipeById("nonexistent")).toBeUndefined();
+  });
+});
+
+describe("portrait part registries", () => {
+  it("head shapes registry has all 3 shapes", () => {
+    expect(Object.keys(HEAD_SHAPES)).toEqual(
+      expect.arrayContaining(["angular-jaw", "soft-oval", "moderate-jaw"]),
+    );
+  });
+
+  it("eyes registry has all 8 styles", () => {
+    expect(Object.keys(EYES).length).toBe(8);
+  });
+
+  it("hair registry has all 14 styles", () => {
+    expect(Object.keys(HAIR).length).toBe(14);
+    for (const style of Object.values(HAIR)) {
+      expect(style).toHaveProperty("back");
+      expect(style).toHaveProperty("front");
+    }
+  });
+
+  it("face details registry has all 3 styles", () => {
+    expect(Object.keys(FACE_DETAILS).length).toBe(3);
+  });
+
+  it("bodies registry has all 3 styles", () => {
+    expect(Object.keys(BODIES).length).toBe(3);
+  });
+});
+
+describe("validateRecipe", () => {
+  it("returns errors for unknown part references", () => {
+    const errors = validateRecipe({
+      id: "bad",
+      name: "Bad",
+      headShape: "nonexistent",
+      hair: "nonexistent",
+      eyes: "nonexistent",
+      faceDetail: "nonexistent",
+      bodySilhouette: "nonexistent",
+      palette: "nonexistent",
+      skinTone: "nonexistent",
+    });
+    expect(errors.length).toBe(7);
+  });
+
+  it("returns no errors for a valid recipe", () => {
+    const errors = validateRecipe({
+      id: "test",
+      name: "Test",
+      headShape: "angular-jaw",
+      hair: "swept-bangs",
+      eyes: "narrow-almond",
+      faceDetail: "male-standard",
+      bodySilhouette: "armored-structured",
+      palette: "warm-earth",
+      skinTone: "medium-warm",
+    });
+    expect(errors).toEqual([]);
+  });
+});
+
+describe("deriveActorMarker", () => {
+  it("extracts marker colors from a recipe", () => {
+    const recipe = getRecipeById("kael-001")!;
+    const marker = deriveActorMarker(recipe, "broad");
+    expect(marker.hairColor).toBe("#2a1f18");
+    expect(marker.clothingColor).toBe("#3d2c20");
+    expect(marker.accentColor).toBe("#c8a84c");
+    expect(marker.skinColor).toBe("#d4b896");
+    expect(marker.build).toBe("broad");
+  });
+
+  it("returns consistent results for the same recipe", () => {
+    const recipe = getRecipeById("mira-002")!;
+    const a = deriveActorMarker(recipe, "lean");
+    const b = deriveActorMarker(recipe, "lean");
+    expect(a).toEqual(b);
+  });
+});

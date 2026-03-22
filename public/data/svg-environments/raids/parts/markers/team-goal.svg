@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <!-- Goal indicator ring around team marker -->
+  <circle cx="10" cy="10" r="8" fill="none" stroke="rgba(200,168,76,0.25)" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <circle cx="10" cy="10" r="5" fill="none" stroke="rgba(200,168,76,0.15)" stroke-width="0.5"/>
+</svg>

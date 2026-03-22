@@ -28,7 +28,7 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     dominantNeed: "none",
     availableForRaid: false,
     readinessScore: 85,
-    appearancePresetId: "male-swept",
+    appearancePresetId: "kael-001",
     visibleGear: {},
     lifecycle: { status: "active" },
     ...overrides,
@@ -111,7 +111,7 @@ describe("raid watch", () => {
             id: "operator/beta",
             name: "Beta",
             roleTag: "role:infiltrator",
-            appearancePresetId: "female-flowing",
+            appearancePresetId: "mira-002",
             visibleGear: {},
           }),
         ]}

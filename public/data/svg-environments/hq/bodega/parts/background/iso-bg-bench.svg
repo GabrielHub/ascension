@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 0 70 58">
+  <!-- Isometric park bench. Proper 2:1 iso alignment along col axis.
+       Wood slats on metal frame. Runs right-down following tile grid. -->
+
+  <!-- Back rest (iso parallelogram, slightly above seat) -->
+  <polygon points="18,4 66,28 60,31 12,7"
+    fill="#342414" stroke="#2c2014" stroke-width="0.5"/>
+  <!-- Back slat lines -->
+  <line x1="14" y1="5.5" x2="62" y2="29.5" stroke="#2c2014" stroke-width="0.4"/>
+  <line x1="15" y1="7" x2="63" y2="31" stroke="#2c2014" stroke-width="0.3"/>
+
+  <!-- Seat surface (iso parallelogram) -->
+  <polygon points="18,10 66,34 54,40 6,16"
+    fill="#3a2818" stroke="#2c2014" stroke-width="0.5"/>
+  <!-- Seat slat lines -->
+  <line x1="12" y1="13" x2="60" y2="37" stroke="#2c2014" stroke-width="0.4"/>
+  <line x1="10" y1="15" x2="58" y2="39" stroke="#2c2014" stroke-width="0.3"/>
+
+  <!-- Seat front face (thickness) -->
+  <polygon points="6,16 54,40 54,44 6,20"
+    fill="#2c2014" stroke="#241c10" stroke-width="0.3"/>
+  <!-- Seat right end face -->
+  <polygon points="66,34 54,40 54,44 66,38"
+    fill="#302010" stroke="#241c10" stroke-width="0.3"/>
+
+  <!-- Metal legs -->
+  <line x1="12" y1="20" x2="10" y2="48" stroke="#3a3838" stroke-width="1.8"/>
+  <line x1="58" y1="42" x2="56" y2="52" stroke="#3a3838" stroke-width="1.8"/>
+  <line x1="34" y1="32" x2="32" y2="50" stroke="#3a3838" stroke-width="1.2"/>
+
+  <!-- Armrest brackets (metal) -->
+  <polygon points="12,7 14,10 6,16 6,20 10,17 12,9"
+    fill="#3a3838" stroke="#252525" stroke-width="0.3" opacity="0.6"/>
+  <polygon points="60,31 62,34 54,40 54,44 58,38 60,33"
+    fill="#333030" stroke="#252525" stroke-width="0.3" opacity="0.6"/>
+
+  <!-- Shadow -->
+  <ellipse cx="34" cy="52" rx="28" ry="4" fill="rgba(0,0,0,0.08)"/>
+</svg>

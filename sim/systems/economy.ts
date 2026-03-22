@@ -6,7 +6,7 @@ import {
   StaffState,
   WorldTimeState,
 } from "../components";
-import { getRoleTag } from "./commands";
+import { getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
 import type { SimSystem } from "./types";
 
 export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
@@ -17,7 +17,9 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
   const buildingEntity = context.singletonEntities.building;
   const dayEntity = context.singletonEntities.time;
   const currentDay = WorldTimeState.day[dayEntity];
-  if (currentDay <= (BuildingAuthority.lastPayrollDay[buildingEntity] ?? 0)) {
+  const lastPayrollDay = BuildingAuthority.lastPayrollDay[buildingEntity] ?? 0;
+  const daysElapsed = currentDay - lastPayrollDay;
+  if (daysElapsed <= 0) {
     return;
   }
 
@@ -31,20 +33,20 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
     ).length *
       12;
   const activeReceptionRooms = context.runtimeState.roomEntities.filter((entity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[entity]] ?? context.registry.rooms[0];
+    const template = getRoomTemplateForEntity(context, entity);
     return (
-      getRoleTag(template.tags) === "role:reception" && RoomInstance.isOperational[entity] === 1
+      getStaffRoleTag(template.tags) === "staff:reception" &&
+      RoomInstance.isOperational[entity] === 1
     );
   }).length;
   const resourceIncomeModifiers = BuildingAuthority.resourceIncomeModifiers[buildingEntity] ?? {};
   const dailyIncome = activeReceptionRooms * 38 + (resourceIncomeModifiers["resource/cash"] ?? 0);
 
-  GuildState.treasury[context.singletonEntities.guild] += dailyIncome - payroll;
+  GuildState.treasury[context.singletonEntities.guild] += (dailyIncome - payroll) * daysElapsed;
   if (activeReceptionRooms === 0) {
-    GuildState.reputation[context.singletonEntities.guild] -= 2;
+    GuildState.reputation[context.singletonEntities.guild] -= 2 * daysElapsed;
   } else {
-    GuildState.intel[context.singletonEntities.guild] += 1;
+    GuildState.intel[context.singletonEntities.guild] += daysElapsed;
   }
 
   BuildingAuthority.lastPayrollDay[buildingEntity] = currentDay;

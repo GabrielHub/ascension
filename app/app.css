@@ -55,6 +55,7 @@ a {
 /* --- Scrollbar -------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: var(--color-void);
@@ -308,4 +309,80 @@ a {
   font-size: 1.5rem;
   margin-bottom: 0.75rem;
   opacity: 0.5;
+}
+
+/* --- Raid map tiles -------------------------------------------------------- */
+.raid-cell-corridor {
+  background: linear-gradient(180deg, #1a2030 0%, #141a28 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(58, 69, 104, 0.35),
+    inset 0 -1px 0 rgba(58, 69, 104, 0.25);
+}
+
+.raid-cell-chamber {
+  background: linear-gradient(180deg, #1d2435 0%, #171d2d 100%);
+  box-shadow: inset 0 0 0 0.5px rgba(224, 221, 214, 0.04);
+}
+
+/* --- Raid team goal-ring base ---------------------------------------------- */
+.raid-team-ring {
+  border-radius: 50%;
+  border: 1.5px solid;
+}
+
+/* --- Raid map scanline overlay --------------------------------------------- */
+.raid-scanlines {
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(6, 8, 16, 0.08) 2px,
+    rgba(6, 8, 16, 0.08) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* --- Raid enemy pulse ------------------------------------------------------ */
+@keyframes raid-enemy-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.raid-enemy-pulse {
+  animation: raid-enemy-pulse 4s ease-in-out infinite;
+}
+
+/* --- Raid feature soft pulse ----------------------------------------------- */
+@keyframes raid-feature-pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.raid-feature-pulse {
+  animation: raid-feature-pulse 3s ease-in-out infinite;
+}
+
+/* --- Audio cue pulse ------------------------------------------------------- */
+@keyframes cue-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }

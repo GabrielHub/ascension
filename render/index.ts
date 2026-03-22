@@ -1,49 +1,41 @@
-import type { TemplateRegistry } from "content/templates";
-
-import type { WorldSnapshot } from "save";
-
 import { composeSvgRecipe, searchSvgParts } from "./svg-parts";
-import type { SvgPartDefinition, WorldRenderSnapshot } from "./types";
+import { createHqWorldSnapshot, composeHqWorldGeometry } from "./hq-world";
+import type { RaidWorldSnapshot, SvgPartDefinition } from "./types";
+import { createDefaultEffects } from "./world-effects";
 
+export * from "./camera";
+export * from "./actor-tokens";
+export * from "./hq-world";
 export * from "./operator-detail-svg";
 export * from "./svg-parts";
 export * from "./types";
 export * from "./world-canvas";
+export * from "./world-effects";
 
-export function buildWorldRenderSnapshot(
-  snapshot: WorldSnapshot,
-  registry: TemplateRegistry,
-): WorldRenderSnapshot {
-  const building =
-    registry.buildingById.get(snapshot.building.activeBuildingId) ?? registry.buildings[0];
-
+export function buildRaidWorldSnapshot(
+  dungeonName: string,
+  contractSiteId: string,
+  dungeonWidth: number,
+  dungeonHeight: number,
+  teams: RaidWorldSnapshot["teams"],
+  enemies: RaidWorldSnapshot["enemies"],
+  features: RaidWorldSnapshot["features"],
+  fogMask: RaidWorldSnapshot["fogMask"],
+): RaidWorldSnapshot {
   return {
-    title: building.name,
-    subtitle: "Canvas owns world-scale rendering. SVG stays reserved for focused detail views.",
-    nodes: snapshot.rooms.map((room) => {
-      const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
-
-      return {
-        id: room.id,
-        label: template.name,
-        detail: `${room.occupancy}/${room.capacity} staffed`,
-        x: room.position.x,
-        y: room.position.y,
-        width: room.position.width,
-        height: room.position.height,
-        fill: room.occupancy > 0 ? "rgba(217, 119, 6, 0.72)" : "rgba(71, 85, 105, 0.68)",
-        isOccupied: room.occupancy > 0,
-      };
-    }),
+    dungeonName,
+    contractSiteId,
+    dungeonWidth,
+    dungeonHeight,
+    teams,
+    enemies,
+    features,
+    fogMask,
+    effects: createDefaultEffects(),
+    focus: null,
   };
 }
 
-/**
- * @deprecated Operator portraits now use the locked Unified Anime style via
- * `app/ui/operator-portrait.tsx`. This placeholder catalog remains for
- * backwards compatibility with session.ts until runtime cleanup.
- * See `public/data/svg-parts/operators/` for canonical operator assets.
- */
 export function createPreviewSvgCatalog(): readonly SvgPartDefinition[] {
   return [
     {
@@ -97,7 +89,6 @@ export function createPreviewSvgCatalog(): readonly SvgPartDefinition[] {
   ];
 }
 
-/** @deprecated See `createPreviewSvgCatalog` deprecation note. */
 export function buildPreviewDetailRecipe() {
   const catalog = createPreviewSvgCatalog();
   const clothingMatch = searchSvgParts(catalog, {

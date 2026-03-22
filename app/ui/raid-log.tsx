@@ -10,6 +10,17 @@ const RESULT_STYLES: Record<string, { badge: string; label: string }> = {
   mixed: { badge: "badge-slate", label: "Mixed" },
 };
 
+function formatSummaryTimestamp(endedAt: string): string {
+  const endedDate = new Date(endedAt);
+  if (Number.isNaN(endedDate.getTime())) return endedAt;
+  return endedDate.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewModel }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -29,15 +40,15 @@ function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewMode
 function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
   const style = RESULT_STYLES[summary.result] ?? RESULT_STYLES.mixed;
   const casualties = summary.operatorOutcomes.filter((o) => o.died);
+  const endedAtLabel = formatSummaryTimestamp(summary.endedAt);
+  const summaryLine = summary.location ? `${summary.location} · ${endedAtLabel}` : endedAtLabel;
 
   return (
     <div className="glass-card-inset p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h4 className="text-xs font-medium text-silver-bright">{summary.missionName}</h4>
-          <p className="mt-0.5 text-xs text-silver/60">
-            {summary.location || new Date(summary.endedAt).toLocaleDateString()}
-          </p>
+          <p className="mt-0.5 text-xs text-silver/60">{summaryLine}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {casualties.length > 0 && (
@@ -50,11 +61,11 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
       <div className="mt-2 flex items-center gap-3 text-xs">
         <span className={summary.cashDelta >= 0 ? "text-gold" : "text-danger"}>
           {summary.cashDelta >= 0 ? "+" : ""}
-          {summary.cashDelta} cash
+          {Math.round(summary.cashDelta)} cash
         </span>
         <span className={summary.reputationDelta >= 0 ? "text-gold/80" : "text-danger"}>
           {summary.reputationDelta >= 0 ? "+" : ""}
-          {summary.reputationDelta} rep
+          {Math.round(summary.reputationDelta)} rep
         </span>
       </div>
 
@@ -67,23 +78,43 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
         </div>
       )}
 
-      {summary.narrativeTags.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {summary.narrativeTags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.6875rem] text-silver/60"
-            >
-              {tag.replace(/_/g, " ")}
-            </span>
-          ))}
-        </div>
-      )}
+      {(() => {
+        const displayTags = summary.narrativeTags.filter(
+          (tag) =>
+            !tag.startsWith("mission:") &&
+            !tag.startsWith("location:") &&
+            !tag.startsWith("result:"),
+        );
+        if (displayTags.length === 0) return null;
+        return (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {displayTags.map((tag) => {
+              const label = tag
+                .replace(/^[^:]+:/, "")
+                .replace(/_/g, " ")
+                .replace(/^\w/, (c) => c.toUpperCase());
+              return (
+                <span
+                  key={tag}
+                  className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.6875rem] text-silver/60"
+                >
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
 export function RaidLog({ history }: RaidLogProps) {
+  const orderedHistory = [...history].sort(
+    (a, b) =>
+      new Date(b.endedAt).getTime() - new Date(a.endedAt).getTime() || a.id.localeCompare(b.id),
+  );
+
   if (history.length === 0) {
     return (
       <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
@@ -97,7 +128,7 @@ export function RaidLog({ history }: RaidLogProps) {
       <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
         Raid History ({history.length})
       </h3>
-      {history.map((summary) => (
+      {orderedHistory.map((summary) => (
         <RaidSummaryCard key={summary.id} summary={summary} />
       ))}
     </div>

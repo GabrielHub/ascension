@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 40">
+  <!-- Isometric bucket. Simple metal/plastic bucket. Scrappy tier 1 feel. -->
+
+  <!-- Bucket body (tapered cylinder) -->
+  <ellipse cx="18" cy="34" rx="10" ry="4" fill="#2a3038" stroke="#222830" stroke-width="0.5"/>
+  <rect x="8" y="18" width="20" height="16" fill="#2a3038"/>
+  <ellipse cx="18" cy="18" rx="10" ry="4" fill="#323a42" stroke="#2a3038" stroke-width="0.5"/>
+
+  <!-- Interior darkness -->
+  <ellipse cx="18" cy="18" rx="8" ry="3" fill="#1a2028"/>
+
+  <!-- Rim highlight -->
+  <ellipse cx="18" cy="18" rx="10" ry="4" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+  <!-- Handle -->
+  <path d="M10,18 Q10,8 18,6 Q26,8 26,18" fill="none" stroke="#4a4a52" stroke-width="1"/>
+
+  <!-- Band around bucket -->
+  <line x1="8" y1="26" x2="28" y2="26" stroke="#3a4048" stroke-width="0.8"/>
+
+  <!-- Shadow -->
+  <ellipse cx="18" cy="36" rx="8" ry="2.5" fill="rgba(0,0,0,0.1)"/>
+</svg>

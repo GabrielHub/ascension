@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 30 40 52">
+  <!-- Isometric office chair.
+       Swivel chair with back rest, seat, post, and star base. -->
+
+  <!-- Back rest -->
+  <polygon points="32,40 48,32 64,40 48,44"
+    fill="#263358" stroke="#0d1225" stroke-width="0.6"/>
+  <!-- Back rest thickness -->
+  <polygon points="32,40 48,44 48,48 32,44"
+    fill="#1a2440"/>
+  <polygon points="64,40 48,44 48,48 64,44"
+    fill="#1a2440"/>
+
+  <!-- Seat cushion -->
+  <polygon points="30,52 48,60 66,52 48,44"
+    fill="#1a2440" stroke="#0d1225" stroke-width="0.5"/>
+
+  <!-- Post -->
+  <line x1="48" y1="60" x2="48" y2="72" stroke="#252525" stroke-width="2.5"/>
+
+  <!-- Star base (simplified ellipse) -->
+  <ellipse cx="48" cy="74" rx="14" ry="5" fill="#252525" opacity="0.8"/>
+  <!-- Caster dots -->
+  <circle cx="35" cy="74" r="1.5" fill="#3a3838"/>
+  <circle cx="61" cy="74" r="1.5" fill="#3a3838"/>
+  <circle cx="48" cy="78" r="1.5" fill="#3a3838"/>
+</svg>

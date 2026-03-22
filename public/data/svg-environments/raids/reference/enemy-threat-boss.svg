@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28">
+  <defs>
+    <radialGradient id="eb-glow" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0%" stop-color="rgba(212,84,30,0.3)"/>
+      <stop offset="60%" stop-color="rgba(212,84,30,0.1)"/>
+      <stop offset="100%" stop-color="rgba(212,84,30,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Boss marker — largest enemy, imposing presence -->
+  <circle cx="14" cy="14" r="13" fill="url(#eb-glow)"/>
+  <!-- Outer threat ring -->
+  <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(212,84,30,0.25)" stroke-width="1" stroke-dasharray="3,2"/>
+  <!-- Boss diamond -->
+  <polygon points="14,3 24,14 14,25 4,14" fill="rgba(212,84,30,0.4)"/>
+  <polygon points="14,3 24,14 14,25 4,14" fill="none" stroke="rgba(212,84,30,0.9)" stroke-width="1.2"/>
+  <!-- Inner crown shape -->
+  <polygon points="14,7 18,14 14,21 10,14" fill="rgba(212,84,30,0.6)"/>
+  <polygon points="14,7 18,14 14,21 10,14" fill="none" stroke="rgba(255,160,80,0.4)" stroke-width="0.8"/>
+  <!-- Core -->
+  <circle cx="14" cy="14" r="2.5" fill="rgba(212,84,30,0.95)"/>
+  <circle cx="14" cy="14" r="1.2" fill="rgba(255,200,100,0.3)"/>
+</svg>

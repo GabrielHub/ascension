@@ -1,11 +1,12 @@
 import { stableStringHash } from "lib/stable-hash";
 
-import presetsManifest from "../content/data/operator-presets.json";
+import type { OperatorAppearanceSnapshot } from "./types";
+import operatorRecipesManifest from "../content/data/operator-recipes.json";
 // Imported via content mirror; the canonical copy in public/ is served at runtime by URL.
 import operatorAppearancePartsIndex from "../content/data/operator-parts-index.json";
 
-interface OperatorPresetManifest {
-  presets: Array<{
+interface OperatorRecipeManifest {
+  recipes: Array<{
     id: string;
   }>;
 }
@@ -21,10 +22,10 @@ export interface OperatorAppearancePartIndexEntry {
   rarity: string;
 }
 
-const manifest = presetsManifest as OperatorPresetManifest;
-const presetIds = manifest.presets.map((preset) => preset.id);
-const fallbackPresetId = presetIds[0] ?? "male-swept";
-const presetIdSet = new Set(presetIds);
+const manifest = operatorRecipesManifest as OperatorRecipeManifest;
+const recipeIds = manifest.recipes.map((recipe) => recipe.id);
+const fallbackRecipeId = recipeIds[0] ?? "kael-001";
+const recipeIdSet = new Set(recipeIds);
 
 export const OPERATOR_VISIBLE_GEAR_SLOT_IDS = [
   "weaponPartId",
@@ -79,37 +80,19 @@ function parseOperatorAppearancePartEntries(value: unknown, path: string): unkno
     : fail(`${path} must be an array or an object with a parts array.`);
 }
 
-export interface OperatorAppearanceSnapshot {
-  presetId: string;
-  visibleGear?: OperatorVisibleGearSnapshot;
+export const OPERATOR_APPEARANCE_RECIPE_IDS = [...recipeIds] as readonly string[];
+
+export function isOperatorAppearanceRecipeId(value: unknown): value is string {
+  return typeof value === "string" && recipeIdSet.has(value);
 }
 
-export interface OperatorVisibleGearSnapshot {
-  weaponPartId?: string;
-  outfitOverlayPartId?: string;
-  accessoryPartId?: string;
-}
-
-export const OPERATOR_APPEARANCE_PRESET_IDS = [...presetIds] as readonly string[];
-
-export function isOperatorAppearancePresetId(value: unknown): value is string {
-  return typeof value === "string" && presetIdSet.has(value);
-}
-
-export function selectOperatorAppearancePresetId(input: {
-  stableKey?: string;
-  legacySeed?: number;
-}): string {
-  if (input.legacySeed !== undefined && Number.isFinite(input.legacySeed)) {
-    return presetIds[Math.abs(Math.trunc(input.legacySeed)) % presetIds.length] ?? fallbackPresetId;
-  }
-
+export function selectOperatorAppearanceRecipeId(input: { stableKey?: string }): string {
   const stableKey = input.stableKey?.trim();
   if (!stableKey) {
-    return fallbackPresetId;
+    return fallbackRecipeId;
   }
 
-  return presetIds[stableStringHash(stableKey) % presetIds.length] ?? fallbackPresetId;
+  return recipeIds[stableStringHash(stableKey) % recipeIds.length] ?? fallbackRecipeId;
 }
 
 export function getOperatorVisibleGearPartCategory(slot: OperatorVisibleGearSlotId): string {
@@ -154,12 +137,11 @@ export function parseOperatorAppearancePartIndex(
   return index;
 }
 
-export function normalizeOperatorAppearance(input: {
-  presetId?: unknown;
-  stableKey?: string;
-  legacySeed?: unknown;
-}): { appearance: OperatorAppearanceSnapshot; changed: boolean } {
-  if (isOperatorAppearancePresetId(input.presetId)) {
+export function normalizeOperatorAppearance(input: { presetId?: unknown; stableKey?: string }): {
+  appearance: OperatorAppearanceSnapshot;
+  changed: boolean;
+} {
+  if (isOperatorAppearanceRecipeId(input.presetId)) {
     return {
       appearance: {
         presetId: input.presetId,
@@ -170,12 +152,8 @@ export function normalizeOperatorAppearance(input: {
 
   return {
     appearance: {
-      presetId: selectOperatorAppearancePresetId({
+      presetId: selectOperatorAppearanceRecipeId({
         stableKey: input.stableKey,
-        legacySeed:
-          typeof input.legacySeed === "number" && Number.isFinite(input.legacySeed)
-            ? input.legacySeed
-            : undefined,
       }),
     },
     changed: true,

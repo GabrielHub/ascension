@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 100">
+  <!-- Isometric tall shelf unit. Bodega product shelving.
+       Proper 2:1 iso box with 3 shelf tiers and products. -->
+
+  <!-- Top surface -->
+  <polygon points="38,8 62,20 38,32 14,20"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.8"/>
+
+  <!-- Right face (side) -->
+  <polygon points="62,20 38,32 38,92 62,80"
+    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+
+  <!-- Left face (main visible, shelves here) -->
+  <polygon points="14,20 38,32 38,92 14,80"
+    fill="#3a3838" stroke="#252525" stroke-width="0.7"/>
+
+  <!-- Shelf dividers on left face -->
+  <line x1="14" y1="35" x2="38" y2="47" stroke="#2a2a2a" stroke-width="0.8"/>
+  <line x1="14" y1="50" x2="38" y2="62" stroke="#2a2a2a" stroke-width="0.8"/>
+  <line x1="14" y1="65" x2="38" y2="77" stroke="#2a2a2a" stroke-width="0.8"/>
+
+  <!-- Shelf dividers on right face -->
+  <line x1="62" y1="35" x2="38" y2="47" stroke="#2a2828" stroke-width="0.5"/>
+  <line x1="62" y1="50" x2="38" y2="62" stroke="#2a2828" stroke-width="0.5"/>
+  <line x1="62" y1="65" x2="38" y2="77" stroke="#2a2828" stroke-width="0.5"/>
+
+  <!-- Top shelf products (row of bottles/boxes) -->
+  <polygon points="17,22 26,27 26,34 17,29" fill="#2a3828" opacity="0.8"/>
+  <polygon points="27,27 34,31 34,34 27,30" fill="#382a2a" opacity="0.7"/>
+  <polygon points="22,25 30,29 30,35 22,31" fill="#2a2a38" opacity="0.7"/>
+
+  <!-- Middle shelf products -->
+  <polygon points="16,37 24,41 24,49 16,45" fill="#302c24" opacity="0.7"/>
+  <polygon points="25,42 35,47 35,49 25,44" fill="#28302c" opacity="0.7"/>
+  <polygon points="18,40 28,45 28,50 18,45" fill="#383028" opacity="0.6"/>
+
+  <!-- Bottom shelf products (larger boxes) -->
+  <polygon points="16,53 28,59 28,64 16,58" fill="#2c2420" opacity="0.7"/>
+  <polygon points="24,56 36,62 36,65 24,59" fill="#28302c" opacity="0.7"/>
+
+  <!-- Floor shelf items (bulkier) -->
+  <polygon points="17,68 30,74 30,78 17,72" fill="#302820" opacity="0.6"/>
+  <polygon points="26,71 36,76 36,80 26,75" fill="#2a3030" opacity="0.6"/>
+
+  <!-- Subtle label strips -->
+  <rect x="18" y="25" width="3" height="2" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+  <rect x="20" y="42" width="3" height="2" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+
+  <!-- Top edge highlight -->
+  <line x1="14" y1="20" x2="38" y2="8" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+  <!-- Shadow -->
+  <ellipse cx="38" cy="96" rx="20" ry="3" fill="rgba(0,0,0,0.1)"/>
+</svg>

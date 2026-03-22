@@ -2,11 +2,11 @@ export interface BootstrapRoomSeed {
   id: string;
   templateId: string;
   occupancy: number;
-  position: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+  footprint: {
+    col: number;
+    row: number;
+    cols: number;
+    rows: number;
   };
 }
 
@@ -68,9 +68,6 @@ export interface BootstrapScenario {
     assignment: {
       kind: string;
       targetId: string;
-    };
-    appearance: {
-      seed: number;
     };
   }[];
   operatorRelationships: readonly {
@@ -136,22 +133,22 @@ export const bootstrapScenario = {
       id: "room-instance/front_desk",
       templateId: "room/front_desk:tier_1",
       occupancy: 1,
-      position: {
-        x: 80,
-        y: 72,
-        width: 180,
-        height: 108,
+      footprint: {
+        col: 0,
+        row: 0,
+        cols: 4,
+        rows: 3,
       },
     },
     {
       id: "room-instance/recruitment_space",
       templateId: "room/recruitment_space:tier_1",
       occupancy: 0,
-      position: {
-        x: 292,
-        y: 72,
-        width: 208,
-        height: 108,
+      footprint: {
+        col: 4,
+        row: 0,
+        cols: 4,
+        rows: 3,
       },
     },
   ],
@@ -200,9 +197,6 @@ export const bootstrapScenario = {
         kind: "idle",
         targetId: "",
       },
-      appearance: {
-        seed: 3,
-      },
     },
     {
       id: "operator/milo-hart",
@@ -248,9 +242,6 @@ export const bootstrapScenario = {
         kind: "idle",
         targetId: "",
       },
-      appearance: {
-        seed: 7,
-      },
     },
   ],
   operatorRelationships: [
@@ -268,7 +259,7 @@ export const bootstrapScenario = {
     {
       id: "staff/aina",
       name: "Aina Solis",
-      roleTag: "role:reception",
+      roleTag: "staff:reception",
       status: "assigned",
       wage: 18,
       assignment: {

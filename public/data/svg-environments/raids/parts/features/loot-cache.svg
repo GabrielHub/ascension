@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Loot cache — small gold-tinted container indicator -->
+  <rect x="4" y="7" width="8" height="6" rx="1" fill="none" stroke="rgba(200,168,76,0.12)" stroke-width="0.7"/>
+  <line x1="4" y1="9" x2="12" y2="9" stroke="rgba(200,168,76,0.08)" stroke-width="0.5"/>
+  <circle cx="8" cy="11" r="0.6" fill="rgba(200,168,76,0.1)"/>
+</svg>

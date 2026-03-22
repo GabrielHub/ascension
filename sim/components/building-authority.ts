@@ -18,6 +18,7 @@ export interface ActiveRaidResolutionPacket {
 
 export interface ActiveRaidPacketRecord {
   id: string;
+  contractSiteId: string;
   opportunityId: string;
   missionId: string;
   location: string;
@@ -36,6 +37,7 @@ export interface ActiveRaidPacketRecord {
 
 export interface RaidSummaryRecord {
   id: string;
+  contractSiteId: string;
   opportunityId: string;
   missionId: string;
   location: string;
@@ -51,6 +53,42 @@ export interface RaidSummaryRecord {
   operatorOutcomes: ActiveRaidResolutionPacket["operatorOutcomes"];
   narrativeTags: string[];
   intelMismatchTags: string[];
+}
+
+// ── Contract site state ───────────────────────────────────────────────────
+
+export interface ContractSiteState {
+  /** The secured contract site id, or empty string if none secured. */
+  contractSiteId: string;
+  /** Mission template id for this contract. */
+  missionId: string;
+  /** Location string for the dungeon. */
+  location: string;
+  /** Whether the dungeon boss has been defeated. */
+  bossDefeated: boolean;
+  /** Whether the contract has been lost. */
+  contractLost: boolean;
+  /** Threat level for this site. */
+  threat: number;
+  /** Intel gathered on this site. */
+  intel: number;
+  /** Reward baseline for runs into this site. */
+  reward: number;
+  /** Tick when the contract was secured. */
+  securedAtTick: number;
+}
+
+// ── Fog-of-war state ──────────────────────────────────────────────────────
+
+export interface FogOfWarState {
+  /** Grid width in cells. */
+  gridWidth: number;
+  /** Grid height in cells. */
+  gridHeight: number;
+  /** Flat array of booleans, row-major. true = revealed. */
+  revealed: boolean[];
+  /** Total cells revealed so far. */
+  revealedCount: number;
 }
 
 export const BuildingAuthority = soa({
@@ -77,4 +115,8 @@ export const BuildingAuthority = soa({
   lastVisitorSpawnTick: [] as number[],
   lastEventTick: [] as number[],
   lastRaidOpportunityTick: [] as number[],
+  /** The one secured government contract site. */
+  contractSite: [] as (ContractSiteState | null)[],
+  /** Fog-of-war state for the current contract dungeon. */
+  fogOfWar: [] as (FogOfWarState | null)[],
 });

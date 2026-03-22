@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Debris pile — small environmental feature overlay -->
+  <rect x="3" y="8" width="10" height="6" fill="#1e2030" rx="1" opacity="0.6"/>
+  <rect x="5" y="6" width="7" height="4" fill="#222638" rx="1" opacity="0.5"/>
+  <rect x="4" y="10" width="3" height="2" fill="#1a1c2c" rx="0.5" opacity="0.4"/>
+  <!-- Scatter dots -->
+  <circle cx="2" cy="12" r="0.8" fill="#1e2030" opacity="0.3"/>
+  <circle cx="13" cy="11" r="0.6" fill="#1e2030" opacity="0.3"/>
+</svg>

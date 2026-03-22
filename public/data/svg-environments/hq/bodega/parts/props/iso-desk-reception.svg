@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="13 28 69 58">
+  <!-- Isometric reception desk / counter.
+       L-shaped counter with front panel, top surface, and side. -->
+
+  <!-- Counter top surface -->
+  <polygon points="15,42 55,62 80,50 40,30"
+    fill="#2c2218" stroke="#231e18" stroke-width="1"/>
+  <!-- Counter front face (right-facing) -->
+  <polygon points="55,62 80,50 80,72 55,84"
+    fill="#231e18" stroke="#1e1a16" stroke-width="0.8"/>
+  <!-- Counter left face -->
+  <polygon points="15,42 55,62 55,84 15,64"
+    fill="#1e1a16" stroke="#171410" stroke-width="0.8"/>
+  <!-- Counter panel detail -->
+  <line x1="56" y1="70" x2="79" y2="58" stroke="#2c2218" stroke-width="0.5"/>
+  <line x1="16" y1="50" x2="54" y2="70" stroke="#2a2218" stroke-width="0.4"/>
+</svg>

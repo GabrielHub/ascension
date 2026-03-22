@@ -3,17 +3,8 @@
   "locked": "2026-03-21",
   "origin": "E2 Anime Seinen (male) + E3 Anime Shoujo (female), blended for neutral",
   "viewBox": "0 0 120 160",
-  "referenceExemplars": [
-    "public/data/svg-parts/operators/reference/male-bruiser-swept.svg",
-    "public/data/svg-parts/operators/reference/female-infiltrator-flowing.svg",
-    "public/data/svg-parts/operators/reference/neutral-strategist-tousled.svg"
-  ],
   "playgroundRoute": "/svg-playground",
-  "reactRenderers": [
-    "app/ui/_unified-male.tsx",
-    "app/ui/_unified-female.tsx",
-    "app/ui/_unified-neutral.tsx"
-  ],
+  "builderModule": "app/ui/_portrait-parts.tsx",
   "sharedModule": "app/ui/_svg-shared.ts",
 
   "presentations": {
@@ -92,7 +83,7 @@
   },
 
   "hairAndEyes": {
-    "principle": "Hair and eyes are the primary differentiators between individual operators. The structural base (head, body, clothing) stays consistent within each gender presentation. Hair and eyes are creative territory — new styles are encouraged as long as they fit the overall anime cel-shade language.",
+    "principle": "Hair and eyes are the primary differentiators between individual operators. The structural base (head, body, clothing) stays consistent within each presentation family. Authored and generated operators must both resolve to the same recipe contract before reaching the modular builder.",
     "hairGuidelines": [
       "Hair defines the head silhouette and must read clearly at roster size (h-14 / ~56px tall)",
       "Render as layered paths: a back layer behind the head, a front layer overlapping the forehead",

@@ -1,4 +1,5 @@
 import type { GameCallbacks, RoomViewModel, UpgradeViewModel } from "./view-models";
+import { formatTag } from "./view-models";
 
 interface RoomDetailPanelProps {
   room: RoomViewModel | null;
@@ -82,8 +83,8 @@ export function RoomDetailPanel({
     return (
       <div className="empty-state py-12">
         <div className="empty-state-icon">&#9633;</div>
-        <p className="text-xs text-gold/70">Select a room to inspect</p>
-        <p className="mt-1 text-xs text-silver/60">Choose from the floor plan on the left</p>
+        <p className="text-xs text-gold/70">No room selected</p>
+        <p className="mt-1 text-xs text-silver/60">Click a room in the world view</p>
       </div>
     );
   }
@@ -142,10 +143,9 @@ export function RoomDetailPanel({
         <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }} />
       </div>
 
-      {room.requiredRoleTag && (
+      {room.requiredStaffTag && (
         <div className="text-xs text-gold/70">
-          Requires <span className="text-gold/80">{room.requiredRoleTag.replace("role:", "")}</span>{" "}
-          staff
+          Requires <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span> staff
         </div>
       )}
 

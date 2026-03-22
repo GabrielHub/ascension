@@ -1,5 +1,5 @@
 {
-  "description": "Modular operator SVG parts index. Each entry validates against the locked metadata shape from the appearance contract.",
+  "description": "Modular operator SVG parts index. Gear overlays and portrait-part categories. Each entry validates against the locked metadata shape from the appearance contract.",
   "locked": "2026-03-21",
   "style": "ascension-anime-unified",
   "viewBox": "0 0 120 160",
@@ -90,6 +90,316 @@
       "tags": ["earpiece", "communication", "tech", "tactical"],
       "paletteTags": ["infiltrator", "strategist"],
       "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "head-shape/angular-jaw",
+      "category": "head-shape",
+      "tags": ["angular", "masculine", "strong-jaw", "sharp"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "head-shape/soft-oval",
+      "category": "head-shape",
+      "tags": ["soft", "feminine", "oval", "elegant"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "head-shape/moderate-jaw",
+      "category": "head-shape",
+      "tags": ["moderate", "balanced", "rounded", "neutral"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/swept-bangs",
+      "category": "hair",
+      "tags": ["swept", "bangs", "layered", "medium"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/wild-spikes",
+      "category": "hair",
+      "tags": ["spiky", "wild", "flame", "bold"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/undercut",
+      "category": "hair",
+      "tags": ["undercut", "buzzed", "swept-back", "asymmetric"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/flowing-long",
+      "category": "hair",
+      "tags": ["flowing", "long", "waves", "elegant"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/geometric-bob",
+      "category": "hair",
+      "tags": ["bob", "geometric", "short", "sharp"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/high-ponytail",
+      "category": "hair",
+      "tags": ["ponytail", "high", "clean", "pulled-back"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/tousled",
+      "category": "hair",
+      "tags": ["tousled", "messy", "medium", "casual"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/sideshave",
+      "category": "hair",
+      "tags": ["sideshave", "asymmetric", "dramatic", "contrast"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/twin-tails",
+      "category": "hair",
+      "tags": ["twin-tails", "pigtails", "long", "playful"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/curly-voluminous",
+      "category": "hair",
+      "tags": ["curly", "voluminous", "big", "textured"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/long-straight",
+      "category": "hair",
+      "tags": ["long", "straight", "hime", "sleek"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/messy-bun",
+      "category": "hair",
+      "tags": ["bun", "messy", "updo", "casual"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/braided-side",
+      "category": "hair",
+      "tags": ["braid", "side", "woven", "elegant"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "hair/ahoge-short",
+      "category": "hair",
+      "tags": ["ahoge", "short", "antenna", "cowlick"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/narrow-almond",
+      "category": "eyes",
+      "tags": ["narrow", "almond", "intense", "slit-pupil"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/angular-cat",
+      "category": "eyes",
+      "tags": ["angular", "cat-eye", "fierce", "diamond-highlight"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/round-open",
+      "category": "eyes",
+      "tags": ["round", "open", "gentle", "warm"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/sparkle-ornate",
+      "category": "eyes",
+      "tags": ["sparkle", "ornate", "large", "multi-ring"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/sharp-elegant",
+      "category": "eyes",
+      "tags": ["sharp", "elegant", "winged", "lashes"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/warm-round",
+      "category": "eyes",
+      "tags": ["warm", "round", "soft", "two-ring"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/balanced-almond",
+      "category": "eyes",
+      "tags": ["balanced", "almond", "clean", "moderate"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "eyes/angular-sharp",
+      "category": "eyes",
+      "tags": ["angular", "sharp", "accent-liner", "dramatic"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "face-detail/male-standard",
+      "category": "face-detail",
+      "tags": ["masculine", "thick-brows", "firm-mouth"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "face-detail/female-standard",
+      "category": "face-detail",
+      "tags": ["feminine", "thin-brows", "blush", "tinted-lips"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "face-detail/neutral-standard",
+      "category": "face-detail",
+      "tags": ["neutral", "medium-brows", "subtle-mouth"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "body-silhouette/armored-structured",
+      "category": "body-silhouette",
+      "tags": ["armored", "structured", "collar", "shoulder-plates"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "body-silhouette/elegant-light",
+      "category": "body-silhouette",
+      "tags": ["elegant", "light", "gem-clasp", "accent-trim"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "body-silhouette/clean-simple",
+      "category": "body-silhouette",
+      "tags": ["clean", "simple", "mandarin-collar", "minimal"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
       "bodyCompatibility": ["broad", "medium", "lean"],
       "poseCompatibility": ["standing"],
       "rarity": "common"

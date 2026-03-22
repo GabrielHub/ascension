@@ -11,14 +11,14 @@ import {
 
 const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, Phase1OperatorSnapshot["appearance"]> = {
   "operator/rose-vega": {
-    presetId: "female-flowing",
+    presetId: "vera-004",
     visibleGear: {
       weaponPartId: "weapon/tactical-rifle",
       outfitOverlayPartId: "outfit-overlay/tactical-vest",
     },
   },
   "operator/milo-hart": {
-    presetId: "male-undercut",
+    presetId: "dax-008",
     visibleGear: {
       weaponPartId: "weapon/dual-daggers",
       accessoryPartId: "accessory/comm-earpiece",
@@ -28,8 +28,10 @@ const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, Phase1OperatorSnapshot
 
 export * from "./commands";
 export * from "./components";
+export * from "./navigation";
 export * from "./runtime";
 export * from "./systems";
+export * from "./uncertainty";
 
 export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
   const startingBuilding = registry.buildingById.get(bootstrapScenario.building.activeBuildingId);
@@ -41,8 +43,8 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
   }
 
   const snapshot = {
-    guild: bootstrapScenario.guild,
-    time: bootstrapScenario.time,
+    guild: { ...bootstrapScenario.guild },
+    time: { ...bootstrapScenario.time },
     building: {
       activeBuildingId: startingBuilding.id,
       activeBuildingTier: startingBuilding.baseTier,
@@ -62,7 +64,7 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
         tier: roomTemplate.tier,
         capacity: roomTemplate.baseCapacity,
         occupancy: seed.occupancy,
-        position: seed.position,
+        footprint: { ...seed.footprint },
       };
     }),
     activeRaidPackets: [],
@@ -70,13 +72,44 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     appliedUpgradeIds: [],
     operators: bootstrapScenario.operators.map((operator) => ({
       ...operator,
-      appearance: BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id] ?? { presetId: "male-swept" },
+      identity: { ...operator.identity },
+      preferences: {
+        ...operator.preferences,
+        preferredMissionTags: [...operator.preferences.preferredMissionTags],
+        preferredPartnerIds: [...operator.preferences.preferredPartnerIds],
+      },
+      schedule: { ...operator.schedule },
+      needs: { ...operator.needs },
+      morale: { ...operator.morale },
+      loyalty: { ...operator.loyalty },
+      injury: { ...operator.injury },
+      assignment: { ...operator.assignment },
+      appearance: {
+        presetId: BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]?.presetId ?? "kael-001",
+        ...(BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]?.visibleGear
+          ? {
+              visibleGear: {
+                ...BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]!.visibleGear,
+              },
+            }
+          : {}),
+      },
       lifecycle: { status: "active" as const },
     })),
-    operatorRelationships: [...bootstrapScenario.operatorRelationships],
-    staff: [...bootstrapScenario.staff],
-    visitors: [...bootstrapScenario.visitors],
-    raidOpportunities: [...bootstrapScenario.raidOpportunities],
+    operatorRelationships: bootstrapScenario.operatorRelationships.map((relationship) => ({
+      ...relationship,
+      historyTags: [...relationship.historyTags],
+    })),
+    staff: bootstrapScenario.staff.map((staff) => ({
+      ...staff,
+      assignment: { ...staff.assignment },
+    })),
+    visitors: bootstrapScenario.visitors.map((visitor) => ({ ...visitor })),
+    raidOpportunities: bootstrapScenario.raidOpportunities.map((opportunity) => ({
+      ...opportunity,
+      interestedOperatorIds: [...opportunity.interestedOperatorIds],
+      claimedOperatorIds: [...opportunity.claimedOperatorIds],
+    })),
     activeEvents: [],
   } satisfies Phase1RuntimeWorldSnapshot;
 

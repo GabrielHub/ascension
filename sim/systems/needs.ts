@@ -6,7 +6,7 @@ import {
   RoomInstance,
   ScheduleState,
 } from "../components";
-import { clamp, getRoleTag } from "./commands";
+import { clamp, getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
 import type { SimSystem } from "./types";
 
 function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
@@ -14,11 +14,10 @@ function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
   const buildingRecoveryModifier = BuildingAuthority.recoveryRateModifier[buildingEntity] ?? 0;
 
   const roomRecoveryModifier = context.runtimeState.roomEntities.reduce((total, roomEntity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[roomEntity]] ?? context.registry.rooms[0];
+    const template = getRoomTemplateForEntity(context, roomEntity);
     if (
       RoomInstance.isOperational[roomEntity] !== 1 ||
-      getRoleTag(template.tags) !== "role:medic"
+      getStaffRoleTag(template.tags) !== "staff:medical"
     ) {
       return total;
     }

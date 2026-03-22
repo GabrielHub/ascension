@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <defs>
+    <radialGradient id="ee-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(212,84,30,0.25)"/>
+      <stop offset="100%" stop-color="rgba(212,84,30,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Elite enemy — stronger presence than generic -->
+  <circle cx="10" cy="10" r="9" fill="url(#ee-glow)"/>
+  <!-- Double diamond -->
+  <polygon points="10,3 16,10 10,17 4,10" fill="rgba(212,84,30,0.5)"/>
+  <polygon points="10,3 16,10 10,17 4,10" fill="none" stroke="rgba(212,84,30,0.9)" stroke-width="1"/>
+  <polygon points="10,5.5 13.5,10 10,14.5 6.5,10" fill="none" stroke="rgba(255,160,80,0.3)" stroke-width="0.6"/>
+  <!-- Core -->
+  <circle cx="10" cy="10" r="1.8" fill="rgba(212,84,30,0.95)"/>
+  <circle cx="10" cy="10" r="1" fill="rgba(255,160,80,0.4)"/>
+</svg>

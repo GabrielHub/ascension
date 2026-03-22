@@ -20,11 +20,11 @@ export type SimCommand =
   | {
       type: "sim/place-room";
       templateId: string;
-      position?: {
-        x?: number;
-        y?: number;
-        width?: number;
-        height?: number;
+      footprint?: {
+        col?: number;
+        row?: number;
+        cols?: number;
+        rows?: number;
       };
     }
   | {

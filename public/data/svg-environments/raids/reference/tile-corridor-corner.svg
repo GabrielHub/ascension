@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="cc-floor" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#161a28"/>
+      <stop offset="100%" stop-color="#121624"/>
+    </linearGradient>
+  </defs>
+  <!-- Floor -->
+  <rect width="32" height="32" fill="url(#cc-floor)"/>
+  <!-- Corner walls — L-shaped turn (open bottom-right) -->
+  <rect x="0" y="0" width="32" height="2" fill="#1e2540" opacity="0.6"/>
+  <rect x="0" y="0" width="2" height="32" fill="#1e2540" opacity="0.6"/>
+  <!-- Inner corner accent -->
+  <rect x="2" y="2" width="2" height="2" fill="rgba(42,53,85,0.2)" rx="0.5"/>
+  <!-- Turn guide -->
+  <path d="M16,0 Q16,16 32,16" fill="none" stroke="rgba(200,168,76,0.03)" stroke-width="0.5" stroke-dasharray="3,3"/>
+</svg>

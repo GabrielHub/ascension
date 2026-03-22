@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <radialGradient id="lc-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(200,168,76,0.1)"/>
+      <stop offset="100%" stop-color="rgba(200,168,76,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Loot cache — collectible point overlay -->
+  <circle cx="8" cy="8" r="6" fill="url(#lc-glow)"/>
+  <!-- Container outline -->
+  <rect x="4" y="6" width="8" height="6" fill="none" stroke="rgba(200,168,76,0.18)" stroke-width="0.8" rx="1"/>
+  <!-- Lid line -->
+  <line x1="4" y1="7.5" x2="12" y2="7.5" stroke="rgba(200,168,76,0.12)" stroke-width="0.6"/>
+  <!-- Gleam dot -->
+  <circle cx="8" cy="9.5" r="0.8" fill="rgba(200,168,76,0.15)"/>
+</svg>

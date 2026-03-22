@@ -1,6 +1,7 @@
 import { addComponent, addEntity, createWorld } from "bitecs";
 
 import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
+import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
 
 import {
@@ -33,17 +34,24 @@ import {
   buildRequirementContext,
   getAdjustedUpgradeCosts,
   getCurrentAbsoluteMinute,
-  isRuntimeOperatorAppearancePresetId,
-  getRoleTag,
+  getStaffRoleTag,
+  isCanonicalStaffRoleTag,
   meetsRequirements,
-  selectRuntimeOperatorAppearancePresetId,
+  normalizeStaffRoleTag,
   type PreferenceProfileRecord,
 } from "./systems/commands";
+import type { RaidTeamGoal } from "render/types";
 import {
+  type RaidEncounterThreat,
+  type RaidEventKind,
+  type RaidFeatureKind,
+  type RaidOperatorReadiness,
+  type RuntimeCueId,
   computeOperatorRaidReadiness,
   computeRelationshipCohesion,
   computeSchedulePressure,
   getRecommendedOperatorCountForMission,
+  selectTeamGoal,
   runSimCommand,
   runSimSystemSchedule,
   simSystemSchedule,
@@ -51,7 +59,7 @@ import {
   type SimSingletonEntities,
 } from "./systems";
 
-export interface Phase1OperatorPreferenceSnapshot extends PreferenceProfileRecord {}
+export type Phase1OperatorPreferenceSnapshot = PreferenceProfileRecord;
 
 export interface Phase1OperatorScheduleSnapshot {
   currentBlock: string;
@@ -123,6 +131,29 @@ export interface Phase1StaffSnapshot {
   roleTag: string;
   status: string;
   wage: number;
+  schedule: {
+    currentBlock: string;
+    workStartMinute: number;
+    workEndMinute: number;
+  };
+  needs: {
+    hunger: number;
+    fatigue: number;
+    stress: number;
+  };
+  morale: {
+    current: number;
+    baseline: number;
+  };
+  loyalty: {
+    current: number;
+    baseline: number;
+  };
+  injury: {
+    severity: number;
+    recoveryHoursRemaining: number;
+    treated: boolean;
+  };
   assignment: {
     kind: string;
     targetId: string;
@@ -185,6 +216,42 @@ export interface Phase1RaidSummarySnapshot extends RaidSummarySnapshot {
   operatorOutcomes: RaidSummaryRecord["operatorOutcomes"];
   narrativeTags: string[];
   intelMismatchTags: string[];
+}
+
+export interface Phase1RaidOperatorStatusView {
+  operatorId: string;
+  readiness: RaidOperatorReadiness;
+  healthFraction: number | null;
+  roleTag: string | null;
+}
+
+export interface Phase1RaidEncounterView {
+  enemyLabel: string;
+  threat: RaidEncounterThreat;
+  healthFraction: number;
+}
+
+export interface Phase1RaidEventView {
+  id: string;
+  kind: RaidEventKind;
+  message: string;
+  tick: number;
+}
+
+export interface Phase1RaidEnemyMarkerView {
+  id: string;
+  x: number;
+  y: number;
+  threat: RaidEncounterThreat;
+  discovered: boolean;
+}
+
+export interface Phase1RaidFeatureMarkerView {
+  id: string;
+  x: number;
+  y: number;
+  kind: RaidFeatureKind;
+  discovered: boolean;
 }
 
 export interface Phase1RuntimeWorldSnapshot extends WorldSnapshot {
@@ -266,10 +333,16 @@ export interface Phase1RuntimeView {
     isOperational: boolean;
     capacity: number;
     occupancy: number;
-    requiredRoleTag: string;
+    requiredStaffTag: string;
     assignedStaffCount: number;
     appliedUpgradeIds: string[];
     availableUpgradeIds: string[];
+    footprint: {
+      col: number;
+      row: number;
+      cols: number;
+      rows: number;
+    };
   }>;
   visitors: Phase1VisitorSnapshot[];
   operators: Array<
@@ -296,10 +369,39 @@ export interface Phase1RuntimeView {
     available: boolean;
   }>;
   raidOpportunities: Phase1RaidOpportunityView[];
-  activeRaids: Phase1ActiveRaidSnapshot[];
+  activeRaids: Array<
+    Phase1ActiveRaidSnapshot & {
+      teamGoal: RaidTeamGoal;
+      teamState: "active" | "returning" | "defeated";
+      x: number;
+      y: number;
+      operatorStatuses: Phase1RaidOperatorStatusView[];
+      encounter: Phase1RaidEncounterView | null;
+      recentEvents: Phase1RaidEventView[];
+    }
+  >;
   raidSummaries: Phase1RaidSummarySnapshot[];
   activeEvents: Phase1ActiveEventSnapshot[];
   rosterPressure: Phase1RosterPressureView;
+  contractSite: {
+    contractSiteId: string;
+    missionId: string;
+    location: string;
+    bossDefeated: boolean;
+    contractLost: boolean;
+    threat: number;
+    intel: number;
+    reward: number;
+  } | null;
+  fogOfWar: {
+    gridWidth: number;
+    gridHeight: number;
+    revealed: readonly boolean[];
+  } | null;
+  raidWorld: {
+    enemyMarkers: Phase1RaidEnemyMarkerView[];
+    featureMarkers: Phase1RaidFeatureMarkerView[];
+  } | null;
 }
 
 export interface AscensionSimulation {
@@ -312,6 +414,7 @@ export interface AscensionSimulation {
   dispatch(command: SimCommand): void;
   getWorldSnapshot(): Phase1RuntimeWorldSnapshot;
   getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot): Phase1RuntimeView;
+  drainRuntimeCues(): readonly RuntimeCueId[];
   tick(deltaMs: number): void;
 }
 
@@ -351,9 +454,9 @@ function normalizeOperatorSnapshot(
 ): Phase1OperatorSnapshot {
   const preferences = normalizePreferenceSnapshot(operator);
   const appearanceRecord = operator.appearance as Record<string, unknown> | undefined;
-  const presetId = isRuntimeOperatorAppearancePresetId(appearanceRecord?.presetId)
-    ? appearanceRecord.presetId
-    : selectRuntimeOperatorAppearancePresetId({
+  const presetId = isOperatorAppearanceRecipeId(appearanceRecord?.presetId)
+    ? appearanceRecord!.presetId
+    : selectOperatorAppearanceRecipeId({
         // Legacy seed migration is save-owned. Runtime reconstructs only the locked preset-id contract.
         stableKey: [
           operator.id,
@@ -362,7 +465,7 @@ function normalizeOperatorSnapshot(
           operator.identity.specialtyTag,
         ].join(":"),
       });
-  const visibleGear = normalizeVisibleGearSnapshot(appearanceRecord?.visibleGear);
+  const visibleGear = buildVisibleGearSnapshot(appearanceRecord?.visibleGear);
 
   return {
     id: operator.id,
@@ -402,6 +505,47 @@ function normalizeOperatorSnapshot(
   };
 }
 
+function normalizeStaffSnapshot(
+  staff: Partial<Phase1StaffSnapshot> & {
+    id: string;
+  },
+): Phase1StaffSnapshot {
+  return {
+    id: staff.id,
+    name: staff.name ?? "Unknown Staff",
+    roleTag: normalizeStaffRoleTag(staff.roleTag ?? "staff:admin") ?? "staff:admin",
+    status: staff.status ?? "available",
+    wage: staff.wage ?? 0,
+    schedule: {
+      currentBlock: staff.schedule?.currentBlock ?? "idle",
+      workStartMinute: staff.schedule?.workStartMinute ?? 480,
+      workEndMinute: staff.schedule?.workEndMinute ?? 1080,
+    },
+    needs: {
+      hunger: staff.needs?.hunger ?? 18,
+      fatigue: staff.needs?.fatigue ?? 24,
+      stress: staff.needs?.stress ?? 14,
+    },
+    morale: {
+      current: staff.morale?.current ?? 56,
+      baseline: staff.morale?.baseline ?? staff.morale?.current ?? 56,
+    },
+    loyalty: {
+      current: staff.loyalty?.current ?? 52,
+      baseline: staff.loyalty?.baseline ?? staff.loyalty?.current ?? 52,
+    },
+    injury: {
+      severity: staff.injury?.severity ?? 0,
+      recoveryHoursRemaining: staff.injury?.recoveryHoursRemaining ?? 0,
+      treated: staff.injury?.treated ?? false,
+    },
+    assignment: {
+      kind: staff.assignment?.kind ?? "idle",
+      targetId: staff.assignment?.targetId ?? "",
+    },
+  };
+}
+
 function normalizeLifecycleSnapshot(
   lifecycle: Phase1OperatorSnapshot["lifecycle"] | undefined,
 ): Phase1OperatorSnapshot["lifecycle"] {
@@ -416,57 +560,24 @@ function normalizeLifecycleSnapshot(
   };
 }
 
-function normalizeVisibleGearSnapshot(
-  value: unknown,
-): Phase1OperatorVisibleGearSnapshot | undefined {
-  if (!value || typeof value !== "object") {
+function buildVisibleGearSnapshot(input: unknown): Phase1OperatorVisibleGearSnapshot | undefined {
+  if (!input || typeof input !== "object") {
     return undefined;
   }
 
-  const visibleGearRecord = value as Record<string, unknown>;
+  const record = input as Record<string, unknown>;
   const visibleGear: Phase1OperatorVisibleGearSnapshot = {};
 
-  if (
-    typeof visibleGearRecord.weaponPartId === "string" &&
-    visibleGearRecord.weaponPartId.length > 0
-  ) {
-    visibleGear.weaponPartId = visibleGearRecord.weaponPartId;
+  if (typeof record.weaponPartId === "string" && record.weaponPartId.length > 0) {
+    visibleGear.weaponPartId = record.weaponPartId;
   }
 
-  if (
-    typeof visibleGearRecord.outfitOverlayPartId === "string" &&
-    visibleGearRecord.outfitOverlayPartId.length > 0
-  ) {
-    visibleGear.outfitOverlayPartId = visibleGearRecord.outfitOverlayPartId;
+  if (typeof record.outfitOverlayPartId === "string" && record.outfitOverlayPartId.length > 0) {
+    visibleGear.outfitOverlayPartId = record.outfitOverlayPartId;
   }
 
-  if (
-    typeof visibleGearRecord.accessoryPartId === "string" &&
-    visibleGearRecord.accessoryPartId.length > 0
-  ) {
-    visibleGear.accessoryPartId = visibleGearRecord.accessoryPartId;
-  }
-
-  return Object.keys(visibleGear).length > 0 ? visibleGear : undefined;
-}
-
-function buildVisibleGearSnapshot(input: {
-  weaponPartId?: string;
-  outfitOverlayPartId?: string;
-  accessoryPartId?: string;
-}): Phase1OperatorVisibleGearSnapshot | undefined {
-  const visibleGear: Phase1OperatorVisibleGearSnapshot = {};
-
-  if (typeof input.weaponPartId === "string" && input.weaponPartId.length > 0) {
-    visibleGear.weaponPartId = input.weaponPartId;
-  }
-
-  if (typeof input.outfitOverlayPartId === "string" && input.outfitOverlayPartId.length > 0) {
-    visibleGear.outfitOverlayPartId = input.outfitOverlayPartId;
-  }
-
-  if (typeof input.accessoryPartId === "string" && input.accessoryPartId.length > 0) {
-    visibleGear.accessoryPartId = input.accessoryPartId;
+  if (typeof record.accessoryPartId === "string" && record.accessoryPartId.length > 0) {
+    visibleGear.accessoryPartId = record.accessoryPartId;
   }
 
   return Object.keys(visibleGear).length > 0 ? visibleGear : undefined;
@@ -502,35 +613,6 @@ function buildLifecycleSnapshot(entity: number): Phase1OperatorSnapshot["lifecyc
   return { status: "active" };
 }
 
-function buildDefaultRelationshipSnapshots(
-  operators: readonly Phase1OperatorSnapshot[],
-): Phase1RelationshipSnapshot[] {
-  const relationships: Phase1RelationshipSnapshot[] = [];
-
-  for (let index = 0; index < operators.length; index += 1) {
-    for (let otherIndex = index + 1; otherIndex < operators.length; otherIndex += 1) {
-      relationships.push(
-        buildInitialRelationshipRecord(
-          {
-            id: operators[index].id,
-            roleTag: operators[index].identity.roleTag,
-            specialtyTag: operators[index].identity.specialtyTag,
-            preferences: operators[index].preferences,
-          },
-          {
-            id: operators[otherIndex].id,
-            roleTag: operators[otherIndex].identity.roleTag,
-            specialtyTag: operators[otherIndex].identity.specialtyTag,
-            preferences: operators[otherIndex].preferences,
-          },
-        ),
-      );
-    }
-  }
-
-  return relationships;
-}
-
 function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot {
   const extendedSnapshot = snapshot as Phase1RuntimeWorldSnapshot;
   const operators = (extendedSnapshot.operators ?? []).map((operator) => {
@@ -541,23 +623,51 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
       },
     );
   });
-  const operatorRelationships =
-    extendedSnapshot.operatorRelationships && extendedSnapshot.operatorRelationships.length > 0
-      ? extendedSnapshot.operatorRelationships.map((relationship) => ({
-          operatorAId: relationship.operatorAId,
-          operatorBId: relationship.operatorBId,
-          trust: relationship.trust ?? 50,
-          friction: relationship.friction ?? 0,
-          familiarity: relationship.familiarity ?? 0,
-          recentSharedOutcome: relationship.recentSharedOutcome ?? 0,
-          historyTags: [...(relationship.historyTags ?? [])],
-        }))
-      : buildDefaultRelationshipSnapshots(operators);
+  const operatorRelationships: Phase1RelationshipSnapshot[] = [];
+  if (extendedSnapshot.operatorRelationships !== undefined) {
+    for (const relationship of extendedSnapshot.operatorRelationships) {
+      operatorRelationships.push({
+        operatorAId: relationship.operatorAId,
+        operatorBId: relationship.operatorBId,
+        trust: relationship.trust ?? 50,
+        friction: relationship.friction ?? 0,
+        familiarity: relationship.familiarity ?? 0,
+        recentSharedOutcome: relationship.recentSharedOutcome ?? 0,
+        historyTags: [...(relationship.historyTags ?? [])],
+      });
+    }
+  } else {
+    for (let i = 0; i < operators.length; i += 1) {
+      for (let j = i + 1; j < operators.length; j += 1) {
+        operatorRelationships.push(
+          buildInitialRelationshipRecord(
+            {
+              id: operators[i].id,
+              roleTag: operators[i].identity.roleTag,
+              specialtyTag: operators[i].identity.specialtyTag,
+              preferences: operators[i].preferences,
+            },
+            {
+              id: operators[j].id,
+              roleTag: operators[j].identity.roleTag,
+              specialtyTag: operators[j].identity.specialtyTag,
+              preferences: operators[j].preferences,
+            },
+          ),
+        );
+      }
+    }
+  }
+  const staff =
+    extendedSnapshot.staff?.map((entry) =>
+      normalizeStaffSnapshot(entry as Partial<Phase1StaffSnapshot> & { id: string }),
+    ) ?? [];
 
   return {
     ...snapshot,
     activeRaidPackets: (extendedSnapshot.activeRaidPackets ?? []).map((packet) => ({
       ...packet,
+      contractSiteId: packet.contractSiteId ?? extendedSnapshot.contractSite?.contractSiteId ?? "",
       opportunityId: packet.opportunityId ?? "",
       operatorIds: packet.operatorIds ?? [],
       startedTick: packet.startedTick ?? 0,
@@ -579,6 +689,7 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     })),
     raidSummaries: (extendedSnapshot.raidSummaries ?? []).map((summary) => ({
       ...summary,
+      contractSiteId: summary.contractSiteId ?? "",
       opportunityId: summary.opportunityId ?? "",
       location: summary.location ?? "district/unknown",
       threat: summary.threat ?? 40,
@@ -591,23 +702,26 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     })),
     operators,
     operatorRelationships,
+    staff,
     raidOpportunities: (extendedSnapshot.raidOpportunities ?? []).map((opportunity) => ({
       id: opportunity.id,
       missionId: opportunity.missionId,
-      location: opportunity.location,
-      threat: opportunity.threat,
-      intel: opportunity.intel,
-      reward: opportunity.reward,
-      risk: opportunity.risk,
-      status: opportunity.status,
+      location: opportunity.location ?? "district/unknown",
+      threat: opportunity.threat ?? 40,
+      intel: opportunity.intel ?? 40,
+      reward: opportunity.reward ?? 60,
+      risk: opportunity.risk ?? 40,
+      status: opportunity.status ?? "open",
       interestedOperatorIds: [...(opportunity.interestedOperatorIds ?? [])],
       claimedOperatorIds: [...(opportunity.claimedOperatorIds ?? [])],
-      createdTick: opportunity.createdTick,
-      expiresAtTick: opportunity.expiresAtTick,
+      createdTick: opportunity.createdTick ?? 0,
+      expiresAtTick: opportunity.expiresAtTick ?? 0,
     })),
-    staff: extendedSnapshot.staff ?? [],
     visitors: extendedSnapshot.visitors ?? [],
     activeEvents: extendedSnapshot.activeEvents ?? [],
+    contractSite: extendedSnapshot.contractSite ?? null,
+    fogOfWar: extendedSnapshot.fogOfWar ?? null,
+    scheduler: extendedSnapshot.scheduler,
   };
 }
 
@@ -650,6 +764,13 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
     nextVisitorSequence: nextSequenceFromIds(visitorIds),
     nextRaidSequence: nextSequenceFromIds(raidIds),
     nextEventSequence: nextSequenceFromIds(eventIds),
+    pendingCueIds: [],
+    raidPresentation: {
+      contractSiteId: null,
+      teams: [],
+      enemies: [],
+      features: [],
+    },
   };
 }
 
@@ -657,11 +778,29 @@ function getActiveBuildingTemplate(context: {
   registry: TemplateRegistry;
   singletonEntities: SimSingletonEntities;
 }) {
-  return (
+  const template =
     context.registry.buildings[
       BuildingAuthority.activeBuildingTemplateIndex[context.singletonEntities.building]
-    ] ?? context.registry.buildings[0]
-  );
+    ];
+  if (!template) {
+    throw new Error("Runtime references an unknown active building template index.");
+  }
+
+  return template;
+}
+
+function getRoomTemplateForRuntimeEntity(
+  registry: TemplateRegistry,
+  entity: number,
+): TemplateRegistry["rooms"][number] {
+  const template = registry.rooms[RoomInstance.templateIndex[entity]];
+  if (!template) {
+    throw new Error(
+      `Runtime references an unknown room template index for room "${RoomInstance.id[entity]}".`,
+    );
+  }
+
+  return template;
 }
 
 function getCurrentAbsoluteMinuteFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot): number {
@@ -784,6 +923,12 @@ function applyWorldSnapshot(
   addComponent(world, timeEntity, WorldTimeState);
   addComponent(world, buildingEntity, BuildingAuthority);
 
+  const assertKnownMissionId = (missionId: string, label: string) => {
+    if (!registry.missionById.has(missionId)) {
+      throw new Error(`Runtime snapshot references unknown mission "${missionId}" for ${label}.`);
+    }
+  };
+
   GuildState.reputation[guildEntity] = runtimeSnapshot.guild.reputation;
   GuildState.treasury[guildEntity] = runtimeSnapshot.guild.treasury;
   GuildState.intel[guildEntity] = runtimeSnapshot.guild.intel;
@@ -792,8 +937,30 @@ function applyWorldSnapshot(
   WorldTimeState.day[timeEntity] = runtimeSnapshot.time.day;
   WorldTimeState.minuteOfDay[timeEntity] = runtimeSnapshot.time.minuteOfDay;
 
-  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] =
-    registry.buildingIndexById.get(runtimeSnapshot.building.activeBuildingId) ?? 0;
+  const buildingTemplateIndex = registry.buildingIndexById.get(
+    runtimeSnapshot.building.activeBuildingId,
+  );
+  if (buildingTemplateIndex === undefined) {
+    throw new Error(
+      `Runtime snapshot references unknown building "${runtimeSnapshot.building.activeBuildingId}".`,
+    );
+  }
+  runtimeSnapshot.activeRaidPackets.forEach((packet) => {
+    assertKnownMissionId(packet.missionId, `active raid "${packet.id}"`);
+  });
+  runtimeSnapshot.raidSummaries.forEach((summary) => {
+    assertKnownMissionId(summary.missionId, `raid summary "${summary.id}"`);
+  });
+  runtimeSnapshot.raidOpportunities?.forEach((opportunity) => {
+    assertKnownMissionId(opportunity.missionId, `raid opportunity "${opportunity.id}"`);
+  });
+  if (runtimeSnapshot.contractSite) {
+    assertKnownMissionId(
+      runtimeSnapshot.contractSite.missionId,
+      `contract site "${runtimeSnapshot.contractSite.contractSiteId}"`,
+    );
+  }
+  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = buildingTemplateIndex;
   BuildingAuthority.activeBuildingTier[buildingEntity] =
     runtimeSnapshot.building.activeBuildingTier;
   BuildingAuthority.roomSlotCount[buildingEntity] = runtimeSnapshot.building.roomSlotCount;
@@ -821,37 +988,54 @@ function applyWorldSnapshot(
     }),
   );
   BuildingAuthority.pressure[buildingEntity] = 0;
-  BuildingAuthority.lastPayrollDay[buildingEntity] = runtimeSnapshot.time.day;
-  BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = currentAbsoluteMinute;
-  BuildingAuthority.lastEventTick[buildingEntity] = 0;
-  BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = Math.max(
-    0,
-    (runtimeSnapshot.raidOpportunities ?? []).reduce((latest, opportunity) => {
-      return Math.max(latest, opportunity.createdTick);
-    }, currentAbsoluteMinute - 150),
-  );
+  BuildingAuthority.lastPayrollDay[buildingEntity] =
+    runtimeSnapshot.scheduler?.lastPayrollDay ?? runtimeSnapshot.time.day;
+  BuildingAuthority.lastVisitorSpawnTick[buildingEntity] =
+    runtimeSnapshot.scheduler?.lastVisitorSpawnTick ?? currentAbsoluteMinute;
+  BuildingAuthority.lastEventTick[buildingEntity] = runtimeSnapshot.scheduler?.lastEventTick ?? 0;
+  BuildingAuthority.lastRaidOpportunityTick[buildingEntity] =
+    runtimeSnapshot.scheduler?.lastRaidOpportunityTick ??
+    Math.max(
+      0,
+      (runtimeSnapshot.raidOpportunities ?? []).reduce((latest, opportunity) => {
+        return Math.max(latest, opportunity.createdTick ?? 0);
+      }, currentAbsoluteMinute - 150),
+    );
+  BuildingAuthority.contractSite[buildingEntity] = runtimeSnapshot.contractSite
+    ? { ...runtimeSnapshot.contractSite }
+    : null;
+  BuildingAuthority.fogOfWar[buildingEntity] = runtimeSnapshot.fogOfWar
+    ? {
+        ...runtimeSnapshot.fogOfWar,
+        revealed: [...runtimeSnapshot.fogOfWar.revealed],
+      }
+    : null;
 
   runtimeSnapshot.rooms.forEach((room, index) => {
     const entity = addEntity(world);
+    const templateIndex = registry.roomIndexById.get(room.templateId);
+    if (templateIndex === undefined) {
+      throw new Error(`Runtime snapshot references unknown room "${room.templateId}".`);
+    }
 
     addComponent(world, entity, RoomInstance);
     addComponent(world, entity, Renderable);
 
     RoomInstance.id[entity] = room.id;
-    RoomInstance.templateIndex[entity] = registry.roomIndexById.get(room.templateId) ?? 0;
+    RoomInstance.templateIndex[entity] = templateIndex;
     RoomInstance.tier[entity] = room.tier;
     RoomInstance.capacity[entity] = room.capacity;
     RoomInstance.occupancy[entity] = room.occupancy;
     RoomInstance.isRequestedActive[entity] = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
     RoomInstance.isOperational[entity] = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
     RoomInstance.assignedStaffCount[entity] = room.occupancy;
-    RoomInstance.appliedUpgradeIds[entity] = [];
+    RoomInstance.appliedUpgradeIds[entity] = [...(room.appliedUpgradeIds ?? [])];
     RoomInstance.slotIndex[entity] = index;
 
-    Renderable.x[entity] = room.position.x;
-    Renderable.y[entity] = room.position.y;
-    Renderable.width[entity] = room.position.width;
-    Renderable.height[entity] = room.position.height;
+    Renderable.col[entity] = room.footprint.col;
+    Renderable.row[entity] = room.footprint.row;
+    Renderable.cols[entity] = room.footprint.cols;
+    Renderable.rows[entity] = room.footprint.rows;
     Renderable.layer[entity] = 1;
 
     runtimeState.roomEntities.push(entity);
@@ -904,14 +1088,20 @@ function applyWorldSnapshot(
     ScheduleState.workEndMinute[entity] = operator.schedule.workEndMinute;
     AssignmentState.kind[entity] = operator.assignment.kind;
     AssignmentState.targetId[entity] = operator.assignment.targetId;
-    RaidParticipationState.activeRaidId[entity] =
-      operator.assignment.kind === "raid" ? operator.assignment.targetId : "";
-    RaidParticipationState.missionId[entity] =
-      runtimeSnapshot.activeRaidPackets.find((packet) => packet.id === operator.assignment.targetId)
-        ?.missionId ?? "";
-    RaidParticipationState.returnTick[entity] =
-      runtimeSnapshot.activeRaidPackets.find((packet) => packet.id === operator.assignment.targetId)
-        ?.returnTick ?? 0;
+    const assignedRaidPacket =
+      operator.assignment.kind === "raid"
+        ? runtimeSnapshot.activeRaidPackets.find(
+            (packet) => packet.id === operator.assignment.targetId,
+          )
+        : undefined;
+    if (operator.assignment.kind === "raid" && !assignedRaidPacket) {
+      throw new Error(
+        `Runtime snapshot operator "${operator.id}" is assigned to unknown raid "${operator.assignment.targetId}".`,
+      );
+    }
+    RaidParticipationState.activeRaidId[entity] = assignedRaidPacket?.id ?? "";
+    RaidParticipationState.missionId[entity] = assignedRaidPacket?.missionId ?? "";
+    RaidParticipationState.returnTick[entity] = assignedRaidPacket?.returnTick ?? 0;
     InjuryState.severity[entity] = operator.injury.severity;
     InjuryState.recoveryHoursRemaining[entity] = operator.injury.recoveryHoursRemaining;
     InjuryState.treated[entity] = operator.injury.treated ? 1 : 0;
@@ -947,24 +1137,27 @@ function applyWorldSnapshot(
 
     StaffState.id[entity] = staff.id;
     StaffState.name[entity] = staff.name;
+    if (!isCanonicalStaffRoleTag(staff.roleTag)) {
+      throw new Error(`Runtime snapshot staff "${staff.id}" has unknown role "${staff.roleTag}".`);
+    }
     StaffState.roleTag[entity] = staff.roleTag;
     StaffState.status[entity] = staff.status;
     StaffState.wage[entity] = staff.wage;
-    MoraleState.current[entity] = 56;
-    MoraleState.baseline[entity] = 56;
-    LoyaltyState.current[entity] = 52;
-    LoyaltyState.baseline[entity] = 52;
-    ScheduleState.currentBlock[entity] = "idle";
-    ScheduleState.workStartMinute[entity] = 480;
-    ScheduleState.workEndMinute[entity] = 1080;
+    MoraleState.current[entity] = staff.morale.current;
+    MoraleState.baseline[entity] = staff.morale.baseline;
+    LoyaltyState.current[entity] = staff.loyalty.current;
+    LoyaltyState.baseline[entity] = staff.loyalty.baseline;
+    ScheduleState.currentBlock[entity] = staff.schedule.currentBlock;
+    ScheduleState.workStartMinute[entity] = staff.schedule.workStartMinute;
+    ScheduleState.workEndMinute[entity] = staff.schedule.workEndMinute;
     AssignmentState.kind[entity] = staff.assignment.kind;
     AssignmentState.targetId[entity] = staff.assignment.targetId;
-    NeedState.hunger[entity] = 18;
-    NeedState.fatigue[entity] = 24;
-    NeedState.stress[entity] = 14;
-    InjuryState.severity[entity] = 0;
-    InjuryState.recoveryHoursRemaining[entity] = 0;
-    InjuryState.treated[entity] = 0;
+    NeedState.hunger[entity] = staff.needs.hunger;
+    NeedState.fatigue[entity] = staff.needs.fatigue;
+    NeedState.stress[entity] = staff.needs.stress;
+    InjuryState.severity[entity] = staff.injury.severity;
+    InjuryState.recoveryHoursRemaining[entity] = staff.injury.recoveryHoursRemaining;
+    InjuryState.treated[entity] = staff.injury.treated ? 1 : 0;
 
     runtimeState.staffEntities.push(entity);
   });
@@ -1005,12 +1198,14 @@ function applyWorldSnapshot(
 
   runtimeSnapshot.activeEvents?.forEach((event) => {
     const entity = addEntity(world);
+    const templateIndex = registry.events.findIndex((template) => template.id === event.templateId);
+    if (templateIndex < 0) {
+      throw new Error(`Runtime snapshot references unknown event template "${event.templateId}".`);
+    }
 
     addComponent(world, entity, EventState);
     EventState.id[entity] = event.id;
-    EventState.templateIndex[entity] = registry.events.findIndex(
-      (template) => template.id === event.templateId,
-    );
+    EventState.templateIndex[entity] = templateIndex;
     EventState.severity[entity] = event.severity;
     EventState.remainingHours[entity] = event.remainingHours;
     EventState.pressureContribution[entity] = event.pressureContribution;
@@ -1079,7 +1274,7 @@ function applyWorldSnapshot(
           operatorSlotCount: BuildingAuthority.operatorSlotCount[buildingEntity],
         },
         rooms: runtimeState.roomEntities.map((entity) => {
-          const template = registry.rooms[RoomInstance.templateIndex[entity]] ?? registry.rooms[0];
+          const template = getRoomTemplateForRuntimeEntity(registry, entity);
 
           return {
             id: RoomInstance.id[entity],
@@ -1088,11 +1283,12 @@ function applyWorldSnapshot(
             capacity: RoomInstance.capacity[entity],
             occupancy: RoomInstance.occupancy[entity],
             isActive: RoomInstance.isRequestedActive[entity] === 1,
-            position: {
-              x: Renderable.x[entity],
-              y: Renderable.y[entity],
-              width: Renderable.width[entity],
-              height: Renderable.height[entity],
+            appliedUpgradeIds: [...(RoomInstance.appliedUpgradeIds[entity] ?? [])],
+            footprint: {
+              col: Renderable.col[entity],
+              row: Renderable.row[entity],
+              cols: Renderable.cols[entity],
+              rows: Renderable.rows[entity],
             },
           };
         }),
@@ -1166,6 +1362,29 @@ function applyWorldSnapshot(
           roleTag: StaffState.roleTag[entity],
           status: StaffState.status[entity],
           wage: StaffState.wage[entity],
+          schedule: {
+            currentBlock: ScheduleState.currentBlock[entity],
+            workStartMinute: ScheduleState.workStartMinute[entity],
+            workEndMinute: ScheduleState.workEndMinute[entity],
+          },
+          needs: {
+            hunger: NeedState.hunger[entity],
+            fatigue: NeedState.fatigue[entity],
+            stress: NeedState.stress[entity],
+          },
+          morale: {
+            current: MoraleState.current[entity],
+            baseline: MoraleState.baseline[entity],
+          },
+          loyalty: {
+            current: LoyaltyState.current[entity],
+            baseline: LoyaltyState.baseline[entity],
+          },
+          injury: {
+            severity: InjuryState.severity[entity],
+            recoveryHoursRemaining: InjuryState.recoveryHoursRemaining[entity],
+            treated: InjuryState.treated[entity] === 1,
+          },
           assignment: {
             kind: AssignmentState.kind[entity],
             targetId: AssignmentState.targetId[entity],
@@ -1194,7 +1413,12 @@ function applyWorldSnapshot(
           expiresAtTick: RaidOpportunityState.expiresAtTick[entity],
         })),
         activeEvents: runtimeState.eventEntities.map((entity) => {
-          const template = registry.events[EventState.templateIndex[entity]] ?? registry.events[0];
+          const template = registry.events[EventState.templateIndex[entity]];
+          if (!template) {
+            throw new Error(
+              `Runtime event "${EventState.id[entity]}" references an unknown template index.`,
+            );
+          }
 
           return {
             id: EventState.id[entity],
@@ -1204,6 +1428,21 @@ function applyWorldSnapshot(
             pressureContribution: EventState.pressureContribution[entity],
           };
         }),
+        contractSite: BuildingAuthority.contractSite[buildingEntity]
+          ? { ...BuildingAuthority.contractSite[buildingEntity]! }
+          : null,
+        fogOfWar: BuildingAuthority.fogOfWar[buildingEntity]
+          ? {
+              ...BuildingAuthority.fogOfWar[buildingEntity]!,
+              revealed: [...BuildingAuthority.fogOfWar[buildingEntity]!.revealed],
+            }
+          : null,
+        scheduler: {
+          lastPayrollDay: BuildingAuthority.lastPayrollDay[buildingEntity] ?? 0,
+          lastVisitorSpawnTick: BuildingAuthority.lastVisitorSpawnTick[buildingEntity] ?? 0,
+          lastEventTick: BuildingAuthority.lastEventTick[buildingEntity] ?? 0,
+          lastRaidOpportunityTick: BuildingAuthority.lastRaidOpportunityTick[buildingEntity] ?? 0,
+        },
       };
     },
     getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot) {
@@ -1286,6 +1525,9 @@ function applyWorldSnapshot(
       const operatorReadinessById = new Map(
         operatorIntentReadiness.map((entry) => [entry.operatorId, entry]),
       );
+      const raidPresentationById = new Map(
+        runtimeState.raidPresentation.teams.map((team) => [team.raidId, team]),
+      );
 
       return {
         stableCommandTypes: STABLE_SIM_COMMAND_TYPES,
@@ -1317,7 +1559,7 @@ function applyWorldSnapshot(
           availableBuildingUpgradeIds,
         },
         rooms: runtimeState.roomEntities.map((entity) => {
-          const template = registry.rooms[RoomInstance.templateIndex[entity]] ?? registry.rooms[0];
+          const template = getRoomTemplateForRuntimeEntity(registry, entity);
           const availableUpgradeIds = registry.upgrades
             .filter((upgrade) => upgrade.target === "room" && upgrade.targetId === template.id)
             .filter(
@@ -1343,10 +1585,16 @@ function applyWorldSnapshot(
             isOperational: RoomInstance.isOperational[entity] === 1,
             capacity: RoomInstance.capacity[entity],
             occupancy: RoomInstance.occupancy[entity],
-            requiredRoleTag: getRoleTag(template.tags),
+            requiredStaffTag: getStaffRoleTag(template.tags),
             assignedStaffCount: RoomInstance.assignedStaffCount[entity],
             appliedUpgradeIds: [...(RoomInstance.appliedUpgradeIds[entity] ?? [])],
             availableUpgradeIds,
+            footprint: {
+              col: Renderable.col[entity],
+              row: Renderable.row[entity],
+              cols: Renderable.cols[entity],
+              rows: Renderable.rows[entity],
+            },
           };
         }),
         visitors: snapshot.visitors ?? [],
@@ -1390,15 +1638,51 @@ function applyWorldSnapshot(
             getRecommendedOperatorCountForMission(mission.baseDurationHours),
         })),
         raidOpportunities:
-          snapshot.raidOpportunities?.map((opportunity) => ({
-            ...opportunity,
-            recommendedOperatorCount: getRecommendedOperatorCountForMission(
-              registry.missionById.get(opportunity.missionId)?.baseDurationHours ?? 4,
-            ),
-            interestedCount: opportunity.interestedOperatorIds.length,
-            claimedCount: opportunity.claimedOperatorIds.length,
-          })) ?? [],
-        activeRaids: snapshot.activeRaidPackets,
+          snapshot.raidOpportunities?.map((opportunity) => {
+            const mission = registry.missionById.get(opportunity.missionId);
+            if (!mission) {
+              throw new Error(
+                `Runtime view references unknown mission "${opportunity.missionId}" for raid opportunity "${opportunity.id}".`,
+              );
+            }
+
+            return {
+              ...opportunity,
+              recommendedOperatorCount: getRecommendedOperatorCountForMission(
+                mission.baseDurationHours,
+              ),
+              interestedCount: opportunity.interestedOperatorIds.length,
+              claimedCount: opportunity.claimedOperatorIds.length,
+            };
+          }) ?? [],
+        activeRaids: snapshot.activeRaidPackets.map((packet) => {
+          const opEntities = packet.operatorIds
+            .map((id) => runtimeState.operatorEntities.find((e) => OperatorIdentity.id[e] === id))
+            .filter((e): e is number => e !== undefined);
+          const presentation = raidPresentationById.get(packet.id);
+          const teamGoal =
+            presentation?.goal ??
+            (opEntities.length > 0
+              ? selectTeamGoal(context, opEntities, packet)
+              : ("exploring" as RaidTeamGoal));
+          const teamState: "active" | "returning" | "defeated" =
+            presentation?.state ??
+            (packet.revealProgress > 90
+              ? packet.resolutionPacket.result === "failure"
+                ? "defeated"
+                : "returning"
+              : "active");
+          return {
+            ...packet,
+            teamGoal,
+            teamState,
+            x: presentation?.x ?? 48,
+            y: presentation?.y ?? 48,
+            operatorStatuses: presentation?.operatorStatuses ?? [],
+            encounter: presentation?.encounter ?? null,
+            recentEvents: presentation?.recentEvents ?? [],
+          };
+        }),
         raidSummaries: snapshot.raidSummaries,
         activeEvents: snapshot.activeEvents ?? [],
         rosterPressure: computeRosterPressure(
@@ -1407,7 +1691,54 @@ function applyWorldSnapshot(
           BuildingAuthority.operatorSlotCount[buildingEntity],
           getCurrentAbsoluteMinute(context),
         ),
+        contractSite: (() => {
+          const cs = BuildingAuthority.contractSite[buildingEntity];
+          if (!cs) return null;
+          return {
+            contractSiteId: cs.contractSiteId,
+            missionId: cs.missionId,
+            location: cs.location,
+            bossDefeated: cs.bossDefeated,
+            contractLost: cs.contractLost,
+            threat: cs.threat,
+            intel: cs.intel,
+            reward: cs.reward,
+          };
+        })(),
+        fogOfWar: (() => {
+          const fog = BuildingAuthority.fogOfWar[buildingEntity];
+          if (!fog) return null;
+          return {
+            gridWidth: fog.gridWidth,
+            gridHeight: fog.gridHeight,
+            revealed: [...fog.revealed],
+          };
+        })(),
+        raidWorld:
+          runtimeState.raidPresentation.contractSiteId != null
+            ? {
+                enemyMarkers: runtimeState.raidPresentation.enemies.map((enemy) => ({
+                  id: enemy.id,
+                  x: enemy.x,
+                  y: enemy.y,
+                  threat: enemy.threat,
+                  discovered: enemy.discovered,
+                })),
+                featureMarkers: runtimeState.raidPresentation.features.map((feature) => ({
+                  id: feature.id,
+                  x: feature.x,
+                  y: feature.y,
+                  kind: feature.kind,
+                  discovered: feature.discovered,
+                })),
+              }
+            : null,
       };
+    },
+    drainRuntimeCues() {
+      const drained = runtimeState.pendingCueIds.slice();
+      runtimeState.pendingCueIds.length = 0;
+      return drained;
     },
     tick(deltaMs) {
       simulation.dispatch({ type: "sim/tick", deltaMs });

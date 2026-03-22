@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 480">
+  <defs>
+    <linearGradient id="tl-brick" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#3d2c20"/>
+      <stop offset="100%" stop-color="#2e2018"/>
+    </linearGradient>
+    <linearGradient id="tl-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#241a12"/>
+      <stop offset="100%" stop-color="#2e2018"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main facade (isometric left face) -->
+  <polygon points="40,60 200,140 200,460 40,380"
+    fill="url(#tl-brick)" stroke="#2a1f18" stroke-width="1.5"/>
+
+  <!-- Side face (narrower, darker) -->
+  <polygon points="200,140 270,110 270,430 200,460"
+    fill="url(#tl-side)" stroke="#2a1f18" stroke-width="1"/>
+
+  <!-- Roof -->
+  <polygon points="40,60 200,140 270,110 110,30"
+    fill="#1a1818" stroke="#252525" stroke-width="1.5"/>
+
+  <!-- Roof edge / cornice -->
+  <polygon points="40,60 200,140 200,146 40,66"
+    fill="#3a3838" stroke="#252525" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Brick mortar lines -->
+  <g opacity="0.1" stroke="#2a1f18" stroke-width="0.4">
+    <line x1="50" y1="120" x2="190" y2="180"/>
+    <line x1="50" y1="160" x2="190" y2="220"/>
+    <line x1="50" y1="200" x2="190" y2="260"/>
+    <line x1="50" y1="240" x2="190" y2="300"/>
+    <line x1="50" y1="280" x2="190" y2="340"/>
+    <line x1="50" y1="320" x2="190" y2="380"/>
+    <line x1="50" y1="360" x2="190" y2="420"/>
+  </g>
+
+  <!-- Windows — 4 floors, 2 per floor -->
+  <g>
+    <!-- Floor 4 (top) -->
+    <rect x="65" y="90" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="115" y="90" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 3 -->
+    <rect x="65" y="160" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="115" y="160" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 2 -->
+    <rect x="65" y="230" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="115" y="230" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+
+    <!-- Floor 1 (ground) -->
+    <rect x="65" y="300" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+    <rect x="115" y="300" width="24" height="30" rx="1"
+      fill="#0a0908" stroke="#3a3838" stroke-width="0.6" transform="skewY(22)"/>
+  </g>
+
+  <!-- Lit window highlights (a few warm windows) -->
+  <g opacity="0.2">
+    <rect x="67" y="162" width="20" height="26" rx="1"
+      fill="#c8a84c" transform="skewY(22)"/>
+    <rect x="117" y="232" width="20" height="26" rx="1"
+      fill="#c8a84c" transform="skewY(22)"/>
+    <rect x="67" y="302" width="20" height="26" rx="1"
+      fill="#9a7a3c" transform="skewY(22)"/>
+  </g>
+
+  <!-- Fire escape -->
+  <g stroke="#3a3838" stroke-width="1" fill="none" opacity="0.5">
+    <!-- Platforms -->
+    <line x1="150" y1="150" x2="195" y2="172"/>
+    <line x1="150" y1="220" x2="195" y2="242"/>
+    <line x1="150" y1="290" x2="195" y2="312"/>
+    <line x1="150" y1="360" x2="195" y2="382"/>
+
+    <!-- Verticals -->
+    <line x1="150" y1="150" x2="150" y2="360"/>
+    <line x1="195" y1="172" x2="195" y2="382"/>
+
+    <!-- Zigzag stairs -->
+    <polyline points="155,155 190,175 155,195 190,215"
+      stroke-width="0.6" opacity="0.4"/>
+    <polyline points="155,225 190,245 155,265 190,285"
+      stroke-width="0.6" opacity="0.4"/>
+
+    <!-- Ladder to ground -->
+    <line x1="170" y1="360" x2="170" y2="440"/>
+    <line x1="175" y1="360" x2="175" y2="440"/>
+    <g stroke-width="0.5">
+      <line x1="170" y1="370" x2="175" y2="370"/>
+      <line x1="170" y1="385" x2="175" y2="385"/>
+      <line x1="170" y1="400" x2="175" y2="400"/>
+      <line x1="170" y1="415" x2="175" y2="415"/>
+      <line x1="170" y1="430" x2="175" y2="430"/>
+    </g>
+  </g>
+
+  <!-- AC unit on side face -->
+  <rect x="220" y="200" width="30" height="20" rx="2"
+    fill="#252525" stroke="#3a3838" stroke-width="0.6" opacity="0.5"/>
+
+  <!-- Water stain / grime streak -->
+  <line x1="130" y1="65" x2="135" y2="370"
+    stroke="#1a1612" stroke-width="3" opacity="0.15"/>
+
+  <!-- Rooftop details -->
+  <g opacity="0.35">
+    <!-- Water tank -->
+    <rect x="90" y="32" width="28" height="22" rx="2" fill="#2a2828" stroke="#252525" stroke-width="0.5"/>
+    <rect x="86" y="28" width="36" height="6" rx="1" fill="#252525"/>
+    <!-- Antenna -->
+    <line x1="180" y1="52" x2="180" y2="20" stroke="#3a3838" stroke-width="1.2"/>
+    <line x1="175" y1="25" x2="185" y2="25" stroke="#3a3838" stroke-width="0.8"/>
+  </g>
+</svg>

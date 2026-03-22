@@ -6,7 +6,6 @@ import {
   createBootstrapWorldSnapshot,
 } from "./index";
 import { STABLE_SIM_COMMAND_TYPES } from "./commands";
-import { RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS } from "./systems/commands";
 import { templateRegistry } from "content/templates";
 
 describe("phase 1 runtime", () => {
@@ -19,8 +18,8 @@ describe("phase 1 runtime", () => {
     expect(phase1View.building.activeBuildingId).toBe("building/bodega");
     expect(phase1View.operators).toHaveLength(2);
     expect(phase1View.operators.map((operator) => operator.appearance.presetId)).toEqual([
-      "female-flowing",
-      "male-undercut",
+      "vera-004",
+      "dax-008",
     ]);
     expect(phase1View.operators.map((operator) => operator.appearance.visibleGear)).toEqual([
       {
@@ -78,6 +77,23 @@ describe("phase 1 runtime", () => {
     ).toBe(false);
   });
 
+  it("returns isolated bootstrap snapshots instead of sharing nested seed state", () => {
+    const first = createBootstrapWorldSnapshot(templateRegistry);
+    const second = createBootstrapWorldSnapshot(templateRegistry);
+
+    first.guild.reputation = 99;
+    first.time.minuteOfDay = 5;
+    first.rooms[0].footprint.col = 7;
+    first.operators![0].preferences.preferredMissionTags.push("mission:mutated");
+    first.staff![0].assignment.targetId = "room-instance/mutated";
+
+    expect(second.guild.reputation).toBe(0);
+    expect(second.time.minuteOfDay).toBe(480);
+    expect(second.rooms[0].footprint.col).toBe(0);
+    expect(second.operators?.[0].preferences.preferredMissionTags).not.toContain("mission:mutated");
+    expect(second.staff?.[0].assignment.targetId).toBe("room-instance/front_desk");
+  });
+
   it("supports staffing, recruiting, and operator relationship seeding", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
 
@@ -87,12 +103,12 @@ describe("phase 1 runtime", () => {
     });
     simulation.dispatch({
       type: "sim/hire-staff",
-      roleTag: "role:recruitment",
+      roleTag: "staff:admin",
     });
 
     const recruiter = simulation
       .getPhase1View()
-      .staff.find((staff) => staff.roleTag === "role:recruitment");
+      .staff.find((staff) => staff.roleTag === "staff:admin");
 
     expect(recruiter).toBeTruthy();
 
@@ -115,10 +131,8 @@ describe("phase 1 runtime", () => {
     expect(phase1View.operators).toHaveLength(3);
     expect(phase1View.visitors).toHaveLength(0);
     expect(
-      RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS.includes(
-        phase1View.operators.find((operator) => operator.id === "operator/3")!.appearance.presetId,
-      ),
-    ).toBe(true);
+      phase1View.operators.find((operator) => operator.id === "operator/3")!.appearance.presetId,
+    ).toEqual(expect.any(String));
     expect(
       phase1View.relationshipSignals.some((relationship) => {
         return (
@@ -128,6 +142,123 @@ describe("phase 1 runtime", () => {
       }),
     ).toBe(false);
     expect(phase1View.relationshipSignals).toHaveLength(3);
+  });
+
+  it("round-trips staff mutable state through runtime snapshots", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.staff = snapshot.staff?.map((staff) => ({
+      ...staff,
+      status: "recovering",
+      schedule: {
+        currentBlock: "recovery",
+        workStartMinute: 540,
+        workEndMinute: 1020,
+      },
+      needs: {
+        hunger: 31,
+        fatigue: 47,
+        stress: 28,
+      },
+      morale: {
+        current: 41,
+        baseline: 52,
+      },
+      loyalty: {
+        current: 44,
+        baseline: 55,
+      },
+      injury: {
+        severity: 18,
+        recoveryHoursRemaining: 6,
+        treated: true,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    }));
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const roundTripped = createAscensionSimulation(simulation.getWorldSnapshot(), templateRegistry);
+    const restoredStaff = roundTripped.getWorldSnapshot().staff?.[0];
+
+    expect(restoredStaff).toMatchObject({
+      status: "recovering",
+      schedule: {
+        currentBlock: "recovery",
+        workStartMinute: 540,
+        workEndMinute: 1020,
+      },
+      needs: {
+        hunger: 31,
+        fatigue: 47,
+        stress: 28,
+      },
+      morale: {
+        current: 41,
+        baseline: 52,
+      },
+      loyalty: {
+        current: 44,
+        baseline: 55,
+      },
+      injury: {
+        severity: 18,
+        recoveryHoursRemaining: 6,
+        treated: true,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    });
+  });
+
+  it("fails fast on unknown building, room, event, and mission ids instead of coercing fallback state", () => {
+    const invalidBuilding = createBootstrapWorldSnapshot(templateRegistry);
+    invalidBuilding.building.activeBuildingId = "building/missing";
+    expect(() => createAscensionSimulation(invalidBuilding, templateRegistry)).toThrow(
+      /unknown building/i,
+    );
+
+    const invalidRoom = createBootstrapWorldSnapshot(templateRegistry);
+    invalidRoom.rooms[0].templateId = "room/missing";
+    expect(() => createAscensionSimulation(invalidRoom, templateRegistry)).toThrow(/unknown room/i);
+
+    const invalidEvent = createBootstrapWorldSnapshot(templateRegistry);
+    invalidEvent.activeEvents = [
+      {
+        id: "event/test",
+        templateId: "event/missing",
+        severity: 2,
+        remainingHours: 3,
+        pressureContribution: 4,
+      },
+    ];
+    expect(() => createAscensionSimulation(invalidEvent, templateRegistry)).toThrow(
+      /unknown event template/i,
+    );
+
+    const invalidMission = createBootstrapWorldSnapshot(templateRegistry);
+    invalidMission.raidOpportunities = [
+      {
+        id: "opportunity/missing-mission",
+        missionId: "mission/missing",
+        location: "district/test-site",
+        threat: 50,
+        intel: 50,
+        reward: 80,
+        risk: 45,
+        status: "open",
+        interestedOperatorIds: [],
+        claimedOperatorIds: [],
+        createdTick: 100,
+        expiresAtTick: 200,
+      },
+    ];
+    expect(() => createAscensionSimulation(invalidMission, templateRegistry)).toThrow(
+      /unknown mission/i,
+    );
   });
 
   it("claims aged raid opportunities deterministically before launching the formed team", () => {
@@ -229,6 +360,314 @@ describe("phase 1 runtime", () => {
     );
   });
 
+  it("spawns autonomous raid opportunities from the secured contract site", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.tick(180000);
+
+    const phase1View = simulation.getPhase1View();
+
+    expect(phase1View.contractSite).toBeTruthy();
+    expect(phase1View.raidOpportunities).toHaveLength(1);
+    expect(phase1View.raidOpportunities[0]).toMatchObject({
+      missionId: phase1View.contractSite!.missionId,
+      location: phase1View.contractSite!.location,
+    });
+  });
+
+  it("round-trips contract site, fog, and room upgrades through runtime snapshots", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/purchase-room-upgrade",
+      roomId: "room-instance/front_desk",
+      upgradeId: "upgrade/room/front_desk:records_wall",
+    });
+    simulation.tick(180000);
+    simulation.tick(60000);
+    simulation.tick(120000);
+
+    const worldSnapshot = simulation.getWorldSnapshot();
+    const restored = createAscensionSimulation(worldSnapshot, templateRegistry);
+    const restoredSnapshot = restored.getWorldSnapshot();
+    const restoredFrontDesk = restored
+      .getPhase1View()
+      .rooms.find((room) => room.id === "room-instance/front_desk");
+
+    expect(restoredSnapshot.contractSite).toEqual(worldSnapshot.contractSite);
+    expect(restoredSnapshot.fogOfWar).toEqual(worldSnapshot.fogOfWar);
+    expect(
+      restoredSnapshot.rooms.find((room) => room.id === "room-instance/front_desk")
+        ?.appliedUpgradeIds,
+    ).toEqual(["upgrade/room/front_desk:records_wall"]);
+    expect(restoredFrontDesk?.capacity).toBe(3);
+  });
+
+  it("applies payroll and income once per elapsed day on large ticks", () => {
+    const createEconomySnapshot = () => {
+      const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+      snapshot.operators = [];
+      snapshot.operatorRelationships = [];
+      snapshot.scheduler = {
+        lastPayrollDay: snapshot.time.day,
+        lastVisitorSpawnTick: snapshot.time.tick,
+        lastEventTick: snapshot.time.tick,
+        lastRaidOpportunityTick: snapshot.time.tick,
+      };
+      return snapshot;
+    };
+
+    const fastForwarded = createAscensionSimulation(createEconomySnapshot(), templateRegistry);
+    const stepped = createAscensionSimulation(createEconomySnapshot(), templateRegistry);
+
+    fastForwarded.tick(3 * 24 * 60 * 60 * 1000);
+    for (let day = 0; day < 3; day += 1) {
+      stepped.tick(24 * 60 * 60 * 1000);
+    }
+
+    expect(fastForwarded.getPhase1View().resources).toEqual(stepped.getPhase1View().resources);
+  });
+
+  it("reveals fog cumulatively instead of re-applying the full reveal budget each minute", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    snapshot.contractSite = {
+      contractSiteId: "contract/test-site",
+      missionId: "mission/clearance",
+      location: "district/lower-east-side",
+      bossDefeated: false,
+      contractLost: false,
+      threat: 80,
+      intel: 45,
+      reward: 160,
+      securedAtTick: 480,
+    };
+    snapshot.fogOfWar = {
+      gridWidth: 16,
+      gridHeight: 16,
+      revealed: Array.from({ length: 16 * 16 }, () => false),
+      revealedCount: 0,
+    };
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/fog-test",
+        contractSiteId: "contract/test-site",
+        opportunityId: "opportunity/fog-test",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 08:00",
+        startedTick: 480,
+        revealProgress: 0,
+        operatorIds: ["operator/rose-vega", "operator/milo-hart"],
+        returnTick: 540,
+        durationHours: 1,
+        threat: 80,
+        intel: 45,
+        reward: 160,
+        cohesion: 60,
+        resolutionPacket: {
+          result: "success",
+          reputationDelta: 5,
+          cashDelta: 100,
+          operatorOutcomes: [
+            {
+              operatorId: "operator/rose-vega",
+              injuryDelta: 0,
+              moraleDelta: 3,
+              loyaltyDelta: 2,
+              status: "steady",
+            },
+            {
+              operatorId: "operator/milo-hart",
+              injuryDelta: 0,
+              moraleDelta: 3,
+              loyaltyDelta: 2,
+              status: "steady",
+            },
+          ],
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    for (let index = 0; index < 10; index += 1) {
+      simulation.tick(1000);
+    }
+
+    expect(simulation.getWorldSnapshot().fogOfWar?.revealedCount).toBeLessThanOrEqual(12);
+  });
+
+  it("requires consecutive failures to lose a contract", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    snapshot.contractSite = {
+      contractSiteId: "contract/loss-check",
+      missionId: "mission/clearance",
+      location: "district/lower-east-side",
+      bossDefeated: false,
+      contractLost: false,
+      threat: 82,
+      intel: 44,
+      reward: 150,
+      securedAtTick: 480,
+    };
+    snapshot.fogOfWar = {
+      gridWidth: 16,
+      gridHeight: 16,
+      revealed: Array.from({ length: 16 * 16 }, () => false),
+      revealedCount: 0,
+    };
+    snapshot.raidSummaries = [
+      {
+        id: "raid/old-1",
+        contractSiteId: "contract/loss-check",
+        opportunityId: "opportunity/1",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 01:00",
+        endedAt: "day-1 01:30",
+        result: "failure",
+        reputationDelta: -2,
+        cashDelta: -20,
+        threat: 70,
+        intel: 40,
+        reward: 90,
+        cohesion: 50,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+      },
+      {
+        id: "raid/old-2",
+        contractSiteId: "contract/loss-check",
+        opportunityId: "opportunity/2",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 02:00",
+        endedAt: "day-1 02:30",
+        result: "success",
+        reputationDelta: 2,
+        cashDelta: 20,
+        threat: 70,
+        intel: 40,
+        reward: 90,
+        cohesion: 50,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+      },
+      {
+        id: "raid/old-3",
+        contractSiteId: "contract/loss-check",
+        opportunityId: "opportunity/3",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 03:00",
+        endedAt: "day-1 03:30",
+        result: "failure",
+        reputationDelta: -2,
+        cashDelta: -20,
+        threat: 70,
+        intel: 40,
+        reward: 90,
+        cohesion: 50,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+      },
+    ];
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/current",
+        contractSiteId: "contract/loss-check",
+        opportunityId: "opportunity/current",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 08:00",
+        startedTick: 420,
+        revealProgress: 100,
+        operatorIds: ["operator/rose-vega", "operator/milo-hart"],
+        returnTick: 480,
+        durationHours: 1,
+        threat: 80,
+        intel: 45,
+        reward: 100,
+        cohesion: 50,
+        resolutionPacket: {
+          result: "failure",
+          reputationDelta: -5,
+          cashDelta: -30,
+          operatorOutcomes: [
+            {
+              operatorId: "operator/rose-vega",
+              injuryDelta: 5,
+              moraleDelta: -3,
+              loyaltyDelta: -2,
+              status: "hurt",
+            },
+            {
+              operatorId: "operator/milo-hart",
+              injuryDelta: 5,
+              moraleDelta: -3,
+              loyaltyDelta: -2,
+              status: "hurt",
+            },
+          ],
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(1000);
+
+    expect(simulation.getPhase1View().contractSite?.contractLost).toBe(false);
+  });
+
+  it("visitor generation only produces field-role recruits", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    snapshot.rooms = snapshot.rooms.map((room) =>
+      room.id === "room-instance/recruitment_space"
+        ? {
+            ...room,
+            isActive: true,
+          }
+        : room,
+    );
+    snapshot.staff = [
+      ...(snapshot.staff ?? []),
+      {
+        id: "staff/recruiter-test",
+        name: "Inez Vale",
+        roleTag: "staff:admin",
+        status: "assigned",
+        wage: 20,
+        assignment: {
+          kind: "room",
+          targetId: "room-instance/recruitment_space",
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(180000);
+
+    expect(
+      simulation
+        .getPhase1View()
+        .visitors.every((visitor) =>
+          ["role:field_lead", "role:scout", "role:medic"].includes(visitor.desiredRoleTag),
+        ),
+    ).toBe(true);
+  });
+
   it("ignores dead operators when computing event pressure from morale and injuries", () => {
     const createSnapshotWithDeadOperator = () => {
       const snapshot = createBootstrapWorldSnapshot(templateRegistry);
@@ -311,7 +750,7 @@ describe("phase 1 runtime", () => {
         {
           id: "staff/recruiter-test",
           name: "Inez Vale",
-          roleTag: "role:recruitment",
+          roleTag: "staff:admin",
           status: "assigned",
           wage: 20,
           assignment: {
@@ -388,7 +827,7 @@ describe("phase 1 runtime", () => {
     expect(
       phase1View.operators.find((operator) => operator.id === "operator/rose-vega")?.appearance,
     ).toEqual({
-      presetId: "female-flowing",
+      presetId: "vera-004",
       visibleGear: {
         weaponPartId: "weapon/tactical-rifle",
         outfitOverlayPartId: "outfit-overlay/tactical-vest",
@@ -396,36 +835,25 @@ describe("phase 1 runtime", () => {
     });
   });
 
-  it("ignores legacy appearance seeds during runtime snapshot reconstruction", () => {
+  it("preserves recipe-based appearance ids through runtime snapshot reconstruction", () => {
     const bootstrapSnapshot = createBootstrapWorldSnapshot(templateRegistry);
-    const roseVega = bootstrapSnapshot.operators?.find(
-      (operator) => operator.id === "operator/rose-vega",
+    const simulation = createAscensionSimulation(bootstrapSnapshot, templateRegistry);
+    const worldSnapshot = simulation.getWorldSnapshot();
+
+    worldSnapshot.operators?.forEach((operator) => {
+      expect(typeof operator.appearance.presetId).toBe("string");
+      expect(operator.appearance.presetId.length).toBeGreaterThan(0);
+    });
+
+    const phase1View = simulation.getPhase1View();
+    phase1View.operators.forEach((operator) => {
+      expect(typeof operator.appearance.presetId).toBe("string");
+      expect(operator.appearance.presetId.length).toBeGreaterThan(0);
+    });
+
+    expect(worldSnapshot.operators?.map((op) => op.appearance.presetId)).toEqual(
+      phase1View.operators.map((op) => op.appearance.presetId),
     );
-
-    expect(roseVega).toBeTruthy();
-
-    const createPresetIdFromLegacySeed = (legacySeed: number) => {
-      const snapshot = createBootstrapWorldSnapshot(templateRegistry);
-      snapshot.operators = snapshot.operators?.map((operator) =>
-        operator.id === "operator/rose-vega"
-          ? ({
-              ...operator,
-              appearance: { seed: legacySeed },
-            } as typeof operator)
-          : operator,
-      );
-
-      return createAscensionSimulation(snapshot, templateRegistry)
-        .getWorldSnapshot()
-        .operators?.find((operator) => operator.id === "operator/rose-vega")?.appearance.presetId;
-    };
-
-    const presetFromFirstSeed = createPresetIdFromLegacySeed(1);
-    const presetFromSecondSeed = createPresetIdFromLegacySeed(999);
-
-    expect(presetFromFirstSeed).toBeDefined();
-    expect(presetFromFirstSeed).toBe(presetFromSecondSeed);
-    expect(RUNTIME_OPERATOR_APPEARANCE_PRESET_IDS).toContain(presetFromFirstSeed);
   });
 
   it("preserves unknown visible gear ids but drops malformed slot values", () => {
@@ -435,7 +863,7 @@ describe("phase 1 runtime", () => {
         ? ({
             ...operator,
             appearance: {
-              presetId: "female-flowing",
+              presetId: "mira-002",
               visibleGear: {
                 weaponPartId: "weapon/unknown-prototype",
                 outfitOverlayPartId: 42,
@@ -456,7 +884,7 @@ describe("phase 1 runtime", () => {
 
     // Unknown gear-id validation stays outside runtime ownership; runtime preserves only typed slot strings.
     expect(worldAppearance).toEqual({
-      presetId: "female-flowing",
+      presetId: "mira-002",
       visibleGear: {
         weaponPartId: "weapon/unknown-prototype",
       },

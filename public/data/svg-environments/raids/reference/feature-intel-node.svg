@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <radialGradient id="in-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(100,160,220,0.1)"/>
+      <stop offset="100%" stop-color="rgba(100,160,220,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Intel node — data discovery point overlay -->
+  <circle cx="8" cy="8" r="6" fill="url(#in-glow)"/>
+  <!-- Data diamond -->
+  <polygon points="8,3.5 12,8 8,12.5 4,8" fill="none" stroke="rgba(100,160,220,0.2)" stroke-width="0.7"/>
+  <!-- Inner dot -->
+  <circle cx="8" cy="8" r="1.2" fill="rgba(100,160,220,0.12)"/>
+  <!-- Scan lines -->
+  <line x1="5" y1="8" x2="3" y2="8" stroke="rgba(100,160,220,0.08)" stroke-width="0.4"/>
+  <line x1="11" y1="8" x2="13" y2="8" stroke="rgba(100,160,220,0.08)" stroke-width="0.4"/>
+</svg>

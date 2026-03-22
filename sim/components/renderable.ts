@@ -1,9 +1,9 @@
 import { soa } from "bitecs";
 
 export const Renderable = soa({
-  x: [] as number[],
-  y: [] as number[],
-  width: [] as number[],
-  height: [] as number[],
+  col: [] as number[],
+  row: [] as number[],
+  cols: [] as number[],
+  rows: [] as number[],
   layer: [] as number[],
 });

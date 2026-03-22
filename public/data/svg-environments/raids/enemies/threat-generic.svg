@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Generic enemy marker — red-tinted diamond silhouette -->
+  <path d="M8,2 L14,8 L8,14 L2,8 Z" fill="rgba(212,84,30,0.15)" stroke="rgba(212,84,30,0.3)" stroke-width="0.7"/>
+  <circle cx="8" cy="8" r="1.2" fill="rgba(212,84,30,0.25)"/>
+</svg>

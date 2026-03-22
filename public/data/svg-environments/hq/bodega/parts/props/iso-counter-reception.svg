@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="3 2 156 108">
+  <!-- Isometric reception counter. Long counter spanning the front of a room.
+       Hero piece of the Front Desk. Proper 2:1 iso parallelogram.
+       Col axis (long side) runs right-down at 2:1. Row axis (depth) runs left-down at 2:1. -->
+
+  <!-- Counter top surface (proper iso parallelogram) -->
+  <polygon points="35,5 155,65 126,79 6,19"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.7"/>
+
+  <!-- Counter front face (left-down facing, main visible face) -->
+  <polygon points="6,19 126,79 126,104 6,44"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- Counter right end face -->
+  <polygon points="155,65 126,79 126,104 155,90"
+    fill="#302818" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- Panel grooves on front face (follow col-axis slope) -->
+  <line x1="36" y1="34" x2="36" y2="59" stroke="#241c12" stroke-width="0.5"/>
+  <line x1="66" y1="49" x2="66" y2="74" stroke="#241c12" stroke-width="0.5"/>
+  <line x1="96" y1="64" x2="96" y2="89" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- Top edge highlights (both iso axes) -->
+  <line x1="35" y1="5" x2="155" y2="65" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <line x1="35" y1="5" x2="6" y2="19" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+  <!-- Service bell on counter (near front-right area) -->
+  <ellipse cx="120" cy="62" rx="3" ry="1.5" fill="#c8a84c" opacity="0.2"/>
+  <circle cx="120" cy="61" r="0.8" fill="#c8a84c" opacity="0.4"/>
+
+  <!-- Small stack of papers (on counter surface, iso-aligned) -->
+  <polygon points="70,34 84,41 80,43 66,36"
+    fill="#3a3828" opacity="0.4"/>
+  <polygon points="72,33 85,40 81,42 68,35"
+    fill="#3c3a28" opacity="0.3"/>
+
+  <!-- Shadow -->
+  <ellipse cx="80" cy="106" rx="52" ry="4" fill="rgba(0,0,0,0.1)"/>
+</svg>

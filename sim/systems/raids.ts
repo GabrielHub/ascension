@@ -3,6 +3,8 @@ import { addComponent, addEntity, removeEntity } from "bitecs";
 import {
   AssignmentState,
   BuildingAuthority,
+  type ActiveRaidResolutionPacket,
+  type ContractSiteState,
   GuildState,
   InjuryState,
   LoyaltyState,
@@ -24,9 +26,24 @@ import {
   removeTrackedEntity,
 } from "./commands";
 import { reconcileAssignmentsSystem } from "./assignment";
-import type { SimSystem, SimSystemContext } from "./types";
+import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
+import type { RaidTeamGoal } from "render/types";
+import type {
+  RaidEncounterThreat,
+  RaidFeatureKind,
+  RaidOperatorReadiness,
+  RaidPresentationEnemy,
+  RaidPresentationEvent,
+  RaidPresentationFeature,
+  RaidPresentationTeam,
+  RuntimeCueId,
+  SimSystem,
+  SimSystemContext,
+} from "./types";
 
-const MAX_OPEN_OPPORTUNITIES = 3;
+export type { RaidTeamGoal } from "render/types";
+
+const MAX_OPEN_OPPORTUNITIES = 1;
 const FORMATION_DELAY_MINUTES = 60;
 const DEFAULT_OPPORTUNITY_LIFETIME_MINUTES = 300;
 const OPPORTUNITY_LOCATIONS = [
@@ -37,6 +54,9 @@ const OPPORTUNITY_LOCATIONS = [
   "district/harlem-substation",
 ] as const;
 
+const FOG_GRID_WIDTH = 16;
+const FOG_GRID_HEIGHT = 16;
+
 export interface RaidReadinessSignal {
   availabilityScore: number;
   willingnessScore: number;
@@ -44,8 +64,259 @@ export interface RaidReadinessSignal {
   schedulePressure: number;
 }
 
+function pushRuntimeCue(context: SimSystemContext, cueId: RuntimeCueId): void {
+  context.runtimeState.pendingCueIds.push(cueId);
+}
+
+function getCellCenter(x: number, y: number) {
+  return {
+    x: x * 32 + 16,
+    y: y * 32 + 16,
+  };
+}
+
+function upsertRaidEvent(
+  events: RaidPresentationEvent[],
+  event: RaidPresentationEvent,
+  maxEvents = 10,
+): void {
+  if (events.some((existing) => existing.id === event.id)) {
+    return;
+  }
+
+  events.push(event);
+  events.sort((left, right) => right.tick - left.tick || left.id.localeCompare(right.id));
+  if (events.length > maxEvents) {
+    events.length = maxEvents;
+  }
+}
+
+function resolveRaidOperatorReadiness(entity: number): RaidOperatorReadiness {
+  if (OperatorIdentity.lifecycleStatus[entity] === "dead") {
+    return "critical";
+  }
+  if (InjuryState.severity[entity] >= 65) {
+    return "critical";
+  }
+  if (InjuryState.severity[entity] >= 25) {
+    return "injured";
+  }
+  if (NeedState.fatigue[entity] >= 55 || NeedState.stress[entity] >= 55) {
+    return "fatigued";
+  }
+  return "ready";
+}
+
+function ensureRaidPresentationSeed(context: SimSystemContext, contractSiteId: string): void {
+  if (context.runtimeState.raidPresentation.contractSiteId === contractSiteId) {
+    return;
+  }
+
+  const rng = new SeededRng(seedFromKey(`raid-presentation:${contractSiteId}`));
+  const features: RaidPresentationFeature[] = [
+    {
+      id: `${contractSiteId}:feature:intel-0`,
+      kind: "intel-node",
+      discovered: false,
+      ...getCellCenter(3, 3),
+    },
+    {
+      id: `${contractSiteId}:feature:loot-0`,
+      kind: "loot-cache",
+      discovered: false,
+      ...getCellCenter(8, 4),
+    },
+    {
+      id: `${contractSiteId}:feature:hazard-0`,
+      kind: "hazard-zone",
+      discovered: false,
+      ...getCellCenter(11, 8),
+    },
+    {
+      id: `${contractSiteId}:feature:debris-0`,
+      kind: "debris-pile",
+      discovered: false,
+      ...getCellCenter(6, 11),
+    },
+  ];
+  const enemies: RaidPresentationEnemy[] = [
+    {
+      id: `${contractSiteId}:enemy:generic-0`,
+      threat: "generic",
+      discovered: false,
+      ...getCellCenter(4 + rng.int(0, 1), 6),
+    },
+    {
+      id: `${contractSiteId}:enemy:elite-0`,
+      threat: "elite",
+      discovered: false,
+      ...getCellCenter(9, 9 + rng.int(0, 1)),
+    },
+    {
+      id: `${contractSiteId}:enemy:boss-0`,
+      threat: "boss",
+      discovered: false,
+      ...getCellCenter(13, 13),
+    },
+  ];
+
+  context.runtimeState.raidPresentation = {
+    contractSiteId,
+    teams: [],
+    enemies,
+    features,
+  };
+}
+
+function revealRaidPresentationFromFog(context: SimSystemContext): void {
+  const fog = BuildingAuthority.fogOfWar[context.singletonEntities.building];
+  if (!fog) {
+    return;
+  }
+
+  const isRevealed = (x: number, y: number) => {
+    const cellX = Math.max(0, Math.min(fog.gridWidth - 1, Math.floor(x / 32)));
+    const cellY = Math.max(0, Math.min(fog.gridHeight - 1, Math.floor(y / 32)));
+    return fog.revealed[cellY * fog.gridWidth + cellX] === true;
+  };
+
+  context.runtimeState.raidPresentation.features.forEach((feature) => {
+    feature.discovered = feature.discovered || isRevealed(feature.x, feature.y);
+  });
+  context.runtimeState.raidPresentation.enemies.forEach((enemy) => {
+    enemy.discovered = enemy.discovered || isRevealed(enemy.x, enemy.y);
+    enemy.engagedRaidId = undefined;
+  });
+}
+
+function buildRaidWaypointPath(index: number) {
+  const paths = [
+    // Path 0: NW entry, east sweep, south hook, west return
+    [
+      getCellCenter(2, 2),
+      getCellCenter(5, 1),
+      getCellCenter(8, 3),
+      getCellCenter(8, 6),
+      getCellCenter(5, 7),
+      getCellCenter(3, 10),
+      getCellCenter(6, 12),
+      getCellCenter(10, 13),
+    ],
+    // Path 1: SW entry, north corridor, east turn, SE descent
+    [
+      getCellCenter(2, 13),
+      getCellCenter(2, 10),
+      getCellCenter(4, 7),
+      getCellCenter(7, 5),
+      getCellCenter(10, 4),
+      getCellCenter(12, 6),
+      getCellCenter(13, 9),
+      getCellCenter(11, 12),
+    ],
+    // Path 2: NE entry, west sweep, south hook, east finish
+    [
+      getCellCenter(13, 2),
+      getCellCenter(11, 4),
+      getCellCenter(8, 5),
+      getCellCenter(5, 4),
+      getCellCenter(3, 6),
+      getCellCenter(4, 9),
+      getCellCenter(7, 11),
+      getCellCenter(10, 13),
+    ],
+    // Path 3: Center spiral outward
+    [
+      getCellCenter(8, 8),
+      getCellCenter(10, 6),
+      getCellCenter(12, 8),
+      getCellCenter(10, 11),
+      getCellCenter(6, 10),
+      getCellCenter(4, 7),
+      getCellCenter(6, 4),
+      getCellCenter(9, 3),
+    ],
+    // Path 4: Zigzag through middle
+    [
+      getCellCenter(1, 5),
+      getCellCenter(4, 3),
+      getCellCenter(7, 6),
+      getCellCenter(10, 3),
+      getCellCenter(12, 6),
+      getCellCenter(9, 9),
+      getCellCenter(6, 12),
+      getCellCenter(3, 14),
+    ],
+  ];
+  return paths[index % paths.length];
+}
+
+// Equidistant segment interpolation (each segment gets equal progress share),
+// unlike navigation.ts interpolatePolylinePosition which is distance-weighted.
+function interpolatePath(path: readonly { x: number; y: number }[], progress: number) {
+  if (path.length === 0) {
+    return { x: 48, y: 48 };
+  }
+  if (path.length === 1) {
+    return path[0];
+  }
+
+  const clamped = clamp(progress, 0, 1);
+  const scaled = clamped * (path.length - 1);
+  const index = Math.min(path.length - 2, Math.floor(scaled));
+  const localProgress = scaled - index;
+  const from = path[index];
+  const to = path[index + 1];
+
+  return {
+    x: from.x + (to.x - from.x) * localProgress,
+    y: from.y + (to.y - from.y) * localProgress,
+  };
+}
+
+function getEncounterLabel(threat: RaidEncounterThreat): string {
+  switch (threat) {
+    case "boss":
+      return "Boss Contact";
+    case "elite":
+      return "Elite Threat";
+    default:
+      return "Hostile Contact";
+  }
+}
+
+function getFeatureEventKind(kind: RaidFeatureKind): RaidPresentationEvent["kind"] {
+  switch (kind) {
+    case "loot-cache":
+      return "loot";
+    case "intel-node":
+      return "intel";
+    case "hazard-zone":
+      return "hazard";
+    default:
+      return "discovery";
+  }
+}
+
+function getFeatureEventMessage(kind: RaidFeatureKind): string {
+  switch (kind) {
+    case "loot-cache":
+      return "Team found a cache worth extracting.";
+    case "intel-node":
+      return "Team recovered actionable site intel.";
+    case "hazard-zone":
+      return "Team is navigating a hazardous zone.";
+    default:
+      return "Team picked through collapsed debris.";
+  }
+}
+
 function getMissionTemplate(context: SimSystemContext, missionId: string) {
-  return context.registry.missionById.get(missionId) ?? context.registry.missions[0];
+  const mission = context.registry.missionById.get(missionId);
+  if (!mission) {
+    throw new Error(`Raid system references unknown mission "${missionId}".`);
+  }
+
+  return mission;
 }
 
 export function getRecommendedOperatorCountForMission(baseDurationHours: number): number {
@@ -226,7 +497,12 @@ function updateOpportunityLifecycle(context: SimSystemContext): void {
 function spawnRaidOpportunity(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
   const guildEntity = context.singletonEntities.guild;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
   const currentMinute = getCurrentAbsoluteMinute(context);
+
+  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) {
+    return;
+  }
 
   const livingOperatorCount = context.runtimeState.operatorEntities.filter(
     (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
@@ -252,41 +528,22 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   }
 
   const sequence = context.runtimeState.nextOpportunitySequence;
-  const missionIndex =
-    (sequence +
-      GuildState.reputation[guildEntity] +
-      (BuildingAuthority.pressure[buildingEntity] ?? 0) +
-      Math.floor(currentMinute / 120)) %
-    context.registry.missions.length;
-  const mission = context.registry.missions[missionIndex];
+  const mission = getMissionTemplate(context, contractSite.missionId);
   const entity = addEntity(context.world);
-  const rewardShapeBonus =
-    mission.rewardShape === "hybrid" ? 22 : mission.rewardShape === "loot" ? 16 : 10;
+  const rng = new SeededRng(
+    seedFromKey(`contract-opportunity:${contractSite.contractSiteId}:${sequence}`),
+  );
+  const threatVariance = rng.int(-4, 6);
+  const intelVariance = rng.int(-6, 4);
+  const rewardVariance = rng.int(-8, 12);
 
   addComponent(context.world, entity, RaidOpportunityState);
   RaidOpportunityState.id[entity] = `opportunity/${sequence}`;
   RaidOpportunityState.missionId[entity] = mission.id;
-  RaidOpportunityState.location[entity] =
-    OPPORTUNITY_LOCATIONS[(sequence - 1) % OPPORTUNITY_LOCATIONS.length];
-  RaidOpportunityState.threat[entity] = clamp(
-    34 + mission.baseDurationHours * 8 + GuildState.reputation[guildEntity] * 2 + (sequence % 11),
-    20,
-    95,
-  );
-  RaidOpportunityState.intel[entity] = clamp(
-    28 +
-      GuildState.intel[guildEntity] * 18 +
-      mission.expectedThreatTags.length * 6 -
-      (BuildingAuthority.pressure[buildingEntity] ?? 0) * 4 +
-      (sequence % 9),
-    10,
-    92,
-  );
-  RaidOpportunityState.reward[entity] = clamp(
-    54 + mission.baseDurationHours * 18 + rewardShapeBonus + GuildState.reputation[guildEntity] * 4,
-    40,
-    180,
-  );
+  RaidOpportunityState.location[entity] = contractSite.location;
+  RaidOpportunityState.threat[entity] = clamp(contractSite.threat + threatVariance, 20, 95);
+  RaidOpportunityState.intel[entity] = clamp(contractSite.intel + intelVariance, 10, 92);
+  RaidOpportunityState.reward[entity] = clamp(contractSite.reward + rewardVariance, 40, 180);
   RaidOpportunityState.risk[entity] = clamp(
     RaidOpportunityState.threat[entity] +
       mission.expectedThreatTags.length * 4 -
@@ -304,6 +561,7 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   context.runtimeState.raidOpportunityEntities.push(entity);
   context.runtimeState.nextOpportunitySequence += 1;
   BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = currentMinute;
+  pushRuntimeCue(context, "raid.opportunity");
 }
 
 function getSortedOpportunityEntities(context: SimSystemContext): number[] {
@@ -464,7 +722,7 @@ function createResolutionPacket(
   operatorEntities: number[],
   averageReadiness: number,
   teamCohesion: number,
-) {
+): ActiveRaidResolutionPacket {
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
   const opportunityRisk = RaidOpportunityState.risk[opportunityEntity];
   const opportunityThreat = RaidOpportunityState.threat[opportunityEntity];
@@ -479,7 +737,7 @@ function createResolutionPacket(
     teamCohesion * 0.4 +
     GuildState.intel[context.singletonEntities.guild] * 6 +
     mission.expectedThreatTags.length * 2;
-  const result =
+  const result: "success" | "failure" | "mixed" =
     teamScore >= challengeScore + 12
       ? "success"
       : teamScore >= challengeScore - 6
@@ -515,7 +773,10 @@ function createResolutionPacket(
               ? -3
               : 6 + Math.round(teamCohesion * 0.04),
         loyaltyDelta: result === "failure" ? -7 : result === "mixed" ? -2 : 3,
-        status: injuryDelta >= 16 ? "hurt" : result === "failure" ? "shaken" : "steady",
+        status: (injuryDelta >= 16 ? "hurt" : result === "failure" ? "shaken" : "steady") as
+          | "steady"
+          | "shaken"
+          | "hurt",
         ...(died ? { died: true } : {}),
       };
     }),
@@ -582,6 +843,7 @@ function updateRelationshipOutcomes(
 
 function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: number): void {
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
+  const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
   const claimedOperatorIds = [
     ...(RaidOpportunityState.claimedOperatorIds[opportunityEntity] ?? []),
   ];
@@ -612,6 +874,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     ...(BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []),
     {
       id: raidId,
+      contractSiteId: contractSite?.contractSiteId ?? "",
       opportunityId: RaidOpportunityState.id[opportunityEntity],
       missionId: mission.id,
       location: RaidOpportunityState.location[opportunityEntity],
@@ -649,6 +912,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     GuildState.intel[context.singletonEntities.guild] - 1,
   );
   context.runtimeState.nextRaidSequence += 1;
+  pushRuntimeCue(context, "raid.launch");
   removeRaidOpportunityEntity(context, opportunityEntity);
 }
 
@@ -688,6 +952,12 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
       GuildState.treasury[context.singletonEntities.guild] += packet.resolutionPacket.cashDelta;
       GuildState.reputation[context.singletonEntities.guild] +=
         packet.resolutionPacket.reputationDelta;
+      pushRuntimeCue(
+        context,
+        packet.resolutionPacket.result === "failure"
+          ? "raid.return.failure"
+          : "raid.return.success",
+      );
 
       packet.resolutionPacket.operatorOutcomes.forEach((outcome) => {
         const operatorEntity = operatorEntityById.get(outcome.operatorId);
@@ -725,6 +995,7 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
           AssignmentState.kind[operatorEntity] = "idle";
           AssignmentState.targetId[operatorEntity] = "";
           ScheduleState.currentBlock[operatorEntity] = "idle";
+          pushRuntimeCue(context, "raid.death");
           return;
         }
 
@@ -744,6 +1015,7 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         ...(BuildingAuthority.raidSummaries[buildingEntity] ?? []),
         {
           id: packet.id,
+          contractSiteId: packet.contractSiteId,
           opportunityId: packet.opportunityId,
           missionId: packet.missionId,
           location: packet.location,
@@ -770,7 +1042,150 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
   return resolvedRaid;
 }
 
+function updateRaidPresentation(context: SimSystemContext): void {
+  const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+  if (!contractSite || contractSite.contractLost || contractSite.bossDefeated) {
+    context.runtimeState.raidPresentation.teams = [];
+    return;
+  }
+
+  ensureRaidPresentationSeed(context, contractSite.contractSiteId);
+  revealRaidPresentationFromFog(context);
+
+  const activePackets =
+    BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? [];
+  const previousTeams = new Map(
+    context.runtimeState.raidPresentation.teams.map((team) => [team.raidId, team]),
+  );
+  const nextTeams: RaidPresentationTeam[] = [];
+  const operatorEntityById = new Map(
+    context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
+  );
+  const currentTick = getCurrentAbsoluteMinute(context);
+
+  activePackets.forEach((packet, index) => {
+    const previousTeam = previousTeams.get(packet.id);
+    const operatorEntities = packet.operatorIds
+      .map((operatorId) => operatorEntityById.get(operatorId))
+      .filter((entity): entity is number => entity !== undefined);
+    const goal =
+      operatorEntities.length > 0
+        ? selectTeamGoal(context, operatorEntities, packet)
+        : ("exploring" as RaidTeamGoal);
+    const state: RaidPresentationTeam["state"] =
+      packet.revealProgress > 90
+        ? packet.resolutionPacket.result === "failure"
+          ? "defeated"
+          : "returning"
+        : "active";
+    const position = interpolatePath(buildRaidWaypointPath(index), packet.revealProgress / 100);
+    const operatorStatuses = operatorEntities.map((entity) => ({
+      operatorId: OperatorIdentity.id[entity],
+      readiness: resolveRaidOperatorReadiness(entity),
+      healthFraction:
+        OperatorIdentity.lifecycleStatus[entity] === "dead"
+          ? 0
+          : clamp(1 - InjuryState.severity[entity] / 100, 0, 1),
+      roleTag: OperatorIdentity.roleTag[entity] || null,
+    }));
+
+    const nearbyEnemy = context.runtimeState.raidPresentation.enemies
+      .filter((enemy) => enemy.discovered)
+      .sort((left, right) => {
+        const leftDistance = Math.hypot(left.x - position.x, left.y - position.y);
+        const rightDistance = Math.hypot(right.x - position.x, right.y - position.y);
+        return leftDistance - rightDistance;
+      })[0];
+    const encounter =
+      nearbyEnemy && Math.hypot(nearbyEnemy.x - position.x, nearbyEnemy.y - position.y) <= 72
+        ? {
+            enemyLabel: getEncounterLabel(nearbyEnemy.threat),
+            threat: nearbyEnemy.threat,
+            healthFraction:
+              nearbyEnemy.threat === "boss"
+                ? clamp(1 - packet.revealProgress / 120, 0.08, 1)
+                : clamp(1 - packet.revealProgress / 140, 0.2, 1),
+          }
+        : null;
+
+    if (nearbyEnemy && encounter) {
+      nearbyEnemy.engagedRaidId = packet.id;
+    }
+
+    const recentEvents = [...(previousTeam?.recentEvents ?? [])];
+    if (!previousTeam) {
+      upsertRaidEvent(recentEvents, {
+        id: `${packet.id}:deploy`,
+        kind: "goal-change",
+        message: `Team deployed toward ${goal}.`,
+        tick: currentTick,
+      });
+    }
+    if (previousTeam?.goal !== goal) {
+      upsertRaidEvent(recentEvents, {
+        id: `${packet.id}:goal:${goal}:${Math.floor(packet.revealProgress / 10)}`,
+        kind: "goal-change",
+        message: `Team shifted focus to ${goal}.`,
+        tick: currentTick,
+      });
+    }
+    if (previousTeam?.state !== state) {
+      upsertRaidEvent(recentEvents, {
+        id: `${packet.id}:state:${state}:${Math.floor(packet.revealProgress / 10)}`,
+        kind: state === "returning" ? "retreat" : "status-change",
+        message:
+          state === "returning"
+            ? "Team is returning from the site."
+            : state === "defeated"
+              ? "Team has been overwhelmed."
+              : "Team is active in the dungeon.",
+        tick: currentTick,
+      });
+    }
+    if (encounter) {
+      upsertRaidEvent(recentEvents, {
+        id: `${packet.id}:encounter:${encounter.threat}:${Math.floor(packet.revealProgress / 15)}`,
+        kind: "encounter",
+        message: `Team engaged ${encounter.enemyLabel.toLowerCase()}.`,
+        tick: currentTick,
+      });
+    }
+
+    context.runtimeState.raidPresentation.features.forEach((feature) => {
+      if (!feature.discovered) {
+        return;
+      }
+      const isNearby = Math.hypot(feature.x - position.x, feature.y - position.y) <= 80;
+      if (!isNearby) {
+        return;
+      }
+      upsertRaidEvent(recentEvents, {
+        id: `${packet.id}:feature:${feature.id}`,
+        kind: getFeatureEventKind(feature.kind),
+        message: getFeatureEventMessage(feature.kind),
+        tick: currentTick,
+      });
+    });
+
+    nextTeams.push({
+      raidId: packet.id,
+      x: position.x,
+      y: position.y,
+      goal,
+      state,
+      operatorStatuses,
+      encounter,
+      recentEvents,
+    });
+  });
+
+  context.runtimeState.raidPresentation.teams = nextTeams;
+}
+
 export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
+  // Ensure a contract site exists before processing raids
+  ensureContractSite(context);
+
   updateOpportunityLifecycle(context);
   if (deltaMs > 0) {
     spawnRaidOpportunity(context);
@@ -781,7 +1196,316 @@ export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
     launchFormedRaids(context);
   }
 
-  if (resolveCompletedRaids(context, deltaMs)) {
+  const resolvedRaid = resolveCompletedRaids(context, deltaMs);
+
+  // Advance fog-of-war for active raids
+  if (deltaMs > 0) {
+    advanceFogOfWar(context);
+  }
+
+  // Check dungeon closure conditions
+  if (resolvedRaid) {
+    checkDungeonClosure(context);
     reconcileAssignmentsSystem(context, 0);
   }
+
+  updateRaidPresentation(context);
 };
+
+// ── Secured contract site ─────────────────────────────────────────────────
+
+/**
+ * Ensure the guild has one secured government contract site.
+ * If no contract exists, secure one based on the current mission pool.
+ * The contract determines the one active dungeon.
+ */
+function ensureContractSite(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+
+  // Already have an active contract
+  if (contractSite && !contractSite.bossDefeated && !contractSite.contractLost) {
+    ensureRaidPresentationSeed(context, contractSite.contractSiteId);
+    return;
+  }
+
+  // Need to secure a new contract
+  const currentMinute = getCurrentAbsoluteMinute(context);
+  const guildEntity = context.singletonEntities.guild;
+  const reputation = GuildState.reputation[guildEntity];
+  const rng = new SeededRng(seedFromKey(`contract:${currentMinute}:${reputation}`));
+
+  // Pick a mission based on guild state
+  const missionIndex = rng.int(0, context.registry.missions.length - 1);
+  const mission = context.registry.missions[missionIndex];
+  const locationIndex = rng.int(0, OPPORTUNITY_LOCATIONS.length - 1);
+
+  const threat = clamp(
+    34 + mission.baseDurationHours * 8 + reputation * 2 + rng.int(0, 10),
+    20,
+    95,
+  );
+  const intel = clamp(
+    28 + GuildState.intel[guildEntity] * 18 + mission.expectedThreatTags.length * 6,
+    10,
+    92,
+  );
+  const reward = clamp(54 + mission.baseDurationHours * 18 + reputation * 4, 40, 180);
+
+  const newContract: ContractSiteState = {
+    contractSiteId: `contract/${currentMinute}`,
+    missionId: mission.id,
+    location: OPPORTUNITY_LOCATIONS[locationIndex],
+    bossDefeated: false,
+    contractLost: false,
+    threat,
+    intel,
+    reward,
+    securedAtTick: currentMinute,
+  };
+
+  BuildingAuthority.contractSite[buildingEntity] = newContract;
+
+  // Initialize fog-of-war for the new dungeon
+  const totalCells = FOG_GRID_WIDTH * FOG_GRID_HEIGHT;
+  BuildingAuthority.fogOfWar[buildingEntity] = {
+    gridWidth: FOG_GRID_WIDTH,
+    gridHeight: FOG_GRID_HEIGHT,
+    revealed: Array.from({ length: totalCells }, () => false),
+    revealedCount: 0,
+  };
+  ensureRaidPresentationSeed(context, newContract.contractSiteId);
+}
+
+// ── Fog-of-war ────────────────────────────────────────────────────────────
+
+/**
+ * Advance fog-of-war based on active raid teams' reveal progress.
+ * Each active raid reveals cells proportional to its reveal progress.
+ */
+function advanceFogOfWar(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const fog = BuildingAuthority.fogOfWar[buildingEntity];
+  if (!fog) return;
+
+  const activePackets = BuildingAuthority.activeRaidPackets[buildingEntity] ?? [];
+  if (activePackets.length === 0) return;
+
+  const totalCells = fog.gridWidth * fog.gridHeight;
+  const currentMinute = getCurrentAbsoluteMinute(context);
+
+  const targetRevealed = Math.min(
+    totalCells,
+    activePackets.reduce((total, packet) => {
+      return total + Math.floor((packet.revealProgress / 100) * totalCells * 0.3);
+    }, 0),
+  );
+  const revealBudget = Math.max(0, targetRevealed - fog.revealedCount);
+  if (revealBudget === 0) {
+    return;
+  }
+
+  const rng = new SeededRng(
+    seedFromKey(
+      `fog:${BuildingAuthority.contractSite[buildingEntity]?.contractSiteId ?? "site"}:${currentMinute}`,
+    ),
+  );
+
+  // Compute current team grid positions for proximity-based reveal
+  const teamGridPositions = activePackets.map((packet, packetIndex) => {
+    const pos = interpolatePath(buildRaidWaypointPath(packetIndex), packet.revealProgress / 100);
+    return {
+      gx: Math.floor(pos.x / 32),
+      gy: Math.floor(pos.y / 32),
+    };
+  });
+
+  let revealed = 0;
+  let attempts = 0;
+  while (revealed < revealBudget && attempts < revealBudget * 4) {
+    // Pick a random team to reveal around
+    const team = teamGridPositions[rng.int(0, teamGridPositions.length - 1)];
+    // Reveal within a radius around the team
+    const radius = 3;
+    const rx = team.gx + rng.int(-radius, radius);
+    const ry = team.gy + rng.int(-radius, radius);
+    const cx = Math.max(0, Math.min(fog.gridWidth - 1, rx));
+    const cy = Math.max(0, Math.min(fog.gridHeight - 1, ry));
+    const cellIndex = cy * fog.gridWidth + cx;
+    if (!fog.revealed[cellIndex]) {
+      fog.revealed[cellIndex] = true;
+      fog.revealedCount += 1;
+      revealed += 1;
+    }
+    attempts += 1;
+  }
+}
+
+/**
+ * Get the current fog-of-war reveal percentage.
+ */
+export function getFogRevealPercentage(context: SimSystemContext): number {
+  const buildingEntity = context.singletonEntities.building;
+  const fog = BuildingAuthority.fogOfWar[buildingEntity];
+  if (!fog) return 0;
+
+  const totalCells = fog.gridWidth * fog.gridHeight;
+  return totalCells > 0 ? (fog.revealedCount / totalCells) * 100 : 0;
+}
+
+// ── Team goal selection ───────────────────────────────────────────────────
+
+/**
+ * Select an autonomous goal for a raid team based on team state and dungeon conditions.
+ * Uses the shared uncertainty utility for weighted selection.
+ */
+export function selectTeamGoal(
+  context: SimSystemContext,
+  operatorEntities: readonly number[],
+  packet: {
+    id?: string;
+    startedTick?: number;
+    threat: number;
+    intel: number;
+    revealProgress: number;
+  },
+): RaidTeamGoal {
+  const currentMinute = getCurrentAbsoluteMinute(context);
+  const operatorKey = operatorEntities.map((entity) => OperatorIdentity.id[entity]).join("|");
+  const rng = new SeededRng(
+    seedFromKey(`goal:${packet.id ?? packet.startedTick ?? 0}:${currentMinute}:${operatorKey}`),
+  );
+
+  // Compute team aggregate stats
+  const avgMorale =
+    operatorEntities.reduce((sum, e) => sum + MoraleState.current[e], 0) /
+    Math.max(1, operatorEntities.length);
+  const avgFatigue =
+    operatorEntities.reduce((sum, e) => sum + NeedState.fatigue[e], 0) /
+    Math.max(1, operatorEntities.length);
+  const avgRiskTolerance =
+    operatorEntities.reduce((sum, e) => sum + PreferenceState.riskTolerance[e], 0) /
+    Math.max(1, operatorEntities.length);
+
+  const fogReveal = packet.revealProgress;
+  const highThreat = packet.threat > 70;
+  const lowIntel = packet.intel < 40;
+
+  // Build weighted goal choices
+  const choices: Array<{ item: RaidTeamGoal; weight: number }> = [
+    {
+      item: "exploring",
+      weight: Math.max(5, 40 - fogReveal * 0.3 + (lowIntel ? 15 : 0)),
+    },
+    {
+      item: "looting",
+      weight: Math.max(5, 25 + fogReveal * 0.15 - (highThreat ? 10 : 0)),
+    },
+    {
+      item: "intel",
+      weight: Math.max(5, 20 + (lowIntel ? 20 : 0) - fogReveal * 0.1),
+    },
+    {
+      item: "hunting",
+      weight: Math.max(5, 15 + avgRiskTolerance * 0.2 + avgMorale * 0.1),
+    },
+    {
+      item: "boss",
+      weight: Math.max(
+        0,
+        fogReveal > 60 ? 10 + avgMorale * 0.15 + avgRiskTolerance * 0.1 - avgFatigue * 0.2 : 0,
+      ),
+    },
+    {
+      item: "retreating",
+      weight: Math.max(0, avgFatigue > 60 ? avgFatigue * 0.4 - avgMorale * 0.1 : 0),
+    },
+    {
+      item: "regrouping",
+      weight: Math.max(0, avgFatigue > 40 && avgMorale < 40 ? 15 : 0),
+    },
+  ];
+
+  const result = weightedChoice(rng, choices);
+  return result.outcome;
+}
+
+// ── Dungeon closure ───────────────────────────────────────────────────────
+
+/**
+ * Check if the active dungeon should close.
+ * Closure happens on boss defeat or contract loss.
+ * Fog-of-war reveal alone never closes the dungeon.
+ * Ordinary enemies continue to respawn while the dungeon is open.
+ */
+function checkDungeonClosure(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+
+  const raidSummaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
+    (summary) => summary.contractSiteId === contractSite.contractSiteId,
+  );
+
+  // Check for boss defeat: a successful raid with high reveal progress
+  const fog = BuildingAuthority.fogOfWar[buildingEntity];
+  const totalCells = fog ? fog.gridWidth * fog.gridHeight : 1;
+  const revealPct = fog ? (fog.revealedCount / totalCells) * 100 : 0;
+
+  // Boss defeat requires >80% reveal and a successful raid outcome
+  const recentSuccesses = raidSummaries.filter(
+    (s) => s.result === "success" && s.missionId === contractSite.missionId && revealPct > 80,
+  );
+
+  if (recentSuccesses.length > 0) {
+    const rng = new SeededRng(
+      seedFromKey(`boss:${contractSite.contractSiteId}:${raidSummaries.length}`),
+    );
+    const bossCheck = boundedRoll(
+      rng,
+      revealPct,
+      [
+        { label: "reveal_progress", value: revealPct * 0.5 },
+        { label: "recent_successes", value: recentSuccesses.length * 10 },
+      ],
+      120,
+      15,
+    );
+
+    if (bossCheck.outcome) {
+      contractSite.bossDefeated = true;
+      // Award bonus for boss defeat
+      GuildState.reputation[context.singletonEntities.guild] += 15;
+      GuildState.treasury[context.singletonEntities.guild] += Math.round(contractSite.reward * 1.5);
+    }
+  }
+
+  // Check for contract loss: too many consecutive failures
+  let failureStreak = 0;
+  for (let index = raidSummaries.length - 1; index >= 0; index -= 1) {
+    if (raidSummaries[index].result !== "failure") {
+      break;
+    }
+
+    failureStreak += 1;
+  }
+
+  if (failureStreak >= 3) {
+    const rng = new SeededRng(
+      seedFromKey(`loss:${contractSite.contractSiteId}:${raidSummaries.length}`),
+    );
+    const lossCheck = boundedRoll(
+      rng,
+      failureStreak * 20,
+      [{ label: "consecutive_failures", value: failureStreak * 15 }],
+      60,
+      10,
+    );
+
+    if (lossCheck.outcome) {
+      contractSite.contractLost = true;
+      // Early contract loss is survivable — reputation penalty only
+      GuildState.reputation[context.singletonEntities.guild] -= 8;
+    }
+  }
+}

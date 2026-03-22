@@ -4,17 +4,27 @@ These plans are execution documents for future work. They are written for parall
 
 ## Active Plan Set
 
-- [Phase 1 Manager](./phase-1-bodega-world-manager.md)
-- [Phase 1 Contract Lock](./phase-1-bodega-world-contract-lock.md)
-- [Phase 1 HQ World And Assets](./phase-1-bodega-world-hq-assets.md)
-- [Phase 1 Runtime And Camera](./phase-1-bodega-world-runtime-camera.md)
-- [Phase 1 Raid World And Assets](./phase-1-bodega-world-raid-assets.md)
-- [Phase 1 Audio And Playgrounds](./phase-1-bodega-world-audio-playgrounds.md)
+- No active multi-agent phase plan set is checked in right now.
+- The prior Phase 1 execution-plan files were retired from the repo after that workstream converged.
+- Add a fresh phase plan set only when new cross-file or multi-agent execution needs to be coordinated.
+
+## Locked Contracts
+
+- [HQ Environment Asset Contract](./hq-environment-asset-contract.md) — modular asset taxonomy, room recipe schema, anchor contract, layer model, and rejection criteria for tile-based HQ composition
+
+## Foundational Canon
+
+- Use [Product Plan](../product-plan.md), [Roadmap](../roadmap.md), and [World Foundation Reference](../world-foundation.md) for future-facing canon.
+- Add a separate foundational execution plan only when there is active cross-cutting work that cannot be staged cleanly from the core canon docs alone.
 
 ## Plan Rules
 
 - Code, tests, templates, and shipped assets remain the source of truth for implemented behavior.
 - These plans exist to coordinate future implementation work, not to restate current code.
+- The product plan, roadmap, and world foundation are the only canonical future-facing source documents. Phase plans must derive from them and must not invent canonical gameplay rules, taxonomy, or world facts on their own.
+- If a phase plan reveals a needed future-facing contract change, update the relevant core document first or in the same pass.
 - One manager agent owns orchestration and gives the user the subagent prompts.
 - Asset production must pass through human review in the SVG playground or audio playground before being locked into canonical asset locations.
 - Review agents are expected throughout the phase, but only on surfaces whose implementation owner has finished or released the lock.
+- Review agents should default to landing bounded fixes directly in the released files they are assigned.
+- Review agents should only hand back findings instead of fixes when the issue crosses ownership boundaries, needs product/contract decisions, or would require a risky refactor.

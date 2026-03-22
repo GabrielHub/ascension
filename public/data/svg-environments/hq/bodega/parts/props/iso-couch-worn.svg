@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 26 76 56">
+  <!-- Isometric worn couch/sofa. For social rooms. -->
+
+  <!-- Back rest -->
+  <polygon points="14,38 48,28 82,38 48,48"
+    fill="#2c2420" stroke="#231e18" stroke-width="0.6"/>
+  <!-- Back rest front face -->
+  <polygon points="14,38 48,48 48,54 14,44"
+    fill="#261e18" stroke="#1e1a16" stroke-width="0.5"/>
+  <polygon points="48,48 82,38 82,44 48,54"
+    fill="#201a16" stroke="#1e1a16" stroke-width="0.5"/>
+
+  <!-- Seat cushion -->
+  <polygon points="18,50 48,64 78,50 48,40"
+    fill="#302820" stroke="#261e18" stroke-width="0.6"/>
+  <!-- Seat front face -->
+  <polygon points="48,64 78,50 78,56 48,70"
+    fill="#261e18"/>
+  <polygon points="18,50 48,64 48,70 18,56"
+    fill="#2c2420"/>
+
+  <!-- Cushion seam line -->
+  <line x1="32" y1="46" x2="48" y2="54" stroke="#261e18" stroke-width="0.5"/>
+  <line x1="48" y1="54" x2="64" y2="46" stroke="#201a16" stroke-width="0.5"/>
+
+  <!-- Armrest left -->
+  <polygon points="14,38 18,50 18,56 14,44"
+    fill="#342c24" stroke="#261e18" stroke-width="0.4"/>
+  <!-- Armrest right -->
+  <polygon points="82,38 78,50 78,56 82,44"
+    fill="#2c2420" stroke="#201a16" stroke-width="0.4"/>
+
+  <!-- Wear marks -->
+  <ellipse cx="40" cy="52" rx="6" ry="2" fill="rgba(0,0,0,0.05)"/>
+
+  <!-- Shadow -->
+  <ellipse cx="48" cy="74" rx="22" ry="5" fill="rgba(0,0,0,0.12)"/>
+</svg>

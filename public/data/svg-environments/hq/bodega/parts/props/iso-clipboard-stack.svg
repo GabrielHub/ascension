@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 30">
+  <!-- Isometric clipboard with stacked papers. Iso parallelogram shape
+       sitting flat on a surface. 2:1 iso perspective. -->
+
+  <!-- Loose papers underneath (iso parallelograms, offset) -->
+  <polygon points="16,14 30,21 22,25 8,18"
+    fill="#3a3828" opacity="0.4"/>
+  <polygon points="18,12 32,19 24,23 10,16"
+    fill="#3c3a2a" opacity="0.5"/>
+
+  <!-- Clipboard body (iso parallelogram) -->
+  <polygon points="18,8 34,16 24,21 8,13"
+    fill="#2c2818" stroke="#241e12" stroke-width="0.5"/>
+  <!-- Thin edge -->
+  <polygon points="8,13 24,21 24,23 8,15"
+    fill="#241e12" opacity="0.6"/>
+
+  <!-- Paper on clipboard -->
+  <polygon points="20,9 32,15 24,19 12,13"
+    fill="#3a3828" opacity="0.8"/>
+
+  <!-- Text lines (iso-aligned) -->
+  <line x1="16" y1="12" x2="26" y2="17" stroke="rgba(200,168,76,0.12)" stroke-width="0.4"/>
+  <line x1="15" y1="13.5" x2="28" y2="19" stroke="rgba(200,168,76,0.08)" stroke-width="0.4"/>
+  <line x1="16" y1="15" x2="24" y2="19" stroke="rgba(200,168,76,0.08)" stroke-width="0.4"/>
+
+  <!-- Clip at top (small iso block) -->
+  <polygon points="24,4 30,7 26,9 20,6"
+    fill="#4a4a52" stroke="#3a3a42" stroke-width="0.4"/>
+  <polygon points="25,5 29,7 27,8 23,6"
+    fill="#5a5a62"/>
+</svg>

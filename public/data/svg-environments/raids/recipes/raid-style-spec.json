@@ -1,0 +1,24 @@
+{
+  "description": "Visual style specification for Phase 1 raid base-map assets.",
+  "locked": "phase-1-raid-topdown-remediation",
+  "mapStyle": "flat-topdown-minimap",
+  "viewBoxes": {
+    "tile": "0 0 64 64",
+    "feature": "0 0 64 64",
+    "marker": "0 0 32 32",
+    "enemy": "0 0 48 48",
+    "focus-frame": "0 0 320 180"
+  },
+  "principles": [
+    "The base raid view is a flat top-down exploration map, not an angled interior room scene.",
+    "Teams should read as dots or lightweight markers first, with richer detail deferred to focus mode.",
+    "Tiles, fog, features, and enemy indicators should optimize for exploration readability over environmental illusion.",
+    "Raid base-map assets must not inherit HQ isometric room-box geometry."
+  ],
+  "notes": [
+    "Use clear top-down tile edges, junctions, chambers, and paths that remain legible under fog-of-war.",
+    "Map features should function as top-down markers, not room props placed in perspective.",
+    "Enemy and team visuals should stay abstract at base zoom and become richer only in focus overlays.",
+    "Do not build raid base tiles as isometric rooms or cutaway interiors."
+  ]
+}

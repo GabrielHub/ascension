@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Boss marker — larger, heavier, triple ring with skull-like abstraction -->
+  <circle cx="12" cy="12" r="10" fill="rgba(212,84,30,0.08)" stroke="rgba(212,84,30,0.25)" stroke-width="1"/>
+  <circle cx="12" cy="12" r="7" fill="rgba(212,84,30,0.12)" stroke="rgba(212,84,30,0.2)" stroke-width="0.7"/>
+  <circle cx="12" cy="12" r="4" fill="rgba(212,84,30,0.18)"/>
+  <!-- Abstract threat sigil -->
+  <line x1="12" y1="4" x2="12" y2="8" stroke="rgba(212,84,30,0.3)" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="5" y1="12" x2="8" y2="12" stroke="rgba(212,84,30,0.2)" stroke-width="0.6"/>
+  <line x1="16" y1="12" x2="19" y2="12" stroke="rgba(212,84,30,0.2)" stroke-width="0.6"/>
+  <line x1="12" y1="16" x2="12" y2="20" stroke="rgba(212,84,30,0.15)" stroke-width="0.6"/>
+  <!-- "Eye" dots -->
+  <circle cx="9.5" cy="10.5" r="0.8" fill="rgba(212,84,30,0.35)"/>
+  <circle cx="14.5" cy="10.5" r="0.8" fill="rgba(212,84,30,0.35)"/>
+</svg>

@@ -1,13 +1,12 @@
 import { AssignmentState, BuildingAuthority, RoomInstance, StaffState } from "../components";
-import { getRoleTag } from "./commands";
+import { getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
 import type { SimSystem } from "./types";
 
 function getRoomUpgradeCapacityBonus(
   context: Parameters<SimSystem>[0],
   roomEntity: number,
 ): number {
-  const template =
-    context.registry.rooms[RoomInstance.templateIndex[roomEntity]] ?? context.registry.rooms[0];
+  const template = getRoomTemplateForEntity(context, roomEntity);
 
   return (RoomInstance.appliedUpgradeIds[roomEntity] ?? []).reduce((total, upgradeId) => {
     const upgrade = context.registry.upgradeById.get(upgradeId);
@@ -33,14 +32,13 @@ export const updateRoomOperationsSystem: SimSystem = (context) => {
   const roomCapacityModifiers = BuildingAuthority.roomCapacityModifiers[buildingEntity] ?? {};
 
   context.runtimeState.roomEntities.forEach((roomEntity) => {
-    const template =
-      context.registry.rooms[RoomInstance.templateIndex[roomEntity]] ?? context.registry.rooms[0];
-    const requiredRoleTag = getRoleTag(template.tags);
+    const template = getRoomTemplateForEntity(context, roomEntity);
+    const requiredStaffTag = getStaffRoleTag(template.tags);
     const assignedStaffCount = context.runtimeState.staffEntities.filter((staffEntity) => {
       return (
         AssignmentState.kind[staffEntity] === "room" &&
         AssignmentState.targetId[staffEntity] === RoomInstance.id[roomEntity] &&
-        StaffState.roleTag[staffEntity] === requiredRoleTag
+        (requiredStaffTag ? StaffState.roleTag[staffEntity] === requiredStaffTag : true)
       );
     }).length;
 

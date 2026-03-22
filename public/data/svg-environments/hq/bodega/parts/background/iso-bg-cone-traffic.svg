@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32">
+  <!-- Isometric traffic cone. Small orange cone with reflective stripe. -->
+
+  <!-- Base (iso diamond) -->
+  <polygon points="12,26 22,31 12,36 2,31"
+    fill="#2a2020" stroke="#1e1818" stroke-width="0.4"/>
+
+  <!-- Cone body (tapered) -->
+  <polygon points="12,8 20,28 12,33 4,28"
+    fill="#8a3018" stroke="#6a2010" stroke-width="0.4"/>
+
+  <!-- Reflective stripe -->
+  <polygon points="12,16 17,24 12,26.5 7,24"
+    fill="#c8c4b8" opacity="0.2"/>
+
+  <!-- Cone tip -->
+  <ellipse cx="12" cy="8" rx="2" ry="1" fill="#aa4020"/>
+
+  <!-- Shadow -->
+  <ellipse cx="12" cy="34" rx="8" ry="2" fill="rgba(0,0,0,0.08)"/>
+</svg>

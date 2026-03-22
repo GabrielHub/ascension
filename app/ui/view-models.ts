@@ -56,11 +56,11 @@ export interface RoomViewModel {
   occupancy: number;
   isActive: boolean;
   isOperational: boolean;
-  requiredRoleTag: string;
+  requiredStaffTag: string;
   assignedStaffCount: number;
   availableUpgradeIds: readonly string[];
   tags: readonly string[];
-  position: RoomSnapshot["position"];
+  footprint: RoomSnapshot["footprint"];
 }
 
 export interface EmptySlotViewModel {
@@ -104,6 +104,13 @@ export interface RaidOpportunityViewModel {
   recommendedOperatorCount: number;
 }
 
+export interface RaidEventViewModel {
+  id: string;
+  kind: string;
+  message: string;
+  tick: number;
+}
+
 export interface ActiveRaidViewModel {
   id: string;
   missionName: string;
@@ -115,6 +122,11 @@ export interface ActiveRaidViewModel {
   threat: number;
   cohesion: number;
   durationHours: number;
+  teamGoal?: string;
+  teamState?: "active" | "returning" | "defeated";
+  x?: number;
+  y?: number;
+  recentEvents: readonly RaidEventViewModel[];
 }
 
 export interface RaidOperatorOutcomeViewModel {
@@ -245,10 +257,51 @@ export interface HqViewModel {
   rosterPressure: RosterPressureViewModel;
 }
 
+export interface ContractSiteViewModel {
+  contractSiteId: string;
+  missionName: string;
+  location: string;
+  bossDefeated: boolean;
+  contractLost: boolean;
+  threat: number;
+  intel: number;
+  reward: number;
+}
+
+export interface RaidEnemyViewModel {
+  id: string;
+  x: number;
+  y: number;
+  threat: string;
+  discovered: boolean;
+}
+
+export interface RaidFeatureViewModel {
+  id: string;
+  x: number;
+  y: number;
+  kind: string;
+  discovered: boolean;
+}
+
+export interface RaidWorldViewModel {
+  enemyMarkers: readonly RaidEnemyViewModel[];
+  featureMarkers: readonly RaidFeatureViewModel[];
+}
+
 export interface OperationsViewModel {
+  contractSite: ContractSiteViewModel | null;
   opportunities: readonly RaidOpportunityViewModel[];
   activeRaids: readonly ActiveRaidViewModel[];
   raidHistory: readonly RaidSummaryViewModel[];
+  raidWorld: RaidWorldViewModel | null;
+}
+
+// ── Tag formatting ──────────────────────────────────────────────────────
+
+/** Strip a `prefix:` from a tag string and replace underscores with spaces. */
+export function formatTag(tag: string): string {
+  return tag.replace(/^[a-z]+:/, "").replace(/_/g, " ");
 }
 
 // ── Formatting helpers ───────────────────────────────────────────────────
@@ -366,11 +419,11 @@ export function buildHqViewFromPhase1(
       occupancy: room.occupancy,
       isActive: room.isRequestedActive,
       isOperational: room.isOperational,
-      requiredRoleTag: room.requiredRoleTag,
+      requiredStaffTag: room.requiredStaffTag,
       assignedStaffCount: room.assignedStaffCount,
       availableUpgradeIds: room.availableUpgradeIds,
       tags: template.tags,
-      position: { x: 0, y: 0, width: 0, height: 0 },
+      footprint: room.footprint,
     };
   });
 
@@ -404,23 +457,23 @@ export function buildHqViewFromPhase1(
     name: op.identity.name,
     roleTag: op.identity.roleTag,
     specialtyTag: op.identity.specialtyTag,
-    moraleCurrent: op.morale.current,
-    moraleBaseline: op.morale.baseline,
-    loyaltyCurrent: op.loyalty.current,
-    loyaltyBaseline: op.loyalty.baseline,
+    moraleCurrent: Math.round(op.morale.current),
+    moraleBaseline: Math.round(op.morale.baseline),
+    loyaltyCurrent: Math.round(op.loyalty.current),
+    loyaltyBaseline: Math.round(op.loyalty.baseline),
     assignmentKind: op.assignment.kind,
     assignmentTargetId: op.assignment.targetId,
-    injurySeverity: op.injury.severity,
-    injuryRecoveryHours: op.injury.recoveryHoursRemaining,
-    needHunger: op.needs.hunger,
-    needFatigue: op.needs.fatigue,
-    needStress: op.needs.stress,
+    injurySeverity: Math.round(op.injury.severity),
+    injuryRecoveryHours: Math.round(op.injury.recoveryHoursRemaining),
+    needHunger: Math.round(op.needs.hunger),
+    needFatigue: Math.round(op.needs.fatigue),
+    needStress: Math.round(op.needs.stress),
     scheduleBlock: op.schedule.currentBlock,
-    riskTolerance: op.preferences.riskTolerance,
+    riskTolerance: Math.round(op.preferences.riskTolerance),
     intent: op.intent,
     dominantNeed: op.dominantNeed,
     availableForRaid: op.availableForRaid,
-    readinessScore: op.readinessScore,
+    readinessScore: Math.round(op.readinessScore),
     appearancePresetId: op.appearance.presetId,
     visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
     lifecycle: extractLifecycle(op.lifecycle),
@@ -562,6 +615,16 @@ export function buildOpsViewFromPhase1(
     threat: raid.threat,
     cohesion: raid.cohesion,
     durationHours: raid.durationHours,
+    teamGoal: raid.teamGoal,
+    teamState: raid.teamState,
+    x: raid.x,
+    y: raid.y,
+    recentEvents: (raid.recentEvents ?? []).map((evt) => ({
+      id: evt.id,
+      kind: evt.kind,
+      message: evt.message,
+      tick: evt.tick,
+    })),
   }));
 
   const operatorNameById = new Map(view.operators.map((op) => [op.id, op.identity.name]));
@@ -587,7 +650,39 @@ export function buildOpsViewFromPhase1(
     })),
   }));
 
-  return { opportunities, activeRaids, raidHistory };
+  const contractSite: ContractSiteViewModel | null = view.contractSite
+    ? {
+        contractSiteId: view.contractSite.contractSiteId,
+        missionName: resolveMissionName(view.contractSite.missionId, registry),
+        location: view.contractSite.location,
+        bossDefeated: view.contractSite.bossDefeated,
+        contractLost: view.contractSite.contractLost,
+        threat: view.contractSite.threat,
+        intel: view.contractSite.intel,
+        reward: view.contractSite.reward,
+      }
+    : null;
+
+  const raidWorld: RaidWorldViewModel | null = view.raidWorld
+    ? {
+        enemyMarkers: view.raidWorld.enemyMarkers.map((enemy) => ({
+          id: enemy.id,
+          x: enemy.x,
+          y: enemy.y,
+          threat: enemy.threat,
+          discovered: enemy.discovered,
+        })),
+        featureMarkers: view.raidWorld.featureMarkers.map((feature) => ({
+          id: feature.id,
+          x: feature.x,
+          y: feature.y,
+          kind: feature.kind,
+          discovered: feature.discovered,
+        })),
+      }
+    : null;
+
+  return { contractSite, opportunities, activeRaids, raidHistory, raidWorld };
 }
 
 // ── Legacy WorldSnapshot builders (retained for render-layer compat) ─────
@@ -608,11 +703,11 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       occupancy: room.occupancy,
       isActive: room.isActive ?? true,
       isOperational: room.isActive ?? true,
-      requiredRoleTag: "",
+      requiredStaffTag: "",
       assignedStaffCount: 0,
       availableUpgradeIds: [],
       tags: template.tags,
-      position: room.position,
+      footprint: room.footprint,
     };
   });
 
@@ -676,7 +771,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       dominantNeed: "idle",
       availableForRaid: false,
       readinessScore: 0,
-      appearancePresetId: str(appearance, "presetId", "male-swept"),
+      appearancePresetId: str(appearance, "presetId", "kael-001"),
       visibleGear: resolveVisibleGear(
         appearance ? extractVisibleGear(appearance) : undefined,
         getLoadedParts(),
@@ -782,6 +877,7 @@ function mapActiveRaid(raid: ActiveRaidSnapshot, registry: TemplateRegistry): Ac
     threat: 0,
     cohesion: 0,
     durationHours: 0,
+    recentEvents: [],
   };
 }
 
@@ -832,9 +928,11 @@ export function buildOperationsViewModel(
   );
 
   return {
+    contractSite: null,
     opportunities,
     activeRaids: snapshot.activeRaidPackets.map((r) => mapActiveRaid(r, registry)),
     raidHistory: snapshot.raidSummaries.map((s) => mapRaidSummary(s, registry)),
+    raidWorld: null,
   };
 }
 

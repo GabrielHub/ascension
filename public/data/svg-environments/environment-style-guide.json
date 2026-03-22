@@ -1,0 +1,46 @@
+{
+  "description": "Shared environment style guide for authored environment assets in Ascension, split by HQ and raid base-map surface.",
+  "locked": "phase-1-surface-split-remediation",
+  "viewStyle": "split-by-surface",
+  "appliesTo": [
+    "hq-shells",
+    "hq-rooms",
+    "hq-props",
+    "hq-fixtures",
+    "raid-base-maps",
+    "raid-features",
+    "raid-markers",
+    "future-room-scenes"
+  ],
+  "principles": [
+    "HQ and raids are separate visual surfaces and should not be forced into one environment grammar.",
+    "HQ environments should read as compact inhabitable spaces, not abstract diagrams.",
+    "Raid base maps should read as flat top-down exploration surfaces first, not as perspective rooms.",
+    "Reusable parts exist to support composition, not to replace composition.",
+    "Each surface should optimize for its own readability contract."
+  ],
+  "requiredLayers": ["surface-specific"],
+  "compositionRules": {
+    "hq": [
+      "Use an angled/isometric room box with visible floor depth and enclosing wall planes.",
+      "HQ room kits must share one canonical module footprint and grid so adjacent rooms snap together cleanly.",
+      "Use layered ownership: shell/perimeter, structure, room recipe, props, and theme.",
+      "Doors, windows, and thresholds should read as openings in architecture rather than pasted icons.",
+      "Props should imply circulation, occupancy, and room function."
+    ],
+    "raidBaseMap": [
+      "Use a flat top-down minimap language for tiles, chambers, corridors, fog, and feature markers.",
+      "Optimize for exploration readability and moving team dots over environmental illusion.",
+      "Base raid-map assets must not depend on isometric room-box geometry.",
+      "Enemy, team, and feature visuals should remain lightweight at base zoom."
+    ]
+  },
+  "doNotUse": [
+    "flat top-down diagrams as approved HQ room scenes",
+    "pure side elevations as approved HQ room scenes",
+    "simple wall-slice cross-sections as approved HQ room scenes",
+    "standalone HQ room dioramas that cannot tile with adjacent rooms",
+    "stacking multiple full room-scene SVGs that each own their own walls and floor planes into one HQ layout",
+    "HQ isometric room-box geometry for the raid base map"
+  ]
+}

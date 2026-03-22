@@ -12,10 +12,10 @@ const P = {
   silverBody: "#e0ddd6",
   silverBright: "#f0ece4",
   cardBg: "rgba(15,14,18,0.4)",
-  cardBorder: "rgba(200,168,76,0.06)",
-  cardBorderHover: "rgba(200,168,76,0.18)",
-  shadow: "0 8px 40px rgba(0,0,0,0.6)",
-  shadowHover: "0 16px 56px rgba(0,0,0,0.7), 0 0 80px rgba(200,168,76,0.05)",
+  cardBorder: "rgba(200,168,76,0.15)",
+  cardBorderHover: "rgba(200,168,76,0.3)",
+  shadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 30px rgba(200,168,76,0.04)",
+  shadowHover: "0 16px 56px rgba(0,0,0,0.7), 0 0 60px rgba(200,168,76,0.1)",
   deleteRed: "#8a3030",
   deleteRedHover: "#b04040",
 } as const;
@@ -182,7 +182,7 @@ function OccupiedCard({
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
           style={{
-            background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${hovered ? 0.15 : 0.06}) 50%, transparent 90%)`,
+            background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${hovered ? 0.2 : 0.12}) 50%, transparent 90%)`,
             transition: "background 0.5s ease",
           }}
         />
@@ -346,7 +346,7 @@ function EmptyCard({ slot }: { slot: StartScreenSaveSlot }) {
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
           style={{
-            background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${active ? 0.15 : 0.06}) 50%, transparent 90%)`,
+            background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${active ? 0.2 : 0.12}) 50%, transparent 90%)`,
             transition: "background 0.5s ease",
           }}
         />
@@ -398,15 +398,7 @@ function EmptyCard({ slot }: { slot: StartScreenSaveSlot }) {
   );
 }
 
-function FooterLink({
-  label,
-  subtle = false,
-  to,
-}: {
-  label: string;
-  subtle?: boolean;
-  to?: string;
-}) {
+function FooterLink({ label, to }: { label: string; to?: string }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const active = hovered || focused;
@@ -416,7 +408,7 @@ function FooterLink({
     fontSize: "0.75rem",
     letterSpacing: "0.12em",
     textTransform: "lowercase",
-    color: active ? P.silverBody : subtle ? "rgba(200,168,76,0.7)" : "rgba(200,168,76,0.7)",
+    color: active ? P.silverBody : "rgba(200,168,76,0.7)",
     background: active ? "rgba(200,168,76,0.04)" : "transparent",
     border: `1px solid ${active ? "rgba(200,168,76,0.1)" : "transparent"}`,
     outline: focused ? "1px solid rgba(200,168,76,0.2)" : "none",
@@ -590,14 +582,7 @@ export function StartScreenShell() {
                   animation: "ss-sub-in 2s ease 0.8s both",
                 }}
               >
-                manhattan &middot; 2035
-              </p>
-
-              <p
-                className="mt-4 text-xs uppercase tracking-[0.28em] text-silver/60"
-                aria-live="polite"
-              >
-                {statusLabel}
+                recruit &middot; manage &middot; ascend
               </p>
             </header>
           </div>
@@ -644,12 +629,12 @@ export function StartScreenShell() {
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
                 />
-                <FooterLink label="Sandbox" subtle to={buildGameShellHref({ mode: "preview" })} />
+                <FooterLink label="Sandbox" to={buildGameShellHref({ mode: "preview" })} />
                 <span
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
                 />
-                <FooterLink label="SVG Tools" subtle to="/svg-assets" />
+                <FooterLink label="SVG Tools" to="/svg-assets" />
               </div>
 
               <div className="text-right">

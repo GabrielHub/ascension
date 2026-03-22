@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Elite enemy marker — double diamond, brighter -->
+  <path d="M8,1 L15,8 L8,15 L1,8 Z" fill="rgba(212,84,30,0.12)" stroke="rgba(212,84,30,0.35)" stroke-width="0.8"/>
+  <path d="M8,4 L12,8 L8,12 L4,8 Z" fill="rgba(212,84,30,0.2)" stroke="rgba(212,84,30,0.3)" stroke-width="0.5"/>
+  <circle cx="8" cy="8" r="1" fill="rgba(212,84,30,0.35)"/>
+</svg>

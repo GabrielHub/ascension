@@ -32,6 +32,9 @@ Start with:
 - [Documentation Index](./docs/index.md)
 - [Roadmap](./docs/roadmap.md)
 - [Product Plan](./docs/product-plan.md)
+- [Product Plan Index](./docs/product/index.md)
+- [World Foundation Reference](./docs/world-foundation.md)
+- [World Foundation Index](./docs/world/index.md)
 - [Plans Index](./docs/plans/index.md)
 
 ## Commands

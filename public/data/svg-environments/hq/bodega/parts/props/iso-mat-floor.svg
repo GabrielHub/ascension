@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 24 84 50">
+  <!-- Isometric floor mat. For training/recovery rooms. Flat on ground. -->
+
+  <!-- Mat surface (flat diamond) -->
+  <polygon points="10,48 48,68 86,48 48,28"
+    fill="#2a3028" stroke="#1e2620" stroke-width="0.8"/>
+
+  <!-- Mat edge thickness (very thin, it's a mat) -->
+  <polygon points="48,68 86,48 86,50 48,70"
+    fill="#1e2620"/>
+  <polygon points="10,48 48,68 48,70 10,50"
+    fill="#242c22"/>
+
+  <!-- Center line -->
+  <line x1="28" y1="48" x2="48" y2="58" stroke="#344030" stroke-width="0.6"/>
+  <line x1="48" y1="58" x2="68" y2="48" stroke="#344030" stroke-width="0.6"/>
+
+  <!-- Corner circle markers -->
+  <circle cx="30" cy="42" r="2" fill="rgba(200,168,76,0.08)" stroke="#344030" stroke-width="0.4"/>
+  <circle cx="66" cy="42" r="2" fill="rgba(200,168,76,0.08)" stroke="#344030" stroke-width="0.4"/>
+  <circle cx="30" cy="54" r="2" fill="rgba(200,168,76,0.08)" stroke="#344030" stroke-width="0.4"/>
+  <circle cx="66" cy="54" r="2" fill="rgba(200,168,76,0.08)" stroke="#344030" stroke-width="0.4"/>
+
+  <!-- Texture lines -->
+  <line x1="20" y1="44" x2="48" y2="58" stroke="rgba(255,255,255,0.02)" stroke-width="0.3"/>
+  <line x1="36" y1="36" x2="60" y2="48" stroke="rgba(255,255,255,0.02)" stroke-width="0.3"/>
+</svg>

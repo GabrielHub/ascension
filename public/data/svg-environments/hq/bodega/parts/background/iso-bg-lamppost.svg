@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 180">
+  <defs>
+    <radialGradient id="lp-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(200,168,76,0.25)"/>
+      <stop offset="60%" stop-color="rgba(200,168,76,0.08)"/>
+      <stop offset="100%" stop-color="rgba(200,168,76,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Light glow halo -->
+  <circle cx="24" cy="16" r="22" fill="url(#lp-glow)"/>
+
+  <!-- Lamp head -->
+  <rect x="14" y="8" width="20" height="12" rx="2"
+    fill="#3a3838" stroke="#252525" stroke-width="0.8"/>
+  <!-- Bulb / lens -->
+  <rect x="16" y="12" width="16" height="5" rx="1"
+    fill="#c8a84c" opacity="0.5"/>
+  <!-- Lamp top cap -->
+  <rect x="12" y="6" width="24" height="4" rx="1"
+    fill="#252525" stroke="#3a3838" stroke-width="0.5"/>
+
+  <!-- Curved arm -->
+  <path d="M24,20 L24,35 Q24,42 20,44 L20,50"
+    stroke="#3a3838" stroke-width="2.5" fill="none"/>
+
+  <!-- Main pole -->
+  <rect x="18" y="50" width="5" height="124" fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
+
+  <!-- Base plate -->
+  <rect x="12" y="170" width="18" height="6" rx="1" fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
+  <rect x="14" y="174" width="14" height="4" rx="1" fill="#252525"/>
+
+  <!-- Decorative ring on pole -->
+  <rect x="16" y="60" width="9" height="3" rx="1" fill="#252525" opacity="0.5"/>
+
+  <!-- Base shadow -->
+  <ellipse cx="21" cy="178" rx="16" ry="3" fill="#060608" opacity="0.25"/>
+
+  <!-- Light cone (downward) -->
+  <polygon points="16,18 32,18 40,50 8,50"
+    fill="rgba(200,168,76,0.03)"/>
+</svg>

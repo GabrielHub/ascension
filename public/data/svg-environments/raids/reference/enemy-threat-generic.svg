@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <defs>
+    <radialGradient id="eg-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(212,84,30,0.2)"/>
+      <stop offset="100%" stop-color="rgba(212,84,30,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Ambient threat glow -->
+  <circle cx="10" cy="10" r="9" fill="url(#eg-glow)"/>
+  <!-- Enemy marker — ember red, angular -->
+  <polygon points="10,4 15,10 10,16 5,10" fill="rgba(212,84,30,0.6)"/>
+  <polygon points="10,4 15,10 10,16 5,10" fill="none" stroke="rgba(212,84,30,0.8)" stroke-width="0.8"/>
+  <!-- Threat pip -->
+  <circle cx="10" cy="10" r="1.5" fill="rgba(212,84,30,0.9)"/>
+</svg>

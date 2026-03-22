@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="21 12 58 80">
+  <!-- Isometric filing cabinet. 4-drawer metal cabinet. -->
+
+  <!-- Cabinet top -->
+  <polygon points="25,28 50,40 75,28 50,16"
+    fill="#3a3838" stroke="#252525" stroke-width="0.8"/>
+  <!-- Cabinet front face (right-facing) -->
+  <polygon points="50,40 75,28 75,76 50,88"
+    fill="#3a3838" stroke="#252525" stroke-width="1"/>
+  <!-- Cabinet left face -->
+  <polygon points="25,28 50,40 50,88 25,76"
+    fill="#333030" stroke="#252525" stroke-width="0.8"/>
+
+  <!-- Drawer lines on front face -->
+  <line x1="51" y1="50" x2="74" y2="38" stroke="#252525" stroke-width="0.6"/>
+  <line x1="51" y1="60" x2="74" y2="48" stroke="#252525" stroke-width="0.6"/>
+  <line x1="51" y1="70" x2="74" y2="58" stroke="#252525" stroke-width="0.6"/>
+  <line x1="51" y1="80" x2="74" y2="68" stroke="#252525" stroke-width="0.6"/>
+
+  <!-- Drawer handles -->
+  <rect x="68" y="32" width="3" height="3" fill="#8a7040" rx="0.5"/>
+  <rect x="68" y="42" width="3" height="3" fill="#8a7040" rx="0.5"/>
+  <rect x="68" y="52" width="3" height="3" fill="#8a7040" rx="0.5"/>
+  <rect x="68" y="62" width="3" height="3" fill="#8a7040" rx="0.5"/>
+</svg>

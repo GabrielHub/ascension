@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 18 78 62">
+  <!-- Isometric medical cot / examination bed. -->
+
+  <!-- Mattress surface -->
+  <polygon points="12,38 52,58 82,43 42,23"
+    fill="#c8c4b8" stroke="#3a3838" stroke-width="0.8" opacity="0.9"/>
+  <!-- Pillow -->
+  <polygon points="42,26 56,33 64,29 50,22"
+    fill="#c8c4b8" stroke="#b0aca0" stroke-width="0.5"/>
+
+  <!-- Frame front face -->
+  <polygon points="52,58 82,43 82,58 52,73"
+    fill="#3a3838" stroke="#252525" stroke-width="0.8"/>
+  <!-- Frame left face -->
+  <polygon points="12,38 52,58 52,73 12,53"
+    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+
+  <!-- Legs -->
+  <line x1="18" y1="45" x2="18" y2="60" stroke="#3a3838" stroke-width="2"/>
+  <line x1="76" y1="48" x2="76" y2="63" stroke="#3a3838" stroke-width="2"/>
+  <line x1="48" y1="62" x2="48" y2="77" stroke="#3a3838" stroke-width="2"/>
+  <line x1="46" y1="32" x2="46" y2="45" stroke="#3a3838" stroke-width="2"/>
+
+  <!-- Sheet fold line -->
+  <line x1="32" y1="38" x2="52" y2="48" stroke="#b0aca0" stroke-width="0.4" opacity="0.4"/>
+</svg>

@@ -1,0 +1,160 @@
+{
+  "description": "Raid environment asset index — dungeon tiles, corridor segments, fog treatments, team markers, and enemy visuals for the first raid presentation layer.",
+  "locked": null,
+  "style": "dungeon-minimap",
+  "concept": "abandoned_school",
+  "parts": [
+    {
+      "id": "tile/corridor",
+      "category": "tile",
+      "tags": ["corridor", "passage", "traversal"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "tile/corridor-corner",
+      "category": "tile",
+      "tags": ["corridor", "corner", "turn"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "tile/chamber",
+      "category": "tile",
+      "tags": ["chamber", "room", "open-space"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "tile/entrance",
+      "category": "tile",
+      "tags": ["entrance", "spawn", "start"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "tile/boss-chamber",
+      "category": "tile",
+      "tags": ["boss", "chamber", "final"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "tile/junction",
+      "category": "tile",
+      "tags": ["junction", "intersection", "branching"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "feature/debris-pile",
+      "category": "feature",
+      "tags": ["debris", "obstacle", "environmental"],
+      "scale": "feature",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "feature/hazard-zone",
+      "category": "feature",
+      "tags": ["hazard", "warning", "danger"],
+      "scale": "feature",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "feature/loot-cache",
+      "category": "feature",
+      "tags": ["loot", "cache", "treasure"],
+      "scale": "feature",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "feature/intel-node",
+      "category": "feature",
+      "tags": ["intel", "data", "discovery"],
+      "scale": "feature",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "fog/edge-soft",
+      "category": "fog-treatment",
+      "tags": ["fog", "edge", "gradient", "reveal"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "fog/unexplored",
+      "category": "fog-treatment",
+      "tags": ["fog", "hidden", "unknown"],
+      "scale": "tile",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "marker/team-dot",
+      "category": "marker",
+      "tags": ["team", "operator", "position"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "marker/team-goal",
+      "category": "marker",
+      "tags": ["team", "goal", "indicator"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "marker/team-focused",
+      "category": "marker",
+      "tags": ["team", "operator", "focused", "selected"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/threat-generic",
+      "category": "enemy",
+      "tags": ["enemy", "threat", "generic", "hostile"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/threat-elite",
+      "category": "enemy",
+      "tags": ["enemy", "elite", "threat", "tough"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/threat-boss",
+      "category": "enemy",
+      "tags": ["enemy", "boss", "threat", "final"],
+      "scale": "marker",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/focus-frame",
+      "category": "enemy",
+      "tags": ["enemy", "focus", "portrait", "frame"],
+      "scale": "detail",
+      "concept": null,
+      "status": "exploration"
+    }
+  ]
+}

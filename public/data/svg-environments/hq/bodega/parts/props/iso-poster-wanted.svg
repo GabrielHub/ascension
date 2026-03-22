@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">
+  <!-- Wall-mounted recruitment poster / job listing. Small, reads as
+       a pinned paper on the wall even at tiny sizes. -->
+
+  <!-- Paper -->
+  <rect x="4" y="4" width="24" height="32" fill="#3a3828" rx="0.5"
+    stroke="#2c2820" stroke-width="0.4"/>
+
+  <!-- "Header" bar (bold stripe at top) -->
+  <rect x="6" y="6" width="20" height="4" fill="#c8a84c" opacity="0.2" rx="0.3"/>
+
+  <!-- Text lines (implied content) -->
+  <line x1="6" y1="14" x2="22" y2="14" stroke="rgba(224,221,214,0.15)" stroke-width="0.8"/>
+  <line x1="6" y1="17" x2="20" y2="17" stroke="rgba(224,221,214,0.1)" stroke-width="0.6"/>
+  <line x1="6" y1="20" x2="18" y2="20" stroke="rgba(224,221,214,0.1)" stroke-width="0.6"/>
+  <line x1="6" y1="23" x2="22" y2="23" stroke="rgba(224,221,214,0.08)" stroke-width="0.6"/>
+  <line x1="6" y1="26" x2="16" y2="26" stroke="rgba(224,221,214,0.08)" stroke-width="0.6"/>
+
+  <!-- Tear-off tabs at bottom -->
+  <line x1="8" y1="30" x2="8" y2="34" stroke="rgba(224,221,214,0.06)" stroke-width="0.5"/>
+  <line x1="11" y1="30" x2="11" y2="34" stroke="rgba(224,221,214,0.06)" stroke-width="0.5"/>
+  <line x1="14" y1="30" x2="14" y2="34" stroke="rgba(224,221,214,0.06)" stroke-width="0.5"/>
+  <line x1="17" y1="30" x2="17" y2="34" stroke="rgba(224,221,214,0.06)" stroke-width="0.5"/>
+  <line x1="20" y1="30" x2="20" y2="34" stroke="rgba(224,221,214,0.06)" stroke-width="0.5"/>
+  <!-- Horizontal tear-off line -->
+  <line x1="6" y1="30" x2="26" y2="30" stroke="rgba(224,221,214,0.08)" stroke-width="0.3" stroke-dasharray="1,1"/>
+
+  <!-- Pin at top -->
+  <circle cx="16" cy="4" r="1.5" fill="#c8a84c" opacity="0.4"/>
+</svg>
