@@ -6,9 +6,13 @@ import {
   type ActiveEventSnapshot,
   type ActiveRaidSnapshot,
   type ContractSiteSnapshot,
+  type EquipmentAssignmentSnapshot,
   type FogOfWarSnapshot,
   type BuildingSnapshot,
   type GuildSnapshot,
+  type InventoryStackSnapshot,
+  type NotableTieSnapshot,
+  type OperatorDispositionSnapshot,
   type OperatorLifecycleSnapshot,
   type OperatorSnapshot,
   type OperatorRelationshipSnapshot,
@@ -16,6 +20,8 @@ import {
   type RaidOpportunitySnapshot,
   type RaidOperatorOutcomeSnapshot,
   type RaidSummarySnapshot,
+  type RecurringTeamSnapshot,
+  type RoomCultureSnapshot,
   type RoomSnapshot,
   type SaveCompactValue,
   type SaveSlotId,
@@ -527,13 +533,16 @@ function parseOperatorLifecycleSnapshot(
   const record = expectRecord(value, path);
   const status = expectString(record.status, `${path}.status`);
 
-  if (status !== "active" && status !== "dead") {
-    fail(`${path}.status`, 'must be "active" or "dead".');
+  if (status !== "active" && status !== "dead" && status !== "departed") {
+    fail(`${path}.status`, 'must be "active", "dead", or "departed".');
   }
 
   if (status === "dead") {
     if (record.deathTick === undefined || record.deathRaidSummaryId === undefined) {
       fail(path, "dead operator must have both deathTick and deathRaidSummaryId.");
+    }
+    if (record.departureTick !== undefined || record.departureReason !== undefined) {
+      fail(path, "dead operator must not carry departureTick or departureReason.");
     }
 
     return {
@@ -546,8 +555,34 @@ function parseOperatorLifecycleSnapshot(
     };
   }
 
-  if (record.deathTick !== undefined || record.deathRaidSummaryId !== undefined) {
-    fail(path, "active operator must not carry deathTick or deathRaidSummaryId.");
+  if (status === "departed") {
+    if (record.departureTick === undefined || record.departureReason === undefined) {
+      fail(path, "departed operator must have both departureTick and departureReason.");
+    }
+    if (record.deathTick !== undefined || record.deathRaidSummaryId !== undefined) {
+      fail(path, "departed operator must not carry deathTick or deathRaidSummaryId.");
+    }
+
+    return {
+      lifecycle: {
+        status: "departed",
+        departureTick: expectNonNegativeInteger(record.departureTick, `${path}.departureTick`),
+        departureReason: expectString(record.departureReason, `${path}.departureReason`),
+      },
+      changed: false,
+    };
+  }
+
+  if (
+    record.deathTick !== undefined ||
+    record.deathRaidSummaryId !== undefined ||
+    record.departureTick !== undefined ||
+    record.departureReason !== undefined
+  ) {
+    fail(
+      path,
+      "active operator must not carry deathTick, deathRaidSummaryId, departureTick, or departureReason.",
+    );
   }
 
   return {
@@ -915,6 +950,95 @@ function parseOptionalCollection<T>(
   };
 }
 
+function parseOperatorDispositionSnapshot(
+  value: unknown,
+  path: string,
+): OperatorDispositionSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    operatorId: expectString(record.operatorId, `${path}.operatorId`),
+    sociability: expectNumber(record.sociability, `${path}.sociability`),
+    temperament: expectNumber(record.temperament, `${path}.temperament`),
+    grievanceLevel: expectNumber(record.grievanceLevel, `${path}.grievanceLevel`),
+    satisfactionLevel: expectNumber(record.satisfactionLevel, `${path}.satisfactionLevel`),
+  };
+}
+
+function parseNotableTieSnapshot(value: unknown, path: string): NotableTieSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    operatorAId: expectString(record.operatorAId, `${path}.operatorAId`),
+    operatorBId: expectString(record.operatorBId, `${path}.operatorBId`),
+    stance: expectString(record.stance, `${path}.stance`),
+    strength: expectNumber(record.strength, `${path}.strength`),
+  };
+}
+
+function parseRecurringTeamSnapshot(value: unknown, path: string): RecurringTeamSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    id: expectString(record.id, `${path}.id`),
+    memberIds: expectStringArray(record.memberIds, `${path}.memberIds`),
+    cohesion: expectNumber(record.cohesion, `${path}.cohesion`),
+    raidCount: expectNonNegativeInteger(record.raidCount, `${path}.raidCount`),
+    lastRaidTick: expectInteger(record.lastRaidTick, `${path}.lastRaidTick`),
+    damaged: expectBoolean(record.damaged, `${path}.damaged`),
+    damageReason:
+      record.damageReason === undefined || record.damageReason === ""
+        ? ""
+        : expectString(record.damageReason, `${path}.damageReason`),
+  };
+}
+
+function parseRoomCultureSnapshot(value: unknown, path: string): RoomCultureSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    roomInstanceId: expectString(record.roomInstanceId, `${path}.roomInstanceId`),
+    comfort: expectNumber(record.comfort, `${path}.comfort`),
+    tension: expectNumber(record.tension, `${path}.tension`),
+    camaraderie: expectNumber(record.camaraderie, `${path}.camaraderie`),
+    tone: expectString(record.tone, `${path}.tone`),
+  };
+}
+
+function parseInventoryStackSnapshot(value: unknown, path: string): InventoryStackSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    itemId: expectString(record.itemId, `${path}.itemId`),
+    quantity: expectPositiveInteger(record.quantity, `${path}.quantity`),
+  };
+}
+
+function parseEquipmentAssignmentSnapshot(
+  value: unknown,
+  path: string,
+): EquipmentAssignmentSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    operatorId: expectString(record.operatorId, `${path}.operatorId`),
+    weaponId: typeof record.weaponId === "string" ? record.weaponId : "",
+    outfitOverlayId: typeof record.outfitOverlayId === "string" ? record.outfitOverlayId : "",
+    accessoryId: typeof record.accessoryId === "string" ? record.accessoryId : "",
+  };
+}
+
+function deriveDispositionFromOperator(operator: OperatorSnapshot): OperatorDispositionSnapshot {
+  const moraleRecord = operator.morale;
+  const loyaltyRecord = operator.loyalty;
+  const moraleCurrent =
+    moraleRecord && typeof moraleRecord.current === "number" ? moraleRecord.current : 50;
+  const loyaltyCurrent =
+    loyaltyRecord && typeof loyaltyRecord.current === "number" ? loyaltyRecord.current : 50;
+
+  return {
+    operatorId: operator.id,
+    sociability: 50,
+    temperament: 50,
+    grievanceLevel: Math.max(0, Math.round(50 - moraleCurrent * 0.5)),
+    satisfactionLevel: Math.round((moraleCurrent + loyaltyCurrent) / 2),
+  };
+}
+
 function parseWorldSnapshot(
   value: unknown,
   path: string,
@@ -964,13 +1088,197 @@ function parseWorldSnapshot(
   const contractSite = parseContractSiteSnapshot(record.contractSite, `${path}.contractSite`);
   const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
   const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
+  const rooms = parseCollection(record.rooms, `${path}.rooms`, parseRoomSnapshot);
+
+  // Phase 2: Parse new snapshot types or derive defaults from schema 7 migration
+  let phase2Changed = false;
+
+  const operatorDispositions =
+    record.operatorDispositions === undefined
+      ? (() => {
+          if (schemaVersion < 8) phase2Changed = true;
+          return schemaVersion < 8
+            ? operators.items.map((op) => deriveDispositionFromOperator(op))
+            : [];
+        })()
+      : parseCollection(
+          record.operatorDispositions,
+          `${path}.operatorDispositions`,
+          parseOperatorDispositionSnapshot,
+        );
+
+  const notableTies: NotableTieSnapshot[] = record.notableTies
+    ? parseCollection(record.notableTies, `${path}.notableTies`, parseNotableTieSnapshot)
+    : (() => {
+        if (schemaVersion < 8) phase2Changed = true;
+        return [];
+      })();
+
+  const recurringTeams: RecurringTeamSnapshot[] = record.recurringTeams
+    ? parseCollection(record.recurringTeams, `${path}.recurringTeams`, parseRecurringTeamSnapshot)
+    : (() => {
+        if (schemaVersion < 8) phase2Changed = true;
+        return [];
+      })();
+
+  const roomCultures: RoomCultureSnapshot[] = record.roomCultures
+    ? parseCollection(record.roomCultures, `${path}.roomCultures`, parseRoomCultureSnapshot)
+    : (() => {
+        if (schemaVersion < 8) phase2Changed = true;
+        return [];
+      })();
+
+  const inventoryStacks: InventoryStackSnapshot[] = record.inventoryStacks
+    ? parseCollection(
+        record.inventoryStacks,
+        `${path}.inventoryStacks`,
+        parseInventoryStackSnapshot,
+      )
+    : (() => {
+        if (schemaVersion < 8) phase2Changed = true;
+        return [];
+      })();
+
+  const equipmentAssignments: EquipmentAssignmentSnapshot[] = record.equipmentAssignments
+    ? parseCollection(
+        record.equipmentAssignments,
+        `${path}.equipmentAssignments`,
+        parseEquipmentAssignmentSnapshot,
+      )
+    : (() => {
+        if (schemaVersion < 8) phase2Changed = true;
+        return [];
+      })();
 
   if (schemaVersion >= 7) {
     const knownOperatorIds = new Set(operators.items.map((op) => op.id));
-    const livingOperatorIds = new Set(
-      operators.items.filter((op) => op.lifecycle.status !== "dead").map((op) => op.id),
+    const knownRoomIds = new Set(rooms.map((room) => room.id));
+    const activeOperatorIds = new Set(
+      operators.items.filter((op) => op.lifecycle.status === "active").map((op) => op.id),
     );
     const knownRaidSummaryIds = new Set(raidSummaries.map((summary) => summary.id));
+
+    const seenDispositionOperatorIds = new Set<string>();
+    operatorDispositions.forEach((entry, entryIndex) => {
+      if (!knownOperatorIds.has(entry.operatorId)) {
+        fail(
+          `${path}.operatorDispositions[${entryIndex}].operatorId`,
+          `must reference an existing operator id, got "${entry.operatorId}".`,
+        );
+      }
+
+      if (seenDispositionOperatorIds.has(entry.operatorId)) {
+        fail(
+          `${path}.operatorDispositions[${entryIndex}].operatorId`,
+          `duplicates operatorId "${entry.operatorId}".`,
+        );
+      }
+
+      seenDispositionOperatorIds.add(entry.operatorId);
+    });
+
+    const seenTieKeys = new Set<string>();
+    notableTies.forEach((tie, entryIndex) => {
+      if (!knownOperatorIds.has(tie.operatorAId)) {
+        fail(
+          `${path}.notableTies[${entryIndex}].operatorAId`,
+          `must reference an existing operator id, got "${tie.operatorAId}".`,
+        );
+      }
+      if (!knownOperatorIds.has(tie.operatorBId)) {
+        fail(
+          `${path}.notableTies[${entryIndex}].operatorBId`,
+          `must reference an existing operator id, got "${tie.operatorBId}".`,
+        );
+      }
+
+      const pairKey =
+        tie.operatorAId < tie.operatorBId
+          ? `${tie.operatorAId}::${tie.operatorBId}`
+          : `${tie.operatorBId}::${tie.operatorAId}`;
+      if (seenTieKeys.has(pairKey)) {
+        fail(
+          `${path}.notableTies[${entryIndex}]`,
+          `duplicates tie pair "${pairKey.replace("::", " / ")}".`,
+        );
+      }
+      seenTieKeys.add(pairKey);
+    });
+
+    const seenRecurringTeamIds = new Set<string>();
+    recurringTeams.forEach((team, entryIndex) => {
+      if (seenRecurringTeamIds.has(team.id)) {
+        fail(
+          `${path}.recurringTeams[${entryIndex}].id`,
+          `duplicates recurring team id "${team.id}".`,
+        );
+      }
+      seenRecurringTeamIds.add(team.id);
+
+      const memberIds = new Set<string>();
+      team.memberIds.forEach((memberId, memberIndex) => {
+        if (!knownOperatorIds.has(memberId)) {
+          fail(
+            `${path}.recurringTeams[${entryIndex}].memberIds[${memberIndex}]`,
+            `must reference an existing operator id, got "${memberId}".`,
+          );
+        }
+        if (memberIds.has(memberId)) {
+          fail(
+            `${path}.recurringTeams[${entryIndex}].memberIds[${memberIndex}]`,
+            `duplicates memberId "${memberId}".`,
+          );
+        }
+        memberIds.add(memberId);
+      });
+    });
+
+    const seenRoomCultureIds = new Set<string>();
+    roomCultures.forEach((culture, entryIndex) => {
+      if (!knownRoomIds.has(culture.roomInstanceId)) {
+        fail(
+          `${path}.roomCultures[${entryIndex}].roomInstanceId`,
+          `must reference an existing room id, got "${culture.roomInstanceId}".`,
+        );
+      }
+      if (seenRoomCultureIds.has(culture.roomInstanceId)) {
+        fail(
+          `${path}.roomCultures[${entryIndex}].roomInstanceId`,
+          `duplicates roomInstanceId "${culture.roomInstanceId}".`,
+        );
+      }
+      seenRoomCultureIds.add(culture.roomInstanceId);
+    });
+
+    const seenInventoryItemIds = new Set<string>();
+    inventoryStacks.forEach((stack, entryIndex) => {
+      if (seenInventoryItemIds.has(stack.itemId)) {
+        fail(
+          `${path}.inventoryStacks[${entryIndex}].itemId`,
+          `duplicates inventory item id "${stack.itemId}".`,
+        );
+      }
+      seenInventoryItemIds.add(stack.itemId);
+    });
+
+    const seenEquipmentOperatorIds = new Set<string>();
+    equipmentAssignments.forEach((assignment, entryIndex) => {
+      if (!knownOperatorIds.has(assignment.operatorId)) {
+        fail(
+          `${path}.equipmentAssignments[${entryIndex}].operatorId`,
+          `must reference an existing operator id, got "${assignment.operatorId}".`,
+        );
+      }
+
+      if (seenEquipmentOperatorIds.has(assignment.operatorId)) {
+        fail(
+          `${path}.equipmentAssignments[${entryIndex}].operatorId`,
+          `duplicates operatorId "${assignment.operatorId}".`,
+        );
+      }
+
+      seenEquipmentOperatorIds.add(assignment.operatorId);
+    });
 
     operators.items.forEach((operator, operatorIndex) => {
       if (
@@ -1001,10 +1309,10 @@ function parseWorldSnapshot(
       }
 
       packet.operatorIds.forEach((operatorId, operatorIndex) => {
-        if (!livingOperatorIds.has(operatorId)) {
+        if (!activeOperatorIds.has(operatorId)) {
           fail(
             `${path}.activeRaidPackets[${packetIndex}].operatorIds[${operatorIndex}]`,
-            `must reference an existing living operator id, got "${operatorId}".`,
+            `must reference an existing active operator id, got "${operatorId}".`,
           );
         }
       });
@@ -1049,7 +1357,7 @@ function parseWorldSnapshot(
       guild: parseGuildSnapshot(record.guild, `${path}.guild`),
       time: parseWorldTimeSnapshot(record.time, `${path}.time`),
       building: parseBuildingSnapshot(record.building, `${path}.building`),
-      rooms: parseCollection(record.rooms, `${path}.rooms`, parseRoomSnapshot),
+      rooms,
       activeRaidPackets: activeRaidPackets.map(({ _changed: _ignored, ...packet }) => packet),
       raidSummaries: raidSummaries.map(({ _changed: _ignored, ...summary }) => summary),
       appliedUpgradeIds: expectStringArray(record.appliedUpgradeIds, `${path}.appliedUpgradeIds`),
@@ -1076,6 +1384,12 @@ function parseWorldSnapshot(
       contractSite: contractSite.contractSite,
       fogOfWar: fogOfWar.fogOfWar,
       ...(scheduler.scheduler === undefined ? {} : { scheduler: scheduler.scheduler }),
+      operatorDispositions,
+      notableTies,
+      recurringTeams,
+      roomCultures,
+      inventoryStacks,
+      equipmentAssignments,
     },
     changed:
       operators.changed ||
@@ -1091,7 +1405,8 @@ function parseWorldSnapshot(
       contractSite.changed ||
       fogOfWar.changed ||
       scheduler.changed ||
-      raidSummaryChanged,
+      raidSummaryChanged ||
+      phase2Changed,
   };
 }
 

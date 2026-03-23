@@ -4,9 +4,11 @@ import type {
   GameCallbacks,
   OperatorViewModel,
   RelationshipViewModel,
+  RoomCultureViewModel,
   RoomViewModel,
   RosterPressureViewModel,
   StaffViewModel,
+  TeamViewModel,
   VisitorViewModel,
 } from "./view-models";
 import { formatTag } from "./view-models";
@@ -22,11 +24,15 @@ interface RosterPanelProps {
   callbacks: GameCallbacks;
   rosterPressure: RosterPressureViewModel;
   focusedOperatorId?: string | null;
+  roomCultures?: readonly RoomCultureViewModel[];
+  teams?: readonly TeamViewModel[];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function statusDotColor(op: OperatorViewModel): string {
+  if (op.lifecycle.status === "departed") return "bg-silver/15";
+  if (op.lifecycle.status === "dead") return "bg-magma";
   if (op.injurySeverity > 0) return "bg-ember";
   if (op.assignmentKind === "raid") return "bg-smolder";
   if (op.assignmentKind === "recovery") return "bg-gold-dim/60";
@@ -35,6 +41,10 @@ function statusDotColor(op: OperatorViewModel): string {
 }
 
 function statusLabel(op: OperatorViewModel): string {
+  if (op.lifecycle.status === "departed") {
+    return op.lifecycle.departureReason ? `Departed (${op.lifecycle.departureReason})` : "Departed";
+  }
+  if (op.lifecycle.status === "dead") return "Killed in action";
   if (op.injurySeverity > 0) return `Injured (${Math.ceil(op.injuryRecoveryHours)}h)`;
   if (op.assignmentKind === "raid") return "On raid";
   if (op.assignmentKind === "recovery") return "Recovering";
@@ -43,6 +53,8 @@ function statusLabel(op: OperatorViewModel): string {
 }
 
 function statusLabelClass(op: OperatorViewModel): string {
+  if (op.lifecycle.status === "departed") return "text-silver/35";
+  if (op.lifecycle.status === "dead") return "text-magma";
   if (op.injurySeverity > 0) return "text-ember";
   if (op.assignmentKind === "raid") return "text-smolder";
   return "text-silver/50";
@@ -55,12 +67,25 @@ function OperatorRow({
   isExpanded,
   onToggle,
   bonds,
+  roomCultures,
+  teams,
 }: {
   op: OperatorViewModel;
   isExpanded: boolean;
   onToggle: () => void;
   bonds: readonly RelationshipViewModel[];
+  roomCultures: readonly RoomCultureViewModel[];
+  teams: readonly TeamViewModel[];
 }) {
+  // Find room culture if assigned to a room
+  const assignedRoomCulture =
+    op.assignmentKind === "room" && op.assignmentTargetId
+      ? (roomCultures.find((rc) => rc.roomId === op.assignmentTargetId) ?? null)
+      : null;
+
+  // Find team membership
+  const operatorTeam = teams.find((team) => team.memberIds.includes(op.id)) ?? null;
+
   return (
     <div>
       <button
@@ -74,6 +99,17 @@ function OperatorRow({
       >
         <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotColor(op)}`} />
         <span className="min-w-0 truncate text-xs font-medium text-silver-bright">{op.name}</span>
+        {/* Phase 2: risk indicators inline */}
+        {op.quitRisk && (
+          <span className="shrink-0 text-[0.6rem] text-magma" title="Critical morale - may leave">
+            !
+          </span>
+        )}
+        {op.retentionRisk && !op.quitRisk && (
+          <span className="shrink-0 text-[0.6rem] text-ember" title="Low loyalty">
+            !
+          </span>
+        )}
         <span className="badge badge-gold ml-auto shrink-0">{formatTag(op.roleTag)}</span>
         <span className={`shrink-0 text-[0.6875rem] ${statusLabelClass(op)}`}>
           {statusLabel(op)}
@@ -118,6 +154,62 @@ function OperatorRow({
             <span className="opacity-30">&middot;</span>
             <span>Stress {Math.round(op.needStress)}</span>
           </div>
+
+          {/* ── Phase 2: Explanation surfaces ──────────────────── */}
+          {(op.refusalRisk || op.quitRisk || op.retentionRisk) && (
+            <div className="space-y-1">
+              {op.autonomyReasons.map((reason) => (
+                <div
+                  key={reason}
+                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-[0.6875rem] shadow-[inset_2px_0_0_currentColor] ${
+                    op.quitRisk ? "bg-magma/8 text-magma" : "bg-ember/8 text-ember"
+                  }`}
+                >
+                  {reason}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Phase 2: Room culture summary if assigned to a room */}
+          {assignedRoomCulture && (
+            <div className="glass-card-inset px-2 py-1.5">
+              <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+                Room: {assignedRoomCulture.roomName}
+              </div>
+              <div className="mt-0.5 text-[0.6875rem] text-silver/55">
+                {assignedRoomCulture.summary}
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                <span className="badge badge-slate">{assignedRoomCulture.tone || "neutral"}</span>
+                {assignedRoomCulture.signals.map((signal) => (
+                  <span key={signal} className="badge badge-slate">
+                    {signal}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Phase 2: Team affiliation */}
+          {operatorTeam && (
+            <div className="glass-card-inset px-2 py-1.5">
+              <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">Team</div>
+              <div className="mt-0.5 text-[0.6875rem] text-silver/60">
+                {operatorTeam.statusSummary}
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-[0.6875rem] text-silver/50">
+                <span>{operatorTeam.memberNames.join(", ")}</span>
+                <span className="opacity-30">&middot;</span>
+                <span>Cohesion {Math.round(operatorTeam.cohesion)}</span>
+              </div>
+              {operatorTeam.explanationReasons.slice(0, 2).map((reason) => (
+                <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
+                  {reason}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Bonds for this operator */}
           {bonds.length > 0 && (
@@ -245,10 +337,12 @@ function StaffRow({
 
 function VisitorRow({
   visitor,
+  canAccept,
   onAccept,
   onReject,
 }: {
   visitor: VisitorViewModel;
+  canAccept: boolean;
   onAccept: () => void;
   onReject: () => void;
 }) {
@@ -262,10 +356,14 @@ function VisitorRow({
       </div>
       <button
         type="button"
-        className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
+        className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
+          canAccept ? "btn-primary" : "btn-ghost cursor-not-allowed text-silver/30"
+        }`}
         onClick={onAccept}
+        disabled={!canAccept}
+        title={canAccept ? `Recruit ${visitor.name}` : "Operator roster full"}
       >
-        Recruit
+        {canAccept ? "Recruit" : "Full"}
       </button>
       <button
         type="button"
@@ -273,6 +371,57 @@ function VisitorRow({
         onClick={onReject}
       >
         pass
+      </button>
+    </div>
+  );
+}
+
+// ── Staff hire menu ──────────────────────────────────────────────────────
+
+const HIREABLE_ROLES = [
+  { tag: "staff:admin", label: "Admin" },
+  { tag: "staff:reception", label: "Reception" },
+  { tag: "staff:logistics", label: "Logistics" },
+  { tag: "staff:medical", label: "Medical" },
+  { tag: "staff:maintenance", label: "Maintenance" },
+] as const;
+
+function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+        onClick={() => setOpen(true)}
+      >
+        + hire
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      {HIREABLE_ROLES.map((role) => (
+        <button
+          key={role.tag}
+          type="button"
+          className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+          onClick={() => {
+            onHire(role.tag);
+            setOpen(false);
+          }}
+        >
+          {role.label}
+        </button>
+      ))}
+      <button
+        type="button"
+        className="btn-ghost px-1 py-0.5 text-[0.6875rem] text-silver/40"
+        onClick={() => setOpen(false)}
+      >
+        &times;
       </button>
     </div>
   );
@@ -289,11 +438,14 @@ export function RosterPanel({
   callbacks,
   rosterPressure,
   focusedOperatorId = null,
+  roomCultures = [],
+  teams = [],
 }: RosterPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
   const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
+  const canRecruit = rosterPressure.vacancyCount > 0;
 
   useEffect(() => {
     if (!focusedOperatorId) return;
@@ -355,6 +507,8 @@ export function RosterPanel({
                 bonds={relationships.filter(
                   (r) => r.operatorAId === op.id || r.operatorBId === op.id,
                 )}
+                roomCultures={roomCultures}
+                teams={teams}
               />
             ))}
           </div>
@@ -389,13 +543,7 @@ export function RosterPanel({
           <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
             Staff ({staff.length})
           </span>
-          <button
-            type="button"
-            className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
-            onClick={() => callbacks.hireStaff("staff:admin")}
-          >
-            + hire
-          </button>
+          <StaffHireMenu onHire={(roleTag) => callbacks.hireStaff(roleTag)} />
         </div>
         {staff.length > 0 ? (
           <div className="space-y-0.5">
@@ -421,11 +569,13 @@ export function RosterPanel({
           <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
             Visitors ({visitors.length})
           </span>
-          {rosterPressure.vacancyCount > 0 && (
+          {rosterPressure.vacancyCount > 0 ? (
             <span className="text-[0.6875rem] text-ember/70">
               {rosterPressure.vacancyCount} to fill
             </span>
-          )}
+          ) : visitors.length > 0 ? (
+            <span className="text-[0.6875rem] text-silver/35">Roster full</span>
+          ) : null}
         </div>
         {visitors.length > 0 ? (
           <div className="space-y-0.5">
@@ -433,6 +583,7 @@ export function RosterPanel({
               <VisitorRow
                 key={v.id}
                 visitor={v}
+                canAccept={canRecruit}
                 onAccept={() => callbacks.acceptRecruit(v.id)}
                 onReject={() => callbacks.rejectRecruit(v.id)}
               />

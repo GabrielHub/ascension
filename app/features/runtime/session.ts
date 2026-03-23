@@ -27,6 +27,7 @@ import {
   resolveRoomAnchor,
   type AscensionSimulation,
   type NavPath,
+  type RuntimeEvent,
   type SimCommand,
   type StableSimCommandType,
 } from "sim";
@@ -108,6 +109,14 @@ export interface RuntimeSessionCommands {
   assignStaff(
     input: Omit<Extract<SimCommand, { type: "sim/assign-staff" }>, "type">,
   ): Promise<void>;
+  buyItem(input: Omit<Extract<SimCommand, { type: "sim/buy-item" }>, "type">): Promise<void>;
+  sellItem(input: Omit<Extract<SimCommand, { type: "sim/sell-item" }>, "type">): Promise<void>;
+  autoAssignAccessory(
+    input: Omit<Extract<SimCommand, { type: "sim/auto-assign-accessory" }>, "type">,
+  ): Promise<void>;
+  unequipItem(
+    input: Omit<Extract<SimCommand, { type: "sim/unequip-item" }>, "type">,
+  ): Promise<void>;
 }
 
 export interface RuntimeSession {
@@ -128,6 +137,7 @@ export interface RuntimeSession {
   lifecycle: RuntimeSessionLifecycle;
   subscribe(listener: RuntimeSessionListener): () => void;
   drainPendingCues(): readonly AudioCueId[];
+  drainPendingEvents(): readonly RuntimeEvent[];
   dispose(): void;
 }
 
@@ -231,10 +241,10 @@ function resolveCuesForCommand(
     }
     case "sim/accept-recruit": {
       const previousOperatorCount = beforePhase1View.operators.filter(
-        (operator) => operator.lifecycle.status !== "dead",
+        (operator) => operator.lifecycle.status === "active",
       ).length;
       const nextOperatorCount = afterPhase1View.operators.filter(
-        (operator) => operator.lifecycle.status !== "dead",
+        (operator) => operator.lifecycle.status === "active",
       ).length;
       return nextOperatorCount > previousOperatorCount ? ["operator.recruit"] : [];
     }
@@ -302,6 +312,7 @@ function createRuntimeSession(
   let persistQueued = false;
   let persistPromise: Promise<void> | undefined;
   const pendingCues: AudioCueId[] = [];
+  const pendingEvents: RuntimeEvent[] = [];
   /** Transient movement state per actor. Key is actor id. */
   const actorMovements = new Map<string, ActorMovement>();
   /** Previous room assignment per actor. Key is actor id. */
@@ -394,9 +405,10 @@ function createRuntimeSession(
     ];
     const hash = stableStringHash(actorId);
     const anchor = orderedAnchors[hash % orderedAnchors.length] ?? roomAnchors[0];
-    // Apply deterministic jitter so co-located actors don't stack exactly
-    const jitterX = ((hash % 11) - 5) * 12;
-    const jitterY = ((hash % 7) - 3) * 10;
+    // Apply deterministic jitter so co-located actors don't stack exactly.
+    // Use separate prime-derived offsets to minimize collisions.
+    const jitterX = ((hash % 13) - 6) * 14;
+    const jitterY = (((hash >>> 4) % 11) - 5) * 12;
     return { x: anchor.x + jitterX, y: anchor.y + 26 + jitterY };
   }
 
@@ -414,7 +426,12 @@ function createRuntimeSession(
     }
   }
 
-  type RoomEntry = { id: string; isOperational: boolean; functionTag: string };
+  type RoomEntry = {
+    id: string;
+    isOperational: boolean;
+    functionTag: string;
+    functionTags: string[];
+  };
 
   function pickRoom(
     rooms: ReadonlyArray<RoomEntry>,
@@ -432,8 +449,8 @@ function createRuntimeSession(
   ): string | null {
     for (const functionTag of preferredTags) {
       const roomId =
-        pickRoom(rooms, hash, (r) => r.isOperational && r.functionTag === functionTag) ??
-        pickRoom(rooms, hash, (r) => r.functionTag === functionTag);
+        pickRoom(rooms, hash, (r) => r.isOperational && r.functionTags.includes(functionTag)) ??
+        pickRoom(rooms, hash, (r) => r.functionTags.includes(functionTag));
       if (roomId) return roomId;
     }
     return pickRoom(rooms, hash, (r) => r.isOperational) ?? pickRoom(rooms, hash, () => true);
@@ -458,6 +475,26 @@ function createRuntimeSession(
       operator.schedule.currentBlock === "recovery" ||
       operator.injury.recoveryHoursRemaining > 0 ||
       operator.injury.severity >= 25;
+    if (needsRecovery) {
+      const dedicatedRecoveryRoomId =
+        pickRoom(
+          rooms,
+          stableStringHash(operator.id),
+          (room) =>
+            room.isOperational &&
+            room.functionTags.includes("room:recovery") &&
+            room.functionTags.length === 1,
+        ) ??
+        pickRoom(
+          rooms,
+          stableStringHash(operator.id),
+          (room) => room.functionTags.includes("room:recovery") && room.functionTags.length === 1,
+        );
+      if (dedicatedRecoveryRoomId) {
+        return dedicatedRecoveryRoomId;
+      }
+    }
+
     const preferredRoomTags = needsRecovery
       ? ["room:recovery", "room:social"]
       : operator.schedule.currentBlock === "social"
@@ -496,7 +533,8 @@ function createRuntimeSession(
   function deriveHqWorldSnapshot(view: RuntimePhase1View, nowMs = Date.now()): HqWorldSnapshot {
     const rooms = view.rooms.map((room) => {
       const template = templateRegistry.roomById.get(room.templateId) ?? templateRegistry.rooms[0];
-      const functionTag = template.tags.find((t) => t.startsWith("room:")) ?? "room:operations";
+      const functionTags = template.tags.filter((tag) => tag.startsWith("room:"));
+      const functionTag = functionTags[0] ?? "room:operations";
       return {
         id: room.id,
         templateId: room.templateId,
@@ -504,6 +542,7 @@ function createRuntimeSession(
         tier: room.tier,
         isOperational: room.isOperational,
         functionTag,
+        functionTags,
         footprint: room.footprint,
       };
     });
@@ -514,7 +553,7 @@ function createRuntimeSession(
     const navGraph = geometry.navGraph;
 
     const operatorActors: ActorMarker[] = view.operators
-      .filter((op) => op.lifecycle.status !== "dead")
+      .filter((op) => op.lifecycle.status === "active")
       .flatMap((op) => {
         const currentRoomId = resolveOperatorRoomId(op, rooms);
         if (!currentRoomId) {
@@ -526,11 +565,19 @@ function createRuntimeSession(
         const preferredAnchorKind = getPreferredAnchorKind(op.schedule.currentBlock);
         const previousRoomId = actorPreviousRoomId.get(op.id);
 
-        // Detect room change and initiate movement
+        // Detect room change and initiate movement.
+        // Skip if the actor already has an in-progress movement to prevent
+        // rapid re-pathing when the schedule oscillates between ticks.
+        const existingMovement = actorMovements.get(op.id);
+        const isCurrentlyMoving =
+          existingMovement !== undefined &&
+          nowMs - existingMovement.startedAtMs < existingMovement.durationMs;
+
         if (
           previousRoomId !== undefined &&
           previousRoomId !== currentRoomId &&
-          currentRoomId !== ""
+          currentRoomId !== "" &&
+          !isCurrentlyMoving
         ) {
           const fromAnchor = resolveRoomAnchor(navGraph, previousRoomId, "idle");
           const toAnchor = resolveRoomAnchor(navGraph, currentRoomId, preferredAnchorKind);
@@ -547,7 +594,12 @@ function createRuntimeSession(
             }
           }
         }
-        actorPreviousRoomId.set(op.id, currentRoomId);
+
+        // Only update the previous room when not mid-movement, so the
+        // movement completes before a new destination is considered.
+        if (!isCurrentlyMoving) {
+          actorPreviousRoomId.set(op.id, currentRoomId);
+        }
 
         // Apply movement animation
         const movement = actorMovements.get(op.id);
@@ -636,7 +688,31 @@ function createRuntimeSession(
       };
     });
 
-    const actors: ActorMarker[] = [...operatorActors, ...staffActors];
+    // ── Visitor actors ────────────────────────────────────────────────
+    const recruitmentRoom = rooms.find(
+      (r) => r.isOperational && r.functionTags.includes("ops:recruitment"),
+    );
+    const visitorActors: ActorMarker[] = recruitmentRoom
+      ? view.visitors.map((visitor) => {
+          const pos = computeRoomAnchorPosition(recruitmentRoom.id, visitor.id, navGraph, "social");
+          return {
+            id: visitor.id,
+            kind: "visitor" as const,
+            x: pos.x,
+            y: pos.y,
+            targetX: pos.x,
+            targetY: pos.y,
+            roomId: recruitmentRoom.id,
+            label: visitor.name,
+            presetId: "",
+            roleTag: visitor.desiredRoleTag,
+            state: "idle" as ActorState,
+            moveProgress: 1,
+          };
+        })
+      : [];
+
+    const actors: ActorMarker[] = [...operatorActors, ...staffActors, ...visitorActors];
 
     return createHqWorldSnapshot(buildingName, geometry, actors);
   }
@@ -679,11 +755,14 @@ function createRuntimeSession(
 
   function appendSimulationCues(): void {
     const runtimeCues = simulation.drainRuntimeCues();
-    if (runtimeCues.length === 0) {
-      return;
+    if (runtimeCues.length > 0) {
+      pendingCues.push(...runtimeCues);
     }
 
-    pendingCues.push(...runtimeCues);
+    const runtimeEvents = simulation.drainRuntimeEvents();
+    if (runtimeEvents.length > 0) {
+      pendingEvents.push(...runtimeEvents);
+    }
   }
 
   const notifyListeners = () => {
@@ -837,6 +916,34 @@ function createRuntimeSession(
         ...input,
       });
     },
+
+    buyItem(input) {
+      return commands.dispatch({
+        type: "sim/buy-item",
+        ...input,
+      });
+    },
+
+    sellItem(input) {
+      return commands.dispatch({
+        type: "sim/sell-item",
+        ...input,
+      });
+    },
+
+    autoAssignAccessory(input) {
+      return commands.dispatch({
+        type: "sim/auto-assign-accessory",
+        ...input,
+      });
+    },
+
+    unequipItem(input) {
+      return commands.dispatch({
+        type: "sim/unequip-item",
+        ...input,
+      });
+    },
   };
 
   const lifecycle: RuntimeSessionLifecycle = {
@@ -939,6 +1046,11 @@ function createRuntimeSession(
     drainPendingCues() {
       const drained = pendingCues.slice();
       pendingCues.length = 0;
+      return drained;
+    },
+    drainPendingEvents() {
+      const drained = pendingEvents.slice();
+      pendingEvents.length = 0;
       return drained;
     },
     dispose() {

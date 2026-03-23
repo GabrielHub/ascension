@@ -12,6 +12,17 @@ export type RuntimeCueId =
   | "raid.opportunity"
   | "event.pressure";
 
+// ── Structured events for the event log ──────────────────────────────────
+
+export interface RuntimeEvent {
+  kind: string;
+  message: string;
+  timestamp: string;
+  accent?: string;
+  targetKind?: string;
+  targetId?: string;
+}
+
 export type RaidPresentationGoal =
   | "exploring"
   | "looting"
@@ -97,11 +108,16 @@ export interface RaidPresentationState {
 export interface SimRuntimeState {
   roomEntities: number[];
   operatorEntities: number[];
-  relationshipEntities: number[];
   raidOpportunityEntities: number[];
   staffEntities: number[];
   visitorEntities: number[];
   eventEntities: number[];
+  dispositionEntities: number[];
+  notableTieEntities: number[];
+  recurringTeamEntities: number[];
+  roomCultureEntities: number[];
+  inventoryEntities: number[];
+  equipmentEntities: number[];
   nextRoomSequence: number;
   nextOperatorSequence: number;
   nextOpportunitySequence: number;
@@ -109,7 +125,9 @@ export interface SimRuntimeState {
   nextVisitorSequence: number;
   nextRaidSequence: number;
   nextEventSequence: number;
+  nextTeamSequence: number;
   pendingCueIds: RuntimeCueId[];
+  pendingEvents: RuntimeEvent[];
   raidPresentation: RaidPresentationState;
 }
 

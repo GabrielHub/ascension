@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 28">
+  <!-- Isometric milk crate used as seating. Flipped upside down, sturdy plastic.
+       The official bodega chair for people who don't rate a real one.
+       Warm gray-brown to match bodega palette. -->
+
+  <!-- Shadow -->
+  <ellipse cx="16" cy="24" rx="8" ry="2" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Crate top (now the seat surface — it's flipped) — lightest face -->
+  <polygon points="6,8 16,13 26,8 16,3"
+    fill="#3a3838" stroke="#302e2e" stroke-width="0.7"/>
+
+  <!-- Crate left face — medium shade -->
+  <polygon points="6,8 16,13 16,22 6,17"
+    fill="#333030" stroke="#2a2828" stroke-width="0.6"/>
+  <!-- Crate right face — darkest shade -->
+  <polygon points="16,13 26,8 26,17 16,22"
+    fill="#2a2828" stroke="#222020" stroke-width="0.6"/>
+
+  <!-- Top edge highlights -->
+  <line x1="6" y1="8" x2="16" y2="3" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+  <line x1="16" y1="3" x2="26" y2="8" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+
+  <!-- Grid holes on left face (ventilation slots — it's a milk crate) -->
+  <rect x="8" y="10" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.18)"/>
+  <rect x="8" y="14" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.18)"/>
+  <rect x="12" y="12" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.15)"/>
+  <rect x="12" y="16" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Grid holes on right face -->
+  <rect x="18" y="9" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.15)"/>
+  <rect x="18" y="13" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.15)"/>
+  <rect x="22" y="11" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.12)"/>
+  <rect x="22" y="15" width="3" height="2" rx="0.3" fill="rgba(0,0,0,0.12)"/>
+
+  <!-- Top surface cross-ridges (upside-down crate bottom) -->
+  <line x1="10" y1="7" x2="16" y2="10" stroke="rgba(0,0,0,0.08)" stroke-width="0.5"/>
+  <line x1="16" y1="10" x2="22" y2="7" stroke="rgba(0,0,0,0.08)" stroke-width="0.5"/>
+</svg>

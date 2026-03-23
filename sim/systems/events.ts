@@ -7,15 +7,20 @@ import {
   InjuryState,
   LoyaltyState,
   MoraleState,
+  NotableTie,
   OperatorIdentity,
+  RecurringTeam,
+  RoomCulture,
   RoomInstance,
 } from "../components";
 import {
   getCurrentAbsoluteMinute,
   getRoomTemplateForEntity,
   getStaffRoleTag,
+  pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
+import { computeAutonomyFlags } from "./morale";
 import { SeededRng, weightedChoice, seedFromKey } from "../uncertainty";
 import type { SimSystem } from "./types";
 
@@ -30,7 +35,7 @@ function getAverageValue(values: number[]): number {
 function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
   const guildEntity = context.singletonEntities.guild;
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
-    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+    (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   );
   const moraleValues = [
     ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
@@ -77,13 +82,42 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
     tags.push("pressure:reputation");
   }
 
+  const highTensionRooms = context.runtimeState.roomCultureEntities.filter(
+    (entity) => RoomCulture.tension[entity] > 70,
+  );
+  if (highTensionRooms.length > 0) {
+    tags.push("pressure:morale");
+  }
+
+  const damagedTeams = context.runtimeState.recurringTeamEntities.filter(
+    (entity) => RecurringTeam.damaged[entity] === 1,
+  );
+  if (damagedTeams.length > 0) {
+    tags.push("pressure:casualty");
+  }
+
+  const retentionRiskOperators = livingOperatorEntities.filter((entity) => {
+    const flags = computeAutonomyFlags(entity);
+    return flags.retentionRisk;
+  });
+  if (retentionRiskOperators.length > 0) {
+    tags.push("pressure:loyalty");
+  }
+
+  const griefTies = context.runtimeState.notableTieEntities.filter(
+    (entity) => NotableTie.stance[entity] === "grief",
+  );
+  if (griefTies.length > 0) {
+    tags.push("pressure:morale");
+  }
+
   return tags;
 }
 
 function computePressure(context: Parameters<SimSystem>[0]): number {
   const guildEntity = context.singletonEntities.guild;
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
-    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+    (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   );
   const moraleValues = [
     ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
@@ -112,10 +146,17 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
 
   activeEventEntities.forEach((entity) => {
     if (deltaMs > 0) {
-      EventState.remainingHours[entity] -= Math.max(1, Math.floor(deltaMs / 1000)) / 60;
+      EventState.remainingHours[entity] -= Math.max(1, Math.floor(deltaMs / 60000)) / 60;
     }
 
     if (EventState.remainingHours[entity] <= 0) {
+      const templateIndex = EventState.templateIndex[entity];
+      const template = context.registry.events[templateIndex];
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: `${template?.name ?? "An event"} has ended`,
+        accent: "silver",
+      });
       removeEntity(context.world, entity);
       removeTrackedEntity(context.runtimeState.eventEntities, entity);
     }
@@ -168,4 +209,9 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
   context.runtimeState.nextEventSequence += 1;
   BuildingAuthority.lastEventTick[buildingEntity] = currentMinute;
   context.runtimeState.pendingCueIds.push("event.pressure");
+  pushRuntimeEvent(context, {
+    kind: "event_change",
+    message: `${template.name} (${Math.ceil(EventState.remainingHours[entity])}h remaining)`,
+    accent: "ember",
+  });
 };

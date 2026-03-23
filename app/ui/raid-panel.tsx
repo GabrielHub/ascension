@@ -15,6 +15,7 @@ interface OperationsPanelProps {
   operators: readonly OperatorViewModel[];
   rosterPressure: RosterPressureViewModel;
   focus: FocusPayload | null;
+  activeCategory: "contract" | "active" | "opportunities" | "history";
 }
 
 function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
@@ -72,20 +73,41 @@ export function OperationsPanel({
   operators,
   rosterPressure,
   focus,
+  activeCategory,
 }: OperationsPanelProps) {
   return (
     <div className="animate-enter space-y-5">
-      {operations.contractSite && <ContractSiteStatus contract={operations.contractSite} />}
+      {activeCategory === "contract" ? (
+        operations.contractSite ? (
+          <ContractSiteStatus contract={operations.contractSite} />
+        ) : (
+          <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
+            <div className="empty-state-icon">&#9876;</div>
+            <p className="text-[0.7rem] font-medium text-gold/70">No secured contract</p>
+            <p className="mt-1 text-xs text-silver/60">
+              Claim a raid opportunity to open a contract site
+            </p>
+          </div>
+        )
+      ) : null}
 
-      <RaidWatch
-        activeRaids={operations.activeRaids}
-        operators={operators}
-        selectedRaidId={focus?.targetKind === "team" ? focus.targetId : null}
-      />
+      {activeCategory === "active" && (
+        <RaidWatch
+          activeRaids={operations.activeRaids}
+          operators={operators}
+          selectedRaidId={focus?.targetKind === "team" ? focus.targetId : null}
+        />
+      )}
 
-      <OpportunityBoard opportunities={operations.opportunities} rosterPressure={rosterPressure} />
+      {activeCategory === "opportunities" && (
+        <OpportunityBoard
+          opportunities={operations.opportunities}
+          rosterPressure={rosterPressure}
+          operators={operators}
+        />
+      )}
 
-      <RaidLog history={operations.raidHistory} />
+      {activeCategory === "history" && <RaidLog history={operations.raidHistory} />}
     </div>
   );
 }

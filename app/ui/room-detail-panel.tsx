@@ -1,4 +1,9 @@
-import type { GameCallbacks, RoomViewModel, UpgradeViewModel } from "./view-models";
+import type {
+  GameCallbacks,
+  RoomCultureViewModel,
+  RoomViewModel,
+  UpgradeViewModel,
+} from "./view-models";
 import { formatTag } from "./view-models";
 
 interface RoomDetailPanelProps {
@@ -6,6 +11,7 @@ interface RoomDetailPanelProps {
   buildingUpgrades: readonly UpgradeViewModel[];
   roomUpgrades: readonly UpgradeViewModel[];
   callbacks: GameCallbacks;
+  roomCulture?: RoomCultureViewModel | null;
 }
 
 function UpgradeCard({
@@ -78,27 +84,22 @@ export function RoomDetailPanel({
   buildingUpgrades,
   roomUpgrades,
   callbacks,
+  roomCulture,
 }: RoomDetailPanelProps) {
-  if (!room) {
-    return (
-      <div className="empty-state py-12">
-        <div className="empty-state-icon">&#9633;</div>
-        <p className="text-xs text-gold/70">No room selected</p>
-        <p className="mt-1 text-xs text-silver/60">Click a room in the world view</p>
-      </div>
-    );
-  }
+  if (!room) return null;
 
   const occupancyPct = room.capacity > 0 ? (room.occupancy / room.capacity) * 100 : 0;
+  const hasUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
 
   return (
-    <div className="animate-enter space-y-4">
-      <div>
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
-            {room.name}
-          </h3>
-          <div className="flex items-center gap-1.5">
+    <div className="animate-enter">
+      {/* Header row: name + badge + description | activate button */}
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
+              {room.name}
+            </h3>
             {room.isOperational ? (
               <span className="badge badge-gold">Operational</span>
             ) : room.isActive ? (
@@ -107,89 +108,122 @@ export function RoomDetailPanel({
               <span className="badge badge-slate">Inactive</span>
             )}
           </div>
+          <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
+        <button
+          type="button"
+          className={`shrink-0 ${room.isActive ? "btn-ghost text-xs" : "btn-primary text-xs"}`}
+          onClick={() => callbacks.setRoomActive(room.id, !room.isActive)}
+        >
+          {room.isActive ? "Deactivate room" : "Activate room"}
+        </button>
       </div>
 
-      {/* Room activation toggle */}
-      <button
-        type="button"
-        className={room.isActive ? "btn-ghost w-full text-xs" : "btn-primary w-full text-xs"}
-        onClick={() => callbacks.setRoomActive(room.id, !room.isActive)}
-      >
-        {room.isActive ? "Deactivate room" : "Activate room"}
-      </button>
-
-      <div className="grid grid-cols-3 gap-2">
-        <div className="glass-card-inset p-2 text-center">
-          <div className="text-xs uppercase tracking-wider text-gold/70">Tier</div>
-          <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
-        </div>
-        <div className="glass-card-inset p-2 text-center">
-          <div className="text-xs uppercase tracking-wider text-gold/70">Staff</div>
-          <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
-            {room.occupancy}/{room.capacity}
+      {/* Body: stats column + upgrades columns */}
+      <div className="mt-4 flex gap-6">
+        {/* Stats */}
+        <div className={`space-y-3 ${hasUpgrades ? "w-56 shrink-0" : "w-full max-w-xs"}`}>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="glass-card-inset p-2 text-center">
+              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Tier</div>
+              <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
+            </div>
+            <div className="glass-card-inset p-2 text-center">
+              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Staff</div>
+              <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
+                {room.occupancy}/{room.capacity}
+              </div>
+            </div>
+            <div className="glass-card-inset p-2 text-center">
+              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Load</div>
+              <div className="mt-0.5 text-sm font-medium text-silver-bright">
+                {Math.round(occupancyPct)}%
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="glass-card-inset p-2 text-center">
-          <div className="text-xs uppercase tracking-wider text-gold/70">Load</div>
-          <div className="mt-0.5 text-sm font-medium text-silver-bright">
-            {Math.round(occupancyPct)}%
+
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
+            <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }} />
           </div>
-        </div>
-      </div>
 
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
-        <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }} />
-      </div>
+          {room.requiredStaffTag && (
+            <div className="text-xs text-gold/70">
+              Requires <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span>{" "}
+              staff
+            </div>
+          )}
 
-      {room.requiredStaffTag && (
-        <div className="text-xs text-gold/70">
-          Requires <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span> staff
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-1">
-        {room.tags.map((tag) => (
-          <span key={tag} className="badge badge-slate">
-            {tag.split(":").pop()}
-          </span>
-        ))}
-      </div>
-
-      {buildingUpgrades.length > 0 && (
-        <div>
-          <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            Building Upgrades
-          </h4>
-          <div className="space-y-2">
-            {buildingUpgrades.map((u) => (
-              <UpgradeCard
-                key={u.id}
-                upgrade={u}
-                onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
-              />
+          <div className="flex flex-wrap gap-1">
+            {room.tags.map((tag) => (
+              <span key={tag} className="badge badge-slate">
+                {tag.split(":").pop()}
+              </span>
             ))}
           </div>
-        </div>
-      )}
 
-      {roomUpgrades.length > 0 && (
-        <div>
-          <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            Room Upgrades
-          </h4>
-          <div className="space-y-2">
-            {roomUpgrades.map((u) => (
-              <UpgradeCard
-                key={u.id}
-                upgrade={u}
-                onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
-              />
-            ))}
-          </div>
+          {roomCulture && (
+            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
+              <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+                Room Culture
+              </h4>
+              <div className="glass-card-inset space-y-2 p-3">
+                <div>
+                  <div className="text-[0.625rem] uppercase tracking-wider text-gold/60">Tone</div>
+                  <div className="mt-0.5 text-xs text-silver-bright">{roomCulture.summary}</div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="badge badge-slate">{roomCulture.tone || "neutral"}</span>
+                  {roomCulture.signals.map((signal) => (
+                    <span key={signal} className="badge badge-slate">
+                      {signal}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Upgrades — fill remaining width */}
+        {hasUpgrades && (
+          <div className="min-w-0 flex-1">
+            <div className="grid auto-cols-fr grid-flow-col gap-4">
+              {buildingUpgrades.length > 0 && (
+                <div>
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                    Building Upgrades
+                  </h4>
+                  <div className="space-y-2">
+                    {buildingUpgrades.map((u) => (
+                      <UpgradeCard
+                        key={u.id}
+                        upgrade={u}
+                        onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {roomUpgrades.length > 0 && (
+                <div>
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                    Room Upgrades
+                  </h4>
+                  <div className="space-y-2">
+                    {roomUpgrades.map((u) => (
+                      <UpgradeCard
+                        key={u.id}
+                        upgrade={u}
+                        onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

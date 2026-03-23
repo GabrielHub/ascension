@@ -8,7 +8,7 @@ export const advanceWorldTimeSystem: SimSystem = ({ singletonEntities }, deltaMs
   }
 
   const worldTimeEntity = singletonEntities.time;
-  const elapsedMinutes = Math.max(1, Math.floor(deltaMs / 1000));
+  const elapsedMinutes = Math.max(1, Math.floor(deltaMs / 60000));
 
   WorldTimeState.tick[worldTimeEntity] += 1;
   WorldTimeState.minuteOfDay[worldTimeEntity] += elapsedMinutes;

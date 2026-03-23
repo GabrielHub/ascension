@@ -30,6 +30,7 @@ describe("validateEnvPartsIndex against shipped index", () => {
     expect(categories).toContain("shell");
     expect(categories).toContain("structure");
     expect(categories).toContain("prop");
+    expect(categories).toContain("scene");
     expect(categories).toContain("background");
     expect(categories).toContain("actor-marker");
   });
@@ -50,6 +51,11 @@ describe("validateEnvPartsIndex error detection", () => {
     locked: null,
     style: "test",
     building: "test",
+    paths: {
+      partsRoot: "/parts",
+      referenceRoot: "/reference",
+      recipesRoot: "/recipes",
+    },
     parts: [],
   };
 
@@ -152,6 +158,12 @@ describe("searchEnvParts", () => {
     expect(markers.every((p) => p.category === "actor-marker")).toBe(true);
   });
 
+  it("filters by scene category", () => {
+    const scenes = searchEnvParts(parts, { category: "scene" });
+    expect(scenes.length).toBeGreaterThan(0);
+    expect(scenes.every((p) => p.category === "scene")).toBe(true);
+  });
+
   it("filters by marker scale", () => {
     const markers = searchEnvParts(parts, { scale: "marker" });
     expect(markers.length).toBeGreaterThan(0);
@@ -244,7 +256,7 @@ describe("shipped index style", () => {
     const parts = getLoadedEnvParts();
     const staleIds = parts.filter(
       (p) =>
-        (!p.id.includes("iso-") && p.category !== "actor-marker") ||
+        (!p.id.includes("iso-") && p.category !== "actor-marker" && p.category !== "scene") ||
         p.id.includes("room-kits/") ||
         p.id.includes("iso-room-shell"),
     );
@@ -278,6 +290,20 @@ describe("envPartSvgPath", () => {
     };
     expect(envPartSvgPath(part)).toBe(
       "/data/svg-environments/hq/bodega/parts/shell/bodega-exterior.svg",
+    );
+  });
+
+  it("returns recipes path for approved scene assets", () => {
+    const part: EnvPartMeta = {
+      id: "recipes/scene-the-register",
+      category: "scene",
+      tags: ["room", "props-only"],
+      scale: "room",
+      roomFamily: "operations",
+      status: "approved",
+    };
+    expect(envPartSvgPath(part)).toBe(
+      "/data/svg-environments/hq/bodega/recipes/scene-the-register.svg",
     );
   });
 
@@ -328,10 +354,20 @@ describe("promoted asset status", () => {
   });
 
   it("approved parts resolve to parts/ directory", () => {
-    const approved = parts.filter((p) => p.status === "approved");
+    const approved = parts.filter((p) => p.status === "approved" && p.category !== "scene");
     for (const part of approved) {
       const path = envPartSvgPath(part);
       expect(path).toContain("/parts/");
+      expect(path).not.toContain("/reference/");
+    }
+  });
+
+  it("approved scene parts resolve to recipes/ directory", () => {
+    const approvedScenes = parts.filter((p) => p.status === "approved" && p.category === "scene");
+    expect(approvedScenes.length).toBeGreaterThan(0);
+    for (const part of approvedScenes) {
+      const path = envPartSvgPath(part);
+      expect(path).toContain("/recipes/");
       expect(path).not.toContain("/reference/");
     }
   });

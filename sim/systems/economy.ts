@@ -6,7 +6,7 @@ import {
   StaffState,
   WorldTimeState,
 } from "../components";
-import { getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
+import { getRoomTemplateForEntity, getStaffRoleTag, pushRuntimeEvent } from "./commands";
 import type { SimSystem } from "./types";
 
 export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
@@ -29,7 +29,7 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
       0,
     ) +
     context.runtimeState.operatorEntities.filter(
-      (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+      (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
     ).length *
       12;
   const activeReceptionRooms = context.runtimeState.roomEntities.filter((entity) => {
@@ -40,13 +40,29 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
     );
   }).length;
   const resourceIncomeModifiers = BuildingAuthority.resourceIncomeModifiers[buildingEntity] ?? {};
-  const dailyIncome = activeReceptionRooms * 38 + (resourceIncomeModifiers["resource/cash"] ?? 0);
+  const dailyIncome = activeReceptionRooms * 50 + (resourceIncomeModifiers["resource/cash"] ?? 0);
 
-  GuildState.treasury[context.singletonEntities.guild] += (dailyIncome - payroll) * daysElapsed;
+  const netCash = (dailyIncome - payroll) * daysElapsed;
+  GuildState.treasury[context.singletonEntities.guild] += netCash;
+
+  const parts: string[] = [];
+  if (netCash !== 0) parts.push(`${netCash > 0 ? "+" : ""}${netCash} cash`);
+
   if (activeReceptionRooms === 0) {
-    GuildState.reputation[context.singletonEntities.guild] -= 2 * daysElapsed;
+    const repLoss = -2 * daysElapsed;
+    GuildState.reputation[context.singletonEntities.guild] += repLoss;
+    parts.push(`${repLoss} rep`);
   } else {
     GuildState.intel[context.singletonEntities.guild] += daysElapsed;
+    if (daysElapsed > 0) parts.push(`+${daysElapsed} intel`);
+  }
+
+  if (parts.length > 0) {
+    pushRuntimeEvent(context, {
+      kind: "resource_swing",
+      message: `Daily ledger: ${parts.join(", ")}`,
+      accent: netCash >= 0 ? "gold" : "ember",
+    });
   }
 
   BuildingAuthority.lastPayrollDay[buildingEntity] = currentDay;

@@ -31,7 +31,7 @@ function DeployedOperatorPortrait({ op }: { op: OperatorViewModel }) {
         {isDead && <div className="absolute inset-0 rounded bg-void/50" />}
       </div>
       <span
-        className={`max-w-[3.5rem] truncate text-[0.6875rem] ${
+        className={`max-w-[5rem] truncate text-[0.6875rem] ${
           isDead ? "text-magma line-through" : "text-silver/60"
         }`}
       >
@@ -272,16 +272,6 @@ export function RaidWatch({
 }: RaidWatchProps) {
   const [rawSelectedId, setRawSelectedId] = useState<string | null>(defaultSelectedRaidId ?? null);
 
-  if (activeRaids.length === 0) {
-    return (
-      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
-        <div className="empty-state-icon">&mdash;</div>
-        <p className="text-xs font-medium text-gold/70">No active raids</p>
-        <p className="mt-1 text-xs text-silver/60">Operators are currently between operations</p>
-      </div>
-    );
-  }
-
   const operatorMap = useMemo(() => new Map(operators.map((op) => [op.id, op])), [operators]);
   const activeRaidIds = new Set(activeRaids.map((r) => r.id));
 
@@ -297,6 +287,16 @@ export function RaidWatch({
 
   function handleSelectRaid(raidId: string) {
     setRawSelectedId((prev) => (prev === raidId ? null : raidId));
+  }
+
+  if (activeRaids.length === 0) {
+    return (
+      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
+        <div className="empty-state-icon">&mdash;</div>
+        <p className="text-xs font-medium text-gold/70">No active raids</p>
+        <p className="mt-1 text-xs text-silver/60">Operators are currently between operations</p>
+      </div>
+    );
   }
 
   return (

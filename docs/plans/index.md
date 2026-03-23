@@ -4,13 +4,14 @@ These plans are execution documents for future work. They are written for parall
 
 ## Active Plan Set
 
-- No active multi-agent phase plan set is checked in right now.
-- The prior Phase 1 execution-plan files were retired from the repo after that workstream converged.
-- Add a fresh phase plan set only when new cross-file or multi-agent execution needs to be coordinated.
+- [Playtest Regression Test Plan](./playtest-regression-test-plan.md)
+- [Playtest Regression Findings](./playtest-regression-findings.md)
+- This plan set stages the post-remediation validation pass and gives the testing agent one checked-in document for fixed issues, blockers, and critical playtest critique.
 
 ## Locked Contracts
 
-- [HQ Environment Asset Contract](./hq-environment-asset-contract.md) — modular asset taxonomy, room recipe schema, anchor contract, layer model, and rejection criteria for tile-based HQ composition
+- No separate locked-contract plan file is checked in right now.
+- If Phase 2 work reveals a contract change that affects canon or shared data shape, update the relevant core document first or in the same pass.
 
 ## Foundational Canon
 

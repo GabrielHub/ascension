@@ -18,12 +18,26 @@ Repo-specific correctional guidance only.
 - Save code owns serialization and migration, not gameplay repair.
 - Render and SVG code must not become alternate rule engines.
 
+## Content Generation
+
+- Consult `docs/world/` before generating any content: design, visual assets, copy, narrative, SFX, or naming
+- The world foundation is the canonical tone and content reference for all authored material
+- The product plan owns mechanics and systems; `docs/world/` owns what things look, sound, read, and feel like
+
 ## Documentation Policy
 
 - Code, tests, templates, and assets are the source of truth for implemented behavior.
 - Do not write docs that duplicate behavior already explained by the implementation.
 - Keep `docs/` for roadmap, future-facing questions, and research only.
 - Keep repo workflow rules in `AGENTS.md` and `CLAUDE.md`.
+
+## Room Scene SVG Rules
+
+- HQ room interiors use pre-composed scene SVGs containing props only (furniture, fixtures, decorations)
+- Scene SVGs must never include walls, floors, tile grids, or structural elements — those are engine-rendered
+- All props inside scene SVGs must be isometric — flat camera-facing rectangles are never valid
+- Reference fixtures (full room with walls/floors) are exploration/preview artifacts only, not production output
+- See `docs/product/asset-production.md` HQ Isometric Contract for the full production pipeline
 
 ## Forbidden Mistakes
 
@@ -32,11 +46,8 @@ Repo-specific correctional guidance only.
 - router-owned gameplay state
 - named-content branches without documentation
 - `as any`
-
-## Phase Target
-
-- Current phase: Phase 1 bodega world rendering
-- Finish the bodega slice visually before expanding or deepening it
+- walls, floors, or structural elements inside room scene SVGs
+- flat camera-facing props (non-isometric rectangles) in any HQ asset
 
 ## UI Rule
 

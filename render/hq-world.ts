@@ -1,4 +1,5 @@
 import { buildNavigationGraph } from "sim/navigation";
+import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
 
 import { createDefaultEffects } from "./world-effects";
 import type {
@@ -19,12 +20,30 @@ import type {
 
 // ── Grid constants ────────────────────────────────────────────────────────
 
-const HQ_TILE_WIDTH = 96;
-const HQ_TILE_HEIGHT = 48;
-const HQ_WALL_HEIGHT = 84;
+const HQ_ENVIRONMENT = getHqEnvironmentRenderConfig();
+const HQ_TILE_WIDTH = HQ_ENVIRONMENT.composition.tileWidth;
+const HQ_TILE_HEIGHT = HQ_ENVIRONMENT.composition.tileHeight;
+const HQ_WALL_HEIGHT = HQ_ENVIRONMENT.composition.wallHeight;
 const WORLD_MARGIN_X = 100;
 const WORLD_MARGIN_Y = 80;
-const ASSET_ROOT = "/data/svg-environments/hq/bodega/parts";
+const ASSET_ROOT = HQ_ENVIRONMENT.paths.partsRoot;
+const SCENE_ROOT = HQ_ENVIRONMENT.paths.recipesRoot;
+const SCENE_ORIGIN_X = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[0];
+const SCENE_ORIGIN_Y = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[1];
+const SCENE_VIEWBOX = HQ_ENVIRONMENT.composition.sceneSystem.canonicalViewBox;
+
+/** Standard scene spec for a 4×3 bodega room. All use the same iso convention. */
+function bodegaScene(filename: string): SceneAssetSpec {
+  return {
+    url: `${SCENE_ROOT}/${filename}`,
+    svgOriginX: SCENE_ORIGIN_X,
+    svgOriginY: SCENE_ORIGIN_Y,
+    svgWidth: SCENE_VIEWBOX.width,
+    svgHeight: SCENE_VIEWBOX.height,
+    viewBoxMinX: SCENE_VIEWBOX.minX,
+    viewBoxMinY: SCENE_VIEWBOX.minY,
+  };
+}
 
 // ── Prop / scenery asset URLs ─────────────────────────────────────────────
 
@@ -65,6 +84,20 @@ const PROP_ASSETS = {
   bottles: `${ASSET_ROOT}/props/iso-bottles-shelf.svg`,
   register: `${ASSET_ROOT}/props/iso-register-cash.svg`,
   punchBag: `${ASSET_ROOT}/props/iso-bag-punching.svg`,
+  // Bodega-specific props
+  coffeeMachine: `${ASSET_ROOT}/props/iso-coffee-machine.svg`,
+  menuBoard: `${ASSET_ROOT}/props/iso-menu-board.svg`,
+  microwave: `${ASSET_ROOT}/props/iso-microwave.svg`,
+  mopBroom: `${ASSET_ROOT}/props/iso-mop-broom.svg`,
+  pickledEggs: `${ASSET_ROOT}/props/iso-jar-pickled-eggs.svg`,
+  deliCase: `${ASSET_ROOT}/props/iso-deli-case.svg`,
+  firstAid: `${ASSET_ROOT}/props/iso-firstaid-wall.svg`,
+  milkCrate: `${ASSET_ROOT}/props/iso-crate-milk.svg`,
+  gearCrate: `${ASSET_ROOT}/props/iso-crate-gear.svg`,
+  guildLicense: `${ASSET_ROOT}/props/iso-license-guild.svg`,
+  posterMotivational: `${ASSET_ROOT}/props/iso-poster-motivational.svg`,
+  ceilingFan: `${ASSET_ROOT}/props/iso-fan-ceiling.svg`,
+  foodDebris: `${ASSET_ROOT}/props/iso-food-debris.svg`,
   // Scenery (exterior)
   awning: `${ASSET_ROOT}/background/iso-bg-awning.svg`,
   hydrant: `${ASSET_ROOT}/background/iso-bg-hydrant.svg`,
@@ -98,11 +131,30 @@ interface RecipePropPlacement {
   offsetY?: number;
 }
 
+/** Pre-composed scene SVG that replaces individual prop sprites for a room. */
+interface SceneAssetSpec {
+  url: string;
+  /** X coordinate of the isometric origin inside the SVG's own coordinate space. */
+  svgOriginX: number;
+  /** Y coordinate of the isometric origin inside the SVG's own coordinate space. */
+  svgOriginY: number;
+  /** viewBox width */
+  svgWidth: number;
+  /** viewBox height */
+  svgHeight: number;
+  /** viewBox minX */
+  viewBoxMinX: number;
+  /** viewBox minY */
+  viewBoxMinY: number;
+}
+
 interface RoomRecipe {
   palette: RoomPalette;
   inactivePalette: RoomPalette;
   openings: readonly { side: HqWallSide; cellOffset: number }[];
   props: readonly RecipePropPlacement[];
+  /** When present, a single composed SVG replaces the individual props array. */
+  sceneAsset?: SceneAssetSpec;
 }
 
 const INACTIVE_PALETTE: RoomPalette = {
@@ -111,31 +163,167 @@ const INACTIVE_PALETTE: RoomPalette = {
   wallRight: "#22242c",
 };
 
-// ── OPERATIONS (Front Desk) ──────────────────────────────────────────────
-// Bodega counter / reception. Counter is the hero dividing customer from clerk.
-// Shelf and product stock behind counter. Stool for the clerk.
-// ViewBoxes are tight — width/height = actual rendered size.
-const OPERATIONS_RECIPE: RoomRecipe = {
+// ── THE REGISTER (Bodega Operations) ─────────────────────────────────────
+// The checkout area. Counter hero divides customer from clerk. Register, phone,
+// guild license on the wall, pickled-egg jar holding down paperwork. Aina sits here.
+const REGISTER_RECIPE: RoomRecipe = {
   palette: { floor: "#3c2a16", wallLeft: "#2c2014", wallRight: "#352616" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
+  sceneAsset: bodegaScene("scene-the-register.svg"),
   props: [
-    // HERO: Long reception counter spanning room center (2:1 iso-aligned)
-    { assetKey: "counter", relCol: 0.5, relRow: 0.65, width: 120, height: 83, zIndex: 40 },
-    // Cash register on counter area
-    { assetKey: "register", relCol: 0.4, relRow: 0.55, width: 44, height: 38, zIndex: 42 },
-    // Clerk stool behind counter
-    { assetKey: "stool", relCol: 0.6, relRow: 0.3, width: 20, height: 50, zIndex: 36 },
-    // Shelf unit against back wall (product stock)
-    { assetKey: "shelf", relCol: 0.75, relRow: 0.2, width: 56, height: 74, zIndex: 34 },
-    // Bottles rack near shelf
-    { assetKey: "bottles", relCol: 0.45, relRow: 0.2, width: 52, height: 62, zIndex: 34 },
-    // Cardboard box near entrance
-    { assetKey: "box", relCol: 0.2, relRow: 0.65, width: 34, height: 46, zIndex: 35 },
-    // Radio on the floor
-    { assetKey: "radio", relCol: 0.82, relRow: 0.5, width: 40, height: 28, zIndex: 36 },
-    // Floor rug at entrance
-    { assetKey: "rug", relCol: 0.3, relRow: 0.85, width: 72, height: 36, zIndex: 28 },
+    // HERO: Reception counter — center, divides clerk from customer
+    { assetKey: "counter", relCol: 0.5, relRow: 0.55, width: 120, height: 83, zIndex: 40 },
+    // Register ON counter surface (offsetY lifts onto counter top)
+    {
+      assetKey: "register",
+      relCol: 0.45,
+      relRow: 0.5,
+      width: 36,
+      height: 32,
+      zIndex: 42,
+      offsetY: -34,
+    },
+    // Pickled-egg jar ON counter (right side, holding down paperwork)
+    {
+      assetKey: "pickledEggs",
+      relCol: 0.58,
+      relRow: 0.52,
+      width: 14,
+      height: 20,
+      zIndex: 43,
+      offsetY: -32,
+    },
+    // Stool behind counter (clerk side, back of room)
+    { assetKey: "stool", relCol: 0.55, relRow: 0.28, width: 22, height: 44, zIndex: 36 },
+    // Shelf against back-right wall
+    { assetKey: "shelf", relCol: 0.8, relRow: 0.2, width: 52, height: 70, zIndex: 34 },
+    // Guild license on left wall (offsetY places it on wall surface)
+    {
+      assetKey: "guildLicense",
+      relCol: 0.18,
+      relRow: 0.18,
+      width: 18,
+      height: 24,
+      zIndex: 33,
+      offsetY: -44,
+    },
+    // Cork board on right wall
+    {
+      assetKey: "corkboard",
+      relCol: 0.62,
+      relRow: 0.08,
+      width: 30,
+      height: 24,
+      zIndex: 33,
+      offsetY: -38,
+    },
+    // Box near entrance (front-left area)
+    { assetKey: "box", relCol: 0.2, relRow: 0.72, width: 26, height: 36, zIndex: 35 },
+    // Ceiling fan (offsetY lifts to ceiling level)
+    {
+      assetKey: "ceilingFan",
+      relCol: 0.5,
+      relRow: 0.32,
+      width: 42,
+      height: 16,
+      zIndex: 31,
+      offsetY: -74,
+    },
+  ],
+};
+
+// ── THE COUNTER (Bodega Recruitment / Deli) ──────────────────────────────
+// The deli counter. Public-facing, street-level energy. Boss makes sandwiches,
+// pours coffee, talks to walk-ins. Deli case is the hero. The food is the pipeline.
+const COUNTER_RECIPE: RoomRecipe = {
+  palette: { floor: "#3a2818", wallLeft: "#2c2014", wallRight: "#342416" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  sceneAsset: bodegaScene("scene-the-counter.svg"),
+  props: [
+    // HERO: Deli case — long glass-fronted counter, dominates the room
+    { assetKey: "deliCase", relCol: 0.48, relRow: 0.55, width: 120, height: 82, zIndex: 40 },
+    // Coffee machine behind counter (back-left, boss's side)
+    { assetKey: "coffeeMachine", relCol: 0.28, relRow: 0.25, width: 34, height: 46, zIndex: 36 },
+    // Menu board on right wall (offsetY places it on wall)
+    {
+      assetKey: "menuBoard",
+      relCol: 0.6,
+      relRow: 0.08,
+      width: 44,
+      height: 30,
+      zIndex: 33,
+      offsetY: -40,
+    },
+    // Customer stool (front of counter, left)
+    { assetKey: "stool", relCol: 0.32, relRow: 0.8, width: 22, height: 44, zIndex: 42 },
+    // Second customer stool (front of counter, right)
+    { assetKey: "stool", relCol: 0.58, relRow: 0.84, width: 22, height: 44, zIndex: 42 },
+    // Shelf behind counter (back-right wall, supplies)
+    { assetKey: "shelf", relCol: 0.82, relRow: 0.18, width: 48, height: 64, zIndex: 34 },
+    // Ceiling fan
+    {
+      assetKey: "ceilingFan",
+      relCol: 0.5,
+      relRow: 0.32,
+      width: 42,
+      height: 16,
+      zIndex: 31,
+      offsetY: -74,
+    },
+  ],
+};
+
+// ── THE DINING AREA (Bodega Recovery / Social) ───────────────────────────
+// Cheap street-level dining. Folding tables and chairs in a simple grid.
+// Think outside simple eating area, not a medical bay. Warm bodega palette.
+const DINING_AREA_RECIPE: RoomRecipe = {
+  palette: { floor: "#382818", wallLeft: "#2a2016", wallRight: "#30261c" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  sceneAsset: bodegaScene("scene-the-dining-area.svg"),
+  props: [
+    // Table 1 (back-left area)
+    { assetKey: "table", relCol: 0.32, relRow: 0.38, width: 72, height: 64, zIndex: 38 },
+    // Chair at table 1 (behind)
+    { assetKey: "chair", relCol: 0.38, relRow: 0.22, width: 30, height: 40, zIndex: 36 },
+    // Chair at table 1 (front)
+    { assetKey: "chair", relCol: 0.25, relRow: 0.52, width: 30, height: 40, zIndex: 40 },
+    // Table 2 (front-right area)
+    { assetKey: "table", relCol: 0.65, relRow: 0.62, width: 72, height: 64, zIndex: 38 },
+    // Chair at table 2 (behind)
+    { assetKey: "chair", relCol: 0.72, relRow: 0.48, width: 30, height: 40, zIndex: 36 },
+    // Milk crate as chair at table 2 (the bodega touch)
+    { assetKey: "milkCrate", relCol: 0.58, relRow: 0.76, width: 24, height: 20, zIndex: 40 },
+    // Microwave against back-right wall
+    { assetKey: "microwave", relCol: 0.82, relRow: 0.22, width: 32, height: 28, zIndex: 35 },
+  ],
+};
+
+// ── SUPPLY CLOSET (Bodega Staffing / Storage) ────────────────────────────
+// "Behind the register, next to the mops. Literally a closet."
+// Shelves are the hero. Boxes stacked too high. Mop in the corner. Dense, cramped.
+const SUPPLY_CLOSET_RECIPE: RoomRecipe = {
+  palette: { floor: "#302418", wallLeft: "#261e14", wallRight: "#2c2218" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  sceneAsset: bodegaScene("scene-supply-closet.svg"),
+  props: [
+    // HERO: Shelf against back-right wall (packed with gear)
+    { assetKey: "shelf", relCol: 0.75, relRow: 0.18, width: 52, height: 70, zIndex: 34 },
+    // Second shelf (back-center wall)
+    { assetKey: "shelf", relCol: 0.4, relRow: 0.18, width: 48, height: 66, zIndex: 34 },
+    // Filing cabinet (left wall area)
+    { assetKey: "cabinet", relCol: 0.18, relRow: 0.3, width: 38, height: 54, zIndex: 35 },
+    // Gear crate on floor (center)
+    { assetKey: "gearCrate", relCol: 0.5, relRow: 0.55, width: 30, height: 28, zIndex: 38 },
+    // Cardboard box stack (front-right)
+    { assetKey: "box", relCol: 0.72, relRow: 0.65, width: 28, height: 38, zIndex: 38 },
+    // Mop and broom leaning against left wall
+    { assetKey: "mopBroom", relCol: 0.12, relRow: 0.6, width: 20, height: 58, zIndex: 36 },
+    // Bucket near mop
+    { assetKey: "bucket", relCol: 0.25, relRow: 0.75, width: 22, height: 26, zIndex: 37 },
   ],
 };
 
@@ -246,16 +434,27 @@ const DEFAULT_RECIPE: RoomRecipe = {
   ],
 };
 
+// Template-specific recipes: keyed by room templateId.
+// Bodega rooms get their own canon-accurate dressing.
+const TEMPLATE_RECIPES: Record<string, RoomRecipe> = {
+  "room/register:tier_1": REGISTER_RECIPE,
+  "room/counter:tier_1": COUNTER_RECIPE,
+  "room/dining_area:tier_1": DINING_AREA_RECIPE,
+  "room/supply_closet:tier_1": SUPPLY_CLOSET_RECIPE,
+};
+
+// Function-tag fallback recipes: used when no template-specific recipe exists.
+// Union hall and later-tier rooms resolve through here.
 const ROOM_RECIPES: Record<string, RoomRecipe> = {
-  "room:operations": OPERATIONS_RECIPE,
+  "room:operations": REGISTER_RECIPE,
   "room:recovery": RECOVERY_RECIPE,
   "room:social": SOCIAL_RECIPE,
   "room:staffing": STAFFING_RECIPE,
   "room:training": TRAINING_RECIPE,
 };
 
-function getRecipe(functionTag: string): RoomRecipe {
-  return ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
+function getRecipe(templateId: string, functionTag: string): RoomRecipe {
+  return TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
 }
 
 // ── Seed type ─────────────────────────────────────────────────────────────
@@ -361,7 +560,7 @@ function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqR
 function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
   const tiles: HqFloorTile[] = [];
   for (const seed of seeds) {
-    const recipe = getRecipe(seed.functionTag);
+    const recipe = getRecipe(seed.templateId, seed.functionTag);
     const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
     const fp = seed.footprint;
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
@@ -378,7 +577,7 @@ function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
 function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
   const segments: HqWallSegment[] = [];
   for (const seed of seeds) {
-    const recipe = getRecipe(seed.functionTag);
+    const recipe = getRecipe(seed.templateId, seed.functionTag);
     const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
     const fp = seed.footprint;
 
@@ -503,25 +702,42 @@ function buildRoomProps(
   const props: HqSpritePlacement[] = [];
 
   for (const room of rooms) {
-    const recipe = getRecipe(room.functionTag);
+    const recipe = getRecipe(room.templateId, room.functionTag);
     const fp = room.footprint;
 
-    for (const propDef of recipe.props) {
-      props.push(
-        placeFloorSprite(
-          `${room.id}/${propDef.assetKey}`,
-          PROP_ASSETS[propDef.assetKey],
-          fp.col + fp.cols * propDef.relCol,
-          fp.row + fp.rows * propDef.relRow,
-          propDef.width,
-          propDef.height,
-          propDef.zIndex,
-          originX,
-          originY,
-          propDef.offsetX ?? 0,
-          propDef.offsetY ?? 0,
-        ),
-      );
+    if (recipe.sceneAsset) {
+      // Pre-composed scene SVG — one sprite replaces all individual props
+      const scene = recipe.sceneAsset;
+      const topCorner = projectIso(fp.col, fp.row, originX, originY);
+      props.push({
+        id: `${room.id}/scene`,
+        assetUrl: scene.url,
+        x: topCorner.x - (scene.svgOriginX - scene.viewBoxMinX),
+        y: topCorner.y - (scene.svgOriginY - scene.viewBoxMinY),
+        width: scene.svgWidth,
+        height: scene.svgHeight,
+        zIndex: 35,
+        opacity: room.isOperational ? 1 : 0.35,
+      });
+    } else {
+      // Per-prop sprite placement (fallback for rooms without scene SVGs)
+      for (const propDef of recipe.props) {
+        props.push(
+          placeFloorSprite(
+            `${room.id}/${propDef.assetKey}`,
+            PROP_ASSETS[propDef.assetKey],
+            fp.col + fp.cols * propDef.relCol,
+            fp.row + fp.rows * propDef.relRow,
+            propDef.width,
+            propDef.height,
+            propDef.zIndex,
+            originX,
+            originY,
+            propDef.offsetX ?? 0,
+            propDef.offsetY ?? 0,
+          ),
+        );
+      }
     }
   }
 
@@ -614,84 +830,62 @@ function buildScenery(
       0,
       -24,
     ),
-    // ── Trees along sidewalk (large canopy, spaced along both edges) ──
+    // ── Trees along the front sidewalk (NYC street tree line) ──
+    // Placed along the curb edge (maxRow + 1.5), evenly spaced across
+    // the bodega's frontage. Trunk extends below ground in the SVG for
+    // correct isometric top-down perspective. Positive offsetY places
+    // the ground shadow at the anchor point and lets the trunk overlap below.
     placeFloorSprite(
       "scenery/tree-1",
       PROP_ASSETS.tree,
-      minCol - 0.8,
-      maxRow + 0.8,
-      68,
-      110,
+      minCol + 0.5,
+      maxRow + 1.5,
+      120,
+      200,
       30,
       originX,
       originY,
       0,
-      -56,
+      24,
     ),
     placeFloorSprite(
       "scenery/tree-2",
       PROP_ASSETS.tree,
-      minCol + 2,
-      maxRow + 0.6,
-      72,
-      116,
+      minCol + 3,
+      maxRow + 1.5,
+      130,
+      217,
       30,
       originX,
       originY,
       0,
-      -60,
+      26,
     ),
     placeFloorSprite(
       "scenery/tree-3",
       PROP_ASSETS.tree,
-      minCol + 5,
-      maxRow + 0.8,
-      64,
-      104,
+      maxCol - 2.5,
+      maxRow + 1.5,
+      126,
+      210,
       30,
       originX,
       originY,
       0,
-      -52,
+      25,
     ),
     placeFloorSprite(
       "scenery/tree-4",
       PROP_ASSETS.tree,
-      maxCol + 1.4,
-      minRow + 0.6,
-      70,
-      112,
+      maxCol + 0.5,
+      maxRow + 1.5,
+      134,
+      223,
       30,
       originX,
       originY,
       0,
-      -58,
-    ),
-    placeFloorSprite(
-      "scenery/tree-5",
-      PROP_ASSETS.tree,
-      maxCol + 0.4,
-      minRow + 3.2,
-      60,
-      98,
-      30,
-      originX,
-      originY,
-      0,
-      -48,
-    ),
-    placeFloorSprite(
-      "scenery/tree-6",
-      PROP_ASSETS.tree,
-      minCol - 2,
-      minRow + 1.5,
-      66,
-      106,
-      30,
-      originX,
-      originY,
-      0,
-      -54,
+      27,
     ),
     // ── Sidewalk furniture ────────────────────────────────────
     placeFloorSprite(
@@ -897,7 +1091,7 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
       functionTag: room.functionTag,
       ...(() => {
         const seed = rooms.find((candidate) => candidate.id === room.id);
-        const opening = seed ? getRecipe(seed.functionTag).openings[0] : undefined;
+        const opening = seed ? getRecipe(seed.templateId, seed.functionTag).openings[0] : undefined;
         if (!seed || !opening) {
           return {};
         }

@@ -27,6 +27,77 @@ function createDeferredPromise<T>() {
   };
 }
 
+function createRoomSnapshot(
+  templateId: string,
+  id: string,
+  footprint: {
+    col: number;
+    row: number;
+    cols: number;
+    rows: number;
+  },
+) {
+  const template = templateRegistry.roomById.get(templateId);
+  if (!template) {
+    throw new Error(`Missing room template ${templateId}`);
+  }
+
+  return {
+    id,
+    templateId: template.id,
+    tier: template.tier,
+    capacity: template.baseCapacity,
+    occupancy: 0,
+    isActive: true,
+    footprint,
+  };
+}
+
+function createUnionHallWorldSnapshot() {
+  const world = createBootstrapWorldSnapshot(templateRegistry);
+
+  world.building = {
+    activeBuildingId: "building/union_hall",
+    activeBuildingTier: 2,
+    roomSlotCount: 7,
+    operatorSlotCount: 6,
+  };
+  world.appliedUpgradeIds = [];
+  world.rooms = [
+    createRoomSnapshot("room/front_desk:tier_1", "room-instance/front_desk", {
+      col: 0,
+      row: 0,
+      cols: 4,
+      rows: 3,
+    }),
+    createRoomSnapshot("room/recruitment_office:tier_1", "room-instance/recruitment_office", {
+      col: 4,
+      row: 0,
+      cols: 4,
+      rows: 3,
+    }),
+  ];
+  world.staff = world.staff?.map((staff) =>
+    staff.roleTag === "staff:reception"
+      ? {
+          ...staff,
+          assignment: {
+            kind: "room",
+            targetId: "room-instance/front_desk",
+          },
+        }
+      : {
+          ...staff,
+          assignment: {
+            kind: "idle",
+            targetId: "",
+          },
+        },
+  );
+
+  return world;
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
@@ -444,13 +515,28 @@ describe("runtime session lifecycle", () => {
   });
 
   it("emits audio cues for place-room commands and drains them", async () => {
-    const session = await resolveRuntimeSession({ mode: "preview" });
+    const world = createUnionHallWorldSnapshot();
 
-    await session.commands.purchaseBuildingUpgrade({
-      upgradeId: "upgrade/building/bodega:annex",
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-21T00:00:00.000Z",
+      },
+      world,
     });
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
     session.drainPendingCues();
-    await session.commands.placeRoom({ templateId: "room/infirmary:tier_1" });
+    await session.commands.placeRoom({ templateId: "room/lounge:tier_1" });
 
     const cues = session.drainPendingCues();
     expect(cues).toEqual(["room.place"]);
@@ -462,11 +548,26 @@ describe("runtime session lifecycle", () => {
   });
 
   it("emits staff cues only for successful hire and assignment changes", async () => {
-    const session = await resolveRuntimeSession({ mode: "preview" });
+    const world = createUnionHallWorldSnapshot();
 
-    await session.commands.purchaseBuildingUpgrade({
-      upgradeId: "upgrade/building/bodega:annex",
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-21T00:00:00.000Z",
+      },
+      world,
     });
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
     session.drainPendingCues();
 
     await session.commands.hireStaff({ roleTag: "staff:admin" });
@@ -483,13 +584,13 @@ describe("runtime session lifecycle", () => {
 
     await session.commands.assignStaff({
       staffId: recruiter!.id,
-      roomId: "room-instance/recruitment_space",
+      roomId: "room-instance/recruitment_office",
     });
     expect(session.drainPendingCues()).toEqual(["staff.assign"]);
 
     await session.commands.assignStaff({
       staffId: recruiter!.id,
-      roomId: "room-instance/recruitment_space",
+      roomId: "room-instance/recruitment_office",
     });
     expect(session.drainPendingCues()).toEqual([]);
 
@@ -508,6 +609,85 @@ describe("runtime session lifecycle", () => {
     // Reactivate it
     await session.commands.setRoomActive({ roomId: roomId!, isActive: true });
     expect(session.drainPendingCues()).toEqual(["room.activate"]);
+
+    session.dispose();
+  });
+
+  it("supports buying, auto-equipping, unequipping, and reselling items through the runtime session", async () => {
+    const itemId = "accessory/field-lead-badge";
+    const item = templateRegistry.itemById.get(itemId);
+    expect(item).toBeTruthy();
+
+    const world = createBootstrapWorldSnapshot(templateRegistry);
+    world.inventoryStacks = [];
+    world.operators = world.operators?.map((operator) =>
+      operator.id === "operator/rose-vega"
+        ? {
+            ...operator,
+            appearance: {
+              presetId: "vera-004",
+              visibleGear: {
+                weaponPartId: "weapon/tactical-rifle",
+                outfitOverlayPartId: "outfit-overlay/tactical-vest",
+              },
+            },
+          }
+        : operator,
+    );
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-21T00:00:00.000Z",
+      },
+      world,
+    });
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
+    const treasuryBefore = session.worldSnapshot.guild.treasury;
+
+    await session.commands.buyItem({ itemId });
+    expect(session.worldSnapshot.guild.treasury).toBe(treasuryBefore - item!.buyPrice);
+    expect(session.worldSnapshot.inventoryStacks).toEqual([{ itemId, quantity: 1 }]);
+
+    await session.commands.autoAssignAccessory({ operatorId: "operator/rose-vega" });
+    expect(
+      session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
+        ?.appearance.visibleGear,
+    ).toEqual({
+      weaponPartId: "weapon/tactical-rifle",
+      outfitOverlayPartId: "outfit-overlay/tactical-vest",
+      accessoryPartId: itemId,
+    });
+    expect(session.worldSnapshot.inventoryStacks).toEqual([]);
+
+    await session.commands.unequipItem({
+      operatorId: "operator/rose-vega",
+      slot: "accessory",
+    });
+    expect(
+      session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
+        ?.appearance.visibleGear,
+    ).toEqual({
+      weaponPartId: "weapon/tactical-rifle",
+      outfitOverlayPartId: "outfit-overlay/tactical-vest",
+    });
+    expect(session.worldSnapshot.inventoryStacks).toEqual([{ itemId, quantity: 1 }]);
+
+    await session.commands.sellItem({ itemId, quantity: 1 });
+    expect(session.worldSnapshot.guild.treasury).toBe(
+      treasuryBefore - item!.buyPrice + item.sellPrice,
+    );
+    expect(session.worldSnapshot.inventoryStacks).toEqual([]);
 
     session.dispose();
   });
@@ -551,30 +731,6 @@ describe("runtime session lifecycle", () => {
       });
       session.drainPendingCues();
 
-      await session.commands.hireStaff({ roleTag: "staff:admin" });
-      session.drainPendingCues();
-
-      const recruiter = session.state.phase1View.staff.find(
-        (staff) =>
-          staff.roleTag === "staff:admin" &&
-          staff.assignment.kind === "idle" &&
-          staff.assignment.targetId === "",
-      );
-
-      expect(recruiter).toBeTruthy();
-
-      await session.commands.assignStaff({
-        staffId: recruiter!.id,
-        roomId: "room-instance/recruitment_space",
-      });
-      session.drainPendingCues();
-
-      await session.commands.setRoomActive({
-        roomId: "room-instance/recruitment_space",
-        isActive: true,
-      });
-      session.drainPendingCues();
-
       await session.commands.acceptRecruit({ visitorId: visitor.id });
       expect(session.drainPendingCues()).toContain("operator.recruit");
     }
@@ -583,7 +739,7 @@ describe("runtime session lifecycle", () => {
   });
 
   it("places recovering operators and recruitment staff into matching room functions", async () => {
-    const world = createBootstrapWorldSnapshot(templateRegistry);
+    const world = createUnionHallWorldSnapshot();
     const infirmaryTemplate = templateRegistry.roomById.get("room/infirmary:tier_1");
     expect(infirmaryTemplate).toBeTruthy();
 
@@ -630,8 +786,8 @@ describe("runtime session lifecycle", () => {
             ...staff,
             roleTag: "staff:admin",
             assignment: {
-              kind: "idle",
-              targetId: "",
+              kind: "room",
+              targetId: "room-instance/recruitment_office",
             },
           }
         : staff,
@@ -663,7 +819,7 @@ describe("runtime session lifecycle", () => {
       session.state.hqWorldSnapshot?.actors.find(
         (actor) => actor.kind === "staff" && actor.roleTag === "staff:admin",
       )?.roomId,
-    ).toBe("room-instance/recruitment_space");
+    ).toBe("room-instance/recruitment_office");
 
     session.dispose();
   });
@@ -861,6 +1017,28 @@ describe("runtime session lifecycle", () => {
       expect("pendingCues" in write).toBe(false);
       expect("pendingCues" in write.world).toBe(false);
     }
+
+    session.dispose();
+  });
+
+  it("tracks persistence errors after a save-backed mutation fails to write", async () => {
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(undefined);
+    vi.spyOn(saveStorage, "writeSaveGame")
+      .mockResolvedValueOnce()
+      .mockRejectedValueOnce(new Error("disk full"));
+
+    const session = await resolveRuntimeSession({
+      mode: "new",
+      slotId: "slot/1",
+    });
+
+    await session.commands.tick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(session.persistence.status).toBe("error");
+    expect(session.persistence.errorMessage).toBe("disk full");
+    expect(session.state.persistence.status).toBe("error");
+    expect(session.state.persistence.errorMessage).toBe("disk full");
 
     session.dispose();
   });

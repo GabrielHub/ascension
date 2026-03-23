@@ -60,7 +60,7 @@ export function OperatorPortrait({
     (visibleGear.weaponPartId || visibleGear.outfitOverlayPartId || visibleGear.accessoryPartId);
 
   const recipe = getRecipeById(presetId) ?? getDefaultRecipe();
-  const build = resolveOperatorBuild(roleTag);
+  const build = resolveOperatorBuild(roleTag, presetId);
 
   return (
     <div

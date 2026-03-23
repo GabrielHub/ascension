@@ -8,6 +8,10 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/reject-recruit",
   "sim/hire-staff",
   "sim/assign-staff",
+  "sim/buy-item",
+  "sim/sell-item",
+  "sim/auto-assign-accessory",
+  "sim/unequip-item",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -57,6 +61,24 @@ export type SimCommand =
       type: "sim/assign-staff";
       staffId: string;
       roomId?: string;
+    }
+  | {
+      type: "sim/buy-item";
+      itemId: string;
+    }
+  | {
+      type: "sim/sell-item";
+      itemId: string;
+      quantity: number;
+    }
+  | {
+      type: "sim/auto-assign-accessory";
+      operatorId: string;
+    }
+  | {
+      type: "sim/unequip-item";
+      operatorId: string;
+      slot: "weapon" | "outfitOverlay" | "accessory";
     }
   | {
       type: "sim/dev-set-resource";

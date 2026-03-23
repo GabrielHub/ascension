@@ -44,6 +44,10 @@ const callbacks: GameCallbacks = {
   hireStaff: () => {},
   assignStaff: () => {},
   placeRoom: () => {},
+  buyItem: () => {},
+  sellItem: () => {},
+  autoAssignAccessory: () => {},
+  unequipItem: () => {},
 };
 
 describe("roster panel", () => {
@@ -84,5 +88,39 @@ describe("roster panel", () => {
     expect(html).toContain("Fallen (1)");
     expect(html).toContain("KIA");
     expect(html).toContain("line-through");
+  });
+
+  it("disables recruiting when the operator roster is full", () => {
+    const html = renderToStaticMarkup(
+      <RosterPanel
+        operators={[makeOperator({ id: "operator/active", name: "Active" })]}
+        staff={[]}
+        visitors={[
+          {
+            id: "visitor/test",
+            name: "Nika Voss",
+            desiredRoleTag: "role:medic",
+            patience: 18,
+            quality: 61,
+            expectedLoyalty: 53,
+          },
+        ]}
+        relationships={[]}
+        rooms={[]}
+        callbacks={callbacks}
+        rosterPressure={{
+          operatorCapacity: 1,
+          livingOperatorCount: 1,
+          vacancyCount: 0,
+          unavailableOperatorIds: [],
+          recentDeathOperatorIds: [],
+          replacementPressureLevel: "stable",
+        }}
+      />,
+    );
+
+    expect(html).toContain("Roster full");
+    expect(html).toContain("disabled");
+    expect(html).toContain(">Full<");
   });
 });

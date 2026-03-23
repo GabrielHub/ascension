@@ -2,12 +2,15 @@ import { validateEffect } from "../effects";
 import { validateRequirement } from "../requirements";
 import { buildingTemplates } from "./buildings";
 import { eventTemplates } from "./events";
+import { dropTables as dropTableData, itemTemplates } from "./items";
 import { missionTemplates } from "./missions";
 import { resourceTemplates } from "./resources";
 import { roomTemplates } from "./rooms";
 import {
   type BuildingTemplate,
+  type DropTable,
   type EventTemplate,
+  type ItemTemplate,
   type MissionTemplate,
   type ResourceTemplate,
   type RoomTemplate,
@@ -27,6 +30,8 @@ const TEMPLATE_CATEGORY_ORDER: readonly TemplateCategory[] = [
   "upgrades",
   "missions",
   "events",
+  "items",
+  "dropTables",
 ] as const;
 
 function makeLookup<T extends TemplateBase>(
@@ -275,6 +280,134 @@ function validateEventTemplates(
   });
 }
 
+function validateItemTemplates(
+  templates: readonly ItemTemplate[],
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  templates.forEach((template) => {
+    validateBaseTemplate("items", template, issues);
+
+    if (template.buyPrice < 0) {
+      issues.push({
+        category: "items",
+        templateId: template.id,
+        message: "buyPrice must be non-negative.",
+      });
+    }
+
+    if (template.sellPrice < 0) {
+      issues.push({
+        category: "items",
+        templateId: template.id,
+        message: "sellPrice must be non-negative.",
+      });
+    }
+
+    if (template.buyPrice > 0 && template.sellPrice >= template.buyPrice) {
+      issues.push({
+        category: "items",
+        templateId: template.id,
+        message: "sellPrice must be less than buyPrice when the item is purchasable.",
+      });
+    }
+
+    template.statEffects.forEach((effect, index) => {
+      if (effect.stat.trim().length === 0) {
+        issues.push({
+          category: "items",
+          templateId: template.id,
+          message: `Stat effect ${index + 1}: stat must be a non-empty string.`,
+        });
+      }
+
+      if (!Number.isFinite(effect.value)) {
+        issues.push({
+          category: "items",
+          templateId: template.id,
+          message: `Stat effect ${index + 1}: value must be a finite number.`,
+        });
+      }
+    });
+  });
+}
+
+function validateDropTables(
+  tables: readonly DropTable[],
+  items: ReadonlyMap<string, ItemTemplate>,
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenIds = new Set<string>();
+
+  tables.forEach((table) => {
+    if (table.id.trim().length === 0) {
+      issues.push({
+        category: "dropTables",
+        templateId: table.id,
+        message: "Drop table id must be a non-empty string.",
+      });
+    }
+
+    if (seenIds.has(table.id)) {
+      issues.push({
+        category: "dropTables",
+        templateId: table.id,
+        message: "Duplicate drop table id.",
+      });
+    }
+    seenIds.add(table.id);
+
+    if (table.entries.length === 0) {
+      issues.push({
+        category: "dropTables",
+        templateId: table.id,
+        message: "Drop table must have at least one entry.",
+      });
+    }
+
+    table.entries.forEach((entry, index) => {
+      if (!items.has(entry.itemId)) {
+        issues.push({
+          category: "dropTables",
+          templateId: table.id,
+          message: `Entry ${index + 1}: unknown item "${entry.itemId}".`,
+        });
+      }
+
+      if (entry.weight <= 0) {
+        issues.push({
+          category: "dropTables",
+          templateId: table.id,
+          message: `Entry ${index + 1}: weight must be greater than zero.`,
+        });
+      }
+
+      if (entry.minQuantity < 1) {
+        issues.push({
+          category: "dropTables",
+          templateId: table.id,
+          message: `Entry ${index + 1}: minQuantity must be at least 1.`,
+        });
+      }
+
+      if (entry.maxQuantity < entry.minQuantity) {
+        issues.push({
+          category: "dropTables",
+          templateId: table.id,
+          message: `Entry ${index + 1}: maxQuantity must be >= minQuantity.`,
+        });
+      }
+    });
+  });
+}
+
+function makeDropTableLookup(tables: readonly DropTable[]): ReadonlyMap<string, DropTable> {
+  const byId = new Map<string, DropTable>();
+  tables.forEach((table) => {
+    byId.set(table.id, table);
+  });
+  return byId;
+}
+
 function formatIssues(issues: readonly TemplateRegistryValidationIssue[]): string {
   const ordered = [...issues].sort((left, right) => {
     const categoryOrder =
@@ -306,6 +439,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   const upgrades = [...upgradeTemplates];
   const missions = [...missionTemplates];
   const events = [...eventTemplates];
+  const items = [...itemTemplates];
+  const dropTables = [...dropTableData];
 
   const resourceLookup = makeLookup("resources", resources, issues);
   const buildingLookup = makeLookup("buildings", buildings, issues);
@@ -313,6 +448,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   const upgradeLookup = makeLookup("upgrades", upgrades, issues);
   const missionLookup = makeLookup("missions", missions, issues);
   const eventLookup = makeLookup("events", events, issues);
+  const itemLookup = makeLookup("items", items, issues);
+  const dropTableLookup = makeDropTableLookup(dropTables);
 
   validateResourceTemplates(resources, issues);
   validateBuildingTemplates(buildings, upgradeLookup.byId, issues);
@@ -326,6 +463,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   );
   validateMissionTemplates(missions, issues);
   validateEventTemplates(events, issues);
+  validateItemTemplates(items, issues);
+  validateDropTables(dropTables, itemLookup.byId, issues);
 
   if (issues.length > 0) {
     throw new Error(`Template registry validation failed.\n${formatIssues(issues)}`);
@@ -338,12 +477,16 @@ export function createTemplateRegistry(): TemplateRegistry {
     upgrades,
     missions,
     events,
+    items,
+    dropTables,
     resourceById: resourceLookup.byId,
     buildingById: buildingLookup.byId,
     roomById: roomLookup.byId,
     upgradeById: upgradeLookup.byId,
     missionById: missionLookup.byId,
     eventById: eventLookup.byId,
+    itemById: itemLookup.byId,
+    dropTableById: dropTableLookup,
     resourceIndexById: resourceLookup.indexById,
     buildingIndexById: buildingLookup.indexById,
     roomIndexById: roomLookup.indexById,

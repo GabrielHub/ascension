@@ -1,8 +1,13 @@
-import type { RaidOpportunityViewModel, RosterPressureViewModel } from "./view-models";
+import type {
+  OperatorViewModel,
+  RaidOpportunityViewModel,
+  RosterPressureViewModel,
+} from "./view-models";
 
 interface OpportunityBoardProps {
   opportunities: readonly RaidOpportunityViewModel[];
   rosterPressure: RosterPressureViewModel;
+  operators?: readonly OperatorViewModel[];
 }
 
 const THREAT_COLORS: Record<string, string> = {
@@ -69,8 +74,19 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
   );
 }
 
-export function OpportunityBoard({ opportunities, rosterPressure }: OpportunityBoardProps) {
+export function OpportunityBoard({
+  opportunities,
+  rosterPressure,
+  operators = [],
+}: OpportunityBoardProps) {
   const rosterThin = rosterPressure.replacementPressureLevel !== "stable";
+
+  // Phase 2: team readiness summary
+  const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
+  const willingCount = livingOperators.filter(
+    (op) => op.availableForRaid && !op.refusalRisk,
+  ).length;
+  const refusingCount = livingOperators.filter((op) => op.refusalRisk).length;
 
   if (opportunities.length === 0) {
     return (
@@ -102,6 +118,15 @@ export function OpportunityBoard({ opportunities, rosterPressure }: OpportunityB
           Operators evaluate and claim opportunities autonomously
         </p>
       </div>
+
+      {/* Phase 2: Team readiness summary */}
+      {livingOperators.length > 0 && (
+        <div className="flex items-center gap-3 text-[0.6875rem]">
+          <span className="text-gold/70">{willingCount} willing</span>
+          {refusingCount > 0 && <span className="text-ember">{refusingCount} refusing</span>}
+        </div>
+      )}
+
       {rosterThin && <RosterThinWarning rosterPressure={rosterPressure} />}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((opp) => (
@@ -124,7 +149,7 @@ function RosterThinWarning({ rosterPressure }: { rosterPressure: RosterPressureV
         {isCritical ? "Roster critical" : "Roster strained"}
       </span>
       <span className="text-[0.6875rem] text-silver/60">
-        {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} operators available
+        {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} on roster
         {rosterPressure.vacancyCount > 0 &&
           ` · ${rosterPressure.vacancyCount} ${rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}`}
       </span>

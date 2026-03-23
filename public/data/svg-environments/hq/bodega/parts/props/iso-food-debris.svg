@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24">
+  <!-- Food debris scatter. Cups, wrappers, chopsticks on a table surface.
+       The evidence that people eat here between everything else.
+       Individual items get cel-shaded treatment for distinctness. -->
+
+  <!-- Shadow -->
+  <ellipse cx="20" cy="18" rx="16" ry="3" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Paper coffee cup — cel-shaded cylinder -->
+  <!-- Cup left half — medium -->
+  <rect x="4" y="6" width="3" height="9" rx="0.5" fill="#2c2418"
+    stroke="#241c12" stroke-width="0.3"/>
+  <!-- Cup right half — darkest -->
+  <rect x="7" y="6" width="3" height="9" rx="0.5" fill="#241c12"
+    stroke="#1c1408" stroke-width="0.3"/>
+  <!-- Cup top ellipse — lightest -->
+  <ellipse cx="7" cy="6" rx="3" ry="1.2" fill="#3a3020" stroke="#2c2418" stroke-width="0.4"/>
+  <!-- Coffee inside -->
+  <ellipse cx="7" cy="6" rx="2" ry="0.8" fill="#1a1008" opacity="0.6"/>
+  <!-- Cup sleeve — darker band -->
+  <rect x="4" y="10" width="6" height="3" fill="#201810" opacity="0.5"/>
+  <!-- Cup highlight -->
+  <line x1="5" y1="7" x2="5" y2="14" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/>
+
+  <!-- Ramen cup (wider, styrofoam) — cel-shaded -->
+  <!-- Cup left half -->
+  <rect x="14" y="4" width="4" height="10" rx="0.5" fill="rgba(180,175,165,0.18)"
+    stroke="rgba(160,155,145,0.14)" stroke-width="0.3"/>
+  <!-- Cup right half — darker -->
+  <rect x="18" y="4" width="4" height="10" rx="0.5" fill="rgba(160,155,145,0.14)"
+    stroke="rgba(140,135,125,0.1)" stroke-width="0.3"/>
+  <!-- Cup top — lightest -->
+  <ellipse cx="18" cy="4" rx="4" ry="1.5" fill="rgba(200,195,185,0.16)"
+    stroke="rgba(180,175,165,0.12)" stroke-width="0.3"/>
+  <!-- Cup highlight -->
+  <line x1="15" y1="5" x2="15" y2="13" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+  <!-- Chopsticks sticking out -->
+  <line x1="16" y1="3" x2="13" y2="-2" stroke="#3a3020" stroke-width="0.8"/>
+  <line x1="19" y1="3" x2="17" y2="-2" stroke="#342c20" stroke-width="0.8"/>
+
+  <!-- Crumpled wrapper — cel-shaded facets -->
+  <polygon points="26,12 29,10 33,12 31,15 27,14"
+    fill="#3a3828" opacity="0.5" stroke="#2c2820" stroke-width="0.4"/>
+  <!-- Wrapper shadow facet -->
+  <polygon points="29,10 33,12 31,15"
+    fill="#2c2820" opacity="0.3"/>
+
+  <!-- Napkin (balled up) -->
+  <ellipse cx="36" cy="10" rx="3" ry="2" fill="rgba(200,195,180,0.12)"
+    stroke="rgba(180,175,160,0.08)" stroke-width="0.3"/>
+  <!-- Napkin shadow half -->
+  <ellipse cx="37" cy="10.5" rx="2" ry="1.5" fill="rgba(0,0,0,0.06)"/>
+
+  <!-- Sauce packet — cel-shaded small rectangle -->
+  <rect x="28" y="7" width="5" height="3" rx="0.5" fill="rgba(200,60,60,0.15)"
+    stroke="rgba(180,40,40,0.1)" stroke-width="0.3"/>
+  <!-- Packet highlight -->
+  <line x1="29" y1="7.5" x2="29" y2="9.5" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+
+  <!-- Straw wrapper -->
+  <line x1="22" y1="14" x2="32" y2="16" stroke="rgba(224,221,214,0.08)" stroke-width="0.8"/>
+</svg>

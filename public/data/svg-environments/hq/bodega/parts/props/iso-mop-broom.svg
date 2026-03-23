@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 80">
+  <!-- Mop and broom leaning together against a wall. Bodega staples.
+       Thin, tall silhouettes. Broom leans left, mop leans right.
+       Cel shading applied to broom head block and mop clamp. -->
+
+  <!-- Shadow -->
+  <ellipse cx="14" cy="76" rx="8" ry="2" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Broom handle (leaning left) — warm wood -->
+  <line x1="10" y1="8" x2="8" y2="62" stroke="#3a3020" stroke-width="1.8"/>
+  <!-- Handle highlight edge -->
+  <line x1="10.5" y1="8" x2="8.5" y2="62" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+
+  <!-- Broom head — cel-shaded block -->
+  <!-- Broom head left face — medium -->
+  <polygon points="4,62 8,60 8,74 4,76"
+    fill="#2c2418" stroke="#201810" stroke-width="0.5"/>
+  <!-- Broom head right face — darkest -->
+  <polygon points="8,60 12,62 12,76 8,74"
+    fill="#221a10" stroke="#1a1408" stroke-width="0.5"/>
+  <!-- Broom head top face — lightest -->
+  <polygon points="4,62 8,60 12,62 8,64"
+    fill="#342c1e" stroke="#2c2418" stroke-width="0.5"/>
+
+  <!-- Bristle lines -->
+  <line x1="5" y1="66" x2="4.5" y2="75" stroke="#201810" stroke-width="0.4"/>
+  <line x1="7" y1="65" x2="7" y2="74" stroke="#201810" stroke-width="0.4"/>
+  <line x1="9" y1="65" x2="9" y2="74" stroke="#1a1408" stroke-width="0.4"/>
+  <line x1="11" y1="66" x2="11.5" y2="75" stroke="#1a1408" stroke-width="0.4"/>
+  <!-- Broom binding -->
+  <line x1="4.5" y1="64" x2="11.5" y2="64" stroke="#2c2418" stroke-width="0.8"/>
+
+  <!-- Mop handle (leaning right) — metal gray -->
+  <line x1="16" y1="6" x2="19" y2="58" stroke="#3a3838" stroke-width="1.8"/>
+  <!-- Handle highlight edge -->
+  <line x1="16.5" y1="6" x2="19.5" y2="58" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
+
+  <!-- Mop head clamp — cel-shaded small box -->
+  <!-- Clamp top — lightest -->
+  <polygon points="16,57 19.5,58.5 23,57 19.5,55.5"
+    fill="#4a4a52" stroke="#3a3a42" stroke-width="0.5"/>
+  <!-- Clamp left — medium -->
+  <polygon points="16,57 19.5,58.5 19.5,61 16,59.5"
+    fill="#3a3a42" stroke="#303038" stroke-width="0.4"/>
+  <!-- Clamp right — darkest -->
+  <polygon points="19.5,58.5 23,57 23,59.5 19.5,61"
+    fill="#303038" stroke="#282830" stroke-width="0.4"/>
+
+  <!-- Mop strands (hanging, damp-looking) -->
+  <path d="M17,61 Q15,68 16,76" fill="none" stroke="#2c3830" stroke-width="1.2" opacity="0.8"/>
+  <path d="M19,61 Q18,70 19,76" fill="none" stroke="#283430" stroke-width="1.2" opacity="0.7"/>
+  <path d="M21,61 Q23,68 22,76" fill="none" stroke="#2c3830" stroke-width="1" opacity="0.8"/>
+  <path d="M18,61 Q16,72 17,76" fill="none" stroke="#263028" stroke-width="1" opacity="0.6"/>
+  <path d="M20,61 Q21,70 21,76" fill="none" stroke="#283430" stroke-width="0.8" opacity="0.7"/>
+
+  <!-- Tiny puddle at mop base (it's always a little damp) -->
+  <ellipse cx="19" cy="76" rx="5" ry="1.5" fill="rgba(40,60,60,0.15)"/>
+</svg>

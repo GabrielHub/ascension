@@ -43,5 +43,8 @@ export function runSimSystemSchedule(context: SimSystemContext, deltaMs: number)
   });
 }
 
+export * from "./inventory";
+export * from "./market";
 export * from "./raids";
+export * from "./social";
 export * from "./types";

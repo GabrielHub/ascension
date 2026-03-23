@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64">
+  <!-- Isometric coffee machine. Bodega drip machine that takes three tries.
+       Boxy, industrial, with a carafe and warming plate. -->
+
+  <!-- Shadow -->
+  <ellipse cx="24" cy="48" rx="13" ry="3" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Machine body — proper cel-shaded iso box -->
+  <!-- Machine body top — lightest face -->
+  <polygon points="12,14 24,20 36,14 24,8"
+    fill="#2e2c36" stroke="#24222c" stroke-width="0.7"/>
+  <!-- Machine body left face — medium shade -->
+  <polygon points="12,14 24,20 24,44 12,38"
+    fill="#22202a" stroke="#1a1822" stroke-width="0.6"/>
+  <!-- Machine body right face — darkest shade -->
+  <polygon points="24,20 36,14 36,38 24,44"
+    fill="#1a1820" stroke="#141218" stroke-width="0.6"/>
+
+  <!-- Top edge highlights -->
+  <line x1="12" y1="14" x2="24" y2="8" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+  <line x1="24" y1="8" x2="36" y2="14" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+
+  <!-- Water reservoir (top back section, slightly raised) -->
+  <polygon points="14,10 24,16 30,12 20,6"
+    fill="#262430" stroke="#1e1c28" stroke-width="0.5"/>
+  <polygon points="14,10 24,16 24,14 14,8"
+    fill="#1e1c28" opacity="0.7"/>
+  <!-- Water level hint -->
+  <line x1="16" y1="12" x2="22" y2="15" stroke="rgba(80,140,200,0.14)" stroke-width="0.8"/>
+
+  <!-- Warming plate (bottom front, protruding) -->
+  <polygon points="14,38 24,44 34,38 24,32"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+
+  <!-- Carafe on warming plate -->
+  <!-- Carafe body — cel-shaded glass box -->
+  <polygon points="18,32 24,35 30,32 24,29"
+    fill="#222830" stroke="#1a2028" stroke-width="0.4"/>
+  <polygon points="18,32 24,35 24,42 18,39"
+    fill="#1a2028" stroke="#141820" stroke-width="0.4"/>
+  <polygon points="24,35 30,32 30,39 24,42"
+    fill="#141820" stroke="#101418" stroke-width="0.4"/>
+  <!-- Coffee level in carafe -->
+  <polygon points="20,35 24,37 28,35 24,33"
+    fill="#1a1008" opacity="0.8"/>
+  <!-- Carafe handle -->
+  <path d="M30,33 Q34,35 30,38" fill="none" stroke="#2a2830" stroke-width="1"/>
+
+  <!-- Control panel (right face detail) -->
+  <rect x="26" y="24" width="4" height="3" rx="0.3" fill="#141218"/>
+  <!-- Power light (dim red, machine is always on) -->
+  <circle cx="34" cy="22" r="1" fill="rgba(200,60,60,0.35)"/>
+  <!-- Button -->
+  <circle cx="28" cy="30" r="1.2" fill="#3a3838" stroke="#2a2a30" stroke-width="0.4"/>
+
+  <!-- Drip stain on warming plate edge -->
+  <line x1="22" y1="38" x2="26" y2="40" stroke="rgba(30,16,8,0.3)" stroke-width="0.8"/>
+</svg>

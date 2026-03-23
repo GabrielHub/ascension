@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32">
+  <!-- Pickled egg jar. Signature bodega detail. Sits on the counter holding
+       down paperwork. Glass jar with murky brine and egg shapes.
+       Cel-shaded cylindrical form with stronger glass reflections. -->
+
+  <!-- Shadow -->
+  <ellipse cx="12" cy="28" rx="6" ry="1.5" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Jar body — cel-shaded cylinder using left/right halves -->
+  <!-- Jar bottom ellipse -->
+  <ellipse cx="12" cy="26" rx="8" ry="3" fill="#222828" stroke="#1a2020" stroke-width="0.5"/>
+  <!-- Jar left half — medium shade -->
+  <rect x="4" y="10" width="8" height="16" fill="#2a3030"/>
+  <!-- Jar right half — darkest shade -->
+  <rect x="12" y="10" width="8" height="16" fill="#222828"/>
+  <!-- Jar top ellipse — lightest shade -->
+  <ellipse cx="12" cy="10" rx="8" ry="3" fill="#343c3c" stroke="#2a3030" stroke-width="0.5"/>
+
+  <!-- Glass highlight (left edge vertical reflection) -->
+  <line x1="6" y1="12" x2="6" y2="24" stroke="rgba(255,255,255,0.09)" stroke-width="0.7"/>
+  <!-- Secondary glass reflection -->
+  <line x1="7.5" y1="13" x2="7.5" y2="22" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+  <!-- Rim highlight -->
+  <ellipse cx="12" cy="10" rx="8" ry="3" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+
+  <!-- Brine level (murky yellow-green) -->
+  <rect x="5" y="12" width="14" height="12" fill="rgba(120,110,50,0.18)"/>
+  <ellipse cx="12" cy="12" rx="7" ry="2.5" fill="rgba(120,110,50,0.14)"/>
+
+  <!-- Eggs (pale ovals floating in brine) -->
+  <ellipse cx="9" cy="18" rx="2.5" ry="1.8" fill="rgba(200,195,170,0.28)"
+    stroke="rgba(180,175,150,0.18)" stroke-width="0.3"/>
+  <ellipse cx="14" cy="20" rx="2.5" ry="2" fill="rgba(200,195,170,0.22)"
+    stroke="rgba(180,175,150,0.14)" stroke-width="0.3"/>
+  <ellipse cx="11" cy="22" rx="2" ry="1.5" fill="rgba(200,195,170,0.2)"
+    stroke="rgba(180,175,150,0.12)" stroke-width="0.3"/>
+
+  <!-- Lid — cel-shaded top with warm wood tones -->
+  <ellipse cx="12" cy="8" rx="7" ry="2.5" fill="#3a3020" stroke="#302818" stroke-width="0.6"/>
+  <ellipse cx="12" cy="7" rx="6" ry="2" fill="#342c20"/>
+  <!-- Lid highlight -->
+  <ellipse cx="12" cy="7" rx="6" ry="2" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+</svg>

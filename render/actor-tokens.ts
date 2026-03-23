@@ -69,7 +69,7 @@ export function getActorPortraitUrl(presetId: string, roleTag: string): string {
   }
 
   const recipe = (getRecipeById(presetId) ?? getDefaultRecipe()) as AppearanceRecipeData;
-  const build: BuildType = resolveOperatorBuild(roleTag);
+  const build: BuildType = resolveOperatorBuild(roleTag, presetId);
   const marker = deriveActorMarker(recipe, build);
   const svgMarkup = buildChibiSvg(
     marker.hairColor,

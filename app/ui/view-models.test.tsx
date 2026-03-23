@@ -15,15 +15,15 @@ describe("phase 1 view models", () => {
 
     simulation.dispatch({
       type: "sim/purchase-room-upgrade",
-      roomId: "room-instance/front_desk",
-      upgradeId: "upgrade/room/front_desk:records_wall",
+      roomId: "room-instance/register",
+      upgradeId: "upgrade/room/register:records_wall",
     });
 
     const hq = buildHqViewFromPhase1(simulation.getPhase1View(), templateRegistry);
 
     expect(hq.roomUpgrades).toContainEqual(
       expect.objectContaining({
-        id: "upgrade/room/front_desk:records_wall",
+        id: "upgrade/room/register:records_wall",
         isApplied: true,
       }),
     );

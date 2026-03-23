@@ -10,22 +10,35 @@ import {
   LoyaltyState,
   MoraleState,
   NeedState,
+  NotableTie,
+  OperatorDisposition,
   OperatorIdentity,
   PreferenceState,
   RaidOpportunityState,
   RaidParticipationState,
-  RelationshipState,
+  RecurringTeam,
+  RoomCulture,
   ScheduleState,
+  WorldTimeState,
 } from "../components";
 import {
-  appendHistoryTags,
   clamp,
   formatWorldTimestamp,
   getCurrentAbsoluteMinute,
-  getPairOrder,
+  pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
 import { reconcileAssignmentsSystem } from "./assignment";
+import { addToInventory, autoSelectAccessory, unequipItem } from "./inventory";
+import { computeAutonomyFlags } from "./morale";
+import {
+  applyRaidSocialOutcome,
+  computeSocialCohesion,
+  findRecurringTeamForMembers,
+  findDispositionEntity,
+  getRecurringTeamCohesionBonus,
+  upsertNotableTie,
+} from "./social";
 import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
 import type { RaidTeamGoal } from "render/types";
 import type {
@@ -92,7 +105,7 @@ function upsertRaidEvent(
 }
 
 function resolveRaidOperatorReadiness(entity: number): RaidOperatorReadiness {
-  if (OperatorIdentity.lifecycleStatus[entity] === "dead") {
+  if (OperatorIdentity.lifecycleStatus[entity] !== "active") {
     return "critical";
   }
   if (InjuryState.severity[entity] >= 65) {
@@ -342,21 +355,6 @@ export function computeSchedulePressure(currentBlock: string): number {
   }
 }
 
-function getRelationshipEntityForPair(
-  context: SimSystemContext,
-  leftId: string,
-  rightId: string,
-): number | undefined {
-  const [operatorAId, operatorBId] = getPairOrder(leftId, rightId);
-
-  return context.runtimeState.relationshipEntities.find((entity) => {
-    return (
-      RelationshipState.operatorAId[entity] === operatorAId &&
-      RelationshipState.operatorBId[entity] === operatorBId
-    );
-  });
-}
-
 function getMissionPreferenceScore(entity: number, missionTags: readonly string[]): number {
   const preferredTags = PreferenceState.preferredMissionTags[entity] ?? [];
   return preferredTags.reduce((total, tag) => {
@@ -376,21 +374,7 @@ export function computeRelationshipCohesion(
   leftId: string,
   rightId: string,
 ): number {
-  const relationshipEntity = getRelationshipEntityForPair(context, leftId, rightId);
-  if (relationshipEntity === undefined) {
-    return 48;
-  }
-
-  return clamp(
-    50 +
-      (RelationshipState.trust[relationshipEntity] -
-        RelationshipState.friction[relationshipEntity]) *
-        0.5 +
-      RelationshipState.familiarity[relationshipEntity] * 0.12 +
-      RelationshipState.recentSharedOutcome[relationshipEntity] * 0.35,
-    0,
-    100,
-  );
+  return computeSocialCohesion(context, leftId, rightId);
 }
 
 function computeTeamCohesion(context: SimSystemContext, operatorIds: readonly string[]): number {
@@ -398,6 +382,13 @@ function computeTeamCohesion(context: SimSystemContext, operatorIds: readonly st
     return 50;
   }
 
+  const recurringTeamEntity = findRecurringTeamForMembers(context, operatorIds);
+  if (recurringTeamEntity !== undefined && RecurringTeam.damaged[recurringTeamEntity] !== 1) {
+    // RecurringTeam members get +15 cohesion bonus when raiding together
+    return clamp(RecurringTeam.cohesion[recurringTeamEntity] + 15, 0, 100);
+  }
+
+  // Fallback to pairwise for non-team groups
   const pairScores: number[] = [];
   for (let index = 0; index < operatorIds.length; index += 1) {
     for (let otherIndex = index + 1; otherIndex < operatorIds.length; otherIndex += 1) {
@@ -505,7 +496,7 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   }
 
   const livingOperatorCount = context.runtimeState.operatorEntities.filter(
-    (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+    (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   ).length;
   if (livingOperatorCount < 2) {
     return;
@@ -562,6 +553,11 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   context.runtimeState.nextOpportunitySequence += 1;
   BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = currentMinute;
   pushRuntimeCue(context, "raid.opportunity");
+  pushRuntimeEvent(context, {
+    kind: "event_change",
+    message: `New raid opportunity: ${mission.name}`,
+    accent: "gold",
+  });
 }
 
 function getSortedOpportunityEntities(context: SimSystemContext): number[] {
@@ -586,18 +582,44 @@ function planOpportunityTeam(
 
   const candidates = context.runtimeState.operatorEntities
     .filter((entity) => {
-      return (
-        OperatorIdentity.lifecycleStatus[entity] !== "dead" &&
-        !reservedOperatorIds.has(OperatorIdentity.id[entity]) &&
-        RaidParticipationState.activeRaidId[entity].length === 0 &&
-        InjuryState.severity[entity] < 70
-      );
+      if (OperatorIdentity.lifecycleStatus[entity] !== "active") return false;
+      if (reservedOperatorIds.has(OperatorIdentity.id[entity])) return false;
+      if (RaidParticipationState.activeRaidId[entity].length > 0) return false;
+
+      if (InjuryState.severity[entity] > 60) return false;
+
+      const autonomyFlags = computeAutonomyFlags(entity);
+      if (autonomyFlags.refusalRisk) {
+        const refusalRng = new SeededRng(
+          seedFromKey(
+            `refusal:${OperatorIdentity.id[entity]}:${getCurrentAbsoluteMinute(context)}`,
+          ),
+        );
+        if (refusalRng.chance(0.4)) return false;
+      }
+      return true;
     })
     .map((entity) => {
       const readiness = computeOperatorRaidReadiness(context, entity, opportunityEntity);
+      const priorTeamBonus = context.runtimeState.recurringTeamEntities.reduce(
+        (best, teamEntity) => {
+          const members = RecurringTeam.memberIds[teamEntity] ?? [];
+          if (!members.includes(OperatorIdentity.id[entity])) {
+            return best;
+          }
+          if (RecurringTeam.damaged[teamEntity] === 1) {
+            return Math.max(best, 2);
+          }
+          return Math.max(best, (RecurringTeam.cohesion[teamEntity] - 50) * 0.12);
+        },
+        0,
+      );
       return {
         entity,
-        readiness,
+        readiness: {
+          ...readiness,
+          readinessScore: readiness.readinessScore + priorTeamBonus,
+        },
       };
     })
     .filter(({ readiness }) => readiness.willingnessScore >= 54)
@@ -633,6 +655,7 @@ function planOpportunityTeam(
 
     const nextCandidate = remaining
       .map((candidate) => {
+        const candidateId = OperatorIdentity.id[candidate.entity];
         const cohesionScore =
           team.length === 0
             ? 50
@@ -642,13 +665,23 @@ function planOpportunityTeam(
                   computeRelationshipCohesion(
                     context,
                     OperatorIdentity.id[teammate.entity],
-                    OperatorIdentity.id[candidate.entity],
+                    candidateId,
                   )
                 );
               }, 0) / team.length;
+        const recurringTeamBonus =
+          team.length === 0
+            ? 0
+            : getRecurringTeamCohesionBonus(context, [
+                ...team.map(({ entity }) => OperatorIdentity.id[entity]),
+                candidateId,
+              ]);
         const partnerBonus = getPreferredPartnerBonus(candidate.entity, [...chosenIdSet]);
         const selectionScore =
-          candidate.readiness.willingnessScore + cohesionScore * 0.35 + partnerBonus;
+          candidate.readiness.willingnessScore +
+          cohesionScore * 0.35 +
+          recurringTeamBonus * 0.5 +
+          partnerBonus;
 
         return {
           candidate,
@@ -792,56 +825,18 @@ function createResolutionPacket(
   };
 }
 
-function updateRelationshipOutcomes(
-  context: SimSystemContext,
-  operatorIds: readonly string[],
-  result: "success" | "failure" | "mixed",
-  missionObjectiveType: string,
-): void {
-  for (let index = 0; index < operatorIds.length; index += 1) {
-    for (let otherIndex = index + 1; otherIndex < operatorIds.length; otherIndex += 1) {
-      const relationshipEntity = getRelationshipEntityForPair(
-        context,
-        operatorIds[index],
-        operatorIds[otherIndex],
-      );
-      if (relationshipEntity === undefined) {
-        continue;
-      }
-
-      const trustDelta = result === "success" ? 6 : result === "mixed" ? 2 : -4;
-      const frictionDelta = result === "success" ? -3 : result === "mixed" ? 1 : 6;
-      const outcomeDelta = result === "success" ? 14 : result === "mixed" ? 4 : -12;
-
-      RelationshipState.trust[relationshipEntity] = clamp(
-        RelationshipState.trust[relationshipEntity] + trustDelta,
-        0,
-        100,
-      );
-      RelationshipState.friction[relationshipEntity] = clamp(
-        RelationshipState.friction[relationshipEntity] + frictionDelta,
-        0,
-        100,
-      );
-      RelationshipState.familiarity[relationshipEntity] = clamp(
-        RelationshipState.familiarity[relationshipEntity] + 4,
-        0,
-        100,
-      );
-      RelationshipState.recentSharedOutcome[relationshipEntity] = clamp(
-        RelationshipState.recentSharedOutcome[relationshipEntity] * 0.35 + outcomeDelta,
-        -30,
-        30,
-      );
-      RelationshipState.historyTags[relationshipEntity] = appendHistoryTags(
-        RelationshipState.historyTags[relationshipEntity] ?? [],
-        [`mission:${missionObjectiveType}`, `outcome:${result}`],
-      );
-    }
-  }
-}
-
 function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: number): void {
+  // Treasury gate: do not launch raids when the guild is in debt
+  if (GuildState.treasury[context.singletonEntities.guild] < 0) {
+    pushRuntimeEvent(context, {
+      kind: "resource_swing",
+      message: "Raid cancelled — treasury is negative",
+      accent: "ember",
+    });
+    removeRaidOpportunityEntity(context, opportunityEntity);
+    return;
+  }
+
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
   const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
   const claimedOperatorIds = [
@@ -868,6 +863,16 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
         total + computeOperatorRaidReadiness(context, entity, opportunityEntity).readinessScore
       );
     }, 0) / Math.max(1, operatorEntities.length);
+
+  claimedOperatorIds.forEach((operatorId, index) => {
+    const operatorEntity = operatorEntities[index];
+    if (operatorEntity === undefined) {
+      return;
+    }
+
+    autoSelectAccessory(context, operatorId, OperatorIdentity.roleTag[operatorEntity]);
+  });
+
   const teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
 
   BuildingAuthority.activeRaidPackets[context.singletonEntities.building] = [
@@ -913,6 +918,17 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
   );
   context.runtimeState.nextRaidSequence += 1;
   pushRuntimeCue(context, "raid.launch");
+  const operatorNames = claimedOperatorIds.map((id) => {
+    const opEntity = operatorEntities.find((e) => OperatorIdentity.id[e] === id);
+    return opEntity !== undefined ? (OperatorIdentity.name[opEntity] ?? id) : id;
+  });
+  pushRuntimeEvent(context, {
+    kind: "team_departure",
+    message: `${operatorNames.join(", ")} departed on ${mission.name}`,
+    accent: "gold",
+    targetKind: "team",
+    targetId: raidId,
+  });
   removeRaidOpportunityEntity(context, opportunityEntity);
 }
 
@@ -959,6 +975,32 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
           : "raid.return.success",
       );
 
+      const missionTemplate = context.registry.missions.find((m) => m.id === packet.missionId);
+      const missionLabel = missionTemplate?.name ?? packet.missionId;
+      const res = packet.resolutionPacket;
+      const returningOperatorNames = packet.resolutionPacket.operatorOutcomes
+        .filter((outcome) => !outcome.died)
+        .map((outcome) => {
+          const operatorEntity = operatorEntityById.get(outcome.operatorId);
+          return operatorEntity === undefined
+            ? outcome.operatorId
+            : (OperatorIdentity.name[operatorEntity] ?? outcome.operatorId);
+        });
+      if (returningOperatorNames.length > 0) {
+        pushRuntimeEvent(context, {
+          kind: "team_return",
+          message: `${returningOperatorNames.join(", ")} returned from ${missionLabel}`,
+          accent: "gold",
+          targetKind: "team",
+          targetId: packet.id,
+        });
+      }
+      pushRuntimeEvent(context, {
+        kind: "raid_result",
+        message: `${missionLabel} ended ${res.result} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
+        accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
+      });
+
       packet.resolutionPacket.operatorOutcomes.forEach((outcome) => {
         const operatorEntity = operatorEntityById.get(outcome.operatorId);
         if (operatorEntity === undefined) {
@@ -989,14 +1031,38 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         RaidParticipationState.returnTick[operatorEntity] = 0;
 
         if (outcome.died) {
+          const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
+          unequipItem(context, outcome.operatorId, "weapon");
+          unequipItem(context, outcome.operatorId, "outfitOverlay");
+          unequipItem(context, outcome.operatorId, "accessory");
           OperatorIdentity.lifecycleStatus[operatorEntity] = "dead";
           OperatorIdentity.deathTick[operatorEntity] = getCurrentAbsoluteMinute(context);
           OperatorIdentity.deathRaidSummaryId[operatorEntity] = packet.id;
+          OperatorIdentity.departureTick[operatorEntity] = 0;
+          OperatorIdentity.departureReason[operatorEntity] = "";
           AssignmentState.kind[operatorEntity] = "idle";
           AssignmentState.targetId[operatorEntity] = "";
           ScheduleState.currentBlock[operatorEntity] = "idle";
           pushRuntimeCue(context, "raid.death");
+          pushRuntimeEvent(context, {
+            kind: "death",
+            message: `${opName} killed in action`,
+            accent: "magma",
+            targetKind: "operator",
+            targetId: outcome.operatorId,
+          });
           return;
+        }
+
+        if (outcome.injuryDelta > 20) {
+          const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
+          pushRuntimeEvent(context, {
+            kind: "injury",
+            message: `${opName} injured during the raid`,
+            accent: "ember",
+            targetKind: "operator",
+            targetId: outcome.operatorId,
+          });
         }
 
         AssignmentState.kind[operatorEntity] =
@@ -1004,15 +1070,37 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         AssignmentState.targetId[operatorEntity] = "";
       });
 
-      updateRelationshipOutcomes(
+      const lootRng = new SeededRng(seedFromKey(`loot:${packet.id}:${currentMinute}`));
+      const lootDrops = generateLootDrops(context, lootRng, packet.resolutionPacket.result);
+      applyLootToInventory(context, lootDrops);
+
+      const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
+        .filter((outcome) => outcome.died)
+        .map((outcome) => outcome.operatorId);
+      const survivingOperatorIds = packet.operatorIds.filter((id) => !diedOperatorIds.includes(id));
+
+      updateRecurringTeamAfterRaid(
         context,
         packet.operatorIds,
         packet.resolutionPacket.result,
-        getMissionTemplate(context, packet.missionId).objectiveType,
+        currentMinute,
       );
 
+      diedOperatorIds.forEach((deceasedId) => {
+        createGriefTies(context, deceasedId, survivingOperatorIds);
+        markTeamDamaged(context, [deceasedId], "death");
+      });
+
+      applyRaidSocialOutcome(context, packet.operatorIds, packet.resolutionPacket.result);
+
+      const MAX_RAID_SUMMARIES = 50;
+      const existingSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
+      const trimmed =
+        existingSummaries.length >= MAX_RAID_SUMMARIES
+          ? existingSummaries.slice(-MAX_RAID_SUMMARIES + 1)
+          : existingSummaries;
       BuildingAuthority.raidSummaries[buildingEntity] = [
-        ...(BuildingAuthority.raidSummaries[buildingEntity] ?? []),
+        ...trimmed,
         {
           id: packet.id,
           contractSiteId: packet.contractSiteId,
@@ -1182,6 +1270,422 @@ function updateRaidPresentation(context: SimSystemContext): void {
   context.runtimeState.raidPresentation.teams = nextTeams;
 }
 
+// ── Loot generation ──────────────────────────────────────────────────────
+
+function getDropTableEntries(context: SimSystemContext, tableId: string) {
+  return context.registry.dropTableById.get(tableId)?.entries ?? [];
+}
+
+function rollDropTable(
+  rng: SeededRng,
+  entries: readonly {
+    itemId: string;
+    weight: number;
+    minQuantity: number;
+    maxQuantity: number;
+  }[],
+): string[] {
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const rolledEntry = weightedChoice(
+    rng,
+    entries.map((entry) => ({
+      item: entry,
+      weight: entry.weight,
+    })),
+  ).outcome;
+  const quantity = rng.int(rolledEntry.minQuantity, rolledEntry.maxQuantity);
+
+  return Array.from({ length: quantity }, () => rolledEntry.itemId);
+}
+
+export function generateLootDrops(
+  context: SimSystemContext,
+  rng: SeededRng,
+  result: "success" | "failure" | "mixed",
+): string[] {
+  const loot: string[] = [];
+  const regularEntries = getDropTableEntries(context, "drop-table/dungeon-f-regular");
+  const eliteEntries = getDropTableEntries(context, "drop-table/dungeon-f-elite");
+  const bossEntries = getDropTableEntries(context, "drop-table/dungeon-f-boss");
+  const regularRolls = result === "success" ? 2 : result === "mixed" ? 1 : rng.chance(0.25) ? 1 : 0;
+
+  for (let i = 0; i < regularRolls; i += 1) {
+    loot.push(...rollDropTable(rng, regularEntries));
+  }
+
+  if (
+    result !== "failure" &&
+    eliteEntries.length > 0 &&
+    rng.chance(result === "success" ? 0.5 : 0.25)
+  ) {
+    loot.push(...rollDropTable(rng, eliteEntries));
+  }
+
+  if (result === "success" && bossEntries.length > 0 && rng.chance(0.2)) {
+    loot.push(...rollDropTable(rng, bossEntries));
+  }
+
+  return loot;
+}
+
+function applyLootToInventory(context: SimSystemContext, loot: string[]): void {
+  const itemCounts = new Map<string, number>();
+  loot.forEach((itemId) => {
+    itemCounts.set(itemId, (itemCounts.get(itemId) ?? 0) + 1);
+  });
+  itemCounts.forEach((quantity, itemId) => {
+    addToInventory(context, itemId, quantity);
+  });
+}
+
+// ── Recurring team tracking ──────────────────────────────────────────────
+
+function updateRecurringTeamAfterRaid(
+  context: SimSystemContext,
+  operatorIds: readonly string[],
+  result: "success" | "failure" | "mixed",
+  currentTick: number,
+): void {
+  let teamEntity = findRecurringTeamForMembers(context, operatorIds);
+
+  if (teamEntity === undefined && operatorIds.length >= 2) {
+    // Create a new recurring team if operators raided together
+    teamEntity = addEntity(context.world);
+    addComponent(context.world, teamEntity, RecurringTeam);
+    RecurringTeam.id[teamEntity] = `team/${context.runtimeState.nextTeamSequence}`;
+    RecurringTeam.memberIds[teamEntity] = [...operatorIds];
+    RecurringTeam.cohesion[teamEntity] = 50;
+    RecurringTeam.raidCount[teamEntity] = 0;
+    RecurringTeam.lastRaidTick[teamEntity] = 0;
+    RecurringTeam.damaged[teamEntity] = 0;
+    RecurringTeam.damageReason[teamEntity] = "";
+    context.runtimeState.recurringTeamEntities.push(teamEntity);
+    context.runtimeState.nextTeamSequence += 1;
+    const memberNames = operatorIds.map((id) => {
+      const e = context.runtimeState.operatorEntities.find(
+        (ent) => OperatorIdentity.id[ent] === id,
+      );
+      return e !== undefined ? (OperatorIdentity.name[e] ?? id) : id;
+    });
+    pushRuntimeEvent(context, {
+      kind: "team_status",
+      message: `${memberNames.join(", ")} formed a recurring team`,
+      accent: "gold",
+      targetKind: "team",
+      targetId: RecurringTeam.id[teamEntity],
+    });
+  }
+
+  if (teamEntity === undefined) return;
+
+  RecurringTeam.raidCount[teamEntity] += 1;
+  RecurringTeam.lastRaidTick[teamEntity] = currentTick;
+
+  const cohesionDelta = result === "success" ? 8 : result === "mixed" ? 2 : -6;
+  RecurringTeam.cohesion[teamEntity] = clamp(
+    RecurringTeam.cohesion[teamEntity] + cohesionDelta,
+    0,
+    100,
+  );
+}
+
+function markTeamDamaged(
+  context: SimSystemContext,
+  operatorIds: readonly string[],
+  reason: string,
+): void {
+  // Find any team that contains the deceased operator
+  context.runtimeState.recurringTeamEntities.forEach((entity) => {
+    const members = RecurringTeam.memberIds[entity] ?? [];
+    if (operatorIds.some((id) => members.includes(id))) {
+      RecurringTeam.damaged[entity] = 1;
+      RecurringTeam.damageReason[entity] = reason;
+    }
+  });
+}
+
+function createGriefTies(
+  context: SimSystemContext,
+  deceasedId: string,
+  survivingIds: readonly string[],
+): void {
+  survivingIds.forEach((survivorId) => {
+    upsertNotableTie(context, deceasedId, survivorId, "grief", 70);
+  });
+}
+
+function disbandRecurringTeam(
+  context: SimSystemContext,
+  teamEntity: number,
+  survivingMemberIds: readonly string[],
+  reason: string,
+): void {
+  removeEntity(context.world, teamEntity);
+  removeTrackedEntity(context.runtimeState.recurringTeamEntities, teamEntity);
+
+  if (survivingMemberIds.length === 0) {
+    return;
+  }
+
+  const survivingNames = survivingMemberIds.map((memberId) => {
+    const operatorEntity = context.runtimeState.operatorEntities.find(
+      (entity) => OperatorIdentity.id[entity] === memberId,
+    );
+
+    return operatorEntity === undefined
+      ? memberId
+      : (OperatorIdentity.name[operatorEntity] ?? memberId);
+  });
+
+  pushRuntimeEvent(context, {
+    kind: "team_status",
+    message: `${survivingNames.join(", ")} disbanded after ${reason.replace(/_/g, " ")}`,
+    accent: "ember",
+  });
+}
+
+// ── Refusal and quit logic ───────────────────────────────────────────────
+
+function getAverageRoomComfort(context: SimSystemContext): number {
+  if (context.runtimeState.roomCultureEntities.length === 0) {
+    return 50;
+  }
+
+  return (
+    context.runtimeState.roomCultureEntities.reduce(
+      (sum, entity) => sum + RoomCulture.comfort[entity],
+      0,
+    ) / context.runtimeState.roomCultureEntities.length
+  );
+}
+
+function getGriefTieCountForOperator(context: SimSystemContext, operatorId: string): number {
+  return context.runtimeState.notableTieEntities.filter((entity) => {
+    return (
+      NotableTie.stance[entity] === "grief" &&
+      (NotableTie.operatorAId[entity] === operatorId ||
+        NotableTie.operatorBId[entity] === operatorId)
+    );
+  }).length;
+}
+
+function getDamagedTeamPenalty(context: SimSystemContext, operatorId: string): number {
+  return context.runtimeState.recurringTeamEntities.some((entity) => {
+    return (
+      RecurringTeam.damaged[entity] === 1 &&
+      (RecurringTeam.memberIds[entity] ?? []).includes(operatorId)
+    );
+  })
+    ? 12
+    : 0;
+}
+
+function getDepartureCheck(
+  context: SimSystemContext,
+  entity: number,
+  rng: SeededRng,
+): {
+  shouldDepart: boolean;
+  reason: string;
+} {
+  const operatorId = OperatorIdentity.id[entity];
+  const flags = computeAutonomyFlags(entity);
+  const dispositionEntity = findDispositionEntity(context, operatorId);
+  const grievanceLevel =
+    dispositionEntity === undefined ? 25 : OperatorDisposition.grievanceLevel[dispositionEntity];
+  const morale = MoraleState.current[entity];
+  const loyalty = LoyaltyState.current[entity];
+  const avgComfort = getAverageRoomComfort(context);
+  const griefTieCount = getGriefTieCountForOperator(context, operatorId);
+  const damagedTeamPenalty = getDamagedTeamPenalty(context, operatorId);
+
+  const reason =
+    flags.quitRisk || morale <= loyalty ? "morale collapse" : "loss of faith in the guild";
+  const roll = boundedRoll(
+    rng,
+    flags.quitRisk ? 28 : 12,
+    [
+      { label: "morale", value: Math.max(0, 22 - morale) * 1.5 },
+      { label: "loyalty", value: Math.max(0, 30 - loyalty) * 1.1 },
+      { label: "grievance", value: Math.max(0, grievanceLevel - 40) * 0.25 },
+      { label: "injury", value: InjuryState.severity[entity] * 0.15 },
+      { label: "grief", value: griefTieCount * 6 },
+      { label: "team_damage", value: damagedTeamPenalty },
+      { label: "room_comfort", value: Math.max(0, 48 - avgComfort) * 0.18 },
+    ],
+    55,
+    10,
+  );
+
+  return {
+    shouldDepart: roll.outcome,
+    reason,
+  };
+}
+
+function departOperator(context: SimSystemContext, entity: number, reason: string): void {
+  const operatorId = OperatorIdentity.id[entity];
+  const operatorName = OperatorIdentity.name[entity] ?? operatorId;
+  const currentMinute = getCurrentAbsoluteMinute(context);
+
+  unequipItem(context, operatorId, "weapon");
+  unequipItem(context, operatorId, "outfitOverlay");
+  unequipItem(context, operatorId, "accessory");
+
+  OperatorIdentity.lifecycleStatus[entity] = "departed";
+  OperatorIdentity.deathTick[entity] = 0;
+  OperatorIdentity.deathRaidSummaryId[entity] = "";
+  OperatorIdentity.departureTick[entity] = currentMinute;
+  OperatorIdentity.departureReason[entity] = reason;
+  AssignmentState.kind[entity] = "idle";
+  AssignmentState.targetId[entity] = "";
+  ScheduleState.currentBlock[entity] = "idle";
+  RaidParticipationState.activeRaidId[entity] = "";
+  RaidParticipationState.missionId[entity] = "";
+  RaidParticipationState.returnTick[entity] = 0;
+
+  markTeamDamaged(
+    context,
+    [operatorId],
+    reason === "loss of faith in the guild" ? "retention_break" : "morale_collapse",
+  );
+  pushRuntimeEvent(context, {
+    kind: "staffing_change",
+    message: `${operatorName} left the guild after ${reason}`,
+    accent: "magma",
+    targetKind: "operator",
+    targetId: operatorId,
+  });
+}
+
+function checkRefusalAndQuit(context: SimSystemContext, rng: SeededRng): void {
+  if (WorldTimeState.minuteOfDay[context.singletonEntities.time] !== 0) {
+    return;
+  }
+
+  const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
+    (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
+  );
+
+  livingOperatorEntities.forEach((entity) => {
+    const flags = computeAutonomyFlags(entity);
+    if (!flags.quitRisk && !flags.retentionRisk) {
+      return;
+    }
+    if (RaidParticipationState.activeRaidId[entity].length > 0) {
+      return;
+    }
+
+    const departureCheck = getDepartureCheck(context, entity, rng);
+    if (!departureCheck.shouldDepart) {
+      return;
+    }
+
+    departOperator(context, entity, departureCheck.reason);
+  });
+}
+
+// ── Damaged team repair vs disband ───────────────────────────────────────
+
+function isDailyRaidConsequenceTick(context: SimSystemContext): boolean {
+  return WorldTimeState.minuteOfDay[context.singletonEntities.time] === 0;
+}
+
+function processDamagedTeams(context: SimSystemContext, rng: SeededRng): void {
+  const operatorEntityById = new Map<string, number>();
+  for (const entity of context.runtimeState.operatorEntities) {
+    operatorEntityById.set(OperatorIdentity.id[entity], entity);
+  }
+
+  context.runtimeState.recurringTeamEntities.slice().forEach((entity) => {
+    if (RecurringTeam.damaged[entity] !== 1) return;
+
+    const members = RecurringTeam.memberIds[entity] ?? [];
+    const livingMembers = members.filter((memberId) => {
+      const opEntity = operatorEntityById.get(memberId);
+      return opEntity !== undefined && OperatorIdentity.lifecycleStatus[opEntity] === "active";
+    });
+
+    if (livingMembers.length < 2) {
+      disbandRecurringTeam(
+        context,
+        entity,
+        livingMembers,
+        RecurringTeam.damageReason[entity] || "losses",
+      );
+      return;
+    }
+
+    let totalMorale = 0;
+    let totalLoyalty = 0;
+    let hasFieldLead = false;
+    for (const memberId of livingMembers) {
+      const opEntity = operatorEntityById.get(memberId);
+      if (opEntity === undefined) continue;
+      totalMorale += MoraleState.current[opEntity];
+      totalLoyalty += LoyaltyState.current[opEntity];
+      if (OperatorIdentity.roleTag[opEntity] === "role:field_lead") hasFieldLead = true;
+    }
+    const avgMorale = totalMorale / livingMembers.length;
+    const avgLoyalty = totalLoyalty / livingMembers.length;
+
+    // Count grief ties among members
+    const griefCount = context.runtimeState.notableTieEntities.filter((tieEntity) => {
+      return (
+        NotableTie.stance[tieEntity] === "grief" &&
+        (livingMembers.includes(NotableTie.operatorAId[tieEntity]) ||
+          livingMembers.includes(NotableTie.operatorBId[tieEntity]))
+      );
+    }).length;
+
+    // Average room culture comfort
+    const avgComfort =
+      context.runtimeState.roomCultureEntities.length > 0
+        ? context.runtimeState.roomCultureEntities.reduce(
+            (sum, rcEntity) => sum + RoomCulture.comfort[rcEntity],
+            0,
+          ) / context.runtimeState.roomCultureEntities.length
+        : 50;
+
+    const repairResult = boundedRoll(
+      rng,
+      50,
+      [
+        { label: "morale", value: (avgMorale - 50) * 0.4 },
+        { label: "loyalty", value: (avgLoyalty - 50) * 0.3 },
+        { label: "grief", value: -griefCount * 8 },
+        { label: "field_lead", value: hasFieldLead ? 12 : 0 },
+        { label: "room_culture", value: (avgComfort - 50) * 0.2 },
+      ],
+      50,
+      15,
+    );
+
+    const damageReason = RecurringTeam.damageReason[entity] || "recent damage";
+
+    if (repairResult.outcome) {
+      RecurringTeam.damaged[entity] = 0;
+      RecurringTeam.damageReason[entity] = "";
+      RecurringTeam.memberIds[entity] = [...livingMembers];
+      pushRuntimeEvent(context, {
+        kind: "team_status",
+        message: `${livingMembers.length}-operator team recovered from ${damageReason.replace(/_/g, " ")}`,
+        accent: "gold",
+        targetKind: "team",
+        targetId: RecurringTeam.id[entity],
+      });
+    } else {
+      RecurringTeam.cohesion[entity] = clamp(RecurringTeam.cohesion[entity] - 5, 0, 100);
+      if (repairResult.total <= 30 || RecurringTeam.cohesion[entity] <= 20) {
+        disbandRecurringTeam(context, entity, livingMembers, damageReason);
+      }
+    }
+  });
+}
+
 export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
   // Ensure a contract site exists before processing raids
   ensureContractSite(context);
@@ -1189,6 +1693,12 @@ export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
   updateOpportunityLifecycle(context);
   if (deltaMs > 0) {
     spawnRaidOpportunity(context);
+  }
+
+  if (deltaMs > 0 && isDailyRaidConsequenceTick(context)) {
+    const tickRng = new SeededRng(seedFromKey(`raid-tick:${getCurrentAbsoluteMinute(context)}`));
+    checkRefusalAndQuit(context, tickRng);
+    processDamagedTeams(context, tickRng);
   }
 
   refreshOpportunityClaims(context);

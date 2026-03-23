@@ -1,6 +1,6 @@
 import type { TemplateRegistry } from "content/templates";
 import type { ActiveRaidSnapshot, RaidSummarySnapshot, RoomSnapshot, WorldSnapshot } from "save";
-import type { Phase1RuntimeView } from "sim";
+import type { Phase1RuntimeView, Phase2View } from "sim";
 
 import type { VisibleGear } from "./operator-parts";
 import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
@@ -17,6 +17,10 @@ export interface GameCallbacks {
   hireStaff: (roleTag: string) => void;
   assignStaff: (staffId: string, roomId?: string) => void;
   placeRoom: (templateId: string) => void;
+  buyItem: (itemId: string) => void;
+  sellItem: (itemId: string, quantity: number) => void;
+  autoAssignAccessory: (operatorId: string) => void;
+  unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => void;
 }
 
 // ── View model types ─────────────────────────────────────────────────────
@@ -150,9 +154,11 @@ export interface RaidSummaryViewModel {
 }
 
 export interface OperatorLifecycleViewModel {
-  status: "active" | "dead";
+  status: "active" | "dead" | "departed";
   deathTick?: number;
   deathRaidSummaryId?: string;
+  departureTick?: number;
+  departureReason?: string;
 }
 
 export interface RosterPressureViewModel {
@@ -189,6 +195,13 @@ export interface OperatorViewModel {
   appearancePresetId: string;
   visibleGear: VisibleGear;
   lifecycle: OperatorLifecycleViewModel;
+  /** Phase 2: operator may refuse raid assignments due to low morale. */
+  refusalRisk: boolean;
+  /** Phase 2: operator may quit due to critically low morale. */
+  quitRisk: boolean;
+  /** Phase 2: operator may leave due to low loyalty. */
+  retentionRisk: boolean;
+  autonomyReasons: readonly string[];
 }
 
 export interface StaffViewModel {
@@ -229,6 +242,80 @@ export interface ActiveEventViewModel {
   name: string;
   severity: number;
   remainingHours: number;
+}
+
+// ── Phase 2 view model types ────────────────────────────────────────────
+
+export interface TeamViewModel {
+  id: string;
+  memberIds: readonly string[];
+  memberNames: readonly string[];
+  cohesion: number;
+  raidCount: number;
+  damaged: boolean;
+  damageReason: string;
+  statusSummary: string;
+  explanationReasons: readonly string[];
+}
+
+export interface RoomCultureViewModel {
+  roomId: string;
+  roomName: string;
+  tone: string;
+  summary: string;
+  signals: readonly string[];
+}
+
+export interface InventoryItemViewModel {
+  itemId: string;
+  name: string;
+  quantity: number;
+  category: string;
+}
+
+export interface EquipmentViewModel {
+  operatorId: string;
+  operatorName: string;
+  weaponId: string;
+  weaponName: string;
+  outfitOverlayId: string;
+  outfitOverlayName: string;
+  accessoryId: string;
+  accessoryName: string;
+  accessoryReason: string;
+  accessorySummary: string;
+}
+
+export interface MarketItemViewModel {
+  itemId: string;
+  name: string;
+  buyPrice: number;
+  sellPrice: number;
+  available: boolean;
+}
+
+export type EventLogKind =
+  | "team_departure"
+  | "team_return"
+  | "injury"
+  | "death"
+  | "morale_threshold"
+  | "loyalty_threshold"
+  | "staffing_change"
+  | "resource_swing"
+  | "event_change"
+  | "raid_result"
+  | "team_status"
+  | "room_culture";
+
+export interface EventLogEntry {
+  id: string;
+  timestamp: string;
+  kind: EventLogKind;
+  message: string;
+  targetKind?: "operator" | "room" | "team" | "staff";
+  targetId?: string;
+  accent: string;
 }
 
 export interface PlaceableRoomTemplate {
@@ -477,6 +564,11 @@ export function buildHqViewFromPhase1(
     appearancePresetId: op.appearance.presetId,
     visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
     lifecycle: extractLifecycle(op.lifecycle),
+    // Phase 2: defaults until enriched via enrichOperatorsWithAutonomy
+    refusalRisk: false,
+    quitRisk: false,
+    retentionRisk: false,
+    autonomyReasons: [],
   }));
 
   const operatorNameById = new Map(operators.map((op) => [op.id, op.name]));
@@ -777,6 +869,10 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
         getLoadedParts(),
       ),
       lifecycle: extractLifecycle(rec(op as Record<string, unknown>, "lifecycle")),
+      refusalRisk: false,
+      quitRisk: false,
+      retentionRisk: false,
+      autonomyReasons: [],
     };
   });
 
@@ -939,7 +1035,15 @@ export function buildOperationsViewModel(
 // ── Lifecycle and pressure helpers ─────────────────────────────────────────
 
 function extractLifecycle(
-  raw: { status?: string; deathTick?: number; deathRaidSummaryId?: string } | undefined,
+  raw:
+    | {
+        status?: string;
+        deathTick?: number;
+        deathRaidSummaryId?: string;
+        departureTick?: number;
+        departureReason?: string;
+      }
+    | undefined,
 ): OperatorLifecycleViewModel {
   if (raw && raw.status === "dead") {
     return {
@@ -947,6 +1051,14 @@ function extractLifecycle(
       deathTick: typeof raw.deathTick === "number" ? raw.deathTick : undefined,
       deathRaidSummaryId:
         typeof raw.deathRaidSummaryId === "string" ? raw.deathRaidSummaryId : undefined,
+    };
+  }
+
+  if (raw && raw.status === "departed") {
+    return {
+      status: "departed",
+      departureTick: typeof raw.departureTick === "number" ? raw.departureTick : undefined,
+      departureReason: typeof raw.departureReason === "string" ? raw.departureReason : undefined,
     };
   }
   return { status: "active" };
@@ -1019,4 +1131,123 @@ function rec(
   return typeof v === "object" && v !== null && !Array.isArray(v)
     ? (v as Record<string, unknown>)
     : undefined;
+}
+
+// ── Phase 2 view builders ────────────────────────────────────────────────
+
+/** Resolve human-readable item name from the registry, falling back to a slug. */
+function resolveItemName(itemId: string, registry: TemplateRegistry): string {
+  const item = registry.itemById.get(itemId);
+  if (item) return item.name;
+  const slug = itemId.split("/").pop() ?? itemId;
+  return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Classify an item id into a display category. */
+function resolveItemCategory(itemId: string): string {
+  if (itemId.startsWith("weapon/")) return "weapons";
+  if (itemId.startsWith("outfit-overlay/")) return "outfits";
+  if (itemId.startsWith("accessory/")) return "accessories";
+  if (itemId.startsWith("loot/")) return "loot";
+  return "misc";
+}
+
+/** Enrich existing operators with Phase 2 autonomy data. */
+export function enrichOperatorsWithAutonomy(
+  operators: readonly OperatorViewModel[],
+  phase2: Phase2View,
+): OperatorViewModel[] {
+  const autonomyByOperatorId = new Map(phase2.operatorAutonomy.map((a) => [a.operatorId, a]));
+  return operators.map((op) => {
+    const autonomy = autonomyByOperatorId.get(op.id);
+    if (!autonomy) return op;
+    return {
+      ...op,
+      refusalRisk: autonomy.refusalRisk,
+      quitRisk: autonomy.quitRisk,
+      retentionRisk: autonomy.retentionRisk,
+      autonomyReasons: autonomy.explanationReasons.map((reason) => reason.description),
+    };
+  });
+}
+
+/** Build team view models from Phase 2 data. */
+export function buildTeamViewModels(
+  phase2: Phase2View,
+  operatorNameById: ReadonlyMap<string, string>,
+): TeamViewModel[] {
+  return phase2.teams.map((team) => ({
+    id: team.id,
+    memberIds: team.members,
+    memberNames: team.members.map((id) => operatorNameById.get(id) ?? id.split("/").pop() ?? "?"),
+    cohesion: team.cohesion,
+    raidCount: team.raidCount,
+    damaged: team.damaged,
+    damageReason: team.damageReason,
+    statusSummary: team.statusSummary,
+    explanationReasons: team.explanationReasons.map((reason) => reason.description),
+  }));
+}
+
+/** Build room culture view models from Phase 2 data. */
+export function buildRoomCultureViewModels(
+  phase2: Phase2View,
+  roomNameById: ReadonlyMap<string, string>,
+): RoomCultureViewModel[] {
+  return phase2.roomCultures.map((rc) => ({
+    roomId: rc.roomId,
+    roomName: roomNameById.get(rc.roomId) ?? rc.roomId.split("/").pop() ?? "?",
+    tone: rc.tone,
+    summary: rc.summary,
+    signals: rc.signals,
+  }));
+}
+
+/** Build inventory view models from Phase 2 data. */
+export function buildInventoryViewModels(
+  phase2: Phase2View,
+  registry: TemplateRegistry,
+): InventoryItemViewModel[] {
+  return phase2.inventory
+    .filter((stack) => stack.quantity > 0)
+    .map((stack) => ({
+      itemId: stack.itemId,
+      name: resolveItemName(stack.itemId, registry),
+      quantity: stack.quantity,
+      category: resolveItemCategory(stack.itemId),
+    }));
+}
+
+/** Build market item view models from Phase 2 data. */
+export function buildMarketItemViewModels(
+  phase2: Phase2View,
+  registry: TemplateRegistry,
+): MarketItemViewModel[] {
+  return phase2.marketItems.map((mi) => ({
+    itemId: mi.itemId,
+    name: resolveItemName(mi.itemId, registry),
+    buyPrice: mi.buyPrice,
+    sellPrice: mi.sellPrice,
+    available: mi.available,
+  }));
+}
+
+/** Build equipment view models from Phase 2 data. */
+export function buildEquipmentViewModels(
+  phase2: Phase2View,
+  registry: TemplateRegistry,
+  operatorNameById: ReadonlyMap<string, string>,
+): EquipmentViewModel[] {
+  return phase2.equipment.map((eq) => ({
+    operatorId: eq.operatorId,
+    operatorName: operatorNameById.get(eq.operatorId) ?? eq.operatorId.split("/").pop() ?? "?",
+    weaponId: eq.weaponId,
+    weaponName: resolveItemName(eq.weaponId, registry),
+    outfitOverlayId: eq.outfitOverlayId,
+    outfitOverlayName: resolveItemName(eq.outfitOverlayId, registry),
+    accessoryId: eq.accessoryId,
+    accessoryName: resolveItemName(eq.accessoryId, registry),
+    accessoryReason: eq.accessoryReason,
+    accessorySummary: eq.accessorySummary,
+  }));
 }

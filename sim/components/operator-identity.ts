@@ -12,4 +12,6 @@ export const OperatorIdentity = soa({
   lifecycleStatus: [] as string[],
   deathTick: [] as number[],
   deathRaidSummaryId: [] as string[],
+  departureTick: [] as number[],
+  departureReason: [] as string[],
 });

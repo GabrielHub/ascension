@@ -6,6 +6,7 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 
 ## File Map
 
+- [Asset Production Contract](./asset-production.md)
 - [Presentation Direction](./presentation.md)
 - [Gameplay Systems](./gameplay-systems.md)
 - [Content Taxonomy](./content-taxonomy.md)

@@ -41,7 +41,7 @@ function createBaseSave(): PersistedSaveGame {
       rooms: [
         {
           id: "room-instance/front-desk",
-          templateId: "room/front_desk:tier_1",
+          templateId: "room/register:tier_1",
           tier: 1,
           capacity: 2,
           occupancy: 1,
@@ -191,7 +191,7 @@ function createBaseSave(): PersistedSaveGame {
       visitors: [
         {
           id: "visitor/1",
-          queueStage: "front_desk",
+          queueStage: "register",
         },
       ],
       raidOpportunities: [
@@ -321,7 +321,7 @@ describe("save codec", () => {
         rooms: [
           {
             id: "room-instance/front-desk",
-            templateId: "room/front_desk:tier_1",
+            templateId: "room/register:tier_1",
             tier: 1,
             capacity: 2,
             occupancy: 0,
@@ -675,7 +675,7 @@ describe("save codec", () => {
         rooms: [
           {
             ...base.world.rooms[0],
-            appliedUpgradeIds: ["upgrade/room/front_desk:records_wall"],
+            appliedUpgradeIds: ["upgrade/room/register:records_wall"],
           },
         ],
         contractSite: {
@@ -722,7 +722,7 @@ describe("save codec", () => {
     });
 
     expect(normalized.world.rooms[0]?.appliedUpgradeIds).toEqual([
-      "upgrade/room/front_desk:records_wall",
+      "upgrade/room/register:records_wall",
     ]);
     expect(normalized.world.contractSite).toEqual({
       contractSiteId: "contract/test-site",
@@ -800,7 +800,7 @@ describe("save codec", () => {
         compatibilityVersion: "preproduction-track-z",
       }),
     ).toThrowError(
-      /save\.compatibilityVersion must match current compatibility version "preproduction-track-a"\./,
+      /save\.compatibilityVersion must match current compatibility version "preproduction-track-b"\./,
     );
   });
 
@@ -855,7 +855,7 @@ describe("save codec", () => {
         },
       }),
     ).toThrowError(
-      /save\.world\.activeRaidPackets\[0\]\.operatorIds\[0\] must reference an existing living operator id, got "operator\/missing"\./,
+      /save\.world\.activeRaidPackets\[0\]\.operatorIds\[0\] must reference an existing active operator id, got "operator\/missing"\./,
     );
   });
 
@@ -1302,7 +1302,59 @@ describe("save codec", () => {
           ],
         },
       }),
-    ).toThrowError(/save\.world\.operators\[0\]\.lifecycle\.status must be "active" or "dead"\./);
+    ).toThrowError(
+      /save\.world\.operators\[0\]\.lifecycle\.status must be "active", "dead", or "departed"\./,
+    );
+  });
+
+  it("preserves departed operators with departure metadata through round trips", () => {
+    const base = createBaseSave();
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [
+          ...(base.world.operators ?? []),
+          {
+            id: "operator/departed-1",
+            lifecycle: {
+              status: "departed",
+              departureTick: 360,
+              departureReason: "morale collapse",
+            },
+            identity: { displayName: "Gone" },
+            appearance: { presetId: "mira-002" },
+          },
+        ],
+      },
+    });
+
+    const departed = normalized.world.operators?.find((op) => op.id === "operator/departed-1");
+    expect(departed?.lifecycle).toEqual({
+      status: "departed",
+      departureTick: 360,
+      departureReason: "morale collapse",
+    });
+  });
+
+  it("rejects departed operators missing departure metadata", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          operators: [
+            {
+              id: "operator/bad",
+              lifecycle: { status: "departed", departureTick: 50 },
+              appearance: { presetId: "mira-002" },
+            },
+          ],
+        },
+      }),
+    ).toThrowError(/departed operator must have both departureTick and departureReason/);
   });
 
   it("rejects current-schema dead operator missing deathTick", () => {
@@ -1463,7 +1515,9 @@ describe("save codec", () => {
           ],
         },
       }),
-    ).toThrowError(/active operator must not carry deathTick or deathRaidSummaryId/);
+    ).toThrowError(
+      /active operator must not carry deathTick, deathRaidSummaryId, departureTick, or departureReason/,
+    );
   });
 
   it("rejects raid summary claiming death for unknown operator", () => {

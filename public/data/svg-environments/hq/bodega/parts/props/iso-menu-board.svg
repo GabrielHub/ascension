@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 40">
+  <!-- Wall-mounted menu board. Half the letters are missing. Bodega classic.
+       Black background with white/colored text slots, some obviously empty.
+       Iso box frame with cel-shaded edges gives it depth on the wall. -->
+
+  <!-- Shadow -->
+  <ellipse cx="28" cy="35" rx="20" ry="2" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Frame — iso box (shallow depth, wall-mounted) -->
+  <!-- Frame top face — lightest -->
+  <polygon points="4,3 28,1 52,3 28,5"
+    fill="#3a3838" stroke="#302e2e" stroke-width="0.6"/>
+  <!-- Frame left face — medium -->
+  <polygon points="4,3 28,5 28,33 4,31"
+    fill="#333030" stroke="#2a2828" stroke-width="0.5"/>
+  <!-- Frame right face — darkest -->
+  <polygon points="28,5 52,3 52,31 28,33"
+    fill="#2a2828" stroke="#222020" stroke-width="0.5"/>
+
+  <!-- Top edge highlights -->
+  <line x1="4" y1="3" x2="28" y2="1" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+  <line x1="28" y1="1" x2="52" y2="3" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+
+  <!-- Board backing (recessed black surface) -->
+  <rect x="6" y="5" width="44" height="26" rx="0.5" fill="#0e0e12"/>
+
+  <!-- Header row (bigger letter slots) -->
+  <rect x="9" y="7" width="4" height="4" rx="0.3" fill="rgba(224,221,214,0.2)"/>
+  <rect x="14" y="7" width="4" height="4" rx="0.3" fill="rgba(224,221,214,0.18)"/>
+  <!-- missing slot -->
+  <rect x="23" y="7" width="4" height="4" rx="0.3" fill="rgba(200,60,60,0.15)"/>
+  <!-- missing slot -->
+  <rect x="32" y="7" width="4" height="4" rx="0.3" fill="rgba(224,221,214,0.2)"/>
+  <rect x="37" y="7" width="4" height="4" rx="0.3" fill="rgba(224,221,214,0.15)"/>
+  <!-- missing slot -->
+  <rect x="44" y="7" width="4" height="4" rx="0.3" fill="rgba(224,221,214,0.18)"/>
+
+  <!-- Price column (right side) -->
+  <rect x="43" y="14" width="3" height="3" rx="0.2" fill="rgba(200,168,76,0.15)"/>
+  <rect x="43" y="19" width="3" height="3" rx="0.2" fill="rgba(200,168,76,0.12)"/>
+  <rect x="43" y="24" width="3" height="3" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+
+  <!-- Item row 1 (partial letters) -->
+  <rect x="9" y="14" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.15)"/>
+  <rect x="13" y="14" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.12)"/>
+  <!-- gap (missing) -->
+  <rect x="21" y="14" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.12)"/>
+  <rect x="25" y="14" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.1)"/>
+  <!-- gap -->
+  <rect x="33" y="14" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.12)"/>
+
+  <!-- Item row 2 (more missing) -->
+  <rect x="9" y="19" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.12)"/>
+  <!-- gap -->
+  <rect x="21" y="19" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.1)"/>
+  <!-- gap -->
+  <rect x="29" y="19" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.12)"/>
+  <rect x="33" y="19" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.08)"/>
+
+  <!-- Item row 3 (mostly empty) -->
+  <rect x="9" y="24" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.1)"/>
+  <rect x="13" y="24" width="3" height="3" rx="0.2" fill="rgba(224,221,214,0.08)"/>
+  <!-- everything else missing -->
+
+  <!-- Empty letter-track grooves (where letters should be) -->
+  <line x1="9" y1="13" x2="39" y2="13" stroke="rgba(255,255,255,0.03)" stroke-width="0.3"/>
+  <line x1="9" y1="18" x2="39" y2="18" stroke="rgba(255,255,255,0.03)" stroke-width="0.3"/>
+  <line x1="9" y1="23" x2="39" y2="23" stroke="rgba(255,255,255,0.03)" stroke-width="0.3"/>
+  <line x1="9" y1="28" x2="39" y2="28" stroke="rgba(255,255,255,0.03)" stroke-width="0.3"/>
+
+  <!-- Mounting screws -->
+  <circle cx="8" cy="4" r="0.8" fill="#4a4a52"/>
+  <circle cx="48" cy="4" r="0.8" fill="#4a4a52"/>
+</svg>

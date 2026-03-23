@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 34">
+  <!-- Guild license document. Taped to the wall behind the register.
+       "The most official-looking thing in the building." Framed paper
+       with a seal and implied text. Slightly crooked.
+       Cel-shaded frame gives depth on the wall. -->
+
+  <!-- Shadow -->
+  <ellipse cx="14" cy="33" rx="10" ry="1.5" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Frame — iso box (shallow depth, wall-mounted) -->
+  <!-- Frame top face — lightest -->
+  <polygon points="3,4 14,2 25,4 14,6"
+    fill="#3a3020" stroke="#302818" stroke-width="0.6"/>
+  <!-- Frame left face — medium -->
+  <polygon points="3,4 14,6 14,32 3,30"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
+  <!-- Frame right face — darkest -->
+  <polygon points="14,6 25,4 25,30 14,32"
+    fill="#241c12" stroke="#1c1408" stroke-width="0.5"/>
+
+  <!-- Top edge highlights -->
+  <line x1="3" y1="4" x2="14" y2="2" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+  <line x1="14" y1="2" x2="25" y2="4" stroke="rgba(255,255,255,0.07)" stroke-width="0.4"/>
+
+  <!-- Paper inside frame (on left face, slightly inset) -->
+  <rect x="5" y="7" width="8" height="22" rx="0.3" fill="#3a3828"
+    stroke="#302818" stroke-width="0.3"/>
+  <!-- Paper inside frame (on right face, slightly inset, darker) -->
+  <rect x="15" y="7" width="8" height="22" rx="0.3" fill="#343220"
+    stroke="#2c2418" stroke-width="0.3"/>
+
+  <!-- Header text area (official-looking) -->
+  <rect x="6" y="8" width="16" height="3" fill="rgba(200,168,76,0.15)" rx="0.2"/>
+
+  <!-- Body text lines (implied legalese) -->
+  <line x1="6" y1="14" x2="20" y2="14" stroke="rgba(224,221,214,0.12)" stroke-width="0.5"/>
+  <line x1="6" y1="16.5" x2="22" y2="16.5" stroke="rgba(224,221,214,0.1)" stroke-width="0.5"/>
+  <line x1="6" y1="19" x2="19" y2="19" stroke="rgba(224,221,214,0.1)" stroke-width="0.5"/>
+  <line x1="6" y1="21.5" x2="21" y2="21.5" stroke="rgba(224,221,214,0.08)" stroke-width="0.5"/>
+
+  <!-- Official seal (gold circle, bottom center) -->
+  <circle cx="14" cy="26" r="3" fill="rgba(200,168,76,0.2)"
+    stroke="rgba(200,168,76,0.3)" stroke-width="0.5"/>
+  <!-- Seal inner detail -->
+  <circle cx="14" cy="26" r="1.5" fill="rgba(200,168,76,0.15)"/>
+
+  <!-- Tape strips holding it to the wall (slightly crooked) -->
+  <rect x="1" y="2" width="8" height="2.5" rx="0.2" fill="rgba(200,195,170,0.1)"
+    transform="rotate(-3 5 3)"/>
+  <rect x="19" y="1" width="8" height="2.5" rx="0.2" fill="rgba(200,195,170,0.08)"
+    transform="rotate(2 23 2)"/>
+</svg>

@@ -9,18 +9,23 @@ import {
   BuildingAuthority,
   type ActiveRaidPacketRecord,
   type RaidSummaryRecord,
+  EquipmentAssignment,
   EventState,
   GuildState,
   InjuryState,
+  InventoryStack,
   LoyaltyState,
   MoraleState,
   NeedState,
+  NotableTie,
+  OperatorDisposition,
   OperatorIdentity,
   PreferenceState,
   RaidOpportunityState,
   RaidParticipationState,
-  RelationshipState,
+  RecurringTeam,
   Renderable,
+  RoomCulture,
   RoomInstance,
   ScheduleState,
   StaffState,
@@ -42,6 +47,8 @@ import {
 } from "./systems/commands";
 import type { RaidTeamGoal } from "render/types";
 import {
+  describeAccessoryAssignment,
+  describeAccessorySelectionReason,
   type RaidEncounterThreat,
   type RaidEventKind,
   type RaidFeatureKind,
@@ -50,7 +57,11 @@ import {
   computeOperatorRaidReadiness,
   computeRelationshipCohesion,
   computeSchedulePressure,
+  deriveCompatibilityRelationships,
+  ensurePhase2StateEntities,
+  ensureDispositionDefaults,
   getRecommendedOperatorCountForMission,
+  importLegacyRelationshipsIntoSocialState,
   selectTeamGoal,
   runSimCommand,
   runSimSystemSchedule,
@@ -58,6 +69,8 @@ import {
   type SimRuntimeState,
   type SimSingletonEntities,
 } from "./systems";
+import { type MarketItemView, getMarketItems } from "./systems/market";
+import { computeAutonomyFlags } from "./systems/morale";
 
 export type Phase1OperatorPreferenceSnapshot = PreferenceProfileRecord;
 
@@ -109,9 +122,11 @@ export interface Phase1OperatorSnapshot {
     visibleGear?: Phase1OperatorVisibleGearSnapshot;
   };
   lifecycle: {
-    status: "active" | "dead";
+    status: "active" | "dead" | "departed";
     deathTick?: number;
     deathRaidSummaryId?: string;
+    departureTick?: number;
+    departureReason?: string;
   };
 }
 
@@ -404,6 +419,80 @@ export interface Phase1RuntimeView {
   } | null;
 }
 
+// ── Phase 2 View Types ────────────────────────────────────────────────────
+
+export interface Phase2TeamView {
+  id: string;
+  members: string[];
+  cohesion: number;
+  raidCount: number;
+  damaged: boolean;
+  damageReason: string;
+  statusSummary: string;
+  explanationReasons: Phase2AutonomyFactor[];
+}
+
+export interface Phase2RoomCultureView {
+  roomId: string;
+  tone: string;
+  summary: string;
+  signals: string[];
+}
+
+export interface Phase2InventoryView {
+  itemId: string;
+  quantity: number;
+}
+
+export interface Phase2EquipmentView {
+  operatorId: string;
+  weaponId: string;
+  outfitOverlayId: string;
+  accessoryId: string;
+  accessoryReason: string;
+  accessorySummary: string;
+}
+
+export interface Phase2AutonomyFactor {
+  factor: string;
+  contribution: number;
+  description: string;
+}
+
+export interface Phase2OperatorAutonomyView {
+  operatorId: string;
+  refusalRisk: boolean;
+  quitRisk: boolean;
+  retentionRisk: boolean;
+  explanationReasons: Phase2AutonomyFactor[];
+}
+
+export interface Phase2DispositionView {
+  operatorId: string;
+  sociability: number;
+  temperament: number;
+  grievanceLevel: number;
+  satisfactionLevel: number;
+}
+
+export interface Phase2NotableTieView {
+  operatorAId: string;
+  operatorBId: string;
+  stance: string;
+  strength: number;
+}
+
+export interface Phase2View {
+  teams: Phase2TeamView[];
+  roomCultures: Phase2RoomCultureView[];
+  inventory: Phase2InventoryView[];
+  equipment: Phase2EquipmentView[];
+  operatorAutonomy: Phase2OperatorAutonomyView[];
+  marketItems: MarketItemView[];
+  dispositions: Phase2DispositionView[];
+  notableTies: Phase2NotableTieView[];
+}
+
 export interface AscensionSimulation {
   registry: TemplateRegistry;
   singletonEntities: SimSingletonEntities;
@@ -414,7 +503,9 @@ export interface AscensionSimulation {
   dispatch(command: SimCommand): void;
   getWorldSnapshot(): Phase1RuntimeWorldSnapshot;
   getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot): Phase1RuntimeView;
+  getPhase2View(): Phase2View;
   drainRuntimeCues(): readonly RuntimeCueId[];
+  drainRuntimeEvents(): readonly import("./systems/types").RuntimeEvent[];
   tick(deltaMs: number): void;
 }
 
@@ -549,7 +640,19 @@ function normalizeStaffSnapshot(
 function normalizeLifecycleSnapshot(
   lifecycle: Phase1OperatorSnapshot["lifecycle"] | undefined,
 ): Phase1OperatorSnapshot["lifecycle"] {
-  if (!lifecycle || lifecycle.status !== "dead") {
+  if (!lifecycle) {
+    return { status: "active" };
+  }
+
+  if (lifecycle.status === "departed") {
+    return {
+      status: "departed",
+      departureTick: lifecycle.departureTick,
+      departureReason: lifecycle.departureReason,
+    };
+  }
+
+  if (lifecycle.status !== "dead") {
     return { status: "active" };
   }
 
@@ -607,6 +710,14 @@ function buildLifecycleSnapshot(entity: number): Phase1OperatorSnapshot["lifecyc
       status: "dead",
       deathTick: OperatorIdentity.deathTick[entity],
       deathRaidSummaryId: OperatorIdentity.deathRaidSummaryId[entity],
+    };
+  }
+
+  if (OperatorIdentity.lifecycleStatus[entity] === "departed") {
+    return {
+      status: "departed",
+      departureTick: OperatorIdentity.departureTick[entity],
+      departureReason: OperatorIdentity.departureReason[entity],
     };
   }
 
@@ -722,6 +833,12 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     contractSite: extendedSnapshot.contractSite ?? null,
     fogOfWar: extendedSnapshot.fogOfWar ?? null,
     scheduler: extendedSnapshot.scheduler,
+    operatorDispositions: extendedSnapshot.operatorDispositions ?? [],
+    notableTies: extendedSnapshot.notableTies ?? [],
+    recurringTeams: extendedSnapshot.recurringTeams ?? [],
+    roomCultures: extendedSnapshot.roomCultures ?? [],
+    inventoryStacks: extendedSnapshot.inventoryStacks ?? [],
+    equipmentAssignments: extendedSnapshot.equipmentAssignments ?? [],
   };
 }
 
@@ -749,14 +866,21 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
     ...snapshot.raidSummaries.map((s) => s.id),
   ];
 
+  const teamIds = (snapshot.recurringTeams ?? []).map((t) => t.id);
+
   return {
     roomEntities: [],
     operatorEntities: [],
-    relationshipEntities: [],
     raidOpportunityEntities: [],
     staffEntities: [],
     visitorEntities: [],
     eventEntities: [],
+    dispositionEntities: [],
+    notableTieEntities: [],
+    recurringTeamEntities: [],
+    roomCultureEntities: [],
+    inventoryEntities: [],
+    equipmentEntities: [],
     nextRoomSequence: nextSequenceFromIds(roomIds),
     nextOperatorSequence: nextSequenceFromIds(operatorIds),
     nextOpportunitySequence: nextSequenceFromIds(opportunityIds),
@@ -764,7 +888,9 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
     nextVisitorSequence: nextSequenceFromIds(visitorIds),
     nextRaidSequence: nextSequenceFromIds(raidIds),
     nextEventSequence: nextSequenceFromIds(eventIds),
+    nextTeamSequence: nextSequenceFromIds(teamIds),
     pendingCueIds: [],
+    pendingEvents: [],
     raidPresentation: {
       contractSiteId: null,
       teams: [],
@@ -871,8 +997,8 @@ function computeRosterPressure(
   currentAbsoluteMinute: number,
 ): Phase1RosterPressureView {
   const allOperators = snapshot.operators ?? [];
-  const livingOperators = allOperators.filter((op) => op.lifecycle.status !== "dead");
-  const livingOperatorCount = livingOperators.length;
+  const activeOperators = allOperators.filter((op) => op.lifecycle.status === "active");
+  const livingOperatorCount = activeOperators.length;
   const vacancyCount = Math.max(0, operatorCapacity - livingOperatorCount);
 
   const unavailableOperatorIds = operatorIntentReadiness
@@ -887,9 +1013,15 @@ function computeRosterPressure(
         currentAbsoluteMinute - op.lifecycle.deathTick < RECENT_DEATH_WINDOW_MINUTES,
     )
     .map((op) => op.id);
+  const recentDepartureCount = allOperators.filter(
+    (op) =>
+      op.lifecycle.status === "departed" &&
+      op.lifecycle.departureTick !== undefined &&
+      currentAbsoluteMinute - op.lifecycle.departureTick < RECENT_DEATH_WINDOW_MINUTES,
+  ).length;
 
   const vacancyRatio = operatorCapacity > 0 ? vacancyCount / operatorCapacity : 0;
-  const recentLossWeight = recentDeathOperatorIds.length * 0.15;
+  const recentLossWeight = (recentDeathOperatorIds.length + recentDepartureCount) * 0.15;
   const unavailableWeight =
     livingOperatorCount > 0 ? (unavailableOperatorIds.length / livingOperatorCount) * 0.3 : 0;
   const pressureScore = vacancyRatio + recentLossWeight + unavailableWeight;
@@ -1068,6 +1200,8 @@ function applyWorldSnapshot(
     OperatorIdentity.lifecycleStatus[entity] = operator.lifecycle.status;
     OperatorIdentity.deathTick[entity] = operator.lifecycle.deathTick ?? 0;
     OperatorIdentity.deathRaidSummaryId[entity] = operator.lifecycle.deathRaidSummaryId ?? "";
+    OperatorIdentity.departureTick[entity] = operator.lifecycle.departureTick ?? 0;
+    OperatorIdentity.departureReason[entity] = operator.lifecycle.departureReason ?? "";
     PreferenceState.riskTolerance[entity] = operator.preferences.riskTolerance;
     PreferenceState.rewardFocus[entity] = operator.preferences.rewardFocus;
     PreferenceState.recoveryBias[entity] = operator.preferences.recoveryBias;
@@ -1107,21 +1241,6 @@ function applyWorldSnapshot(
     InjuryState.treated[entity] = operator.injury.treated ? 1 : 0;
 
     runtimeState.operatorEntities.push(entity);
-  });
-
-  runtimeSnapshot.operatorRelationships?.forEach((relationship) => {
-    const entity = addEntity(world);
-
-    addComponent(world, entity, RelationshipState);
-    RelationshipState.operatorAId[entity] = relationship.operatorAId;
-    RelationshipState.operatorBId[entity] = relationship.operatorBId;
-    RelationshipState.trust[entity] = relationship.trust;
-    RelationshipState.friction[entity] = relationship.friction;
-    RelationshipState.familiarity[entity] = relationship.familiarity;
-    RelationshipState.recentSharedOutcome[entity] = relationship.recentSharedOutcome;
-    RelationshipState.historyTags[entity] = [...relationship.historyTags];
-
-    runtimeState.relationshipEntities.push(entity);
   });
 
   runtimeSnapshot.staff?.forEach((staff) => {
@@ -1213,6 +1332,103 @@ function applyWorldSnapshot(
     runtimeState.eventEntities.push(entity);
   });
 
+  (runtimeSnapshot.operatorDispositions ?? []).forEach((disposition) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, OperatorDisposition);
+    OperatorDisposition.operatorId[entity] = disposition.operatorId;
+    OperatorDisposition.sociability[entity] = disposition.sociability;
+    OperatorDisposition.temperament[entity] = disposition.temperament;
+    OperatorDisposition.grievanceLevel[entity] = disposition.grievanceLevel;
+    OperatorDisposition.satisfactionLevel[entity] = disposition.satisfactionLevel;
+    runtimeState.dispositionEntities.push(entity);
+  });
+
+  (runtimeSnapshot.notableTies ?? []).forEach((tie) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, NotableTie);
+    NotableTie.operatorAId[entity] = tie.operatorAId;
+    NotableTie.operatorBId[entity] = tie.operatorBId;
+    NotableTie.stance[entity] = tie.stance;
+    NotableTie.strength[entity] = tie.strength;
+    runtimeState.notableTieEntities.push(entity);
+  });
+
+  (runtimeSnapshot.recurringTeams ?? []).forEach((team) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, RecurringTeam);
+    RecurringTeam.id[entity] = team.id;
+    RecurringTeam.memberIds[entity] = [...team.memberIds];
+    RecurringTeam.cohesion[entity] = team.cohesion;
+    RecurringTeam.raidCount[entity] = team.raidCount;
+    RecurringTeam.lastRaidTick[entity] = team.lastRaidTick;
+    RecurringTeam.damaged[entity] = team.damaged ? 1 : 0;
+    RecurringTeam.damageReason[entity] = team.damageReason;
+    runtimeState.recurringTeamEntities.push(entity);
+  });
+
+  (runtimeSnapshot.roomCultures ?? []).forEach((culture) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, RoomCulture);
+    RoomCulture.roomInstanceId[entity] = culture.roomInstanceId;
+    RoomCulture.comfort[entity] = culture.comfort;
+    RoomCulture.tension[entity] = culture.tension;
+    RoomCulture.camaraderie[entity] = culture.camaraderie;
+    RoomCulture.tone[entity] = culture.tone;
+    runtimeState.roomCultureEntities.push(entity);
+  });
+
+  (runtimeSnapshot.inventoryStacks ?? []).forEach((stack) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, InventoryStack);
+    InventoryStack.itemId[entity] = stack.itemId;
+    InventoryStack.quantity[entity] = stack.quantity;
+    runtimeState.inventoryEntities.push(entity);
+  });
+
+  (runtimeSnapshot.equipmentAssignments ?? []).forEach((assignment) => {
+    const entity = addEntity(world);
+    addComponent(world, entity, EquipmentAssignment);
+    EquipmentAssignment.operatorId[entity] = assignment.operatorId;
+    EquipmentAssignment.weaponId[entity] = assignment.weaponId;
+    EquipmentAssignment.outfitOverlayId[entity] = assignment.outfitOverlayId;
+    EquipmentAssignment.accessoryId[entity] = assignment.accessoryId;
+    runtimeState.equipmentEntities.push(entity);
+  });
+
+  ensureDispositionDefaults({
+    world,
+    registry,
+    singletonEntities: {
+      guild: guildEntity,
+      time: timeEntity,
+      building: buildingEntity,
+    },
+    runtimeState,
+  });
+  ensurePhase2StateEntities({
+    world,
+    registry,
+    singletonEntities: {
+      guild: guildEntity,
+      time: timeEntity,
+      building: buildingEntity,
+    },
+    runtimeState,
+  });
+  importLegacyRelationshipsIntoSocialState(
+    {
+      world,
+      registry,
+      singletonEntities: {
+        guild: guildEntity,
+        time: timeEntity,
+        building: buildingEntity,
+      },
+      runtimeState,
+    },
+    runtimeSnapshot.operatorRelationships ?? [],
+  );
+
   const singletonEntities: SimSingletonEntities = {
     guild: guildEntity,
     time: timeEntity,
@@ -1227,6 +1443,76 @@ function applyWorldSnapshot(
 
   runSimSystemSchedule(context, 0);
 
+  function buildRoomCultureSignals(entity: number): string[] {
+    const signals: string[] = [];
+    if (RoomCulture.comfort[entity] >= 65) {
+      signals.push("comfortable");
+    } else if (RoomCulture.comfort[entity] <= 35) {
+      signals.push("worn thin");
+    }
+    if (RoomCulture.tension[entity] >= 60) {
+      signals.push("frayed");
+    } else if (RoomCulture.tension[entity] <= 35) {
+      signals.push("steady");
+    }
+    if (RoomCulture.camaraderie[entity] >= 60) {
+      signals.push("tight-knit");
+    } else if (RoomCulture.camaraderie[entity] <= 35) {
+      signals.push("distant");
+    }
+    return signals;
+  }
+
+  function buildRoomCultureSummary(entity: number): string {
+    const signals = buildRoomCultureSignals(entity);
+    if (signals.length === 0) {
+      return RoomCulture.tone[entity] || "neutral";
+    }
+    return signals.join(", ");
+  }
+
+  function buildTeamExplanation(entity: number): Phase2AutonomyFactor[] {
+    const cohesion = RecurringTeam.cohesion[entity];
+    const raidCount = RecurringTeam.raidCount[entity];
+    const explanations: Phase2AutonomyFactor[] = [
+      {
+        factor: "cohesion",
+        contribution: cohesion - 50,
+        description: `Cohesion at ${Math.round(cohesion)} anchors this team`,
+      },
+      {
+        factor: "history",
+        contribution: Math.min(raidCount * 4, 20),
+        description: `${raidCount} shared raids reinforce recurring-team memory`,
+      },
+    ];
+
+    if (RecurringTeam.damaged[entity] === 1) {
+      explanations.push({
+        factor: "damage",
+        contribution: -18,
+        description: `Damaged state from ${RecurringTeam.damageReason[entity] || "recent losses"} is suppressing trust`,
+      });
+    }
+
+    return explanations;
+  }
+
+  function buildTeamStatusSummary(entity: number): string {
+    if (RecurringTeam.damaged[entity] === 1) {
+      return `Shaken after ${RecurringTeam.damageReason[entity] || "recent losses"}`;
+    }
+    if (RecurringTeam.raidCount[entity] >= 4 && RecurringTeam.cohesion[entity] >= 65) {
+      return "Battle-tested and stable";
+    }
+    if (RecurringTeam.raidCount[entity] >= 2) {
+      return "Holding together through repeated raids";
+    }
+    return "Newly emerging raid unit";
+  }
+
+  let phase2ViewCache: Phase2View | null = null;
+
   const simulation: AscensionSimulation = {
     registry,
     singletonEntities,
@@ -1235,6 +1521,7 @@ function applyWorldSnapshot(
     schedule: simSystemSchedule,
     stableCommandTypes: STABLE_SIM_COMMAND_TYPES,
     dispatch(command) {
+      phase2ViewCache = null;
       if (command.type === "sim/tick") {
         runSimSystemSchedule(context, command.deltaMs);
         return;
@@ -1347,14 +1634,8 @@ function applyWorldSnapshot(
           }),
           lifecycle: buildLifecycleSnapshot(entity),
         })),
-        operatorRelationships: runtimeState.relationshipEntities.map((entity) => ({
-          operatorAId: RelationshipState.operatorAId[entity],
-          operatorBId: RelationshipState.operatorBId[entity],
-          trust: RelationshipState.trust[entity],
-          friction: RelationshipState.friction[entity],
-          familiarity: RelationshipState.familiarity[entity],
-          recentSharedOutcome: RelationshipState.recentSharedOutcome[entity],
-          historyTags: [...(RelationshipState.historyTags[entity] ?? [])],
+        operatorRelationships: deriveCompatibilityRelationships(context).map((relationship) => ({
+          ...relationship,
         })),
         staff: runtimeState.staffEntities.map((entity) => ({
           id: StaffState.id[entity],
@@ -1443,10 +1724,54 @@ function applyWorldSnapshot(
           lastEventTick: BuildingAuthority.lastEventTick[buildingEntity] ?? 0,
           lastRaidOpportunityTick: BuildingAuthority.lastRaidOpportunityTick[buildingEntity] ?? 0,
         },
+        operatorDispositions: runtimeState.dispositionEntities.map((entity) => ({
+          operatorId: OperatorDisposition.operatorId[entity],
+          sociability: OperatorDisposition.sociability[entity],
+          temperament: OperatorDisposition.temperament[entity],
+          grievanceLevel: OperatorDisposition.grievanceLevel[entity],
+          satisfactionLevel: OperatorDisposition.satisfactionLevel[entity],
+        })),
+        notableTies: runtimeState.notableTieEntities.map((entity) => ({
+          operatorAId: NotableTie.operatorAId[entity],
+          operatorBId: NotableTie.operatorBId[entity],
+          stance: NotableTie.stance[entity],
+          strength: NotableTie.strength[entity],
+        })),
+        recurringTeams: runtimeState.recurringTeamEntities.map((entity) => ({
+          id: RecurringTeam.id[entity],
+          memberIds: [...(RecurringTeam.memberIds[entity] ?? [])],
+          cohesion: RecurringTeam.cohesion[entity],
+          raidCount: RecurringTeam.raidCount[entity],
+          lastRaidTick: RecurringTeam.lastRaidTick[entity],
+          damaged: RecurringTeam.damaged[entity] === 1,
+          damageReason: RecurringTeam.damageReason[entity],
+        })),
+        roomCultures: runtimeState.roomCultureEntities.map((entity) => ({
+          roomInstanceId: RoomCulture.roomInstanceId[entity],
+          comfort: RoomCulture.comfort[entity],
+          tension: RoomCulture.tension[entity],
+          camaraderie: RoomCulture.camaraderie[entity],
+          tone: RoomCulture.tone[entity],
+        })),
+        inventoryStacks: runtimeState.inventoryEntities
+          .filter((entity) => InventoryStack.quantity[entity] > 0)
+          .map((entity) => ({
+            itemId: InventoryStack.itemId[entity],
+            quantity: InventoryStack.quantity[entity],
+          })),
+        equipmentAssignments: runtimeState.equipmentEntities.map((entity) => ({
+          operatorId: EquipmentAssignment.operatorId[entity],
+          weaponId: EquipmentAssignment.weaponId[entity],
+          outfitOverlayId: EquipmentAssignment.outfitOverlayId[entity],
+          accessoryId: EquipmentAssignment.accessoryId[entity],
+        })),
       };
     },
     getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot) {
       const snapshot = cachedSnapshot ?? simulation.getWorldSnapshot();
+      const operatorSnapshotById = new Map(
+        (snapshot.operators ?? []).map((operator) => [operator.id, operator] as const),
+      );
       const requirementContext = buildRequirementContext(context);
       const buildingTemplate = getActiveBuildingTemplate(context);
       const availableBuildingUpgradeIds = registry.upgrades
@@ -1465,12 +1790,10 @@ function applyWorldSnapshot(
         })
         .map((upgrade) => upgrade.id);
       const livingOperatorEntities = runtimeState.operatorEntities.filter(
-        (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+        (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
       );
       const operatorIntentReadiness = livingOperatorEntities.map((entity) => {
-        const operatorSnapshot =
-          snapshot.operators?.find((operator) => operator.id === OperatorIdentity.id[entity]) ??
-          snapshot.operators?.[0];
+        const operatorSnapshot = operatorSnapshotById.get(OperatorIdentity.id[entity]);
         if (!operatorSnapshot) {
           throw new Error(`Missing runtime operator snapshot for ${OperatorIdentity.id[entity]}.`);
         }
@@ -1550,7 +1873,7 @@ function applyWorldSnapshot(
           roomSlotCount: snapshot.building.roomSlotCount,
           roomsUsed: snapshot.rooms.length,
           operatorSlotCount: snapshot.building.operatorSlotCount,
-          operatorCount: (snapshot.operators ?? []).filter((op) => op.lifecycle.status !== "dead")
+          operatorCount: (snapshot.operators ?? []).filter((op) => op.lifecycle.status === "active")
             .length,
           appliedUpgradeIds: snapshot.appliedUpgradeIds,
           unlockedRoomTemplateIds: [
@@ -1615,15 +1938,14 @@ function applyWorldSnapshot(
             };
           }) ?? [],
         operatorIntentReadiness,
-        relationshipSignals:
-          snapshot.operatorRelationships?.map((relationship) => ({
-            ...relationship,
-            cohesion: computeRelationshipCohesion(
-              context,
-              relationship.operatorAId,
-              relationship.operatorBId,
-            ),
-          })) ?? [],
+        relationshipSignals: deriveCompatibilityRelationships(context).map((relationship) => ({
+          ...relationship,
+          cohesion: computeRelationshipCohesion(
+            context,
+            relationship.operatorAId,
+            relationship.operatorBId,
+          ),
+        })),
         staff: snapshot.staff ?? [],
         missions: registry.missions.map((mission) => ({
           id: mission.id,
@@ -1735,9 +2057,143 @@ function applyWorldSnapshot(
             : null,
       };
     },
+    getPhase2View(): Phase2View {
+      if (phase2ViewCache) return phase2ViewCache;
+
+      const livingOperatorEntities = runtimeState.operatorEntities.filter(
+        (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
+      );
+
+      phase2ViewCache = {
+        teams: runtimeState.recurringTeamEntities.map((entity) => ({
+          id: RecurringTeam.id[entity],
+          members: [...(RecurringTeam.memberIds[entity] ?? [])],
+          cohesion: RecurringTeam.cohesion[entity],
+          raidCount: RecurringTeam.raidCount[entity],
+          damaged: RecurringTeam.damaged[entity] === 1,
+          damageReason: RecurringTeam.damageReason[entity],
+          statusSummary: buildTeamStatusSummary(entity),
+          explanationReasons: buildTeamExplanation(entity),
+        })),
+        roomCultures: runtimeState.roomCultureEntities.map((entity) => ({
+          roomId: RoomCulture.roomInstanceId[entity],
+          tone: RoomCulture.tone[entity],
+          summary: buildRoomCultureSummary(entity),
+          signals: buildRoomCultureSignals(entity),
+        })),
+        inventory: runtimeState.inventoryEntities.map((entity) => ({
+          itemId: InventoryStack.itemId[entity],
+          quantity: InventoryStack.quantity[entity],
+        })),
+        equipment: livingOperatorEntities.map((entity) => {
+          const operatorId = OperatorIdentity.id[entity];
+          const equipmentEntity = runtimeState.equipmentEntities.find(
+            (candidate) => EquipmentAssignment.operatorId[candidate] === operatorId,
+          );
+          const accessoryId =
+            equipmentEntity === undefined ? "" : EquipmentAssignment.accessoryId[equipmentEntity];
+          const accessory = describeAccessoryAssignment(context, operatorId, accessoryId);
+          return {
+            operatorId,
+            weaponId:
+              equipmentEntity === undefined ? "" : EquipmentAssignment.weaponId[equipmentEntity],
+            outfitOverlayId:
+              equipmentEntity === undefined
+                ? ""
+                : EquipmentAssignment.outfitOverlayId[equipmentEntity],
+            accessoryId,
+            accessoryReason: accessory.reason,
+            accessorySummary: describeAccessorySelectionReason(accessory.reason),
+          };
+        }),
+        operatorAutonomy: livingOperatorEntities.map((entity) => {
+          const flags = computeAutonomyFlags(entity);
+          const morale = MoraleState.current[entity];
+          const loyalty = LoyaltyState.current[entity];
+          const explanationReasons: Phase2AutonomyFactor[] = [];
+
+          if (flags.refusalRisk) {
+            explanationReasons.push({
+              factor: "low_morale",
+              contribution: -morale,
+              description: `Morale at ${Math.round(morale)} creates refusal risk`,
+            });
+          }
+          if (flags.quitRisk) {
+            explanationReasons.push({
+              factor: "critical_morale",
+              contribution: -morale,
+              description: `Morale at ${Math.round(morale)} creates quit risk`,
+            });
+          }
+          if (flags.retentionRisk) {
+            explanationReasons.push({
+              factor: "low_loyalty",
+              contribution: -loyalty,
+              description: `Loyalty at ${Math.round(loyalty)} creates retention risk`,
+            });
+          }
+          if (InjuryState.severity[entity] >= 35) {
+            explanationReasons.push({
+              factor: "injury",
+              contribution: -InjuryState.severity[entity] * 0.5,
+              description: `Injury severity ${Math.round(InjuryState.severity[entity])} is reducing autonomy stability`,
+            });
+          }
+          if (NeedState.fatigue[entity] >= 55) {
+            explanationReasons.push({
+              factor: "fatigue",
+              contribution: -NeedState.fatigue[entity] * 0.35,
+              description: `Fatigue at ${Math.round(NeedState.fatigue[entity])} is dragging readiness`,
+            });
+          }
+          const damagedTeamEntity = runtimeState.recurringTeamEntities.find((teamEntity) => {
+            return (
+              RecurringTeam.damaged[teamEntity] === 1 &&
+              (RecurringTeam.memberIds[teamEntity] ?? []).includes(OperatorIdentity.id[entity])
+            );
+          });
+          if (damagedTeamEntity !== undefined) {
+            explanationReasons.push({
+              factor: "team_damage",
+              contribution: -18,
+              description: `Recurring team damage from ${RecurringTeam.damageReason[damagedTeamEntity] || "recent fallout"} is hurting confidence`,
+            });
+          }
+
+          return {
+            operatorId: OperatorIdentity.id[entity],
+            refusalRisk: flags.refusalRisk,
+            quitRisk: flags.quitRisk,
+            retentionRisk: flags.retentionRisk,
+            explanationReasons,
+          };
+        }),
+        marketItems: getMarketItems(registry),
+        dispositions: runtimeState.dispositionEntities.map((entity) => ({
+          operatorId: OperatorDisposition.operatorId[entity],
+          sociability: OperatorDisposition.sociability[entity],
+          temperament: OperatorDisposition.temperament[entity],
+          grievanceLevel: OperatorDisposition.grievanceLevel[entity],
+          satisfactionLevel: OperatorDisposition.satisfactionLevel[entity],
+        })),
+        notableTies: runtimeState.notableTieEntities.map((entity) => ({
+          operatorAId: NotableTie.operatorAId[entity],
+          operatorBId: NotableTie.operatorBId[entity],
+          stance: NotableTie.stance[entity],
+          strength: NotableTie.strength[entity],
+        })),
+      };
+      return phase2ViewCache;
+    },
     drainRuntimeCues() {
       const drained = runtimeState.pendingCueIds.slice();
       runtimeState.pendingCueIds.length = 0;
+      return drained;
+    },
+    drainRuntimeEvents() {
+      const drained = runtimeState.pendingEvents.slice();
+      runtimeState.pendingEvents.length = 0;
       return drained;
     },
     tick(deltaMs) {

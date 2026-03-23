@@ -1,8 +1,8 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 7;
-export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-a";
+export const CURRENT_SAVE_SCHEMA_VERSION = 9;
+export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
   guildName: string;
@@ -62,9 +62,11 @@ export interface OperatorAppearanceSnapshot {
 }
 
 export interface OperatorLifecycleSnapshot {
-  status: "active" | "dead";
+  status: "active" | "dead" | "departed";
   deathTick?: number;
   deathRaidSummaryId?: string;
+  departureTick?: number;
+  departureReason?: string;
 }
 
 export interface OperatorSnapshot {
@@ -182,6 +184,51 @@ export interface WorldSchedulerSnapshot {
   lastRaidOpportunityTick: number;
 }
 
+export interface OperatorDispositionSnapshot {
+  operatorId: string;
+  sociability: number;
+  temperament: number;
+  grievanceLevel: number;
+  satisfactionLevel: number;
+}
+
+export interface NotableTieSnapshot {
+  operatorAId: string;
+  operatorBId: string;
+  stance: string;
+  strength: number;
+}
+
+export interface RecurringTeamSnapshot {
+  id: string;
+  memberIds: string[];
+  cohesion: number;
+  raidCount: number;
+  lastRaidTick: number;
+  damaged: boolean;
+  damageReason: string;
+}
+
+export interface RoomCultureSnapshot {
+  roomInstanceId: string;
+  comfort: number;
+  tension: number;
+  camaraderie: number;
+  tone: string;
+}
+
+export interface InventoryStackSnapshot {
+  itemId: string;
+  quantity: number;
+}
+
+export interface EquipmentAssignmentSnapshot {
+  operatorId: string;
+  weaponId: string;
+  outfitOverlayId: string;
+  accessoryId: string;
+}
+
 export interface WorldSnapshot {
   guild: GuildSnapshot;
   time: WorldTimeSnapshot;
@@ -199,6 +246,12 @@ export interface WorldSnapshot {
   contractSite?: ContractSiteSnapshot | null;
   fogOfWar?: FogOfWarSnapshot | null;
   scheduler?: WorldSchedulerSnapshot;
+  operatorDispositions?: OperatorDispositionSnapshot[];
+  notableTies?: NotableTieSnapshot[];
+  recurringTeams?: RecurringTeamSnapshot[];
+  roomCultures?: RoomCultureSnapshot[];
+  inventoryStacks?: InventoryStackSnapshot[];
+  equipmentAssignments?: EquipmentAssignmentSnapshot[];
 }
 
 export interface PersistedSaveGame {

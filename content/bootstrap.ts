@@ -2,12 +2,18 @@ export interface BootstrapRoomSeed {
   id: string;
   templateId: string;
   occupancy: number;
+  isActive?: boolean;
   footprint: {
     col: number;
     row: number;
     cols: number;
     rows: number;
   };
+}
+
+interface BootstrapInventoryEntry {
+  itemId: string;
+  quantity: number;
 }
 
 export interface BootstrapScenario {
@@ -112,12 +118,13 @@ export interface BootstrapScenario {
     createdTick: number;
     expiresAtTick: number;
   }[];
+  inventory: readonly BootstrapInventoryEntry[];
 }
 
 export const bootstrapScenario = {
   guild: {
     reputation: 0,
-    treasury: 250,
+    treasury: 500,
     intel: 1,
   },
   time: {
@@ -130,9 +137,10 @@ export const bootstrapScenario = {
   },
   rooms: [
     {
-      id: "room-instance/front_desk",
-      templateId: "room/front_desk:tier_1",
+      id: "room-instance/register",
+      templateId: "room/register:tier_1",
       occupancy: 1,
+      isActive: true,
       footprint: {
         col: 0,
         row: 0,
@@ -141,12 +149,25 @@ export const bootstrapScenario = {
       },
     },
     {
-      id: "room-instance/recruitment_space",
-      templateId: "room/recruitment_space:tier_1",
+      id: "room-instance/counter",
+      templateId: "room/counter:tier_1",
       occupancy: 0,
+      isActive: true,
       footprint: {
         col: 4,
         row: 0,
+        cols: 4,
+        rows: 3,
+      },
+    },
+    {
+      id: "room-instance/dining_area",
+      templateId: "room/dining_area:tier_1",
+      occupancy: 0,
+      isActive: true,
+      footprint: {
+        col: 0,
+        row: 3,
         cols: 4,
         rows: 3,
       },
@@ -243,6 +264,186 @@ export const bootstrapScenario = {
         targetId: "",
       },
     },
+    {
+      id: "operator/jin-tanaka",
+      identity: {
+        name: "Jin Tanaka",
+        roleTag: "role:medic",
+        specialtyTag: "focus:containment",
+      },
+      preferences: {
+        riskTolerance: 45,
+        rewardFocus: 52,
+        recoveryBias: 68,
+        socialBias: 55,
+        trainingBias: 48,
+        comfortBias: 62,
+        preferredMissionTags: ["mission:stability", "objective:hold"],
+        preferredPartnerIds: ["operator/lena-park"],
+      },
+      schedule: {
+        currentBlock: "work",
+        workStartMinute: 480,
+        workEndMinute: 1080,
+      },
+      needs: {
+        hunger: 10,
+        fatigue: 14,
+        stress: 18,
+      },
+      morale: {
+        current: 60,
+        baseline: 60,
+      },
+      loyalty: {
+        current: 55,
+        baseline: 55,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    {
+      id: "operator/vera-santos",
+      identity: {
+        name: "Vera Santos",
+        roleTag: "role:field_lead",
+        specialtyTag: "focus:extraction",
+      },
+      preferences: {
+        riskTolerance: 78,
+        rewardFocus: 74,
+        recoveryBias: 30,
+        socialBias: 62,
+        trainingBias: 66,
+        comfortBias: 36,
+        preferredMissionTags: ["mission:retrieval", "objective:escort"],
+        preferredPartnerIds: ["operator/ash-okafor"],
+      },
+      schedule: {
+        currentBlock: "work",
+        workStartMinute: 480,
+        workEndMinute: 1080,
+      },
+      needs: {
+        hunger: 14,
+        fatigue: 20,
+        stress: 12,
+      },
+      morale: {
+        current: 70,
+        baseline: 70,
+      },
+      loyalty: {
+        current: 65,
+        baseline: 65,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    {
+      id: "operator/ash-okafor",
+      identity: {
+        name: "Ash Okafor",
+        roleTag: "role:scout",
+        specialtyTag: "focus:extraction",
+      },
+      preferences: {
+        riskTolerance: 68,
+        rewardFocus: 60,
+        recoveryBias: 38,
+        socialBias: 42,
+        trainingBias: 64,
+        comfortBias: 44,
+        preferredMissionTags: ["mission:retrieval", "objective:escort"],
+        preferredPartnerIds: ["operator/vera-santos"],
+      },
+      schedule: {
+        currentBlock: "work",
+        workStartMinute: 480,
+        workEndMinute: 1080,
+      },
+      needs: {
+        hunger: 16,
+        fatigue: 24,
+        stress: 10,
+      },
+      morale: {
+        current: 58,
+        baseline: 58,
+      },
+      loyalty: {
+        current: 60,
+        baseline: 60,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    {
+      id: "operator/lena-park",
+      identity: {
+        name: "Lena Park",
+        roleTag: "role:medic",
+        specialtyTag: "focus:containment",
+      },
+      preferences: {
+        riskTolerance: 40,
+        rewardFocus: 48,
+        recoveryBias: 72,
+        socialBias: 64,
+        trainingBias: 42,
+        comfortBias: 58,
+        preferredMissionTags: ["mission:stability", "objective:hold"],
+        preferredPartnerIds: ["operator/jin-tanaka"],
+      },
+      schedule: {
+        currentBlock: "work",
+        workStartMinute: 480,
+        workEndMinute: 1080,
+      },
+      needs: {
+        hunger: 8,
+        fatigue: 12,
+        stress: 20,
+      },
+      morale: {
+        current: 65,
+        baseline: 65,
+      },
+      loyalty: {
+        current: 57,
+        baseline: 57,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
   ],
   operatorRelationships: [
     {
@@ -252,6 +453,24 @@ export const bootstrapScenario = {
       friction: 16,
       familiarity: 44,
       recentSharedOutcome: 8,
+      historyTags: ["history:starting_roster", "bond:field_pair"],
+    },
+    {
+      operatorAId: "operator/jin-tanaka",
+      operatorBId: "operator/lena-park",
+      trust: 52,
+      friction: 10,
+      familiarity: 38,
+      recentSharedOutcome: 4,
+      historyTags: ["history:starting_roster", "bond:medic_pair"],
+    },
+    {
+      operatorAId: "operator/vera-santos",
+      operatorBId: "operator/ash-okafor",
+      trust: 58,
+      friction: 14,
+      familiarity: 40,
+      recentSharedOutcome: 6,
       historyTags: ["history:starting_roster", "bond:field_pair"],
     },
   ],
@@ -264,7 +483,29 @@ export const bootstrapScenario = {
       wage: 18,
       assignment: {
         kind: "room",
-        targetId: "room-instance/front_desk",
+        targetId: "room-instance/register",
+      },
+    },
+    {
+      id: "staff/boris",
+      name: "Boris Petrov",
+      roleTag: "staff:logistics",
+      status: "idle",
+      wage: 15,
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    {
+      id: "staff/carmen",
+      name: "Carmen Liu",
+      roleTag: "staff:maintenance",
+      status: "idle",
+      wage: 14,
+      assignment: {
+        kind: "idle",
+        targetId: "",
       },
     },
   ],
@@ -277,6 +518,30 @@ export const bootstrapScenario = {
       quality: 61,
       expectedLoyalty: 53,
     },
+    {
+      id: "visitor/preview-2",
+      name: "Dax Moreno",
+      desiredRoleTag: "role:field_lead",
+      patience: 22,
+      quality: 58,
+      expectedLoyalty: 50,
+    },
+    {
+      id: "visitor/preview-3",
+      name: "Quinn Reyes",
+      desiredRoleTag: "role:scout",
+      patience: 15,
+      quality: 55,
+      expectedLoyalty: 48,
+    },
   ],
   raidOpportunities: [],
+  inventory: [
+    { itemId: "weapon/pipe-wrench", quantity: 2 },
+    { itemId: "weapon/kitchen-knife", quantity: 1 },
+    { itemId: "outfit-overlay/padded-jacket", quantity: 2 },
+    { itemId: "accessory/comm-earpiece", quantity: 2 },
+    { itemId: "accessory/tactical-scarf", quantity: 1 },
+    { itemId: "loot/monster-part/fang", quantity: 3 },
+  ],
 } satisfies BootstrapScenario;

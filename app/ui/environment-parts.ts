@@ -5,12 +5,22 @@
  * Does not invent gameplay logic.
  */
 
-import envIndexData from "../../content/data/hq-environment-index.json";
+import {
+  getHqEnvironmentRenderConfig,
+  getLoadedHqEnvironmentManifest,
+  type HqEnvironmentAssetRoots,
+} from "lib/hq-environment-manifest";
 
 // ── Types matching the environment asset metadata shape ──────────────
 
-export type EnvPartCategory = "shell" | "structure" | "prop" | "actor-marker" | "background";
-export type EnvPartScale = "building" | "structure" | "prop" | "marker" | "backdrop";
+export type EnvPartCategory =
+  | "shell"
+  | "structure"
+  | "prop"
+  | "scene"
+  | "actor-marker"
+  | "background";
+export type EnvPartScale = "building" | "structure" | "prop" | "room" | "marker" | "backdrop";
 export type EnvPartStatus = "exploration" | "approved";
 export interface EnvPartMeta {
   id: string;
@@ -88,6 +98,7 @@ export interface EnvPartsIndex {
   locked: string | null;
   style: string;
   building: string;
+  paths: HqEnvironmentAssetRoots;
   parts: readonly EnvPartMeta[];
 }
 
@@ -97,6 +108,7 @@ const VALID_CATEGORIES: ReadonlySet<string> = new Set<EnvPartCategory>([
   "shell",
   "structure",
   "prop",
+  "scene",
   "actor-marker",
   "background",
 ]);
@@ -104,6 +116,7 @@ const VALID_SCALES: ReadonlySet<string> = new Set<EnvPartScale>([
   "building",
   "structure",
   "prop",
+  "room",
   "marker",
   "backdrop",
 ]);
@@ -118,6 +131,20 @@ export interface EnvValidationError {
 export function validateEnvPartsIndex(index: EnvPartsIndex): EnvValidationError[] {
   const errors: EnvValidationError[] = [];
   const seenIds = new Set<string>();
+  const assetRoots: ReadonlyArray<keyof HqEnvironmentAssetRoots> = [
+    "partsRoot",
+    "referenceRoot",
+    "recipesRoot",
+  ];
+
+  assetRoots.forEach((key) => {
+    if (!index.paths[key]?.trim()) {
+      errors.push({
+        partId: "(index)",
+        message: `Missing ${key} asset root.`,
+      });
+    }
+  });
 
   for (const part of index.parts) {
     if (seenIds.has(part.id)) {
@@ -188,20 +215,29 @@ export function findEnvPartById(
 }
 
 /** Resolve the public asset path for an environment part SVG.
- *  All exploration assets live in reference/; approved assets are in parts/. */
-export function envPartSvgPath(part: EnvPartMeta): string {
+ *  Exploration assets live in reference/. Approved scene assets live in recipes/.
+ *  Other approved assets live in parts/. */
+export function envPartSvgPath(
+  part: EnvPartMeta,
+  index: EnvPartsIndex = getLoadedEnvPartsIndex(),
+): string {
   const filename = part.id.split("/").pop() ?? part.id;
   if (part.status === "approved") {
-    return `/data/svg-environments/hq/bodega/parts/${part.id}.svg`;
+    if (part.category === "scene") {
+      return `${index.paths.recipesRoot}/${filename}.svg`;
+    }
+
+    return `${index.paths.partsRoot}/${part.id}.svg`;
   }
-  return `/data/svg-environments/hq/bodega/reference/${filename}.svg`;
+
+  return `${index.paths.referenceRoot}/${filename}.svg`;
 }
 
 // ── Loaded index access ─────────────────────────────────────────────
 
 /** Returns the shipped HQ environment parts index, parsed and typed. */
 export function getLoadedEnvPartsIndex(): EnvPartsIndex {
-  return envIndexData as unknown as EnvPartsIndex;
+  return getLoadedHqEnvironmentManifest() as EnvPartsIndex;
 }
 
 /** Returns the parts array from the shipped environment index. */
@@ -217,8 +253,7 @@ export function defaultPresetId(): string {
 /** Resolve the retained building shell asset URL. */
 export function resolveShellAssetUrl(): string {
   const parts = getLoadedEnvParts();
+  const { paths } = getHqEnvironmentRenderConfig();
   const shell = findEnvPartById(parts, "shell/iso-bodega-shell");
-  return shell
-    ? envPartSvgPath(shell)
-    : "/data/svg-environments/hq/bodega/parts/shell/iso-bodega-shell.svg";
+  return shell ? envPartSvgPath(shell) : `${paths.partsRoot}/shell/iso-bodega-shell.svg`;
 }

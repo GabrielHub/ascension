@@ -16,11 +16,13 @@ Boss starts at the bottom. The bodega. No reputation, barely any cash, and opera
 
 At Boss's scale, the guild works one secured clearance contract at a time. Until that site is cleared or the contract is lost, that is the job.
 
+For the physical space, room flavor, upgrade progression, and building relocation of the guild headquarters, see [Headquarters And Rooms](./headquarters-and-rooms.md).
+
 ## The City
 
 New York's real boroughs and neighborhoods are used. Manhattan, Brooklyn, Queens, the Bronx, Staten Island - real names, real geography.
 
-City interaction features are deferred. The current game scope focuses on the guild's headquarters building and the dungeons it clears. District-level features (contracts by neighborhood, factional presence, public perception per borough, city institution interactions) are future content that the world model supports but does not require yet.
+The city is larger than what Boss can immediately touch. Borough politics, neighborhood reputation, local institutions, and district-specific pressures all exist around the guild even when Boss is still operating at bodega scale.
 
 ## Dungeons
 

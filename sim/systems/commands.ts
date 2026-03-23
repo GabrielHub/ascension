@@ -6,6 +6,8 @@ import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
 import type { SimCommand } from "../commands";
+import { buyItem, sellItem, getMarketPriceForItem } from "./market";
+import { autoSelectAccessory, unequipItem } from "./inventory";
 import {
   AssignmentState,
   BuildingAuthority,
@@ -18,14 +20,14 @@ import {
   PreferenceState,
   RaidParticipationState,
   Renderable,
-  RelationshipState,
   RoomInstance,
   ScheduleState,
   StaffState,
   VisitorState,
   WorldTimeState,
 } from "../components";
-import type { SimSystemContext } from "./types";
+import { ensureOperatorDispositionEntity, ensureRoomCultureEntity } from "./social";
+import type { RuntimeEvent, SimSystemContext } from "./types";
 
 const ROLE_TAG_PREFIX = "role:";
 const STAFF_TAG_PREFIX = "staff:";
@@ -212,6 +214,16 @@ export function formatWorldTimestamp(context: SimSystemContext): string {
   return `day-${WorldTimeState.day[timeEntity]} ${hour}:${minute}`;
 }
 
+export function pushRuntimeEvent(
+  context: SimSystemContext,
+  event: Omit<RuntimeEvent, "timestamp">,
+): void {
+  context.runtimeState.pendingEvents.push({
+    ...event,
+    timestamp: formatWorldTimestamp(context),
+  });
+}
+
 export function getRoleTag(tags: readonly string[]): string {
   return tags.find((tag) => tag.startsWith(ROLE_TAG_PREFIX)) ?? "role:general";
 }
@@ -344,7 +356,7 @@ export function buildRequirementContext(context: SimSystemContext): RequirementE
     roomTiers: getRoomTiers(context),
     staffRoleCounts: getStaffRoleCounts(context),
     operatorCount: context.runtimeState.operatorEntities.filter(
-      (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+      (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
     ).length,
     unlockedTemplateTags,
   };
@@ -451,6 +463,7 @@ function createRoomInstanceEntity(
   Renderable.layer[entity] = 1;
 
   context.runtimeState.roomEntities.push(entity);
+  ensureRoomCultureEntity(context, RoomInstance.id[entity], template.tags);
   context.runtimeState.nextRoomSequence += 1;
 }
 
@@ -510,6 +523,8 @@ function createOperatorEntity(
   OperatorIdentity.lifecycleStatus[entity] = "active";
   OperatorIdentity.deathTick[entity] = 0;
   OperatorIdentity.deathRaidSummaryId[entity] = "";
+  OperatorIdentity.departureTick[entity] = 0;
+  OperatorIdentity.departureReason[entity] = "";
   NeedState.hunger[entity] = source.hunger;
   NeedState.fatigue[entity] = source.fatigue;
   NeedState.stress[entity] = source.stress;
@@ -538,9 +553,34 @@ function createOperatorEntity(
   InjuryState.treated[entity] = 0;
 
   context.runtimeState.operatorEntities.push(entity);
+  ensureOperatorDispositionEntity(context, OperatorIdentity.id[entity]);
   context.runtimeState.nextOperatorSequence += 1;
   return entity;
 }
+
+// Name pool for dynamically hired staff (deterministic by sequence number).
+const STAFF_NAMES: readonly string[] = [
+  "Dana Wolfe",
+  "Emile Nava",
+  "Freya Cobb",
+  "Gael Moran",
+  "Hiro Vance",
+  "Ida Kwan",
+  "Jasper Doyle",
+  "Kira Sato",
+  "Leo Vidal",
+  "Maren Cho",
+  "Nico Stein",
+  "Olive Ruiz",
+  "Pax Lindahl",
+  "Remy Serra",
+  "Suki Roth",
+  "Tomas Carr",
+  "Uma Phan",
+  "Victor Albright",
+  "Wren Ito",
+  "Zara Medina",
+];
 
 function createStaffEntity(context: SimSystemContext, roleTag: string): boolean {
   const normalizedRoleTag = normalizeStaffRoleTag(roleTag);
@@ -549,7 +589,6 @@ function createStaffEntity(context: SimSystemContext, roleTag: string): boolean 
   }
 
   const entity = addEntity(context.world);
-  const roleName = normalizedRoleTag.slice(STAFF_TAG_PREFIX.length).replace(/_/g, " ");
 
   addComponent(context.world, entity, StaffState);
   addComponent(context.world, entity, MoraleState);
@@ -559,8 +598,9 @@ function createStaffEntity(context: SimSystemContext, roleTag: string): boolean 
   addComponent(context.world, entity, NeedState);
   addComponent(context.world, entity, InjuryState);
 
-  StaffState.id[entity] = `staff/${context.runtimeState.nextStaffSequence}`;
-  StaffState.name[entity] = `${roleName} staff ${context.runtimeState.nextStaffSequence}`;
+  const seq = context.runtimeState.nextStaffSequence;
+  StaffState.id[entity] = `staff/${seq}`;
+  StaffState.name[entity] = STAFF_NAMES[seq % STAFF_NAMES.length];
   StaffState.roleTag[entity] = normalizedRoleTag;
   StaffState.status[entity] = "available";
   StaffState.wage[entity] = 16 + (scoreString(roleTag) % 7);
@@ -615,29 +655,32 @@ function findStaffEntityById(context: SimSystemContext, staffId: string): number
   return context.runtimeState.staffEntities.find((entity) => StaffState.id[entity] === staffId);
 }
 
-function createRelationshipEntity(
-  context: SimSystemContext,
-  relationship: RelationshipRecordData,
-): void {
-  const entity = addEntity(context.world);
-
-  addComponent(context.world, entity, RelationshipState);
-  RelationshipState.operatorAId[entity] = relationship.operatorAId;
-  RelationshipState.operatorBId[entity] = relationship.operatorBId;
-  RelationshipState.trust[entity] = relationship.trust;
-  RelationshipState.friction[entity] = relationship.friction;
-  RelationshipState.familiarity[entity] = relationship.familiarity;
-  RelationshipState.recentSharedOutcome[entity] = relationship.recentSharedOutcome;
-  RelationshipState.historyTags[entity] = [...relationship.historyTags];
-
-  context.runtimeState.relationshipEntities.push(entity);
-}
-
 export function hasOperationalRecruitmentRoom(context: SimSystemContext): boolean {
   return context.runtimeState.roomEntities.some((entity) => {
     const template = getRoomTemplateForEntity(context, entity);
-    return template.tags.includes("room:staffing") && RoomInstance.isOperational[entity] === 1;
+    return template.tags.includes("ops:recruitment") && RoomInstance.isOperational[entity] === 1;
   });
+}
+
+export function getRecruitmentRoomCapacity(context: SimSystemContext): number {
+  let total = 0;
+  for (const entity of context.runtimeState.roomEntities) {
+    const template = getRoomTemplateForEntity(context, entity);
+    if (template.tags.includes("ops:recruitment") && RoomInstance.isOperational[entity] === 1) {
+      total += RoomInstance.capacity[entity] ?? template.baseCapacity;
+    }
+  }
+  return total;
+}
+
+export function getRecruitmentRoomId(context: SimSystemContext): string | undefined {
+  for (const entity of context.runtimeState.roomEntities) {
+    const template = getRoomTemplateForEntity(context, entity);
+    if (template.tags.includes("ops:recruitment") && RoomInstance.isOperational[entity] === 1) {
+      return RoomInstance.id[entity];
+    }
+  }
+  return undefined;
 }
 
 export function applySimCommand(context: SimSystemContext, command: SimCommand): void {
@@ -735,7 +778,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
     case "sim/accept-recruit": {
       const visitorEntity = findVisitorEntityById(context, command.visitorId);
       const livingOperatorCount = context.runtimeState.operatorEntities.filter(
-        (entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead",
+        (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
       ).length;
       if (
         visitorEntity === undefined ||
@@ -745,16 +788,13 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      const existingOperators = context.runtimeState.operatorEntities.filter(
-        (entity) => entity !== undefined && OperatorIdentity.lifecycleStatus[entity] !== "dead",
-      );
       const preferences = buildDefaultPreferenceProfile({
         name: VisitorState.name[visitorEntity],
         roleTag: VisitorState.desiredRoleTag[visitorEntity],
         specialtyTag: `focus:${VisitorState.desiredRoleTag[visitorEntity].slice(ROLE_TAG_PREFIX.length)}`,
       });
       const recruitSpecialtyTag = `focus:${VisitorState.desiredRoleTag[visitorEntity].slice(ROLE_TAG_PREFIX.length)}`;
-      const operatorEntity = createOperatorEntity(context, {
+      createOperatorEntity(context, {
         name: VisitorState.name[visitorEntity],
         roleTag: VisitorState.desiredRoleTag[visitorEntity],
         specialtyTag: recruitSpecialtyTag,
@@ -774,41 +814,19 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         stress: 18,
       });
 
-      existingOperators.forEach((existingEntity) => {
-        createRelationshipEntity(
-          context,
-          buildInitialRelationshipRecord(
-            {
-              id: OperatorIdentity.id[operatorEntity],
-              roleTag: OperatorIdentity.roleTag[operatorEntity],
-              specialtyTag: OperatorIdentity.specialtyTag[operatorEntity],
-              preferences,
-            },
-            {
-              id: OperatorIdentity.id[existingEntity],
-              roleTag: OperatorIdentity.roleTag[existingEntity],
-              specialtyTag: OperatorIdentity.specialtyTag[existingEntity],
-              preferences: {
-                riskTolerance: PreferenceState.riskTolerance[existingEntity],
-                rewardFocus: PreferenceState.rewardFocus[existingEntity],
-                recoveryBias: PreferenceState.recoveryBias[existingEntity],
-                socialBias: PreferenceState.socialBias[existingEntity],
-                trainingBias: PreferenceState.trainingBias[existingEntity],
-                comfortBias: PreferenceState.comfortBias[existingEntity],
-                preferredMissionTags: [
-                  ...(PreferenceState.preferredMissionTags[existingEntity] ?? []),
-                ],
-                preferredPartnerIds: [
-                  ...(PreferenceState.preferredPartnerIds[existingEntity] ?? []),
-                ],
-              },
-            },
-          ),
-        );
-      });
-
+      const recruitName = VisitorState.name[visitorEntity];
       removeEntity(context.world, visitorEntity);
       removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
+      pushRuntimeEvent(context, {
+        kind: "staffing_change",
+        message: `${recruitName} joined the roster`,
+        accent: "gold",
+        targetKind: "operator",
+        targetId:
+          OperatorIdentity.id[
+            context.runtimeState.operatorEntities[context.runtimeState.operatorEntities.length - 1]
+          ],
+      });
       return;
     }
     case "sim/reject-recruit": {
@@ -817,9 +835,15 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
+      const rejectName = VisitorState.name[visitorEntity];
       removeEntity(context.world, visitorEntity);
       removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
       GuildState.reputation[context.singletonEntities.guild] -= 1;
+      pushRuntimeEvent(context, {
+        kind: "staffing_change",
+        message: `${rejectName} was turned away (-1 rep)`,
+        accent: "ember",
+      });
       return;
     }
     case "sim/hire-staff": {
@@ -865,6 +889,51 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       return;
     }
 
+    case "sim/buy-item": {
+      const price = getMarketPriceForItem(context.registry, command.itemId);
+      if (!price || price.buyPrice <= 0) return;
+      if (!buyItem(context, command.itemId, price.buyPrice)) {
+        return;
+      }
+      const itemName = context.registry.itemById.get(command.itemId)?.name ?? command.itemId;
+      pushRuntimeEvent(context, {
+        kind: "resource_swing",
+        message: `Bought ${itemName} for $${price.buyPrice}`,
+        accent: "gold",
+      });
+      return;
+    }
+    case "sim/sell-item": {
+      if (command.quantity <= 0) {
+        return;
+      }
+      const pricing = getMarketPriceForItem(context.registry, command.itemId);
+      if (!pricing || pricing.sellPrice <= 0) return;
+      if (!sellItem(context, command.itemId, command.quantity, pricing.sellPrice)) {
+        return;
+      }
+      const itemName = context.registry.itemById.get(command.itemId)?.name ?? command.itemId;
+      pushRuntimeEvent(context, {
+        kind: "resource_swing",
+        message: `Sold ${command.quantity} ${itemName}${command.quantity === 1 ? "" : "s"} for $${pricing.sellPrice * command.quantity}`,
+        accent: "gold",
+      });
+      return;
+    }
+    case "sim/auto-assign-accessory": {
+      const operatorEntity = context.runtimeState.operatorEntities.find(
+        (entity) => OperatorIdentity.id[entity] === command.operatorId,
+      );
+      if (operatorEntity === undefined) {
+        return;
+      }
+      autoSelectAccessory(context, command.operatorId, OperatorIdentity.roleTag[operatorEntity]);
+      return;
+    }
+    case "sim/unequip-item": {
+      unequipItem(context, command.operatorId, command.slot);
+      return;
+    }
     case "sim/dev-set-resource": {
       const guildEntity = context.singletonEntities.guild;
 

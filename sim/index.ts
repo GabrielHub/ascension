@@ -64,6 +64,7 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
         tier: roomTemplate.tier,
         capacity: roomTemplate.baseCapacity,
         occupancy: seed.occupancy,
+        ...(seed.isActive === undefined ? {} : { isActive: seed.isActive }),
         footprint: { ...seed.footprint },
       };
     }),
@@ -111,6 +112,38 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
       claimedOperatorIds: [...opportunity.claimedOperatorIds],
     })),
     activeEvents: [],
+    operatorDispositions: bootstrapScenario.operators.map((operator) => ({
+      operatorId: operator.id,
+      sociability: 50,
+      temperament: 50,
+      grievanceLevel: Math.max(0, Math.round(50 - operator.morale.current * 0.5)),
+      satisfactionLevel: Math.round((operator.morale.current + operator.loyalty.current) / 2),
+    })),
+    inventoryStacks: bootstrapScenario.inventory.map((entry) => ({ ...entry })),
+    equipmentAssignments: bootstrapScenario.operators
+      .map((operator) => {
+        const appearance = BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id];
+        if (!appearance?.visibleGear) {
+          return null;
+        }
+
+        return {
+          operatorId: operator.id,
+          weaponId: appearance.visibleGear.weaponPartId ?? "",
+          outfitOverlayId: appearance.visibleGear.outfitOverlayPartId ?? "",
+          accessoryId: appearance.visibleGear.accessoryPartId ?? "",
+        };
+      })
+      .filter(
+        (
+          entry,
+        ): entry is {
+          operatorId: string;
+          weaponId: string;
+          outfitOverlayId: string;
+          accessoryId: string;
+        } => entry !== null,
+      ),
   } satisfies Phase1RuntimeWorldSnapshot;
 
   return snapshot;

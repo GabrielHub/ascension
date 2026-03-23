@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Dining Area
+       Cheap street-level dining with folding tables, chairs, milk crate, microwave.
+       No walls, floor, tile grid, or labels.
+       Redesigned layout: two folding tables in grid pattern, two chairs per table,
+       one milk crate as seating, microwave against back wall.
+       Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24) -->
+
+  <!-- == FOLDING TABLE 1 (back-left, approx iso 0.5,0.8) ============== -->
+  <!-- Table top surface -->
+  <polygon points="152,128 200,152 176,164 128,140"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.8"/>
+  <!-- Front-left face -->
+  <polygon points="128,140 176,164 176,172 128,148"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.6"/>
+  <!-- Front-right face -->
+  <polygon points="200,152 176,164 176,172 200,160"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <!-- Top edge highlight -->
+  <line x1="152" y1="128" x2="128" y2="140" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <!-- Fold-out legs -->
+  <line x1="134" y1="148" x2="134" y2="168" stroke="#2c2418" stroke-width="1.5"/>
+  <line x1="194" y1="156" x2="194" y2="176" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="172" y1="170" x2="172" y2="188" stroke="#241c12" stroke-width="1.5"/>
+  <!-- Leg cross brace -->
+  <line x1="138" y1="160" x2="168" y2="180" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- == CHAIR 1A (behind table 1, iso ~0.2,0.2) ====================== -->
+  <!-- Seat diamond -->
+  <polygon points="132,112 142,106 152,112 142,116"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <!-- Back rest -->
+  <polygon points="132,112 142,106 142,100 132,106"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="142,106 152,112 152,106 142,100"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <!-- Legs -->
+  <line x1="134" y1="116" x2="134" y2="130" stroke="#333030" stroke-width="1.2"/>
+  <line x1="150" y1="116" x2="150" y2="130" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="142" y1="118" x2="142" y2="132" stroke="#333030" stroke-width="1"/>
+
+  <!-- == CHAIR 1B (in front of table 1, iso ~0.8,1.6) ================= -->
+  <!-- Seat diamond -->
+  <polygon points="120,170 130,164 140,170 130,174"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <!-- Back rest -->
+  <polygon points="120,170 130,164 130,158 120,164"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="130,164 140,170 140,164 130,158"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <!-- Legs -->
+  <line x1="122" y1="174" x2="122" y2="188" stroke="#333030" stroke-width="1.2"/>
+  <line x1="138" y1="174" x2="138" y2="188" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="130" y1="176" x2="130" y2="190" stroke="#333030" stroke-width="1"/>
+
+  <!-- == FOLDING TABLE 2 (front-right, approx iso 2.2,1.8) ============ -->
+  <!-- Table top surface -->
+  <polygon points="248,188 296,212 272,224 224,200"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.8"/>
+  <!-- Front-left face -->
+  <polygon points="224,200 272,224 272,232 224,208"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.6"/>
+  <!-- Front-right face -->
+  <polygon points="296,212 272,224 272,232 296,220"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <!-- Top edge highlight -->
+  <line x1="248" y1="188" x2="224" y2="200" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <!-- Fold-out legs -->
+  <line x1="230" y1="208" x2="230" y2="228" stroke="#2c2418" stroke-width="1.5"/>
+  <line x1="290" y1="216" x2="290" y2="236" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="268" y1="230" x2="268" y2="248" stroke="#241c12" stroke-width="1.5"/>
+  <!-- Leg cross brace -->
+  <line x1="234" y1="220" x2="264" y2="240" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- == CHAIR 2A (behind table 2, iso ~2.5,1.2) ====================== -->
+  <!-- Seat diamond -->
+  <polygon points="262,172 272,166 282,172 272,176"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <!-- Back rest -->
+  <polygon points="262,172 272,166 272,160 262,166"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="272,166 282,172 282,166 272,160"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <!-- Legs -->
+  <line x1="264" y1="176" x2="264" y2="190" stroke="#333030" stroke-width="1.2"/>
+  <line x1="280" y1="176" x2="280" y2="190" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="272" y1="178" x2="272" y2="192" stroke="#333030" stroke-width="1"/>
+
+  <!-- == MILK CRATE ("the bodega chair", at table 2, iso ~2.0,2.4) ==== -->
+  <!-- Flipped iso box in warm gray -->
+  <!-- Top face -->
+  <polygon points="218,230 228,224 238,230 228,234"
+    fill="#3a3838" stroke="#333030" stroke-width="0.5"/>
+  <!-- Left face -->
+  <polygon points="218,230 228,234 228,242 218,238"
+    fill="#333030" stroke="#2a2828" stroke-width="0.4"/>
+  <!-- Right face -->
+  <polygon points="238,230 228,234 228,242 238,238"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <!-- Grid holes for ventilation (left face) -->
+  <rect x="220" y="232" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.15)"/>
+  <rect x="220" y="235" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.15)"/>
+  <rect x="224" y="233" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.12)"/>
+  <!-- Grid holes (right face) -->
+  <rect x="231" y="232" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.12)"/>
+  <rect x="231" y="235" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.1)"/>
+  <rect x="235" y="233" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- == MICROWAVE (against back-right wall area, iso ~3.2,0.5) ======= -->
+  <!-- Top face -->
+  <polygon points="340,120 356,128 368,122 352,114"
+    fill="#2c2c34" stroke="#222228" stroke-width="0.5"/>
+  <!-- Left face -->
+  <polygon points="340,120 356,128 356,140 340,132"
+    fill="#28282e" stroke="#1e1e24" stroke-width="0.4"/>
+  <!-- Right face -->
+  <polygon points="356,128 368,122 368,134 356,140"
+    fill="#24242a" stroke="#1e1e24" stroke-width="0.4"/>
+  <!-- Door window -->
+  <polygon points="342,122 354,128 354,136 342,130"
+    fill="#0e1018" stroke="#1a1a20" stroke-width="0.3"/>
+  <!-- Glass reflection -->
+  <line x1="343" y1="123" x2="345" y2="124" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+  <!-- Splatter stain -->
+  <circle cx="347" cy="128" r="1.2" fill="rgba(60,30,10,0.12)"/>
+  <!-- Buttons -->
+  <circle cx="360" cy="126" r="0.6" fill="#3a3838"/>
+  <circle cx="363" cy="125" r="0.6" fill="#3a3838"/>
+  <!-- Timer glow -->
+  <rect x="358" y="122" width="4" height="2" rx="0.3" fill="rgba(100,180,120,0.08)"/>
+  <!-- Top edge highlight -->
+  <line x1="340" y1="120" x2="368" y2="122" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+</svg>

@@ -7,7 +7,7 @@ export const resourceTemplates = [
     name: "Cash",
     tags: ["resource:liquid", "economy:core"],
     description: "The base liquid budget for payroll, supplies, and building work.",
-    startingAmount: 250,
+    startingAmount: 500,
   },
   {
     id: "resource/reputation",

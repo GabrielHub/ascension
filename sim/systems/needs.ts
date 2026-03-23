@@ -6,8 +6,24 @@ import {
   RoomInstance,
   ScheduleState,
 } from "../components";
-import { clamp, getRoomTemplateForEntity, getStaffRoleTag } from "./commands";
+import { clamp, getRoomTemplateForEntity } from "./commands";
 import type { SimSystem } from "./types";
+
+export interface NeedReadinessFlags {
+  injuryPreventsRaid: boolean;
+  exhaustionPenalty: boolean;
+  stressPenalty: boolean;
+  hungerReducesTraining: boolean;
+}
+
+export function computeNeedReadinessFlags(entity: number): NeedReadinessFlags {
+  return {
+    injuryPreventsRaid: InjuryState.severity[entity] > 60,
+    exhaustionPenalty: NeedState.fatigue[entity] > 80,
+    stressPenalty: NeedState.stress[entity] > 70,
+    hungerReducesTraining: NeedState.hunger[entity] > 70,
+  };
+}
 
 function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
   const buildingEntity = context.singletonEntities.building;
@@ -15,10 +31,7 @@ function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
 
   const roomRecoveryModifier = context.runtimeState.roomEntities.reduce((total, roomEntity) => {
     const template = getRoomTemplateForEntity(context, roomEntity);
-    if (
-      RoomInstance.isOperational[roomEntity] !== 1 ||
-      getStaffRoleTag(template.tags) !== "staff:medical"
-    ) {
+    if (RoomInstance.isOperational[roomEntity] !== 1 || !template.tags.includes("room:recovery")) {
       return total;
     }
 
@@ -129,11 +142,11 @@ export const advanceNeedsSystem: SimSystem = (context, deltaMs) => {
     return;
   }
 
-  const elapsedHours = Math.max(1, Math.floor(deltaMs / 1000)) / 60;
+  const elapsedHours = Math.max(1, Math.floor(deltaMs / 60000)) / 60;
   const recoveryRate = getOperationalRecoveryRate(context);
 
   context.runtimeState.operatorEntities
-    .filter((entity) => OperatorIdentity.lifecycleStatus[entity] !== "dead")
+    .filter((entity) => OperatorIdentity.lifecycleStatus[entity] === "active")
     .forEach((entity) => {
       advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);
     });

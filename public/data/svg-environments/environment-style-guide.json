@@ -24,9 +24,12 @@
     "hq": [
       "Use an angled/isometric room box with visible floor depth and enclosing wall planes.",
       "HQ room kits must share one canonical module footprint and grid so adjacent rooms snap together cleanly.",
-      "Use layered ownership: shell/perimeter, structure, room recipe, props, and theme.",
+      "Use layered ownership: shell/perimeter and structure are engine-rendered; room interiors use pre-composed scene SVGs containing props only.",
       "Doors, windows, and thresholds should read as openings in architecture rather than pasted icons.",
-      "Props should imply circulation, occupancy, and room function."
+      "Props should imply circulation, occupancy, and room function.",
+      "Room scene SVGs must contain only furniture, fixtures, and decorations — never walls, floors, tile grids, or structural elements.",
+      "All props inside scene SVGs must be isometric. Flat camera-facing rectangles (e.g. wall posters drawn as flat rects) are not valid.",
+      "Scene SVGs use a canonical coordinate system aligned to the shared isometric grid so the engine places them correctly over engine-rendered structure."
     ],
     "raidBaseMap": [
       "Use a flat top-down minimap language for tiles, chambers, corridors, fog, and feature markers.",
@@ -40,6 +43,8 @@
     "pure side elevations as approved HQ room scenes",
     "simple wall-slice cross-sections as approved HQ room scenes",
     "standalone HQ room dioramas that cannot tile with adjacent rooms",
+    "room scene SVGs that include walls, floors, tile grids, or structural elements (those are engine-rendered)",
+    "flat camera-facing rectangles for wall-mounted items — all props must be isometric",
     "stacking multiple full room-scene SVGs that each own their own walls and floor planes into one HQ layout",
     "HQ isometric room-box geometry for the raid base map"
   ]

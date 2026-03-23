@@ -1,5 +1,4 @@
 import { composeSvgRecipe, searchSvgParts } from "./svg-parts";
-import { createHqWorldSnapshot, composeHqWorldGeometry } from "./hq-world";
 import type { RaidWorldSnapshot, SvgPartDefinition } from "./types";
 import { createDefaultEffects } from "./world-effects";
 

@@ -570,32 +570,26 @@ function drawBackdrop(ctx: CanvasRenderingContext2D, viewW: number, viewH: numbe
   ctx.fillRect(0, 0, viewW, viewH);
 }
 
-// ── Flanking buildings (massive fills behind the ground plane) ────────────
+// ── Flanking buildings (NYC tenement facades behind the ground plane) ─────
 
 function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
   const periTiles = snapshot.modular.perimeterTiles;
   if (periTiles.length === 0) return;
 
-  const p = (col: number, row: number) => hqProject(snapshot, col, row);
+  const proj = (col: number, row: number) => hqProject(snapshot, col, row);
 
-  // Perimeter diamond corners
   const periMinCol = Math.min(...periTiles.map((t) => t.col));
   const periMaxCol = Math.max(...periTiles.map((t) => t.col)) + 1;
   const periMinRow = Math.min(...periTiles.map((t) => t.row));
-  const topPt = p(periMinCol, periMinRow);
-  const leftPt = p(
-    periMinCol,
-    periMinRow +
-      (periTiles.length > 0 ? Math.max(...periTiles.map((t) => t.row)) + 1 - periMinRow : 1),
-  );
-  const rightPt = p(periMaxCol, periMinRow);
+  const periMaxRow = Math.max(...periTiles.map((t) => t.row)) + 1;
+  const topPt = proj(periMinCol, periMinRow);
+  const leftPt = proj(periMinCol, periMaxRow);
+  const rightPt = proj(periMaxCol, periMinRow);
 
-  // Fill the entire area above / behind the ground diamond with a uniform
-  // dark color. Two massive polygons cover the left and right "buildings".
   const EXT = 3000;
 
-  // Left building mass
-  ctx.fillStyle = "#0c0b14";
+  // ── A. Deep background sky ──
+  ctx.fillStyle = "#06060a";
   ctx.beginPath();
   ctx.moveTo(topPt.x, topPt.y);
   ctx.lineTo(leftPt.x, leftPt.y);
@@ -605,7 +599,6 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   ctx.closePath();
   ctx.fill();
 
-  // Right building mass
   ctx.beginPath();
   ctx.moveTo(topPt.x, topPt.y);
   ctx.lineTo(rightPt.x, rightPt.y);
@@ -615,45 +608,311 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   ctx.closePath();
   ctx.fill();
 
-  // Alley wall faces along the bodega edges (subtle depth detail)
   const floorTiles = snapshot.modular.floorTiles;
   if (floorTiles.length === 0) return;
   const bldMinCol = Math.min(...floorTiles.map((t) => t.col));
   const bldMaxCol = Math.max(...floorTiles.map((t) => t.col)) + 1;
   const bldMinRow = Math.min(...floorTiles.map((t) => t.row));
   const bldMaxRow = Math.max(...floorTiles.map((t) => t.row)) + 1;
-  const wallH = snapshot.layout.wallHeight * 6;
+  const storyH = snapshot.layout.wallHeight;
 
-  for (const { c, seed } of [
-    { c: bldMinCol, seed: 0 },
-    { c: bldMaxCol, seed: 2 },
-  ]) {
-    const p0 = p(c, bldMinRow);
-    const p1 = p(c, bldMaxRow);
-    const face: HqPoint[] = [p0, p1, { x: p1.x, y: p1.y - wallH }, { x: p0.x, y: p0.y - wallH }];
-    const grad = ctx.createLinearGradient(p0.x, p0.y - wallH, p0.x, p0.y);
-    grad.addColorStop(0, "#0c0b14");
-    grad.addColorStop(0.8, "#12101a");
-    grad.addColorStop(1, "#16141e");
-    drawPolygon(ctx, face, grad);
+  // ── B. Far building silhouettes (skyline depth) ──
+  const bgBuildings = [
+    {
+      col: bldMinCol - 2,
+      r0: bldMinRow - 1,
+      r1: bldMaxRow + 2,
+      h: storyH * 8,
+      fill: "#09090f",
+      seed: 100,
+    },
+    {
+      col: bldMinCol - 4,
+      r0: bldMinRow - 2,
+      r1: bldMaxRow + 3,
+      h: storyH * 10,
+      fill: "#07070d",
+      seed: 200,
+    },
+    {
+      col: bldMaxCol + 2,
+      r0: bldMinRow - 1,
+      r1: bldMaxRow + 2,
+      h: storyH * 7,
+      fill: "#09090f",
+      seed: 300,
+    },
+    {
+      col: bldMaxCol + 4,
+      r0: bldMinRow - 2,
+      r1: bldMaxRow + 3,
+      h: storyH * 9,
+      fill: "#07070d",
+      seed: 400,
+    },
+  ];
 
-    // Sparse dim windows
-    const faceW = Math.abs(p1.x - p0.x);
-    const faceDy = p1.y - p0.y;
-    if (faceW < 20) continue;
-    const winCols = Math.min(Math.floor(faceW / 18), 8);
-    for (let wr = 3; wr < 10; wr++) {
-      for (let wc = 0; wc < winCols; wc++) {
-        const u = (wc + 0.5) / winCols;
-        const v = (wr + 0.3) / 10;
-        const bx = p0.x + (p1.x - p0.x) * u;
-        const by = p0.y + faceDy * u - wallH * v;
-        if (seededRand(wc * 17 + wr * 31 + seed * 97) > 0.65) {
-          const alpha = 0.02 + seededRand(wc * 13 + wr * 23 + seed * 53) * 0.04;
+  for (const bg of bgBuildings) {
+    const p0 = proj(bg.col, bg.r0);
+    const p1 = proj(bg.col, bg.r1);
+    drawPolygon(ctx, [p0, p1, { x: p1.x, y: p1.y - bg.h }, { x: p0.x, y: p0.y - bg.h }], bg.fill);
+
+    // Sparse distant windows
+    const fW = Math.abs(p1.x - p0.x);
+    const fDy = p1.y - p0.y;
+    if (fW < 15) continue;
+    const cols = Math.min(Math.floor(fW / 10), 12);
+    const rows = Math.floor(bg.h / (storyH * 0.9));
+    for (let wr = 2; wr < rows; wr++) {
+      for (let wc = 0; wc < cols; wc++) {
+        if (seededRand(wc * 29 + wr * 43 + bg.seed) > 0.72) {
+          const u = (wc + 0.5) / cols;
+          const v = (wr + 0.3) / rows;
+          const alpha = 0.008 + seededRand(wc * 7 + wr * 13 + bg.seed) * 0.015;
           ctx.fillStyle = `rgba(200, 168, 76, ${alpha})`;
-          ctx.fillRect(bx - 1.5, by - 2, 3, 3);
+          ctx.fillRect(p0.x + (p1.x - p0.x) * u - 1, p0.y + fDy * u - bg.h * v - 1.5, 2, 2.5);
         }
       }
+    }
+  }
+
+  // ── C. Immediate neighbor facades (6-story tenements) ──
+  const neighborH = storyH * 6;
+  const floors = 6;
+
+  for (const { c, side, seed } of [
+    { c: bldMinCol, side: "left" as const, seed: 0 },
+    { c: bldMaxCol, side: "right" as const, seed: 2 },
+  ]) {
+    const p0 = proj(c, bldMinRow);
+    const p1 = proj(c, bldMaxRow);
+    const fW = Math.abs(p1.x - p0.x);
+    const fDy = p1.y - p0.y;
+
+    // Main facade gradient
+    const grad = ctx.createLinearGradient(p0.x, p0.y - neighborH, p0.x, p0.y);
+    grad.addColorStop(0, "#0b0a14");
+    grad.addColorStop(0.15, "#0e0d18");
+    grad.addColorStop(0.5, "#12101c");
+    grad.addColorStop(0.85, "#16141e");
+    grad.addColorStop(1, "#1a1824");
+    drawPolygon(
+      ctx,
+      [p0, p1, { x: p1.x, y: p1.y - neighborH }, { x: p0.x, y: p0.y - neighborH }],
+      grad,
+    );
+
+    // Rooftop parapet
+    ctx.strokeStyle = "rgba(70, 62, 48, 0.5)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y - neighborH);
+    ctx.lineTo(p1.x, p1.y - neighborH);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(120, 105, 72, 0.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y - neighborH - 1);
+    ctx.lineTo(p1.x, p1.y - neighborH - 1);
+    ctx.stroke();
+
+    // Floor cornice lines
+    for (let f = 1; f <= floors; f++) {
+      const v = f / floors;
+      const isAccent = f === floors || f === 1;
+      ctx.strokeStyle = `rgba(80, 72, 55, ${isAccent ? 0.25 : 0.1})`;
+      ctx.lineWidth = isAccent ? 1.5 : 0.7;
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y - neighborH * v);
+      ctx.lineTo(p1.x, p1.y - neighborH * v);
+      ctx.stroke();
+    }
+
+    // Window grid
+    if (fW < 20) continue;
+    const winCols = Math.min(Math.floor(fW / 14), 10);
+    const winW = 4;
+    const winH = 5.5;
+
+    for (let fl = 0; fl < floors; fl++) {
+      for (let wc = 0; wc < winCols; wc++) {
+        const u = (wc + 0.5) / winCols;
+        const flV = (fl + 0.4) / floors;
+        const wx = p0.x + (p1.x - p0.x) * u;
+        const wy = p0.y + fDy * u - neighborH * flV;
+        const rng = seededRand(wc * 17 + fl * 31 + seed * 97);
+        const warmth = seededRand(wc * 13 + fl * 23 + seed * 53);
+
+        if (rng > 0.3) {
+          // Lit window — warm gold/amber, occasional cool TV blue
+          const alpha = 0.05 + warmth * 0.12;
+          ctx.fillStyle =
+            warmth > 0.85 ? `rgba(160, 180, 210, ${alpha * 0.5})` : `rgba(200, 168, 76, ${alpha})`;
+          ctx.fillRect(wx - winW / 2, wy - winH, winW, winH);
+        } else {
+          // Dark window
+          ctx.fillStyle = "rgba(8, 8, 16, 0.6)";
+          ctx.fillRect(wx - winW / 2, wy - winH, winW, winH);
+        }
+
+        // Window frame
+        ctx.strokeStyle = "rgba(50, 44, 35, 0.25)";
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(wx - winW / 2, wy - winH, winW, winH);
+      }
+    }
+
+    // Fire escape (left facade only)
+    if (side === "left" && fW > 40) {
+      const escU = 0.4;
+      ctx.strokeStyle = "rgba(55, 50, 42, 0.6)";
+      for (let fl = 1; fl < floors; fl++) {
+        const v = (fl + 0.35) / floors;
+        const ex = p0.x + (p1.x - p0.x) * escU;
+        const ey = p0.y + fDy * escU - neighborH * v;
+
+        // Platform
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(ex - 8, ey);
+        ctx.lineTo(ex + 8, ey);
+        ctx.stroke();
+
+        // Railing
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(ex - 8, ey);
+        ctx.lineTo(ex - 8, ey - 5);
+        ctx.lineTo(ex + 8, ey - 5);
+        ctx.lineTo(ex + 8, ey);
+        ctx.stroke();
+
+        // Zigzag ladder to next floor
+        if (fl < floors - 1) {
+          const nextY = p0.y + fDy * escU - neighborH * ((fl + 1 + 0.35) / floors);
+          ctx.strokeStyle = "rgba(55, 50, 42, 0.4)";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(ex + 4, ey);
+          ctx.lineTo(ex - 2, (ey + nextY) / 2);
+          ctx.lineTo(ex + 4, nextY);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(55, 50, 42, 0.6)";
+        }
+      }
+    }
+
+    // AC units on random windows
+    for (let fl = 0; fl < floors; fl++) {
+      for (let wc = 0; wc < winCols; wc++) {
+        if (seededRand(wc * 41 + fl * 67 + seed * 113) > 0.82) {
+          const u = (wc + 0.5) / winCols;
+          const flV = (fl + 0.4) / floors;
+          const ax = p0.x + (p1.x - p0.x) * u;
+          const ay = p0.y + fDy * u - neighborH * flV;
+          ctx.fillStyle = "rgba(35, 32, 28, 0.8)";
+          ctx.fillRect(ax - 3.5, ay, 7, 3.5);
+          ctx.strokeStyle = "rgba(25, 22, 18, 0.6)";
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(ax - 3.5, ay, 7, 3.5);
+        }
+      }
+    }
+  }
+
+  // ── D. Rooftop elements ──
+
+  // Water tower on left building
+  {
+    const p0 = proj(bldMinCol, bldMinRow);
+    const p1 = proj(bldMinCol, bldMaxRow);
+    const tx = p0.x + (p1.x - p0.x) * 0.7;
+    const ty = p0.y + (p1.y - p0.y) * 0.7 - neighborH;
+    const legH = 16;
+    const tankH = 20;
+    const tankW = 18;
+
+    ctx.fillStyle = "rgba(18, 16, 24, 0.9)";
+    // Tank barrel
+    ctx.fillRect(tx - tankW / 2, ty - legH - tankH, tankW, tankH);
+    // Conical roof
+    ctx.beginPath();
+    ctx.moveTo(tx - tankW / 2 - 1, ty - legH - tankH);
+    ctx.lineTo(tx, ty - legH - tankH - 10);
+    ctx.lineTo(tx + tankW / 2 + 1, ty - legH - tankH);
+    ctx.closePath();
+    ctx.fill();
+    // Legs
+    ctx.strokeStyle = "rgba(18, 16, 24, 0.85)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (const dx of [-6, 0, 6]) {
+      ctx.moveTo(tx + dx, ty);
+      ctx.lineTo(tx + dx * 0.8, ty - legH);
+    }
+    ctx.stroke();
+    // Cross brace
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(tx - 5, ty - legH * 0.4);
+    ctx.lineTo(tx + 5, ty - legH * 0.6);
+    ctx.stroke();
+  }
+
+  // Antenna mast on right building
+  {
+    const p0 = proj(bldMaxCol, bldMinRow);
+    const p1 = proj(bldMaxCol, bldMaxRow);
+    const ax = p0.x + (p1.x - p0.x) * 0.3;
+    const ay = p0.y + (p1.y - p0.y) * 0.3 - neighborH;
+
+    ctx.strokeStyle = "rgba(18, 16, 24, 0.75)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax, ay - 24);
+    ctx.stroke();
+    // Crossbars
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(ax - 5, ay - 18);
+    ctx.lineTo(ax + 5, ay - 18);
+    ctx.moveTo(ax - 3, ay - 22);
+    ctx.lineTo(ax + 3, ay - 22);
+    ctx.stroke();
+    // Guy wires
+    ctx.strokeStyle = "rgba(18, 16, 24, 0.3)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay - 24);
+    ctx.lineTo(ax - 12, ay);
+    ctx.moveTo(ax, ay - 24);
+    ctx.lineTo(ax + 12, ay);
+    ctx.stroke();
+    // Red warning light + glow
+    ctx.fillStyle = "rgba(220, 50, 50, 0.35)";
+    ctx.beginPath();
+    ctx.arc(ax, ay - 24, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(220, 50, 50, 0.08)";
+    ctx.beginPath();
+    ctx.arc(ax, ay - 24, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Vent pipes on left rooftop
+  {
+    const p0 = proj(bldMinCol, bldMinRow);
+    const p1 = proj(bldMinCol, bldMaxRow);
+    const vx = p0.x + (p1.x - p0.x) * 0.25;
+    const vy = p0.y + (p1.y - p0.y) * 0.25 - neighborH;
+    ctx.fillStyle = "rgba(20, 18, 26, 0.85)";
+    for (const [dx, h] of [
+      [-3, 8],
+      [0, 12],
+      [4, 6],
+    ] as const) {
+      ctx.fillRect(vx + dx - 1.5, vy - h, 3, h);
     }
   }
 }

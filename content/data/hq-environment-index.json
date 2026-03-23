@@ -3,6 +3,11 @@
   "locked": null,
   "style": "bodega-angled-isometric",
   "building": "bodega",
+  "paths": {
+    "partsRoot": "/data/svg-environments/hq/bodega/parts",
+    "referenceRoot": "/data/svg-environments/hq/bodega/reference",
+    "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
+  },
   "composition": {
     "tileWidth": 96,
     "tileHeight": 48,
@@ -14,7 +19,14 @@
       "room:social",
       "room:staffing",
       "room:training"
-    ]
+    ],
+    "sceneSystem": {
+      "description": "Room interiors use pre-composed scene SVGs containing props only (no walls, floors, or structure). The engine renders structure programmatically and overlays the scene SVG.",
+      "canonicalOrigin": [200, 100],
+      "canonicalViewBox": "20 0 420 310",
+      "roomFootprint": { "cols": 4, "rows": 3 },
+      "fallback": "per-prop sprite placement for rooms without scene SVGs"
+    }
   },
   "parts": [
     {
@@ -207,6 +219,38 @@
       "tags": ["steam", "vent", "atmosphere", "street-detail", "isometric"],
       "scale": "prop",
       "roomFamily": null,
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-the-register",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "register", "operations"],
+      "scale": "room",
+      "roomFamily": "operations",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-the-counter",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "counter", "operations"],
+      "scale": "room",
+      "roomFamily": "operations",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-the-dining-area",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "dining", "social"],
+      "scale": "room",
+      "roomFamily": "social",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-supply-closet",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "storage", "operations"],
+      "scale": "room",
+      "roomFamily": "operations",
       "status": "approved"
     },
     {

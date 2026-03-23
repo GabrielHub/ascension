@@ -34,13 +34,12 @@ export const updateRoomOperationsSystem: SimSystem = (context) => {
   context.runtimeState.roomEntities.forEach((roomEntity) => {
     const template = getRoomTemplateForEntity(context, roomEntity);
     const requiredStaffTag = getStaffRoleTag(template.tags);
-    const assignedStaffCount = context.runtimeState.staffEntities.filter((staffEntity) => {
-      return (
+    const assignedStaffCount = context.runtimeState.staffEntities.filter(
+      (staffEntity) =>
         AssignmentState.kind[staffEntity] === "room" &&
         AssignmentState.targetId[staffEntity] === RoomInstance.id[roomEntity] &&
-        (requiredStaffTag ? StaffState.roleTag[staffEntity] === requiredStaffTag : true)
-      );
-    }).length;
+        (requiredStaffTag ? StaffState.roleTag[staffEntity] === requiredStaffTag : true),
+    ).length;
 
     RoomInstance.assignedStaffCount[roomEntity] = assignedStaffCount;
     RoomInstance.capacity[roomEntity] =
@@ -49,6 +48,9 @@ export const updateRoomOperationsSystem: SimSystem = (context) => {
       getRoomUpgradeCapacityBonus(context, roomEntity);
     RoomInstance.occupancy[roomEntity] = assignedStaffCount;
     RoomInstance.isOperational[roomEntity] =
-      RoomInstance.isRequestedActive[roomEntity] === 1 && assignedStaffCount >= 1 ? 1 : 0;
+      RoomInstance.isRequestedActive[roomEntity] === 1 &&
+      (requiredStaffTag ? assignedStaffCount >= 1 : true)
+        ? 1
+        : 0;
   });
 };

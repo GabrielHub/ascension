@@ -495,10 +495,10 @@ function MapOverlayHeader({
   const activeTeams = snapshot.teams.filter((t) => t.state === "active").length;
 
   return (
-    <div className="pointer-events-auto absolute right-0 top-0 flex flex-col items-end gap-2">
+    <div className="pointer-events-auto absolute right-[22rem] top-0 flex max-w-xs flex-col items-end gap-2">
       {/* Dungeon name */}
       <div className="animate-enter rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.75)] px-3 py-2 backdrop-blur-xl">
-        <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+        <p className="max-w-[14rem] truncate text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
           {snapshot.dungeonName}
         </p>
         <p className="mt-0.5 text-[0.6875rem] text-silver/50">Contract Site</p>

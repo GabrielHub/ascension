@@ -147,6 +147,23 @@ export function DevMenuOverlay({ session, onClose }: DevMenuOverlayProps) {
 
           <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
 
+          {/* Quick Actions */}
+          <div className="space-y-3">
+            <SectionLabel>Quick Actions</SectionLabel>
+            <div className="flex flex-wrap gap-1">
+              <CheatButton
+                label="Bankrupt (cash=0)"
+                onClick={() => setResource("resource/cash", 0)}
+              />
+              <CheatButton
+                label="Debt (cash=-100)"
+                onClick={() => setResource("resource/cash", -100)}
+              />
+            </div>
+          </div>
+
+          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
+
           {/* Debug */}
           <div className="space-y-3">
             <SectionLabel>Debug</SectionLabel>

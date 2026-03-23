@@ -1,6 +1,6 @@
 # Product Gameplay Systems
 
-This file owns future-facing gameplay-system direction for operators, raids, resources, rooms, and deferred constraints.
+This file owns future-facing gameplay-system direction for operators, raids, resources, items, rooms, and deferred constraints.
 
 ## Current Gameplay Direction
 
@@ -113,13 +113,13 @@ Bosses carry tags that apply persistent effects during the encounter. Current ex
 | `boss:intel_resist`    | Intel-based preparation bonuses are reduced                                                       |
 | `boss:aoe`             | Deals damage to all operators instead of only the current frontline                               |
 
-Loot and rare resource direction:
+Loot and early raid-economy direction:
 
-- Regular enemies drop common resources.
-- Tougher enemies within a dungeon have better drop rates.
-- Bosses drop rare resources specific to their dungeon theme and rank.
-- Higher-rank dungeons drop rarer and more valuable resources.
-- Defeated bosses close the dungeon and remove access to that dungeon's loot table.
+- Regular enemies can drop stackable loot items. The default early loot family is monster parts.
+- Tougher enemies within a dungeon have better drop rates and can more credibly drop usable gear.
+- Bosses drop larger or rarer monster-part stacks tied to their dungeon theme and rank, and they can also drop gear.
+- Higher-rank dungeons improve both loot value and gear quality.
+- Defeated bosses close the dungeon and remove access to that dungeon's drop table.
 
 ## Gear, Resources, And Rooms
 
@@ -131,6 +131,14 @@ Guild-level resources:
 | Reputation | Public-facing credibility. Affects contract access, recruitment pool quality, and political leverage. | `resource:pressure`, `progression:external` |
 | Intel      | Operational knowledge. Improves raid planning and reduces mission risk.                               | `resource:knowledge`, `ops:planning`        |
 
+Stackable inventory defaults:
+
+- All inventory-tracked items stack by exact item ID.
+- Weapons, outfit overlays, accessories, and loot items live in shared guild inventory as quantity-bearing stacks, not as unique per-copy objects.
+- Equipping an operator reserves one copy from the relevant stack. Unequipping returns that copy to the stack.
+- Phase 2 should not introduce per-copy durability, personalized ownership history, or one-off stat rolls unless the product plan is explicitly updated later.
+- Monster parts are inventory items, not a fourth guild-level resource axis. They are the first stackable loot family in the early raid economy.
+
 Gear has stat effects. Equipment is not cosmetic.
 
 - Weapons affect offensive stats (Strength, Speed, damage output).
@@ -139,13 +147,21 @@ Gear has stat effects. Equipment is not cosmetic.
 - Higher-rank gear provides larger stat bonuses.
 - Gear stat bonuses stack with an operator's trained stats, but gear does not raise the rank ceiling.
 
-Gear can be purchased or crafted.
+Gear, inventory, and market defaults:
 
 - Purchasing is the early-game path. Available gear quality is limited by guild reputation and rank.
+- Phase 2 should ship a minimal market surface for buying gear and selling excess gear or monster parts for cash.
+- That market can be framed in copy as rival-guild demand and supply, but Phase 2 does not require full rival-guild simulation, rival HQs, or persistent rival rosters.
+- Monster parts are sellable in Phase 2 and should mainly function as raid-to-cash conversion loot until deeper crafting lands.
+- Gear drops can go directly into the shared inventory stack when recovered from raids.
+- Accessories should auto-select from eligible inventory stacks using operator role, rank, preferences, and current needs.
+- Phase 2 only requires auto-selection for accessories. Broader automated weapon or outfit policy can land later if it proves necessary.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
 
 Rooms are the building blocks of the guild's physical space. They determine what the guild can do and how well it can do it.
+
+Lower headquarters tiers are allowed to combine multiple room families inside one physical room. The room family tags are runtime-facing function tags, not a promise that every building tier gets one dedicated room per family.
 
 | Family      | Function                              | Example Rooms                                              |
 | ----------- | ------------------------------------- | ---------------------------------------------------------- |
@@ -155,6 +171,8 @@ Rooms are the building blocks of the guild's physical space. They determine what
 | Social      | Morale, recruitment, retention        | Lounge, cafeteria, rec room                                |
 | Staffing    | Staff assignment and effectiveness    | Office space, supply closet, server room                   |
 | Specialized | Field-role or rank-specific           | Medic clinic, scout briefing room, field lead command room |
+
+Recruitment is a capability, not a separate room family. Public-facing recruitment can live inside different room families at different building tiers as long as the runtime-facing tags and staffing rules stay explicit.
 
 Training room direction:
 

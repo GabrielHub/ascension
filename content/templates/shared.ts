@@ -52,13 +52,58 @@ export interface EventTemplate extends TemplateBase {
     | "personnel_conflict"
     | "contract_deadline"
     | "economic_pressure"
-    | "regulatory_scrutiny";
+    | "regulatory_scrutiny"
+    | "team_friction"
+    | "injury_setback"
+    | "departure_warning"
+    | "room_tension"
+    | "supply_shortage"
+    | "rival_poaching"
+    | "morale_surge"
+    | "contract_opportunity";
   pressureTags: readonly string[];
   weight: number;
 }
 
+export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot";
+export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
+
+export interface StatEffect {
+  stat: string;
+  value: number;
+}
+
+export interface ItemTemplate extends TemplateBase {
+  kind: "item";
+  category: ItemCategory;
+  rank: ItemRank;
+  buyPrice: number;
+  sellPrice: number;
+  statEffects: readonly StatEffect[];
+}
+
+export interface DropTableEntry {
+  itemId: string;
+  weight: number;
+  minQuantity: number;
+  maxQuantity: number;
+}
+
+export interface DropTable {
+  id: string;
+  entries: readonly DropTableEntry[];
+}
+
 export interface TemplateRegistryValidationIssue {
-  category: "resources" | "buildings" | "rooms" | "upgrades" | "missions" | "events";
+  category:
+    | "resources"
+    | "buildings"
+    | "rooms"
+    | "upgrades"
+    | "missions"
+    | "events"
+    | "items"
+    | "dropTables";
   templateId: string;
   message: string;
 }
@@ -70,12 +115,16 @@ export interface TemplateRegistry {
   upgrades: readonly UpgradeTemplate[];
   missions: readonly MissionTemplate[];
   events: readonly EventTemplate[];
+  items: readonly ItemTemplate[];
+  dropTables: readonly DropTable[];
   resourceById: ReadonlyMap<string, ResourceTemplate>;
   buildingById: ReadonlyMap<string, BuildingTemplate>;
   roomById: ReadonlyMap<string, RoomTemplate>;
   upgradeById: ReadonlyMap<string, UpgradeTemplate>;
   missionById: ReadonlyMap<string, MissionTemplate>;
   eventById: ReadonlyMap<string, EventTemplate>;
+  itemById: ReadonlyMap<string, ItemTemplate>;
+  dropTableById: ReadonlyMap<string, DropTable>;
   resourceIndexById: ReadonlyMap<string, number>;
   buildingIndexById: ReadonlyMap<string, number>;
   roomIndexById: ReadonlyMap<string, number>;
