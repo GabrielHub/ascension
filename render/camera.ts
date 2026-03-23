@@ -28,10 +28,16 @@ export function createCameraBounds(
   worldHeight: number,
   viewportWidth: number,
   viewportHeight: number,
+  /** Optional: constrain zoom-out to show the building, not the full world. */
+  buildingWorldSize?: { width: number; height: number },
 ): CameraBounds {
-  const fitZoom = Math.min(viewportWidth / worldWidth, viewportHeight / worldHeight);
+  // When a building size is provided, base minZoom on the building rather
+  // than the full world so players can't zoom out to see the tile grid.
+  const refWidth = buildingWorldSize?.width ?? worldWidth;
+  const refHeight = buildingWorldSize?.height ?? worldHeight;
+  const fitZoom = Math.min(viewportWidth / refWidth, viewportHeight / refHeight);
   return {
-    minZoom: Math.min(DEFAULT_MAX_ZOOM, Math.max(DEFAULT_MIN_ZOOM, fitZoom * 0.9)),
+    minZoom: Math.min(DEFAULT_MAX_ZOOM, Math.max(DEFAULT_MIN_ZOOM, fitZoom * 0.85)),
     maxZoom: DEFAULT_MAX_ZOOM,
     worldWidth,
     worldHeight,

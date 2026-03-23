@@ -62,6 +62,7 @@ export interface RoomViewModel {
   isOperational: boolean;
   requiredStaffTag: string;
   assignedStaffCount: number;
+  appliedUpgradeIds: readonly string[];
   availableUpgradeIds: readonly string[];
   tags: readonly string[];
   footprint: RoomSnapshot["footprint"];
@@ -391,6 +392,12 @@ export function formatTag(tag: string): string {
   return tag.replace(/^[a-z]+:/, "").replace(/_/g, " ");
 }
 
+/** Title-case a raw culture tone or signal label for display.
+ *  "lived_in" → "Lived-In", "tight-knit" → "Tight-Knit", "quiet" → "Quiet" */
+export function formatCultureLabel(raw: string): string {
+  return raw.replace(/_/g, "-").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 // ── Formatting helpers ───────────────────────────────────────────────────
 
 function formatTimeOfDay(minuteOfDay: number): string {
@@ -399,6 +406,17 @@ function formatTimeOfDay(minuteOfDay: number): string {
   const period = hours >= 12 ? "PM" : "AM";
   const displayHour = hours % 12 || 12;
   return `${displayHour}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
+function formatTemplateSlug(id: string): string {
+  return (
+    id
+      .split("/")
+      .pop()
+      ?.replace(/:tier_\d+$/, "")
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase()) ?? id
+  );
 }
 
 function formatRequirement(req: { type: string; [key: string]: unknown }): string {
@@ -425,7 +443,7 @@ function formatEffect(eff: { type: string; [key: string]: unknown }): string {
     case "add_room_slot":
       return `+${eff.amount} room slot`;
     case "unlock_room_template":
-      return `Unlock ${String(eff.roomId).split("/").pop()?.replace(":", " ")}`;
+      return `Unlock ${formatTemplateSlug(String(eff.roomId))}`;
     case "unlock_room_tier":
       return `Unlock tier ${eff.tier}`;
     case "grant_operator_slot":
@@ -508,6 +526,7 @@ export function buildHqViewFromPhase1(
       isOperational: room.isOperational,
       requiredStaffTag: room.requiredStaffTag,
       assignedStaffCount: room.assignedStaffCount,
+      appliedUpgradeIds: room.appliedUpgradeIds,
       availableUpgradeIds: room.availableUpgradeIds,
       tags: template.tags,
       footprint: room.footprint,
@@ -797,6 +816,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       isOperational: room.isActive ?? true,
       requiredStaffTag: "",
       assignedStaffCount: 0,
+      appliedUpgradeIds: [],
       availableUpgradeIds: [],
       tags: template.tags,
       footprint: room.footprint,

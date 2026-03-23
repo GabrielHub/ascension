@@ -1,5 +1,7 @@
 import hqEnvironmentIndexData from "content/data/hq-environment-index.json";
 
+import type { HqTimeOfDayPhase } from "./hq-time-phase";
+
 export interface HqEnvironmentAssetRoots {
   partsRoot: string;
   referenceRoot: string;
@@ -30,6 +32,19 @@ export interface HqEnvironmentRenderConfig {
   }>;
 }
 
+interface RawBackdropPhaseProfile {
+  ambientTint?: string;
+  fogColor?: string;
+  shadowIntensity?: number;
+  zones?: Partial<Record<string, readonly string[]>>;
+}
+
+interface RawBackdropManifest {
+  profileId?: string;
+  elevationBandId?: string | null;
+  phases?: Partial<Record<string, RawBackdropPhaseProfile>>;
+}
+
 interface RawHqEnvironmentManifest {
   building?: string;
   paths?: Partial<HqEnvironmentAssetRoots>;
@@ -46,6 +61,7 @@ interface RawHqEnvironmentManifest {
       };
     };
   };
+  backdrop?: RawBackdropManifest;
 }
 
 const DEFAULT_BUILDING = "bodega";
@@ -134,4 +150,117 @@ export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
       },
     },
   };
+}
+
+// ── Backdrop profile types ──────────────────────────────────────────────
+
+export type HqBackdropZone =
+  | "belowShell"
+  | "rear"
+  | "leftFlank"
+  | "rightFlank"
+  | "fore"
+  | "aboveShell"
+  | "fxOverlay";
+
+const ALL_BACKDROP_ZONES: readonly HqBackdropZone[] = [
+  "belowShell",
+  "rear",
+  "leftFlank",
+  "rightFlank",
+  "fore",
+  "aboveShell",
+  "fxOverlay",
+];
+
+const ALL_PHASES: readonly HqTimeOfDayPhase[] = ["sunrise", "day", "sunset", "night"];
+
+export interface HqBackdropPhaseProfile {
+  ambientTint: string;
+  fogColor: string;
+  shadowIntensity: number;
+  zones: Readonly<Record<HqBackdropZone, readonly string[]>>;
+}
+
+export interface HqBackdropManifest {
+  profileId: string;
+  elevationBandId: string | null;
+  phases: Readonly<Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>>;
+}
+
+const DEFAULT_PHASE_PROFILE: HqBackdropPhaseProfile = {
+  ambientTint: "rgba(0, 0, 0, 0)",
+  fogColor: "rgba(0, 0, 0, 0)",
+  shadowIntensity: 0.15,
+  zones: {
+    belowShell: [],
+    rear: [],
+    leftFlank: [],
+    rightFlank: [],
+    fore: [],
+    aboveShell: [],
+    fxOverlay: [],
+  },
+};
+
+function parseBackdropPhaseProfile(
+  raw: RawBackdropPhaseProfile | undefined,
+): HqBackdropPhaseProfile {
+  if (!raw) return DEFAULT_PHASE_PROFILE;
+
+  const zones = {} as Record<HqBackdropZone, readonly string[]>;
+  for (const zone of ALL_BACKDROP_ZONES) {
+    const rawZone = raw.zones?.[zone];
+    zones[zone] = Array.isArray(rawZone)
+      ? rawZone.filter((v): v is string => typeof v === "string")
+      : [];
+  }
+
+  return {
+    ambientTint:
+      typeof raw.ambientTint === "string" ? raw.ambientTint : DEFAULT_PHASE_PROFILE.ambientTint,
+    fogColor: typeof raw.fogColor === "string" ? raw.fogColor : DEFAULT_PHASE_PROFILE.fogColor,
+    shadowIntensity:
+      typeof raw.shadowIntensity === "number" && Number.isFinite(raw.shadowIntensity)
+        ? raw.shadowIntensity
+        : DEFAULT_PHASE_PROFILE.shadowIntensity,
+    zones,
+  };
+}
+
+let _cachedBackdropManifest: HqBackdropManifest | null | undefined;
+
+export function getHqBackdropManifest(): HqBackdropManifest | null {
+  if (_cachedBackdropManifest !== undefined) return _cachedBackdropManifest;
+
+  const manifest = getLoadedHqEnvironmentManifest();
+  const raw = manifest.backdrop;
+  if (!raw || typeof raw !== "object") {
+    _cachedBackdropManifest = null;
+    return null;
+  }
+
+  const profileId = typeof raw.profileId === "string" ? raw.profileId : "unknown";
+  const elevationBandId = typeof raw.elevationBandId === "string" ? raw.elevationBandId : null;
+
+  const rawPhases = raw.phases;
+  if (!rawPhases || typeof rawPhases !== "object") {
+    _cachedBackdropManifest = null;
+    return null;
+  }
+
+  for (const phase of ALL_PHASES) {
+    if (!(phase in rawPhases)) {
+      _cachedBackdropManifest = null;
+      return null;
+    }
+  }
+
+  const phases = {} as Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>;
+  for (const phase of ALL_PHASES) {
+    phases[phase] = parseBackdropPhaseProfile(rawPhases[phase]);
+  }
+
+  _cachedBackdropManifest = { profileId, elevationBandId, phases };
+  return _cachedBackdropManifest;
 }

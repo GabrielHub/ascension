@@ -22,6 +22,10 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Deterministic seeded assembly is the near-term goal. LLM-assisted character generation remains a later extension, not a dependency for finishing the slice.
 - Lighting should begin with a small shared render-effects abstraction using practical 2D techniques such as baked shading, shadow layers, emissive accents, and simple masks.
 - Custom shader work should remain a later implementation behind that shared abstraction, once the art language, camera behavior, and room composition rules are stable.
+- HQ exteriors should support a clock-driven four-state day-night cycle: `sunrise`, `day`, `sunset`, and `night`.
+- The HQ day-night cycle is presentation-facing only by default. It changes the backdrop, skyline, exterior lighting, and decorative street dressing around the building shell; it does not add hidden gameplay modifiers on its own.
+- HQ exterior composition should be shell-relative, not permanently ground-level. The core framing contract is the building shell in the center plus authored zones around it, not a fixed promise of sidewalk, street, and alley semantics.
+- The current shipped bodega slice uses a hybrid version of that contract: the active phase, tint/fog/shadow values, and shell-relative backdrop-zone schema are data-backed, while some bodega-specific exterior dressing still comes from renderer-authored composition until fuller backdrop packages replace it.
 
 ## Overlay UI Direction
 
@@ -58,6 +62,10 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Room-definition assets must not each own their full floor and wall box when they are intended to be composed into one building. Pre-composed scene SVGs that contain only props (furniture, fixtures, decorations) are the approved production target for room interiors. Scene SVGs must never include walls, floors, tile grids, or structural elements — those remain engine-rendered. Full monolithic room SVGs that include their own walls and floors are exploration/reference artifacts only.
 - The intended future building pipeline should support swapping structural/theme families, such as bodega finishes now and office-tower or luxury finishes later, without redefining the room-composition model itself.
 - Operators and their attachments already have a satisfactory style direction. This HQ environment-language correction applies to rooms, room props, environmental fixtures, and shells.
+- Exterior backdrop packages are part of the building-theme contract. Every headquarters building or setting must ship one approved exterior set for each canonical time-of-day state: `sunrise`, `day`, `sunset`, and `night`.
+- Those exterior sets should own the sky treatment, neighboring-building read, exterior emissives, and street-level decorative dressing around the HQ shell. They should not duplicate the engine-rendered room structure or interior scene SVG responsibilities.
+- Exterior packages should attach to abstract shell-relative zones such as `fore`, `left-flank`, `right-flank`, `rear`, `above-shell`, and `below-shell`, so the same composition model works for a bodega, a two-floor union hall, and a late-game tower.
+- Taller buildings should also support reusable elevation bands rather than exact one-off floor numbers. The preferred future contract is floor-aware but reusable: several nearby floors can share the same surrounding package when their outside read is materially similar.
 
 ## Raid Presentation Direction
 

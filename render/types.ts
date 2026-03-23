@@ -1,3 +1,19 @@
+export type { HqTimeOfDayPhase } from "lib/hq-time-phase";
+export type { HqBackdropZone } from "lib/hq-environment-manifest";
+
+import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
+import type { HqBackdropZone } from "lib/hq-environment-manifest";
+
+export interface HqBackdropSnapshot {
+  phase: HqTimeOfDayPhase;
+  profileId: string;
+  elevationBandId: string | null;
+  zones: Readonly<Record<HqBackdropZone, readonly string[]>>;
+  ambientTint: string;
+  fogColor: string;
+  shadowIntensity: number;
+}
+
 export interface CameraState {
   x: number;
   y: number;
@@ -107,6 +123,8 @@ export interface HqWorldLayout {
   worldHeight: number;
   minX: number;
   minY: number;
+  /** World-space size of the building shell (for camera zoom limits). */
+  buildingWorldSize?: { width: number; height: number };
 }
 
 export interface HqSpritePlacement {
@@ -125,8 +143,19 @@ export interface HqRoomNode {
   templateId: string;
   label: string;
   tier: number;
+  isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
+  footprint: HqFootprint;
+  floorPoints: readonly HqPoint[];
+  leftWallPoints: readonly HqPoint[];
+  rightWallPoints: readonly HqPoint[];
+  bounds: Readonly<{ x: number; y: number; width: number; height: number }>;
+}
+
+export interface HqExpansionSlotNode {
+  id: string;
+  label: string;
   footprint: HqFootprint;
   floorPoints: readonly HqPoint[];
   leftWallPoints: readonly HqPoint[];
@@ -175,12 +204,14 @@ export interface HqWorldSnapshot {
   buildingName: string;
   layout: HqWorldLayout;
   rooms: readonly HqRoomNode[];
+  expansionSlots: readonly HqExpansionSlotNode[];
   modular: HqModularGeometry;
   roomProps: readonly HqSpritePlacement[];
   scenery: readonly HqSpritePlacement[];
   actors: readonly ActorMarker[];
   navGraph: NavigationGraph;
   effects: WorldEffectsSnapshot;
+  backdrop: HqBackdropSnapshot | null;
   focus: FocusPayload | null;
 }
 

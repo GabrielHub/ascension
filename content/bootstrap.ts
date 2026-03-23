@@ -75,6 +75,25 @@ export interface BootstrapScenario {
       kind: string;
       targetId: string;
     };
+    combat: {
+      rank: string;
+      attunementTag: string;
+      traits: string[];
+      kit: {
+        regularAttackId: string;
+        skillId: string;
+        ultimateId: string;
+        passiveIds: string[];
+      };
+      baseStats: {
+        strength: number;
+        speed: number;
+        endurance: number;
+        resilience: number;
+        perception: number;
+        intelligence: number;
+      };
+    };
   }[];
   operatorRelationships: readonly {
     operatorAId: string;
@@ -137,40 +156,25 @@ export const bootstrapScenario = {
   },
   rooms: [
     {
+      id: "room-instance/dining_area",
+      templateId: "room/dining_area:tier_1",
+      occupancy: 0,
+      isActive: true,
+      footprint: { col: 1, row: 15, cols: 8, rows: 3 },
+    },
+    {
       id: "room-instance/register",
       templateId: "room/register:tier_1",
       occupancy: 1,
       isActive: true,
-      footprint: {
-        col: 0,
-        row: 0,
-        cols: 4,
-        rows: 3,
-      },
+      footprint: { col: 0, row: 10, cols: 4, rows: 3 },
     },
     {
       id: "room-instance/counter",
       templateId: "room/counter:tier_1",
       occupancy: 0,
       isActive: true,
-      footprint: {
-        col: 4,
-        row: 0,
-        cols: 4,
-        rows: 3,
-      },
-    },
-    {
-      id: "room-instance/dining_area",
-      templateId: "room/dining_area:tier_1",
-      occupancy: 0,
-      isActive: true,
-      footprint: {
-        col: 0,
-        row: 3,
-        cols: 4,
-        rows: 3,
-      },
+      footprint: { col: 6, row: 10, cols: 4, rows: 3 },
     },
   ],
   operators: [
@@ -218,6 +222,25 @@ export const bootstrapScenario = {
         kind: "idle",
         targetId: "",
       },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:kinetic",
+        traits: ["trait:steady", "trait:resolute"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/field-lead-skill",
+          ultimateId: "kit/field-lead-ultimate",
+          passiveIds: ["kit/field-lead-passive"],
+        },
+        baseStats: {
+          strength: 14,
+          speed: 8,
+          endurance: 13,
+          resilience: 10,
+          perception: 7,
+          intelligence: 8,
+        },
+      },
     },
     {
       id: "operator/milo-hart",
@@ -262,6 +285,25 @@ export const bootstrapScenario = {
       assignment: {
         kind: "idle",
         targetId: "",
+      },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:void",
+        traits: ["trait:alert", "trait:evasive"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/scout-skill",
+          ultimateId: "kit/scout-ultimate",
+          passiveIds: ["kit/scout-passive"],
+        },
+        baseStats: {
+          strength: 7,
+          speed: 14,
+          endurance: 8,
+          resilience: 7,
+          perception: 13,
+          intelligence: 9,
+        },
       },
     },
     {
@@ -308,6 +350,25 @@ export const bootstrapScenario = {
         kind: "idle",
         targetId: "",
       },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:vital",
+        traits: ["trait:resilient", "trait:composed"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/medic-skill",
+          ultimateId: "kit/medic-ultimate",
+          passiveIds: ["kit/medic-passive"],
+        },
+        baseStats: {
+          strength: 6,
+          speed: 7,
+          endurance: 9,
+          resilience: 14,
+          perception: 8,
+          intelligence: 13,
+        },
+      },
     },
     {
       id: "operator/vera-santos",
@@ -352,6 +413,25 @@ export const bootstrapScenario = {
       assignment: {
         kind: "idle",
         targetId: "",
+      },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:kinetic",
+        traits: ["trait:aggressive", "trait:steady"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/field-lead-skill",
+          ultimateId: "kit/field-lead-ultimate",
+          passiveIds: ["kit/field-lead-passive"],
+        },
+        baseStats: {
+          strength: 15,
+          speed: 9,
+          endurance: 12,
+          resilience: 9,
+          perception: 8,
+          intelligence: 7,
+        },
       },
     },
     {
@@ -398,6 +478,25 @@ export const bootstrapScenario = {
         kind: "idle",
         targetId: "",
       },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:void",
+        traits: ["trait:alert", "trait:tenacious"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/scout-skill",
+          ultimateId: "kit/scout-ultimate",
+          passiveIds: ["kit/scout-passive"],
+        },
+        baseStats: {
+          strength: 8,
+          speed: 13,
+          endurance: 9,
+          resilience: 7,
+          perception: 14,
+          intelligence: 8,
+        },
+      },
     },
     {
       id: "operator/lena-park",
@@ -442,6 +541,25 @@ export const bootstrapScenario = {
       assignment: {
         kind: "idle",
         targetId: "",
+      },
+      combat: {
+        rank: "f",
+        attunementTag: "attunement:vital",
+        traits: ["trait:resilient", "trait:alert"],
+        kit: {
+          regularAttackId: "kit/basic-strike",
+          skillId: "kit/medic-skill",
+          ultimateId: "kit/medic-ultimate",
+          passiveIds: ["kit/medic-passive"],
+        },
+        baseStats: {
+          strength: 5,
+          speed: 8,
+          endurance: 8,
+          resilience: 13,
+          perception: 9,
+          intelligence: 14,
+        },
       },
     },
   ],

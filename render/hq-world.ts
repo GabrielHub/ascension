@@ -1,9 +1,13 @@
+import { getBuildingLayout } from "content/building-layouts";
 import { buildNavigationGraph } from "sim/navigation";
-import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import { getHqBackdropManifest, getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
-import { createDefaultEffects } from "./world-effects";
+import { createEffectsWithOverrides } from "./world-effects";
 import type {
   ActorMarker,
+  HqBackdropSnapshot,
+  HqExpansionSlotNode,
   HqFloorTile,
   HqFootprint,
   HqModularGeometry,
@@ -110,6 +114,9 @@ const PROP_ASSETS = {
   manhole: `${ASSET_ROOT}/background/iso-bg-manhole.svg`,
   cone: `${ASSET_ROOT}/background/iso-bg-cone-traffic.svg`,
   bench: `${ASSET_ROOT}/background/iso-bg-bench.svg`,
+  buildingTall: `${ASSET_ROOT}/background/iso-bg-building-tall.svg`,
+  garden: `${ASSET_ROOT}/background/iso-bg-garden.svg`,
+  backAlley: `${ASSET_ROOT}/background/iso-bg-back-alley.svg`,
 } as const;
 
 // ── Room recipe system ────────────────────────────────────────────────────
@@ -276,28 +283,55 @@ const COUNTER_RECIPE: RoomRecipe = {
 };
 
 // ── THE DINING AREA (Bodega Recovery / Social) ───────────────────────────
-// Cheap street-level dining. Folding tables and chairs in a simple grid.
-// Think outside simple eating area, not a medical bay. Warm bodega palette.
+// Double-wide dining hall covering the full front of the bodega (8×3 footprint).
+// Two table clusters, warm bodega palette, casual street-food atmosphere.
 const DINING_AREA_RECIPE: RoomRecipe = {
   palette: { floor: "#382818", wallLeft: "#2a2016", wallRight: "#30261c" },
   inactivePalette: INACTIVE_PALETTE,
-  openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: bodegaScene("scene-the-dining-area.svg"),
+  openings: [
+    { side: "right", cellOffset: 1 },
+    { side: "right", cellOffset: 5 },
+  ],
   props: [
-    // Table 1 (back-left area)
-    { assetKey: "table", relCol: 0.32, relRow: 0.38, width: 72, height: 64, zIndex: 38 },
-    // Chair at table 1 (behind)
-    { assetKey: "chair", relCol: 0.38, relRow: 0.22, width: 30, height: 40, zIndex: 36 },
-    // Chair at table 1 (front)
-    { assetKey: "chair", relCol: 0.25, relRow: 0.52, width: 30, height: 40, zIndex: 40 },
-    // Table 2 (front-right area)
-    { assetKey: "table", relCol: 0.65, relRow: 0.62, width: 72, height: 64, zIndex: 38 },
-    // Chair at table 2 (behind)
-    { assetKey: "chair", relCol: 0.72, relRow: 0.48, width: 30, height: 40, zIndex: 36 },
-    // Milk crate as chair at table 2 (the bodega touch)
-    { assetKey: "milkCrate", relCol: 0.58, relRow: 0.76, width: 24, height: 20, zIndex: 40 },
-    // Microwave against back-right wall
-    { assetKey: "microwave", relCol: 0.82, relRow: 0.22, width: 32, height: 28, zIndex: 35 },
+    // Left cluster — Table 1
+    { assetKey: "table", relCol: 0.18, relRow: 0.38, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.22, relRow: 0.22, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.14, relRow: 0.52, width: 30, height: 40, zIndex: 40 },
+    // Left cluster — Table 2
+    { assetKey: "table", relCol: 0.38, relRow: 0.62, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.42, relRow: 0.48, width: 30, height: 40, zIndex: 36 },
+    // Milk crate as chair (the bodega touch)
+    { assetKey: "milkCrate", relCol: 0.32, relRow: 0.76, width: 24, height: 20, zIndex: 40 },
+    // Right cluster — Table 3
+    { assetKey: "table", relCol: 0.62, relRow: 0.38, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.66, relRow: 0.22, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.58, relRow: 0.52, width: 30, height: 40, zIndex: 40 },
+    // Right cluster — Table 4
+    { assetKey: "table", relCol: 0.82, relRow: 0.62, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.86, relRow: 0.48, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "milkCrate", relCol: 0.76, relRow: 0.76, width: 24, height: 20, zIndex: 40 },
+    // Back wall items
+    { assetKey: "microwave", relCol: 0.9, relRow: 0.14, width: 32, height: 28, zIndex: 35 },
+    { assetKey: "coffeeMachine", relCol: 0.1, relRow: 0.14, width: 34, height: 46, zIndex: 35 },
+    // Ceiling fans
+    {
+      assetKey: "ceilingFan",
+      relCol: 0.28,
+      relRow: 0.4,
+      width: 42,
+      height: 16,
+      zIndex: 31,
+      offsetY: -74,
+    },
+    {
+      assetKey: "ceilingFan",
+      relCol: 0.72,
+      relRow: 0.4,
+      width: 42,
+      height: 16,
+      zIndex: 31,
+      offsetY: -74,
+    },
   ],
 };
 
@@ -443,6 +477,73 @@ const TEMPLATE_RECIPES: Record<string, RoomRecipe> = {
   "room/supply_closet:tier_1": SUPPLY_CLOSET_RECIPE,
 };
 
+const ROOM_UPGRADE_OVERLAYS: Record<string, readonly RecipePropPlacement[]> = {
+  "upgrade/room/register:records_wall": [
+    {
+      assetKey: "corkboard",
+      relCol: 0.76,
+      relRow: 0.1,
+      width: 36,
+      height: 28,
+      zIndex: 44,
+      offsetY: -42,
+    },
+    {
+      assetKey: "clipboard",
+      relCol: 0.66,
+      relRow: 0.2,
+      width: 20,
+      height: 18,
+      zIndex: 45,
+      offsetY: -24,
+    },
+  ],
+  "upgrade/room/counter:hot_coffee": [
+    {
+      assetKey: "sign",
+      relCol: 0.8,
+      relRow: 0.12,
+      width: 34,
+      height: 38,
+      zIndex: 44,
+      offsetY: -44,
+    },
+    { assetKey: "coffeeMachine", relCol: 0.22, relRow: 0.3, width: 34, height: 44, zIndex: 45 },
+  ],
+  "upgrade/room/dining_area:first_aid_station": [
+    {
+      assetKey: "firstAid",
+      relCol: 0.8,
+      relRow: 0.12,
+      width: 22,
+      height: 30,
+      zIndex: 44,
+      offsetY: -42,
+    },
+    { assetKey: "trayMedical", relCol: 0.72, relRow: 0.38, width: 34, height: 36, zIndex: 45 },
+  ],
+  "upgrade/room/supply_closet:labeled_bins": [
+    { assetKey: "gearCrate", relCol: 0.38, relRow: 0.62, width: 28, height: 24, zIndex: 44 },
+    { assetKey: "milkCrate", relCol: 0.62, relRow: 0.62, width: 26, height: 22, zIndex: 44 },
+  ],
+  "upgrade/room/gym:heavy_bags": [
+    { assetKey: "punchBag", relCol: 0.72, relRow: 0.38, width: 24, height: 62, zIndex: 44 },
+    { assetKey: "mat", relCol: 0.68, relRow: 0.74, width: 56, height: 34, zIndex: 43 },
+  ],
+  "upgrade/room/lounge:jukebox": [
+    { assetKey: "radio", relCol: 0.78, relRow: 0.28, width: 40, height: 28, zIndex: 44 },
+    {
+      assetKey: "sign",
+      relCol: 0.18,
+      relRow: 0.16,
+      width: 30,
+      height: 34,
+      zIndex: 43,
+      offsetY: -38,
+    },
+  ],
+};
+
 // Function-tag fallback recipes: used when no template-specific recipe exists.
 // Union hall and later-tier rooms resolve through here.
 const ROOM_RECIPES: Record<string, RoomRecipe> = {
@@ -464,9 +565,23 @@ interface HqRoomSeed {
   templateId: string;
   name: string;
   tier: number;
+  isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
+  appliedUpgradeIds?: readonly string[];
   footprint: HqFootprint;
+}
+
+interface HqExpansionSlotSeed {
+  id: string;
+  label: string;
+  footprint: HqFootprint;
+}
+
+interface ComposeHqWorldOptions {
+  reservedSlots?: readonly HqExpansionSlotSeed[];
+  /** Building template ID — used to look up the fixed building layout. */
+  buildingId?: string;
 }
 
 // ── Geometry output ───────────────────────────────────────────────────────
@@ -474,6 +589,7 @@ interface HqRoomSeed {
 interface HqWorldGeometry {
   layout: HqWorldLayout;
   rooms: readonly HqRoomNode[];
+  expansionSlots: readonly HqExpansionSlotNode[];
   modular: HqModularGeometry;
   roomProps: readonly HqSpritePlacement[];
   scenery: readonly HqSpritePlacement[];
@@ -540,8 +656,45 @@ function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqR
     templateId: seed.templateId,
     label: seed.name,
     tier: seed.tier,
+    isRequestedActive: seed.isRequestedActive,
     isOperational: seed.isOperational,
     functionTag: seed.functionTag,
+    footprint: fp,
+    floorPoints,
+    leftWallPoints,
+    rightWallPoints,
+    bounds: {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      width: Math.max(...xs) - Math.min(...xs),
+      height: Math.max(...ys) - Math.min(...ys),
+    },
+  };
+}
+
+function createExpansionSlotNode(
+  seed: HqExpansionSlotSeed,
+  originX: number,
+  originY: number,
+): HqExpansionSlotNode {
+  const fp = seed.footprint;
+  const top = projectIso(fp.col, fp.row, originX, originY);
+  const right = projectIso(fp.col + fp.cols, fp.row, originX, originY);
+  const bottom = projectIso(fp.col + fp.cols, fp.row + fp.rows, originX, originY);
+  const left = projectIso(fp.col, fp.row + fp.rows, originX, originY);
+  const topLift = { x: top.x, y: top.y - HQ_WALL_HEIGHT };
+  const leftLift = { x: left.x, y: left.y - HQ_WALL_HEIGHT };
+  const rightLift = { x: right.x, y: right.y - HQ_WALL_HEIGHT };
+  const floorPoints = [top, right, bottom, left];
+  const leftWallPoints = [top, left, leftLift, topLift];
+  const rightWallPoints = [top, right, rightLift, topLift];
+  const allPoints = [...floorPoints, ...leftWallPoints, ...rightWallPoints];
+  const xs = allPoints.map((point) => point.x);
+  const ys = allPoints.map((point) => point.y);
+
+  return {
+    id: seed.id,
+    label: seed.label,
     footprint: fp,
     floorPoints,
     leftWallPoints,
@@ -561,7 +714,8 @@ function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
   const tiles: HqFloorTile[] = [];
   for (const seed of seeds) {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
-    const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
+    const palette =
+      seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
     const fp = seed.footprint;
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
       for (let r = fp.row; r < fp.row + fp.rows; r++) {
@@ -578,7 +732,8 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
   const segments: HqWallSegment[] = [];
   for (const seed of seeds) {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
-    const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
+    const palette =
+      seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
     const fp = seed.footprint;
 
     const openingSet = new Set(recipe.openings.map((o) => `${o.side}:${o.cellOffset}`));
@@ -614,18 +769,17 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
 
 // ── Perimeter tiles ───────────────────────────────────────────────────────
 
-function buildPerimeterTiles(seeds: readonly HqRoomSeed[]): HqPerimeterTile[] {
-  if (seeds.length === 0) return [];
+function buildPerimeterTiles(footprints: readonly HqFootprint[]): HqPerimeterTile[] {
+  if (footprints.length === 0) return [];
 
-  const minCol = Math.min(...seeds.map((s) => s.footprint.col));
-  const maxCol = Math.max(...seeds.map((s) => s.footprint.col + s.footprint.cols));
-  const minRow = Math.min(...seeds.map((s) => s.footprint.row));
-  const maxRow = Math.max(...seeds.map((s) => s.footprint.row + s.footprint.rows));
+  const minCol = Math.min(...footprints.map((footprint) => footprint.col));
+  const maxCol = Math.max(...footprints.map((footprint) => footprint.col + footprint.cols));
+  const minRow = Math.min(...footprints.map((footprint) => footprint.row));
+  const maxRow = Math.max(...footprints.map((footprint) => footprint.row + footprint.rows));
 
   // Occupied cells set
   const occupied = new Set<string>();
-  for (const seed of seeds) {
-    const fp = seed.footprint;
+  for (const fp of footprints) {
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
       for (let r = fp.row; r < fp.row + fp.rows; r++) {
         occupied.add(`${c},${r}`);
@@ -634,12 +788,13 @@ function buildPerimeterTiles(seeds: readonly HqRoomSeed[]): HqPerimeterTile[] {
   }
 
   const tiles: HqPerimeterTile[] = [];
-  // Extended padding so the tile grid covers the visible ground area.
-  // The flanking "buildings" sit behind this tiled ground plane.
-  const padLeft = 6;
-  const padRight = 6;
-  const padTop = 3;
-  const padBottom = 6;
+  // Extended padding so the tile grid covers the full visible canvas area.
+  // Must be large enough that the isometric ground plane fills the viewport
+  // at all zoom levels, with room for street, sidewalk, and alley zones.
+  const padLeft = 22;
+  const padRight = 22;
+  const padTop = 16;
+  const padBottom = 22;
 
   for (let c = minCol - padLeft; c <= maxCol + padRight; c++) {
     for (let r = minRow - padTop; r <= maxRow + padBottom; r++) {
@@ -649,10 +804,13 @@ function buildPerimeterTiles(seeds: readonly HqRoomSeed[]): HqPerimeterTile[] {
       if (r < minRow) {
         // Behind the building — alley/void
         kind = "alley";
-      } else if (r >= maxRow && r < maxRow + 2) {
+      } else if (r >= maxRow && r < maxRow + 3) {
         kind = "sidewalk";
-      } else if (r >= maxRow + 2) {
+      } else if (r >= maxRow + 3 && r < maxRow + 9) {
         kind = "street";
+      } else if (r >= maxRow + 9) {
+        // Far side of street — more sidewalk then alley
+        kind = r < maxRow + 11 ? "sidewalk" : "alley";
       } else if (c < minCol || c >= maxCol) {
         kind = "alley";
       } else {
@@ -717,7 +875,7 @@ function buildRoomProps(
         width: scene.svgWidth,
         height: scene.svgHeight,
         zIndex: 35,
-        opacity: room.isOperational ? 1 : 0.35,
+        opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35,
       });
     } else {
       // Per-prop sprite placement (fallback for rooms without scene SVGs)
@@ -739,214 +897,284 @@ function buildRoomProps(
         );
       }
     }
+
+    for (const upgradeId of room.appliedUpgradeIds ?? []) {
+      const overlayProps = ROOM_UPGRADE_OVERLAYS[upgradeId] ?? [];
+      for (const [index, propDef] of overlayProps.entries()) {
+        props.push({
+          ...placeFloorSprite(
+            `${room.id}/upgrade/${upgradeId}/${propDef.assetKey}-${index}`,
+            PROP_ASSETS[propDef.assetKey],
+            fp.col + fp.cols * propDef.relCol,
+            fp.row + fp.rows * propDef.relRow,
+            propDef.width,
+            propDef.height,
+            propDef.zIndex,
+            originX,
+            originY,
+            propDef.offsetX ?? 0,
+            propDef.offsetY ?? 0,
+          ),
+          opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.7 : 0.45,
+        });
+      }
+    }
   }
 
   return props;
 }
 
+// ── Building layout: corridor + empty-slot tiles ─────────────────────────
+
+import type { BuildingLayout } from "content/building-layouts";
+
+const CORRIDOR_TINT = "#2a2420";
+const EMPTY_SLOT_TINT = "#1c1a18";
+const BUILDING_WALL_LEFT = "#2c2014";
+const BUILDING_WALL_RIGHT = "#352616";
+
+function buildCorridorTiles(layout: BuildingLayout | undefined): HqFloorTile[] {
+  if (!layout) return [];
+  // Every cell inside the shell that isn't a room slot is a corridor.
+  const slotCells = new Set<string>();
+  for (const slot of layout.slots) {
+    for (let c = slot.col; c < slot.col + slot.cols; c++) {
+      for (let r = slot.row; r < slot.row + slot.rows; r++) {
+        slotCells.add(`${c},${r}`);
+      }
+    }
+  }
+  const tiles: HqFloorTile[] = [];
+  const sh = layout.shell;
+  for (let c = sh.col; c < sh.col + sh.cols; c++) {
+    for (let r = sh.row; r < sh.row + sh.rows; r++) {
+      if (!slotCells.has(`${c},${r}`)) {
+        tiles.push({ col: c, row: r, tint: CORRIDOR_TINT, roomId: "corridor" });
+      }
+    }
+  }
+  return tiles;
+}
+
+function buildEmptySlotTiles(
+  layout: BuildingLayout | undefined,
+  placedRooms: readonly HqRoomSeed[],
+): HqFloorTile[] {
+  if (!layout) return [];
+  const occupied = new Set<string>();
+  for (const room of placedRooms) {
+    const fp = room.footprint;
+    for (let c = fp.col; c < fp.col + fp.cols; c++) {
+      for (let r = fp.row; r < fp.row + fp.rows; r++) {
+        occupied.add(`${c},${r}`);
+      }
+    }
+  }
+
+  const tiles: HqFloorTile[] = [];
+  for (const slot of layout.slots) {
+    let slotOccupied = false;
+    for (let c = slot.col; c < slot.col + slot.cols && !slotOccupied; c++) {
+      for (let r = slot.row; r < slot.row + slot.rows && !slotOccupied; r++) {
+        if (occupied.has(`${c},${r}`)) slotOccupied = true;
+      }
+    }
+    if (slotOccupied) continue;
+    for (let c = slot.col; c < slot.col + slot.cols; c++) {
+      for (let r = slot.row; r < slot.row + slot.rows; r++) {
+        tiles.push({ col: c, row: r, tint: EMPTY_SLOT_TINT, roomId: `empty-${slot.slotId}` });
+      }
+    }
+  }
+  return tiles;
+}
+
+/** Build a single continuous wall along the building shell exterior. */
+function buildBuildingShellWalls(layout: BuildingLayout | undefined): HqWallSegment[] {
+  if (!layout) return [];
+  const sh = layout.shell;
+  const segments: HqWallSegment[] = [];
+
+  // Left wall: back-left face along col = sh.col
+  for (let r = sh.row; r < sh.row + sh.rows; r++) {
+    segments.push({
+      col: sh.col,
+      row: r,
+      side: "left",
+      kind: "solid",
+      tint: BUILDING_WALL_LEFT,
+      roomId: "building-shell",
+    });
+  }
+
+  // Right wall: back-right face along row = sh.row
+  for (let c = sh.col; c < sh.col + sh.cols; c++) {
+    segments.push({
+      col: c,
+      row: sh.row,
+      side: "right",
+      kind: "solid",
+      tint: BUILDING_WALL_RIGHT,
+      roomId: "building-shell",
+    });
+  }
+
+  return segments;
+}
+
 // ── Scenery (background SVG sprites on grid) ──────────────────────────────
 
 function buildScenery(
-  rooms: readonly HqRoomSeed[],
+  footprints: readonly HqFootprint[],
   originX: number,
   originY: number,
 ): HqSpritePlacement[] {
-  const minCol = Math.min(...rooms.map((r) => r.footprint.col));
-  const maxCol = Math.max(...rooms.map((r) => r.footprint.col + r.footprint.cols));
-  const minRow = Math.min(...rooms.map((r) => r.footprint.row));
-  const maxRow = Math.max(...rooms.map((r) => r.footprint.row + r.footprint.rows));
+  if (footprints.length === 0) return [];
 
-  return [
-    // Street-level scenery
-    placeFloorSprite(
-      "scenery/awning",
-      PROP_ASSETS.awning,
-      minCol + 1.5,
-      maxRow - 0.15,
-      144,
-      52,
-      26,
-      originX,
-      originY,
-      0,
-      -72,
-    ),
-    placeFloorSprite(
-      "scenery/hydrant",
-      PROP_ASSETS.hydrant,
-      minCol - 1.2,
-      maxRow + 1.4,
-      32,
-      42,
-      32,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/lamp",
-      PROP_ASSETS.lamp,
-      maxCol + 1.4,
-      minRow + 2.6,
-      36,
-      150,
-      10,
-      originX,
-      originY,
-      0,
-      -108,
-    ),
-    placeFloorSprite(
-      "scenery/dumpster",
-      PROP_ASSETS.dumpster,
-      minCol - 1.4,
-      minRow + 2,
-      58,
-      46,
-      28,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/trash",
-      PROP_ASSETS.trash,
-      maxCol + 0.4,
-      maxRow + 0.8,
-      46,
-      32,
-      31,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/steam",
-      PROP_ASSETS.steam,
-      maxCol + 1.8,
-      maxRow + 2,
-      52,
-      82,
-      8,
-      originX,
-      originY,
-      0,
-      -24,
-    ),
-    // ── Trees along the front sidewalk (NYC street tree line) ──
-    // Placed along the curb edge (maxRow + 1.5), evenly spaced across
-    // the bodega's frontage. Trunk extends below ground in the SVG for
-    // correct isometric top-down perspective. Positive offsetY places
-    // the ground shadow at the anchor point and lets the trunk overlap below.
-    placeFloorSprite(
-      "scenery/tree-1",
-      PROP_ASSETS.tree,
-      minCol + 0.5,
-      maxRow + 1.5,
-      120,
-      200,
-      30,
-      originX,
-      originY,
-      0,
-      24,
-    ),
-    placeFloorSprite(
-      "scenery/tree-2",
-      PROP_ASSETS.tree,
-      minCol + 3,
-      maxRow + 1.5,
-      130,
-      217,
-      30,
-      originX,
-      originY,
-      0,
-      26,
-    ),
-    placeFloorSprite(
-      "scenery/tree-3",
-      PROP_ASSETS.tree,
-      maxCol - 2.5,
-      maxRow + 1.5,
-      126,
-      210,
-      30,
-      originX,
-      originY,
-      0,
-      25,
-    ),
-    placeFloorSprite(
-      "scenery/tree-4",
-      PROP_ASSETS.tree,
-      maxCol + 0.5,
-      maxRow + 1.5,
-      134,
-      223,
-      30,
-      originX,
-      originY,
-      0,
-      27,
-    ),
-    // ── Sidewalk furniture ────────────────────────────────────
-    placeFloorSprite(
-      "scenery/bench",
-      PROP_ASSETS.bench,
-      minCol + 1,
-      maxRow + 1.2,
-      58,
-      48,
-      31,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/mailbox",
-      PROP_ASSETS.mailbox,
-      maxCol + 0.8,
-      minRow + 1.2,
-      28,
-      40,
-      31,
-      originX,
-      originY,
-      0,
-      -10,
-    ),
-    // ── Street details ────────────────────────────────────────
-    placeFloorSprite(
-      "scenery/manhole",
-      PROP_ASSETS.manhole,
-      minCol + 0.5,
-      maxRow + 3,
-      38,
-      22,
-      7,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/cone-1",
-      PROP_ASSETS.cone,
-      maxCol + 2.5,
-      maxRow + 1.5,
-      18,
-      24,
-      31,
-      originX,
-      originY,
-    ),
-    placeFloorSprite(
-      "scenery/cone-2",
-      PROP_ASSETS.cone,
-      maxCol + 3,
-      maxRow + 1.8,
-      16,
-      22,
-      31,
-      originX,
-      originY,
-    ),
-  ];
+  // Derive building shell bounds from footprints
+  const minCol = Math.min(...footprints.map((fp) => fp.col));
+  const maxCol = Math.max(...footprints.map((fp) => fp.col + fp.cols));
+  const minRow = Math.min(...footprints.map((fp) => fp.row));
+  const maxRow = Math.max(...footprints.map((fp) => fp.row + fp.rows));
+
+  const proj = (col: number, row: number) => projectIso(col, row, originX, originY);
+  const placements: HqSpritePlacement[] = [];
+
+  // The bodega is a diamond in screen space. Place the apartment building
+  // along the LEFT side (col = minCol edge) and the garden along the
+  // RIGHT side (col = maxCol edge). Both stretch front-to-back.
+
+  // ── Apartment building (LEFT side, 2-tile gap from bodega) ──
+  // Runs the full length of the bodega's left edge, towering above it.
+  // The building SVG has a deep side face so it reads as a full block.
+  {
+    const topAnchor = proj(minCol - 2, minRow);
+    const botAnchor = proj(minCol - 2, maxRow);
+    const edgeLen = botAnchor.y - topAnchor.y;
+    const w = 900;
+    const h = edgeLen + 600;
+    placements.push({
+      id: "scenery/building-left",
+      assetUrl: PROP_ASSETS.buildingTall,
+      x: botAnchor.x - w * 0.55,
+      y: topAnchor.y - (h - edgeLen) + 40,
+      width: w,
+      height: h,
+      zIndex: 2,
+      opacity: 0.85,
+    });
+  }
+
+  // ── Garden (RIGHT side, gap from bodega) ──
+  // Green space to the right of the bodega, pushed out to avoid overlap.
+  {
+    const midRow = Math.floor((minRow + maxRow) / 2);
+    const mid = proj(maxCol + 4, midRow);
+    const w = 750;
+    const h = 600;
+    placements.push({
+      id: "scenery/garden",
+      assetUrl: PROP_ASSETS.garden,
+      x: mid.x - w * 0.3,
+      y: mid.y - h * 0.35,
+      width: w,
+      height: h,
+      zIndex: 3,
+      opacity: 0.9,
+    });
+  }
+
+  // ── Street tree (front sidewalk, right side) ──
+  {
+    const anchor = proj(maxCol + 2, maxRow + 2);
+    const w = 130;
+    const h = 210;
+    placements.push({
+      id: "scenery/tree-right",
+      assetUrl: PROP_ASSETS.tree,
+      x: anchor.x - w * 0.5,
+      y: anchor.y - h + 30,
+      width: w,
+      height: h,
+      zIndex: 9,
+      opacity: 0.9,
+    });
+  }
+
+  // ── Street tree (front sidewalk, left side) ──
+  {
+    const anchor = proj(minCol - 1, maxRow + 3);
+    const w = 110;
+    const h = 180;
+    placements.push({
+      id: "scenery/tree-left",
+      assetUrl: PROP_ASSETS.tree,
+      x: anchor.x - w * 0.5,
+      y: anchor.y - h + 25,
+      width: w,
+      height: h,
+      zIndex: 9,
+      opacity: 0.85,
+    });
+  }
+
+  // ── Back alley scene (behind bodega — dumpster, trash, pallets) ──
+  // Spans the full visual width of the bodega shell's back edge, plus
+  // extra columns on each side so it fills the space behind the building.
+  {
+    const leftBack = proj(minCol - 3, minRow - 3);
+    const rightBack = proj(maxCol + 3, minRow - 3);
+    const w = rightBack.x - leftBack.x;
+    const h = w * (310 / 600); // preserve SVG aspect ratio
+    const midX = (leftBack.x + rightBack.x) / 2;
+    const midY = (leftBack.y + rightBack.y) / 2;
+    placements.push({
+      id: "scenery/back-alley",
+      assetUrl: PROP_ASSETS.backAlley,
+      x: midX - w * 0.5,
+      y: midY - h * 0.55,
+      width: w,
+      height: h,
+      zIndex: 4,
+      opacity: 0.85,
+    });
+  }
+
+  // ── Hydrant (front-right sidewalk corner) ──
+  {
+    const anchor = proj(maxCol + 1, maxRow + 2);
+    const w = 45;
+    const h = 75;
+    placements.push({
+      id: "scenery/hydrant",
+      assetUrl: PROP_ASSETS.hydrant,
+      x: anchor.x - w * 0.5,
+      y: anchor.y - h + 12,
+      width: w,
+      height: h,
+      zIndex: 10,
+      opacity: 0.85,
+    });
+  }
+
+  // ── Lamppost (front sidewalk, center) ──
+  {
+    const anchor = proj(Math.floor((minCol + maxCol) / 2), maxRow + 3);
+    const w = 55;
+    const h = 140;
+    placements.push({
+      id: "scenery/lamp",
+      assetUrl: PROP_ASSETS.lamp,
+      x: anchor.x - w * 0.5,
+      y: anchor.y - h + 20,
+      width: w,
+      height: h,
+      zIndex: 10,
+      opacity: 0.85,
+    });
+  }
+
+  return placements;
 }
 
 // ── Geometry shift helpers ────────────────────────────────────────────────
@@ -974,6 +1202,7 @@ function shiftRoom(room: HqRoomNode, dx: number, dy: number): HqRoomNode {
 
 function computeWorldBounds(
   rooms: readonly HqRoomNode[],
+  expansionSlots: readonly HqExpansionSlotNode[],
   roomProps: readonly HqSpritePlacement[],
   scenery: readonly HqSpritePlacement[],
   perimeterTiles: readonly HqPerimeterTile[],
@@ -1004,6 +1233,11 @@ function computeWorldBounds(
     room.leftWallPoints.forEach(absorbPoint);
     room.rightWallPoints.forEach(absorbPoint);
   });
+  expansionSlots.forEach((slot) => {
+    slot.floorPoints.forEach(absorbPoint);
+    slot.leftWallPoints.forEach(absorbPoint);
+    slot.rightWallPoints.forEach(absorbPoint);
+  });
   roomProps.forEach(absorbSprite);
   scenery.forEach(absorbSprite);
 
@@ -1019,8 +1253,33 @@ function computeWorldBounds(
 
 // ── Main composition ──────────────────────────────────────────────────────
 
-export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeometry {
-  if (rooms.length === 0) {
+function shiftExpansionSlot(
+  slot: HqExpansionSlotNode,
+  dx: number,
+  dy: number,
+): HqExpansionSlotNode {
+  return {
+    ...slot,
+    floorPoints: shiftPoints(slot.floorPoints, dx, dy),
+    leftWallPoints: shiftPoints(slot.leftWallPoints, dx, dy),
+    rightWallPoints: shiftPoints(slot.rightWallPoints, dx, dy),
+    bounds: {
+      x: slot.bounds.x + dx,
+      y: slot.bounds.y + dy,
+      width: slot.bounds.width,
+      height: slot.bounds.height,
+    },
+  };
+}
+
+export function composeHqWorldGeometry(
+  rooms: readonly HqRoomSeed[],
+  options: ComposeHqWorldOptions = {},
+): HqWorldGeometry {
+  const reservedSlots = options.reservedSlots ?? [];
+  const buildingLayout = options.buildingId ? getBuildingLayout(options.buildingId) : undefined;
+
+  if (rooms.length === 0 && reservedSlots.length === 0 && !buildingLayout) {
     const layout: HqWorldLayout = {
       tileWidth: HQ_TILE_WIDTH,
       tileHeight: HQ_TILE_HEIGHT,
@@ -1036,6 +1295,7 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
     return {
       layout,
       rooms: [],
+      expansionSlots: [],
       modular: { floorTiles: [], wallSegments: [], perimeterTiles: [] },
       roomProps: [],
       scenery: [],
@@ -1043,22 +1303,37 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
     };
   }
 
-  const maxRow = Math.max(...rooms.map((r) => r.footprint.row + r.footprint.rows));
+  // When a building layout exists, use the full shell for perimeter/bounds
+  // so the building size stays fixed regardless of how many rooms are placed.
+  const perimeterFootprints: HqFootprint[] = buildingLayout
+    ? [buildingLayout.shell]
+    : [...rooms.map((room) => room.footprint), ...reservedSlots.map((slot) => slot.footprint)];
+  const maxRow = Math.max(...perimeterFootprints.map((fp) => fp.row + fp.rows));
   const originX = (maxRow + 6) * (HQ_TILE_WIDTH / 2);
   const originY = 180;
 
   // Build modular geometry
-  const floorTiles = buildFloorTiles(rooms);
-  const wallSegments = buildWallSegments(rooms);
-  const perimeterTiles = buildPerimeterTiles(rooms);
+  const floorTiles = [
+    ...buildFloorTiles(rooms),
+    ...buildCorridorTiles(buildingLayout),
+    ...buildEmptySlotTiles(buildingLayout, rooms),
+  ];
+  const wallSegments = buildingLayout
+    ? buildBuildingShellWalls(buildingLayout)
+    : buildWallSegments(rooms);
+  const perimeterTiles = buildPerimeterTiles(perimeterFootprints);
 
   // Build room nodes (for hit-testing), props, scenery, navGraph
   const rawRooms = rooms.map((seed) => createRoomNode(seed, originX, originY));
+  const rawExpansionSlots = reservedSlots.map((slot) =>
+    createExpansionSlotNode(slot, originX, originY),
+  );
   const roomProps = buildRoomProps(rooms, originX, originY);
-  const scenery = buildScenery(rooms, originX, originY);
+  const scenery = buildScenery(perimeterFootprints, originX, originY);
 
   const rawBounds = computeWorldBounds(
     rawRooms,
+    rawExpansionSlots,
     roomProps,
     scenery,
     perimeterTiles,
@@ -1069,11 +1344,13 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
   const dy = WORLD_MARGIN_Y - rawBounds.minY;
 
   const shiftedRooms = rawRooms.map((r) => shiftRoom(r, dx, dy));
+  const shiftedExpansionSlots = rawExpansionSlots.map((slot) => shiftExpansionSlot(slot, dx, dy));
   const shiftedProps = roomProps.map((s) => shiftSprite(s, dx, dy));
   const shiftedScenery = scenery.map((s) => shiftSprite(s, dx, dy));
 
   const bounds = computeWorldBounds(
     shiftedRooms,
+    shiftedExpansionSlots,
     shiftedProps,
     shiftedScenery,
     perimeterTiles,
@@ -1105,6 +1382,24 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
     })),
   );
 
+  // Compute building shell world-space size for camera zoom limits
+  let buildingWorldSize: { width: number; height: number } | undefined;
+  if (buildingLayout) {
+    const shell = buildingLayout.shell;
+    const shellCorners = [
+      projectIso(shell.col, shell.row, originX + dx, originY + dy),
+      projectIso(shell.col + shell.cols, shell.row, originX + dx, originY + dy),
+      projectIso(shell.col + shell.cols, shell.row + shell.rows, originX + dx, originY + dy),
+      projectIso(shell.col, shell.row + shell.rows, originX + dx, originY + dy),
+    ];
+    const sxs = shellCorners.map((p) => p.x);
+    const sys = shellCorners.map((p) => p.y);
+    buildingWorldSize = {
+      width: (Math.max(...sxs) - Math.min(...sxs)) * 1.4,
+      height: (Math.max(...sys) - Math.min(...sys) + HQ_WALL_HEIGHT) * 1.4,
+    };
+  }
+
   const layout: HqWorldLayout = {
     tileWidth: HQ_TILE_WIDTH,
     tileHeight: HQ_TILE_HEIGHT,
@@ -1115,15 +1410,37 @@ export function composeHqWorldGeometry(rooms: readonly HqRoomSeed[]): HqWorldGeo
     minY: bounds.minY,
     worldWidth: bounds.maxX - bounds.minX + WORLD_MARGIN_X,
     worldHeight: bounds.maxY - bounds.minY + WORLD_MARGIN_Y,
+    buildingWorldSize,
   };
 
   return {
     layout,
     rooms: shiftedRooms,
+    expansionSlots: shiftedExpansionSlots,
     modular: { floorTiles, wallSegments, perimeterTiles },
     roomProps: shiftedProps,
     scenery: shiftedScenery,
     navGraph,
+  };
+}
+
+// ── Backdrop snapshot ────────────────────────────────────────────────────
+
+function buildBackdropSnapshot(minuteOfDay: number): HqBackdropSnapshot | null {
+  const manifest = getHqBackdropManifest();
+  if (!manifest) return null;
+
+  const phase = resolveTimeOfDayPhase(minuteOfDay);
+  const profile = manifest.phases[phase];
+
+  return {
+    phase,
+    profileId: manifest.profileId,
+    elevationBandId: manifest.elevationBandId,
+    zones: profile.zones,
+    ambientTint: profile.ambientTint,
+    fogColor: profile.fogColor,
+    shadowIntensity: profile.shadowIntensity,
   };
 }
 
@@ -1133,17 +1450,27 @@ export function createHqWorldSnapshot(
   buildingName: string,
   geometry: HqWorldGeometry,
   actors: readonly ActorMarker[],
+  minuteOfDay?: number,
 ): HqWorldSnapshot {
+  const backdrop = minuteOfDay !== undefined ? buildBackdropSnapshot(minuteOfDay) : null;
+  const phase = backdrop?.phase;
+
   return {
     buildingName,
     layout: geometry.layout,
     rooms: geometry.rooms,
+    expansionSlots: geometry.expansionSlots,
     modular: geometry.modular,
     roomProps: geometry.roomProps,
     scenery: geometry.scenery,
     actors,
     navGraph: geometry.navGraph,
-    effects: createDefaultEffects(),
+    effects: createEffectsWithOverrides(phase, {
+      ambientTint: backdrop?.ambientTint,
+      fogColor: backdrop?.fogColor,
+      shadowIntensity: backdrop?.shadowIntensity,
+    }),
+    backdrop,
     focus: null,
   };
 }

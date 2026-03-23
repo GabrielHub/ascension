@@ -84,6 +84,10 @@ export type SimCommand =
       type: "sim/dev-set-resource";
       resourceId: "resource/cash" | "resource/reputation" | "resource/intel";
       amount: number;
+    }
+  | {
+      type: "sim/dev-set-time";
+      minuteOfDay: number;
     };
 
 export interface SimCommandQueue {

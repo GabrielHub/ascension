@@ -1,9 +1,11 @@
+import { getBuildingLayout } from "content/building-layouts";
 import { templateRegistry } from "content/templates";
 import { buildRaidWorldSnapshot, composeHqWorldGeometry, createHqWorldSnapshot } from "render";
 import type {
   ActorMarker,
   ActorState,
   FogCell,
+  HqFootprint,
   HqWorldSnapshot,
   NavAnchorKind,
   RaidTeamMarker,
@@ -35,6 +37,7 @@ import { stableStringHash } from "lib/stable-hash";
 import type { AudioCueId } from "app/features/audio";
 
 const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
+const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
 const PRESENTATION_FRAME_INTERVAL_MS = 50;
 
 /** Duration for an actor to travel between rooms (ms). */
@@ -306,9 +309,11 @@ function createRuntimeSession(
 
   let closed = false;
   let autoTickInterval: ReturnType<typeof setInterval> | undefined;
+  let autosaveTimeout: ReturnType<typeof setTimeout> | undefined;
   let presentationRefreshInterval: ReturnType<typeof setInterval> | undefined;
   let autoTickPending = false;
   let mutationQueue = Promise.resolve();
+  let persistDirty = false;
   let persistQueued = false;
   let persistPromise: Promise<void> | undefined;
   const pendingCues: AudioCueId[] = [];
@@ -379,6 +384,20 @@ function createRuntimeSession(
       default:
         return "idle";
     }
+  }
+
+  function getDefaultExpansionFootprint(slotIndex: number, buildingId?: string): HqFootprint {
+    if (buildingId) {
+      const layout = getBuildingLayout(buildingId);
+      if (layout && slotIndex < layout.slots.length) {
+        const slot = layout.slots[slotIndex];
+        return { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows };
+      }
+    }
+    // Legacy fallback
+    const column = slotIndex % 2;
+    const row = Math.floor(slotIndex / 2);
+    return { col: column * 4, row: row * 3, cols: 4, rows: 3 };
   }
 
   function computeRoomAnchorPosition(
@@ -540,16 +559,32 @@ function createRuntimeSession(
         templateId: room.templateId,
         name: room.name,
         tier: room.tier,
+        isRequestedActive: room.isRequestedActive,
         isOperational: room.isOperational,
         functionTag,
         functionTags,
+        appliedUpgradeIds: room.appliedUpgradeIds,
         footprint: room.footprint,
       };
     });
+    const activeBuildingId = view.building.activeBuildingId;
+    const reservedSlots = Array.from(
+      { length: Math.max(0, view.building.roomSlotCount - view.rooms.length) },
+      (_, index) => {
+        const slotIndex = view.rooms.length + index;
+        return {
+          id: `room-slot/${slotIndex}`,
+          label: `Open Slot ${slotIndex + 1}`,
+          footprint: getDefaultExpansionFootprint(slotIndex, activeBuildingId),
+        };
+      },
+    );
 
-    const buildingName =
-      templateRegistry.buildingById.get(view.building.activeBuildingId)?.name ?? "Bodega HQ";
-    const geometry = composeHqWorldGeometry(rooms);
+    const buildingName = templateRegistry.buildingById.get(activeBuildingId)?.name ?? "Bodega HQ";
+    const geometry = composeHqWorldGeometry(rooms, {
+      reservedSlots,
+      buildingId: activeBuildingId,
+    });
     const navGraph = geometry.navGraph;
 
     const operatorActors: ActorMarker[] = view.operators
@@ -714,7 +749,7 @@ function createRuntimeSession(
 
     const actors: ActorMarker[] = [...operatorActors, ...staffActors, ...visitorActors];
 
-    return createHqWorldSnapshot(buildingName, geometry, actors);
+    return createHqWorldSnapshot(buildingName, geometry, actors, view.clock.minuteOfDay);
   }
 
   function deriveRaidWorldSnapshot(view: RuntimePhase1View): RaidWorldSnapshot | null {
@@ -769,13 +804,14 @@ function createRuntimeSession(
     listeners.forEach((listener) => listener(session));
   };
 
-  const schedulePersist = () => {
-    if (!session.isSaveBacked || !session.save) {
-      return;
+  const clearAutosaveTimeout = () => {
+    if (autosaveTimeout) {
+      clearTimeout(autosaveTimeout);
+      autosaveTimeout = undefined;
     }
+  };
 
-    persistQueued = true;
-
+  const startPersistWorker = () => {
     if (persistPromise) {
       return;
     }
@@ -783,12 +819,21 @@ function createRuntimeSession(
     persistPromise = (async () => {
       while (persistQueued) {
         persistQueued = false;
+
+        if (!persistDirty) {
+          continue;
+        }
+
+        persistDirty = false;
         session.persistence = {
           status: "saving",
           lastSavedAt: session.persistence.lastSavedAt,
         };
-        session.state = buildRuntimeSessionState(session);
-        notifyListeners();
+
+        if (!closed) {
+          session.state = buildRuntimeSessionState(session);
+          notifyListeners();
+        }
 
         try {
           const nextSave = createPersistedSessionSave(session);
@@ -817,6 +862,42 @@ function createRuntimeSession(
     })();
   };
 
+  const queuePersistNow = () => {
+    if (!session.isSaveBacked || !session.save) {
+      return;
+    }
+
+    if (!persistDirty) {
+      return;
+    }
+
+    clearAutosaveTimeout();
+    persistQueued = true;
+    startPersistWorker();
+  };
+
+  const schedulePersist = (command: SimCommand) => {
+    if (!session.isSaveBacked || !session.save) {
+      return;
+    }
+
+    persistDirty = true;
+
+    if (closed || command.type !== "sim/tick") {
+      queuePersistNow();
+      return;
+    }
+
+    if (autosaveTimeout) {
+      return;
+    }
+
+    autosaveTimeout = setTimeout(() => {
+      autosaveTimeout = undefined;
+      queuePersistNow();
+    }, AUTOSAVE_INTERVAL_MS);
+  };
+
   const queueSimulationMutation = (command: SimCommand): Promise<void> => {
     if (closed) {
       return Promise.resolve();
@@ -841,7 +922,7 @@ function createRuntimeSession(
         );
         appendSimulationCues();
         notifyListeners();
-        schedulePersist();
+        schedulePersist(command);
       });
 
     mutationQueue = nextMutation.catch(() => undefined);
@@ -1059,11 +1140,13 @@ function createRuntimeSession(
       }
 
       closed = true;
+      clearAutosaveTimeout();
       if (presentationRefreshInterval) {
         clearInterval(presentationRefreshInterval);
         presentationRefreshInterval = undefined;
       }
       lifecycle.stopAutoTick();
+      queuePersistNow();
       listeners.clear();
     },
   };

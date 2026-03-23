@@ -53,9 +53,13 @@ export function buildNavigationGraph(
   }
 
   // Build connectors between every pair of room entry anchors
-  // using a corridor band above the rooms
+  // using a corridor band running through the interior of the building.
   const entryAnchors = anchors.filter((a) => a.kind === "entry");
-  const corridorY = Math.min(...rooms.map((r) => r.y)) - 40;
+  // Place the corridor at the vertical center of all rooms so operators
+  // stay inside the building when moving between rooms.
+  const allYMidpoints = rooms.map((r) => r.y + r.height / 2);
+  const corridorY =
+    allYMidpoints.length > 0 ? (Math.min(...allYMidpoints) + Math.max(...allYMidpoints)) / 2 : 0;
 
   for (let i = 0; i < entryAnchors.length; i++) {
     for (let j = i + 1; j < entryAnchors.length; j++) {

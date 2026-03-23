@@ -1,7 +1,7 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 9;
+export const CURRENT_SAVE_SCHEMA_VERSION = 10;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -69,6 +69,26 @@ export interface OperatorLifecycleSnapshot {
   departureReason?: string;
 }
 
+export interface OperatorCombatSnapshot {
+  rank: string;
+  attunementTag: string;
+  traits: string[];
+  kit: {
+    regularAttackId: string;
+    skillId: string;
+    ultimateId: string;
+    passiveIds: string[];
+  };
+  baseStats: {
+    strength: number;
+    speed: number;
+    endurance: number;
+    resilience: number;
+    perception: number;
+    intelligence: number;
+  };
+}
+
 export interface OperatorSnapshot {
   id: string;
   lifecycle: OperatorLifecycleSnapshot;
@@ -81,6 +101,7 @@ export interface OperatorSnapshot {
   injury?: SaveStructuredRecord;
   assignment?: SaveStructuredRecord;
   appearance: OperatorAppearanceSnapshot;
+  combat?: OperatorCombatSnapshot;
 }
 
 export interface OperatorRelationshipSnapshot {
@@ -156,6 +177,8 @@ export interface RaidSummarySnapshot extends SaveStructuredRecord {
   operatorOutcomes?: RaidOperatorOutcomeSnapshot[];
   narrativeTags?: string[];
   intelMismatchTags?: string[];
+  bossDefeated?: boolean;
+  contributingFactors?: string[];
 }
 
 export interface ContractSiteSnapshot {

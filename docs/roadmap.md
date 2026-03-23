@@ -41,7 +41,15 @@ This section is intentionally summary-level. The implementation itself is the so
 - The bodega uses the four bodega-native room identities from the world foundation, and training rooms remain gated to later headquarters tiers.
 - The Phase 2 asset-production contract is documented and locked around canon-first briefs, recipe previews, modular production, props-only room scenes, controlled item variants, and viewer/playground review.
 - HQ environment metadata, raid environment metadata, and visual review tooling are shipped; the current runtime presentation intentionally mixes asset-backed data with localized hand-authored composition where that keeps the slice stable and readable.
+- The HQ exterior day-night pass is live in hybrid form: the simulation clock drives canonical `sunrise` / `day` / `sunset` / `night` phases, the HQ environment manifest owns the per-phase tint/fog/shadow values plus shell-relative backdrop zones, and the bodega still mixes in renderer-authored exterior scenery while the backdrop package system fills out.
 - Phase 1: Bodega World Rendering is implemented. Its accepted slice includes world-first HQ presentation, authored compositional HQ and raid-map assets, locked camera/framing rules, first-pass lighting/effects, autonomous contract-site raid behavior, first-pass taxonomy remediation, seeded uncertainty, and generalized SVG review tooling.
+- Operators now carry a permanent combat identity contract: rank, attunement, traits, fixed kit references, and six base combat stats (strength, speed, endurance, resilience, perception, intelligence) that persist through saves and migrations.
+- A shared simulation-owned derived-stat layer computes effective operator stats from base stats, equipped gear stat effects, and injury penalties, and exposes a single combat-power aggregate for raid resolution.
+- Gear stat effects are now first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, with those contributions flowing through the derived-stat layer into raid outcomes.
+- Raid resolution is stat-driven and boss-aware: missions carry explicit enemy group profiles and boss combat profiles with tags, weaknesses, and threat values that modify challenge and team scores during autonomous resolution.
+- Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty, while boss weaknesses reward matching team composition.
+- Loot distribution is now driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
+- The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 
 ## Phase 3: Union Hall Expansion
 
@@ -53,6 +61,9 @@ Deliverables:
 - relocation event framed as a systemic milestone, not just a map swap
 - prebuilt initial layouts for new building phases
 - multi-floor support
+- floor-indexed HQ presentation state so the active floor is explicit in the runtime view rather than implied by one flat map
+- a first floor-navigation/view contract that supports moving between floors without rewriting the entire HQ interaction model
+- floor-aware exterior/background selection that can reuse shared elevation bands across similar floors
 - room families that were combined in the bodega split into dedicated union-hall rooms as documented in the world foundation, including infirmary, break room, lounge, gym, sparring room, and a proper recruitment office
 - training rooms unlock for the first time — no training exists in the bodega phase
 - office-tier rooms and role-specific room variants for later progression
@@ -66,7 +77,30 @@ Deliverables:
 Exit criteria:
 
 - moving to the next building changes how the player allocates space, labor, and money
+- moving between floors is a real part of understanding and managing the headquarters, not just a cosmetic label
+- the second building does not require bespoke exterior art for every single floor when adjacent floors share the same outside read
 - the second building tier mostly feels like added content, not rewritten infrastructure
+
+## Cross-Building HQ Day-Night Presentation Pass
+
+Goal: make headquarters exteriors feel lived-in across the existing bodega and every future building tier without turning lighting into hidden gameplay logic.
+
+Deliverables:
+
+- derive HQ time-of-day presentation from the existing simulation clock instead of introducing a separate presentation timer
+- standardize four canonical HQ exterior states: sunrise, day, sunset, and night
+- apply those states only to the background and exterior decorative dressing around the HQ shell in the first pass
+- give each building theme its own authored exterior backdrop package for all four states rather than recoloring one universal background
+- define those backdrop packages in shell-relative zones so the same system can later serve ground-floor buildings, multi-floor HQs, and tower-scale headquarters
+- keep the future verticality path open through reusable elevation bands, so similar floors can share exterior packages instead of requiring bespoke art for every floor
+- replace the remaining hardcoded bodega exterior dressing with fully package-driven building-specific exterior variants
+
+Exit criteria:
+
+- the bodega visibly changes across the four day-night states when the existing clock advances
+- adding a new building now includes a clear requirement to ship four exterior backdrop variants as part of its environment package
+- the first implementation does not block future floor-aware backgrounds for multi-floor or skyscraper headquarters
+- the feature remains presentation-only unless the product plan is explicitly updated later
 
 ## Phase 4: Midgame Systems
 

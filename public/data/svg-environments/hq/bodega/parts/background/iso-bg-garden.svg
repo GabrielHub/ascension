@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 220">
+  <!-- Urban side-lot garden in isometric view.
+       Sits adjacent to a building wall — chain-link fence, planters,
+       overgrown bushes, a tree, community garden vibe.
+       Render at 300-450px wide for proper scale next to the bodega. -->
+
+  <!-- Ground patch (isometric diamond, larger) -->
+  <polygon points="150,15 280,80 150,145 20,80"
+    fill="#1e2a1a" stroke="#2a3822" stroke-width="1" opacity="0.75"/>
+
+  <!-- Dirt/mulch beds -->
+  <polygon points="150,30 240,75 150,120 60,75"
+    fill="#2a2218" opacity="0.5"/>
+
+  <!-- Back planter bed (against the wall side) -->
+  <polygon points="50,50 140,95 120,105 30,60"
+    fill="#1a2c16" stroke="#243018" stroke-width="0.8"/>
+  <polygon points="50,48 140,93 140,95 50,50"
+    fill="#3a3028" stroke="#2a2218" stroke-width="0.5"/>
+
+  <!-- Large bush cluster (back) -->
+  <ellipse cx="90" cy="55" rx="28" ry="18" fill="#142818"/>
+  <ellipse cx="75" cy="48" rx="20" ry="14" fill="#163020"/>
+  <ellipse cx="108" cy="52" rx="16" ry="12" fill="#122616"/>
+  <ellipse cx="65" cy="56" rx="12" ry="9" fill="#0e2414"/>
+  <!-- Highlights -->
+  <ellipse cx="82" cy="44" rx="8" ry="4" fill="#1a3422" opacity="0.45"/>
+  <ellipse cx="100" cy="48" rx="6" ry="3" fill="#1e3826" opacity="0.35"/>
+
+  <!-- Tree (right-center, larger) -->
+  <line x1="200" y1="95" x2="200" y2="45" stroke="#3a2818" stroke-width="5"/>
+  <line x1="200" y1="95" x2="200" y2="45" stroke="#4a3424" stroke-width="2.5"/>
+  <!-- Branches -->
+  <line x1="200" y1="60" x2="180" y2="38" stroke="#3a2818" stroke-width="2"/>
+  <line x1="200" y1="55" x2="220" y2="35" stroke="#3a2818" stroke-width="1.5"/>
+  <!-- Canopy -->
+  <ellipse cx="200" cy="35" rx="32" ry="22" fill="#102818"/>
+  <ellipse cx="188" cy="28" rx="20" ry="15" fill="#142c1c"/>
+  <ellipse cx="214" cy="26" rx="16" ry="14" fill="#0e2414"/>
+  <ellipse cx="200" cy="20" rx="22" ry="12" fill="#142c1c"/>
+  <ellipse cx="178" cy="36" rx="12" ry="9" fill="#0e2414"/>
+  <ellipse cx="222" cy="32" rx="10" ry="8" fill="#102818"/>
+  <!-- Top highlights -->
+  <ellipse cx="192" cy="22" rx="8" ry="4" fill="#163220" opacity="0.45"/>
+  <ellipse cx="210" cy="26" rx="6" ry="3" fill="#1a3624" opacity="0.35"/>
+  <!-- Ground shadow -->
+  <ellipse cx="205" cy="100" rx="26" ry="9" fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Front raised planter (masonry) -->
+  <polygon points="100,100 200,150 200,162 100,112"
+    fill="#2e2820" stroke="#3a3028" stroke-width="0.8"/>
+  <polygon points="200,150 218,142 218,154 200,162"
+    fill="#241e18" stroke="#3a3028" stroke-width="0.5"/>
+  <polygon points="100,100 200,150 218,142 118,92"
+    fill="#342c24" stroke="#3a3028" stroke-width="0.5"/>
+  <!-- Plants in planter -->
+  <ellipse cx="150" cy="104" rx="22" ry="12" fill="#142a18"/>
+  <ellipse cx="138" cy="100" rx="14" ry="9" fill="#183020"/>
+  <ellipse cx="165" cy="98" rx="12" ry="8" fill="#122616"/>
+  <ellipse cx="180" cy="102" rx="10" ry="7" fill="#163020"/>
+
+  <!-- Small bush cluster (front-left) -->
+  <ellipse cx="60" cy="95" rx="14" ry="10" fill="#142818"/>
+  <ellipse cx="52" cy="92" rx="10" ry="7" fill="#163020"/>
+
+  <!-- Chain-link fence posts -->
+  <g stroke="#3a3838" fill="none" opacity="0.45">
+    <!-- Left fence -->
+    <line x1="30" y1="74" x2="30" y2="56" stroke-width="1.5"/>
+    <line x1="52" y1="85" x2="52" y2="67" stroke-width="1.5"/>
+    <!-- Wire -->
+    <line x1="30" y1="58" x2="52" y2="69" stroke-width="0.6"/>
+    <line x1="30" y1="64" x2="52" y2="75" stroke-width="0.6"/>
+    <!-- Right fence -->
+    <line x1="248" y1="85" x2="248" y2="67" stroke-width="1.5"/>
+    <line x1="268" y1="76" x2="268" y2="58" stroke-width="1.5"/>
+    <line x1="248" y1="69" x2="268" y2="60" stroke-width="0.6"/>
+    <line x1="248" y1="75" x2="268" y2="66" stroke-width="0.6"/>
+  </g>
+
+  <!-- Stepping stones -->
+  <ellipse cx="140" cy="125" rx="8" ry="3.5" fill="#383028" opacity="0.4"/>
+  <ellipse cx="155" cy="132" rx="7" ry="3" fill="#383028" opacity="0.35"/>
+  <ellipse cx="125" cy="118" rx="6" ry="2.5" fill="#383028" opacity="0.3"/>
+
+  <!-- Watering can -->
+  <g opacity="0.35">
+    <rect x="240" y="100" width="12" height="10" rx="1" fill="#2a4838"/>
+    <line x1="252" y1="102" x2="260" y2="98" stroke="#2a4838" stroke-width="1.5"/>
+  </g>
+</svg>

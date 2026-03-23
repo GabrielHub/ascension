@@ -111,6 +111,7 @@ function createBaseSave(): PersistedSaveGame {
           lifecycle: { status: "active" as const },
           identity: {
             displayName: "Rook",
+            roleTag: "role:field_lead",
           },
           preferences: {
             preferredMissionTags: ["mission:clearance"],
@@ -138,6 +139,25 @@ function createBaseSave(): PersistedSaveGame {
           },
           appearance: {
             presetId: "mira-002",
+          },
+          combat: {
+            rank: "f",
+            attunementTag: "attunement:kinetic",
+            traits: ["trait:steady"],
+            kit: {
+              regularAttackId: "kit/basic-strike",
+              skillId: "kit/field-lead-skill",
+              ultimateId: "kit/field-lead-ultimate",
+              passiveIds: ["kit/field-lead-passive"],
+            },
+            baseStats: {
+              strength: 14,
+              speed: 8,
+              endurance: 13,
+              resilience: 10,
+              perception: 7,
+              intelligence: 8,
+            },
           },
         },
       ],
@@ -618,6 +638,41 @@ describe("save codec", () => {
         status: "steady",
       },
     ]);
+  });
+
+  it("backfills missing combat data even on current-schema saves", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        operators: base.world.operators?.map((operator) => {
+          const { combat: _combat, ...rest } = operator;
+          return rest;
+        }),
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.operators?.[0]?.combat).toEqual({
+      rank: "f",
+      attunementTag: "attunement:kinetic",
+      traits: ["trait:steady"],
+      kit: {
+        regularAttackId: "kit/basic-strike",
+        skillId: "kit/field-lead-skill",
+        ultimateId: "kit/field-lead-ultimate",
+        passiveIds: ["kit/field-lead-passive"],
+      },
+      baseStats: {
+        strength: 14,
+        speed: 8,
+        endurance: 13,
+        resilience: 10,
+        perception: 7,
+        intelligence: 8,
+      },
+    });
   });
 
   it("round-trips relationship and raid opportunity state", () => {
@@ -1537,5 +1592,143 @@ describe("save codec", () => {
         },
       }),
     ).toThrowError(/claims died for unknown operatorId "operator\/nonexistent"/);
+  });
+
+  it("migrates v9 save without combat data to v10 with deterministic defaults", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 9,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            id: "operator/1",
+            lifecycle: { status: "active" as const },
+            identity: { roleTag: "role:field_lead" },
+            appearance: { presetId: "mira-002" },
+          },
+          {
+            id: "operator/2",
+            lifecycle: { status: "active" as const },
+            identity: { roleTag: "role:scout" },
+            appearance: { presetId: "mira-002" },
+          },
+          {
+            id: "operator/3",
+            lifecycle: { status: "active" as const },
+            identity: { roleTag: "role:medic" },
+            appearance: { presetId: "mira-002" },
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
+
+    const ops = hydrated.save.world.operators;
+    expect(ops).toBeDefined();
+    expect(ops).toHaveLength(3);
+
+    // field_lead gets kinetic attunement with higher strength/endurance
+    const fieldLead = ops?.find((op) => op.id === "operator/1");
+    expect(fieldLead?.combat).toBeDefined();
+    expect(fieldLead?.combat?.rank).toBe("f");
+    expect(fieldLead?.combat?.attunementTag).toBe("attunement:kinetic");
+    expect(fieldLead?.combat?.traits).toEqual(["trait:steady"]);
+    expect(fieldLead?.combat?.kit.regularAttackId).toBe("kit/basic-strike");
+    expect(fieldLead?.combat?.kit.skillId).toBe("kit/field-lead-skill");
+    expect(fieldLead?.combat?.baseStats.strength).toBe(14);
+    expect(fieldLead?.combat?.baseStats.endurance).toBe(13);
+
+    // scout gets void attunement with higher speed/perception
+    const scout = ops?.find((op) => op.id === "operator/2");
+    expect(scout?.combat).toBeDefined();
+    expect(scout?.combat?.rank).toBe("f");
+    expect(scout?.combat?.attunementTag).toBe("attunement:void");
+    expect(scout?.combat?.traits).toEqual(["trait:alert"]);
+    expect(scout?.combat?.kit.skillId).toBe("kit/scout-skill");
+    expect(scout?.combat?.baseStats.speed).toBe(14);
+    expect(scout?.combat?.baseStats.perception).toBe(13);
+
+    // medic gets vital attunement with higher resilience/intelligence
+    const medic = ops?.find((op) => op.id === "operator/3");
+    expect(medic?.combat).toBeDefined();
+    expect(medic?.combat?.rank).toBe("f");
+    expect(medic?.combat?.attunementTag).toBe("attunement:vital");
+    expect(medic?.combat?.traits).toEqual(["trait:resilient"]);
+    expect(medic?.combat?.kit.skillId).toBe("kit/medic-skill");
+    expect(medic?.combat?.baseStats.resilience).toBe(14);
+    expect(medic?.combat?.baseStats.intelligence).toBe(13);
+  });
+
+  it("v9 migration produces deterministic defaults based on roleTag", () => {
+    const base = createBaseSave();
+
+    // Run migration twice for the same operator -- results should be identical
+    const makeV9Save = () => ({
+      ...base,
+      schemaVersion: 9,
+      world: {
+        ...base.world,
+        activeRaidPackets: [],
+        operators: [
+          {
+            id: "operator/x",
+            lifecycle: { status: "active" as const },
+            identity: { roleTag: "role:scout" },
+            appearance: { presetId: "mira-002" },
+          },
+        ],
+      },
+    });
+
+    const hydrated1 = hydratePersistedSaveGame(makeV9Save());
+    const hydrated2 = hydratePersistedSaveGame(makeV9Save());
+
+    expect(hydrated1.save.world.operators?.[0]?.combat).toEqual(
+      hydrated2.save.world.operators?.[0]?.combat,
+    );
+  });
+
+  it("round-trips v10 save with combat data correctly", () => {
+    const base = createBaseSave();
+    const combat = {
+      rank: "e",
+      attunementTag: "attunement:fire",
+      traits: ["trait:aggressive", "trait:alert"],
+      kit: {
+        regularAttackId: "kit/flame-strike",
+        skillId: "kit/fire-burst",
+        ultimateId: "kit/inferno",
+        passiveIds: ["kit/heat-resist", "kit/fire-aura"],
+      },
+      baseStats: {
+        strength: 18,
+        speed: 12,
+        endurance: 15,
+        resilience: 10,
+        perception: 8,
+        intelligence: 9,
+      },
+    };
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            ...base.world.operators![0],
+            combat,
+          },
+        ],
+      },
+    });
+
+    expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
+    const op = normalized.world.operators?.[0];
+    expect(op?.combat).toEqual(combat);
   });
 });

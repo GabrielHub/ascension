@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { FocusPayload } from "render";
 
@@ -6,14 +6,25 @@ import { BodegaFloor } from "./bodega-floor";
 import { RoomDetailPanel } from "./room-detail-panel";
 import type { GameCallbacks, HqViewModel, RoomCultureViewModel } from "./view-models";
 
+/** Build a lookup from roomId → culture for efficient access in the floor strip. */
+function buildCultureMap(
+  cultures: readonly RoomCultureViewModel[],
+): ReadonlyMap<string, RoomCultureViewModel> {
+  const map = new Map<string, RoomCultureViewModel>();
+  for (const c of cultures) map.set(c.roomId, c);
+  return map;
+}
+
 interface HqPanelProps {
   hq: HqViewModel;
   callbacks: GameCallbacks;
   focus: FocusPayload | null;
+  onClearFocus?: () => void;
   roomCultures?: readonly RoomCultureViewModel[];
 }
 
-export function HqPanel({ hq, callbacks, focus, roomCultures = [] }: HqPanelProps) {
+export function HqPanel({ hq, callbacks, focus, onClearFocus, roomCultures = [] }: HqPanelProps) {
+  const cultureMap = useMemo(() => buildCultureMap(roomCultures), [roomCultures]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,9 +44,7 @@ export function HqPanel({ hq, callbacks, focus, roomCultures = [] }: HqPanelProp
     ? hq.roomUpgrades.filter((u) => u.targetId === selectedRoom.templateId)
     : [];
 
-  const selectedRoomCulture = selectedRoom
-    ? (roomCultures.find((rc) => rc.roomId === selectedRoom.id) ?? null)
-    : null;
+  const selectedRoomCulture = selectedRoom ? (cultureMap.get(selectedRoom.id) ?? null) : null;
 
   return (
     <div className="animate-enter space-y-4">
@@ -47,52 +56,52 @@ export function HqPanel({ hq, callbacks, focus, roomCultures = [] }: HqPanelProp
             {hq.rooms.filter((r) => r.isActive).length}/{hq.rooms.length} active
           </span>
         </div>
-        <div className="overflow-x-auto overflow-y-hidden">
-          <BodegaFloor
-            rooms={hq.rooms}
-            emptySlots={hq.emptySlots}
-            placeableTemplates={hq.placeableRoomTemplates}
-            selectedRoomId={effectiveRoomId}
-            onSelectRoom={setSelectedRoomId}
-            onPlaceRoom={callbacks.placeRoom}
-          />
-        </div>
-        {roomCultures.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {roomCultures.map((culture) => (
-              <button
-                key={culture.roomId}
-                type="button"
-                className={`rounded-full border px-2.5 py-1 text-left transition-colors ${
-                  effectiveRoomId === culture.roomId
-                    ? "border-gold/30 bg-[rgba(200,168,76,0.08)]"
-                    : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.32)] hover:border-gold/20"
-                }`}
-                onClick={() => setSelectedRoomId(culture.roomId)}
-              >
-                <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/55">
-                  {culture.roomName}
-                </div>
-                <div className="text-[0.6875rem] text-silver/60">
-                  {culture.tone || "neutral"}
-                  {culture.signals[0] ? ` • ${culture.signals[0]}` : ""}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+        <BodegaFloor
+          rooms={hq.rooms}
+          emptySlots={hq.emptySlots}
+          placeableTemplates={hq.placeableRoomTemplates}
+          selectedRoomId={effectiveRoomId}
+          onSelectRoom={setSelectedRoomId}
+          onPlaceRoom={callbacks.placeRoom}
+          cultureMap={cultureMap}
+        />
       </div>
 
       {/* Room detail — full width below room strip */}
       {selectedRoom && (
         <div className="border-t border-[rgba(200,168,76,0.06)] pt-4">
-          <RoomDetailPanel
-            room={selectedRoom}
-            buildingUpgrades={hq.upgrades}
-            roomUpgrades={selectedRoomUpgrades}
-            callbacks={callbacks}
-            roomCulture={selectedRoomCulture}
-          />
+          <div className="flex items-start justify-between">
+            <div className="min-w-0 flex-1">
+              <RoomDetailPanel
+                room={selectedRoom}
+                buildingUpgrades={hq.upgrades}
+                roomUpgrades={selectedRoomUpgrades}
+                callbacks={callbacks}
+                roomCulture={selectedRoomCulture}
+              />
+            </div>
+            <button
+              type="button"
+              className="ml-3 shrink-0 text-silver/40 transition-colors hover:text-silver-bright"
+              onClick={() => {
+                setSelectedRoomId(null);
+                onClearFocus?.();
+              }}
+              aria-label="Close room detail"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              >
+                <path d="M4 4l8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -53,6 +53,8 @@ export interface RaidSummaryRecord {
   operatorOutcomes: ActiveRaidResolutionPacket["operatorOutcomes"];
   narrativeTags: string[];
   intelMismatchTags: string[];
+  bossDefeated?: boolean;
+  contributingFactors?: string[];
 }
 
 // ── Contract site state ───────────────────────────────────────────────────

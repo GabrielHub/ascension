@@ -1,5 +1,6 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
 
+import { getBuildingLayout } from "content/building-layouts";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
 import { stableStringHash } from "lib/stable-hash";
@@ -405,16 +406,18 @@ function applyCosts(context: SimSystemContext, costs: Map<string, number>): void
   });
 }
 
-function getDefaultRoomFootprint(slotIndex: number) {
+function getDefaultRoomFootprint(slotIndex: number, buildingId?: string) {
+  if (buildingId) {
+    const layout = getBuildingLayout(buildingId);
+    if (layout && slotIndex < layout.slots.length) {
+      const slot = layout.slots[slotIndex];
+      return { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows };
+    }
+  }
+  // Legacy fallback
   const column = slotIndex % 2;
   const row = Math.floor(slotIndex / 2);
-
-  return {
-    col: column * 4,
-    row: row * 3,
-    cols: 4,
-    rows: 3,
-  };
+  return { col: column * 4, row: row * 3, cols: 4, rows: 3 };
 }
 
 function createRoomInstanceEntity(
@@ -434,7 +437,10 @@ function createRoomInstanceEntity(
 
   const entity = addEntity(context.world);
   const slotIndex = context.runtimeState.roomEntities.length;
-  const fallbackFootprint = getDefaultRoomFootprint(slotIndex);
+  const buildingEntity = context.singletonEntities.building;
+  const buildingTemplate =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+  const fallbackFootprint = getDefaultRoomFootprint(slotIndex, buildingTemplate?.id);
 
   addComponent(context.world, entity, RoomInstance);
   addComponent(context.world, entity, Renderable);
@@ -949,6 +955,11 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
           return;
       }
 
+      return;
+    }
+    case "sim/dev-set-time": {
+      const timeEntity = context.singletonEntities.time;
+      WorldTimeState.minuteOfDay[timeEntity] = Math.max(0, Math.min(1439, command.minuteOfDay));
       return;
     }
   }

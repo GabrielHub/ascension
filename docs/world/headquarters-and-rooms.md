@@ -21,6 +21,17 @@ The bodega is not a metaphor. It is a real bodega that Boss is running as a dual
 - The walls have a mix of health-department notices, guild permits, and a motivational poster someone put up ironically that nobody has taken down.
 - It is cramped, loud, and smells like whatever the dining area microwave just did. It is also home.
 
+### Bodega Exterior By Time Of Day
+
+The bodega should not feel visually frozen. The street outside changes mood over the course of a day even when the room layout does not.
+
+- **Sunrise.** Pale sky, cold morning light, shutters rolling up, delivery-hour quiet, steam and damp pavement.
+- **Day.** Full street readability, active storefront energy, clearer neighboring-building presence, practical city clutter visible instead of silhouetted.
+- **Sunset.** Warm spill on brick and awning fabric, long shadows, neon and interior lights starting to matter, the block feeling busier and more tired at the same time.
+- **Night.** Darker sky, stronger emissives, pooled streetlight, lit windows, neon, and late-shift neighborhood grime becoming more pronounced.
+
+This is an exterior presentation layer, not a room rewrite. The bodega's interior room identity remains the same; the mood shift happens in the sky, surrounding buildings, storefront lighting, and street dressing around the HQ shell.
+
 ### Bodega Rooms
 
 The bodega is small. It has four usable spaces, and calling them "rooms" is generous. There is no gym, no lounge, no dedicated infirmary, no training facility. Operators get better by surviving actual work, not by working out in a storage room. Dedicated training, recovery, and social spaces belong to the larger headquarters that come after the bodega.
@@ -112,6 +123,8 @@ General direction:
 - Each building should have a distinct physical identity tied to a real type of New York space: bodega, union hall, office floor, converted warehouse, proper tower floor.
 - The building's identity shapes what rooms feel like inside it. A union-hall gym and a tower-floor gym serve the same function but have completely different atmospheres.
 - Relocation between buildings is always a narrative event, never a silent upgrade.
+- Every building should also have a distinct exterior backdrop family tied to its location and identity. That exterior family must support the four canonical HQ time-of-day states: sunrise, day, sunset, and night.
+- A new building should not inherit the bodega's skyline or street dressing. Its surrounding backdrop, neighboring architecture, signage language, and exterior decorative details should read as native to that building's place in the city.
 
 ### Room Catalog By Building Tier
 

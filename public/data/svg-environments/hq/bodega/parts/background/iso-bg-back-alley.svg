@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 310">
+  <!-- Back-alley service area behind a bodega / restaurant.
+       Isometric view — cracked asphalt pad spanning the full building width,
+       with commercial dumpster, recycling barrel, trash bags, pallets, and grime.
+       Ground diamond matches bodega shell width for aligned placement. -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       GROUND PAD — cracked asphalt, full-width isometric diamond
+       ═══════════════════════════════════════════════════════ -->
+
+  <polygon points="300,15 580,155 300,295 20,155"
+    fill="#1c1a18" stroke="#242220" stroke-width="1" opacity="0.8"/>
+
+  <!-- Inner darker patch (tire wear zone, center) -->
+  <polygon points="300,50 480,140 300,230 120,140"
+    fill="#181614" opacity="0.3"/>
+
+  <!-- Cracks in asphalt -->
+  <g stroke="#141210" stroke-width="0.8" fill="none" opacity="0.22">
+    <path d="M160,120 L180,128 L175,140 L190,148"/>
+    <path d="M400,110 L415,118 L410,130 L425,136"/>
+    <path d="M280,170 L295,178 L288,185"/>
+    <path d="M460,135 L470,140 L465,150"/>
+    <path d="M130,145 L140,150 L135,158"/>
+  </g>
+
+  <!-- Grease / oil stains -->
+  <ellipse cx="220" cy="135" rx="24" ry="9" fill="#141210" opacity="0.22"/>
+  <ellipse cx="380" cy="150" rx="18" ry="6" fill="#12100e" opacity="0.18"/>
+  <ellipse cx="140" cy="150" rx="12" ry="5" fill="#141210" opacity="0.15"/>
+  <ellipse cx="480" cy="140" rx="14" ry="5" fill="#12100e" opacity="0.15"/>
+
+  <!-- Drain grate (center-left ground) -->
+  <g opacity="0.5">
+    <polygon points="160,155 182,166 174,170 152,159"
+      fill="#0e0e0e" stroke="#1a1818" stroke-width="0.6"/>
+    <line x1="158" y1="157" x2="179" y2="168" stroke="#1a1818" stroke-width="0.4"/>
+    <line x1="162" y1="159" x2="176" y2="166" stroke="#1a1818" stroke-width="0.4"/>
+    <line x1="166" y1="155" x2="166" y2="168" stroke="#1a1818" stroke-width="0.4"/>
+    <line x1="172" y1="157" x2="172" y2="170" stroke="#1a1818" stroke-width="0.4"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       DUMPSTER — large commercial unit, left-center
+       Isometric box: left face, right face, top face
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="200" cy="170" rx="52" ry="14" fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Left face (front-facing in iso) -->
+  <polygon points="145,105 230,148 230,172 145,129"
+    fill="#1a3028" stroke="#142820" stroke-width="1"/>
+  <!-- Right face (receding in iso) -->
+  <polygon points="230,148 268,129 268,153 230,172"
+    fill="#122418" stroke="#0e1e14" stroke-width="0.8"/>
+  <!-- Top face -->
+  <polygon points="145,105 230,148 268,129 183,86"
+    fill="#1e3830" stroke="#142820" stroke-width="0.8"/>
+
+  <!-- Lid (ajar, tilted back) -->
+  <polygon points="183,86 268,129 265,121 182,79"
+    fill="#224030" stroke="#163020" stroke-width="0.7"/>
+  <!-- Lid hinge line -->
+  <line x1="183" y1="86" x2="268" y2="129"
+    stroke="#0e1e14" stroke-width="0.6" opacity="0.5"/>
+
+  <!-- Left face ridges -->
+  <g stroke="#142820" stroke-width="0.5" opacity="0.4">
+    <line x1="148" y1="111" x2="227" y2="151"/>
+    <line x1="149" y1="118" x2="228" y2="158"/>
+    <line x1="150" y1="125" x2="229" y2="165"/>
+  </g>
+
+  <!-- Right face ridges -->
+  <g stroke="#0e1e14" stroke-width="0.4" opacity="0.35">
+    <line x1="233" y1="151" x2="265" y2="134"/>
+    <line x1="233" y1="158" x2="265" y2="141"/>
+    <line x1="233" y1="165" x2="265" y2="148"/>
+  </g>
+
+  <!-- Rust / wear spots -->
+  <ellipse cx="186" cy="120" rx="11" ry="4" fill="#5a3020" opacity="0.1"/>
+  <ellipse cx="215" cy="160" rx="8" ry="3" fill="#4a2818" opacity="0.08"/>
+
+  <!-- Wheels -->
+  <ellipse cx="153" cy="130" rx="3.5" ry="2" fill="#1e1e1e" stroke="#333" stroke-width="0.4"/>
+  <ellipse cx="225" cy="172" rx="3.5" ry="2" fill="#1e1e1e" stroke="#333" stroke-width="0.4"/>
+
+  <!-- Overflow trash poking out -->
+  <g opacity="0.4">
+    <path d="M196,82 Q190,74 198,71" fill="#0e0e10" stroke="#1a1a1e" stroke-width="0.5"/>
+    <ellipse cx="242" cy="122" rx="7" ry="4" fill="#0e0e10" stroke="#1a1a1e" stroke-width="0.4"/>
+    <path d="M218,84 Q214,77 220,74" fill="none" stroke="#1a1a1e" stroke-width="0.6"/>
+  </g>
+
+  <!-- Liquid trail -->
+  <path d="M230,170 Q236,180 230,190 Q224,198 232,206"
+    stroke="#0e0c08" stroke-width="2" fill="none" opacity="0.1" stroke-linecap="round"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RECYCLING BARREL — right-center
+       Isometric cylinder approximation
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="410" cy="152" rx="22" ry="8" fill="rgba(0,0,0,0.12)"/>
+
+  <!-- Barrel body (left face) -->
+  <polygon points="390,110 420,125 420,148 390,133"
+    fill="#1a2438" stroke="#142030" stroke-width="0.8"/>
+  <!-- Barrel body (right face) -->
+  <polygon points="420,125 438,116 438,139 420,148"
+    fill="#121c2e" stroke="#0e1828" stroke-width="0.7"/>
+  <!-- Top face -->
+  <polygon points="390,110 420,125 438,116 408,101"
+    fill="#1e2c42" stroke="#142030" stroke-width="0.7"/>
+
+  <!-- Lid slightly askew -->
+  <polygon points="392,108 422,123 436,114 406,99"
+    fill="#243448" stroke="#1a2838" stroke-width="0.6"/>
+
+  <!-- Recycling arrows (simplified, on left face) -->
+  <g stroke="#2a3c52" stroke-width="1" fill="none" opacity="0.3">
+    <path d="M400,118 L408,122 L404,120"/>
+    <path d="M410,125 L404,128 L406,126"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TRASH BAGS — left cluster + scattered
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Large bag cluster (left of dumpster) -->
+  <path d="M90,140 Q82,126 86,114 Q90,104 102,101 Q114,99 122,106
+           Q128,101 134,108 Q140,114 136,126 Q140,136 132,140 Z"
+    fill="#0e0e10" stroke="#1a1a1e" stroke-width="0.6"/>
+  <path d="M100,108 Q108,104 116,108" stroke="#1e1e22" stroke-width="0.7" fill="none" opacity="0.35"/>
+
+  <!-- Medium bag (front of cluster) -->
+  <path d="M102,152 Q96,140 100,130 Q104,122 114,120 Q122,118 128,124
+           Q132,120 136,126 Q138,132 134,140 Q138,148 130,152 Z"
+    fill="#121214" stroke="#1e1e22" stroke-width="0.5"/>
+  <path d="M112,124 Q118,120 124,124" stroke="#1e1e22" stroke-width="0.5" fill="none" opacity="0.3"/>
+
+  <!-- Small bag on top -->
+  <ellipse cx="110" cy="106" rx="13" ry="7" fill="#0a0a0c" stroke="#161618" stroke-width="0.5"/>
+  <path d="M106,100 Q103,94 109,91" stroke="#1e1e22" stroke-width="0.7" fill="none" opacity="0.45"/>
+
+  <!-- Stray bag (between dumpster and barrel) -->
+  <path d="M325,135 Q318,126 322,118 Q326,111 334,109 Q342,107 348,113
+           Q354,109 358,116 Q360,122 356,130 Q360,136 352,139 Z"
+    fill="#0e0e10" stroke="#1a1a1e" stroke-width="0.5"/>
+  <path d="M336,112 Q333,106 339,103" stroke="#1e1e22" stroke-width="0.6" fill="none" opacity="0.4"/>
+
+  <!-- Small bag (far right, near pallets) -->
+  <path d="M470,132 Q466,124 470,118 Q474,112 480,111 Q486,110 490,114
+           Q494,112 496,118 Q498,122 494,128 Q498,133 492,135 Z"
+    fill="#121214" stroke="#1e1e22" stroke-width="0.4"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       WOODEN PALLETS — stacked, right side
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Pallet 1 (flat on ground) -->
+  <polygon points="460,88 515,116 492,127 437,99"
+    fill="#3a2e20" stroke="#2a2218" stroke-width="0.8"/>
+  <polygon points="437,99 492,127 492,131 437,103"
+    fill="#2e2418" stroke="#241c14" stroke-width="0.5"/>
+  <polygon points="492,127 515,116 515,120 492,131"
+    fill="#241c14" stroke="#1e1810" stroke-width="0.5"/>
+  <!-- Slat lines -->
+  <line x1="448" y1="93" x2="505" y2="121" stroke="#2a2218" stroke-width="0.4" opacity="0.4"/>
+  <line x1="446" y1="97" x2="500" y2="124" stroke="#2a2218" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Pallet 2 (stacked, slight offset) -->
+  <polygon points="458,83 513,111 490,122 435,94"
+    fill="#342818" stroke="#2a2016" stroke-width="0.8"/>
+  <polygon points="435,94 490,122 490,126 435,98"
+    fill="#2a2016" stroke="#221a12" stroke-width="0.5"/>
+  <polygon points="490,122 513,111 513,115 490,126"
+    fill="#221a12" stroke="#1c1610" stroke-width="0.5"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CARDBOARD — flattened pile + leaning box
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Flattened cardboard pile (between dumpster and barrel) -->
+  <g opacity="0.55">
+    <polygon points="295,162 340,185 328,190 283,167"
+      fill="#3a2e1c" stroke="#2e2416" stroke-width="0.5"/>
+    <polygon points="290,160 335,183 323,188 278,165"
+      fill="#342818" stroke="#2a2014" stroke-width="0.5"/>
+    <polygon points="293,158 338,181 326,186 281,163"
+      fill="#3e3220" stroke="#302618" stroke-width="0.5"/>
+  </g>
+
+  <!-- Standing box (leaning against dumpster right side) -->
+  <polygon points="275,130 298,142 298,158 275,146"
+    fill="#3a2e1c" stroke="#2e2416" stroke-width="0.6"/>
+  <polygon points="298,142 312,135 312,151 298,158"
+    fill="#302618" stroke="#281e14" stroke-width="0.5"/>
+  <polygon points="275,130 298,142 312,135 289,123"
+    fill="#42361e" stroke="#302618" stroke-width="0.5"/>
+
+  <!-- Crushed box (on ground, right) -->
+  <g opacity="0.45">
+    <polygon points="440,148 470,163 462,167 432,152"
+      fill="#342818" stroke="#2a2014" stroke-width="0.4"/>
+    <polygon points="432,152 462,167 462,170 432,155"
+      fill="#2e2418" stroke="#241c14" stroke-width="0.3"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MILK CRATE (overturned) + BROKEN CHAIR
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Milk crate (right of barrel) -->
+  <g opacity="0.5">
+    <polygon points="450,118 478,132 472,135 444,121"
+      fill="#2a2a2e" stroke="#222226" stroke-width="0.5"/>
+    <polygon points="444,121 472,135 472,141 444,127"
+      fill="#222226" stroke="#1c1c20" stroke-width="0.4"/>
+    <polygon points="472,135 478,132 478,138 472,141"
+      fill="#1c1c20" stroke="#18181c" stroke-width="0.4"/>
+    <g stroke="#2e2e32" stroke-width="0.3" opacity="0.4">
+      <line x1="448" y1="123" x2="470" y2="137"/>
+      <line x1="452" y1="125" x2="468" y2="133"/>
+    </g>
+  </g>
+
+  <!-- Broken folding chair (far left, tipped over) -->
+  <g opacity="0.4" stroke="#3a3838" stroke-width="1" fill="none">
+    <!-- Legs (splayed) -->
+    <line x1="65" y1="152" x2="55" y2="140"/>
+    <line x1="65" y1="152" x2="78" y2="142"/>
+    <line x1="80" y1="160" x2="70" y2="148"/>
+    <line x1="80" y1="160" x2="90" y2="150"/>
+    <!-- Seat surface -->
+    <polygon points="58,142 82,154 90,150 66,138"
+      fill="#2a2828" stroke="#3a3838" stroke-width="0.6"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MISC SCATTER — cans, debris, puddle
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Crushed cans -->
+  <ellipse cx="350" cy="170" rx="5" ry="2.5" fill="#2e2e30" stroke="#3a3a3e"
+    stroke-width="0.3" opacity="0.4"/>
+  <ellipse cx="180" cy="180" rx="4" ry="2" fill="#3a2020" stroke="#4a3030"
+    stroke-width="0.3" opacity="0.35"/>
+
+  <!-- Small debris dots -->
+  <g fill="#1a1816" opacity="0.3">
+    <circle cx="190" cy="175" r="1.5"/>
+    <circle cx="310" cy="165" r="1"/>
+    <circle cx="420" cy="160" r="1.2"/>
+    <circle cx="260" cy="190" r="0.8"/>
+    <circle cx="500" cy="145" r="1"/>
+    <circle cx="130" cy="160" r="1.2"/>
+    <circle cx="370" cy="175" r="0.8"/>
+  </g>
+
+  <!-- Puddle (center-right) -->
+  <ellipse cx="340" cy="190" rx="20" ry="7" fill="#141216" opacity="0.18"/>
+
+  <!-- Wet stain near drain -->
+  <ellipse cx="170" cy="165" rx="15" ry="5" fill="#141216" opacity="0.12"/>
+</svg>

@@ -136,6 +136,8 @@ The production contract is backed by two runtime-facing environment indexes that
 - `content/data/hq-environment-index.json` — modular tile-based HQ composition. Tracks shell, structure, prop, scene, background, and actor-marker parts against the canonical 96x48 isometric grid. The file also owns the shipped asset roots (`parts`, `reference`, `recipes`) plus the canonical room-scene placement numbers (tile size, wall height, scene origin, viewBox, room footprint). Each entry carries `category`, `tags`, `scale`, `roomFamily`, and `status` (approved or exploration).
 - `content/data/raid-environment-index.json` — dungeon minimap composition. Tracks tile, feature, fog-treatment, marker, and enemy parts for the top-down raid map language. Each entry carries `category`, `tags`, `scale`, `concept`, and `status`.
 
+For the current bodega slice, the HQ index also owns the live backdrop metadata contract: profile id, optional elevation-band id, four canonical time-of-day phase profiles, and shell-relative zone lists. Zone population is still partial in the shipped bodega, so renderer-authored fallback scenery remains acceptable until approved backdrop packages fully replace it.
+
 New environment parts must be registered in the relevant index before promotion. Parts with `status: "exploration"` are not yet approved for canonical use and must pass through the full review pipeline before promotion to `status: "approved"`.
 
 For the current shipped HQ slice, `content/data/hq-environment-index.json` is the runtime source of truth for the bodega room/building asset pipeline. Docs define workflow and constraints; they should not restate runtime paths or placement numbers in a second location. Runtime code should consume the index rather than duplicating those values in renderer constants.
@@ -172,11 +174,12 @@ The bodega and the future high-rise must differ in theme and surrounding read, b
 
 The surroundings are not filler. They establish scale, neighborhood identity, and the player's sense of being embedded in a city block.
 
-1. Define the site context in writing first: street corner, adjacent buildings, skyline visibility, trees, signage, traffic clutter, and how enclosed or exposed the headquarters feels.
+1. Define the site context in writing first: adjacent massing, skyline visibility, enclosure, signage language, traffic or airspace clutter, and how exposed or hemmed-in the headquarters feels at the intended elevation.
 2. Produce a background recipe preview that shows the intended framing around the building shell.
-3. Lock the scale cues: tall neighboring buildings, tree canopy, fence lines, sidewalk clutter, sky exposure, and background occlusion.
-4. Break the scene into reusable backdrop layers.
-5. Build and review those layers in the actual HQ framing.
+3. Lock the shell-relative composition zones: what lives in front of the shell, to either side, behind it, above it, and below it.
+4. If the building can support multiple floors, lock reusable elevation bands before production starts. Do not jump straight to bespoke art for exact floor numbers unless the outside read genuinely changes.
+5. Break the scene into reusable backdrop layers.
+6. Build and review those layers in the actual HQ framing.
 
 Do not generate surroundings as generic city filler after the HQ is already built. The surroundings are part of the site recipe.
 

@@ -4,7 +4,9 @@ import type {
   RoomViewModel,
   UpgradeViewModel,
 } from "./view-models";
-import { formatTag } from "./view-models";
+import { formatCultureLabel, formatTag } from "./view-models";
+import { Tooltip } from "./_tooltip";
+import { getTagTip, getToneTip, getSignalTip } from "./_glossary";
 
 interface RoomDetailPanelProps {
   room: RoomViewModel | null;
@@ -36,12 +38,11 @@ function UpgradeCard({
           </span>
           <div className="mt-0.5 flex flex-wrap gap-1">
             {upgrade.requirements.map((req) => (
-              <span
-                key={req.type + req.label}
-                className="rounded bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/60"
-              >
-                {req.label}
-              </span>
+              <Tooltip key={req.type + req.label} content={`Requirement: ${req.type}`} side="top">
+                <span className="rounded bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/60">
+                  {req.label}
+                </span>
+              </Tooltip>
             ))}
           </div>
         </div>
@@ -54,12 +55,11 @@ function UpgradeCard({
           </span>
           <div className="mt-0.5 flex flex-wrap gap-1">
             {upgrade.effects.map((eff) => (
-              <span
-                key={eff.type + eff.label}
-                className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-xs text-gold"
-              >
-                {eff.label}
-              </span>
+              <Tooltip key={eff.type + eff.label} content={`Effect type: ${eff.type}`} side="top">
+                <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-xs text-gold">
+                  {eff.label}
+                </span>
+              </Tooltip>
             ))}
           </div>
         </div>
@@ -101,11 +101,17 @@ export function RoomDetailPanel({
               {room.name}
             </h3>
             {room.isOperational ? (
-              <span className="badge badge-gold">Operational</span>
+              <Tooltip content="Fully staffed and running at capacity">
+                <span className="badge badge-gold">Operational</span>
+              </Tooltip>
             ) : room.isActive ? (
-              <span className="badge badge-slate">Understaffed</span>
+              <Tooltip content="Active but needs more staff for full output">
+                <span className="badge badge-slate">Understaffed</span>
+              </Tooltip>
             ) : (
-              <span className="badge badge-slate">Inactive</span>
+              <Tooltip content="Shut down — activate to begin staffing">
+                <span className="badge badge-slate">Inactive</span>
+              </Tooltip>
             )}
           </div>
           <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
@@ -124,22 +130,28 @@ export function RoomDetailPanel({
         {/* Stats */}
         <div className={`space-y-3 ${hasUpgrades ? "w-56 shrink-0" : "w-full max-w-xs"}`}>
           <div className="grid grid-cols-3 gap-2">
-            <div className="glass-card-inset p-2 text-center">
-              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Tier</div>
-              <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
-            </div>
-            <div className="glass-card-inset p-2 text-center">
-              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Staff</div>
-              <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
-                {room.occupancy}/{room.capacity}
+            <Tooltip content="Room tier — higher tiers unlock better upgrades">
+              <div className="glass-card-inset p-2 text-center">
+                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Tier</div>
+                <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
               </div>
-            </div>
-            <div className="glass-card-inset p-2 text-center">
-              <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Load</div>
-              <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                {Math.round(occupancyPct)}%
+            </Tooltip>
+            <Tooltip content="Staff currently assigned / maximum capacity">
+              <div className="glass-card-inset p-2 text-center">
+                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Staff</div>
+                <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
+                  {room.occupancy}/{room.capacity}
+                </div>
               </div>
-            </div>
+            </Tooltip>
+            <Tooltip content="Staffing level — 100% means fully operational">
+              <div className="glass-card-inset p-2 text-center">
+                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Load</div>
+                <div className="mt-0.5 text-sm font-medium text-silver-bright">
+                  {Math.round(occupancyPct)}%
+                </div>
+              </div>
+            </Tooltip>
           </div>
 
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
@@ -148,35 +160,51 @@ export function RoomDetailPanel({
 
           {room.requiredStaffTag && (
             <div className="text-xs text-gold/70">
-              Requires <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span>{" "}
+              Requires{" "}
+              <Tooltip
+                content={
+                  getTagTip(room.requiredStaffTag) || "Staff role needed to operate this room"
+                }
+                side="top"
+              >
+                <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span>
+              </Tooltip>{" "}
               staff
             </div>
           )}
 
           <div className="flex flex-wrap gap-1">
             {room.tags.map((tag) => (
-              <span key={tag} className="badge badge-slate">
-                {tag.split(":").pop()}
-              </span>
+              <Tooltip key={tag} content={getTagTip(tag)}>
+                <span className="badge badge-slate">{tag.split(":").pop()}</span>
+              </Tooltip>
             ))}
           </div>
 
           {roomCulture && (
             <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
-              <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
-                Room Culture
-              </h4>
+              <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
+                <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+                  Room Culture
+                </h4>
+              </Tooltip>
               <div className="glass-card-inset space-y-2 p-3">
                 <div>
                   <div className="text-[0.625rem] uppercase tracking-wider text-gold/60">Tone</div>
-                  <div className="mt-0.5 text-xs text-silver-bright">{roomCulture.summary}</div>
+                  <div className="mt-0.5 text-xs text-silver-bright">
+                    {formatCultureLabel(roomCulture.summary)}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="badge badge-slate">{roomCulture.tone || "neutral"}</span>
-                  {roomCulture.signals.map((signal) => (
-                    <span key={signal} className="badge badge-slate">
-                      {signal}
+                  <Tooltip content={getToneTip(roomCulture.tone)}>
+                    <span className="badge badge-slate">
+                      {formatCultureLabel(roomCulture.tone || "neutral")}
                     </span>
+                  </Tooltip>
+                  {roomCulture.signals.map((signal) => (
+                    <Tooltip key={signal} content={getSignalTip(signal)}>
+                      <span className="badge badge-slate">{formatCultureLabel(signal)}</span>
+                    </Tooltip>
                   ))}
                 </div>
               </div>
@@ -190,9 +218,11 @@ export function RoomDetailPanel({
             <div className="grid auto-cols-fr grid-flow-col gap-4">
               {buildingUpgrades.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                    Building Upgrades
-                  </h4>
+                  <Tooltip content="Upgrades that improve the whole building" side="top">
+                    <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                      Building Upgrades
+                    </h4>
+                  </Tooltip>
                   <div className="space-y-2">
                     {buildingUpgrades.map((u) => (
                       <UpgradeCard
@@ -206,9 +236,11 @@ export function RoomDetailPanel({
               )}
               {roomUpgrades.length > 0 && (
                 <div>
-                  <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                    Room Upgrades
-                  </h4>
+                  <Tooltip content="Upgrades specific to this room" side="top">
+                    <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                      Room Upgrades
+                    </h4>
+                  </Tooltip>
                   <div className="space-y-2">
                     {roomUpgrades.map((u) => (
                       <UpgradeCard

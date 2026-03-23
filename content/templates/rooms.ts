@@ -94,7 +94,7 @@ export const roomTemplates = [
     description: "A comfortable social space that helps operators feel like people again.",
     tier: 1,
     baseCapacity: 4,
-    availableInBuildings: ["building/union_hall"],
+    availableInBuildings: ["building/bodega", "building/union_hall"],
   },
   {
     id: "room/gym:tier_1",
@@ -104,7 +104,7 @@ export const roomTemplates = [
     description: "A scrappy but real training room with enough equipment to matter.",
     tier: 1,
     baseCapacity: 2,
-    availableInBuildings: ["building/union_hall"],
+    availableInBuildings: ["building/bodega", "building/union_hall"],
   },
   {
     id: "room/sparring_room:tier_1",

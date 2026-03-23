@@ -1,15 +1,25 @@
+import { Tooltip } from "./_tooltip";
+
 interface StatBarProps {
   label: string;
   value: number;
   max: number;
+  /** Optional tooltip explaining what this stat does. */
+  tip?: string;
 }
 
-export function StatBar({ label, value, max }: StatBarProps) {
+export function StatBar({ label, value, max, tip }: StatBarProps) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
     <div>
       <div className="flex items-center justify-between">
-        <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
+        {tip ? (
+          <Tooltip content={tip} side="top">
+            <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
+          </Tooltip>
+        ) : (
+          <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
+        )}
         <span className="text-[0.6875rem] tabular-nums text-silver/50">{value}</span>
       </div>
       <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">

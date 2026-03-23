@@ -27,6 +27,28 @@ describe("phase 1 view models", () => {
         isApplied: true,
       }),
     );
+    expect(
+      hq.rooms.find((room) => room.id === "room-instance/register")?.appliedUpgradeIds,
+    ).toEqual(["upgrade/room/register:records_wall"]);
+  });
+
+  it("turns bodega room-slot upgrades into placeable room options instead of dead empty slots", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const before = buildHqViewFromPhase1(simulation.getPhase1View(), templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+
+    const hq = buildHqViewFromPhase1(simulation.getPhase1View(), templateRegistry);
+
+    expect(hq.emptySlots.length).toBe(before.emptySlots.length + 1);
+    expect(hq.placeableRoomTemplates).toContainEqual(
+      expect.objectContaining({
+        id: "room/lounge:tier_1",
+      }),
+    );
   });
 
   it("maps forming opportunities to the claimed operations state", () => {

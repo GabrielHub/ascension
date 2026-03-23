@@ -1,6 +1,15 @@
+import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
+
 import type { RuntimeSession } from "app/features/runtime";
 
 const HOUR_MS = 60 * 60 * 1000;
+
+const PHASE_TARGETS: Record<HqTimeOfDayPhase, { label: string; minuteOfDay: number }> = {
+  sunrise: { label: "Sunrise", minuteOfDay: 390 },
+  day: { label: "Day", minuteOfDay: 720 },
+  sunset: { label: "Sunset", minuteOfDay: 1140 },
+  night: { label: "Night", minuteOfDay: 60 },
+};
 
 interface DevMenuOverlayProps {
   session: RuntimeSession;
@@ -73,6 +82,20 @@ export function DevMenuOverlay({ session, onClose }: DevMenuOverlayProps) {
     void session.commands.tick(hours * HOUR_MS);
   }
 
+  function setTimePhase(minuteOfDay: number) {
+    void session.commands.dispatch({ type: "sim/dev-set-time", minuteOfDay });
+  }
+
+  function toggleFreeze() {
+    if (session.isAutoTicking) {
+      session.lifecycle.stopAutoTick();
+    } else {
+      session.lifecycle.startAutoTick();
+    }
+  }
+
+  const currentPhase = resolveTimeOfDayPhase(clock.minuteOfDay);
+
   return (
     <>
       {/* Backdrop */}
@@ -135,12 +158,48 @@ export function DevMenuOverlay({ session, onClose }: DevMenuOverlayProps) {
               <span className="text-xs text-silver/50">
                 Day {clock.day} &middot;{" "}
                 {String(Math.floor(clock.minuteOfDay / 60)).padStart(2, "0")}:
-                {String(clock.minuteOfDay % 60).padStart(2, "0")}
+                {String(clock.minuteOfDay % 60).padStart(2, "0")} ({currentPhase})
               </span>
               <div className="flex gap-1">
                 <CheatButton label="+1h" onClick={() => skipTime(1)} />
                 <CheatButton label="+6h" onClick={() => skipTime(6)} />
                 <CheatButton label="+1 day" onClick={() => skipTime(24)} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className={`px-2.5 py-1 text-xs rounded ${
+                  session.isAutoTicking
+                    ? "btn-ghost"
+                    : "bg-volcanic/40 text-gold border border-volcanic/60"
+                }`}
+                onClick={toggleFreeze}
+              >
+                {session.isAutoTicking ? "Freeze" : "Frozen — Resume"}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[0.625rem] uppercase tracking-[0.15em] text-silver/40">
+                Jump to
+              </span>
+              <div className="flex gap-1">
+                {Object.entries(PHASE_TARGETS).map(([key, { label, minuteOfDay }]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`px-2 py-1 text-xs rounded ${
+                      currentPhase === key
+                        ? "bg-gold/20 text-gold border border-gold/30"
+                        : "btn-ghost"
+                    }`}
+                    onClick={() => setTimePhase(minuteOfDay)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

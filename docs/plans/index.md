@@ -1,31 +1,22 @@
 # Phase Plans Index
 
-These plans are execution documents for future work. They are written for parallel agent execution with one manager agent owning orchestration, prompts, file locks, and merge order.
+This folder currently has no active checked-in phase-plan documents.
 
-## Active Plan Set
+The earlier pre-Phase-3 remediation plans were removed once that execution pass stopped being the live coordination surface.
 
-- [Playtest Regression Test Plan](./playtest-regression-test-plan.md)
-- [Playtest Regression Findings](./playtest-regression-findings.md)
-- This plan set stages the post-remediation validation pass and gives the testing agent one checked-in document for fixed issues, blockers, and critical playtest critique.
+## What Belongs Here
 
-## Locked Contracts
+- Add a plan doc here only when a future workstream needs explicit staged execution, ownership boundaries, or merge-order guidance.
+- Keep plan docs transient and execution-focused. They are not canonical product or world references.
+- Remove plan docs once the plan is complete or no longer the current coordination source.
 
-- No separate locked-contract plan file is checked in right now.
-- If Phase 2 work reveals a contract change that affects canon or shared data shape, update the relevant core document first or in the same pass.
+## Canon Sources
 
-## Foundational Canon
+- Use [Roadmap](../roadmap.md) for rollout order and lighter-now versus deeper-later staging.
+- Use [Product Plan](../product-plan.md) and the split docs under [Product](../product/index.md) for future-facing gameplay and presentation direction.
+- Use [World Foundation Reference](../world-foundation.md) and the split docs under [World](../world/index.md) for tone, content identity, and environmental flavor direction.
 
-- Use [Product Plan](../product-plan.md), [Roadmap](../roadmap.md), and [World Foundation Reference](../world-foundation.md) for future-facing canon.
-- Add a separate foundational execution plan only when there is active cross-cutting work that cannot be staged cleanly from the core canon docs alone.
-
-## Plan Rules
+## Execution Rule
 
 - Code, tests, templates, and shipped assets remain the source of truth for implemented behavior.
-- These plans exist to coordinate future implementation work, not to restate current code.
-- The product plan, roadmap, and world foundation are the only canonical future-facing source documents. Phase plans must derive from them and must not invent canonical gameplay rules, taxonomy, or world facts on their own.
-- If a phase plan reveals a needed future-facing contract change, update the relevant core document first or in the same pass.
-- One manager agent owns orchestration and gives the user the subagent prompts.
-- Asset production must pass through human review in the SVG playground or audio playground before being locked into canonical asset locations.
-- Review agents are expected throughout the phase, but only on surfaces whose implementation owner has finished or released the lock.
-- Review agents should default to landing bounded fixes directly in the released files they are assigned.
-- Review agents should only hand back findings instead of fixes when the issue crosses ownership boundaries, needs product/contract decisions, or would require a risky refactor.
+- If a future plan changes a shared contract, update the relevant canonical doc in the same pass.

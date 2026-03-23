@@ -36,6 +36,48 @@ export interface UpgradeTemplate extends TemplateBase {
   effects: readonly EffectDefinition[];
 }
 
+export type BossTag =
+  | "boss:resilience-pierce"
+  | "boss:recovery-suppress"
+  | "boss:speed-drain"
+  | "boss:summon-pressure"
+  | "boss:intel-resist"
+  | "boss:area-damage";
+
+export type BossWeaknessKind = "role" | "stat" | "tag";
+
+export interface BossWeakness {
+  kind: BossWeaknessKind;
+  target: string;
+  multiplier: number;
+}
+
+export interface EnemyGroupProfile {
+  threat: number;
+  count: number;
+  dropTableId: string;
+}
+
+export interface BossProfile {
+  bossId: string;
+  name: string;
+  rank: string;
+  phases: number;
+  tags: readonly BossTag[];
+  weaknesses: readonly BossWeakness[];
+  attack: number;
+  defense: number;
+  hp: number;
+  speed: number;
+  threat: number;
+  dropTableId: string;
+}
+
+export interface MissionCombatProfile {
+  enemyGroups: readonly EnemyGroupProfile[];
+  boss: BossProfile | null;
+}
+
 export interface MissionTemplate extends TemplateBase {
   kind: "mission";
   objectiveType: "clearance" | "containment" | "extraction";
@@ -43,6 +85,7 @@ export interface MissionTemplate extends TemplateBase {
   rewardShape: "cash" | "loot" | "hybrid";
   intelConfidenceFloor: "low" | "medium" | "high";
   baseDurationHours: number;
+  combatProfile?: MissionCombatProfile;
 }
 
 export interface EventTemplate extends TemplateBase {

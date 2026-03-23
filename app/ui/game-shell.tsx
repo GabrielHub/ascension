@@ -21,6 +21,7 @@ import { OperationsPanel } from "./raid-panel";
 import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
 import { RaidWorldView } from "./raid-world-view";
 import { RosterPanel } from "./roster-panel";
+import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
 import {
   buildEquipmentViewModels,
@@ -124,12 +125,14 @@ function ResourceCounter({
   label,
   value,
   accent,
+  tip,
 }: {
   label: string;
   value: number | string;
   accent?: boolean;
+  tip?: string;
 }) {
-  return (
+  const inner = (
     <div className="flex items-baseline gap-1.5">
       <span className="text-xs font-medium uppercase tracking-[0.18em] text-gold/70">{label}</span>
       <span
@@ -141,6 +144,8 @@ function ResourceCounter({
       </span>
     </div>
   );
+
+  return tip ? <Tooltip content={tip}>{inner}</Tooltip> : inner;
 }
 
 function formatPersistenceTimestamp(timestamp: string | undefined): string | null {
@@ -232,37 +237,55 @@ function FocusedOperatorOverlay({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <div className="glass-card-inset p-2">
-          <p className="uppercase tracking-[0.12em] text-gold/60">Intent</p>
-          <p className="mt-1 text-silver-bright">{operator.intent}</p>
-        </div>
-        <div className="glass-card-inset p-2">
-          <p className="uppercase tracking-[0.12em] text-gold/60">Readiness</p>
-          <p className="mt-1 tabular-nums text-silver-bright">
-            {Math.round(operator.readinessScore)}
-          </p>
-        </div>
-        <div className="glass-card-inset p-2">
-          <p className="uppercase tracking-[0.12em] text-gold/60">Morale</p>
-          <p className="mt-1 tabular-nums text-silver-bright">
-            {Math.round(operator.moraleCurrent)}
-          </p>
-        </div>
-        <div className="glass-card-inset p-2">
-          <p className="uppercase tracking-[0.12em] text-gold/60">Loyalty</p>
-          <p className="mt-1 tabular-nums text-silver-bright">
-            {Math.round(operator.loyaltyCurrent)}
-          </p>
-        </div>
+        <Tooltip content="What this operator wants to do right now">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-gold/60">Intent</p>
+            <p className="mt-1 text-silver-bright">{operator.intent}</p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Overall combat readiness score">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-gold/60">Readiness</p>
+            <p className="mt-1 tabular-nums text-silver-bright">
+              {Math.round(operator.readinessScore)}
+            </p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Low morale risks task refusal or departure">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-gold/60">Morale</p>
+            <p className="mt-1 tabular-nums text-silver-bright">
+              {Math.round(operator.moraleCurrent)}
+            </p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Low loyalty increases the chance of quitting">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-gold/60">Loyalty</p>
+            <p className="mt-1 tabular-nums text-silver-bright">
+              {Math.round(operator.loyaltyCurrent)}
+            </p>
+          </div>
+        </Tooltip>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2 text-[0.6875rem] text-silver/60">
-        <span>Fatigue {Math.round(operator.needFatigue)}</span>
-        <span>Stress {Math.round(operator.needStress)}</span>
+        <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
+          <span>Fatigue {Math.round(operator.needFatigue)}</span>
+        </Tooltip>
+        <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
+          <span>Stress {Math.round(operator.needStress)}</span>
+        </Tooltip>
         {operator.injurySeverity > 0 && (
-          <span className="text-ember">Injured ({Math.ceil(operator.injuryRecoveryHours)}h)</span>
+          <Tooltip content="Time remaining until fully recovered" side="top">
+            <span className="text-ember">Injured ({Math.ceil(operator.injuryRecoveryHours)}h)</span>
+          </Tooltip>
         )}
-        {operator.availableForRaid && <span className="text-gold/70">Raid-ready</span>}
+        {operator.availableForRaid && (
+          <Tooltip content="Healthy and unassigned — can join a raid" side="top">
+            <span className="text-gold/70">Raid-ready</span>
+          </Tooltip>
+        )}
       </div>
 
       {/* Phase 2: Autonomy risk warnings */}
@@ -303,7 +326,11 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
             <span className="text-xs font-medium text-silver-bright">
               {team.memberNames.join(", ")}
             </span>
-            {team.damaged && <span className="badge badge-ember">Damaged</span>}
+            {team.damaged && (
+              <Tooltip content={team.damageReason || "Team cohesion has been damaged"} side="top">
+                <span className="badge badge-ember">Damaged</span>
+              </Tooltip>
+            )}
           </div>
           <div className="mt-1 text-[0.6875rem] text-silver/60">{team.statusSummary}</div>
           {team.explanationReasons.slice(0, 2).map((reason) => (
@@ -312,8 +339,12 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
             </div>
           ))}
           <div className="mt-1 flex items-center gap-3 text-[0.6875rem] text-silver/50">
-            <span>Cohesion {Math.round(team.cohesion)}</span>
-            <span>{team.raidCount} raids</span>
+            <Tooltip content="Team coordination — builds through shared missions" side="top">
+              <span>Cohesion {Math.round(team.cohesion)}</span>
+            </Tooltip>
+            <Tooltip content="Total raids completed together" side="top">
+              <span>{team.raidCount} raids</span>
+            </Tooltip>
             {team.damaged && team.damageReason && (
               <span className="text-ember">{team.damageReason}</span>
             )}
@@ -648,7 +679,9 @@ export function GameShell() {
               <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright">
                 {hq.building.name}
               </h1>
-              <span className="badge badge-gold">T{hq.building.tier}</span>
+              <Tooltip content="Building tier — determines room slots and upgrade access">
+                <span className="badge badge-gold">T{hq.building.tier}</span>
+              </Tooltip>
             </div>
 
             {/* Separator */}
@@ -656,64 +689,86 @@ export function GameShell() {
 
             {/* Resources */}
             <div className="hidden items-center gap-4 sm:flex">
-              <ResourceCounter label="Cash" value={hq.guild.treasury} accent />
-              <ResourceCounter label="Rep" value={hq.guild.reputation} />
-              <ResourceCounter label="Intel" value={hq.guild.intel} />
+              <ResourceCounter
+                label="Cash"
+                value={hq.guild.treasury}
+                accent
+                tip="Funds for upgrades, hiring, and purchases"
+              />
+              <ResourceCounter
+                label="Rep"
+                value={hq.guild.reputation}
+                tip="Reputation — attracts better contracts and recruits"
+              />
+              <ResourceCounter
+                label="Intel"
+                value={hq.guild.intel}
+                tip="Intelligence — reveals raid opportunities"
+              />
             </div>
 
             {/* Push right */}
             <div className="ml-auto flex items-center gap-4">
               {/* Time + advance */}
               <div className="flex items-center gap-2">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-                    D{hq.time.day}
-                  </span>
-                  <span className="font-[family-name:var(--font-display)] text-[0.8rem] font-light tabular-nums text-silver/80">
-                    {hq.time.formatted}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-ghost text-xs"
-                  onClick={advanceHour}
-                  title="Advance one hour"
-                >
-                  +1h
-                </button>
+                <Tooltip content="Current in-game day and time of day">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+                      D{hq.time.day}
+                    </span>
+                    <span className="font-[family-name:var(--font-display)] text-[0.8rem] font-light tabular-nums text-silver/80">
+                      {hq.time.formatted}
+                    </span>
+                  </div>
+                </Tooltip>
+                <Tooltip content="Advance time by one hour">
+                  <button type="button" className="btn-ghost text-xs" onClick={advanceHour}>
+                    +1h
+                  </button>
+                </Tooltip>
               </div>
 
               {/* Capacity glance */}
               <div className="hidden items-center gap-1.5 text-xs text-silver/60 lg:flex">
-                <span>
-                  {hq.building.usedRoomSlots}/{hq.building.totalRoomSlots}
-                </span>
+                <Tooltip content="Rooms placed / total room slots">
+                  <span>
+                    {hq.building.usedRoomSlots}/{hq.building.totalRoomSlots}
+                  </span>
+                </Tooltip>
                 <span className="opacity-60">rooms</span>
                 <span className="mx-0.5 opacity-40">|</span>
-                <span
-                  className={
-                    hq.rosterPressure.replacementPressureLevel === "critical"
-                      ? "text-ember"
-                      : hq.rosterPressure.replacementPressureLevel === "strained"
-                        ? "text-smolder"
-                        : ""
-                  }
-                >
-                  {hq.rosterPressure.livingOperatorCount}/{hq.rosterPressure.operatorCapacity}
-                </span>
+                <Tooltip content="Active operators / max capacity">
+                  <span
+                    className={
+                      hq.rosterPressure.replacementPressureLevel === "critical"
+                        ? "text-ember"
+                        : hq.rosterPressure.replacementPressureLevel === "strained"
+                          ? "text-smolder"
+                          : ""
+                    }
+                  >
+                    {hq.rosterPressure.livingOperatorCount}/{hq.rosterPressure.operatorCapacity}
+                  </span>
+                </Tooltip>
                 <span className="opacity-60">ops</span>
                 {hq.rosterPressure.vacancyCount > 0 && (
-                  <span className="text-ember">({hq.rosterPressure.vacancyCount} vacant)</span>
+                  <Tooltip content="Open operator slots that need filling">
+                    <span className="text-ember">({hq.rosterPressure.vacancyCount} vacant)</span>
+                  </Tooltip>
                 )}
                 {hq.rosterPressure.recentDeathOperatorIds.length > 0 && (
-                  <span className="text-magma">
-                    &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
-                  </span>
+                  <Tooltip content="Operators recently killed in action">
+                    <span className="text-magma">
+                      &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
+                    </span>
+                  </Tooltip>
                 )}
                 {hq.staff.length > 0 && (
                   <>
                     <span className="mx-0.5 opacity-40">|</span>
-                    <span>{hq.staff.length}</span>
+                    <Tooltip content="Total hired staff across all rooms">
+                      <span>{hq.staff.length}</span>
+                    </Tooltip>
                     <span className="opacity-60">staff</span>
                   </>
                 )}
@@ -768,17 +823,25 @@ export function GameShell() {
             {/* Status badges */}
             <div className="hidden shrink-0 items-center gap-2 pl-3 md:flex">
               {hq.rosterPressure.replacementPressureLevel !== "stable" && (
-                <span
-                  className={`badge animate-enter ${
+                <Tooltip
+                  content={
                     hq.rosterPressure.replacementPressureLevel === "critical"
-                      ? "badge-ember"
-                      : "badge-slate"
-                  }`}
+                      ? "Dangerously low — recruit operators urgently"
+                      : "Below ideal strength — consider recruiting"
+                  }
                 >
-                  {hq.rosterPressure.replacementPressureLevel === "critical"
-                    ? "roster critical"
-                    : "roster strained"}
-                </span>
+                  <span
+                    className={`badge animate-enter ${
+                      hq.rosterPressure.replacementPressureLevel === "critical"
+                        ? "badge-ember"
+                        : "badge-slate"
+                    }`}
+                  >
+                    {hq.rosterPressure.replacementPressureLevel === "critical"
+                      ? "roster critical"
+                      : "roster strained"}
+                  </span>
+                </Tooltip>
               )}
               {operations.activeRaids.length > 0 && (
                 <span className="badge badge-ember animate-enter">
@@ -836,7 +899,13 @@ export function GameShell() {
           (activeTab === "operations" && opsCategory !== null)) && (
           <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 pr-[22rem] shadow-[0_-8px_40px_rgba(0,0,0,0.4)] lg:pr-[26rem]">
             {activeTab === "hq" && hqCategory === "rooms" && (
-              <HqPanel hq={hq} callbacks={callbacks} focus={focus} roomCultures={roomCultures} />
+              <HqPanel
+                hq={hq}
+                callbacks={callbacks}
+                focus={focus}
+                onClearFocus={() => setFocus(null)}
+                roomCultures={roomCultures}
+              />
             )}
             {activeTab === "hq" && hqCategory === "roster" && (
               <RosterPanel

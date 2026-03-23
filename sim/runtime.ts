@@ -3,6 +3,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
+import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
 
 import {
   AssignmentState,
@@ -127,6 +128,25 @@ export interface Phase1OperatorSnapshot {
     deathRaidSummaryId?: string;
     departureTick?: number;
     departureReason?: string;
+  };
+  combat?: {
+    rank: string;
+    attunementTag: string;
+    traits: string[];
+    kit: {
+      regularAttackId: string;
+      skillId: string;
+      ultimateId: string;
+      passiveIds: string[];
+    };
+    baseStats: {
+      strength: number;
+      speed: number;
+      endurance: number;
+      resilience: number;
+      perception: number;
+      intelligence: number;
+    };
   };
 }
 
@@ -557,6 +577,7 @@ function normalizeOperatorSnapshot(
         ].join(":"),
       });
   const visibleGear = buildVisibleGearSnapshot(appearanceRecord?.visibleGear);
+  const combat = normalizeOperatorCombatSnapshot(operator.combat, operator.identity.roleTag);
 
   return {
     id: operator.id,
@@ -593,6 +614,7 @@ function normalizeOperatorSnapshot(
       ...(visibleGear ? { visibleGear } : {}),
     },
     lifecycle: normalizeLifecycleSnapshot(operator.lifecycle),
+    combat,
   };
 }
 
@@ -722,6 +744,28 @@ function buildLifecycleSnapshot(entity: number): Phase1OperatorSnapshot["lifecyc
   }
 
   return { status: "active" };
+}
+
+function buildCombatSnapshot(entity: number): Phase1OperatorSnapshot["combat"] {
+  return {
+    rank: OperatorIdentity.rank[entity],
+    attunementTag: OperatorIdentity.attunementTag[entity],
+    traits: [...(OperatorIdentity.traits[entity] ?? [])],
+    kit: {
+      regularAttackId: OperatorIdentity.regularAttackId[entity],
+      skillId: OperatorIdentity.skillId[entity],
+      ultimateId: OperatorIdentity.ultimateId[entity],
+      passiveIds: [...(OperatorIdentity.passiveIds[entity] ?? [])],
+    },
+    baseStats: {
+      strength: OperatorIdentity.baseStrength[entity],
+      speed: OperatorIdentity.baseSpeed[entity],
+      endurance: OperatorIdentity.baseEndurance[entity],
+      resilience: OperatorIdentity.baseResilience[entity],
+      perception: OperatorIdentity.basePerception[entity],
+      intelligence: OperatorIdentity.baseIntelligence[entity],
+    },
+  };
 }
 
 function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot {
@@ -1202,6 +1246,19 @@ function applyWorldSnapshot(
     OperatorIdentity.deathRaidSummaryId[entity] = operator.lifecycle.deathRaidSummaryId ?? "";
     OperatorIdentity.departureTick[entity] = operator.lifecycle.departureTick ?? 0;
     OperatorIdentity.departureReason[entity] = operator.lifecycle.departureReason ?? "";
+    OperatorIdentity.rank[entity] = operator.combat.rank;
+    OperatorIdentity.attunementTag[entity] = operator.combat.attunementTag;
+    OperatorIdentity.traits[entity] = [...operator.combat.traits];
+    OperatorIdentity.regularAttackId[entity] = operator.combat.kit.regularAttackId;
+    OperatorIdentity.skillId[entity] = operator.combat.kit.skillId;
+    OperatorIdentity.ultimateId[entity] = operator.combat.kit.ultimateId;
+    OperatorIdentity.passiveIds[entity] = [...operator.combat.kit.passiveIds];
+    OperatorIdentity.baseStrength[entity] = operator.combat.baseStats.strength;
+    OperatorIdentity.baseSpeed[entity] = operator.combat.baseStats.speed;
+    OperatorIdentity.baseEndurance[entity] = operator.combat.baseStats.endurance;
+    OperatorIdentity.baseResilience[entity] = operator.combat.baseStats.resilience;
+    OperatorIdentity.basePerception[entity] = operator.combat.baseStats.perception;
+    OperatorIdentity.baseIntelligence[entity] = operator.combat.baseStats.intelligence;
     PreferenceState.riskTolerance[entity] = operator.preferences.riskTolerance;
     PreferenceState.rewardFocus[entity] = operator.preferences.rewardFocus;
     PreferenceState.recoveryBias[entity] = operator.preferences.recoveryBias;
@@ -1633,6 +1690,7 @@ function applyWorldSnapshot(
             accessoryPartId: OperatorIdentity.appearanceAccessoryPartId[entity],
           }),
           lifecycle: buildLifecycleSnapshot(entity),
+          combat: buildCombatSnapshot(entity),
         })),
         operatorRelationships: deriveCompatibilityRelationships(context).map((relationship) => ({
           ...relationship,

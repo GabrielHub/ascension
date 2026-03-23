@@ -3,6 +3,7 @@ import {
   CURRENT_SAVE_SCHEMA_VERSION,
   SAVE_SLOT_IDS,
   type OperatorAppearanceSnapshot,
+  type OperatorCombatSnapshot,
   type ActiveEventSnapshot,
   type ActiveRaidSnapshot,
   type ContractSiteSnapshot,
@@ -42,6 +43,7 @@ import {
   parseOperatorAppearancePartIndex,
   type OperatorAppearancePartIndexEntry,
 } from "./appearance";
+import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 
 export class SaveValidationError extends Error {
   constructor(message: string) {
@@ -591,6 +593,49 @@ function parseOperatorLifecycleSnapshot(
   };
 }
 
+function parseOperatorCombatSnapshot(value: unknown, path: string): OperatorCombatSnapshot {
+  const record = expectRecord(value, path);
+  const kitRecord = expectRecord(record.kit, `${path}.kit`);
+  const statsRecord = expectRecord(record.baseStats, `${path}.baseStats`);
+
+  return {
+    rank: expectString(record.rank, `${path}.rank`),
+    attunementTag: expectString(record.attunementTag, `${path}.attunementTag`),
+    traits: expectStringArray(record.traits, `${path}.traits`),
+    kit: {
+      regularAttackId: expectString(kitRecord.regularAttackId, `${path}.kit.regularAttackId`),
+      skillId: expectString(kitRecord.skillId, `${path}.kit.skillId`),
+      ultimateId: expectString(kitRecord.ultimateId, `${path}.kit.ultimateId`),
+      passiveIds: expectStringArray(kitRecord.passiveIds, `${path}.kit.passiveIds`),
+    },
+    baseStats: {
+      strength: expectNumber(statsRecord.strength, `${path}.baseStats.strength`),
+      speed: expectNumber(statsRecord.speed, `${path}.baseStats.speed`),
+      endurance: expectNumber(statsRecord.endurance, `${path}.baseStats.endurance`),
+      resilience: expectNumber(statsRecord.resilience, `${path}.baseStats.resilience`),
+      perception: expectNumber(statsRecord.perception, `${path}.baseStats.perception`),
+      intelligence: expectNumber(statsRecord.intelligence, `${path}.baseStats.intelligence`),
+    },
+  };
+}
+
+function parseOptionalOperatorCombatSnapshot(
+  value: unknown,
+  path: string,
+  identity: SaveStructuredRecord | undefined,
+  schemaVersion: number,
+): { combat: OperatorCombatSnapshot | undefined; changed: boolean } {
+  if (value !== undefined) {
+    return { combat: parseOperatorCombatSnapshot(value, path), changed: false };
+  }
+
+  const roleTag = identity && typeof identity.roleTag === "string" ? identity.roleTag : "";
+  return {
+    combat: deriveOperatorCombatDefaults(roleTag),
+    changed: schemaVersion < 10 || value === undefined,
+  };
+}
+
 function parseOperatorSnapshot(
   value: unknown,
   path: string,
@@ -613,6 +658,12 @@ function parseOperatorSnapshot(
     `${path}.lifecycle`,
     schemaVersion,
   );
+  const combat = parseOptionalOperatorCombatSnapshot(
+    record.combat,
+    `${path}.combat`,
+    identity,
+    schemaVersion,
+  );
 
   return {
     id: expectString(record.id, `${path}.id`),
@@ -626,7 +677,8 @@ function parseOperatorSnapshot(
     injury: parseOptionalStructuredRecord(record.injury, `${path}.injury`),
     assignment: parseOptionalStructuredRecord(record.assignment, `${path}.assignment`),
     appearance: appearance.appearance,
-    _changed: appearance.changed || lifecycle.changed,
+    ...(combat.combat !== undefined ? { combat: combat.combat } : {}),
+    _changed: appearance.changed || lifecycle.changed || combat.changed,
   };
 }
 
@@ -913,6 +965,17 @@ function parseRaidSummarySnapshot(
       intelMismatchTags === undefined
         ? []
         : expectStringArray(intelMismatchTags, `${path}.intelMismatchTags`),
+    ...(record.bossDefeated !== undefined
+      ? { bossDefeated: expectBoolean(record.bossDefeated, `${path}.bossDefeated`) }
+      : {}),
+    ...(record.contributingFactors !== undefined
+      ? {
+          contributingFactors: expectStringArray(
+            record.contributingFactors,
+            `${path}.contributingFactors`,
+          ),
+        }
+      : {}),
     _changed: changed,
   };
 }

@@ -277,5 +277,67 @@
       "roomFamily": null,
       "status": "exploration"
     }
-  ]
+  ],
+  "backdrop": {
+    "profileId": "bodega-ground",
+    "elevationBandId": null,
+    "phases": {
+      "sunrise": {
+        "ambientTint": "rgba(255, 180, 120, 0.12)",
+        "fogColor": "rgba(255, 200, 150, 0.08)",
+        "shadowIntensity": 0.3,
+        "zones": {
+          "belowShell": [],
+          "rear": [],
+          "leftFlank": [],
+          "rightFlank": [],
+          "fore": [],
+          "aboveShell": [],
+          "fxOverlay": []
+        }
+      },
+      "day": {
+        "ambientTint": "rgba(255, 255, 240, 0.05)",
+        "fogColor": "rgba(200, 210, 220, 0.04)",
+        "shadowIntensity": 0.5,
+        "zones": {
+          "belowShell": [],
+          "rear": [],
+          "leftFlank": [],
+          "rightFlank": [],
+          "fore": [],
+          "aboveShell": [],
+          "fxOverlay": []
+        }
+      },
+      "sunset": {
+        "ambientTint": "rgba(255, 140, 80, 0.15)",
+        "fogColor": "rgba(255, 160, 100, 0.10)",
+        "shadowIntensity": 0.6,
+        "zones": {
+          "belowShell": [],
+          "rear": [],
+          "leftFlank": [],
+          "rightFlank": [],
+          "fore": [],
+          "aboveShell": [],
+          "fxOverlay": []
+        }
+      },
+      "night": {
+        "ambientTint": "rgba(40, 60, 120, 0.20)",
+        "fogColor": "rgba(20, 30, 60, 0.15)",
+        "shadowIntensity": 0.8,
+        "zones": {
+          "belowShell": [],
+          "rear": [],
+          "leftFlank": [],
+          "rightFlank": [],
+          "fore": [],
+          "aboveShell": [],
+          "fxOverlay": []
+        }
+      }
+    }
+  }
 }

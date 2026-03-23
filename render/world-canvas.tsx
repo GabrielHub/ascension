@@ -18,10 +18,12 @@ import type {
   CameraBounds,
   CameraState,
   FocusPayload,
+  HqBackdropSnapshot,
   HqPerimeterTile,
   HqPoint,
   HqRoomNode,
   HqSpritePlacement,
+  HqTimeOfDayPhase,
   HqWallSegment,
   HqWorldSnapshot,
   RaidWorldSnapshot,
@@ -40,7 +42,9 @@ import {
 import { getActorPortraitUrl } from "./actor-tokens";
 import { roundRect } from "./canvas-utils";
 import { projectIso } from "./hq-world";
+import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
 
+const ASSET_ROOT = getHqEnvironmentRenderConfig().paths.partsRoot;
 const FONT_FAMILY = "'Inter', sans-serif";
 const GOLD = "#c8a84c";
 const GOLD_DIM = "rgba(200, 168, 76, 0.28)";
@@ -57,20 +61,62 @@ const RAID_FOG_CELL = 32;
 const TOKEN_W = 48;
 const TOKEN_H = 60;
 
-// ── Perimeter fill colors ─────────────────────────────────────────────────
+// ── Phase-aware perimeter fill colors ──────────────────────────────────────
 
-const PERIMETER_FILLS: Record<HqPerimeterTile["kind"], string> = {
-  sidewalk: "#3c362a",
-  street: "#1a1a20",
-  alley: "#0e0e14",
-  void: "#0a0a0e",
+type PerimeterPalette = Record<HqPerimeterTile["kind"], string>;
+
+const PERIMETER_FILLS: Record<HqTimeOfDayPhase, PerimeterPalette> = {
+  day: {
+    sidewalk: "#6e645a",
+    street: "#3a3a44",
+    alley: "#2e2e38",
+    void: "#24242e",
+  },
+  sunrise: {
+    sidewalk: "#5a4e3e",
+    street: "#2e2824",
+    alley: "#201c18",
+    void: "#181410",
+  },
+  sunset: {
+    sidewalk: "#5a4430",
+    street: "#2c2220",
+    alley: "#1e1614",
+    void: "#161010",
+  },
+  night: {
+    sidewalk: "#3c362a",
+    street: "#1a1a20",
+    alley: "#0e0e14",
+    void: "#0a0a0e",
+  },
 };
 
-const PERIMETER_STROKES: Record<HqPerimeterTile["kind"], string> = {
-  sidewalk: "rgba(255, 255, 255, 0.05)",
-  street: "rgba(255, 255, 255, 0.02)",
-  alley: "rgba(255, 255, 255, 0.015)",
-  void: "rgba(255, 255, 255, 0.005)",
+const PERIMETER_STROKES: Record<HqTimeOfDayPhase, PerimeterPalette> = {
+  day: {
+    sidewalk: "rgba(255, 255, 255, 0.10)",
+    street: "rgba(255, 255, 255, 0.04)",
+    alley: "rgba(255, 255, 255, 0.03)",
+    void: "rgba(255, 255, 255, 0.01)",
+  },
+  sunrise: {
+    sidewalk: "rgba(255, 220, 180, 0.08)",
+    street: "rgba(255, 220, 180, 0.03)",
+    alley: "rgba(255, 220, 180, 0.02)",
+    void: "rgba(255, 220, 180, 0.005)",
+  },
+  sunset: {
+    sidewalk: "rgba(255, 180, 120, 0.10)",
+    street: "rgba(255, 180, 120, 0.04)",
+    alley: "rgba(255, 180, 120, 0.03)",
+    void: "rgba(255, 180, 120, 0.01)",
+  },
+  night: {
+    sidewalk: "rgba(255, 255, 255, 0.05)",
+    street: "rgba(255, 255, 255, 0.02)",
+    alley: "rgba(255, 255, 255, 0.015)",
+    void: "rgba(255, 255, 255, 0.005)",
+  },
 };
 
 // ── SVG image cache ───────────────────────────────────────────────────────
@@ -157,22 +203,31 @@ function drawPolygon(
   }
 }
 
-function pointInPolygon(points: readonly HqPoint[], x: number, y: number): boolean {
-  let inside = false;
-  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-    const xi = points[i].x;
-    const yi = points[i].y;
-    const xj = points[j].x;
-    const yj = points[j].y;
-    const intersects =
-      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / Math.max(yj - yi, 0.0001) + xi;
-    if (intersects) inside = !inside;
-  }
-  return inside;
-}
-
 function hqProject(snapshot: HqWorldSnapshot, col: number, row: number): HqPoint {
   return projectIso(col, row, snapshot.layout.originX, snapshot.layout.originY);
+}
+
+interface GridBounds {
+  minCol: number;
+  maxCol: number;
+  minRow: number;
+  maxRow: number;
+}
+
+function computeGridBounds(tiles: readonly { col: number; row: number }[]): GridBounds | null {
+  if (tiles.length === 0) return null;
+  let minCol = tiles[0].col;
+  let maxCol = tiles[0].col;
+  let minRow = tiles[0].row;
+  let maxRow = tiles[0].row;
+  for (let i = 1; i < tiles.length; i++) {
+    const t = tiles[i];
+    if (t.col < minCol) minCol = t.col;
+    if (t.col > maxCol) maxCol = t.col;
+    if (t.row < minRow) minRow = t.row;
+    if (t.row > maxRow) maxRow = t.row;
+  }
+  return { minCol, maxCol, minRow, maxRow };
 }
 
 /** Diamond for a single tile using grid vertex positions (not center). */
@@ -187,18 +242,22 @@ function tileDiamond(snapshot: HqWorldSnapshot, col: number, row: number): HqPoi
 // ── Modular tile rendering ────────────────────────────────────────────────
 
 function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
+  const phase: HqTimeOfDayPhase = snapshot.backdrop?.phase ?? "night";
+  const fills = PERIMETER_FILLS[phase];
+  const strokes = PERIMETER_STROKES[phase];
+
   // Solid opaque ground plane behind the iso diamonds to prevent
-  // flanking buildings bleeding through the gaps between tiles
-  if (snapshot.modular.perimeterTiles.length > 0) {
-    const pts = snapshot.modular.perimeterTiles;
-    const cols = pts.map((t) => t.col);
-    const rows = pts.map((t) => t.row);
-    const pMin = hqProject(snapshot, Math.min(...cols), Math.min(...rows));
-    const pMaxCol = hqProject(snapshot, Math.max(...cols) + 1, Math.min(...rows));
-    const pMaxRow = hqProject(snapshot, Math.min(...cols), Math.max(...rows) + 1);
-    const pMax = hqProject(snapshot, Math.max(...cols) + 1, Math.max(...rows) + 1);
+  // flanking buildings bleeding through the gaps between tiles.
+  // Extends well beyond tiles to cover viewport corners.
+  const periBounds = computeGridBounds(snapshot.modular.perimeterTiles);
+  if (periBounds) {
+    const EXT = 30;
+    const pMin = hqProject(snapshot, periBounds.minCol - EXT, periBounds.minRow - EXT);
+    const pMaxCol = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.minRow - EXT);
+    const pMaxRow = hqProject(snapshot, periBounds.minCol - EXT, periBounds.maxRow + 1 + EXT);
+    const pMax = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.maxRow + 1 + EXT);
     const groundPoly: HqPoint[] = [pMin, pMaxCol, pMax, pMaxRow];
-    drawPolygon(ctx, groundPoly, "#0a0a0e");
+    drawPolygon(ctx, groundPoly, fills.void);
   }
 
   const sorted = snapshot.modular.perimeterTiles
@@ -211,9 +270,28 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
     kindMap.set(`${tile.col},${tile.row}`, tile.kind);
   }
 
+  // Precompute center-lane set (street tiles with >=2 streets above and below)
+  const centerLaneSet = new Set<string>();
+  for (const tile of snapshot.modular.perimeterTiles) {
+    if (tile.kind !== "street") continue;
+    let streetsAbove = 0;
+    let streetsBelow = 0;
+    for (let dr = 1; dr <= 8; dr++) {
+      if (kindMap.get(`${tile.col},${tile.row - dr}`) === "street") streetsAbove++;
+      else break;
+    }
+    for (let dr = 1; dr <= 8; dr++) {
+      if (kindMap.get(`${tile.col},${tile.row + dr}`) === "street") streetsBelow++;
+      else break;
+    }
+    if (streetsAbove >= 2 && streetsBelow >= 2) {
+      centerLaneSet.add(`${tile.col},${tile.row}`);
+    }
+  }
+
   for (const tile of sorted) {
-    const fill = PERIMETER_FILLS[tile.kind];
-    const stroke = PERIMETER_STROKES[tile.kind];
+    const fill = fills[tile.kind];
+    const stroke = strokes[tile.kind];
     const pts = tileDiamond(snapshot, tile.col, tile.row);
     drawPolygon(ctx, pts, fill, stroke);
 
@@ -232,25 +310,23 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
       }
     }
 
-    // Street lane markings — iso-aligned dashed center lines
+    // Street lane markings — double yellow center line
     if (tile.kind === "street") {
-      // Draw center line on tiles in the middle of the street band
-      const aboveKey = `${tile.col},${tile.row - 1}`;
-      const belowKey = `${tile.col},${tile.row + 1}`;
-      const aboveKind = kindMap.get(aboveKey);
-      const belowKind = kindMap.get(belowKey);
-      const isCenterLane =
-        aboveKind === "street" && (belowKind === "street" || belowKind === undefined);
+      const isCenterLane = centerLaneSet.has(`${tile.col},${tile.row}`);
 
       if (isCenterLane) {
         const cx = (pts[0].x + pts[2].x) / 2;
         const cy = (pts[0].y + pts[2].y) / 2;
-        // Iso-aligned dash along col axis direction (2:1 slope)
-        ctx.strokeStyle = "rgba(200, 180, 80, 0.18)";
-        ctx.lineWidth = 1.2;
+        // Double yellow line — two parallel iso-aligned dashes
+        ctx.strokeStyle = "rgba(200, 180, 80, 0.25)";
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(cx - 12, cy - 6);
-        ctx.lineTo(cx + 12, cy + 6);
+        ctx.moveTo(cx - 12, cy - 6 - 1.5);
+        ctx.lineTo(cx + 12, cy + 6 - 1.5);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 12, cy - 6 + 1.5);
+        ctx.lineTo(cx + 12, cy + 6 + 1.5);
         ctx.stroke();
       }
 
@@ -259,22 +335,35 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
       if (noise > 0.7) {
         const cx = (pts[0].x + pts[2].x) / 2;
         const cy = (pts[0].y + pts[2].y) / 2;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.01)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.015)";
         ctx.fillRect(cx - 6, cy - 1, 12, 2);
       }
     }
 
-    // Curb line: where sidewalk meets street
+    // Curb line: where sidewalk meets street (either side)
     if (tile.kind === "sidewalk") {
       const belowKey = `${tile.col},${tile.row + 1}`;
+      const aboveKey = `${tile.col},${tile.row - 1}`;
+      // Curb on near side (sidewalk above street)
       if (kindMap.get(belowKey) === "street") {
         const p2 = hqProject(snapshot, tile.col + 1, tile.row + 1);
         const p3 = hqProject(snapshot, tile.col, tile.row + 1);
-        ctx.strokeStyle = "rgba(120, 108, 80, 0.35)";
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(120, 108, 80, 0.45)";
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
         ctx.moveTo(p3.x, p3.y);
         ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      // Curb on far side (street above sidewalk)
+      if (kindMap.get(aboveKey) === "street") {
+        const p0 = hqProject(snapshot, tile.col, tile.row);
+        const p1 = hqProject(snapshot, tile.col + 1, tile.row);
+        ctx.strokeStyle = "rgba(120, 108, 80, 0.35)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
         ctx.stroke();
       }
 
@@ -284,8 +373,8 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
         const cx = (pts[0].x + pts[2].x) / 2;
         const cy = (pts[0].y + pts[2].y) / 2;
         // Line along row axis (-2:1 slope)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.025)";
-        ctx.lineWidth = 0.4;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
+        ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(cx + 14, cy - 7);
         ctx.lineTo(cx - 14, cy + 7);
@@ -345,6 +434,29 @@ function drawModularFloorTiles(
   }
 }
 
+function drawExpansionSlots(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
+  for (const slot of snapshot.expansionSlots) {
+    ctx.save();
+    ctx.setLineDash([8, 6]);
+    drawPolygon(ctx, slot.floorPoints, "rgba(200, 168, 76, 0.08)", "rgba(200, 168, 76, 0.28)");
+    drawPolygon(ctx, slot.leftWallPoints, "rgba(200, 168, 76, 0.03)", "rgba(200, 168, 76, 0.16)");
+    drawPolygon(ctx, slot.rightWallPoints, "rgba(200, 168, 76, 0.04)", "rgba(200, 168, 76, 0.18)");
+    ctx.setLineDash([]);
+
+    const centerX = slot.bounds.x + slot.bounds.width / 2;
+    const centerY = slot.bounds.y + slot.bounds.height / 2;
+    ctx.textAlign = "center";
+    ctx.fillStyle = GOLD;
+    ctx.font = `500 18px ${FONT_FAMILY}`;
+    ctx.fillText("+", centerX, centerY - 6);
+    ctx.fillStyle = SILVER;
+    ctx.font = `500 10px ${FONT_FAMILY}`;
+    ctx.fillText(slot.label, centerX, centerY + 14);
+    ctx.textAlign = "start";
+    ctx.restore();
+  }
+}
+
 function drawModularWallSegments(
   ctx: CanvasRenderingContext2D,
   snapshot: HqWorldSnapshot,
@@ -385,7 +497,9 @@ function drawModularWallSegments(
     ];
 
     const isHovered = seg.roomId === hoveredRoomId;
-    const operational = roomMap.get(seg.roomId)?.isOperational ?? false;
+    const room = roomMap.get(seg.roomId);
+    const operational = room?.isOperational ?? false;
+    const active = operational || (room?.isRequestedActive ?? false);
 
     ctx.save();
 
@@ -450,8 +564,8 @@ function drawModularWallSegments(
     ctx.lineTo(p1.x, p1.y);
     ctx.stroke();
 
-    // Operational room warm glow on wall face
-    if (operational) {
+    // Active room warm glow on wall face
+    if (active) {
       const glowGrad = ctx.createLinearGradient(p0.x, p0.y - wallH * 0.6, p0.x, p0.y);
       glowGrad.addColorStop(0, "rgba(200, 168, 76, 0)");
       glowGrad.addColorStop(0.6, "rgba(200, 168, 76, 0.04)");
@@ -483,7 +597,9 @@ function drawWallOpening(
 
   const lintelH = wallH * 0.2;
   const jambW = 4;
-  const operational = roomMap.get(seg.roomId)?.isOperational ?? false;
+  const room = roomMap.get(seg.roomId);
+  const operational = room?.isOperational ?? false;
+  const active = operational || (room?.isRequestedActive ?? false);
 
   // Lintel beam with depth
   const lintelPoints: HqPoint[] = [
@@ -519,8 +635,8 @@ function drawWallOpening(
   ];
   drawPolygon(ctx, interiorPoints, "#0c0c14");
 
-  // Threshold with gold glow for operational rooms
-  const thresholdColor = operational ? "rgba(200, 168, 76, 0.3)" : "rgba(100, 100, 110, 0.15)";
+  // Threshold with gold glow for active rooms
+  const thresholdColor = active ? "rgba(200, 168, 76, 0.3)" : "rgba(100, 100, 110, 0.15)";
   ctx.strokeStyle = thresholdColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -528,8 +644,8 @@ function drawWallOpening(
   ctx.lineTo(p1.x, p1.y);
   ctx.stroke();
 
-  // Warm light spill from operational room
-  if (operational) {
+  // Warm light spill from active room
+  if (active) {
     ctx.save();
     const cx = (p0.x + p1.x) / 2;
     const cy = (p0.y + p1.y) / 2;
@@ -548,10 +664,11 @@ function drawRoomHoverLabel(ctx: CanvasRenderingContext2D, room: HqRoomNode): vo
   const labelX = room.bounds.x + 18;
   const labelY = room.bounds.y + 18;
 
-  ctx.fillStyle = room.isOperational ? SILVER_BRIGHT : SILVER;
+  const labelActive = room.isOperational || room.isRequestedActive;
+  ctx.fillStyle = labelActive ? SILVER_BRIGHT : SILVER;
   ctx.font = `500 12px ${FONT_FAMILY}`;
   ctx.fillText(room.label, labelX, labelY);
-  ctx.fillStyle = room.isOperational ? GOLD : GOLD_DIM;
+  ctx.fillStyle = labelActive ? GOLD : GOLD_DIM;
   ctx.font = `400 10px ${FONT_FAMILY}`;
   ctx.fillText(`T${room.tier}`, labelX, labelY + 18);
 }
@@ -564,24 +681,320 @@ function seededRand(seed: number): number {
   return x - Math.floor(x);
 }
 
-function drawBackdrop(ctx: CanvasRenderingContext2D, viewW: number, viewH: number): void {
-  // Simple dark fill — the tile ground plane and building walls cover everything
-  ctx.fillStyle = "#08080c";
+/** Phase-aware base fill colors for the HQ backdrop.
+ *  Must match the darkest ground tile (void) so that the isometric
+ *  diamond edges blend seamlessly into the canvas background.
+ *  The sky is drawn separately by drawFlankingBuildings. */
+const BACKDROP_BASE_FILLS: Record<HqTimeOfDayPhase, string> = {
+  sunrise: "#181410",
+  day: "#24242e",
+  sunset: "#161010",
+  night: "#0a0a0e",
+};
+
+function drawBackdrop(
+  ctx: CanvasRenderingContext2D,
+  viewW: number,
+  viewH: number,
+  backdrop: HqBackdropSnapshot | null,
+): void {
+  ctx.fillStyle = backdrop ? BACKDROP_BASE_FILLS[backdrop.phase] : "#08080c";
   ctx.fillRect(0, 0, viewW, viewH);
+}
+
+/** Resolve a backdrop zone asset ID to a full URL. */
+function backdropAssetUrl(assetId: string): string {
+  return `${ASSET_ROOT}/${assetId}.svg`;
+}
+
+/** Collect all backdrop zone asset URLs for preloading. */
+function collectBackdropAssetUrls(backdrop: HqBackdropSnapshot): string[] {
+  const urls: string[] = [];
+  for (const zone of Object.values(backdrop.zones)) {
+    for (const id of zone) {
+      urls.push(backdropAssetUrl(id));
+    }
+  }
+  return urls;
+}
+
+/**
+ * Draw a backdrop zone's SVG assets in world space.
+ * Positions are derived from the building bounds in the snapshot.
+ */
+export function computeBackdropZonePlacement(
+  snapshot: HqWorldSnapshot,
+  zone: keyof HqBackdropSnapshot["zones"],
+  assetId: string,
+  aspect: number,
+  intrinsicHeight = 0,
+  index = 0,
+): Readonly<{ x: number; y: number; width: number; height: number; alpha?: number }> | null {
+  const floorBounds = computeGridBounds(snapshot.modular.floorTiles);
+  if (!floorBounds) return null;
+
+  const proj = (col: number, row: number) => hqProject(snapshot, col, row);
+  const bldMinCol = floorBounds.minCol;
+  const bldMaxCol = floorBounds.maxCol + 1;
+  const bldMinRow = floorBounds.minRow;
+  const bldMaxRow = floorBounds.maxRow + 1;
+  const topPt = proj(bldMinCol, bldMinRow);
+  const leftPt = proj(bldMinCol, bldMaxRow);
+  const rightPt = proj(bldMaxCol, bldMinRow);
+  const bottomPt = proj(bldMaxCol, bldMaxRow);
+  const bldW = rightPt.x - leftPt.x;
+  const bldH = bottomPt.y - topPt.y;
+
+  if (zone === "rear") {
+    const width = bldW * 1.6;
+    const height = width / aspect;
+    return {
+      x: (leftPt.x + rightPt.x) / 2 - width / 2,
+      y: topPt.y - height - snapshot.layout.wallHeight,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "leftFlank") {
+    const height = bldH * 1.2 + snapshot.layout.wallHeight;
+    const width = height * aspect;
+    return {
+      x: leftPt.x - width - 20,
+      y: topPt.y - snapshot.layout.wallHeight,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "rightFlank") {
+    const height = bldH * 1.2 + snapshot.layout.wallHeight;
+    const width = height * aspect;
+    return {
+      x: rightPt.x + 20,
+      y: topPt.y - snapshot.layout.wallHeight,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "belowShell") {
+    const width = bldW * 1.4;
+    const height = width / aspect;
+    return {
+      x: (leftPt.x + rightPt.x) / 2 - width / 2,
+      y: bottomPt.y + index * 4,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "aboveShell") {
+    const width = bldW * 0.9;
+    const height = width / aspect;
+    return {
+      x: (leftPt.x + rightPt.x) / 2 - width / 2,
+      y: topPt.y - height - snapshot.layout.wallHeight * 1.2 - index * 12,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "fore") {
+    const seed = idHash(assetId);
+    const scale = intrinsicHeight > 100 ? 0.6 : 0.4;
+    const height = bldH * scale;
+    const width = height * aspect;
+    const spread = bldW * 0.8;
+    return {
+      x: (leftPt.x + rightPt.x) / 2 - spread / 2 + seededRand(seed) * spread,
+      y: bottomPt.y + 30 + seededRand(seed + 1) * 60,
+      width,
+      height,
+    };
+  }
+
+  if (zone === "fxOverlay") {
+    const seed = idHash(assetId);
+    const height = bldH * 0.4;
+    const width = height * aspect;
+    return {
+      x: leftPt.x + seededRand(seed + 3) * bldW * 0.6,
+      y: bottomPt.y - height * 0.3 + seededRand(seed + 4) * 40,
+      width,
+      height,
+      alpha: 0.5,
+    };
+  }
+
+  return null;
+}
+
+function drawBackdropZone(
+  ctx: CanvasRenderingContext2D,
+  snapshot: HqWorldSnapshot,
+  zone: keyof HqBackdropSnapshot["zones"],
+  imageCache: SvgImageCache,
+): void {
+  const bd = snapshot.backdrop;
+  if (!bd) return;
+  const assetIds = bd.zones[zone];
+  if (!assetIds || assetIds.length === 0) return;
+
+  for (let i = 0; i < assetIds.length; i++) {
+    const url = backdropAssetUrl(assetIds[i]);
+    const img = imageCache.get(url);
+    if (!img) {
+      imageCache.load(url);
+      continue;
+    }
+
+    const aspect = img.naturalWidth / (img.naturalHeight || 1);
+    const placement = computeBackdropZonePlacement(
+      snapshot,
+      zone,
+      assetIds[i],
+      aspect,
+      img.naturalHeight,
+      i,
+    );
+    if (!placement) {
+      continue;
+    }
+    ctx.save();
+    if (placement.alpha !== undefined) {
+      ctx.globalAlpha = placement.alpha;
+    }
+    ctx.drawImage(img, placement.x, placement.y, placement.width, placement.height);
+    ctx.restore();
+  }
 }
 
 // ── Flanking buildings (NYC tenement facades behind the ground plane) ─────
 
-function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
-  const periTiles = snapshot.modular.perimeterTiles;
-  if (periTiles.length === 0) return;
+// ── Phase-aware flanking building palette ──────────────────────────────────
 
+interface FlankingPalette {
+  sky: string;
+  farFill1: string;
+  farFill2: string;
+  facadeStops: [string, string, string, string, string];
+  parapet: string;
+  parapetHighlight: string;
+  cornice: string;
+  corniceAccent: string;
+  windowLit: string;
+  windowCool: string;
+  windowDark: string;
+  windowFrame: string;
+  fireEscape: string;
+  farWindowColor: string;
+  farWindowAlphaBase: number;
+  farWindowAlphaRange: number;
+  windowLitAlphaBase: number;
+  windowLitAlphaRange: number;
+  windowLitThreshold: number;
+}
+
+const FLANKING_PALETTES: Record<HqTimeOfDayPhase, FlankingPalette> = {
+  day: {
+    sky: "#3a4858",
+    farFill1: "#2e3440",
+    farFill2: "#242a36",
+    facadeStops: ["#3a3444", "#403a4c", "#483e52", "#4e4456", "#544a5c"],
+    parapet: "rgba(100, 88, 72, 0.6)",
+    parapetHighlight: "rgba(140, 125, 100, 0.2)",
+    cornice: "rgba(100, 90, 72, 0.18)",
+    corniceAccent: "rgba(100, 90, 72, 0.35)",
+    windowLit: "rgba(180, 200, 220, 0.15)",
+    windowCool: "rgba(160, 180, 200, 0.10)",
+    windowDark: "rgba(20, 20, 30, 0.4)",
+    windowFrame: "rgba(70, 62, 52, 0.3)",
+    fireEscape: "rgba(75, 68, 58, 0.7)",
+    farWindowColor: "rgba(180, 200, 220,",
+    farWindowAlphaBase: 0.015,
+    farWindowAlphaRange: 0.02,
+    windowLitAlphaBase: 0.08,
+    windowLitAlphaRange: 0.12,
+    windowLitThreshold: 0.15,
+  },
+  sunrise: {
+    sky: "#1e1812",
+    farFill1: "#161210",
+    farFill2: "#120e0c",
+    facadeStops: ["#1e1818", "#221c1c", "#282020", "#2c2424", "#302828"],
+    parapet: "rgba(90, 70, 50, 0.5)",
+    parapetHighlight: "rgba(130, 100, 70, 0.15)",
+    cornice: "rgba(90, 70, 50, 0.12)",
+    corniceAccent: "rgba(90, 70, 50, 0.28)",
+    windowLit: "rgba(255, 200, 140,",
+    windowCool: "rgba(160, 180, 210,",
+    windowDark: "rgba(12, 10, 10, 0.5)",
+    windowFrame: "rgba(60, 50, 38, 0.25)",
+    fireEscape: "rgba(60, 52, 42, 0.6)",
+    farWindowColor: "rgba(255, 200, 140,",
+    farWindowAlphaBase: 0.01,
+    farWindowAlphaRange: 0.018,
+    windowLitAlphaBase: 0.06,
+    windowLitAlphaRange: 0.12,
+    windowLitThreshold: 0.35,
+  },
+  sunset: {
+    sky: "#1e1410",
+    farFill1: "#18100e",
+    farFill2: "#140c0a",
+    facadeStops: ["#1e1414", "#221818", "#281c18", "#2e201c", "#32241e"],
+    parapet: "rgba(90, 60, 40, 0.5)",
+    parapetHighlight: "rgba(140, 100, 60, 0.15)",
+    cornice: "rgba(90, 60, 40, 0.12)",
+    corniceAccent: "rgba(90, 60, 40, 0.28)",
+    windowLit: "rgba(255, 160, 80,",
+    windowCool: "rgba(160, 180, 210,",
+    windowDark: "rgba(12, 8, 6, 0.5)",
+    windowFrame: "rgba(60, 44, 32, 0.25)",
+    fireEscape: "rgba(60, 48, 38, 0.6)",
+    farWindowColor: "rgba(255, 160, 80,",
+    farWindowAlphaBase: 0.012,
+    farWindowAlphaRange: 0.02,
+    windowLitAlphaBase: 0.07,
+    windowLitAlphaRange: 0.14,
+    windowLitThreshold: 0.3,
+  },
+  night: {
+    sky: "#06060a",
+    farFill1: "#09090f",
+    farFill2: "#07070d",
+    facadeStops: ["#0b0a14", "#0e0d18", "#12101c", "#16141e", "#1a1824"],
+    parapet: "rgba(70, 62, 48, 0.5)",
+    parapetHighlight: "rgba(120, 105, 72, 0.12)",
+    cornice: "rgba(80, 72, 55, 0.1)",
+    corniceAccent: "rgba(80, 72, 55, 0.25)",
+    windowLit: "rgba(200, 168, 76,",
+    windowCool: "rgba(160, 180, 210,",
+    windowDark: "rgba(8, 8, 16, 0.6)",
+    windowFrame: "rgba(50, 44, 35, 0.25)",
+    fireEscape: "rgba(55, 50, 42, 0.6)",
+    farWindowColor: "rgba(200, 168, 76,",
+    farWindowAlphaBase: 0.008,
+    farWindowAlphaRange: 0.015,
+    windowLitAlphaBase: 0.05,
+    windowLitAlphaRange: 0.12,
+    windowLitThreshold: 0.3,
+  },
+};
+
+function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
+  const periBounds = computeGridBounds(snapshot.modular.perimeterTiles);
+  if (!periBounds) return;
+
+  const phase: HqTimeOfDayPhase = snapshot.backdrop?.phase ?? "night";
+  const pal = FLANKING_PALETTES[phase];
   const proj = (col: number, row: number) => hqProject(snapshot, col, row);
 
-  const periMinCol = Math.min(...periTiles.map((t) => t.col));
-  const periMaxCol = Math.max(...periTiles.map((t) => t.col)) + 1;
-  const periMinRow = Math.min(...periTiles.map((t) => t.row));
-  const periMaxRow = Math.max(...periTiles.map((t) => t.row)) + 1;
+  const periMinCol = periBounds.minCol;
+  const periMaxCol = periBounds.maxCol + 1;
+  const periMinRow = periBounds.minRow;
+  const periMaxRow = periBounds.maxRow + 1;
   const topPt = proj(periMinCol, periMinRow);
   const leftPt = proj(periMinCol, periMaxRow);
   const rightPt = proj(periMaxCol, periMinRow);
@@ -589,7 +1002,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   const EXT = 3000;
 
   // ── A. Deep background sky ──
-  ctx.fillStyle = "#06060a";
+  ctx.fillStyle = pal.sky;
   ctx.beginPath();
   ctx.moveTo(topPt.x, topPt.y);
   ctx.lineTo(leftPt.x, leftPt.y);
@@ -608,12 +1021,12 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   ctx.closePath();
   ctx.fill();
 
-  const floorTiles = snapshot.modular.floorTiles;
-  if (floorTiles.length === 0) return;
-  const bldMinCol = Math.min(...floorTiles.map((t) => t.col));
-  const bldMaxCol = Math.max(...floorTiles.map((t) => t.col)) + 1;
-  const bldMinRow = Math.min(...floorTiles.map((t) => t.row));
-  const bldMaxRow = Math.max(...floorTiles.map((t) => t.row)) + 1;
+  const floorBounds = computeGridBounds(snapshot.modular.floorTiles);
+  if (!floorBounds) return;
+  const bldMinCol = floorBounds.minCol;
+  const bldMaxCol = floorBounds.maxCol + 1;
+  const bldMinRow = floorBounds.minRow;
+  const bldMaxRow = floorBounds.maxRow + 1;
   const storyH = snapshot.layout.wallHeight;
 
   // ── B. Far building silhouettes (skyline depth) ──
@@ -623,7 +1036,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
       r0: bldMinRow - 1,
       r1: bldMaxRow + 2,
       h: storyH * 8,
-      fill: "#09090f",
+      fill: pal.farFill1,
       seed: 100,
     },
     {
@@ -631,7 +1044,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
       r0: bldMinRow - 2,
       r1: bldMaxRow + 3,
       h: storyH * 10,
-      fill: "#07070d",
+      fill: pal.farFill2,
       seed: 200,
     },
     {
@@ -639,7 +1052,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
       r0: bldMinRow - 1,
       r1: bldMaxRow + 2,
       h: storyH * 7,
-      fill: "#09090f",
+      fill: pal.farFill1,
       seed: 300,
     },
     {
@@ -647,7 +1060,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
       r0: bldMinRow - 2,
       r1: bldMaxRow + 3,
       h: storyH * 9,
-      fill: "#07070d",
+      fill: pal.farFill2,
       seed: 400,
     },
   ];
@@ -668,8 +1081,10 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
         if (seededRand(wc * 29 + wr * 43 + bg.seed) > 0.72) {
           const u = (wc + 0.5) / cols;
           const v = (wr + 0.3) / rows;
-          const alpha = 0.008 + seededRand(wc * 7 + wr * 13 + bg.seed) * 0.015;
-          ctx.fillStyle = `rgba(200, 168, 76, ${alpha})`;
+          const alpha =
+            pal.farWindowAlphaBase +
+            seededRand(wc * 7 + wr * 13 + bg.seed) * pal.farWindowAlphaRange;
+          ctx.fillStyle = `${pal.farWindowColor} ${alpha})`;
           ctx.fillRect(p0.x + (p1.x - p0.x) * u - 1, p0.y + fDy * u - bg.h * v - 1.5, 2, 2.5);
         }
       }
@@ -691,11 +1106,11 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
 
     // Main facade gradient
     const grad = ctx.createLinearGradient(p0.x, p0.y - neighborH, p0.x, p0.y);
-    grad.addColorStop(0, "#0b0a14");
-    grad.addColorStop(0.15, "#0e0d18");
-    grad.addColorStop(0.5, "#12101c");
-    grad.addColorStop(0.85, "#16141e");
-    grad.addColorStop(1, "#1a1824");
+    grad.addColorStop(0, pal.facadeStops[0]);
+    grad.addColorStop(0.15, pal.facadeStops[1]);
+    grad.addColorStop(0.5, pal.facadeStops[2]);
+    grad.addColorStop(0.85, pal.facadeStops[3]);
+    grad.addColorStop(1, pal.facadeStops[4]);
     drawPolygon(
       ctx,
       [p0, p1, { x: p1.x, y: p1.y - neighborH }, { x: p0.x, y: p0.y - neighborH }],
@@ -703,13 +1118,13 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
     );
 
     // Rooftop parapet
-    ctx.strokeStyle = "rgba(70, 62, 48, 0.5)";
+    ctx.strokeStyle = pal.parapet;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y - neighborH);
     ctx.lineTo(p1.x, p1.y - neighborH);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(120, 105, 72, 0.12)";
+    ctx.strokeStyle = pal.parapetHighlight;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y - neighborH - 1);
@@ -720,7 +1135,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
     for (let f = 1; f <= floors; f++) {
       const v = f / floors;
       const isAccent = f === floors || f === 1;
-      ctx.strokeStyle = `rgba(80, 72, 55, ${isAccent ? 0.25 : 0.1})`;
+      ctx.strokeStyle = isAccent ? pal.corniceAccent : pal.cornice;
       ctx.lineWidth = isAccent ? 1.5 : 0.7;
       ctx.beginPath();
       ctx.moveTo(p0.x, p0.y - neighborH * v);
@@ -743,20 +1158,20 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
         const rng = seededRand(wc * 17 + fl * 31 + seed * 97);
         const warmth = seededRand(wc * 13 + fl * 23 + seed * 53);
 
-        if (rng > 0.3) {
-          // Lit window — warm gold/amber, occasional cool TV blue
-          const alpha = 0.05 + warmth * 0.12;
+        if (rng > pal.windowLitThreshold) {
+          // Lit/reflective window
+          const alpha = pal.windowLitAlphaBase + warmth * pal.windowLitAlphaRange;
           ctx.fillStyle =
-            warmth > 0.85 ? `rgba(160, 180, 210, ${alpha * 0.5})` : `rgba(200, 168, 76, ${alpha})`;
+            warmth > 0.85 ? `${pal.windowCool} ${alpha * 0.5})` : `${pal.windowLit} ${alpha})`;
           ctx.fillRect(wx - winW / 2, wy - winH, winW, winH);
         } else {
           // Dark window
-          ctx.fillStyle = "rgba(8, 8, 16, 0.6)";
+          ctx.fillStyle = pal.windowDark;
           ctx.fillRect(wx - winW / 2, wy - winH, winW, winH);
         }
 
         // Window frame
-        ctx.strokeStyle = "rgba(50, 44, 35, 0.25)";
+        ctx.strokeStyle = pal.windowFrame;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(wx - winW / 2, wy - winH, winW, winH);
       }
@@ -765,7 +1180,7 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
     // Fire escape (left facade only)
     if (side === "left" && fW > 40) {
       const escU = 0.4;
-      ctx.strokeStyle = "rgba(55, 50, 42, 0.6)";
+      ctx.strokeStyle = pal.fireEscape;
       for (let fl = 1; fl < floors; fl++) {
         const v = (fl + 0.35) / floors;
         const ex = p0.x + (p1.x - p0.x) * escU;
@@ -1189,7 +1604,9 @@ function drawFocusHighlightRect(ctx: CanvasRenderingContext2D, focus: FocusPaylo
     ctx.stroke();
     ctx.fillStyle = FOCUS_HIGHLIGHT_GLOW;
     ctx.fill();
-  } else {
+  } else if (focus.targetKind !== "room") {
+    // Non-room rectangular targets still get the dashed highlight.
+    // Rooms rely on the floor-edge glow so the large rectangle is unnecessary.
     ctx.strokeStyle = FOCUS_HIGHLIGHT_BORDER;
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 4]);
@@ -1210,10 +1627,9 @@ function drawRoomFloorEdges(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
     const fp = room.floorPoints;
     if (fp.length < 4) continue;
 
-    const edgeColor = room.isOperational ? "rgba(200, 168, 76, 0.25)" : "rgba(120, 120, 130, 0.12)";
-    const innerColor = room.isOperational
-      ? "rgba(200, 168, 76, 0.06)"
-      : "rgba(120, 120, 130, 0.03)";
+    const roomActive = room.isOperational || room.isRequestedActive;
+    const edgeColor = roomActive ? "rgba(200, 168, 76, 0.25)" : "rgba(120, 120, 130, 0.12)";
+    const innerColor = roomActive ? "rgba(200, 168, 76, 0.06)" : "rgba(120, 120, 130, 0.03)";
 
     // Room floor border — thin gold/silver line around the room perimeter
     ctx.save();
@@ -1278,18 +1694,28 @@ function drawHqWorld(
   hoveredRoomId: string | null,
   time: number,
 ): void {
-  drawBackdrop(ctx, viewW, viewH);
+  drawBackdrop(ctx, viewW, viewH, snapshot.backdrop);
 
   ctx.save();
   ctx.translate(viewW / 2, viewH / 2);
   ctx.scale(camera.zoom, camera.zoom);
   ctx.translate(-camera.x, -camera.y);
 
+  // 0b. Backdrop zone SVGs (rear sky behind flanking buildings)
+  drawBackdropZone(ctx, snapshot, "rear", imageCache);
+
   // 1. Flanking buildings (drawn first, behind everything)
   drawFlankingBuildings(ctx, snapshot);
 
+  // 1b. Backdrop flank SVGs (tenements on left/right)
+  drawBackdropZone(ctx, snapshot, "leftFlank", imageCache);
+  drawBackdropZone(ctx, snapshot, "rightFlank", imageCache);
+
   // 2. Perimeter tiles (drawn on top of flanking buildings)
   drawPerimeterTiles(ctx, snapshot);
+
+  // 2b. Backdrop below-shell zone (street, sidewalk)
+  drawBackdropZone(ctx, snapshot, "belowShell", imageCache);
 
   // 3. Scenery behind rooms
   snapshot.scenery
@@ -1316,6 +1742,7 @@ function drawHqWorld(
 
   // 5. Modular floor tiles (back to front)
   drawModularFloorTiles(ctx, snapshot, hoveredRoomId);
+  drawExpansionSlots(ctx, snapshot);
 
   // 5b. Room floor edge markings
   drawRoomFloorEdges(ctx, snapshot);
@@ -1354,11 +1781,28 @@ function drawHqWorld(
     drawFocusHighlightRect(ctx, effectiveFocus);
   }
 
-  // 10. Debug overlay (toggle with G key in dev builds)
+  // 10. Backdrop foreground props
+  drawBackdropZone(ctx, snapshot, "fore", imageCache);
+  drawBackdropZone(ctx, snapshot, "aboveShell", imageCache);
+
+  // 11. Debug overlay (toggle with G key in dev builds)
   drawPropDebugOverlay(ctx, snapshot);
 
   ctx.restore();
   drawAmbientTint(ctx, viewW, viewH, snapshot.effects);
+
+  // FX overlay (screen-space, after ambient tint but before focus dimming)
+  if (snapshot.backdrop) {
+    const fxIds = snapshot.backdrop.zones.fxOverlay;
+    if (fxIds.length > 0) {
+      ctx.save();
+      ctx.translate(viewW / 2, viewH / 2);
+      ctx.scale(camera.zoom, camera.zoom);
+      ctx.translate(-camera.x, -camera.y);
+      drawBackdropZone(ctx, snapshot, "fxOverlay", imageCache);
+      ctx.restore();
+    }
+  }
 
   if (effectiveFocus?.highlightBounds) {
     const fb = effectiveFocus.highlightBounds;
@@ -1373,21 +1817,21 @@ function drawHqWorld(
 
 // ── HQ hit testing ────────────────────────────────────────────────────────
 
-function pointInRoom(room: HqRoomNode, x: number, y: number): boolean {
-  return (
-    pointInPolygon(room.floorPoints, x, y) ||
-    pointInPolygon(room.leftWallPoints, x, y) ||
-    pointInPolygon(room.rightWallPoints, x, y)
-  );
-}
-
 function hitTestHqRoom(
   snapshot: HqWorldSnapshot,
   worldX: number,
   worldY: number,
 ): HqRoomNode | null {
-  for (const room of [...snapshot.rooms].reverse()) {
-    if (pointInRoom(room, worldX, worldY)) {
+  const { originX, originY, tileWidth, tileHeight } = snapshot.layout;
+  // Inverse isometric projection: world → grid
+  const dx = worldX - originX;
+  const dy = worldY - originY;
+  const col = (dx / (tileWidth / 2) + dy / (tileHeight / 2)) / 2;
+  const row = (dy / (tileHeight / 2) - dx / (tileWidth / 2)) / 2;
+
+  for (const room of snapshot.rooms) {
+    const fp = room.footprint;
+    if (col >= fp.col && col < fp.col + fp.cols && row >= fp.row && row < fp.row + fp.rows) {
       return room;
     }
   }
@@ -1523,9 +1967,10 @@ export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorld
           ? [getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")]
           : [],
       ),
+      ...(snapshot.backdrop ? collectBackdropAssetUrls(snapshot.backdrop) : []),
     ];
     sharedImageCache.preloadAll([...new Set(urls)]);
-  }, [snapshot.roomProps, snapshot.scenery, snapshot.actors]);
+  }, [snapshot.roomProps, snapshot.scenery, snapshot.actors, snapshot.backdrop]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1538,12 +1983,13 @@ export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorld
         snapshot.layout.worldHeight,
         rect.width,
         rect.height,
+        snapshot.layout.buildingWorldSize,
       );
       // Center on building bounds (rooms) rather than full world for a tighter initial view
       let centerX = snapshot.layout.minX + snapshot.layout.worldWidth / 2;
       let centerY = snapshot.layout.minY + snapshot.layout.worldHeight / 2;
-      if (snapshot.rooms.length > 0) {
-        const allPts = snapshot.rooms.flatMap((r) => [
+      if (snapshot.rooms.length > 0 || snapshot.expansionSlots.length > 0) {
+        const allPts = [...snapshot.rooms, ...snapshot.expansionSlots].flatMap((r) => [
           ...r.floorPoints,
           ...r.leftWallPoints,
           ...r.rightWallPoints,

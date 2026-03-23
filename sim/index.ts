@@ -96,6 +96,18 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
           : {}),
       },
       lifecycle: { status: "active" as const },
+      combat: {
+        rank: operator.combat.rank,
+        attunementTag: operator.combat.attunementTag,
+        traits: [...operator.combat.traits],
+        kit: {
+          regularAttackId: operator.combat.kit.regularAttackId,
+          skillId: operator.combat.kit.skillId,
+          ultimateId: operator.combat.kit.ultimateId,
+          passiveIds: [...operator.combat.kit.passiveIds],
+        },
+        baseStats: { ...operator.combat.baseStats },
+      },
     })),
     operatorRelationships: bootstrapScenario.operatorRelationships.map((relationship) => ({
       ...relationship,

@@ -7,6 +7,8 @@ import {
 } from "./index";
 import { STABLE_SIM_COMMAND_TYPES } from "./commands";
 import { templateRegistry } from "content/templates";
+import { OperatorIdentity } from "./components";
+import { computeDerivedStats } from "./systems/derived-stats";
 
 describe("time-unit contract", () => {
   it("advances exactly 60 in-game minutes from a 3600000ms tick", () => {
@@ -105,10 +107,12 @@ describe("phase 1 runtime", () => {
         "room/counter:tier_1",
         "room/dining_area:tier_1",
         "room/supply_closet:tier_1",
+        "room/lounge:tier_1",
       ]),
     );
     expect(phase1View.building.roomSlotCount).toBe(5);
     expect(phase1View.building.operatorSlotCount).toBe(7);
+    expect(phase1View.building.unlockedRoomTemplateIds.includes("room/lounge:tier_1")).toBe(true);
 
     // After purchasing annex (220), the records_wall upgrade (90) should still be affordable
     phase1View = simulation.getPhase1View();
@@ -116,6 +120,14 @@ describe("phase 1 runtime", () => {
       phase1View.rooms
         .find((room) => room.id === "room-instance/register")
         ?.availableUpgradeIds.includes("upgrade/room/register:records_wall"),
+    ).toBe(true);
+
+    simulation.dispatch({
+      type: "sim/place-room",
+      templateId: "room/lounge:tier_1",
+    });
+    expect(
+      simulation.getPhase1View().rooms.some((room) => room.templateId === "room/lounge:tier_1"),
     ).toBe(true);
   });
 
@@ -131,7 +143,7 @@ describe("phase 1 runtime", () => {
 
     expect(second.guild.reputation).toBe(0);
     expect(second.time.minuteOfDay).toBe(480);
-    expect(second.rooms[0].footprint.col).toBe(0);
+    expect(second.rooms[0].footprint.col).toBe(1);
     expect(second.operators?.[0].preferences.preferredMissionTags).not.toContain("mission:mutated");
     expect(second.staff?.[0].assignment.targetId).toBe("room-instance/register");
   });
@@ -900,6 +912,51 @@ describe("phase 1 runtime", () => {
     expect(worldSnapshot.operators?.map((op) => op.appearance.presetId)).toEqual(
       phase1View.operators.map((op) => op.appearance.presetId),
     );
+  });
+
+  it("round-trips operator combat state into ECS-derived stats and back into snapshots", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const roseEntity = simulation.runtimeState.operatorEntities.find(
+      (entity) => OperatorIdentity.id[entity] === "operator/rose-vega",
+    );
+
+    expect(roseEntity).toBeDefined();
+    expect(computeDerivedStats(simulation, roseEntity!).base).toEqual({
+      strength: 14,
+      speed: 8,
+      endurance: 13,
+      resilience: 10,
+      perception: 7,
+      intelligence: 8,
+    });
+
+    const worldSnapshot = simulation.getWorldSnapshot();
+    const rose = worldSnapshot.operators?.find((operator) => operator.id === "operator/rose-vega");
+    expect(rose?.combat).toEqual({
+      rank: "f",
+      attunementTag: "attunement:kinetic",
+      traits: ["trait:steady", "trait:resolute"],
+      kit: {
+        regularAttackId: "kit/basic-strike",
+        skillId: "kit/field-lead-skill",
+        ultimateId: "kit/field-lead-ultimate",
+        passiveIds: ["kit/field-lead-passive"],
+      },
+      baseStats: {
+        strength: 14,
+        speed: 8,
+        endurance: 13,
+        resilience: 10,
+        perception: 7,
+        intelligence: 8,
+      },
+    });
+
+    const restored = createAscensionSimulation(worldSnapshot, templateRegistry);
+    const restoredRose = restored
+      .getWorldSnapshot()
+      .operators?.find((operator) => operator.id === "operator/rose-vega");
+    expect(restoredRose?.combat).toEqual(rose?.combat);
   });
 
   it("preserves unknown visible gear ids but drops malformed slot values", () => {

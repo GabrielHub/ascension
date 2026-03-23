@@ -1,15 +1,71 @@
+import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
+
 import { traceRoundRect } from "./canvas-utils";
 import type { WorldEffectsSnapshot } from "./types";
 
+// ── Phase-specific effect presets ────────────────────────────────────────
+
+const PHASE_EFFECTS: Readonly<
+  Record<
+    HqTimeOfDayPhase,
+    Pick<WorldEffectsSnapshot, "ambientTint" | "fogColor" | "shadowIntensity">
+  >
+> = {
+  sunrise: {
+    ambientTint: "rgba(255, 180, 120, 0.12)",
+    fogColor: "rgba(255, 200, 150, 0.08)",
+    shadowIntensity: 0.3,
+  },
+  day: {
+    ambientTint: "rgba(255, 255, 240, 0.05)",
+    fogColor: "rgba(200, 210, 220, 0.04)",
+    shadowIntensity: 0.5,
+  },
+  sunset: {
+    ambientTint: "rgba(255, 140, 80, 0.15)",
+    fogColor: "rgba(255, 160, 100, 0.10)",
+    shadowIntensity: 0.6,
+  },
+  night: {
+    ambientTint: "rgba(40, 60, 120, 0.20)",
+    fogColor: "rgba(20, 30, 60, 0.15)",
+    shadowIntensity: 0.8,
+  },
+};
+
 // ── Default effects ───────────────────────────────────────────────────────
 
-export function createDefaultEffects(): WorldEffectsSnapshot {
+export function createDefaultEffects(phase?: HqTimeOfDayPhase): WorldEffectsSnapshot {
+  if (phase) {
+    const preset = PHASE_EFFECTS[phase];
+    return {
+      ambientTint: preset.ambientTint,
+      fogColor: preset.fogColor,
+      focusDimAlpha: 0,
+      focusTargetId: null,
+      shadowIntensity: preset.shadowIntensity,
+    };
+  }
+
   return {
     ambientTint: "rgba(200, 168, 76, 0.03)",
     fogColor: "rgba(6, 6, 8, 0.85)",
     focusDimAlpha: 0,
     focusTargetId: null,
     shadowIntensity: 0.15,
+  };
+}
+
+export function createEffectsWithOverrides(
+  phase: HqTimeOfDayPhase | undefined,
+  overrides: Partial<Pick<WorldEffectsSnapshot, "ambientTint" | "fogColor" | "shadowIntensity">>,
+): WorldEffectsSnapshot {
+  const base = createDefaultEffects(phase);
+  return {
+    ...base,
+    ambientTint: overrides.ambientTint ?? base.ambientTint,
+    fogColor: overrides.fogColor ?? base.fogColor,
+    shadowIntensity: overrides.shadowIntensity ?? base.shadowIntensity,
   };
 }
 

@@ -39,6 +39,8 @@ import {
   getRecurringTeamCohesionBonus,
   upsertNotableTie,
 } from "./social";
+import { computeDerivedStats, type OperatorBaseStats } from "./derived-stats";
+import type { BossTag, BossWeakness } from "content/templates/shared";
 import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
 import type { RaidTeamGoal } from "render/types";
 import type {
@@ -749,6 +751,92 @@ function refreshOpportunityClaims(context: SimSystemContext): void {
   });
 }
 
+/** Compute the challenge score penalty from boss tags. */
+export function computeBossTagPenalty(tags: readonly BossTag[]): number {
+  let penalty = 0;
+  for (const tag of tags) {
+    switch (tag) {
+      case "boss:resilience-pierce":
+        penalty += 8;
+        break;
+      case "boss:recovery-suppress":
+        penalty += 6;
+        break;
+      case "boss:speed-drain":
+        penalty += 5;
+        break;
+      case "boss:summon-pressure":
+        penalty += 7;
+        break;
+      case "boss:intel-resist":
+        penalty += 4;
+        break;
+      case "boss:area-damage":
+        penalty += 9;
+        break;
+    }
+  }
+  return penalty;
+}
+
+/** Compute team score bonus from exploiting boss weaknesses. */
+const VALID_STAT_KEYS = new Set([
+  "strength",
+  "speed",
+  "endurance",
+  "resilience",
+  "perception",
+  "intelligence",
+]);
+
+export function computeBossWeaknessBonus(
+  weaknesses: readonly BossWeakness[],
+  operatorEntities: number[],
+  context?: SimSystemContext,
+): { bonus: number; exploitedWeaknesses: string[] } {
+  let bonus = 0;
+  const exploitedWeaknesses: string[] = [];
+
+  for (const weakness of weaknesses) {
+    switch (weakness.kind) {
+      case "role": {
+        const hasRole = operatorEntities.some(
+          (e) => OperatorIdentity.roleTag[e] === weakness.target,
+        );
+        if (hasRole) {
+          bonus += 8 * weakness.multiplier;
+          exploitedWeaknesses.push(`role:${weakness.target}`);
+        }
+        break;
+      }
+      case "stat": {
+        if (context && VALID_STAT_KEYS.has(weakness.target)) {
+          const statKey = weakness.target as keyof OperatorBaseStats;
+          const avgStat =
+            operatorEntities.reduce((sum, e) => {
+              const stats = computeDerivedStats(context, e).effective;
+              return sum + stats[statKey];
+            }, 0) / Math.max(1, operatorEntities.length);
+          if (avgStat >= 12) {
+            bonus += 6 * weakness.multiplier;
+            exploitedWeaknesses.push(`stat:${weakness.target}`);
+          }
+        } else if (operatorEntities.length >= 2) {
+          bonus += 4 * weakness.multiplier;
+          exploitedWeaknesses.push(`stat:${weakness.target}`);
+        }
+        break;
+      }
+      case "tag": {
+        // Future: check if team has preparation tags. Skipped for now.
+        break;
+      }
+    }
+  }
+
+  return { bonus, exploitedWeaknesses };
+}
+
 function createResolutionPacket(
   context: SimSystemContext,
   opportunityEntity: number,
@@ -757,19 +845,47 @@ function createResolutionPacket(
   teamCohesion: number,
 ): ActiveRaidResolutionPacket {
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
+  const combatProfile = mission.combatProfile ?? null;
   const opportunityRisk = RaidOpportunityState.risk[opportunityEntity];
   const opportunityThreat = RaidOpportunityState.threat[opportunityEntity];
   const opportunityReward = RaidOpportunityState.reward[opportunityEntity];
-  const challengeScore =
+  // ── Base challenge score ─────────────────────────────────────────
+  let challengeScore =
     opportunityRisk +
     opportunityThreat * 0.45 +
     mission.baseDurationHours * 4 -
     RaidOpportunityState.intel[opportunityEntity] * 0.16;
-  const teamScore =
+
+  // ── Base team score (includes derived stats combat power) ───────
+  const teamCombatPower =
+    operatorEntities.reduce((total, entity) => {
+      return total + computeDerivedStats(context, entity).combatPower;
+    }, 0) / Math.max(1, operatorEntities.length);
+  let teamScore =
     averageReadiness +
     teamCohesion * 0.4 +
+    teamCombatPower * 0.6 +
     GuildState.intel[context.singletonEntities.guild] * 6 +
     mission.expectedThreatTags.length * 2;
+
+  // ── Boss tag penalties raise the challenge ──────────────────────
+  if (combatProfile?.boss) {
+    challengeScore += computeBossTagPenalty(combatProfile.boss.tags);
+    challengeScore += combatProfile.boss.threat * 0.25;
+  }
+
+  // ── Boss weakness bonuses reward team composition ───────────────
+  let exploitedWeaknesses: string[] = [];
+  if (combatProfile?.boss) {
+    const weaknessResult = computeBossWeaknessBonus(
+      combatProfile.boss.weaknesses,
+      operatorEntities,
+      context,
+    );
+    teamScore += weaknessResult.bonus;
+    exploitedWeaknesses = weaknessResult.exploitedWeaknesses;
+  }
+
   const result: "success" | "failure" | "mixed" =
     teamScore >= challengeScore + 12
       ? "success"
@@ -813,11 +929,26 @@ function createResolutionPacket(
         ...(died ? { died: true } : {}),
       };
     }),
-    narrativeTags: [
-      `mission:${mission.objectiveType}`,
-      `location:${RaidOpportunityState.location[opportunityEntity]}`,
-      `result:${result}`,
-    ],
+    narrativeTags: (() => {
+      const tags: string[] = [
+        `mission:${mission.objectiveType}`,
+        `location:${RaidOpportunityState.location[opportunityEntity]}`,
+        `result:${result}`,
+      ];
+      if (combatProfile?.boss) {
+        tags.push(`boss:${combatProfile.boss.bossId}`);
+        for (const tag of combatProfile.boss.tags) {
+          tags.push(tag);
+        }
+        if (result === "success") {
+          tags.push("boss:defeated");
+        }
+        if (exploitedWeaknesses.length > 0) {
+          tags.push("boss:weakness-exploited");
+        }
+      }
+      return tags;
+    })(),
     intelMismatchTags:
       RaidOpportunityState.intel[opportunityEntity] >= 60
         ? []
@@ -1071,7 +1202,12 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
       });
 
       const lootRng = new SeededRng(seedFromKey(`loot:${packet.id}:${currentMinute}`));
-      const lootDrops = generateLootDrops(context, lootRng, packet.resolutionPacket.result);
+      const lootDrops = generateLootDrops(
+        context,
+        lootRng,
+        packet.resolutionPacket.result,
+        packet.missionId,
+      );
       applyLootToInventory(context, lootDrops);
 
       const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
@@ -1119,6 +1255,19 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
           operatorOutcomes: packet.resolutionPacket.operatorOutcomes,
           narrativeTags: packet.resolutionPacket.narrativeTags,
           intelMismatchTags: packet.resolutionPacket.intelMismatchTags,
+          bossDefeated: packet.resolutionPacket.narrativeTags.includes("boss:defeated"),
+          contributingFactors: [
+            ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
+            ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
+            ...(packet.intel >= 60 ? ["intel:high"] : []),
+            ...(packet.intel < 30 ? ["intel:low"] : []),
+            ...(packet.resolutionPacket.narrativeTags.includes("boss:weakness-exploited")
+              ? ["boss:weakness-exploited"]
+              : []),
+            ...(packet.resolutionPacket.narrativeTags.includes("boss:defeated")
+              ? ["boss:defeated"]
+              : []),
+          ],
         },
       ];
 
@@ -1305,27 +1454,56 @@ export function generateLootDrops(
   context: SimSystemContext,
   rng: SeededRng,
   result: "success" | "failure" | "mixed",
+  missionId?: string,
 ): string[] {
   const loot: string[] = [];
-  const regularEntries = getDropTableEntries(context, "drop-table/dungeon-f-regular");
-  const eliteEntries = getDropTableEntries(context, "drop-table/dungeon-f-elite");
-  const bossEntries = getDropTableEntries(context, "drop-table/dungeon-f-boss");
-  const regularRolls = result === "success" ? 2 : result === "mixed" ? 1 : rng.chance(0.25) ? 1 : 0;
 
-  for (let i = 0; i < regularRolls; i += 1) {
-    loot.push(...rollDropTable(rng, regularEntries));
+  // Resolve combat profile from mission if available
+  const mission = missionId ? context.registry.missionById.get(missionId) : undefined;
+  const combatProfile = mission?.combatProfile ?? null;
+
+  // ── Enemy group loot (uses combat profile drop tables when available) ──
+  if (combatProfile && combatProfile.enemyGroups.length > 0) {
+    for (const group of combatProfile.enemyGroups) {
+      const groupEntries = getDropTableEntries(context, group.dropTableId);
+      if (groupEntries.length === 0) continue;
+      const rolls =
+        result === "success" ? group.count : result === "mixed" ? Math.ceil(group.count / 2) : 0;
+      for (let i = 0; i < rolls; i += 1) {
+        loot.push(...rollDropTable(rng, groupEntries));
+      }
+    }
+  } else {
+    // Fallback to legacy loot tables when no combat profile exists
+    const regularEntries = getDropTableEntries(context, "drop-table/dungeon-f-regular");
+    const eliteEntries = getDropTableEntries(context, "drop-table/dungeon-f-elite");
+    const regularRolls =
+      result === "success" ? 2 : result === "mixed" ? 1 : rng.chance(0.25) ? 1 : 0;
+
+    for (let i = 0; i < regularRolls; i += 1) {
+      loot.push(...rollDropTable(rng, regularEntries));
+    }
+
+    if (
+      result !== "failure" &&
+      eliteEntries.length > 0 &&
+      rng.chance(result === "success" ? 0.5 : 0.25)
+    ) {
+      loot.push(...rollDropTable(rng, eliteEntries));
+    }
   }
 
-  if (
-    result !== "failure" &&
-    eliteEntries.length > 0 &&
-    rng.chance(result === "success" ? 0.5 : 0.25)
-  ) {
-    loot.push(...rollDropTable(rng, eliteEntries));
-  }
-
-  if (result === "success" && bossEntries.length > 0 && rng.chance(0.2)) {
-    loot.push(...rollDropTable(rng, bossEntries));
+  // ── Boss loot (guaranteed roll on success when combat profile exists) ──
+  if (combatProfile?.boss) {
+    const bossDropEntries = getDropTableEntries(context, combatProfile.boss.dropTableId);
+    if (result === "success" && bossDropEntries.length > 0) {
+      loot.push(...rollDropTable(rng, bossDropEntries));
+    }
+  } else {
+    const bossEntries = getDropTableEntries(context, "drop-table/dungeon-f-boss");
+    if (result === "success" && bossEntries.length > 0 && rng.chance(0.2)) {
+      loot.push(...rollDropTable(rng, bossEntries));
+    }
   }
 
   return loot;

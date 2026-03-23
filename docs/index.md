@@ -21,6 +21,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
+  This index may intentionally contain no active checked-in plan docs between execution passes.
 
 ### Research
 

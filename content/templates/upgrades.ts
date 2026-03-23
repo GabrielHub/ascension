@@ -55,6 +55,10 @@ export const upgradeTemplates = [
         amount: 1,
       },
       {
+        type: "unlock_room_template",
+        roomId: "room/lounge:tier_1",
+      },
+      {
         type: "grant_operator_slot",
         amount: 1,
       },
@@ -270,6 +274,10 @@ export const upgradeTemplates = [
       {
         type: "add_room_slot",
         amount: 1,
+      },
+      {
+        type: "unlock_room_template",
+        roomId: "room/gym:tier_1",
       },
       {
         type: "grant_operator_slot",

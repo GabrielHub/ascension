@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -150 760 900">
+  <!-- NYC apartment block with extended side face and background building.
+       Facade = left-facing wall (slope 0.53125). Side = receding wall (slope -0.46875).
+       Windows use matrix transforms for correct isometric placement.
+       Background building visible above roof suggests urban density. -->
+
+  <defs>
+    <linearGradient id="bt-facade" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#50423a"/>
+      <stop offset="100%" stop-color="#3e3028"/>
+    </linearGradient>
+    <linearGradient id="bt-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2e2420"/>
+      <stop offset="100%" stop-color="#382e26"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════
+       BACKGROUND BUILDING (behind main, taller — drawn first)
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- BG side sliver (right edge, 25px deep) -->
+  <polygon points="720,42 745,30 745,80 720,92"
+    fill="#201c1a" stroke="#1a1818" stroke-width="0.5" opacity="0.8"/>
+
+  <!-- BG facade wall (50px tall above main roof back edge) -->
+  <polygon points="400,-128 720,42 720,92 400,-78"
+    fill="#242018" opacity="0.85"/>
+
+  <!-- BG roof -->
+  <polygon points="400,-128 720,42 745,30 425,-140"
+    fill="#181616" stroke="#222" stroke-width="0.5" opacity="0.8"/>
+
+  <!-- BG dim lit windows -->
+  <g transform="matrix(1, 0.53125, 0, 1, 400, -128)" opacity="0.12">
+    <rect x="35" y="18" width="10" height="14" rx="0.5" fill="#c8a84c"/>
+    <rect x="110" y="20" width="10" height="14" rx="0.5" fill="#9a7a3c"/>
+    <rect x="185" y="15" width="10" height="14" rx="0.5" fill="#c8a84c"/>
+    <rect x="250" y="22" width="10" height="14" rx="0.5" fill="#8a7040"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN BUILDING — structural faces
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Side face (380px deep, behind facade) -->
+  <polygon points="340,270 720,92 720,482 340,660"
+    fill="url(#bt-side)" stroke="#2e2418" stroke-width="1"/>
+
+  <!-- Facade (front-facing wall) -->
+  <polygon points="20,100 340,270 340,660 20,490"
+    fill="url(#bt-facade)" stroke="#2e2418" stroke-width="1.5"/>
+
+  <!-- Roof -->
+  <polygon points="20,100 340,270 720,92 400,-78"
+    fill="#222020" stroke="#2a2a2a" stroke-width="1.5"/>
+
+  <!-- Roof edge cornice — facade -->
+  <polygon points="20,100 340,270 340,278 20,108"
+    fill="#4a4440" stroke="#2e2418" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Roof edge cornice — side (extended) -->
+  <polygon points="340,270 720,92 720,100 340,278"
+    fill="#3a3630" stroke="#2e2418" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FACADE DETAILS — matrix(1, 0.53125, 0, 1, 20, 100)
+       Local coords: s=0→320 (left→right), t=0→390 (top→bottom)
+       Floor dividers at t = 66, 136, 206, 276
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Floor cornice lines -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)"
+     opacity="0.18" stroke="#5a5040" stroke-width="0.8">
+    <line x1="5" y1="66" x2="315" y2="66"/>
+    <line x1="5" y1="136" x2="315" y2="136"/>
+    <line x1="5" y1="206" x2="315" y2="206"/>
+    <line x1="5" y1="276" x2="315" y2="276"/>
+  </g>
+
+  <!-- Brick texture lines -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)"
+     opacity="0.08" stroke="#4a3e30" stroke-width="0.4">
+    <line x1="10" y1="50" x2="315" y2="50"/>
+    <line x1="10" y1="100" x2="315" y2="100"/>
+    <line x1="10" y1="165" x2="315" y2="165"/>
+    <line x1="10" y1="195" x2="315" y2="195"/>
+    <line x1="10" y1="240" x2="315" y2="240"/>
+    <line x1="10" y1="265" x2="315" y2="265"/>
+    <line x1="10" y1="310" x2="315" y2="310"/>
+    <line x1="10" y1="340" x2="315" y2="340"/>
+    <line x1="10" y1="360" x2="315" y2="360"/>
+  </g>
+
+  <!-- FACADE WINDOWS (5 cols × 4 floors) -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)"
+     fill="#161210" stroke="#3a3530" stroke-width="0.5">
+    <!-- Floor 1 (t=19) -->
+    <rect x="30" y="19" width="22" height="28" rx="1"/>
+    <rect x="90" y="19" width="22" height="28" rx="1"/>
+    <rect x="150" y="19" width="22" height="28" rx="1"/>
+    <rect x="210" y="19" width="22" height="28" rx="1"/>
+    <rect x="270" y="19" width="22" height="28" rx="1"/>
+    <!-- Floor 2 (t=87) -->
+    <rect x="30" y="87" width="22" height="28" rx="1"/>
+    <rect x="90" y="87" width="22" height="28" rx="1"/>
+    <rect x="150" y="87" width="22" height="28" rx="1"/>
+    <rect x="210" y="87" width="22" height="28" rx="1"/>
+    <rect x="270" y="87" width="22" height="28" rx="1"/>
+    <!-- Floor 3 (t=157) -->
+    <rect x="30" y="157" width="22" height="28" rx="1"/>
+    <rect x="90" y="157" width="22" height="28" rx="1"/>
+    <rect x="150" y="157" width="22" height="28" rx="1"/>
+    <rect x="210" y="157" width="22" height="28" rx="1"/>
+    <rect x="270" y="157" width="22" height="28" rx="1"/>
+    <!-- Floor 4 (t=227) -->
+    <rect x="30" y="227" width="22" height="28" rx="1"/>
+    <rect x="90" y="227" width="22" height="28" rx="1"/>
+    <rect x="150" y="227" width="22" height="28" rx="1"/>
+    <rect x="210" y="227" width="22" height="28" rx="1"/>
+    <rect x="270" y="227" width="22" height="28" rx="1"/>
+  </g>
+
+  <!-- Facade warm lit windows (scattered) -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)" opacity="0.25">
+    <rect x="92" y="89" width="18" height="24" rx="1" fill="#c8a84c"/>
+    <rect x="32" y="229" width="18" height="24" rx="1" fill="#c8a84c"/>
+    <rect x="212" y="159" width="18" height="24" rx="1" fill="#9a7a3c"/>
+    <rect x="272" y="89" width="18" height="24" rx="1" fill="#8a7040"/>
+    <rect x="152" y="21" width="18" height="24" rx="1" fill="#9a7a3c"/>
+    <rect x="272" y="229" width="18" height="24" rx="1" fill="#b8984c"/>
+    <rect x="32" y="19" width="18" height="24" rx="1" fill="#9a7a3c"/>
+  </g>
+
+  <!-- Facade storefronts (ground floor, t=290) -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)">
+    <rect x="20" y="295" width="60" height="45" rx="1"
+      fill="#1a1816" stroke="#3a3530" stroke-width="0.7" opacity="0.6"/>
+    <rect x="115" y="295" width="55" height="45" rx="1"
+      fill="#1a1816" stroke="#3a3530" stroke-width="0.7" opacity="0.5"/>
+    <rect x="205" y="295" width="70" height="45" rx="1"
+      fill="#1a1816" stroke="#3a3530" stroke-width="0.7" opacity="0.6"/>
+  </g>
+
+  <!-- Fire escape (facade, between cols 4–5) -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)"
+     stroke="#4a4840" stroke-width="0.8" fill="none" opacity="0.4">
+    <line x1="222" y1="28" x2="222" y2="272"/>
+    <line x1="258" y1="28" x2="258" y2="272"/>
+    <line x1="222" y1="66" x2="258" y2="66"/>
+    <line x1="222" y1="136" x2="258" y2="136"/>
+    <line x1="222" y1="206" x2="258" y2="206"/>
+    <line x1="222" y1="276" x2="258" y2="276"/>
+  </g>
+
+  <!-- Water stain (facade) -->
+  <g transform="matrix(1, 0.53125, 0, 1, 20, 100)">
+    <line x1="150" y1="0" x2="152" y2="360"
+      stroke="#30281e" stroke-width="4" opacity="0.1"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SIDE FACE DETAILS — matrix(1, -0.46875, 0, 1, 340, 270)
+       Local coords: s=0→380 (left→right/back), t=0→390 (top→bottom)
+       Floor dividers at t = 66, 136, 206, 276
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Floor cornice lines (extended to 380px) -->
+  <g transform="matrix(1, -0.46875, 0, 1, 340, 270)"
+     opacity="0.14" stroke="#4a4438" stroke-width="0.6">
+    <line x1="5" y1="66" x2="375" y2="66"/>
+    <line x1="5" y1="136" x2="375" y2="136"/>
+    <line x1="5" y1="206" x2="375" y2="206"/>
+    <line x1="5" y1="276" x2="375" y2="276"/>
+  </g>
+
+  <!-- SIDE WINDOWS (6 cols × 4 floors) -->
+  <g transform="matrix(1, -0.46875, 0, 1, 340, 270)"
+     fill="#161210" stroke="#3a3530" stroke-width="0.4" opacity="0.7">
+    <!-- Floor 1 (t=21) -->
+    <rect x="25" y="21" width="18" height="24" rx="1"/>
+    <rect x="85" y="21" width="18" height="24" rx="1"/>
+    <rect x="145" y="21" width="18" height="24" rx="1"/>
+    <rect x="205" y="21" width="18" height="24" rx="1"/>
+    <rect x="265" y="21" width="18" height="24" rx="1"/>
+    <rect x="330" y="21" width="18" height="24" rx="1"/>
+    <!-- Floor 2 (t=89) -->
+    <rect x="25" y="89" width="18" height="24" rx="1"/>
+    <rect x="85" y="89" width="18" height="24" rx="1"/>
+    <rect x="145" y="89" width="18" height="24" rx="1"/>
+    <rect x="205" y="89" width="18" height="24" rx="1"/>
+    <rect x="265" y="89" width="18" height="24" rx="1"/>
+    <rect x="330" y="89" width="18" height="24" rx="1"/>
+    <!-- Floor 3 (t=159) -->
+    <rect x="25" y="159" width="18" height="24" rx="1"/>
+    <rect x="85" y="159" width="18" height="24" rx="1"/>
+    <rect x="145" y="159" width="18" height="24" rx="1"/>
+    <rect x="205" y="159" width="18" height="24" rx="1"/>
+    <rect x="265" y="159" width="18" height="24" rx="1"/>
+    <rect x="330" y="159" width="18" height="24" rx="1"/>
+    <!-- Floor 4 (t=229) -->
+    <rect x="25" y="229" width="18" height="24" rx="1"/>
+    <rect x="85" y="229" width="18" height="24" rx="1"/>
+    <rect x="145" y="229" width="18" height="24" rx="1"/>
+    <rect x="205" y="229" width="18" height="24" rx="1"/>
+    <rect x="265" y="229" width="18" height="24" rx="1"/>
+    <rect x="330" y="229" width="18" height="24" rx="1"/>
+  </g>
+
+  <!-- Side face warm lit windows -->
+  <g transform="matrix(1, -0.46875, 0, 1, 340, 270)" opacity="0.18">
+    <rect x="87" y="91" width="14" height="20" rx="1" fill="#c8a84c"/>
+    <rect x="207" y="161" width="14" height="20" rx="1" fill="#9a7a3c"/>
+    <rect x="147" y="231" width="14" height="20" rx="1" fill="#c8a84c"/>
+    <rect x="332" y="23" width="14" height="20" rx="1" fill="#8a7040"/>
+    <rect x="267" y="161" width="14" height="20" rx="1" fill="#b8984c"/>
+    <rect x="27" y="89" width="14" height="20" rx="1" fill="#c8a84c"/>
+  </g>
+
+  <!-- AC units (side face) -->
+  <g transform="matrix(1, -0.46875, 0, 1, 340, 270)" opacity="0.4">
+    <rect x="100" y="145" width="22" height="14" rx="2"
+      fill="#2e2e2e" stroke="#444" stroke-width="0.5"/>
+    <rect x="250" y="215" width="22" height="14" rx="2"
+      fill="#2e2e2e" stroke="#444" stroke-width="0.5"/>
+    <rect x="340" y="100" width="22" height="14" rx="2"
+      fill="#2e2e2e" stroke="#444" stroke-width="0.5"/>
+  </g>
+
+  <!-- Downspout (side face, near ridge) -->
+  <g transform="matrix(1, -0.46875, 0, 1, 340, 270)">
+    <line x1="3" y1="5" x2="3" y2="385"
+      stroke="#3a3838" stroke-width="1.5" opacity="0.3"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ROOFTOP ELEMENTS
+       ═══════════════════════════════════════════════════════ -->
+
+  <g opacity="0.35">
+    <!-- Water tank (roof u=50, v=80 → screen 150, 89) -->
+    <rect x="140" y="76" width="24" height="16" rx="2"
+      fill="#2a2828" stroke="#333" stroke-width="0.5"/>
+    <rect x="137" y="73" width="30" height="5" rx="1" fill="#2a2828"/>
+
+    <!-- Antenna (roof u=250, v=160 → screen 430, 158) -->
+    <line x1="430" y1="158" x2="430" y2="138"
+      stroke="#4a4848" stroke-width="1.2"/>
+    <line x1="426" y1="142" x2="434" y2="142"
+      stroke="#4a4848" stroke-width="0.8"/>
+  </g>
+</svg>

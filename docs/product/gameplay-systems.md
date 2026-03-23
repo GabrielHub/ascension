@@ -163,6 +163,8 @@ Rooms are the building blocks of the guild's physical space. They determine what
 
 Lower headquarters tiers are allowed to combine multiple room families inside one physical room. The room family tags are runtime-facing function tags, not a promise that every building tier gets one dedicated room per family.
 
+Building progression should not assume that every headquarters remains a single-plane layout. Later headquarters tiers should support floor-indexed room placement and floor-aware presentation, with multi-floor buildings changing both space allocation and how the player reads the headquarters at a glance.
+
 | Family      | Function                              | Example Rooms                                              |
 | ----------- | ------------------------------------- | ---------------------------------------------------------- |
 | Operations  | Mission planning, contract management | Front desk, mission board, intel room                      |
@@ -192,6 +194,14 @@ Later role-specific room variants should include:
 - Medic Clinic - more efficient Endurance/Resilience training for medics
 
 Staff assigned to rooms improve the room's effectiveness. This should remain a core management loop.
+
+Multi-floor headquarters direction:
+
+- The first post-bodega building should be allowed to span multiple floors rather than only widening the same ground plane.
+- Floor identity should be explicit in runtime-facing HQ presentation state once multi-floor buildings arrive; floor selection should not be inferred indirectly from background art alone.
+- Exterior surroundings for multi-floor buildings should use reusable elevation bands where possible so adjacent floors with materially similar outside reads can share one backdrop package.
+- Exact per-floor bespoke surroundings should be reserved for floors whose exterior context genuinely changes, such as ground-entry floors, sky-lobby floors, penthouse tiers, or tower-top prestige floors.
+- Multi-floor support should deepen building strategy, staffing, and readability first. It should not require a full tower-scale simulation before the second building can ship.
 
 ## Future Constraints
 

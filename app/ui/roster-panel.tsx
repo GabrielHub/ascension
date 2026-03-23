@@ -11,8 +11,10 @@ import type {
   TeamViewModel,
   VisitorViewModel,
 } from "./view-models";
-import { formatTag } from "./view-models";
+import { formatCultureLabel, formatTag } from "./view-models";
 import { StatBar } from "./_stat-bar";
+import { Tooltip } from "./_tooltip";
+import { getToneTip, getSignalTip } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
 
 interface RosterPanelProps {
@@ -101,14 +103,14 @@ function OperatorRow({
         <span className="min-w-0 truncate text-xs font-medium text-silver-bright">{op.name}</span>
         {/* Phase 2: risk indicators inline */}
         {op.quitRisk && (
-          <span className="shrink-0 text-[0.6rem] text-magma" title="Critical morale - may leave">
-            !
-          </span>
+          <Tooltip content="Critical morale — may leave the team" side="top">
+            <span className="shrink-0 text-[0.6rem] text-magma">!</span>
+          </Tooltip>
         )}
         {op.retentionRisk && !op.quitRisk && (
-          <span className="shrink-0 text-[0.6rem] text-ember" title="Low loyalty">
-            !
-          </span>
+          <Tooltip content="Low loyalty — retention at risk" side="top">
+            <span className="shrink-0 text-[0.6rem] text-ember">!</span>
+          </Tooltip>
         )}
         <span className="badge badge-gold ml-auto shrink-0">{formatTag(op.roleTag)}</span>
         <span className={`shrink-0 text-[0.6875rem] ${statusLabelClass(op)}`}>
@@ -137,22 +139,40 @@ function OperatorRow({
                 )}
               </div>
               {op.availableForRaid && (
-                <span className="mt-1 inline-block text-[0.6875rem] text-gold/70">Raid-ready</span>
+                <Tooltip content="Healthy and unassigned — can join a raid" side="top">
+                  <span className="mt-1 inline-block text-[0.6875rem] text-gold/70">
+                    Raid-ready
+                  </span>
+                </Tooltip>
               )}
             </div>
           </div>
 
           {/* Stat bars */}
           <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-            <StatBar label="Morale" value={Math.round(op.moraleCurrent)} max={100} />
-            <StatBar label="Loyalty" value={Math.round(op.loyaltyCurrent)} max={100} />
+            <StatBar
+              label="Morale"
+              value={Math.round(op.moraleCurrent)}
+              max={100}
+              tip="How the operator feels. Low morale risks refusal or departure"
+            />
+            <StatBar
+              label="Loyalty"
+              value={Math.round(op.loyaltyCurrent)}
+              max={100}
+              tip="Commitment to the team. Low loyalty increases quit risk"
+            />
           </div>
 
           {/* Needs */}
           <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
-            <span>Fatigue {Math.round(op.needFatigue)}</span>
+            <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
+              <span>Fatigue {Math.round(op.needFatigue)}</span>
+            </Tooltip>
             <span className="opacity-30">&middot;</span>
-            <span>Stress {Math.round(op.needStress)}</span>
+            <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
+              <span>Stress {Math.round(op.needStress)}</span>
+            </Tooltip>
           </div>
 
           {/* ── Phase 2: Explanation surfaces ──────────────────── */}
@@ -178,14 +198,18 @@ function OperatorRow({
                 Room: {assignedRoomCulture.roomName}
               </div>
               <div className="mt-0.5 text-[0.6875rem] text-silver/55">
-                {assignedRoomCulture.summary}
+                {formatCultureLabel(assignedRoomCulture.summary)}
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
-                <span className="badge badge-slate">{assignedRoomCulture.tone || "neutral"}</span>
-                {assignedRoomCulture.signals.map((signal) => (
-                  <span key={signal} className="badge badge-slate">
-                    {signal}
+                <Tooltip content={getToneTip(assignedRoomCulture.tone)}>
+                  <span className="badge badge-slate">
+                    {formatCultureLabel(assignedRoomCulture.tone || "neutral")}
                   </span>
+                </Tooltip>
+                {assignedRoomCulture.signals.map((signal) => (
+                  <Tooltip key={signal} content={getSignalTip(signal)}>
+                    <span className="badge badge-slate">{formatCultureLabel(signal)}</span>
+                  </Tooltip>
                 ))}
               </div>
             </div>
@@ -201,7 +225,9 @@ function OperatorRow({
               <div className="mt-1 flex items-center gap-2 text-[0.6875rem] text-silver/50">
                 <span>{operatorTeam.memberNames.join(", ")}</span>
                 <span className="opacity-30">&middot;</span>
-                <span>Cohesion {Math.round(operatorTeam.cohesion)}</span>
+                <Tooltip content="Team coordination. Builds through shared missions" side="top">
+                  <span>Cohesion {Math.round(operatorTeam.cohesion)}</span>
+                </Tooltip>
               </div>
               {operatorTeam.explanationReasons.slice(0, 2).map((reason) => (
                 <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
@@ -214,9 +240,11 @@ function OperatorRow({
           {/* Bonds for this operator */}
           {bonds.length > 0 && (
             <div>
-              <div className="mb-1 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/50">
-                Bonds
-              </div>
+              <Tooltip content="Interpersonal relationships formed through shared work" side="top">
+                <div className="mb-1 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/50">
+                  Bonds
+                </div>
+              </Tooltip>
               {bonds.map((rel) => {
                 const partnerName =
                   rel.operatorAId === op.id ? rel.operatorBName : rel.operatorAName;
@@ -228,13 +256,21 @@ function OperatorRow({
                     : rel.cohesion >= 20
                       ? "text-silver/50"
                       : "text-ember";
+                const cohesionTip =
+                  rel.cohesion >= 50
+                    ? "Close bond — strong mutual trust"
+                    : rel.cohesion >= 20
+                      ? "Developing bond — building rapport"
+                      : "Fragile bond — may weaken further";
                 return (
                   <div
                     key={`${rel.operatorAId}-${rel.operatorBId}`}
                     className="flex items-center justify-between py-0.5 text-[0.6875rem]"
                   >
                     <span className="text-silver/70">{partnerName}</span>
-                    <span className={cohesionClass}>{cohesionLabel}</span>
+                    <Tooltip content={cohesionTip} side="top">
+                      <span className={cohesionClass}>{cohesionLabel}</span>
+                    </Tooltip>
                   </div>
                 );
               })}
@@ -253,7 +289,9 @@ function FallenRow({ op }: { op: OperatorViewModel }) {
     <div className="flex items-center gap-2 px-2.5 py-1 opacity-60">
       <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-magma/50" />
       <span className="min-w-0 truncate text-xs text-silver/50 line-through">{op.name}</span>
-      <span className="ml-auto text-[0.6875rem] text-magma/70">KIA</span>
+      <Tooltip content="Killed in action" side="top">
+        <span className="ml-auto text-[0.6875rem] text-magma/70">KIA</span>
+      </Tooltip>
     </div>
   );
 }
@@ -299,7 +337,9 @@ function StaffRow({
       {isExpanded && (
         <div className="animate-enter ml-4 mt-1 border-l border-gold/10 pl-3 pb-1.5">
           <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
-            <span>${member.wage}/day</span>
+            <Tooltip content="Daily wage drawn from treasury" side="top">
+              <span>${member.wage}/day</span>
+            </Tooltip>
             <span className="opacity-30">&middot;</span>
             <span>{member.status}</span>
           </div>
@@ -315,15 +355,19 @@ function StaffRow({
                 </button>
               )}
               {assignableRooms.map((room) => (
-                <button
+                <Tooltip
                   key={room.id}
-                  type="button"
-                  className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
-                  onClick={() => onAssign(room.id)}
-                  title={`Assign to ${room.name}`}
+                  content={`Assign to ${room.name} (${room.occupancy}/${room.capacity})`}
+                  side="top"
                 >
-                  {room.name.toLowerCase()}
-                </button>
+                  <button
+                    type="button"
+                    className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
+                    onClick={() => onAssign(room.id)}
+                  >
+                    {room.name.toLowerCase()}
+                  </button>
+                </Tooltip>
               ))}
             </div>
           )}
@@ -354,24 +398,30 @@ function VisitorRow({
           {formatTag(visitor.desiredRoleTag)}
         </span>
       </div>
-      <button
-        type="button"
-        className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
-          canAccept ? "btn-primary" : "btn-ghost cursor-not-allowed text-silver/30"
-        }`}
-        onClick={onAccept}
-        disabled={!canAccept}
-        title={canAccept ? `Recruit ${visitor.name}` : "Operator roster full"}
+      <Tooltip
+        content={canAccept ? `Recruit ${visitor.name} as an operator` : "Operator roster is full"}
+        side="top"
       >
-        {canAccept ? "Recruit" : "Full"}
-      </button>
-      <button
-        type="button"
-        className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
-        onClick={onReject}
-      >
-        pass
-      </button>
+        <button
+          type="button"
+          className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
+            canAccept ? "btn-primary" : "btn-ghost cursor-not-allowed text-silver/30"
+          }`}
+          onClick={onAccept}
+          disabled={!canAccept}
+        >
+          {canAccept ? "Recruit" : "Full"}
+        </button>
+      </Tooltip>
+      <Tooltip content="Dismiss this visitor" side="top">
+        <button
+          type="button"
+          className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+          onClick={onReject}
+        >
+          pass
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -483,17 +533,19 @@ export function RosterPanel({
           <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
             Operators
           </h3>
-          <span
-            className={`text-[0.6875rem] tabular-nums ${
-              rosterPressure.replacementPressureLevel === "critical"
-                ? "text-ember"
-                : rosterPressure.replacementPressureLevel === "strained"
-                  ? "text-smolder"
-                  : "text-gold/60"
-            }`}
-          >
-            {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity}
-          </span>
+          <Tooltip content="Active operators / maximum capacity">
+            <span
+              className={`text-[0.6875rem] tabular-nums ${
+                rosterPressure.replacementPressureLevel === "critical"
+                  ? "text-ember"
+                  : rosterPressure.replacementPressureLevel === "strained"
+                    ? "text-smolder"
+                    : "text-gold/60"
+              }`}
+            >
+              {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity}
+            </span>
+          </Tooltip>
         </div>
 
         {livingOperators.length > 0 ? (
@@ -540,9 +592,11 @@ export function RosterPanel({
       {/* ── Staff ─────────────────────────────────────────── */}
       <div>
         <div className="mb-1 flex items-center justify-between px-1">
-          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
-            Staff ({staff.length})
-          </span>
+          <Tooltip content="Hired workers assigned to rooms. Not combat-capable">
+            <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+              Staff ({staff.length})
+            </span>
+          </Tooltip>
           <StaffHireMenu onHire={(roleTag) => callbacks.hireStaff(roleTag)} />
         </div>
         {staff.length > 0 ? (
@@ -566,13 +620,17 @@ export function RosterPanel({
       {/* ── Visitors ──────────────────────────────────────── */}
       <div>
         <div className="mb-1 flex items-center justify-between px-1">
-          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
-            Visitors ({visitors.length})
-          </span>
-          {rosterPressure.vacancyCount > 0 ? (
-            <span className="text-[0.6875rem] text-ember/70">
-              {rosterPressure.vacancyCount} to fill
+          <Tooltip content="Potential recruits passing through. Accept to add as operators">
+            <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+              Visitors ({visitors.length})
             </span>
+          </Tooltip>
+          {rosterPressure.vacancyCount > 0 ? (
+            <Tooltip content="Open operator slots available for recruitment">
+              <span className="text-[0.6875rem] text-ember/70">
+                {rosterPressure.vacancyCount} to fill
+              </span>
+            </Tooltip>
           ) : visitors.length > 0 ? (
             <span className="text-[0.6875rem] text-silver/35">Roster full</span>
           ) : null}

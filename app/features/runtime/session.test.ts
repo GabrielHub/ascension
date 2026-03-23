@@ -27,6 +27,8 @@ function createDeferredPromise<T>() {
   };
 }
 
+const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
+
 function createRoomSnapshot(
   templateId: string,
   id: string,
@@ -158,6 +160,32 @@ describe("runtime session lifecycle", () => {
     expect(session.stableCommandTypes).toContain("sim/place-room");
     expect(session.stableCommandTypes).toContain("sim/accept-recruit");
     expect(session.stableCommandTypes).toContain("sim/assign-staff");
+
+    session.dispose();
+  });
+
+  it("derives visible expansion bays and overlay props from HQ upgrade state", async () => {
+    const session = await resolveRuntimeSession({
+      mode: "preview",
+    });
+    const initialExpansionSlotCount = session.state.hqWorldSnapshot?.expansionSlots.length ?? 0;
+
+    await session.commands.purchaseBuildingUpgrade({
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+    await session.commands.purchaseRoomUpgrade({
+      roomId: "room-instance/register",
+      upgradeId: "upgrade/room/register:records_wall",
+    });
+
+    expect(session.state.hqWorldSnapshot?.expansionSlots.length).toBe(
+      initialExpansionSlotCount + 1,
+    );
+    expect(
+      session.state.hqWorldSnapshot?.roomProps.some((sprite) =>
+        sprite.id.includes("upgrade/upgrade/room/register:records_wall"),
+      ),
+    ).toBe(true);
 
     session.dispose();
   });
@@ -1032,13 +1060,39 @@ describe("runtime session lifecycle", () => {
       slotId: "slot/1",
     });
 
-    await session.commands.tick();
+    await session.commands.placeRoom({ templateId: "room/break-room" });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(session.persistence.status).toBe("error");
     expect(session.persistence.errorMessage).toBe("disk full");
     expect(session.state.persistence.status).toBe("error");
     expect(session.state.persistence.errorMessage).toBe("disk full");
+
+    session.dispose();
+  });
+
+  it("delays tick-driven autosaves until the autosave interval elapses", async () => {
+    vi.useFakeTimers();
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(undefined);
+    const writeSaveGame = vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "new",
+      slotId: "slot/1",
+    });
+
+    expect(writeSaveGame).toHaveBeenCalledTimes(1);
+
+    await session.commands.tick();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(writeSaveGame).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(AUTOSAVE_INTERVAL_MS);
+
+    expect(writeSaveGame).toHaveBeenCalledTimes(2);
+    expect(writeSaveGame.mock.calls[1]?.[0].world.time.tick).toBe(session.worldSnapshot.time.tick);
 
     session.dispose();
   });
@@ -1064,7 +1118,7 @@ describe("runtime session lifecycle", () => {
       slotId: "slot/1",
     });
 
-    await session.commands.tick();
+    await session.commands.placeRoom({ templateId: "room/break-room" });
     await session.commands.tick();
     const latestTick = session.worldSnapshot.time.tick;
 
