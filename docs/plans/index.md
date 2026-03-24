@@ -1,14 +1,16 @@
-# Phase Plans Index
+# Plans Index
 
-This folder currently has no active checked-in phase-plan documents.
+Checked-in plan docs are execution briefs, not canon. Some are infrastructure plans, some are feature-system plans, and some are targeted follow-up plans.
 
-The earlier pre-Phase-3 remediation plans were removed once that execution pass stopped being the live coordination surface.
+## Current Plans
+
+There are no active checked-in execution plans right now. Completed briefs should be removed once their implementation and canon-doc updates land.
 
 ## What Belongs Here
 
-- Add a plan doc here only when a future workstream needs explicit staged execution, ownership boundaries, or merge-order guidance.
-- Keep plan docs transient and execution-focused. They are not canonical product or world references.
-- Remove plan docs once the plan is complete or no longer the current coordination source.
+- Add a plan doc here only when a future workstream needs explicit staged execution, ownership boundaries, merge-order guidance, or a temporary implementation brief.
+- Keep plan docs execution-focused. They should describe how to build a deferred feature, not become a second source of product canon.
+- Remove or replace plan docs once the plan is complete or no longer the active coordination source.
 
 ## Canon Sources
 
@@ -19,4 +21,4 @@ The earlier pre-Phase-3 remediation plans were removed once that execution pass 
 ## Execution Rule
 
 - Code, tests, templates, and shipped assets remain the source of truth for implemented behavior.
-- If a future plan changes a shared contract, update the relevant canonical doc in the same pass.
+- If a plan changes a shared future-facing contract, update the relevant canon docs in the same pass.

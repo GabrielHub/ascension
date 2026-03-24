@@ -1,93 +1,146 @@
 /**
- * Fixed building layouts define the full physical shell of each HQ building
- * type. Room slots, corridors, and the outer boundary are all defined upfront
- * so the building size never changes as the player adds or removes rooms.
- *
- * Any cell inside the shell that is not a room slot is automatically rendered
- * as a corridor tile (internal hallway).
+ * Fixed building layouts define the physical shell for each HQ building.
+ * Layouts are floor-aware even when the live building only exposes floor 0.
  */
 
 export interface BuildingRoomSlot {
-  /** Stable slot identifier (e.g. "slot/0"). */
   slotId: string;
-  /** Grid footprint for this slot. */
   col: number;
   row: number;
   cols: number;
   rows: number;
-  /** If set, the room template placed here at game start. */
   startingTemplateId?: string;
 }
 
-export interface BuildingLayout {
-  /** Which building template this layout belongs to. */
-  buildingId: string;
-  /** Outer shell footprint (encompasses all rooms + corridors). */
+export interface BuildingFloorLayout {
+  floorIndex: number;
+  elevationBandId: string | null;
   shell: { col: number; row: number; cols: number; rows: number };
-  /** All room slots in front-to-back order. */
   slots: readonly BuildingRoomSlot[];
 }
 
-// ── Bodega ───────────────────────────────────────────────────────────────────
-//
-// Layout (10 cols × 18 rows, front = high row numbers):
-//
-//  Row 0–2:    [Slot 5  4×3 @ col 0]  ··2-col gap··  [Slot 6  4×3 @ col 6]
-//  Row 3–4:    [============ 2-row corridor ============]
-//  Row 5–7:    [Slot 3  4×3 @ col 0]  ··2-col gap··  [Slot 4  4×3 @ col 6]
-//  Row 8–9:    [============ 2-row corridor ============]
-//  Row 10–12:  [Register 4×3 @ col 0] ··2-col gap··  [Counter 4×3 @ col 6]
-//  Row 13–14:  [============ 2-row corridor ============]
-//  Row 15–17:  ·1· [====== Dining Area 8×3 ======] ·1·
+export interface BuildingLayoutStage {
+  stageId: string;
+  minimumTier: number;
+  floors: readonly BuildingFloorLayout[];
+}
 
-export const BODEGA_LAYOUT: BuildingLayout = {
-  buildingId: "building/bodega",
+export interface BuildingLayoutDefinition {
+  buildingId: string;
+  stages: readonly BuildingLayoutStage[];
+}
+
+const BODEGA_FLOOR_0: BuildingFloorLayout = {
+  floorIndex: 0,
+  elevationBandId: "ground-floor",
   shell: { col: 0, row: 0, cols: 10, rows: 18 },
   slots: [
-    // Slot 0 — Dining Area (double-wide, centered front)
     {
-      slotId: "slot/0",
+      slotId: "slot/dining-area",
       col: 1,
       row: 15,
       cols: 8,
       rows: 3,
       startingTemplateId: "room/dining_area:tier_1",
     },
-    // Slot 1 — Register (middle-left)
     {
-      slotId: "slot/1",
+      slotId: "slot/register",
       col: 0,
       row: 10,
       cols: 4,
       rows: 3,
       startingTemplateId: "room/register:tier_1",
     },
-    // Slot 2 — Counter (middle-right)
     {
-      slotId: "slot/2",
+      slotId: "slot/counter",
       col: 6,
       row: 10,
       cols: 4,
       rows: 3,
       startingTemplateId: "room/counter:tier_1",
     },
-    // Slot 3 — back-left (locked)
-    { slotId: "slot/3", col: 0, row: 5, cols: 4, rows: 3 },
-    // Slot 4 — back-right (locked)
-    { slotId: "slot/4", col: 6, row: 5, cols: 4, rows: 3 },
-    // Slot 5 — far-back-left (locked)
-    { slotId: "slot/5", col: 0, row: 0, cols: 4, rows: 3 },
-    // Slot 6 — far-back-right (locked)
-    { slotId: "slot/6", col: 6, row: 0, cols: 4, rows: 3 },
+    {
+      slotId: "slot/supply-closet",
+      col: 0,
+      row: 5,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/supply_closet:tier_1",
+    },
+    { slotId: "slot/back-room-right", col: 6, row: 5, cols: 4, rows: 3 },
+    { slotId: "slot/storage-left", col: 0, row: 0, cols: 4, rows: 3 },
+    { slotId: "slot/storage-right", col: 6, row: 0, cols: 4, rows: 3 },
   ],
 };
 
-// ── Lookup ───────────────────────────────────────────────────────────────────
+export const BODEGA_LAYOUT: BuildingLayoutDefinition = {
+  buildingId: "building/bodega",
+  stages: [
+    {
+      stageId: "bodega/starter",
+      minimumTier: 1,
+      floors: [BODEGA_FLOOR_0],
+    },
+  ],
+};
 
-const LAYOUTS_BY_BUILDING: Record<string, BuildingLayout> = {
+const LAYOUTS_BY_BUILDING: Record<string, BuildingLayoutDefinition> = {
   [BODEGA_LAYOUT.buildingId]: BODEGA_LAYOUT,
 };
 
-export function getBuildingLayout(buildingId: string): BuildingLayout | undefined {
+const activeStageCache = new Map<string, BuildingLayoutStage | undefined>();
+
+function getActiveStage(
+  definition: BuildingLayoutDefinition | undefined,
+  buildingTier = 1,
+): BuildingLayoutStage | undefined {
+  if (!definition) {
+    return undefined;
+  }
+
+  const cacheKey = `${definition.buildingId}:${buildingTier}`;
+  if (activeStageCache.has(cacheKey)) return activeStageCache.get(cacheKey);
+
+  const result =
+    [...definition.stages]
+      .sort((left, right) => left.minimumTier - right.minimumTier)
+      .filter((stage) => stage.minimumTier <= buildingTier)
+      .at(-1) ?? definition.stages[0];
+
+  activeStageCache.set(cacheKey, result);
+  return result;
+}
+
+export function getBuildingLayoutDefinition(
+  buildingId: string,
+): BuildingLayoutDefinition | undefined {
   return LAYOUTS_BY_BUILDING[buildingId];
+}
+
+export function getBuildingFloors(
+  buildingId: string,
+  buildingTier = 1,
+): readonly BuildingFloorLayout[] {
+  return getActiveStage(getBuildingLayoutDefinition(buildingId), buildingTier)?.floors ?? [];
+}
+
+export function getBuildingLayout(
+  buildingId: string,
+  floorIndex = 0,
+  buildingTier = 1,
+): BuildingFloorLayout | undefined {
+  return getBuildingFloors(buildingId, buildingTier).find(
+    (floor) => floor.floorIndex === floorIndex,
+  );
+}
+
+export function getBuildingSlot(
+  buildingId: string,
+  slotId: string,
+  floorIndex = 0,
+  buildingTier = 1,
+): BuildingRoomSlot | undefined {
+  return getBuildingLayout(buildingId, floorIndex, buildingTier)?.slots.find(
+    (slot) => slot.slotId === slotId,
+  );
 }

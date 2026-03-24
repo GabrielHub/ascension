@@ -30,6 +30,122 @@ export const missionTemplates = [
         speed: 20,
         threat: 60,
         dropTableId: "drop-table/dungeon-f-boss",
+        encounter: {
+          elapsedMinutes: 42,
+          targetingPriority: "frontline",
+          phases: [
+            {
+              phaseIndex: 0,
+              hpThresholdFraction: 1,
+              statModifiers: {},
+              actionIds: ["action/brood-rush", "action/tunnel-breach", "action/chitin-screech"],
+              onEnterEffects: [],
+            },
+            {
+              phaseIndex: 1,
+              hpThresholdFraction: 0.55,
+              statModifiers: { attack: 4, speed: 3 },
+              actionIds: [
+                "action/brood-rush",
+                "action/tunnel-breach",
+                "action/egg-burst",
+                "action/feeding-frenzy",
+              ],
+              onEnterEffects: [
+                { kind: "apply_status", statusId: "hastened", duration: 2, potency: 8 },
+              ],
+              summonIds: ["summon/broodling"],
+            },
+          ],
+          actions: [
+            {
+              id: "action/brood-rush",
+              name: "Brood Rush",
+              weight: 36,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 15, scalingStat: "strength", scalingFactor: 0.85 },
+              ],
+            },
+            {
+              id: "action/tunnel-breach",
+              name: "Tunnel Breach",
+              weight: 26,
+              cooldown: 2,
+              targeting: "all_enemies",
+              effects: [
+                { kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.6 },
+                { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+              ],
+            },
+            {
+              id: "action/chitin-screech",
+              name: "Chitin Screech",
+              weight: 18,
+              cooldown: 3,
+              targeting: "all_enemies",
+              effects: [{ kind: "apply_status", statusId: "suppressed", duration: 2, potency: 8 }],
+            },
+            {
+              id: "action/egg-burst",
+              name: "Egg Burst",
+              weight: 12,
+              cooldown: 3,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1 },
+                { kind: "apply_status", statusId: "bleeding", duration: 2, potency: 8 },
+              ],
+              phaseIndices: [1],
+            },
+            {
+              id: "action/feeding-frenzy",
+              name: "Feeding Frenzy",
+              weight: 8,
+              cooldown: 4,
+              targeting: "enemy_lowest_hp",
+              effects: [
+                { kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.05 },
+              ],
+              phaseIndices: [1],
+            },
+          ],
+          reactionHooks: [
+            {
+              trigger: "on_phase_enter",
+              target: "all_allies",
+              effects: [
+                { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+              usesRemaining: 1,
+            },
+          ],
+          summonDefinitions: [
+            {
+              summonId: "summon/broodling",
+              label: "Broodling",
+              stats: { attack: 7, defense: 5, hp: 28, speed: 12, threat: 24 },
+              actions: [
+                {
+                  id: "action/broodling-bite",
+                  name: "Broodling Bite",
+                  weight: 100,
+                  cooldown: 0,
+                  targeting: "enemy_lowest_hp",
+                  effects: [
+                    {
+                      kind: "damage",
+                      basePower: 7,
+                      scalingStat: "strength",
+                      scalingFactor: 0.4,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       },
     },
   },
@@ -59,6 +175,52 @@ export const missionTemplates = [
         speed: 15,
         threat: 50,
         dropTableId: "drop-table/dungeon-f-boss",
+        encounter: {
+          elapsedMinutes: 34,
+          targetingPriority: "highest_threat",
+          phases: [
+            {
+              phaseIndex: 0,
+              hpThresholdFraction: 1,
+              statModifiers: {},
+              actionIds: ["action/pipe-lash", "action/backflow", "action/maintenance-seal"],
+              onEnterEffects: [],
+            },
+          ],
+          actions: [
+            {
+              id: "action/pipe-lash",
+              name: "Pipe Lash",
+              weight: 42,
+              cooldown: 0,
+              targeting: "enemy_highest_threat",
+              effects: [
+                { kind: "damage", basePower: 13, scalingStat: "strength", scalingFactor: 0.8 },
+              ],
+            },
+            {
+              id: "action/backflow",
+              name: "Backflow",
+              weight: 32,
+              cooldown: 2,
+              targeting: "all_enemies",
+              effects: [
+                { kind: "damage", basePower: 7, scalingStat: "strength", scalingFactor: 0.45 },
+                { kind: "apply_status", statusId: "slowed", duration: 2, potency: 8 },
+              ],
+            },
+            {
+              id: "action/maintenance-seal",
+              name: "Maintenance Seal",
+              weight: 26,
+              cooldown: 3,
+              targeting: "boss",
+              effects: [
+                { kind: "shield", basePower: 14, scalingStat: "resilience", scalingFactor: 0.35 },
+              ],
+            },
+          ],
+        },
       },
     },
   },
@@ -91,6 +253,89 @@ export const missionTemplates = [
         speed: 45,
         threat: 55,
         dropTableId: "drop-table/dungeon-f-boss",
+        encounter: {
+          elapsedMinutes: 36,
+          targetingPriority: "lowest_hp",
+          phases: [
+            {
+              phaseIndex: 0,
+              hpThresholdFraction: 1,
+              statModifiers: {},
+              actionIds: ["action/blindside", "action/signal-fade", "action/afterimage-pounce"],
+              onEnterEffects: [],
+            },
+            {
+              phaseIndex: 1,
+              hpThresholdFraction: 0.5,
+              statModifiers: { speed: 6, attack: 3 },
+              actionIds: [
+                "action/blindside",
+                "action/signal-fade",
+                "action/afterimage-pounce",
+                "action/vanishing-angle",
+              ],
+              onEnterEffects: [
+                { kind: "apply_status", statusId: "fortified", duration: 2, potency: 6 },
+              ],
+            },
+          ],
+          actions: [
+            {
+              id: "action/blindside",
+              name: "Blindside",
+              weight: 34,
+              cooldown: 0,
+              targeting: "enemy_lowest_hp",
+              effects: [
+                { kind: "damage", basePower: 14, scalingStat: "strength", scalingFactor: 0.9 },
+              ],
+            },
+            {
+              id: "action/signal-fade",
+              name: "Signal Fade",
+              weight: 28,
+              cooldown: 2,
+              targeting: "all_enemies",
+              effects: [
+                { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 8 },
+                { kind: "modify_threat", delta: -8 },
+              ],
+            },
+            {
+              id: "action/afterimage-pounce",
+              name: "Afterimage Pounce",
+              weight: 22,
+              cooldown: 2,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.95 },
+                { kind: "apply_status", statusId: "marked", duration: 2, potency: 6 },
+              ],
+            },
+            {
+              id: "action/vanishing-angle",
+              name: "Vanishing Angle",
+              weight: 16,
+              cooldown: 4,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.1 },
+                { kind: "apply_status", statusId: "exposed", duration: 2, potency: 8 },
+              ],
+              phaseIndices: [1],
+            },
+          ],
+          reactionHooks: [
+            {
+              trigger: "on_phase_enter",
+              target: "boss_self",
+              effects: [
+                { kind: "shield", basePower: 12, scalingStat: "resilience", scalingFactor: 0.25 },
+              ],
+              usesRemaining: 1,
+            },
+          ],
+        },
       },
     },
   },

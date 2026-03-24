@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import {
   applyWheelZoom,
@@ -43,6 +43,7 @@ import { getActorPortraitUrl } from "./actor-tokens";
 import { roundRect } from "./canvas-utils";
 import { projectIso } from "./hq-world";
 import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
 
 const ASSET_ROOT = getHqEnvironmentRenderConfig().paths.partsRoot;
 const FONT_FAMILY = "'Inter', sans-serif";
@@ -60,6 +61,18 @@ const HOVER_BORDER = "rgba(200, 168, 76, 0.3)";
 const RAID_FOG_CELL = 32;
 const TOKEN_W = 48;
 const TOKEN_H = 60;
+
+interface CanvasViewport {
+  width: number;
+  height: number;
+  dpr: number;
+}
+
+const DEFAULT_VIEWPORT: CanvasViewport = {
+  width: 800,
+  height: 600,
+  dpr: 1,
+};
 
 // ── Phase-aware perimeter fill colors ──────────────────────────────────────
 
@@ -214,6 +227,18 @@ interface GridBounds {
   maxRow: number;
 }
 
+interface PreparedPerimeterRenderData {
+  bounds: GridBounds | null;
+  sortedTiles: readonly HqPerimeterTile[];
+  kindMap: ReadonlyMap<string, HqPerimeterTile["kind"]>;
+  centerLaneSet: ReadonlySet<string>;
+}
+
+const perimeterRenderPrepCache = new WeakMap<
+  readonly HqPerimeterTile[],
+  PreparedPerimeterRenderData
+>();
+
 function computeGridBounds(tiles: readonly { col: number; row: number }[]): GridBounds | null {
   if (tiles.length === 0) return null;
   let minCol = tiles[0].col;
@@ -239,40 +264,38 @@ function tileDiamond(snapshot: HqWorldSnapshot, col: number, row: number): HqPoi
   return [p0, p1, p2, p3];
 }
 
-// ── Modular tile rendering ────────────────────────────────────────────────
+function measureCanvasViewport(canvas: HTMLCanvasElement): CanvasViewport {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    width: rect.width,
+    height: rect.height,
+    dpr: window.devicePixelRatio || 1,
+  };
+}
 
-function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
-  const phase: HqTimeOfDayPhase = snapshot.backdrop?.phase ?? "night";
-  const fills = PERIMETER_FILLS[phase];
-  const strokes = PERIMETER_STROKES[phase];
-
-  // Solid opaque ground plane behind the iso diamonds to prevent
-  // flanking buildings bleeding through the gaps between tiles.
-  // Extends well beyond tiles to cover viewport corners.
-  const periBounds = computeGridBounds(snapshot.modular.perimeterTiles);
-  if (periBounds) {
-    const EXT = 30;
-    const pMin = hqProject(snapshot, periBounds.minCol - EXT, periBounds.minRow - EXT);
-    const pMaxCol = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.minRow - EXT);
-    const pMaxRow = hqProject(snapshot, periBounds.minCol - EXT, periBounds.maxRow + 1 + EXT);
-    const pMax = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.maxRow + 1 + EXT);
-    const groundPoly: HqPoint[] = [pMin, pMaxCol, pMax, pMaxRow];
-    drawPolygon(ctx, groundPoly, fills.void);
+function syncCanvasBackingStore(canvas: HTMLCanvasElement, viewport: CanvasViewport): void {
+  const nextW = Math.floor(viewport.width * viewport.dpr);
+  const nextH = Math.floor(viewport.height * viewport.dpr);
+  if (canvas.width !== nextW || canvas.height !== nextH) {
+    canvas.width = nextW;
+    canvas.height = nextH;
   }
+}
 
-  const sorted = snapshot.modular.perimeterTiles
-    .slice()
-    .sort((a, b) => a.col + a.row - (b.col + b.row));
+export function preparePerimeterRenderData(
+  tiles: readonly HqPerimeterTile[],
+): PreparedPerimeterRenderData {
+  const cached = perimeterRenderPrepCache.get(tiles);
+  if (cached) return cached;
 
-  // Build a set for quick sidewalk/street boundary lookup
-  const kindMap = new Map<string, string>();
-  for (const tile of snapshot.modular.perimeterTiles) {
+  const sortedTiles = tiles.slice().sort((a, b) => a.col + a.row - (b.col + b.row));
+  const kindMap = new Map<string, HqPerimeterTile["kind"]>();
+  for (const tile of tiles) {
     kindMap.set(`${tile.col},${tile.row}`, tile.kind);
   }
 
-  // Precompute center-lane set (street tiles with >=2 streets above and below)
   const centerLaneSet = new Set<string>();
-  for (const tile of snapshot.modular.perimeterTiles) {
+  for (const tile of tiles) {
     if (tile.kind !== "street") continue;
     let streetsAbove = 0;
     let streetsBelow = 0;
@@ -289,7 +312,39 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
     }
   }
 
-  for (const tile of sorted) {
+  const prepared: PreparedPerimeterRenderData = {
+    bounds: computeGridBounds(tiles),
+    sortedTiles,
+    kindMap,
+    centerLaneSet,
+  };
+  perimeterRenderPrepCache.set(tiles, prepared);
+  return prepared;
+}
+
+// ── Modular tile rendering ────────────────────────────────────────────────
+
+function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
+  const phase: HqTimeOfDayPhase = snapshot.backdrop?.phase ?? "night";
+  const fills = PERIMETER_FILLS[phase];
+  const strokes = PERIMETER_STROKES[phase];
+  const perimeterData = preparePerimeterRenderData(snapshot.modular.perimeterTiles);
+
+  // Solid opaque ground plane behind the iso diamonds to prevent
+  // flanking buildings bleeding through the gaps between tiles.
+  // Extends well beyond tiles to cover viewport corners.
+  const periBounds = perimeterData.bounds;
+  if (periBounds) {
+    const EXT = 30;
+    const pMin = hqProject(snapshot, periBounds.minCol - EXT, periBounds.minRow - EXT);
+    const pMaxCol = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.minRow - EXT);
+    const pMaxRow = hqProject(snapshot, periBounds.minCol - EXT, periBounds.maxRow + 1 + EXT);
+    const pMax = hqProject(snapshot, periBounds.maxCol + 1 + EXT, periBounds.maxRow + 1 + EXT);
+    const groundPoly: HqPoint[] = [pMin, pMaxCol, pMax, pMaxRow];
+    drawPolygon(ctx, groundPoly, fills.void);
+  }
+
+  for (const tile of perimeterData.sortedTiles) {
     const fill = fills[tile.kind];
     const stroke = strokes[tile.kind];
     const pts = tileDiamond(snapshot, tile.col, tile.row);
@@ -312,7 +367,7 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
 
     // Street lane markings — double yellow center line
     if (tile.kind === "street") {
-      const isCenterLane = centerLaneSet.has(`${tile.col},${tile.row}`);
+      const isCenterLane = perimeterData.centerLaneSet.has(`${tile.col},${tile.row}`);
 
       if (isCenterLane) {
         const cx = (pts[0].x + pts[2].x) / 2;
@@ -345,7 +400,7 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
       const belowKey = `${tile.col},${tile.row + 1}`;
       const aboveKey = `${tile.col},${tile.row - 1}`;
       // Curb on near side (sidewalk above street)
-      if (kindMap.get(belowKey) === "street") {
+      if (perimeterData.kindMap.get(belowKey) === "street") {
         const p2 = hqProject(snapshot, tile.col + 1, tile.row + 1);
         const p3 = hqProject(snapshot, tile.col, tile.row + 1);
         ctx.strokeStyle = "rgba(120, 108, 80, 0.45)";
@@ -356,7 +411,7 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
         ctx.stroke();
       }
       // Curb on far side (street above sidewalk)
-      if (kindMap.get(aboveKey) === "street") {
+      if (perimeterData.kindMap.get(aboveKey) === "street") {
         const p0 = hqProject(snapshot, tile.col, tile.row);
         const p1 = hqProject(snapshot, tile.col + 1, tile.row);
         ctx.strokeStyle = "rgba(120, 108, 80, 0.35)";
@@ -388,6 +443,7 @@ function drawModularFloorTiles(
   ctx: CanvasRenderingContext2D,
   snapshot: HqWorldSnapshot,
   hoveredRoomId: string | null,
+  selectedRoomId: string | null,
 ): void {
   const sorted = snapshot.modular.floorTiles
     .slice()
@@ -396,7 +452,7 @@ function drawModularFloorTiles(
   for (const tile of sorted) {
     const noise = tileNoise(tile.col, tile.row);
     const alpha = 0.94 + noise * 0.1;
-    const isHovered = tile.roomId === hoveredRoomId;
+    const isHovered = tile.roomId === hoveredRoomId || tile.roomId === selectedRoomId;
     const pts = tileDiamond(snapshot, tile.col, tile.row);
 
     ctx.save();
@@ -437,22 +493,63 @@ function drawModularFloorTiles(
 function drawExpansionSlots(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
   for (const slot of snapshot.expansionSlots) {
     ctx.save();
-    ctx.setLineDash([8, 6]);
-    drawPolygon(ctx, slot.floorPoints, "rgba(200, 168, 76, 0.08)", "rgba(200, 168, 76, 0.28)");
-    drawPolygon(ctx, slot.leftWallPoints, "rgba(200, 168, 76, 0.03)", "rgba(200, 168, 76, 0.16)");
-    drawPolygon(ctx, slot.rightWallPoints, "rgba(200, 168, 76, 0.04)", "rgba(200, 168, 76, 0.18)");
-    ctx.setLineDash([]);
 
-    const centerX = slot.bounds.x + slot.bounds.width / 2;
-    const centerY = slot.bounds.y + slot.bounds.height / 2;
-    ctx.textAlign = "center";
-    ctx.fillStyle = GOLD;
-    ctx.font = `500 18px ${FONT_FAMILY}`;
-    ctx.fillText("+", centerX, centerY - 6);
-    ctx.fillStyle = SILVER;
-    ctx.font = `500 10px ${FONT_FAMILY}`;
-    ctx.fillText(slot.label, centerX, centerY + 14);
-    ctx.textAlign = "start";
+    const isLocked = slot.kind === "locked";
+
+    if (isLocked) {
+      // Locked slots: muted, closed-off treatment — owned but not yet usable
+      ctx.setLineDash([4, 8]);
+      drawPolygon(ctx, slot.floorPoints, "rgba(30, 28, 24, 0.6)", "rgba(80, 70, 50, 0.12)");
+      drawPolygon(ctx, slot.leftWallPoints, "rgba(30, 28, 24, 0.3)", "rgba(80, 70, 50, 0.08)");
+      drawPolygon(ctx, slot.rightWallPoints, "rgba(30, 28, 24, 0.35)", "rgba(80, 70, 50, 0.1)");
+      ctx.setLineDash([]);
+
+      // Draw a small lock icon
+      const centerX = slot.bounds.x + slot.bounds.width / 2;
+      const centerY = slot.bounds.y + slot.bounds.height / 2;
+
+      // Lock body
+      ctx.fillStyle = "rgba(80, 70, 50, 0.25)";
+      ctx.fillRect(centerX - 5, centerY - 4, 10, 8);
+      ctx.strokeStyle = "rgba(80, 70, 50, 0.3)";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(centerX - 5, centerY - 4, 10, 8);
+      // Lock shackle
+      ctx.beginPath();
+      ctx.arc(centerX, centerY - 4, 4, Math.PI, 0);
+      ctx.stroke();
+
+      // Label (dimmed)
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(138, 112, 64, 0.3)";
+      ctx.font = `500 9px ${FONT_FAMILY}`;
+      ctx.fillText(slot.label, centerX, centerY + 16);
+      ctx.textAlign = "start";
+    } else {
+      // Available slots: gold dashed outline with "+" icon
+      ctx.setLineDash([8, 6]);
+      drawPolygon(ctx, slot.floorPoints, "rgba(200, 168, 76, 0.08)", "rgba(200, 168, 76, 0.28)");
+      drawPolygon(ctx, slot.leftWallPoints, "rgba(200, 168, 76, 0.03)", "rgba(200, 168, 76, 0.16)");
+      drawPolygon(
+        ctx,
+        slot.rightWallPoints,
+        "rgba(200, 168, 76, 0.04)",
+        "rgba(200, 168, 76, 0.18)",
+      );
+      ctx.setLineDash([]);
+
+      const centerX = slot.bounds.x + slot.bounds.width / 2;
+      const centerY = slot.bounds.y + slot.bounds.height / 2;
+      ctx.textAlign = "center";
+      ctx.fillStyle = GOLD;
+      ctx.font = `500 18px ${FONT_FAMILY}`;
+      ctx.fillText("+", centerX, centerY - 6);
+      ctx.fillStyle = SILVER;
+      ctx.font = `500 10px ${FONT_FAMILY}`;
+      ctx.fillText(slot.label, centerX, centerY + 14);
+      ctx.textAlign = "start";
+    }
+
     ctx.restore();
   }
 }
@@ -461,6 +558,7 @@ function drawModularWallSegments(
   ctx: CanvasRenderingContext2D,
   snapshot: HqWorldSnapshot,
   hoveredRoomId: string | null,
+  selectedRoomId: string | null,
 ): void {
   const wallH = snapshot.layout.wallHeight;
   const sorted = snapshot.modular.wallSegments
@@ -496,7 +594,7 @@ function drawModularWallSegments(
       { x: p0.x, y: p0.y - wallH },
     ];
 
-    const isHovered = seg.roomId === hoveredRoomId;
+    const isHovered = seg.roomId === hoveredRoomId || seg.roomId === selectedRoomId;
     const room = roomMap.get(seg.roomId);
     const operational = room?.isOperational ?? false;
     const active = operational || (room?.isRequestedActive ?? false);
@@ -664,13 +762,55 @@ function drawRoomHoverLabel(ctx: CanvasRenderingContext2D, room: HqRoomNode): vo
   const labelX = room.bounds.x + 18;
   const labelY = room.bounds.y + 18;
 
+  // Measure text to size the backdrop dynamically
+  ctx.font = `500 12px ${FONT_FAMILY}`;
+  const titleW = ctx.measureText(room.label).width;
+  ctx.font = `400 10px ${FONT_FAMILY}`;
+  const infoLines = [
+    `T${room.tier}`,
+    `F${room.floorIndex + 1} · ${formatSlotLabel(room.slotId)}`,
+    getRoomStateLabel(room.roomStateId),
+    `${room.reservedFootprint.cols}x${room.reservedFootprint.rows} -> ${room.activeFootprint.cols}x${room.activeFootprint.rows}`,
+  ];
+  const maxInfoW = Math.max(...infoLines.map((l) => ctx.measureText(l).width));
+  const contentW = Math.max(titleW, maxInfoW);
+
+  // Glass backdrop behind label text
+  const padL = 14;
+  const padR = 18;
+  const padTop = 12;
+  const padBottom = 14;
+  const bgX = labelX - padL;
+  const bgY = labelY - padTop;
+  const bgW = contentW + padL + padR;
+  const bgH = 58 + padTop + padBottom; // covers all 5 text lines
+  const bgR = 6;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(bgX, bgY, bgW, bgH, bgR);
+  ctx.fillStyle = "rgba(10, 10, 14, 0.72)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(200, 168, 76, 0.12)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
   const labelActive = room.isOperational || room.isRequestedActive;
   ctx.fillStyle = labelActive ? SILVER_BRIGHT : SILVER;
   ctx.font = `500 12px ${FONT_FAMILY}`;
   ctx.fillText(room.label, labelX, labelY);
   ctx.fillStyle = labelActive ? GOLD : GOLD_DIM;
   ctx.font = `400 10px ${FONT_FAMILY}`;
-  ctx.fillText(`T${room.tier}`, labelX, labelY + 18);
+  ctx.fillText(`T${room.tier}`, labelX, labelY + 16);
+  ctx.fillStyle = SILVER;
+  ctx.fillText(`F${room.floorIndex + 1} · ${formatSlotLabel(room.slotId)}`, labelX, labelY + 30);
+  ctx.fillText(getRoomStateLabel(room.roomStateId), labelX, labelY + 44);
+  ctx.fillText(
+    `${room.reservedFootprint.cols}x${room.reservedFootprint.rows} -> ${room.activeFootprint.cols}x${room.activeFootprint.rows}`,
+    labelX,
+    labelY + 58,
+  );
 }
 
 // ── Backdrop ──────────────────────────────────────────────────────────────
@@ -906,8 +1046,8 @@ const FLANKING_PALETTES: Record<HqTimeOfDayPhase, FlankingPalette> = {
     parapetHighlight: "rgba(140, 125, 100, 0.2)",
     cornice: "rgba(100, 90, 72, 0.18)",
     corniceAccent: "rgba(100, 90, 72, 0.35)",
-    windowLit: "rgba(180, 200, 220, 0.15)",
-    windowCool: "rgba(160, 180, 200, 0.10)",
+    windowLit: "rgba(180, 200, 220,",
+    windowCool: "rgba(160, 180, 200,",
     windowDark: "rgba(20, 20, 30, 0.4)",
     windowFrame: "rgba(70, 62, 52, 0.3)",
     fireEscape: "rgba(75, 68, 58, 0.7)",
@@ -1338,10 +1478,11 @@ function drawBuildingShell(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnaps
   const tiles = snapshot.modular.floorTiles;
   if (tiles.length === 0) return;
 
-  const minCol = Math.min(...tiles.map((t) => t.col));
-  const maxCol = Math.max(...tiles.map((t) => t.col)) + 1;
-  const minRow = Math.min(...tiles.map((t) => t.row));
-  const maxRow = Math.max(...tiles.map((t) => t.row)) + 1;
+  const bounds = computeGridBounds(tiles);
+  if (!bounds) return;
+  const { minCol, maxCol: maxColRaw, minRow, maxRow: maxRowRaw } = bounds;
+  const maxCol = maxColRaw + 1;
+  const maxRow = maxRowRaw + 1;
   const wallH = snapshot.layout.wallHeight;
 
   const topCorner = hqProject(snapshot, minCol, minRow);
@@ -1467,6 +1608,12 @@ function drawChibiToken(
     ctx.beginPath();
     ctx.ellipse(x, y, TOKEN_W * 0.4, 5.5, 0, 0, Math.PI * 2);
     ctx.stroke();
+  } else if (kind === "visitor") {
+    ctx.strokeStyle = "rgba(232, 170, 60, 0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, y, TOKEN_W * 0.4, 5.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
   }
 }
 
@@ -1533,16 +1680,20 @@ function drawActorLabel(
   x: number,
   y: number,
   weight: string,
+  color?: string,
 ): void {
   ctx.textAlign = "center";
   ctx.font = `${weight} 10px ${FONT_FAMILY}`;
   ctx.fillStyle = "rgba(6, 6, 8, 0.85)";
   ctx.fillText(label, x + 0.5, y + 0.5);
   ctx.fillText(label, x - 0.5, y + 0.5);
-  ctx.fillStyle = SILVER_BRIGHT;
+  ctx.fillStyle = color ?? SILVER_BRIGHT;
   ctx.fillText(label, x, y);
   ctx.textAlign = "start";
 }
+
+/** Visitor label color — a warm amber to distinguish recruitable operators. */
+const VISITOR_LABEL_COLOR = "rgba(232, 170, 60, 0.95)";
 
 function drawActor(
   ctx: CanvasRenderingContext2D,
@@ -1560,14 +1711,16 @@ function drawActor(
   }
 
   const portraitUrl =
-    actor.kind === "operator" && actor.presetId
+    (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
       ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
       : null;
   const tokenImg = portraitUrl ? imageCache.load(portraitUrl) : null;
   if (tokenImg) {
     drawChibiToken(ctx, x, y, tokenImg, actor.kind);
-    // Always show name for operators, on-hover for others
-    if (actor.kind === "operator" || showLabel) {
+    if (actor.kind === "visitor") {
+      const rankLabel = actor.rank ? `(${actor.rank}) ${actor.label}` : actor.label;
+      drawActorLabel(ctx, rankLabel, x, y + 12, "500", VISITOR_LABEL_COLOR);
+    } else if (actor.kind === "operator" || showLabel) {
       drawActorLabel(ctx, actor.label, x, y + 12, "500");
     }
     return;
@@ -1580,8 +1733,10 @@ function drawActor(
         ? ACTOR_FILL_STAFF
         : ACTOR_FILL_VISITOR;
   drawDotToken(ctx, x, y, fill, actor.kind, actor.label);
-  // Always show name for operators, on-hover for others
-  if (actor.kind === "operator" || showLabel) {
+  if (actor.kind === "visitor") {
+    const rankLabel = actor.rank ? `(${actor.rank}) ${actor.label}` : actor.label;
+    drawActorLabel(ctx, rankLabel, x, y + ACTOR_RADIUS + 8, "400", VISITOR_LABEL_COLOR);
+  } else if (actor.kind === "operator" || showLabel) {
     drawActorLabel(ctx, actor.label, x, y + ACTOR_RADIUS + 8, "400");
   }
 }
@@ -1683,6 +1838,151 @@ function drawRoomFunctionMarker(ctx: CanvasRenderingContext2D, snapshot: HqWorld
 
 // ── Main HQ draw ──────────────────────────────────────────────────────────
 
+function drawDebugOverlays(
+  ctx: CanvasRenderingContext2D,
+  snapshot: HqWorldSnapshot,
+  overlays: HqDebugOverlays,
+): void {
+  if (overlays.showRoomBounds) {
+    for (const room of snapshot.rooms) {
+      ctx.save();
+      // Active bounds (cyan)
+      ctx.strokeStyle = "rgba(0, 200, 255, 0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(
+        room.activeBounds.x,
+        room.activeBounds.y,
+        room.activeBounds.width,
+        room.activeBounds.height,
+      );
+      // Reserved bounds (yellow dashed)
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = "rgba(255, 200, 0, 0.35)";
+      ctx.strokeRect(room.bounds.x, room.bounds.y, room.bounds.width, room.bounds.height);
+      ctx.setLineDash([]);
+      // Room label
+      ctx.fillStyle = "rgba(0, 200, 255, 0.7)";
+      ctx.font = `600 8px ${FONT_FAMILY}`;
+      ctx.fillText(room.label, room.activeBounds.x + 2, room.activeBounds.y - 3);
+      // Room state ID
+      ctx.fillStyle = "rgba(200, 168, 76, 0.6)";
+      ctx.font = `400 7px ${FONT_FAMILY}`;
+      ctx.fillText(
+        room.roomStateId,
+        room.activeBounds.x + 2,
+        room.activeBounds.y + room.activeBounds.height + 9,
+      );
+      ctx.restore();
+    }
+  }
+
+  if (overlays.showFootprints) {
+    for (const room of snapshot.rooms) {
+      ctx.save();
+      // Reserved footprint floor diamond (yellow, dim)
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "rgba(255, 200, 0, 0.3)";
+      ctx.lineWidth = 1;
+      drawPolygonOutline(ctx, room.floorPoints, "rgba(255, 200, 0, 0.3)");
+      ctx.setLineDash([]);
+      // Active footprint floor diamond (cyan, brighter)
+      ctx.strokeStyle = "rgba(0, 200, 255, 0.4)";
+      ctx.lineWidth = 1.5;
+      // Just draw active bounds outline
+      ctx.strokeRect(
+        room.activeBounds.x,
+        room.activeBounds.y,
+        room.activeBounds.width,
+        room.activeBounds.height,
+      );
+      // Footprint label
+      const fp = room.reservedFootprint;
+      const afp = room.activeFootprint;
+      ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
+      ctx.font = `400 7px ${FONT_FAMILY}`;
+      ctx.fillText(
+        `reserved: ${fp.cols}x${fp.rows} @(${fp.col},${fp.row})`,
+        room.bounds.x + 2,
+        room.bounds.y + room.bounds.height + 9,
+      );
+      if (
+        afp.cols !== fp.cols ||
+        afp.rows !== fp.rows ||
+        afp.col !== fp.col ||
+        afp.row !== fp.row
+      ) {
+        ctx.fillStyle = "rgba(0, 200, 255, 0.5)";
+        ctx.fillText(
+          `active: ${afp.cols}x${afp.rows} @(${afp.col},${afp.row})`,
+          room.bounds.x + 2,
+          room.bounds.y + room.bounds.height + 18,
+        );
+      }
+      ctx.restore();
+    }
+  }
+
+  if (overlays.showAnchors) {
+    for (const anchor of snapshot.navGraph.anchors) {
+      ctx.save();
+      const colors: Record<string, string> = {
+        entry: "rgba(255, 100, 100, 0.6)",
+        idle: "rgba(100, 200, 100, 0.6)",
+        work: "rgba(100, 100, 255, 0.6)",
+        social: "rgba(255, 200, 100, 0.6)",
+        recovery: "rgba(200, 100, 255, 0.6)",
+      };
+      ctx.fillStyle = colors[anchor.kind] ?? "rgba(200, 200, 200, 0.5)";
+      ctx.beginPath();
+      ctx.arc(anchor.x, anchor.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.font = `500 6px ${FONT_FAMILY}`;
+      ctx.fillText(anchor.kind, anchor.x + 6, anchor.y + 2);
+      ctx.restore();
+    }
+    // Draw connectors
+    for (const conn of snapshot.navGraph.connectors) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(200, 200, 200, 0.15)";
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([2, 4]);
+      const from = snapshot.navGraph.anchors.find((a) => a.id === conn.fromAnchorId);
+      const to = snapshot.navGraph.anchors.find((a) => a.id === conn.toAnchorId);
+      if (from && to) {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        for (const wp of conn.waypoints) {
+          ctx.lineTo(wp.x, wp.y);
+        }
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+}
+
+function drawPolygonOutline(
+  ctx: CanvasRenderingContext2D,
+  points: readonly HqPoint[],
+  strokeColor: string,
+): void {
+  if (points.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = strokeColor;
+  ctx.stroke();
+}
+
 function drawHqWorld(
   ctx: CanvasRenderingContext2D,
   snapshot: HqWorldSnapshot,
@@ -1693,7 +1993,11 @@ function drawHqWorld(
   imageCache: SvgImageCache,
   hoveredRoomId: string | null,
   time: number,
+  debugOverlays?: HqDebugOverlays,
+  pointerWorld?: { x: number; y: number } | null,
 ): void {
+  const focusedRoomId = focus?.targetKind === "room" ? focus.targetId : null;
+
   drawBackdrop(ctx, viewW, viewH, snapshot.backdrop);
 
   ctx.save();
@@ -1738,10 +2042,10 @@ function drawHqWorld(
   }
 
   // 4. Modular wall segments (back to front, drawn behind floor)
-  drawModularWallSegments(ctx, snapshot, hoveredRoomId);
+  drawModularWallSegments(ctx, snapshot, hoveredRoomId, focusedRoomId);
 
   // 5. Modular floor tiles (back to front)
-  drawModularFloorTiles(ctx, snapshot, hoveredRoomId);
+  drawModularFloorTiles(ctx, snapshot, hoveredRoomId, focusedRoomId);
   drawExpansionSlots(ctx, snapshot);
 
   // 5b. Room floor edge markings
@@ -1763,15 +2067,17 @@ function drawHqWorld(
   snapshot.actors.forEach((actor) => {
     const showLabel =
       actor.roomId === hoveredRoomId ||
+      actor.roomId === focusedRoomId ||
       (focus?.targetKind === "operator" || focus?.targetKind === "staff"
         ? focus.targetId === actor.id
         : false);
     drawActor(ctx, actor, imageCache, showLabel, time);
   });
 
-  // 8. Hover label overlay
-  if (hoveredRoomId) {
-    const room = snapshot.rooms.find((r) => r.id === hoveredRoomId);
+  // 8. Hover/selection label overlay — show for hovered room, or focused room if nothing hovered
+  const labelRoomId = hoveredRoomId ?? focusedRoomId;
+  if (labelRoomId) {
+    const room = snapshot.rooms.find((r) => r.id === labelRoomId);
     if (room) drawRoomHoverLabel(ctx, room);
   }
 
@@ -1788,7 +2094,27 @@ function drawHqWorld(
   // 11. Debug overlay (toggle with G key in dev builds)
   drawPropDebugOverlay(ctx, snapshot);
 
+  // 12. Spatial debug overlays (dev menu toggles)
+  if (debugOverlays) {
+    drawDebugOverlays(ctx, snapshot, debugOverlays);
+  }
+
   ctx.restore();
+
+  // 13. Pointer coordinate readout (screen-space HUD)
+  if (debugOverlays?.showPointerCoords && pointerWorld) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.fillRect(viewW - 200, 8, 192, 22);
+    ctx.fillStyle = "rgba(0, 200, 255, 0.8)";
+    ctx.font = `500 10px ${FONT_FAMILY}`;
+    ctx.fillText(
+      `world: (${Math.round(pointerWorld.x)}, ${Math.round(pointerWorld.y)})`,
+      viewW - 194,
+      23,
+    );
+    ctx.restore();
+  }
   drawAmbientTint(ctx, viewW, viewH, snapshot.effects);
 
   // FX overlay (screen-space, after ambient tint but before focus dimming)
@@ -1804,7 +2130,8 @@ function drawHqWorld(
     }
   }
 
-  if (effectiveFocus?.highlightBounds) {
+  // Rooms use hover-style grid/wall highlights instead of the rectangular dimming cutout
+  if (effectiveFocus?.highlightBounds && effectiveFocus.targetKind !== "room") {
     const fb = effectiveFocus.highlightBounds;
     drawFocusDimming(ctx, viewW, viewH, snapshot.effects, {
       x: (fb.x - camera.x) * camera.zoom + viewW / 2,
@@ -1830,7 +2157,7 @@ function hitTestHqRoom(
   const row = (dy / (tileHeight / 2) - dx / (tileWidth / 2)) / 2;
 
   for (const room of snapshot.rooms) {
-    const fp = room.footprint;
+    const fp = room.reservedFootprint;
     if (col >= fp.col && col < fp.col + fp.cols && row >= fp.row && row < fp.row + fp.rows) {
       return room;
     }
@@ -1872,7 +2199,7 @@ function drawPropDebugOverlay(ctx: CanvasRenderingContext2D, snapshot: HqWorldSn
 
   // Draw tile grid lines within each room
   for (const room of snapshot.rooms) {
-    const fp = room.footprint;
+    const fp = room.reservedFootprint;
     ctx.save();
     ctx.globalAlpha = 0.4;
 
@@ -1943,20 +2270,43 @@ function drawPropDebugOverlay(ctx: CanvasRenderingContext2D, snapshot: HqWorldSn
 
 const sharedImageCache = new SvgImageCache();
 
+export interface HqDebugOverlays {
+  showRoomBounds?: boolean;
+  showFootprints?: boolean;
+  showAnchors?: boolean;
+  showPointerCoords?: boolean;
+}
+
 interface HqWorldCanvasProps {
   snapshot: HqWorldSnapshot;
   focus?: FocusPayload | null;
   onFocusChange?: (focus: FocusPayload | null) => void;
+  debugOverlays?: HqDebugOverlays;
 }
 
-export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorldCanvasProps) {
+export function HqWorldCanvas({
+  snapshot,
+  focus = null,
+  onFocusChange,
+  debugOverlays,
+}: HqWorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const snapshotRef = useRef(snapshot);
+  const focusRef = useRef<FocusPayload | null>(focus);
+  const onFocusChangeRef = useRef(onFocusChange);
+  const debugOverlaysRef = useRef(debugOverlays);
   const cameraRef = useRef<CameraState | null>(null);
   const boundsRef = useRef<CameraBounds>(createCameraBounds(800, 600, 800, 600));
   const panRef = useRef<PanState>(createPanState());
   const animFrameRef = useRef<number>(0);
   const hoveredRoomIdRef = useRef<string | null>(null);
-  const [, forceRender] = useState(0);
+  const pointerWorldRef = useRef<{ x: number; y: number } | null>(null);
+  const viewportRef = useRef<CanvasViewport>(DEFAULT_VIEWPORT);
+
+  snapshotRef.current = snapshot;
+  focusRef.current = focus;
+  onFocusChangeRef.current = onFocusChange;
+  debugOverlaysRef.current = debugOverlays;
 
   useEffect(() => {
     const urls = [
@@ -1972,61 +2322,90 @@ export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorld
     sharedImageCache.preloadAll([...new Set(urls)]);
   }, [snapshot.roomProps, snapshot.scenery, snapshot.actors, snapshot.backdrop]);
 
+  const syncHqViewport = useCallback((canvas: HTMLCanvasElement, shouldMeasure = true) => {
+    const viewport = shouldMeasure
+      ? measureCanvasViewport(canvas)
+      : { ...viewportRef.current, dpr: window.devicePixelRatio || viewportRef.current.dpr };
+    viewportRef.current = viewport;
+
+    const nextSnapshot = snapshotRef.current;
+    boundsRef.current = createCameraBounds(
+      nextSnapshot.layout.worldWidth,
+      nextSnapshot.layout.worldHeight,
+      viewport.width,
+      viewport.height,
+      nextSnapshot.layout.buildingWorldSize,
+    );
+
+    let centerX = nextSnapshot.layout.minX + nextSnapshot.layout.worldWidth / 2;
+    let centerY = nextSnapshot.layout.minY + nextSnapshot.layout.worldHeight / 2;
+    if (nextSnapshot.rooms.length > 0 || nextSnapshot.expansionSlots.length > 0) {
+      const allPts = [...nextSnapshot.rooms, ...nextSnapshot.expansionSlots].flatMap((r) => [
+        ...r.floorPoints,
+        ...r.leftWallPoints,
+        ...r.rightWallPoints,
+      ]);
+      const rxs = allPts.map((p) => p.x);
+      const rys = allPts.map((p) => p.y);
+      centerX = (Math.min(...rxs) + Math.max(...rxs)) / 2;
+      centerY = (Math.min(...rys) + Math.max(...rys)) / 2;
+    }
+
+    const fitZoom =
+      Math.min(
+        viewport.width / nextSnapshot.layout.worldWidth,
+        viewport.height / nextSnapshot.layout.worldHeight,
+      ) * 1.5;
+    const initialZoom = Math.min(
+      boundsRef.current.maxZoom,
+      Math.max(boundsRef.current.minZoom, fitZoom),
+    );
+
+    cameraRef.current = cameraRef.current
+      ? clampCamera(
+          { ...cameraRef.current, zoom: cameraRef.current.zoom || initialZoom },
+          boundsRef.current,
+          viewport.width,
+          viewport.height,
+        )
+      : clampCamera(
+          { x: centerX, y: centerY, zoom: initialZoom },
+          boundsRef.current,
+          viewport.width,
+          viewport.height,
+        );
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resizeObserver = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect();
-      boundsRef.current = createCameraBounds(
-        snapshot.layout.worldWidth,
-        snapshot.layout.worldHeight,
-        rect.width,
-        rect.height,
-        snapshot.layout.buildingWorldSize,
-      );
-      // Center on building bounds (rooms) rather than full world for a tighter initial view
-      let centerX = snapshot.layout.minX + snapshot.layout.worldWidth / 2;
-      let centerY = snapshot.layout.minY + snapshot.layout.worldHeight / 2;
-      if (snapshot.rooms.length > 0 || snapshot.expansionSlots.length > 0) {
-        const allPts = [...snapshot.rooms, ...snapshot.expansionSlots].flatMap((r) => [
-          ...r.floorPoints,
-          ...r.leftWallPoints,
-          ...r.rightWallPoints,
-        ]);
-        const rxs = allPts.map((p) => p.x);
-        const rys = allPts.map((p) => p.y);
-        centerX = (Math.min(...rxs) + Math.max(...rxs)) / 2;
-        centerY = (Math.min(...rys) + Math.max(...rys)) / 2;
-      }
-      const fitZoom =
-        Math.min(
-          rect.width / snapshot.layout.worldWidth,
-          rect.height / snapshot.layout.worldHeight,
-        ) * 1.5;
-      const initialZoom = Math.min(
-        boundsRef.current.maxZoom,
-        Math.max(boundsRef.current.minZoom, fitZoom),
-      );
+    const handleResize = () => syncHqViewport(canvas);
+    handleResize();
 
-      cameraRef.current = cameraRef.current
-        ? clampCamera(
-            { ...cameraRef.current, zoom: cameraRef.current.zoom || initialZoom },
-            boundsRef.current,
-            rect.width,
-            rect.height,
-          )
-        : clampCamera(
-            { x: centerX, y: centerY, zoom: initialZoom },
-            boundsRef.current,
-            rect.width,
-            rect.height,
-          );
-      forceRender((n) => n + 1);
-    });
+    const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(canvas);
-    return () => resizeObserver.disconnect();
-  }, [snapshot.layout]);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [syncHqViewport]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    syncHqViewport(canvas, false);
+  }, [
+    snapshot.layout.worldWidth,
+    snapshot.layout.worldHeight,
+    snapshot.layout.buildingWorldSize,
+    snapshot.layout.minX,
+    snapshot.layout.minY,
+    snapshot.rooms,
+    snapshot.expansionSlots,
+    syncHqViewport,
+  ]);
 
   // G key toggles prop debug grid overlay (dev only)
   useEffect(() => {
@@ -2057,62 +2436,60 @@ export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorld
         return;
       }
 
-      const rect = cv.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const nextW = Math.floor(rect.width * dpr);
-      const nextH = Math.floor(rect.height * dpr);
-      if (cv.width !== nextW || cv.height !== nextH) {
-        cv.width = nextW;
-        cv.height = nextH;
+      const nextDpr = window.devicePixelRatio || 1;
+      if (viewportRef.current.dpr !== nextDpr) {
+        viewportRef.current = { ...viewportRef.current, dpr: nextDpr };
       }
-      cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      syncCanvasBackingStore(cv, viewportRef.current);
+      cx.setTransform(viewportRef.current.dpr, 0, 0, viewportRef.current.dpr, 0, 0);
       drawHqWorld(
         cx,
-        snapshot,
-        focus,
+        snapshotRef.current,
+        focusRef.current,
         cameraRef.current,
-        rect.width,
-        rect.height,
+        viewportRef.current.width,
+        viewportRef.current.height,
         sharedImageCache,
         hoveredRoomIdRef.current,
         timestamp,
+        debugOverlaysRef.current,
+        pointerWorldRef.current,
       );
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     animFrameRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [focus, snapshot]);
+  }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (e.button !== 0 || !cameraRef.current) return;
     panRef.current = beginPan(panRef.current, e.clientX, e.clientY, cameraRef.current);
   }, []);
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas || !cameraRef.current) return;
-      const rect = canvas.getBoundingClientRect();
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !cameraRef.current) return;
+    const rect = canvas.getBoundingClientRect();
+    const nextSnapshot = snapshotRef.current;
 
-      if (panRef.current.isPanning) {
-        const next = updatePan(panRef.current, e.clientX, e.clientY, cameraRef.current);
-        cameraRef.current = clampCamera(next, boundsRef.current, rect.width, rect.height);
-        hoveredRoomIdRef.current = null;
-        canvas.style.cursor = "grabbing";
-        return;
-      }
+    if (panRef.current.isPanning) {
+      const next = updatePan(panRef.current, e.clientX, e.clientY, cameraRef.current);
+      cameraRef.current = clampCamera(next, boundsRef.current, rect.width, rect.height);
+      hoveredRoomIdRef.current = null;
+      canvas.style.cursor = "grabbing";
+      return;
+    }
 
-      const localX = e.clientX - rect.left;
-      const localY = e.clientY - rect.top;
-      const world = screenToWorld(localX, localY, cameraRef.current, rect.width, rect.height);
-      const actor = hitTestActor(snapshot, world.x, world.y);
-      const room = actor ? null : hitTestHqRoom(snapshot, world.x, world.y);
-      hoveredRoomIdRef.current = room?.id ?? null;
-      canvas.style.cursor = actor || room ? "pointer" : "default";
-    },
-    [snapshot],
-  );
+    const localX = e.clientX - rect.left;
+    const localY = e.clientY - rect.top;
+    const world = screenToWorld(localX, localY, cameraRef.current, rect.width, rect.height);
+    pointerWorldRef.current = world;
+    const actor = hitTestActor(nextSnapshot, world.x, world.y);
+    const room = actor ? null : hitTestHqRoom(nextSnapshot, world.x, world.y);
+    hoveredRoomIdRef.current = room?.id ?? null;
+    canvas.style.cursor = actor || room ? "pointer" : "default";
+  }, []);
 
   const handleMouseUp = useCallback(() => {
     panRef.current = endPan(panRef.current);
@@ -2140,66 +2517,61 @@ export function HqWorldCanvas({ snapshot, focus = null, onFocusChange }: HqWorld
     cameraRef.current = clampCamera(next, boundsRef.current, rect.width, rect.height);
   }, []);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!onFocusChange || !cameraRef.current) return;
-      const dx = Math.abs(e.clientX - panRef.current.startScreenX);
-      const dy = Math.abs(e.clientY - panRef.current.startScreenY);
-      if (dx > 4 || dy > 4) return;
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!cameraRef.current) return;
+    const nextOnFocusChange = onFocusChangeRef.current;
+    if (!nextOnFocusChange) return;
+    const dx = Math.abs(e.clientX - panRef.current.startScreenX);
+    const dy = Math.abs(e.clientY - panRef.current.startScreenY);
+    if (dx > 4 || dy > 4) return;
 
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const world = screenToWorld(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-        cameraRef.current,
-        rect.width,
-        rect.height,
-      );
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const nextSnapshot = snapshotRef.current;
+    const world = screenToWorld(
+      e.clientX - rect.left,
+      e.clientY - rect.top,
+      cameraRef.current,
+      rect.width,
+      rect.height,
+    );
 
-      const actor = hitTestActor(snapshot, world.x, world.y);
-      if (actor) {
-        if (actor.kind === "visitor") {
-          onFocusChange(null);
-          return;
-        }
+    const actor = hitTestActor(nextSnapshot, world.x, world.y);
+    if (actor) {
+      const { x: actorX, y: actorY } = actor;
+      const portraitUrl =
+        (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
+          ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
+          : null;
+      const hasPortrait = portraitUrl ? sharedImageCache.get(portraitUrl) !== null : false;
+      const bounds = hasPortrait
+        ? {
+            x: actorX - TOKEN_W / 2 - 4,
+            y: actorY - TOKEN_H - 4,
+            width: TOKEN_W + 8,
+            height: TOKEN_H + 16,
+          }
+        : {
+            x: actorX - ACTOR_RADIUS - 8,
+            y: actorY - ACTOR_RADIUS - 8,
+            width: (ACTOR_RADIUS + 8) * 2,
+            height: (ACTOR_RADIUS + 8) * 2,
+          };
+      const focusKind =
+        actor.kind === "operator" ? "operator" : actor.kind === "visitor" ? "visitor" : "staff";
+      nextOnFocusChange(buildFocusHighlight(focusKind, actor.id, bounds));
+      return;
+    }
 
-        const { x: actorX, y: actorY } = actor;
-        const portraitUrl =
-          actor.kind === "operator" && actor.presetId
-            ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
-            : null;
-        const hasPortrait = portraitUrl ? sharedImageCache.get(portraitUrl) !== null : false;
-        const bounds = hasPortrait
-          ? {
-              x: actorX - TOKEN_W / 2 - 4,
-              y: actorY - TOKEN_H - 4,
-              width: TOKEN_W + 8,
-              height: TOKEN_H + 16,
-            }
-          : {
-              x: actorX - ACTOR_RADIUS - 8,
-              y: actorY - ACTOR_RADIUS - 8,
-              width: (ACTOR_RADIUS + 8) * 2,
-              height: (ACTOR_RADIUS + 8) * 2,
-            };
-        onFocusChange(
-          buildFocusHighlight(actor.kind === "operator" ? "operator" : "staff", actor.id, bounds),
-        );
-        return;
-      }
+    const room = hitTestHqRoom(nextSnapshot, world.x, world.y);
+    if (room) {
+      nextOnFocusChange(buildFocusHighlight("room", room.id, room.bounds));
+      return;
+    }
 
-      const room = hitTestHqRoom(snapshot, world.x, world.y);
-      if (room) {
-        onFocusChange(buildFocusHighlight("room", room.id, room.bounds));
-        return;
-      }
-
-      onFocusChange(null);
-    },
-    [snapshot, onFocusChange],
-  );
+    nextOnFocusChange(null);
+  }, []);
 
   return (
     <canvas
@@ -2283,34 +2655,59 @@ interface RaidWorldCanvasProps {
 
 export function RaidWorldCanvas({ snapshot, focus = null, onFocusChange }: RaidWorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const snapshotRef = useRef(snapshot);
+  const focusRef = useRef<FocusPayload | null>(focus);
+  const onFocusChangeRef = useRef(onFocusChange);
   const cameraRef = useRef<CameraState>(createCameraState(512, 512));
   const boundsRef = useRef<CameraBounds>(createCameraBounds(512, 512, 800, 600));
   const panRef = useRef<PanState>(createPanState());
   const animFrameRef = useRef<number>(0);
-  const [, forceRender] = useState(0);
+  const viewportRef = useRef<CanvasViewport>(DEFAULT_VIEWPORT);
+
+  snapshotRef.current = snapshot;
+  focusRef.current = focus;
+  onFocusChangeRef.current = onFocusChange;
+
+  const syncRaidViewport = useCallback((canvas: HTMLCanvasElement, shouldMeasure = true) => {
+    const viewport = shouldMeasure
+      ? measureCanvasViewport(canvas)
+      : { ...viewportRef.current, dpr: window.devicePixelRatio || viewportRef.current.dpr };
+    viewportRef.current = viewport;
+    const nextSnapshot = snapshotRef.current;
+    boundsRef.current = createCameraBounds(
+      nextSnapshot.dungeonWidth,
+      nextSnapshot.dungeonHeight,
+      viewport.width,
+      viewport.height,
+    );
+    cameraRef.current = clampCamera(
+      cameraRef.current,
+      boundsRef.current,
+      viewport.width,
+      viewport.height,
+    );
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const resizeObserver = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect();
-      boundsRef.current = createCameraBounds(
-        snapshot.dungeonWidth,
-        snapshot.dungeonHeight,
-        rect.width,
-        rect.height,
-      );
-      cameraRef.current = clampCamera(
-        cameraRef.current,
-        boundsRef.current,
-        rect.width,
-        rect.height,
-      );
-      forceRender((n) => n + 1);
-    });
+    const handleResize = () => syncRaidViewport(canvas);
+    handleResize();
+
+    const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(canvas);
-    return () => resizeObserver.disconnect();
-  }, [snapshot.dungeonWidth, snapshot.dungeonHeight]);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [syncRaidViewport]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    syncRaidViewport(canvas, false);
+  }, [snapshot.dungeonWidth, snapshot.dungeonHeight, syncRaidViewport]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -2322,22 +2719,27 @@ export function RaidWorldCanvas({ snapshot, focus = null, onFocusChange }: RaidW
     const cx = ctx;
 
     function draw(timestamp: number) {
-      const rect = cv.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const nextW = Math.floor(rect.width * dpr);
-      const nextH = Math.floor(rect.height * dpr);
-      if (cv.width !== nextW || cv.height !== nextH) {
-        cv.width = nextW;
-        cv.height = nextH;
+      const nextDpr = window.devicePixelRatio || 1;
+      if (viewportRef.current.dpr !== nextDpr) {
+        viewportRef.current = { ...viewportRef.current, dpr: nextDpr };
       }
-      cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawRaidWorld(cx, snapshot, focus, cameraRef.current, rect.width, rect.height, timestamp);
+      syncCanvasBackingStore(cv, viewportRef.current);
+      cx.setTransform(viewportRef.current.dpr, 0, 0, viewportRef.current.dpr, 0, 0);
+      drawRaidWorld(
+        cx,
+        snapshotRef.current,
+        focusRef.current,
+        cameraRef.current,
+        viewportRef.current.width,
+        viewportRef.current.height,
+        timestamp,
+      );
       animFrameRef.current = requestAnimationFrame(draw);
     }
 
     animFrameRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [focus, snapshot]);
+  }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (e.button !== 0) return;
@@ -2380,44 +2782,43 @@ export function RaidWorldCanvas({ snapshot, focus = null, onFocusChange }: RaidW
     cameraRef.current = clampCamera(next, boundsRef.current, rect.width, rect.height);
   }, []);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!onFocusChange) return;
-      const dx = Math.abs(e.clientX - panRef.current.startScreenX);
-      const dy = Math.abs(e.clientY - panRef.current.startScreenY);
-      if (dx > 4 || dy > 4) return;
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const nextOnFocusChange = onFocusChangeRef.current;
+    if (!nextOnFocusChange) return;
+    const dx = Math.abs(e.clientX - panRef.current.startScreenX);
+    const dy = Math.abs(e.clientY - panRef.current.startScreenY);
+    if (dx > 4 || dy > 4) return;
 
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const world = screenToWorld(
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-        cameraRef.current,
-        rect.width,
-        rect.height,
-      );
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const nextSnapshot = snapshotRef.current;
+    const world = screenToWorld(
+      e.clientX - rect.left,
+      e.clientY - rect.top,
+      cameraRef.current,
+      rect.width,
+      rect.height,
+    );
 
-      for (const team of snapshot.teams) {
-        const tx = world.x - team.x;
-        const ty = world.y - team.y;
-        if (tx * tx + ty * ty <= 100) {
-          onFocusChange(
-            buildFocusHighlight("team", team.teamId, {
-              x: team.x - 18,
-              y: team.y - 18,
-              width: 36,
-              height: 36,
-            }),
-          );
-          return;
-        }
+    for (const team of nextSnapshot.teams) {
+      const tx = world.x - team.x;
+      const ty = world.y - team.y;
+      if (tx * tx + ty * ty <= 100) {
+        nextOnFocusChange(
+          buildFocusHighlight("team", team.teamId, {
+            x: team.x - 18,
+            y: team.y - 18,
+            width: 36,
+            height: 36,
+          }),
+        );
+        return;
       }
+    }
 
-      onFocusChange(null);
-    },
-    [snapshot, onFocusChange],
-  );
+    nextOnFocusChange(null);
+  }, []);
 
   return (
     <canvas

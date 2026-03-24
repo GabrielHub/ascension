@@ -1,4 +1,6 @@
 import type { RaidOperatorOutcomeViewModel, RaidSummaryViewModel } from "./view-models";
+import { getNarrativeTagMeta } from "./_glossary";
+import { Tooltip } from "./_tooltip";
 
 interface RaidLogProps {
   history: readonly RaidSummaryViewModel[];
@@ -89,17 +91,13 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
         return (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {displayTags.map((tag) => {
-              const label = tag
-                .replace(/^[^:]+:/, "")
-                .replace(/_/g, " ")
-                .replace(/^\w/, (c) => c.toUpperCase());
+              const { label, tip } = getNarrativeTagMeta(tag);
               return (
-                <span
-                  key={tag}
-                  className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.6875rem] text-silver/60"
-                >
-                  {label}
-                </span>
+                <Tooltip key={tag} content={tip}>
+                  <span className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.6875rem] text-silver/60">
+                    {label}
+                  </span>
+                </Tooltip>
               );
             })}
           </div>

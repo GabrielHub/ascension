@@ -31,6 +31,8 @@ export {
   RAID_VOID,
 } from "./raid-draw";
 
+export { type RaidGoalPresentation, getRaidGoalPresentation } from "./raid-goals";
+
 export {
   type EncounterThreat,
   type FocusEncounter,

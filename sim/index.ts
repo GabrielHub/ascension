@@ -1,5 +1,6 @@
 import { bootstrapScenario } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
+import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 
 import type { WorldSnapshot } from "save";
 
@@ -48,6 +49,7 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     building: {
       activeBuildingId: startingBuilding.id,
       activeBuildingTier: startingBuilding.baseTier,
+      activeFloorIndex: 0,
       roomSlotCount: startingBuilding.baseRoomSlots,
       operatorSlotCount: startingBuilding.baseOperatorSlots,
     },
@@ -62,10 +64,16 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
         id: seed.id,
         templateId: roomTemplate.id,
         tier: roomTemplate.tier,
+        floorIndex: seed.floorIndex,
+        slotId: seed.slotId,
+        roomStateId: getRoomStateId(roomTemplate.id, []),
         capacity: roomTemplate.baseCapacity,
         occupancy: seed.occupancy,
         ...(seed.isActive === undefined ? {} : { isActive: seed.isActive }),
-        footprint: { ...seed.footprint },
+        reservedFootprint: { ...seed.reservedFootprint },
+        activeFootprint:
+          seed.activeFootprint ??
+          getRoomActiveFootprint(roomTemplate.id, seed.reservedFootprint, []),
       };
     }),
     activeRaidPackets: [],

@@ -102,6 +102,38 @@ export interface EnvPartsIndex {
   parts: readonly EnvPartMeta[];
 }
 
+export interface EnvSceneReviewContract {
+  building: string;
+  tileWidth: number;
+  tileHeight: number;
+  wallHeight: number;
+  canonicalOrigin: readonly [number, number];
+  canonicalViewBox: Readonly<{
+    minX: number;
+    minY: number;
+    width: number;
+    height: number;
+  }>;
+  roomFootprint: Readonly<{
+    cols: number;
+    rows: number;
+  }>;
+}
+
+export interface EnvSceneReviewStep {
+  index: number;
+  label: string;
+  part: EnvPartMeta | null;
+  isPlaceholder: boolean;
+}
+
+export interface EnvSceneReviewGroup {
+  seriesKey: string;
+  label: string;
+  roomFamily: string | null;
+  steps: readonly EnvSceneReviewStep[];
+}
+
 // ── Validation ──────────────────────────────────────────────────────
 
 const VALID_CATEGORIES: ReadonlySet<string> = new Set<EnvPartCategory>([
@@ -121,6 +153,15 @@ const VALID_SCALES: ReadonlySet<string> = new Set<EnvPartScale>([
   "backdrop",
 ]);
 const VALID_STATUSES: ReadonlySet<string> = new Set<EnvPartStatus>(["exploration", "approved"]);
+const SCENE_SERIES_TAG_BLACKLIST = new Set([
+  "room",
+  "interior",
+  "props-only",
+  "bodega",
+  "operations",
+  "social",
+  "approved",
+]);
 
 export interface EnvValidationError {
   partId: string;
@@ -167,6 +208,35 @@ export function validateEnvPartsIndex(index: EnvPartsIndex): EnvValidationError[
     if (!Array.isArray(part.tags) || part.tags.length === 0) {
       errors.push({ partId: part.id, message: "tags must be a non-empty array" });
     }
+
+    if (part.category === "scene") {
+      if (part.scale !== "room") {
+        errors.push({ partId: part.id, message: "scene assets must use room scale." });
+      }
+
+      if (part.status !== "approved") {
+        errors.push({ partId: part.id, message: "scene assets must be approved." });
+      }
+
+      if (part.roomFamily === null || part.roomFamily.trim().length === 0) {
+        errors.push({ partId: part.id, message: "scene assets must declare a room family." });
+      }
+
+      if (!part.tags.some((tag) => tag === "room")) {
+        errors.push({ partId: part.id, message: 'scene assets must carry the "room" tag.' });
+      }
+
+      if (!part.tags.some((tag) => tag === "props-only")) {
+        errors.push({
+          partId: part.id,
+          message: 'scene assets must carry the "props-only" tag.',
+        });
+      }
+
+      if (!envPartSvgPath(part, index).includes("/recipes/")) {
+        errors.push({ partId: part.id, message: "scene assets must resolve from recipes/." });
+      }
+    }
   }
 
   return errors;
@@ -212,6 +282,91 @@ export function findEnvPartById(
   id: string,
 ): EnvPartMeta | undefined {
   return parts.find((p) => p.id === id);
+}
+
+export function formatSceneSeriesLabel(seriesKey: string): string {
+  return seriesKey
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getSceneSeriesKey(part: EnvPartMeta): string {
+  const slug = part.id.split("/").pop() ?? part.id;
+  const sceneSlug = slug.replace(/^scene-(the-)?/, "");
+  if (sceneSlug && sceneSlug !== slug) {
+    // Strip trailing state number suffix (e.g. "-2", "-3") so progressive
+    // room states group into the same review series.
+    return sceneSlug.replace(/-\d+$/, "");
+  }
+
+  const tagKey = part.tags.find((tag) => !SCENE_SERIES_TAG_BLACKLIST.has(tag));
+  if (tagKey) {
+    return tagKey;
+  }
+
+  if (part.roomFamily && part.roomFamily.trim().length > 0) {
+    return part.roomFamily;
+  }
+
+  return part.id.split("/").pop() ?? part.id;
+}
+
+export function getSceneReviewContract(): EnvSceneReviewContract {
+  const renderConfig = getHqEnvironmentRenderConfig();
+
+  return {
+    building: renderConfig.building,
+    tileWidth: renderConfig.composition.tileWidth,
+    tileHeight: renderConfig.composition.tileHeight,
+    wallHeight: renderConfig.composition.wallHeight,
+    canonicalOrigin: renderConfig.composition.sceneSystem.canonicalOrigin,
+    canonicalViewBox: renderConfig.composition.sceneSystem.canonicalViewBox,
+    roomFootprint: renderConfig.composition.sceneSystem.roomFootprint,
+  };
+}
+
+export function buildSceneReviewGroups(
+  parts: readonly EnvPartMeta[],
+): readonly EnvSceneReviewGroup[] {
+  const sceneParts = parts
+    .filter((part) => part.category === "scene")
+    .filter((part) => part.status === "approved")
+    .slice()
+    .sort((left, right) => {
+      const leftKey = getSceneSeriesKey(left);
+      const rightKey = getSceneSeriesKey(right);
+      return leftKey.localeCompare(rightKey) || left.id.localeCompare(right.id);
+    });
+
+  const groups = new Map<string, EnvPartMeta[]>();
+  sceneParts.forEach((part) => {
+    const key = getSceneSeriesKey(part);
+    const entries = groups.get(key) ?? [];
+    entries.push(part);
+    groups.set(key, entries);
+  });
+
+  return [...groups.entries()]
+    .map(([seriesKey, sceneGroup]) => {
+      const sortedGroup = sceneGroup.slice().sort((left, right) => left.id.localeCompare(right.id));
+      const stepCount = Math.max(3, sortedGroup.length);
+      return {
+        seriesKey,
+        label: formatSceneSeriesLabel(seriesKey),
+        roomFamily: sortedGroup[0]?.roomFamily ?? null,
+        steps: Array.from({ length: stepCount }, (_, index) => {
+          const part = sortedGroup[index] ?? null;
+          return {
+            index: index + 1,
+            label: `State ${index + 1}`,
+            part,
+            isPlaceholder: part === null,
+          } satisfies EnvSceneReviewStep;
+        }),
+      } satisfies EnvSceneReviewGroup;
+    })
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 /** Resolve the public asset path for an environment part SVG.

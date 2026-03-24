@@ -1,5 +1,6 @@
 import type { EffectDefinition } from "../effects";
 import type { RequirementDefinition } from "../requirements";
+import type { AbilityEffect, TargetingRule } from "./kits";
 
 export interface TemplateBase {
   id: string;
@@ -71,6 +72,55 @@ export interface BossProfile {
   speed: number;
   threat: number;
   dropTableId: string;
+  encounter?: BossEncounterTemplate;
+}
+
+export interface BossEncounterTemplate {
+  elapsedMinutes: number;
+  phases: readonly BossEncounterPhaseTemplate[];
+  actions: readonly BossEncounterActionTemplate[];
+  reactionHooks?: readonly BossEncounterReactionTemplate[];
+  summonDefinitions?: readonly BossEncounterSummonTemplate[];
+  targetingPriority?: "highest_threat" | "lowest_hp" | "random" | "frontline";
+}
+
+export interface BossEncounterPhaseTemplate {
+  phaseIndex: number;
+  hpThresholdFraction: number;
+  statModifiers: Partial<Record<"attack" | "defense" | "speed" | "threat", number>>;
+  actionIds: readonly string[];
+  onEnterEffects: readonly AbilityEffect[];
+  summonIds?: readonly string[];
+}
+
+export interface BossEncounterActionTemplate {
+  id: string;
+  name: string;
+  weight: number;
+  cooldown: number;
+  targeting: TargetingRule;
+  effects: readonly AbilityEffect[];
+  phaseIndices?: readonly number[];
+}
+
+export interface BossEncounterReactionTemplate {
+  trigger: "on_phase_enter";
+  target: "boss_self" | "all_allies";
+  effects: readonly AbilityEffect[];
+  usesRemaining: number;
+}
+
+export interface BossEncounterSummonTemplate {
+  summonId: string;
+  label: string;
+  stats: {
+    attack: number;
+    defense: number;
+    hp: number;
+    speed: number;
+    threat: number;
+  };
+  actions: readonly BossEncounterActionTemplate[];
 }
 
 export interface MissionCombatProfile {

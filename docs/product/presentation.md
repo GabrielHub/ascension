@@ -36,6 +36,10 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - World focus, category switches, and event-log clicks should all converge on the same active-card system rather than spawning disconnected parallel panels.
 - Event-log entries should be actionable when possible: clicking a room, operator, team, or completed raid entry should open or focus the relevant card or summary surface.
 - The event log should capture every player-noticeable state change worth reacting to, including departures, returns, injuries, deaths, morale or loyalty threshold shifts, staffing changes, resource swings, active-event changes, and lightweight raid-result updates.
+- The event log is the passive notice rail, not the only event surface. Major incidents should be allowed to take over the screen with a blocking modal when the player must make a decision before simulation continues.
+- Blocking modals should freeze the simulation through one shared runtime pause contract rather than relying on visual overlays alone. That contract now supports settings, incidents, boss-commitment beats, and future top-priority interruption states.
+- Incident modals should render structured runtime payloads and choice buttons, not bespoke one-off copy blocks. They sit above ordinary HQ and raid management overlays, with the world dimmed beneath them.
+- Raid boss commitment is a shipped use case for this interruption layer. When a team commits to the boss, the presentation can stop the game, foreground that team and site, and pull the player into the moment instead of burying it in the right-rail log.
 - The layout target is modern and minimal, but not empty: the world stays readable behind the glass UI while the player still has a stable place to look for what just changed.
 - Category selection is toggle-dismissible: clicking the already-active category pill collapses the bottom panel and returns to the full world view.
 - Shell chrome surfaces use shared CSS classes (`.glass-panel`, `.glass-panel-subtle`) to keep opacity and blur values consistent across header, nav, bottom panel, and event log rail.
@@ -81,12 +85,16 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Fog of war should reveal explored space as teams move through the dungeon.
 - Raid teams should enter dungeons with explicit autonomous goals such as looting, exploring, gathering intel, hunting threats, or attempting the boss.
 - Teams should autonomously decide when to leave, regroup, scout, or escalate to a boss attempt instead of always pushing to completion in one trip.
+- When a team escalates from exploration to a boss attempt, the product can treat that as a top-priority interruption beat rather than only as passive map-state drift. The player can be pulled into the encounter moment and focus the boss site deliberately.
+- A committed boss confrontation now hands off into a dedicated runtime-owned encounter surface. That surface is a secondary overlay mode above the canonical raid map, not a replacement for the base raid presentation language.
+- Development and verification tooling can pause and single-step an active encounter without changing the canonical player-facing authority model.
 - Ordinary enemies should continue to respawn in the dungeon over time.
 - The active dungeon remains the guild's contract focus until its boss is defeated or the contract is lost.
 - Early contract loss should be possible and survivable; later layers can escalate failure into more severe organizational consequences.
 - Clicking a team enters a focused overlay mode that syncs the active bottom card to that team while leaving the event log visible on the right.
 - Raid rendering should stay lighter and more abstract than HQ rendering, even when the underlying assets are authored and real.
-- If raids later use richer focus backdrops or encounter scenes, those are secondary overlays, not the canonical base-map language.
+- If raids use richer boss encounter backdrops or encounter scenes, those are secondary overlays, not the canonical base-map language.
+- The implementation medium for a boss encounter surface is not locked here. React, canvas, or hybrid approaches are all valid as long as gameplay authority remains in runtime state.
 
 ## Approval Loop
 

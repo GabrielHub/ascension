@@ -65,6 +65,7 @@ describe("phase 1 runtime", () => {
     expect(phase1View.operatorIntentReadiness).toHaveLength(6);
     expect(phase1View.relationshipSignals).toHaveLength(15);
     expect(phase1View.raidOpportunities).toHaveLength(0);
+    expect(phase1View.building.operatorSlotCount).toBe(7);
   });
 
   it("fails closed when a cached phase-1 snapshot omits an active operator", () => {
@@ -96,25 +97,22 @@ describe("phase 1 runtime", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
     simulation.dispatch({
       type: "sim/purchase-building-upgrade",
-      upgradeId: "upgrade/building/bodega:annex",
+      upgradeId: "upgrade/building/bodega:frontage",
     });
 
     let phase1View = simulation.getPhase1View();
-    expect(phase1View.building.appliedUpgradeIds).toContain("upgrade/building/bodega:annex");
-    expect(phase1View.building.unlockedRoomTemplateIds).toEqual(
-      expect.arrayContaining([
-        "room/register:tier_1",
-        "room/counter:tier_1",
-        "room/dining_area:tier_1",
-        "room/supply_closet:tier_1",
-        "room/lounge:tier_1",
-      ]),
-    );
-    expect(phase1View.building.roomSlotCount).toBe(5);
+    expect(phase1View.building.appliedUpgradeIds).toContain("upgrade/building/bodega:frontage");
+    expect(phase1View.building.tier).toBe(1);
+    expect(phase1View.building.unlockedRoomTemplateIds).toEqual([
+      "room/register:tier_1",
+      "room/counter:tier_1",
+      "room/dining_area:tier_1",
+      "room/supply_closet:tier_1",
+    ]);
+    expect(phase1View.building.roomSlotCount).toBe(4);
     expect(phase1View.building.operatorSlotCount).toBe(7);
-    expect(phase1View.building.unlockedRoomTemplateIds.includes("room/lounge:tier_1")).toBe(true);
 
-    // After purchasing annex (220), the records_wall upgrade (90) should still be affordable
+    // After purchasing frontage (150), the records_wall upgrade (90) should still be affordable
     phase1View = simulation.getPhase1View();
     expect(
       phase1View.rooms
@@ -124,11 +122,125 @@ describe("phase 1 runtime", () => {
 
     simulation.dispatch({
       type: "sim/place-room",
-      templateId: "room/lounge:tier_1",
+      templateId: "room/supply_closet:tier_1",
     });
     expect(
-      simulation.getPhase1View().rooms.some((room) => room.templateId === "room/lounge:tier_1"),
+      simulation
+        .getPhase1View()
+        .rooms.some((room) => room.templateId === "room/supply_closet:tier_1"),
     ).toBe(true);
+  });
+
+  it("reaches dining area state 3 after purchasing both sequential upgrades", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    // Give enough cash for both upgrades
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+
+    const diningRoomId = "room-instance/dining_area";
+    const getRoomView = () =>
+      simulation.getPhase1View().rooms.find((room) => room.id === diningRoomId);
+
+    // State 1: no upgrades
+    expect(getRoomView()?.roomStateId).toBe("room-state/dining-area:1");
+    expect(getRoomView()?.availableUpgradeIds).toContain(
+      "upgrade/room/dining_area:first_aid_station",
+    );
+    expect(getRoomView()?.availableUpgradeIds).not.toContain(
+      "upgrade/room/dining_area:common_table",
+    );
+
+    // Purchase first upgrade -> state 2
+    simulation.dispatch({
+      type: "sim/purchase-room-upgrade",
+      roomId: diningRoomId,
+      upgradeId: "upgrade/room/dining_area:first_aid_station",
+    });
+    expect(getRoomView()?.roomStateId).toBe("room-state/dining-area:2");
+    expect(getRoomView()?.appliedUpgradeIds).toContain(
+      "upgrade/room/dining_area:first_aid_station",
+    );
+    expect(getRoomView()?.availableUpgradeIds).toContain("upgrade/room/dining_area:common_table");
+
+    // Purchase second upgrade -> state 3
+    simulation.dispatch({
+      type: "sim/purchase-room-upgrade",
+      roomId: diningRoomId,
+      upgradeId: "upgrade/room/dining_area:common_table",
+    });
+    expect(getRoomView()?.roomStateId).toBe("room-state/dining-area:3");
+    expect(getRoomView()?.appliedUpgradeIds).toEqual([
+      "upgrade/room/dining_area:first_aid_station",
+      "upgrade/room/dining_area:common_table",
+    ]);
+    expect(getRoomView()?.availableUpgradeIds).toEqual([]);
+  });
+
+  it("rejects purchasing second dining area upgrade before the first", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+
+    // Try to purchase the second upgrade directly (should be blocked)
+    simulation.dispatch({
+      type: "sim/purchase-room-upgrade",
+      roomId: "room-instance/dining_area",
+      upgradeId: "upgrade/room/dining_area:common_table",
+    });
+    const diningRoom = simulation
+      .getPhase1View()
+      .rooms.find((room) => room.id === "room-instance/dining_area");
+    expect(diningRoom?.roomStateId).toBe("room-state/dining-area:1");
+    expect(diningRoom?.appliedUpgradeIds).toEqual([]);
+  });
+
+  it("places a room into the first actual open slot instead of using room-count order", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.rooms = snapshot.rooms.filter((room) => room.slotId !== "slot/register");
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.dispatch({
+      type: "sim/place-room",
+      templateId: "room/register:tier_1",
+    });
+
+    expect(
+      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/register:tier_1"),
+    ).toEqual(
+      expect.objectContaining({
+        slotId: "slot/register",
+        floorIndex: 0,
+      }),
+    );
+  });
+
+  it("rejects placing rooms into locked slots even when the command names a slot explicitly", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.rooms = snapshot.rooms.filter((room) => room.slotId !== "slot/supply-closet");
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.dispatch({
+      type: "sim/place-room",
+      templateId: "room/supply_closet:tier_1",
+      floorIndex: 0,
+      slotId: "slot/back-room-right",
+    });
+
+    expect(
+      simulation.getPhase1View().rooms.some((room) => room.slotId === "slot/back-room-right"),
+    ).toBe(false);
+    expect(
+      simulation
+        .getPhase1View()
+        .rooms.some((room) => room.templateId === "room/supply_closet:tier_1"),
+    ).toBe(false);
   });
 
   it("returns isolated bootstrap snapshots instead of sharing nested seed state", () => {
@@ -137,13 +249,13 @@ describe("phase 1 runtime", () => {
 
     first.guild.reputation = 99;
     first.time.minuteOfDay = 5;
-    first.rooms[0].footprint.col = 7;
+    first.rooms[0].reservedFootprint.col = 7;
     first.operators![0].preferences.preferredMissionTags.push("mission:mutated");
     first.staff![0].assignment.targetId = "room-instance/mutated";
 
     expect(second.guild.reputation).toBe(0);
     expect(second.time.minuteOfDay).toBe(480);
-    expect(second.rooms[0].footprint.col).toBe(1);
+    expect(second.rooms[0].reservedFootprint.col).toBe(1);
     expect(second.operators?.[0].preferences.preferredMissionTags).not.toContain("mission:mutated");
     expect(second.staff?.[0].assignment.targetId).toBe("room-instance/register");
   });
@@ -151,10 +263,6 @@ describe("phase 1 runtime", () => {
   it("supports recruiting and operator relationship seeding", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
 
-    simulation.dispatch({
-      type: "sim/purchase-building-upgrade",
-      upgradeId: "upgrade/building/bodega:annex",
-    });
     simulation.dispatch({
       type: "sim/accept-recruit",
       visitorId: "visitor/preview-1",
@@ -1003,17 +1111,15 @@ describe("phase 1 runtime", () => {
       expect(operator.lifecycle).toEqual({ status: "active" });
     });
     expect(phase1View.rosterPressure.livingOperatorCount).toBe(6);
-    expect(phase1View.rosterPressure.vacancyCount).toBe(0);
+    expect(phase1View.rosterPressure.vacancyCount).toBe(1);
     expect(phase1View.rosterPressure.replacementPressureLevel).toBe("stable");
     expect(phase1View.rosterPressure.recentDeathOperatorIds).toEqual([]);
   });
 
   it("rosterPressure reports strained when one slot is open without a recent death", () => {
-    const simulation = createBootstrapSimulation(templateRegistry);
-    simulation.dispatch({
-      type: "sim/purchase-building-upgrade",
-      upgradeId: "upgrade/building/bodega:annex",
-    });
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.building.operatorSlotCount = 7;
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
     const phase1View = simulation.getPhase1View();
 
     expect(phase1View.rosterPressure.operatorCapacity).toBe(7);

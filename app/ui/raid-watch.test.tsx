@@ -65,7 +65,8 @@ describe("raid watch", () => {
     );
 
     expect(html).toContain("25%");
-    expect(html).not.toContain("100%");
+    // The reveal progress bar width should be 25%, not rescaled to some other value
+    expect(html).toContain("width:25%");
   });
 
   it("renders deployed operator portraits with gear overlays in raid context", () => {
@@ -212,8 +213,8 @@ describe("raid watch", () => {
     // Per-operator details appear in inspection
     expect(html).toContain("Viper");
     expect(html).toContain("Shadow");
-    expect(html).toContain("bruiser");
-    expect(html).toContain("infiltrator");
+    expect(html).toContain("Bruiser");
+    expect(html).toContain("Infiltrator");
 
     // Morale and readiness stats appear in inspection
     expect(html).toContain("Morale");
@@ -271,7 +272,7 @@ describe("raid watch", () => {
     // Inspection panel shows Beta Op team
     expect(html).toContain("Team Inspection");
     expect(html).toContain("B1");
-    expect(html).toContain("strategist");
+    expect(html).toContain("Strategist");
 
     // Both raid cards render (zoomed-out readability preserved)
     expect(html).toContain("Alpha Op");
@@ -305,8 +306,8 @@ describe("raid watch", () => {
     expect(html).toContain("6h");
 
     // Role breakdown
-    expect(html).toContain("bruiser");
-    expect(html).toContain("infiltrator");
+    expect(html).toContain("Bruiser");
+    expect(html).toContain("Infiltrator");
   });
 
   it("shows injury and stress warnings in inspection for distressed operators", () => {

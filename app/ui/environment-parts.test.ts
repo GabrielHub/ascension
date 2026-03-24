@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildSceneReviewGroups,
+  getSceneReviewContract,
   findEnvPartById,
   getLoadedEnvParts,
   getLoadedEnvPartsIndex,
   envPartSvgPath,
+  formatSceneSeriesLabel,
   searchEnvParts,
   validateEnvPartsIndex,
   ENV_LIGHTING_PRESETS,
@@ -40,6 +43,20 @@ describe("validateEnvPartsIndex against shipped index", () => {
     for (const part of parts) {
       expect(part.tags.length).toBeGreaterThan(0);
     }
+  });
+
+  it("scene assets obey the room-scene contract", () => {
+    const parts = getLoadedEnvParts().filter((part) => part.category === "scene");
+
+    expect(parts.length).toBeGreaterThan(0);
+    parts.forEach((part) => {
+      expect(part.scale).toBe("room");
+      expect(part.status).toBe("approved");
+      expect(part.roomFamily).not.toBeNull();
+      expect(part.tags).toContain("room");
+      expect(part.tags).toContain("props-only");
+      expect(envPartSvgPath(part)).toContain("/recipes/");
+    });
   });
 });
 
@@ -109,6 +126,23 @@ describe("validateEnvPartsIndex error detection", () => {
     };
     const errors = validateEnvPartsIndex({ ...baseIndex, parts: [bad] });
     expect(errors.some((e) => e.message.includes("tags must be"))).toBe(true);
+  });
+
+  it("detects malformed scene metadata", () => {
+    const badScene: EnvPartMeta = {
+      id: "recipes/bad-scene",
+      category: "scene",
+      tags: ["room", "interior"],
+      scale: "prop",
+      roomFamily: null,
+      status: "exploration",
+    };
+    const errors = validateEnvPartsIndex({ ...baseIndex, parts: [badScene] });
+
+    expect(errors.some((e) => e.message.includes("room scale"))).toBe(true);
+    expect(errors.some((e) => e.message.includes("approved"))).toBe(true);
+    expect(errors.some((e) => e.message.includes("room family"))).toBe(true);
+    expect(errors.some((e) => e.message.includes('"props-only"'))).toBe(true);
   });
 });
 
@@ -241,6 +275,58 @@ describe("getEnvLightingPreset", () => {
 describe("defaultPresetId", () => {
   it("returns the first preset id", () => {
     expect(defaultPresetId()).toBe(ENV_LIGHTING_PRESETS[0].id);
+  });
+});
+
+describe("scene review helpers", () => {
+  it("exposes the canonical room-scene geometry contract", () => {
+    expect(getSceneReviewContract()).toEqual({
+      building: "bodega",
+      tileWidth: 96,
+      tileHeight: 48,
+      wallHeight: 84,
+      canonicalOrigin: [200, 100],
+      canonicalViewBox: {
+        minX: 20,
+        minY: 0,
+        width: 420,
+        height: 310,
+      },
+      roomFootprint: {
+        cols: 4,
+        rows: 3,
+      },
+    });
+  });
+
+  it("builds progression scaffolds per room-scene series", () => {
+    const groups = buildSceneReviewGroups(getLoadedEnvParts());
+
+    expect(groups.map((group) => group.label)).toEqual([
+      "Counter",
+      "Dining Area",
+      "Register",
+      "Supply Closet",
+    ]);
+    expect(groups.every((group) => group.steps.length >= 3)).toBe(true);
+    expect(groups.find((group) => group.label === "Register")?.steps[0].part?.id).toBe(
+      "recipes/scene-the-register",
+    );
+    // Dining area has 3 progressive states (base + first-aid + fully upgraded)
+    const diningGroup = groups.find((group) => group.label === "Dining Area")!;
+    expect(diningGroup.steps[0].part?.id).toBe("recipes/scene-the-dining-area");
+    expect(diningGroup.steps[1].part?.id).toBe("recipes/scene-the-dining-area-2");
+    expect(diningGroup.steps[2].part?.id).toBe("recipes/scene-the-dining-area-3");
+    // Register has 2 progressive states (base + records wall)
+    const registerGroup = groups.find((group) => group.label === "Register")!;
+    expect(registerGroup.steps[0].part?.id).toBe("recipes/scene-the-register");
+    expect(registerGroup.steps[1].part?.id).toBe("recipes/scene-the-register-2");
+    expect(registerGroup.steps[2].isPlaceholder).toBe(true);
+  });
+
+  it("formats scene series labels for review", () => {
+    expect(formatSceneSeriesLabel("front-desk")).toBe("Front Desk");
+    expect(formatSceneSeriesLabel("supply_closet")).toBe("Supply Closet");
   });
 });
 

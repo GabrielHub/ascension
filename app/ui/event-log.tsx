@@ -65,7 +65,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
   // ── Collapsed: compact pill ──────────────────────────────────
   if (!expanded) {
     return (
-      <div className="pointer-events-auto absolute right-4 top-[92px] z-20">
+      <div className="pointer-events-auto">
         <button
           type="button"
           onClick={() => setExpanded(true)}
@@ -85,7 +85,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
 
   // ── Expanded: chatbox window ─────────────────────────────────
   return (
-    <div className="pointer-events-auto absolute right-4 top-[92px] z-20 flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.5)] lg:w-96">
+    <div className="pointer-events-auto flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.5)] lg:w-96">
       {/* Header — click to minimize */}
       <button
         type="button"

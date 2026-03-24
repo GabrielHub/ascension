@@ -29,6 +29,8 @@ This section is intentionally summary-level. The implementation itself is the so
 - Active raid packets, hidden resolution data, collapsed raid history, and operator lifecycle changes persist through saves.
 - Permanent operator death, operator departure, and roster replacement pressure are implemented.
 - Pressure events are generated from runtime state rather than hand-authored UI triggers.
+- The shipped interruption layer is runtime-owned: settings, incidents, and boss-commitment beats can freeze the simulation, persist when gameplay-authoritative, and restore cleanly through save/load.
+- Interactive incidents now bind to runtime subjects, surface authored choices through blocking modals, resolve deterministic consequence bundles in simulation code, and persist through refresh/load.
 - Operator portraits use the shipped modular recipe-based SVG pipeline, including visible gear overlays where present.
 - The bodega now renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, staff, and visitor markers.
 - The operations view now presents the secured active contract site as a full-screen raid map with fog of war, team goals, focus overlays, and persisted raid presentation state.
@@ -44,11 +46,13 @@ This section is intentionally summary-level. The implementation itself is the so
 - The HQ exterior day-night pass is live in hybrid form: the simulation clock drives canonical `sunrise` / `day` / `sunset` / `night` phases, the HQ environment manifest owns the per-phase tint/fog/shadow values plus shell-relative backdrop zones, and the bodega still mixes in renderer-authored exterior scenery while the backdrop package system fills out.
 - Phase 1: Bodega World Rendering is implemented. Its accepted slice includes world-first HQ presentation, authored compositional HQ and raid-map assets, locked camera/framing rules, first-pass lighting/effects, autonomous contract-site raid behavior, first-pass taxonomy remediation, seeded uncertainty, and generalized SVG review tooling.
 - Operators now carry a permanent combat identity contract: rank, attunement, traits, fixed kit references, and six base combat stats (strength, speed, endurance, resilience, perception, intelligence) that persist through saves and migrations.
+- First-class operator kit templates are implemented for regular attacks, skills, ultimates, and passives, with deterministic runtime execution rules shared by encounter simulation and player-facing combat identity surfaces.
 - A shared simulation-owned derived-stat layer computes effective operator stats from base stats, equipped gear stat effects, and injury penalties, and exposes a single combat-power aggregate for raid resolution.
 - Gear stat effects are now first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, with those contributions flowing through the derived-stat layer into raid outcomes.
 - Raid resolution is stat-driven and boss-aware: missions carry explicit enemy group profiles and boss combat profiles with tags, weaknesses, and threat values that modify challenge and team scores during autonomous resolution.
 - Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty, while boss weaknesses reward matching team composition.
 - Loot distribution is now driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
+- Boss commitment now escalates into a blocking interruption beat, and committed confrontations can hand off into a save-safe runtime-owned encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 
 ## Phase 3: Union Hall Expansion
@@ -115,6 +119,10 @@ Deliverables:
 - faction or contract pressure
 - city institutions begin pushing through licensing/compliance, labor and worker-safety oversight, emergency-response containment, and borough-level political or contract pressure
 - richer social fallout from guild reputation, contract performance, operator death, and room/team culture
+- expand the shipped incident library with more authored subject bindings, consequence bundles, and higher-pressure institutional scenarios
+- deepen boss-encounter content breadth with additional bosses, mixed enemy rosters, phase behaviors, and longer-form intervention design
+- expand encounter debug tooling and authored boss/incident content beyond the initial shipped slice
+- optional later AI incident framing layered on top of deterministic authored triggers and consequence bundles, not as the gameplay authority
 - optional weekly AI-generated narrative reports built from saved raid summaries and guild state
 
 Exit criteria:

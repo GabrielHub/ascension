@@ -27,15 +27,20 @@ describe("phase 1 view models", () => {
         isApplied: true,
       }),
     );
-    expect(
-      hq.rooms.find((room) => room.id === "room-instance/register")?.appliedUpgradeIds,
-    ).toEqual(["upgrade/room/register:records_wall"]);
+    expect(hq.rooms.find((room) => room.id === "room-instance/register")).toEqual(
+      expect.objectContaining({
+        floorIndex: 0,
+        slotId: "slot/register",
+        roomStateId: expect.stringMatching(/^room-state\//),
+        appliedUpgradeIds: ["upgrade/room/register:records_wall"],
+        reservedFootprint: expect.objectContaining({ cols: 4, rows: 3 }),
+        activeFootprint: expect.objectContaining({ cols: 4, rows: 3 }),
+      }),
+    );
   });
 
-  it("turns bodega room-slot upgrades into placeable room options instead of dead empty slots", () => {
+  it("exposes explicit floor-aware slots instead of dead empty slots", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
-    const before = buildHqViewFromPhase1(simulation.getPhase1View(), templateRegistry);
-
     simulation.dispatch({
       type: "sim/purchase-building-upgrade",
       upgradeId: "upgrade/building/bodega:annex",
@@ -43,12 +48,15 @@ describe("phase 1 view models", () => {
 
     const hq = buildHqViewFromPhase1(simulation.getPhase1View(), templateRegistry);
 
-    expect(hq.emptySlots.length).toBe(before.emptySlots.length + 1);
-    expect(hq.placeableRoomTemplates).toContainEqual(
+    expect(hq.expansionSlots).toContainEqual(
       expect.objectContaining({
-        id: "room/lounge:tier_1",
+        kind: "locked",
+        slotId: "slot/back-room-right",
+        floorIndex: 0,
       }),
     );
+    expect(hq.expansionSlots.every((slot) => slot.floorIndex === 0)).toBe(true);
+    expect(hq.expansionSlots).toHaveLength(3);
   });
 
   it("maps forming opportunities to the claimed operations state", () => {

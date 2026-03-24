@@ -1,8 +1,14 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
 
-import { getBuildingLayout } from "content/building-layouts";
+import { getBuildingFloors, getBuildingLayout } from "content/building-layouts";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
+import {
+  getNextPendingRoomUpgradeIds,
+  getRoomActiveFootprint,
+  getRoomStateId,
+  getSlotKey,
+} from "lib/hq-room-state";
 import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
@@ -29,6 +35,18 @@ import {
 } from "../components";
 import { ensureOperatorDispositionEntity, ensureRoomCultureEntity } from "./social";
 import type { RuntimeEvent, SimSystemContext } from "./types";
+
+// Late-bound encounter/interruption/incident command handler.
+// Registered at system init time by encounter-commands.ts to break circular imports.
+let encounterCommandHandler:
+  | ((context: SimSystemContext, type: string, payload: Record<string, unknown>) => boolean)
+  | null = null;
+
+export function registerEncounterCommandHandler(
+  handler: (context: SimSystemContext, type: string, payload: Record<string, unknown>) => boolean,
+): void {
+  encounterCommandHandler = handler;
+}
 
 const ROLE_TAG_PREFIX = "role:";
 const STAFF_TAG_PREFIX = "staff:";
@@ -406,23 +424,96 @@ function applyCosts(context: SimSystemContext, costs: Map<string, number>): void
   });
 }
 
-function getDefaultRoomFootprint(slotIndex: number, buildingId?: string) {
-  if (buildingId) {
-    const layout = getBuildingLayout(buildingId);
-    if (layout && slotIndex < layout.slots.length) {
-      const slot = layout.slots[slotIndex];
-      return { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows };
-    }
-  }
-  // Legacy fallback
+function getFallbackRoomPlacement(slotIndex: number, floorIndex = 0, slotId?: string) {
   const column = slotIndex % 2;
   const row = Math.floor(slotIndex / 2);
-  return { col: column * 4, row: row * 3, cols: 4, rows: 3 };
+  return {
+    floorIndex,
+    slotId: slotId ?? `slot/${slotIndex}`,
+    reservedFootprint: { col: column * 4, row: row * 3, cols: 4, rows: 3 },
+  };
+}
+
+function resolveAvailableRoomPlacement(
+  context: SimSystemContext,
+  placement?: {
+    slotId?: string;
+    floorIndex?: number;
+  },
+) {
+  const slotIndex = context.runtimeState.roomEntities.length;
+  const buildingEntity = context.singletonEntities.building;
+  const buildingTemplate =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+  const requestedFloorIndex =
+    placement?.floorIndex ?? BuildingAuthority.activeFloorIndex[buildingEntity] ?? 0;
+
+  if (!buildingTemplate) {
+    return getFallbackRoomPlacement(slotIndex, requestedFloorIndex, placement?.slotId);
+  }
+
+  const orderedSlots = getBuildingFloors(
+    buildingTemplate.id,
+    BuildingAuthority.activeBuildingTier[buildingEntity],
+  ).flatMap((floor) =>
+    floor.slots.map((slot) => ({
+      floorIndex: floor.floorIndex,
+      slotId: slot.slotId,
+      reservedFootprint: { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows },
+    })),
+  );
+  if (orderedSlots.length === 0) {
+    return getFallbackRoomPlacement(slotIndex, requestedFloorIndex, placement?.slotId);
+  }
+
+  const unlockedSlots = orderedSlots.slice(
+    0,
+    Math.max(0, BuildingAuthority.roomSlotCount[buildingEntity] ?? 0),
+  );
+  const occupiedSlotKeys = new Set(
+    context.runtimeState.roomEntities.map((entity) =>
+      getSlotKey(RoomInstance.floorIndex[entity] ?? 0, RoomInstance.slotId[entity]),
+    ),
+  );
+
+  const requestedSlot = placement?.slotId
+    ? unlockedSlots.find(
+        (slot) =>
+          slot.floorIndex === requestedFloorIndex &&
+          slot.slotId === placement.slotId &&
+          !occupiedSlotKeys.has(getSlotKey(slot.floorIndex, slot.slotId)),
+      )
+    : undefined;
+  if (requestedSlot) {
+    return requestedSlot;
+  }
+
+  if (placement?.slotId) {
+    return null;
+  }
+
+  return (
+    unlockedSlots.find(
+      (slot) =>
+        slot.floorIndex === requestedFloorIndex &&
+        !occupiedSlotKeys.has(getSlotKey(slot.floorIndex, slot.slotId)),
+    ) ?? null
+  );
 }
 
 function createRoomInstanceEntity(
   context: SimSystemContext,
   templateId: string,
+  placement: {
+    slotId: string;
+    floorIndex: number;
+    reservedFootprint: {
+      col: number;
+      row: number;
+      cols: number;
+      rows: number;
+    };
+  },
   footprint?: {
     col?: number;
     row?: number;
@@ -437,10 +528,13 @@ function createRoomInstanceEntity(
 
   const entity = addEntity(context.world);
   const slotIndex = context.runtimeState.roomEntities.length;
-  const buildingEntity = context.singletonEntities.building;
-  const buildingTemplate =
-    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
-  const fallbackFootprint = getDefaultRoomFootprint(slotIndex, buildingTemplate?.id);
+  const reservedFootprint = {
+    col: footprint?.col ?? placement.reservedFootprint.col,
+    row: footprint?.row ?? placement.reservedFootprint.row,
+    cols: footprint?.cols ?? placement.reservedFootprint.cols,
+    rows: footprint?.rows ?? placement.reservedFootprint.rows,
+  };
+  const activeFootprint = getRoomActiveFootprint(template.id, reservedFootprint, []);
 
   addComponent(context.world, entity, RoomInstance);
   addComponent(context.world, entity, Renderable);
@@ -454,6 +548,9 @@ function createRoomInstanceEntity(
 
   RoomInstance.templateIndex[entity] = templateIndex;
   RoomInstance.tier[entity] = template.tier;
+  RoomInstance.floorIndex[entity] = placement.floorIndex;
+  RoomInstance.slotId[entity] = placement.slotId;
+  RoomInstance.roomStateId[entity] = getRoomStateId(template.id, []);
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
   RoomInstance.isRequestedActive[entity] = 0;
@@ -461,11 +558,15 @@ function createRoomInstanceEntity(
   RoomInstance.assignedStaffCount[entity] = 0;
   RoomInstance.appliedUpgradeIds[entity] = [];
   RoomInstance.slotIndex[entity] = slotIndex;
+  RoomInstance.reservedCol[entity] = reservedFootprint.col;
+  RoomInstance.reservedRow[entity] = reservedFootprint.row;
+  RoomInstance.reservedCols[entity] = reservedFootprint.cols;
+  RoomInstance.reservedRows[entity] = reservedFootprint.rows;
 
-  Renderable.col[entity] = footprint?.col ?? fallbackFootprint.col;
-  Renderable.row[entity] = footprint?.row ?? fallbackFootprint.row;
-  Renderable.cols[entity] = footprint?.cols ?? fallbackFootprint.cols;
-  Renderable.rows[entity] = footprint?.rows ?? fallbackFootprint.rows;
+  Renderable.col[entity] = activeFootprint.col;
+  Renderable.row[entity] = activeFootprint.row;
+  Renderable.cols[entity] = activeFootprint.cols;
+  Renderable.rows[entity] = activeFootprint.rows;
   Renderable.layer[entity] = 1;
 
   context.runtimeState.roomEntities.push(entity);
@@ -708,12 +809,47 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         context.runtimeState.roomEntities.length >=
           BuildingAuthority.roomSlotCount[buildingEntity] ||
         !template.availableInBuildings.includes(activeBuildingTemplate.id) ||
-        !unlockedRoomTemplateIds.includes(template.id)
+        !unlockedRoomTemplateIds.includes(template.id) ||
+        context.runtimeState.roomEntities.some((entity) => {
+          const existingTemplate = getRoomTemplateForEntity(context, entity);
+          return existingTemplate.id === template.id;
+        })
       ) {
         return;
       }
 
-      createRoomInstanceEntity(context, template.id, command.footprint);
+      const placement = resolveAvailableRoomPlacement(context, {
+        slotId: command.slotId,
+        floorIndex: command.floorIndex,
+      });
+      if (!placement) {
+        return;
+      }
+
+      if (
+        context.runtimeState.roomEntities.some(
+          (entity) =>
+            RoomInstance.slotId[entity] === placement.slotId &&
+            RoomInstance.floorIndex[entity] === placement.floorIndex,
+        )
+      ) {
+        return;
+      }
+
+      createRoomInstanceEntity(context, template.id, placement, command.footprint);
+      return;
+    }
+    case "sim/set-active-floor": {
+      const floors = getBuildingLayout(
+        getActiveBuildingTemplate(context).id,
+        command.floorIndex,
+        BuildingAuthority.activeBuildingTier[buildingEntity],
+      );
+      if (!floors) {
+        return;
+      }
+
+      BuildingAuthority.activeFloorIndex[buildingEntity] = command.floorIndex;
       return;
     }
     case "sim/set-room-active": {
@@ -765,8 +901,10 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
 
       const appliedUpgradeIds = RoomInstance.appliedUpgradeIds[roomEntity] ?? [];
+      const nextPendingIds = getNextPendingRoomUpgradeIds(template.id, appliedUpgradeIds);
       if (
         appliedUpgradeIds.includes(upgrade.id) ||
+        (nextPendingIds.length > 0 && !nextPendingIds.includes(upgrade.id)) ||
         !meetsRequirements(context, upgrade.requirements)
       ) {
         return;
@@ -778,7 +916,23 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
 
       applyCosts(context, costs);
-      RoomInstance.appliedUpgradeIds[roomEntity] = [...appliedUpgradeIds, upgrade.id];
+      const nextAppliedUpgradeIds = [...appliedUpgradeIds, upgrade.id];
+      RoomInstance.appliedUpgradeIds[roomEntity] = nextAppliedUpgradeIds;
+      RoomInstance.roomStateId[roomEntity] = getRoomStateId(template.id, nextAppliedUpgradeIds);
+      const activeFootprint = getRoomActiveFootprint(
+        template.id,
+        {
+          col: RoomInstance.reservedCol[roomEntity],
+          row: RoomInstance.reservedRow[roomEntity],
+          cols: RoomInstance.reservedCols[roomEntity],
+          rows: RoomInstance.reservedRows[roomEntity],
+        },
+        nextAppliedUpgradeIds,
+      );
+      Renderable.col[roomEntity] = activeFootprint.col;
+      Renderable.row[roomEntity] = activeFootprint.row;
+      Renderable.cols[roomEntity] = activeFootprint.cols;
+      Renderable.rows[roomEntity] = activeFootprint.rows;
       return;
     }
     case "sim/accept-recruit": {
@@ -960,6 +1114,15 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
     case "sim/dev-set-time": {
       const timeEntity = context.singletonEntities.time;
       WorldTimeState.minuteOfDay[timeEntity] = Math.max(0, Math.min(1439, command.minuteOfDay));
+      return;
+    }
+    default: {
+      // Delegate encounter, interruption, and incident commands to the
+      // late-bound handler registered by encounter-commands.ts.
+      // This breaks the circular import chain at module init time.
+      if (encounterCommandHandler) {
+        encounterCommandHandler(context, command.type, { ...command });
+      }
       return;
     }
   }

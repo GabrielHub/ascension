@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 
 import {
   CURRENT_CONTENT_COMPATIBILITY,
@@ -35,6 +36,7 @@ function createBaseSave(): PersistedSaveGame {
       building: {
         activeBuildingId: "building/bodega",
         activeBuildingTier: 2,
+        activeFloorIndex: 0,
         roomSlotCount: 4,
         operatorSlotCount: 3,
       },
@@ -43,15 +45,28 @@ function createBaseSave(): PersistedSaveGame {
           id: "room-instance/front-desk",
           templateId: "room/register:tier_1",
           tier: 1,
+          floorIndex: 0,
+          slotId: "slot/register",
+          roomStateId: getRoomStateId("room/register:tier_1", []),
           capacity: 2,
           occupancy: 1,
           isActive: true,
-          footprint: {
+          reservedFootprint: {
             col: 0,
             row: 0,
             cols: 4,
             rows: 3,
           },
+          activeFootprint: getRoomActiveFootprint(
+            "room/register:tier_1",
+            {
+              col: 0,
+              row: 0,
+              cols: 4,
+              rows: 3,
+            },
+            [],
+          ),
         },
       ],
       activeRaidPackets: [
@@ -453,6 +468,50 @@ describe("save codec", () => {
     expect(hydrated.save.world.operatorRelationships).toBeUndefined();
     expect(hydrated.save.world.raidOpportunities).toBeUndefined();
     expect(hydrated.save.world.activeEvents).toBeUndefined();
+  });
+
+  it("maps legacy bodega room footprints onto canonical slot ids and derived room state", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 10,
+      world: {
+        ...base.world,
+        rooms: [
+          {
+            id: "room-instance/front-desk",
+            templateId: "room/register:tier_1",
+            tier: 1,
+            capacity: 2,
+            occupancy: 1,
+            footprint: {
+              col: 0,
+              row: 10,
+              cols: 4,
+              rows: 3,
+            },
+            appliedUpgradeIds: [
+              "upgrade/room/register:records_wall",
+              "upgrade/room/register:ghost",
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.rooms[0]).toMatchObject({
+      floorIndex: 0,
+      slotId: "slot/register",
+      roomStateId: "room-state/register:2",
+      appliedUpgradeIds: ["upgrade/room/register:records_wall"],
+      activeFootprint: {
+        col: 0,
+        row: 10,
+        cols: 4,
+        rows: 3,
+      },
+    });
   });
 
   it("migrates schema 3 relationship memory saves by defaulting missing fields", () => {

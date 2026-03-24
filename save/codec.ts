@@ -43,7 +43,15 @@ import {
   parseOperatorAppearancePartIndex,
   type OperatorAppearancePartIndexEntry,
 } from "./appearance";
+import { templateRegistry } from "content/templates";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import {
+  getApplicableRoomUpgradeIds,
+  getKnownBuildingSlotPlacements,
+  getRoomActiveFootprint,
+  getRoomStateId,
+  resolveKnownRoomSlotPlacement,
+} from "lib/hq-room-state";
 
 export class SaveValidationError extends Error {
   constructor(message: string) {
@@ -242,39 +250,365 @@ function parseWorldTimeSnapshot(value: unknown, path: string): WorldTimeSnapshot
   };
 }
 
-function parseBuildingSnapshot(value: unknown, path: string): BuildingSnapshot {
+function parseBuildingSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): { building: BuildingSnapshot; changed: boolean } {
   const record = expectRecord(value, path);
 
   return {
-    activeBuildingId: expectString(record.activeBuildingId, `${path}.activeBuildingId`),
-    activeBuildingTier: expectNumber(record.activeBuildingTier, `${path}.activeBuildingTier`),
-    roomSlotCount: expectNumber(record.roomSlotCount, `${path}.roomSlotCount`),
-    operatorSlotCount: expectNumber(record.operatorSlotCount, `${path}.operatorSlotCount`),
+    building: {
+      activeBuildingId: expectString(record.activeBuildingId, `${path}.activeBuildingId`),
+      activeBuildingTier: expectNumber(record.activeBuildingTier, `${path}.activeBuildingTier`),
+      activeFloorIndex:
+        record.activeFloorIndex === undefined
+          ? 0
+          : expectNonNegativeInteger(record.activeFloorIndex, `${path}.activeFloorIndex`),
+      roomSlotCount: expectNumber(record.roomSlotCount, `${path}.roomSlotCount`),
+      operatorSlotCount: expectNumber(record.operatorSlotCount, `${path}.operatorSlotCount`),
+    },
+    changed: schemaVersion < 11 || record.activeFloorIndex === undefined,
   };
 }
 
-function parseRoomSnapshot(value: unknown, path: string): RoomSnapshot {
+const LEGACY_BUILDING_ID_MAP: Readonly<Record<string, string>> = {
+  "building/union_hall": "building/bodega",
+};
+
+const LEGACY_ROOM_TEMPLATE_ID_MAP: Readonly<Record<string, string>> = {
+  "room/front_desk:tier_1": "room/register:tier_1",
+  "room/recruitment_office:tier_1": "room/counter:tier_1",
+  "room/infirmary:tier_1": "room/dining_area:tier_1",
+  "room/break_room:tier_1": "room/dining_area:tier_1",
+  "room/lounge:tier_1": "room/dining_area:tier_1",
+  "room/gym:tier_1": "room/supply_closet:tier_1",
+  "room/sparring_room:tier_1": "room/supply_closet:tier_1",
+};
+
+function mapLegacyContentId(id: string, legacyMap: Readonly<Record<string, string>>): string {
+  return legacyMap[id] ?? id;
+}
+
+function footprintsEqual(
+  left: { col: number; row: number; cols: number; rows: number },
+  right: { col: number; row: number; cols: number; rows: number },
+): boolean {
+  return (
+    left.col === right.col &&
+    left.row === right.row &&
+    left.cols === right.cols &&
+    left.rows === right.rows
+  );
+}
+
+function normalizeRoomUpgradeIds(
+  templateId: string,
+  appliedUpgradeIds: unknown,
+): readonly string[] | undefined {
+  if (!Array.isArray(appliedUpgradeIds)) {
+    return undefined;
+  }
+
+  const stringIds = appliedUpgradeIds.filter(
+    (upgradeId): upgradeId is string => typeof upgradeId === "string" && upgradeId.length > 0,
+  );
+  const normalizedUpgradeIds = getApplicableRoomUpgradeIds(templateId, stringIds);
+  return normalizedUpgradeIds.length > 0 ? normalizedUpgradeIds : undefined;
+}
+
+function getCanonicalRoomCapacity(
+  templateId: string,
+  appliedUpgradeIds: readonly string[] | undefined,
+): number {
+  const template = templateRegistry.roomById.get(templateId);
+  if (!template) {
+    return 0;
+  }
+
+  let capacity = template.baseCapacity;
+  for (const upgradeId of appliedUpgradeIds ?? []) {
+    const upgrade = templateRegistry.upgradeById.get(upgradeId);
+    if (!upgrade || upgrade.target !== "room" || upgrade.targetId !== templateId) {
+      continue;
+    }
+
+    upgrade.effects.forEach((effect) => {
+      if (effect.type === "modify_room_capacity" && effect.roomId === templateId) {
+        capacity += effect.amount;
+      }
+    });
+  }
+
+  return capacity;
+}
+
+function canonicalizeLegacyBodegaRooms(
+  buildingRecord: Record<string, unknown>,
+  rooms: unknown[],
+): unknown[] {
+  const canonicalSlots = templateRegistry.buildingById.has("building/bodega")
+    ? resolveKnownBodegaSlots()
+    : [];
+  const canonicalRooms: Record<string, unknown>[] = [];
+  const seenTemplateIds = new Set<string>();
+
+  for (const room of rooms) {
+    if (!room || typeof room !== "object" || Array.isArray(room)) {
+      continue;
+    }
+
+    const roomRecord = room as Record<string, unknown>;
+    const templateId =
+      typeof roomRecord.templateId === "string" ? roomRecord.templateId : undefined;
+    if (!templateId || seenTemplateIds.has(templateId)) {
+      continue;
+    }
+
+    const template = templateRegistry.roomById.get(templateId);
+    const slot = canonicalSlots.find((candidate) => candidate.startingTemplateId === templateId);
+    if (!template || !slot) {
+      continue;
+    }
+
+    seenTemplateIds.add(templateId);
+    const appliedUpgradeIds = normalizeRoomUpgradeIds(templateId, roomRecord.appliedUpgradeIds);
+    const reservedFootprint = { ...slot.footprint };
+    const activeFootprint = getRoomActiveFootprint(
+      templateId,
+      reservedFootprint,
+      appliedUpgradeIds,
+    );
+
+    canonicalRooms.push({
+      id:
+        typeof roomRecord.id === "string" && roomRecord.id.length > 0
+          ? roomRecord.id
+          : `room-instance/${slot.slotId.replace("slot/", "")}`,
+      templateId,
+      tier: template.tier,
+      floorIndex: slot.floorIndex,
+      slotId: slot.slotId,
+      roomStateId: getRoomStateId(templateId, appliedUpgradeIds),
+      capacity: getCanonicalRoomCapacity(templateId, appliedUpgradeIds),
+      occupancy:
+        typeof roomRecord.occupancy === "number" && Number.isFinite(roomRecord.occupancy)
+          ? roomRecord.occupancy
+          : 0,
+      isActive:
+        typeof roomRecord.isActive === "boolean"
+          ? roomRecord.isActive
+          : typeof roomRecord.occupancy === "number" && roomRecord.occupancy > 0,
+      reservedFootprint,
+      activeFootprint,
+      ...(appliedUpgradeIds ? { appliedUpgradeIds: [...appliedUpgradeIds] } : {}),
+    });
+  }
+
+  if (canonicalSlots.length > 0) {
+    buildingRecord.roomSlotCount = canonicalSlots.length;
+    const bodegaTemplate = templateRegistry.buildingById.get("building/bodega");
+    if (bodegaTemplate) {
+      buildingRecord.operatorSlotCount = bodegaTemplate.baseOperatorSlots;
+    }
+    buildingRecord.activeFloorIndex = 0;
+  }
+
+  return canonicalRooms;
+}
+
+function resolveKnownBodegaSlots() {
+  return getKnownBuildingSlotPlacements("building/bodega").filter(
+    (slot) => typeof slot.startingTemplateId === "string" && slot.startingTemplateId.length > 0,
+  );
+}
+
+function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
+  record: Record<string, unknown>;
+  changed: boolean;
+} {
+  let changed = false;
+  const sanitized: Record<string, unknown> = { ...record };
+  let canonicalizeBodegaSlice = false;
+
+  const buildingValue = record.building;
+  if (buildingValue && typeof buildingValue === "object" && !Array.isArray(buildingValue)) {
+    const buildingRecord = { ...(buildingValue as Record<string, unknown>) };
+    if (typeof buildingRecord.activeBuildingId === "string") {
+      const mappedBuildingId = mapLegacyContentId(
+        buildingRecord.activeBuildingId,
+        LEGACY_BUILDING_ID_MAP,
+      );
+      if (mappedBuildingId !== buildingRecord.activeBuildingId) {
+        buildingRecord.activeBuildingId = mappedBuildingId;
+        changed = true;
+        canonicalizeBodegaSlice = mappedBuildingId === "building/bodega";
+      }
+    }
+    sanitized.building = buildingRecord;
+  }
+
+  if (Array.isArray(record.rooms)) {
+    sanitized.rooms = record.rooms.map((room) => {
+      if (!room || typeof room !== "object" || Array.isArray(room)) {
+        return room;
+      }
+
+      const roomRecord = { ...(room as Record<string, unknown>) };
+      if (typeof roomRecord.templateId === "string") {
+        const mappedRoomId = mapLegacyContentId(roomRecord.templateId, LEGACY_ROOM_TEMPLATE_ID_MAP);
+        if (mappedRoomId !== roomRecord.templateId) {
+          roomRecord.templateId = mappedRoomId;
+          changed = true;
+          canonicalizeBodegaSlice = true;
+        }
+      }
+
+      return roomRecord;
+    });
+  }
+
+  if (
+    canonicalizeBodegaSlice &&
+    sanitized.building &&
+    typeof sanitized.building === "object" &&
+    !Array.isArray(sanitized.building) &&
+    Array.isArray(sanitized.rooms)
+  ) {
+    sanitized.rooms = canonicalizeLegacyBodegaRooms(
+      sanitized.building as Record<string, unknown>,
+      sanitized.rooms,
+    );
+    changed = true;
+  }
+
+  return { record: sanitized, changed };
+}
+
+function parseRoomSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+  building: BuildingSnapshot,
+): { room: RoomSnapshot; changed: boolean } {
   const record = expectRecord(value, path);
-  const footprint = expectRecord(record.footprint, `${path}.footprint`);
   const isActive = record.isActive;
   const appliedUpgradeIds = record.appliedUpgradeIds;
+  const parsedAppliedUpgradeIds =
+    appliedUpgradeIds === undefined
+      ? undefined
+      : expectStringArray(appliedUpgradeIds, `${path}.appliedUpgradeIds`);
+  const templateId = expectString(record.templateId, `${path}.templateId`);
+  const normalizedAppliedUpgradeIds = getApplicableRoomUpgradeIds(
+    templateId,
+    parsedAppliedUpgradeIds,
+  );
+  const legacyFootprint =
+    record.footprint === undefined
+      ? undefined
+      : expectRecord(record.footprint, `${path}.footprint`);
+  const reservedRecord =
+    record.reservedFootprint === undefined
+      ? legacyFootprint
+      : expectRecord(record.reservedFootprint, `${path}.reservedFootprint`);
+  const reservedFootprint = {
+    col: expectInteger(
+      reservedRecord?.col,
+      `${path}.${record.reservedFootprint === undefined ? "footprint" : "reservedFootprint"}.col`,
+    ),
+    row: expectInteger(
+      reservedRecord?.row,
+      `${path}.${record.reservedFootprint === undefined ? "footprint" : "reservedFootprint"}.row`,
+    ),
+    cols: expectPositiveInteger(
+      reservedRecord?.cols,
+      `${path}.${record.reservedFootprint === undefined ? "footprint" : "reservedFootprint"}.cols`,
+    ),
+    rows: expectPositiveInteger(
+      reservedRecord?.rows,
+      `${path}.${record.reservedFootprint === undefined ? "footprint" : "reservedFootprint"}.rows`,
+    ),
+  };
+  const activeRecord =
+    record.activeFootprint === undefined
+      ? legacyFootprint
+      : expectRecord(record.activeFootprint, `${path}.activeFootprint`);
+  const fallbackActiveFootprint = getRoomActiveFootprint(
+    templateId,
+    reservedFootprint,
+    normalizedAppliedUpgradeIds,
+  );
+  const parsedActiveFootprint = activeRecord
+    ? {
+        col: expectInteger(
+          activeRecord.col,
+          `${path}.${record.activeFootprint === undefined ? "footprint" : "activeFootprint"}.col`,
+        ),
+        row: expectInteger(
+          activeRecord.row,
+          `${path}.${record.activeFootprint === undefined ? "footprint" : "activeFootprint"}.row`,
+        ),
+        cols: expectPositiveInteger(
+          activeRecord.cols,
+          `${path}.${record.activeFootprint === undefined ? "footprint" : "activeFootprint"}.cols`,
+        ),
+        rows: expectPositiveInteger(
+          activeRecord.rows,
+          `${path}.${record.activeFootprint === undefined ? "footprint" : "activeFootprint"}.rows`,
+        ),
+      }
+    : undefined;
+  const activeFootprint = fallbackActiveFootprint;
+  const parsedFloorIndex =
+    record.floorIndex === undefined
+      ? 0
+      : expectNonNegativeInteger(record.floorIndex, `${path}.floorIndex`);
+  const resolvedSlot = resolveKnownRoomSlotPlacement({
+    buildingId: building.activeBuildingId,
+    buildingTier: building.activeBuildingTier,
+    floorIndex: parsedFloorIndex,
+    slotId: typeof record.slotId === "string" ? record.slotId : undefined,
+    templateId,
+    reservedFootprint,
+  });
+  const floorIndex = resolvedSlot?.floorIndex ?? parsedFloorIndex;
+  const slotId =
+    resolvedSlot?.slotId ??
+    (typeof record.slotId === "string" && record.slotId.length > 0
+      ? record.slotId
+      : `slot/${expectString(record.id, `${path}.id`)}`);
+  const roomStateId = getRoomStateId(templateId, normalizedAppliedUpgradeIds);
 
   return {
-    id: expectString(record.id, `${path}.id`),
-    templateId: expectString(record.templateId, `${path}.templateId`),
-    tier: expectNumber(record.tier, `${path}.tier`),
-    capacity: expectNumber(record.capacity, `${path}.capacity`),
-    occupancy: expectNumber(record.occupancy, `${path}.occupancy`),
-    footprint: {
-      col: expectInteger(footprint.col, `${path}.footprint.col`),
-      row: expectInteger(footprint.row, `${path}.footprint.row`),
-      cols: expectPositiveInteger(footprint.cols, `${path}.footprint.cols`),
-      rows: expectPositiveInteger(footprint.rows, `${path}.footprint.rows`),
+    room: {
+      id: expectString(record.id, `${path}.id`),
+      templateId,
+      tier: expectNumber(record.tier, `${path}.tier`),
+      floorIndex,
+      slotId,
+      roomStateId,
+      capacity: expectNumber(record.capacity, `${path}.capacity`),
+      occupancy: expectNumber(record.occupancy, `${path}.occupancy`),
+      reservedFootprint,
+      activeFootprint,
+      ...(isActive === undefined ? {} : { isActive: expectBoolean(isActive, `${path}.isActive`) }),
+      ...(normalizedAppliedUpgradeIds.length === 0
+        ? {}
+        : { appliedUpgradeIds: [...normalizedAppliedUpgradeIds] }),
     },
-    ...(isActive === undefined ? {} : { isActive: expectBoolean(isActive, `${path}.isActive`) }),
-    ...(appliedUpgradeIds === undefined
-      ? {}
-      : { appliedUpgradeIds: expectStringArray(appliedUpgradeIds, `${path}.appliedUpgradeIds`) }),
+    changed:
+      schemaVersion < 11 ||
+      normalizedAppliedUpgradeIds.length !== (parsedAppliedUpgradeIds?.length ?? 0) ||
+      record.floorIndex === undefined ||
+      floorIndex !== parsedFloorIndex ||
+      record.slotId === undefined ||
+      (typeof record.slotId === "string" && record.slotId !== slotId) ||
+      record.roomStateId === undefined ||
+      record.roomStateId !== roomStateId ||
+      record.reservedFootprint === undefined ||
+      record.activeFootprint === undefined ||
+      (parsedActiveFootprint !== undefined &&
+        !footprintsEqual(parsedActiveFootprint, activeFootprint)),
   };
 }
 
@@ -1108,7 +1442,9 @@ function parseWorldSnapshot(
   schemaVersion: number,
   options: SaveCodecOptions,
 ): { world: WorldSnapshot; changed: boolean } {
-  const record = expectRecord(value, path);
+  const originalRecord = expectRecord(value, path);
+  const legacyContent = sanitizeLegacyContentReferences(originalRecord);
+  const record = legacyContent.record;
   const appearanceContext = createOperatorAppearanceParseContext(options);
   const operators = parseOptionalCollection(
     record.operators,
@@ -1151,7 +1487,10 @@ function parseWorldSnapshot(
   const contractSite = parseContractSiteSnapshot(record.contractSite, `${path}.contractSite`);
   const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
   const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
-  const rooms = parseCollection(record.rooms, `${path}.rooms`, parseRoomSnapshot);
+  const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
+  const rooms = parseCollection(record.rooms, `${path}.rooms`, (entry, entryPath) =>
+    parseRoomSnapshot(entry, entryPath, schemaVersion, building.building),
+  );
 
   // Phase 2: Parse new snapshot types or derive defaults from schema 7 migration
   let phase2Changed = false;
@@ -1297,21 +1636,20 @@ function parseWorldSnapshot(
     });
 
     const seenRoomCultureIds = new Set<string>();
-    roomCultures.forEach((culture, entryIndex) => {
-      if (!knownRoomIds.has(culture.roomInstanceId)) {
-        fail(
-          `${path}.roomCultures[${entryIndex}].roomInstanceId`,
-          `must reference an existing room id, got "${culture.roomInstanceId}".`,
-        );
-      }
-      if (seenRoomCultureIds.has(culture.roomInstanceId)) {
-        fail(
-          `${path}.roomCultures[${entryIndex}].roomInstanceId`,
-          `duplicates roomInstanceId "${culture.roomInstanceId}".`,
-        );
+    // Filter out stale room culture entries that reference rooms no longer present
+    // (e.g. from saves created before a room-ID migration). Culture data is non-critical.
+    for (let i = roomCultures.length - 1; i >= 0; i--) {
+      const culture = roomCultures[i];
+      if (
+        !knownRoomIds.has(culture.roomInstanceId) ||
+        seenRoomCultureIds.has(culture.roomInstanceId)
+      ) {
+        roomCultures.splice(i, 1);
+        phase2Changed = true;
+        continue;
       }
       seenRoomCultureIds.add(culture.roomInstanceId);
-    });
+    }
 
     const seenInventoryItemIds = new Set<string>();
     inventoryStacks.forEach((stack, entryIndex) => {
@@ -1419,8 +1757,8 @@ function parseWorldSnapshot(
     world: {
       guild: parseGuildSnapshot(record.guild, `${path}.guild`),
       time: parseWorldTimeSnapshot(record.time, `${path}.time`),
-      building: parseBuildingSnapshot(record.building, `${path}.building`),
-      rooms,
+      building: building.building,
+      rooms: rooms.map(({ room }) => room),
       activeRaidPackets: activeRaidPackets.map(({ _changed: _ignored, ...packet }) => packet),
       raidSummaries: raidSummaries.map(({ _changed: _ignored, ...summary }) => summary),
       appliedUpgradeIds: expectStringArray(record.appliedUpgradeIds, `${path}.appliedUpgradeIds`),
@@ -1453,8 +1791,20 @@ function parseWorldSnapshot(
       roomCultures,
       inventoryStacks,
       equipmentAssignments,
+      // Encounter, interruption, and incident state: pass through if present, ignore if absent
+      ...(record.activeEncounter && typeof record.activeEncounter === "object"
+        ? { activeEncounter: record.activeEncounter as SaveStructuredRecord }
+        : {}),
+      ...(record.interruptionQueue && typeof record.interruptionQueue === "object"
+        ? { interruptionQueue: record.interruptionQueue as SaveStructuredRecord }
+        : {}),
+      ...(record.incidentState && typeof record.incidentState === "object"
+        ? { incidentState: record.incidentState as SaveStructuredRecord }
+        : {}),
     },
     changed:
+      building.changed ||
+      rooms.some((room) => room.changed) ||
       operators.changed ||
       operatorChanged ||
       operatorRelationships.changed ||
@@ -1469,7 +1819,8 @@ function parseWorldSnapshot(
       fogOfWar.changed ||
       scheduler.changed ||
       raidSummaryChanged ||
-      phase2Changed,
+      phase2Changed ||
+      legacyContent.changed,
   };
 }
 

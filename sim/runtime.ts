@@ -3,7 +3,110 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
+import { getBuildingFloors } from "content/building-layouts";
+import {
+  getApplicableRoomUpgradeIds,
+  getNextPendingRoomUpgradeIds,
+  getRoomActiveFootprint,
+  getRoomStateId,
+  resolveKnownRoomSlotPlacement,
+} from "lib/hq-room-state";
 import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
+import {
+  buildKitTemplateRegistry,
+  REGULAR_ATTACKS,
+  SKILLS,
+  ULTIMATES,
+  PASSIVES,
+} from "content/templates/kits";
+// Type-only re-declarations to avoid importing from systems/ modules.
+// Those modules have init-time circular dependencies through the systems barrel.
+type InterruptionQueueState = { active: unknown; queue: unknown[]; nextInstanceId: number };
+type IncidentState = {
+  pendingIncident: unknown;
+  history: unknown[];
+  cooldowns: Record<string, number>;
+  nextInstanceId: number;
+  lastEvaluationMinute: number;
+};
+// Safe to import: encounter-types is a leaf module with no circular deps.
+import {
+  getBossEncounterDefinition,
+  type BossEncounterInstance,
+  type BossEncounterSnapshot,
+  type EncounterView,
+} from "./systems/encounter-types";
+
+function lazyCreateInterruptionQueueState(): InterruptionQueueState {
+  return { active: null, queue: [], nextInstanceId: 1 };
+}
+
+function lazyCreateIncidentState(): IncidentState {
+  return {
+    pendingIncident: null,
+    history: [],
+    cooldowns: {},
+    nextInstanceId: 1,
+    lastEvaluationMinute: 0,
+  };
+}
+
+function lazyBuildEncounterView(encounter: BossEncounterInstance): EncounterView {
+  const bossActor = Object.values(encounter.actors).find((a) => a.kind === "boss");
+  const bossDef = bossActor?.bossDefinitionId
+    ? getBossEncounterDefinition(templateRegistry, encounter.missionId, bossActor.bossDefinitionId)
+    : undefined;
+  return {
+    encounterId: encounter.encounterId,
+    status: encounter.status,
+    currentRound: encounter.currentRound,
+    currentPhaseIndex: encounter.currentPhaseIndex,
+    phaseCount: bossDef?.phases.length ?? 2,
+    phaseThresholdFractions: bossDef?.phases.map((phase) => phase.hpThresholdFraction) ?? [1],
+    bossName: bossActor?.label ?? "Unknown",
+    bossHpFraction: bossActor ? bossActor.currentHp / bossActor.maxHp : 0,
+    bossDefinitionId: encounter.bossDefinitionId,
+    bossRank: bossDef?.rank ?? "?",
+    bossTags: bossDef?.tags ?? [],
+    bossWeaknesses: bossDef?.weaknesses.map((w) => ({ kind: w.kind, target: w.target })) ?? [],
+    actors: Object.values(encounter.actors).map((a) => ({
+      actorId: a.actorId,
+      label: a.label,
+      side: a.side,
+      kind: a.kind,
+      currentHp: a.currentHp,
+      maxHp: a.maxHp,
+      shield: a.shield,
+      condition: a.condition,
+      activeStatuses: a.activeStatuses,
+      initiative: a.initiative,
+      operatorId: a.operatorId,
+      roleTag: a.roleTag,
+      attunementTag: a.attunementTag,
+      presetId: a.presetId,
+      bossDefinitionId: a.bossDefinitionId,
+    })),
+    initiativeQueue: encounter.initiativeQueue,
+    interventions: encounter.interventions,
+    recentLog: encounter.encounterLog.slice(-20),
+    autoplayEnabled: encounter.autoplayEnabled,
+    elapsedMinutes: encounter.elapsedMinutes,
+  };
+}
+
+function lazyRestoreEncounter(snapshot: BossEncounterSnapshot): BossEncounterInstance {
+  return {
+    ...snapshot,
+    participatingOperatorIds: [...snapshot.participatingOperatorIds],
+    initiativeQueue: [...snapshot.initiativeQueue],
+    actors: JSON.parse(JSON.stringify(snapshot.actors)),
+    interventions: snapshot.interventions.map((i) => ({ ...i })),
+    encounterLog: [...snapshot.encounterLog],
+    debugTraceEnabled: false,
+    autoplayEnabled: true,
+    autoplayIntervalMs: 800,
+  };
+}
 
 import {
   AssignmentState,
@@ -351,6 +454,8 @@ export interface Phase1RuntimeView {
     activeBuildingId: string;
     activeBuildingName: string;
     tier: number;
+    activeFloorIndex: number;
+    floorCount: number;
     roomSlotCount: number;
     roomsUsed: number;
     operatorSlotCount: number;
@@ -364,6 +469,9 @@ export interface Phase1RuntimeView {
     templateId: string;
     name: string;
     tier: number;
+    floorIndex: number;
+    slotId: string;
+    roomStateId: string;
     isRequestedActive: boolean;
     isOperational: boolean;
     capacity: number;
@@ -372,7 +480,13 @@ export interface Phase1RuntimeView {
     assignedStaffCount: number;
     appliedUpgradeIds: string[];
     availableUpgradeIds: string[];
-    footprint: {
+    reservedFootprint: {
+      col: number;
+      row: number;
+      cols: number;
+      rows: number;
+    };
+    activeFootprint: {
       col: number;
       row: number;
       cols: number;
@@ -437,6 +551,9 @@ export interface Phase1RuntimeView {
     enemyMarkers: Phase1RaidEnemyMarkerView[];
     featureMarkers: Phase1RaidFeatureMarkerView[];
   } | null;
+  encounter: EncounterView | null;
+  activeInterruption: import("./systems/interruptions").InterruptionInstance | null;
+  worldTimeFrozen: boolean;
 }
 
 // ── Phase 2 View Types ────────────────────────────────────────────────────
@@ -817,9 +934,46 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     extendedSnapshot.staff?.map((entry) =>
       normalizeStaffSnapshot(entry as Partial<Phase1StaffSnapshot> & { id: string }),
     ) ?? [];
+  const rooms = snapshot.rooms.map((room) => {
+    const appliedUpgradeIds = getApplicableRoomUpgradeIds(room.templateId, room.appliedUpgradeIds);
+    const reservedFootprint = room.reservedFootprint ?? room.footprint;
+    const resolvedSlot = reservedFootprint
+      ? resolveKnownRoomSlotPlacement({
+          buildingId: snapshot.building.activeBuildingId,
+          buildingTier: snapshot.building.activeBuildingTier,
+          floorIndex: room.floorIndex ?? 0,
+          slotId: room.slotId,
+          templateId: room.templateId,
+          reservedFootprint,
+        })
+      : undefined;
+    const activeFootprint = reservedFootprint
+      ? getRoomActiveFootprint(room.templateId, reservedFootprint, appliedUpgradeIds)
+      : undefined;
+
+    if (!reservedFootprint || !activeFootprint) {
+      throw new Error(`Runtime snapshot room "${room.id}" is missing a valid footprint.`);
+    }
+
+    return {
+      ...room,
+      floorIndex: resolvedSlot?.floorIndex ?? room.floorIndex ?? 0,
+      slotId: resolvedSlot?.slotId ?? room.slotId ?? `slot/${room.id}`,
+      roomStateId: getRoomStateId(room.templateId, appliedUpgradeIds),
+      appliedUpgradeIds: [...appliedUpgradeIds],
+      reservedFootprint,
+      activeFootprint,
+      isActive: room.isActive ?? room.occupancy > 0,
+    };
+  });
 
   return {
     ...snapshot,
+    building: {
+      ...snapshot.building,
+      activeFloorIndex: snapshot.building.activeFloorIndex ?? 0,
+    },
+    rooms,
     activeRaidPackets: (extendedSnapshot.activeRaidPackets ?? []).map((packet) => ({
       ...packet,
       contractSiteId: packet.contractSiteId ?? extendedSnapshot.contractSite?.contractSiteId ?? "",
@@ -941,7 +1095,62 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
       enemies: [],
       features: [],
     },
+    activeEncounter: restoreEncounterFromSnapshot(snapshot),
+    interruptionQueue: restoreInterruptionQueueFromSnapshot(snapshot),
+    incidentState: restoreIncidentStateFromSnapshot(snapshot),
+    kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
+    worldTimeFrozen: false,
   };
+}
+
+function restoreEncounterFromSnapshot(
+  snapshot: Phase1RuntimeWorldSnapshot,
+): BossEncounterInstance | null {
+  const raw = (snapshot as Record<string, unknown>).activeEncounter;
+  if (!raw || typeof raw !== "object") return null;
+  try {
+    return lazyRestoreEncounter(raw as BossEncounterSnapshot);
+  } catch {
+    return null;
+  }
+}
+
+function restoreInterruptionQueueFromSnapshot(
+  snapshot: Phase1RuntimeWorldSnapshot,
+): InterruptionQueueState {
+  const raw = (snapshot as Record<string, unknown>).interruptionQueue;
+  if (!raw || typeof raw !== "object") return lazyCreateInterruptionQueueState();
+  try {
+    const data = raw as Record<string, unknown>;
+    return {
+      active: (data.active as InterruptionQueueState["active"]) ?? null,
+      queue: Array.isArray(data.queue) ? data.queue : [],
+      nextInstanceId: typeof data.nextInstanceId === "number" ? data.nextInstanceId : 1,
+    };
+  } catch {
+    return lazyCreateInterruptionQueueState();
+  }
+}
+
+function restoreIncidentStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot): IncidentState {
+  const raw = (snapshot as Record<string, unknown>).incidentState;
+  if (!raw || typeof raw !== "object") return lazyCreateIncidentState();
+  try {
+    const data = raw as Record<string, unknown>;
+    return {
+      pendingIncident: (data.pendingIncident as IncidentState["pendingIncident"]) ?? null,
+      history: Array.isArray(data.history) ? data.history : [],
+      cooldowns:
+        typeof data.cooldowns === "object" && data.cooldowns
+          ? (data.cooldowns as Record<string, number>)
+          : {},
+      nextInstanceId: typeof data.nextInstanceId === "number" ? data.nextInstanceId : 1,
+      lastEvaluationMinute:
+        typeof data.lastEvaluationMinute === "number" ? data.lastEvaluationMinute : 0,
+    };
+  } catch {
+    return lazyCreateIncidentState();
+  }
 }
 
 function getActiveBuildingTemplate(context: {
@@ -1139,6 +1348,7 @@ function applyWorldSnapshot(
   BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = buildingTemplateIndex;
   BuildingAuthority.activeBuildingTier[buildingEntity] =
     runtimeSnapshot.building.activeBuildingTier;
+  BuildingAuthority.activeFloorIndex[buildingEntity] = runtimeSnapshot.building.activeFloorIndex;
   BuildingAuthority.roomSlotCount[buildingEntity] = runtimeSnapshot.building.roomSlotCount;
   BuildingAuthority.operatorSlotCount[buildingEntity] = runtimeSnapshot.building.operatorSlotCount;
   BuildingAuthority.appliedUpgradeIds[buildingEntity] = [...runtimeSnapshot.appliedUpgradeIds];
@@ -1200,6 +1410,9 @@ function applyWorldSnapshot(
     RoomInstance.id[entity] = room.id;
     RoomInstance.templateIndex[entity] = templateIndex;
     RoomInstance.tier[entity] = room.tier;
+    RoomInstance.floorIndex[entity] = room.floorIndex;
+    RoomInstance.slotId[entity] = room.slotId;
+    RoomInstance.roomStateId[entity] = room.roomStateId;
     RoomInstance.capacity[entity] = room.capacity;
     RoomInstance.occupancy[entity] = room.occupancy;
     RoomInstance.isRequestedActive[entity] = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
@@ -1207,11 +1420,15 @@ function applyWorldSnapshot(
     RoomInstance.assignedStaffCount[entity] = room.occupancy;
     RoomInstance.appliedUpgradeIds[entity] = [...(room.appliedUpgradeIds ?? [])];
     RoomInstance.slotIndex[entity] = index;
+    RoomInstance.reservedCol[entity] = room.reservedFootprint.col;
+    RoomInstance.reservedRow[entity] = room.reservedFootprint.row;
+    RoomInstance.reservedCols[entity] = room.reservedFootprint.cols;
+    RoomInstance.reservedRows[entity] = room.reservedFootprint.rows;
 
-    Renderable.col[entity] = room.footprint.col;
-    Renderable.row[entity] = room.footprint.row;
-    Renderable.cols[entity] = room.footprint.cols;
-    Renderable.rows[entity] = room.footprint.rows;
+    Renderable.col[entity] = room.activeFootprint.col;
+    Renderable.row[entity] = room.activeFootprint.row;
+    Renderable.cols[entity] = room.activeFootprint.cols;
+    Renderable.rows[entity] = room.activeFootprint.rows;
     Renderable.layer[entity] = 1;
 
     runtimeState.roomEntities.push(entity);
@@ -1614,6 +1831,7 @@ function applyWorldSnapshot(
         building: {
           activeBuildingId: buildingTemplate.id,
           activeBuildingTier: BuildingAuthority.activeBuildingTier[buildingEntity],
+          activeFloorIndex: BuildingAuthority.activeFloorIndex[buildingEntity] ?? 0,
           roomSlotCount: BuildingAuthority.roomSlotCount[buildingEntity],
           operatorSlotCount: BuildingAuthority.operatorSlotCount[buildingEntity],
         },
@@ -1624,11 +1842,22 @@ function applyWorldSnapshot(
             id: RoomInstance.id[entity],
             templateId: template.id,
             tier: RoomInstance.tier[entity],
+            floorIndex: RoomInstance.floorIndex[entity] ?? 0,
+            slotId: RoomInstance.slotId[entity],
+            roomStateId:
+              RoomInstance.roomStateId[entity] ||
+              getRoomStateId(template.id, RoomInstance.appliedUpgradeIds[entity] ?? []),
             capacity: RoomInstance.capacity[entity],
             occupancy: RoomInstance.occupancy[entity],
             isActive: RoomInstance.isRequestedActive[entity] === 1,
             appliedUpgradeIds: [...(RoomInstance.appliedUpgradeIds[entity] ?? [])],
-            footprint: {
+            reservedFootprint: {
+              col: RoomInstance.reservedCol[entity],
+              row: RoomInstance.reservedRow[entity],
+              cols: RoomInstance.reservedCols[entity],
+              rows: RoomInstance.reservedRows[entity],
+            },
+            activeFootprint: {
               col: Renderable.col[entity],
               row: Renderable.row[entity],
               cols: Renderable.cols[entity],
@@ -1823,6 +2052,60 @@ function applyWorldSnapshot(
           outfitOverlayId: EquipmentAssignment.outfitOverlayId[entity],
           accessoryId: EquipmentAssignment.accessoryId[entity],
         })),
+        // Encounter, interruption, and incident persistence
+        ...(runtimeState.activeEncounter
+          ? {
+              activeEncounter: {
+                encounterId: runtimeState.activeEncounter.encounterId,
+                contractSiteId: runtimeState.activeEncounter.contractSiteId,
+                activeRaidId: runtimeState.activeEncounter.activeRaidId,
+                missionId: runtimeState.activeEncounter.missionId,
+                teamId: runtimeState.activeEncounter.teamId,
+                participatingOperatorIds: [
+                  ...runtimeState.activeEncounter.participatingOperatorIds,
+                ],
+                bossDefinitionId: runtimeState.activeEncounter.bossDefinitionId,
+                currentRound: runtimeState.activeEncounter.currentRound,
+                currentPhaseIndex: runtimeState.activeEncounter.currentPhaseIndex,
+                status: runtimeState.activeEncounter.status,
+                elapsedMinutes: runtimeState.activeEncounter.elapsedMinutes,
+                rngSeed: runtimeState.activeEncounter.rngSeed,
+                rngCursor: runtimeState.activeEncounter.rngCursor,
+                initiativeQueue: [...runtimeState.activeEncounter.initiativeQueue],
+                actors: JSON.parse(JSON.stringify(runtimeState.activeEncounter.actors)),
+                interventions: runtimeState.activeEncounter.interventions.map((i) => ({
+                  ...i,
+                })),
+                encounterLog: runtimeState.activeEncounter.encounterLog.slice(-50),
+              },
+            }
+          : {}),
+        ...(runtimeState.interruptionQueue.active || runtimeState.interruptionQueue.queue.length > 0
+          ? {
+              interruptionQueue: {
+                active:
+                  runtimeState.interruptionQueue.active?.persistence === "persistent"
+                    ? runtimeState.interruptionQueue.active
+                    : null,
+                queue: runtimeState.interruptionQueue.queue.filter(
+                  (i) => i.persistence === "persistent",
+                ),
+                nextInstanceId: runtimeState.interruptionQueue.nextInstanceId,
+              },
+            }
+          : {}),
+        ...(runtimeState.incidentState.pendingIncident ||
+        runtimeState.incidentState.history.length > 0
+          ? {
+              incidentState: {
+                pendingIncident: runtimeState.incidentState.pendingIncident,
+                history: runtimeState.incidentState.history.slice(-20),
+                cooldowns: { ...runtimeState.incidentState.cooldowns },
+                nextInstanceId: runtimeState.incidentState.nextInstanceId,
+                lastEvaluationMinute: runtimeState.incidentState.lastEvaluationMinute,
+              },
+            }
+          : {}),
       };
     },
     getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot) {
@@ -1928,6 +2211,11 @@ function applyWorldSnapshot(
           activeBuildingId: snapshot.building.activeBuildingId,
           activeBuildingName: buildingTemplate.name,
           tier: snapshot.building.activeBuildingTier,
+          activeFloorIndex: snapshot.building.activeFloorIndex,
+          floorCount: getBuildingFloors(
+            snapshot.building.activeBuildingId,
+            snapshot.building.activeBuildingTier,
+          ).length,
           roomSlotCount: snapshot.building.roomSlotCount,
           roomsUsed: snapshot.rooms.length,
           operatorSlotCount: snapshot.building.operatorSlotCount,
@@ -1941,10 +2229,15 @@ function applyWorldSnapshot(
         },
         rooms: runtimeState.roomEntities.map((entity) => {
           const template = getRoomTemplateForRuntimeEntity(registry, entity);
+          const roomAppliedUpgradeIds = RoomInstance.appliedUpgradeIds[entity] ?? [];
+          const nextPendingIds = new Set(
+            getNextPendingRoomUpgradeIds(template.id, roomAppliedUpgradeIds),
+          );
           const availableUpgradeIds = registry.upgrades
             .filter((upgrade) => upgrade.target === "room" && upgrade.targetId === template.id)
-            .filter(
-              (upgrade) => !(RoomInstance.appliedUpgradeIds[entity] ?? []).includes(upgrade.id),
+            .filter((upgrade) => !roomAppliedUpgradeIds.includes(upgrade.id))
+            .filter((upgrade) =>
+              nextPendingIds.size === 0 ? true : nextPendingIds.has(upgrade.id),
             )
             .filter((upgrade) =>
               meetsRequirements(context, upgrade.requirements, requirementContext),
@@ -1962,6 +2255,11 @@ function applyWorldSnapshot(
             templateId: template.id,
             name: template.name,
             tier: RoomInstance.tier[entity],
+            floorIndex: RoomInstance.floorIndex[entity] ?? 0,
+            slotId: RoomInstance.slotId[entity],
+            roomStateId:
+              RoomInstance.roomStateId[entity] ||
+              getRoomStateId(template.id, RoomInstance.appliedUpgradeIds[entity] ?? []),
             isRequestedActive: RoomInstance.isRequestedActive[entity] === 1,
             isOperational: RoomInstance.isOperational[entity] === 1,
             capacity: RoomInstance.capacity[entity],
@@ -1970,7 +2268,13 @@ function applyWorldSnapshot(
             assignedStaffCount: RoomInstance.assignedStaffCount[entity],
             appliedUpgradeIds: [...(RoomInstance.appliedUpgradeIds[entity] ?? [])],
             availableUpgradeIds,
-            footprint: {
+            reservedFootprint: {
+              col: RoomInstance.reservedCol[entity],
+              row: RoomInstance.reservedRow[entity],
+              cols: RoomInstance.reservedCols[entity],
+              rows: RoomInstance.reservedRows[entity],
+            },
+            activeFootprint: {
               col: Renderable.col[entity],
               row: Renderable.row[entity],
               cols: Renderable.cols[entity],
@@ -2113,6 +2417,11 @@ function applyWorldSnapshot(
                 })),
               }
             : null,
+        encounter: runtimeState.activeEncounter
+          ? lazyBuildEncounterView(runtimeState.activeEncounter)
+          : null,
+        activeInterruption: runtimeState.interruptionQueue.active,
+        worldTimeFrozen: runtimeState.worldTimeFrozen,
       };
     },
     getPhase2View(): Phase2View {

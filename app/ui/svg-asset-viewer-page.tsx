@@ -20,7 +20,11 @@ import {
   type EnvPartMeta,
   type EnvPartCategory,
   type EnvLightingPreset,
+  type EnvSceneReviewGroup,
+  type EnvSceneReviewStep,
+  buildSceneReviewGroups,
   getLoadedEnvParts,
+  getSceneReviewContract,
   envPartSvgPath,
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
@@ -67,6 +71,7 @@ function opCategoryLabel(cat: string): string {
 
 const ENV_CATEGORY_LABELS: Record<EnvPartCategory, string> = {
   shell: "Shell",
+  scene: "Room Scenes",
   structure: "Structure",
   prop: "Props",
   background: "Background",
@@ -331,6 +336,50 @@ function MetadataRow({
         {label}
       </span>
       <div className="flex-1 text-xs text-silver-bright">{value ?? children}</div>
+    </div>
+  );
+}
+
+export function SceneContractSummary({
+  contract,
+}: {
+  contract: ReturnType<typeof getSceneReviewContract>;
+}) {
+  return (
+    <div className="grid gap-2 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.32)] p-3 text-[0.6875rem] text-silver/70 sm:grid-cols-2">
+      <div>
+        <span className="text-gold/60">Building</span>
+        <div className="text-silver-bright">{contract.building}</div>
+      </div>
+      <div>
+        <span className="text-gold/60">Tile size</span>
+        <div className="text-silver-bright">
+          {contract.tileWidth} x {contract.tileHeight}
+        </div>
+      </div>
+      <div>
+        <span className="text-gold/60">Wall height</span>
+        <div className="text-silver-bright">{contract.wallHeight}</div>
+      </div>
+      <div>
+        <span className="text-gold/60">Origin</span>
+        <div className="text-silver-bright">
+          {contract.canonicalOrigin[0]}, {contract.canonicalOrigin[1]}
+        </div>
+      </div>
+      <div className="sm:col-span-2">
+        <span className="text-gold/60">View box</span>
+        <div className="text-silver-bright">
+          {contract.canonicalViewBox.minX}, {contract.canonicalViewBox.minY},{" "}
+          {contract.canonicalViewBox.width} x {contract.canonicalViewBox.height}
+        </div>
+      </div>
+      <div className="sm:col-span-2">
+        <span className="text-gold/60">Room footprint</span>
+        <div className="text-silver-bright">
+          {contract.roomFootprint.cols} x {contract.roomFootprint.rows}
+        </div>
+      </div>
     </div>
   );
 }
@@ -844,10 +893,23 @@ function EnvPartListItem({
   );
 }
 
-function EnvSingleDetail({ part, preset }: { part: EnvPartMeta; preset: EnvLightingPreset }) {
+function EnvSingleDetail({
+  part,
+  preset,
+  sceneStepByPartId,
+  sceneContract,
+}: {
+  part: EnvPartMeta;
+  preset: EnvLightingPreset;
+  sceneStepByPartId: ReadonlyMap<string, { group: EnvSceneReviewGroup; step: EnvSceneReviewStep }>;
+  sceneContract: ReturnType<typeof getSceneReviewContract>;
+}) {
   const name = part.id.split("/").pop() ?? part.id;
   const src = envPartSvgPath(part);
   const size = envDetailSize(part.scale);
+  const sceneLookup = sceneStepByPartId.get(part.id);
+  const sceneGroup = sceneLookup?.group;
+  const sceneStep = sceneLookup?.step;
   return (
     <div className="animate-enter flex flex-col items-center gap-6 p-8">
       <div
@@ -881,6 +943,27 @@ function EnvSingleDetail({ part, preset }: { part: EnvPartMeta; preset: EnvLight
           </MetadataRow>
           <MetadataRow label="Preset" value={preset.label} />
           {part.roomFamily && <MetadataRow label="Room" value={part.roomFamily} />}
+          {part.category === "scene" && (
+            <>
+              <MetadataRow label="Series" value={sceneGroup?.label ?? "Unmapped"} />
+              <MetadataRow
+                label="Progress"
+                value={
+                  sceneStep
+                    ? `State ${sceneStep.index}${sceneStep.isPlaceholder ? " (placeholder)" : ""}`
+                    : "State unmapped"
+                }
+              />
+              <MetadataRow label="Scene rules">
+                <div className="flex flex-wrap gap-1">
+                  <span className="badge badge-gold">props-only</span>
+                  <span className="badge badge-gold">room-scale</span>
+                  <span className="badge badge-gold">recipes/</span>
+                </div>
+              </MetadataRow>
+              <SceneContractSummary contract={sceneContract} />
+            </>
+          )}
           <MetadataRow label="Tags">
             <div className="flex flex-wrap gap-1">
               {part.tags.map((t) => (
@@ -896,7 +979,142 @@ function EnvSingleDetail({ part, preset }: { part: EnvPartMeta; preset: EnvLight
   );
 }
 
-function EnvComparisonView({ parts, preset }: { parts: EnvPartMeta[]; preset: EnvLightingPreset }) {
+function EnvComparisonView({
+  parts,
+  preset,
+  sceneStepByPartId,
+  sceneContract,
+}: {
+  parts: EnvPartMeta[];
+  preset: EnvLightingPreset;
+  sceneStepByPartId: ReadonlyMap<string, { group: EnvSceneReviewGroup; step: EnvSceneReviewStep }>;
+  sceneContract: ReturnType<typeof getSceneReviewContract>;
+}) {
+  const allScenes = parts.every((part) => part.category === "scene");
+
+  if (allScenes) {
+    return (
+      <div className="animate-enter space-y-6 p-6">
+        <div className="text-center">
+          <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
+            Scene comparison for {parts.length} room states
+          </h3>
+          <p className="mt-1 text-[0.6875rem] text-silver/50">Preset: {preset.label}</p>
+        </div>
+
+        <SceneContractSummary contract={sceneContract} />
+
+        <div
+          className={`grid gap-4 ${
+            parts.length === 2 ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-3"
+          }`}
+        >
+          {parts.map((part) => {
+            const name = part.id.split("/").pop() ?? part.id;
+            const src = envPartSvgPath(part);
+            const placement = sceneStepByPartId.get(part.id);
+            return (
+              <div
+                key={part.id}
+                className="flex flex-col gap-3 rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] p-4"
+              >
+                <div
+                  className="relative flex h-36 items-center justify-center overflow-hidden rounded-lg border"
+                  style={{ backgroundColor: preset.background, borderColor: preset.border }}
+                >
+                  <SvgPreview
+                    src={src}
+                    alt={name}
+                    className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
+                  />
+                  {preset.overlay && (
+                    <div
+                      className="pointer-events-none absolute inset-0 rounded-lg"
+                      style={{ backgroundColor: preset.overlay }}
+                    />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-silver-bright">{name}</p>
+                  <div className="flex flex-wrap gap-1">
+                    <span className="badge badge-gold">{envCategoryLabel(part.category)}</span>
+                    <span
+                      className={`text-[0.6875rem] ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}
+                    >
+                      {part.status}
+                    </span>
+                    <span className="badge badge-slate text-[0.6rem]">
+                      {placement?.group.label ?? "Unmapped"}
+                    </span>
+                  </div>
+                  <p className="text-[0.6875rem] text-silver/60">
+                    {placement?.step
+                      ? `State ${placement.step.index}${placement.step.isPlaceholder ? " placeholder" : ""}`
+                      : "State unmapped"}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <h4 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
+              Scene series scaffold
+            </h4>
+            <p className="text-[0.625rem] text-silver/40">{sceneGroups.length} scene series</p>
+          </div>
+          {sceneGroups.map((group) => (
+            <div
+              key={group.seriesKey}
+              className="rounded-xl border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.28)] p-4"
+            >
+              <div className="mb-3 flex flex-wrap items-baseline gap-2">
+                <h5 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
+                  {group.label}
+                </h5>
+                {group.roomFamily && (
+                  <span className="badge badge-slate text-[0.6rem]">{group.roomFamily}</span>
+                )}
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {group.steps.map((step) =>
+                  step.part ? (
+                    <div
+                      key={step.part.id}
+                      className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(15,14,18,0.18)] p-3"
+                    >
+                      <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                        State {step.index}
+                      </p>
+                      <p className="mt-2 text-xs text-silver-bright">
+                        {step.part.id.split("/").pop() ?? step.part.id}
+                      </p>
+                      <p className="mt-1 text-[0.6875rem] text-silver/60">
+                        {step.part.roomFamily ?? "n/a"} | {step.part.status}
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      key={`${group.seriesKey}-${step.index}`}
+                      className="rounded-lg border border-dashed border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.18)] p-3"
+                    >
+                      <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                        State {step.index}
+                      </p>
+                      <p className="mt-2 text-xs text-silver/60">Pending scene state</p>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-enter p-6">
       <div className="mb-5 text-center">
@@ -982,6 +1200,17 @@ export function SvgAssetViewerPage() {
   const [envSelected, setEnvSelected] = useState<Set<string>>(new Set());
   const [envPresetId, setEnvPresetId] = useState("neutral");
   const envPreset = getEnvLightingPreset(envPresetId);
+  const envSceneGroups = useMemo(() => buildSceneReviewGroups(envParts), [envParts]);
+  const envSceneContract = useMemo(() => getSceneReviewContract(), []);
+  const envSceneStepByPartId = useMemo(() => {
+    const map = new Map<string, { group: EnvSceneReviewGroup; step: EnvSceneReviewStep }>();
+    for (const group of envSceneGroups) {
+      for (const step of group.steps) {
+        if (step.part) map.set(step.part.id, { group, step });
+      }
+    }
+    return map;
+  }, [envSceneGroups]);
 
   // ── Operator derived state ────────────────────────────────────────────
   const opFilterOptions = useMemo(() => {
@@ -1396,6 +1625,8 @@ export function SvgAssetViewerPage() {
                 key={selectedEnvParts[0].id}
                 part={selectedEnvParts[0]}
                 preset={envPreset}
+                sceneStepByPartId={envSceneStepByPartId}
+                sceneContract={envSceneContract}
               />
             )}
             {selectedEnvParts.length > 1 && (
@@ -1403,6 +1634,8 @@ export function SvgAssetViewerPage() {
                 key={[...envSelected].sort().join()}
                 parts={selectedEnvParts}
                 preset={envPreset}
+                sceneStepByPartId={envSceneStepByPartId}
+                sceneContract={envSceneContract}
               />
             )}
           </main>

@@ -25,6 +25,12 @@ export const AUDIO_CUE_IDS = [
   "staff.assign",
   "operator.recruit",
   "raid.launch",
+  "raid.boss.approach",
+  "raid.boss.commit",
+  "raid.boss.phase",
+  "raid.boss.summon",
+  "raid.boss.victory",
+  "raid.boss.failure",
   "raid.return.success",
   "raid.return.failure",
   "raid.death",
@@ -266,6 +272,114 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
       synth.volume.value = -12;
       synth.triggerAttackRelease("16n");
       setTimeout(() => synth.dispose(), 1500);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.approach",
+    label: "Boss Approach",
+    description: "Low alert pulse when a raid reaches the boss threshold.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.01, decay: 0.25, sustain: 0.05, release: 0.3 },
+      }).connect(sfxBus);
+      synth.volume.value = -11;
+      const now = Tone.now();
+      synth.triggerAttackRelease("F2", "8n", now);
+      synth.triggerAttackRelease("Bb2", "8n", now + 0.18);
+      setTimeout(() => synth.dispose(), 1800);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.commit",
+    label: "Boss Commit",
+    description: "Sharp activation hit when Boss commits the team to the encounter.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.MetalSynth({
+        frequency: 260,
+        envelope: { attack: 0.001, decay: 0.28, release: 0.18 },
+        harmonicity: 4,
+        modulationIndex: 20,
+        resonance: 2600,
+        octaves: 1.5,
+      }).connect(sfxBus);
+      synth.volume.value = -10;
+      synth.triggerAttackRelease("16n");
+      setTimeout(() => synth.dispose(), 1500);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.phase",
+    label: "Boss Phase Shift",
+    description: "Rising unstable sweep for a boss phase transition.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "square" },
+        envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 0.35 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("C4", "16n", now);
+      synth.triggerAttackRelease("G4", "16n", now + 0.08);
+      synth.triggerAttackRelease("D5", "8n", now + 0.18);
+      setTimeout(() => synth.dispose(), 1800);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.summon",
+    label: "Boss Summon",
+    description: "Staccato chittering tone when the boss brings adds into play.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.05 },
+      }).connect(sfxBus);
+      synth.volume.value = -10;
+      const now = Tone.now();
+      synth.triggerAttackRelease("A4", "32n", now);
+      synth.triggerAttackRelease("C5", "32n", now + 0.05);
+      synth.triggerAttackRelease("E5", "32n", now + 0.1);
+      setTimeout(() => synth.dispose(), 1200);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.victory",
+    label: "Boss Victory",
+    description: "Short brass-like fanfare on boss defeat.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.PolySynth(Tone.Synth, {
+        options: {
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.02, decay: 0.24, sustain: 0.08, release: 0.45 },
+        },
+      }).connect(sfxBus);
+      const now = Tone.now();
+      synth.triggerAttackRelease(["C4", "G4"], "8n", now);
+      synth.triggerAttackRelease(["E4", "B4", "E5"], "4n", now + 0.16);
+      setTimeout(() => synth.dispose(), 2200);
+    },
+  }),
+
+  sfx({
+    id: "raid.boss.failure",
+    label: "Boss Failure",
+    description: "Muted descending alarm for retreats or failed boss encounters.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.02, decay: 0.3, sustain: 0.06, release: 0.5 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("D4", "8n", now);
+      synth.triggerAttackRelease("Bb3", "8n", now + 0.18);
+      synth.triggerAttackRelease("F3", "4n", now + 0.34);
+      setTimeout(() => synth.dispose(), 2200);
     },
   }),
 

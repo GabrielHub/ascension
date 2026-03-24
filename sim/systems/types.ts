@@ -1,11 +1,21 @@
 import type { World } from "bitecs";
 
 import type { TemplateRegistry } from "content/templates";
+import type { KitTemplateRegistry } from "content/templates/kits";
+import type { BossEncounterInstance } from "./encounter-types";
+import type { InterruptionQueueState } from "./interruptions";
+import type { IncidentState } from "./incidents";
 
 export type RuntimeCueId =
   | "hq.visitor"
   | "hq.dismiss"
   | "raid.launch"
+  | "raid.boss.approach"
+  | "raid.boss.commit"
+  | "raid.boss.phase"
+  | "raid.boss.summon"
+  | "raid.boss.victory"
+  | "raid.boss.failure"
   | "raid.return.success"
   | "raid.return.failure"
   | "raid.death"
@@ -129,6 +139,12 @@ export interface SimRuntimeState {
   pendingCueIds: RuntimeCueId[];
   pendingEvents: RuntimeEvent[];
   raidPresentation: RaidPresentationState;
+  // Encounter, interruption, and incident state
+  activeEncounter: BossEncounterInstance | null;
+  interruptionQueue: InterruptionQueueState;
+  incidentState: IncidentState;
+  kitRegistry: KitTemplateRegistry;
+  worldTimeFrozen: boolean;
 }
 
 export interface SimSingletonEntities {

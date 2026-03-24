@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="s-aura" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#c8a84c" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#3d2c20" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#060608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="s-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a2018"/>
+      <stop offset="50%" stop-color="#1e1610"/>
+      <stop offset="100%" stop-color="#14100c"/>
+    </linearGradient>
+    <linearGradient id="s-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d2c20"/>
+      <stop offset="100%" stop-color="#2a1e14"/>
+    </linearGradient>
+    <filter id="s-glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="s-gold-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura backdrop -->
+  <ellipse cx="100" cy="135" rx="95" ry="130" fill="url(#s-aura)"/>
+
+  <!-- Body silhouette — massive, bulky, fortified -->
+  <path d="
+    M 100 28
+    L 125 38 L 145 58 L 152 82 L 155 110
+    L 158 145 L 155 180 L 150 215
+    L 142 245 L 132 268
+    L 118 275 L 100 278 L 82 275
+    L 68 268 L 58 245 L 50 215
+    L 45 180 L 42 145 L 45 110
+    L 48 82 L 55 58 L 75 38 Z
+  " fill="url(#s-body)" stroke="rgba(61,44,32,0.5)" stroke-width="1"/>
+
+  <!-- Layered armor plating — heavy industrial -->
+  <path d="M 55 82 L 32 95 L 28 110 L 32 118 L 45 115 L 55 100 Z" fill="url(#s-metal)" stroke="#4a3628" stroke-width="0.6"/>
+  <path d="M 145 82 L 168 95 L 172 110 L 168 118 L 155 115 L 145 100 Z" fill="url(#s-metal)" stroke="#4a3628" stroke-width="0.6"/>
+  <!-- Secondary shoulder layer -->
+  <path d="M 52 90 L 36 100 L 34 108 L 48 105 Z" fill="#3d2c20" stroke="#4a3628" stroke-width="0.3" opacity="0.6"/>
+  <path d="M 148 90 L 164 100 L 166 108 L 152 105 Z" fill="#3d2c20" stroke="#4a3628" stroke-width="0.3" opacity="0.6"/>
+
+  <!-- Pipe network on torso -->
+  <path d="M 70 105 Q 72 130 70 155" fill="none" stroke="#4a3628" stroke-width="2" opacity="0.5"/>
+  <path d="M 130 105 Q 128 130 130 155" fill="none" stroke="#4a3628" stroke-width="2" opacity="0.5"/>
+  <!-- Cross pipes -->
+  <path d="M 70 125 L 130 125" fill="none" stroke="#4a3628" stroke-width="1.5" opacity="0.3"/>
+  <path d="M 72 145 L 128 145" fill="none" stroke="#4a3628" stroke-width="1.5" opacity="0.3"/>
+  <!-- Pipe joints -->
+  <circle cx="70" cy="125" r="3" fill="#2a1e14" stroke="#4a3628" stroke-width="0.5"/>
+  <circle cx="130" cy="125" r="3" fill="#2a1e14" stroke="#4a3628" stroke-width="0.5"/>
+  <circle cx="70" cy="145" r="3" fill="#2a1e14" stroke="#4a3628" stroke-width="0.5"/>
+  <circle cx="130" cy="145" r="3" fill="#2a1e14" stroke="#4a3628" stroke-width="0.5"/>
+
+  <!-- Head — heavy helmet with multiple eye-lights -->
+  <path d="
+    M 100 22
+    L 122 30 L 130 48 L 128 66 L 120 76
+    L 100 80 L 80 76 L 72 66
+    L 70 48 L 78 30 Z
+  " fill="#1e1610" stroke="#3d2c20" stroke-width="1"/>
+
+  <!-- Helmet reinforcement ridge -->
+  <path d="M 85 24 L 100 18 L 115 24" fill="none" stroke="#4a3628" stroke-width="1.2"/>
+  <path d="M 80 30 L 100 22 L 120 30" fill="none" stroke="#4a3628" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Multiple surveillance eye-lights -->
+  <circle cx="88" cy="50" r="4" fill="#c8a84c" opacity="0.6" filter="url(#s-gold-glow)"/>
+  <circle cx="112" cy="50" r="4" fill="#c8a84c" opacity="0.6" filter="url(#s-gold-glow)"/>
+  <!-- Eye cores -->
+  <circle cx="88" cy="50" r="2" fill="#f0ece4" opacity="0.8"/>
+  <circle cx="112" cy="50" r="2" fill="#f0ece4" opacity="0.8"/>
+  <!-- Third eye — center forehead -->
+  <circle cx="100" cy="38" r="2.5" fill="#c8a84c" opacity="0.35" filter="url(#s-gold-glow)"/>
+  <circle cx="100" cy="38" r="1.2" fill="#f0ece4" opacity="0.5"/>
+
+  <!-- Jaw plate -->
+  <path d="M 82 62 L 88 68 L 100 70 L 112 68 L 118 62" fill="none" stroke="#3d2c20" stroke-width="1"/>
+
+  <!-- Chest control plate -->
+  <rect x="78" y="92" width="44" height="30" rx="4" fill="#14100c" stroke="#4a3628" stroke-width="0.7"/>
+  <!-- Gauge indicators -->
+  <circle cx="88" cy="102" r="3.5" fill="none" stroke="#c8a84c" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="88" cy="102" r="1" fill="#c8a84c" opacity="0.4"/>
+  <circle cx="100" cy="102" r="3.5" fill="none" stroke="#c8a84c" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="100" cy="102" r="1" fill="#c8a84c" opacity="0.4"/>
+  <circle cx="112" cy="102" r="3.5" fill="none" stroke="#c8a84c" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="112" cy="102" r="1" fill="#c8a84c" opacity="0.4"/>
+  <!-- Status bars -->
+  <rect x="83" y="112" width="34" height="2" rx="1" fill="#c8a84c" opacity="0.15"/>
+  <rect x="83" y="112" width="22" height="2" rx="1" fill="#c8a84c" opacity="0.3"/>
+  <rect x="83" y="116" width="34" height="2" rx="1" fill="#c8a84c" opacity="0.15"/>
+  <rect x="83" y="116" width="28" height="2" rx="1" fill="#c8a84c" opacity="0.25"/>
+
+  <!-- Arms — massive, tool-bearing -->
+  <path d="M 48 100 L 30 140 L 26 175 L 30 188 L 40 182 L 42 155 L 52 120 Z" fill="#1e1610" stroke="#3d2c20" stroke-width="0.6"/>
+  <path d="M 152 100 L 170 140 L 174 175 L 170 188 L 160 182 L 158 155 L 148 120 Z" fill="#1e1610" stroke="#3d2c20" stroke-width="0.6"/>
+
+  <!-- Left hand — wrench -->
+  <rect x="20" y="180" width="16" height="8" rx="2" fill="#3d2c20" stroke="#4a3628" stroke-width="0.4"/>
+  <rect x="18" y="172" width="5" height="18" rx="1" fill="#4a3628" stroke="#5a4838" stroke-width="0.3"/>
+  <path d="M 16 170 L 14 164 L 18 160 L 24 164 L 22 170 Z" fill="#3d2c20" stroke="#4a3628" stroke-width="0.3"/>
+
+  <!-- Right hand — structural beam -->
+  <rect x="164" y="178" width="16" height="8" rx="2" fill="#3d2c20" stroke="#4a3628" stroke-width="0.4"/>
+  <rect x="170" y="155" width="4" height="35" rx="1" fill="#4a3628" stroke="#5a4838" stroke-width="0.3"/>
+
+  <!-- Belt — heavy duty with keyring -->
+  <rect x="58" y="190" width="84" height="8" rx="2" fill="#2a1e14" stroke="#4a3628" stroke-width="0.5"/>
+  <!-- Key cluster -->
+  <circle cx="75" cy="202" r="3" fill="none" stroke="#c8a84c" stroke-width="0.4" opacity="0.3"/>
+  <line x1="75" y1="198" x2="75" y2="205" stroke="#c8a84c" stroke-width="0.4" opacity="0.25"/>
+  <circle cx="80" cy="204" r="2" fill="none" stroke="#c8a84c" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Structural cracks/damage lines (boss is part of the building) -->
+  <path d="M 65 160 L 62 168 L 66 175 L 63 182" fill="none" stroke="#4a3628" stroke-width="0.4" opacity="0.3"/>
+  <path d="M 135 165 L 138 172 L 134 178" fill="none" stroke="#4a3628" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Foundation sigil -->
+  <rect x="88" y="202" width="24" height="16" rx="2" fill="none" stroke="#c8a84c" stroke-width="0.5" opacity="0.2"/>
+  <line x1="92" y1="210" x2="108" y2="210" stroke="#c8a84c" stroke-width="0.3" opacity="0.2"/>
+  <line x1="100" y1="204" x2="100" y2="216" stroke="#c8a84c" stroke-width="0.3" opacity="0.2"/>
+</svg>

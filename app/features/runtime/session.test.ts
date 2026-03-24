@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 import {
   CURRENT_CONTENT_COMPATIBILITY,
   CURRENT_SAVE_SCHEMA_VERSION,
   saveStorage,
   type PersistedSaveGame,
 } from "save";
+import { hydratePersistedSaveGame } from "save/codec";
 import { createBootstrapWorldSnapshot } from "sim";
+import { createAscensionSimulation } from "sim";
 
 import { parseRuntimeRouteRequest, resolveRuntimeSession } from "./session";
 
@@ -28,16 +31,19 @@ function createDeferredPromise<T>() {
 }
 
 const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
+const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
 
 function createRoomSnapshot(
   templateId: string,
   id: string,
-  footprint: {
+  slotId: string,
+  reservedFootprint: {
     col: number;
     row: number;
     cols: number;
     rows: number;
   },
+  activeFootprint = getRoomActiveFootprint(templateId, reservedFootprint, []),
 ) {
   const template = templateRegistry.roomById.get(templateId);
   if (!template) {
@@ -48,36 +54,69 @@ function createRoomSnapshot(
     id,
     templateId: template.id,
     tier: template.tier,
+    floorIndex: 0,
+    slotId,
+    roomStateId: getRoomStateId(template.id, []),
     capacity: template.baseCapacity,
     occupancy: 0,
     isActive: true,
-    footprint,
+    reservedFootprint,
+    activeFootprint,
   };
 }
 
-function createUnionHallWorldSnapshot() {
+function createBodegaWorldSnapshot() {
   const world = createBootstrapWorldSnapshot(templateRegistry);
 
   world.building = {
-    activeBuildingId: "building/union_hall",
-    activeBuildingTier: 2,
-    roomSlotCount: 7,
-    operatorSlotCount: 6,
+    activeBuildingId: "building/bodega",
+    activeBuildingTier: 1,
+    activeFloorIndex: 0,
+    roomSlotCount: 4,
+    operatorSlotCount: 7,
   };
   world.appliedUpgradeIds = [];
   world.rooms = [
-    createRoomSnapshot("room/front_desk:tier_1", "room-instance/front_desk", {
+    createRoomSnapshot("room/register:tier_1", "room-instance/register", "slot/register", {
       col: 0,
       row: 0,
       cols: 4,
       rows: 3,
     }),
-    createRoomSnapshot("room/recruitment_office:tier_1", "room-instance/recruitment_office", {
-      col: 4,
-      row: 0,
+    createRoomSnapshot(
+      "room/counter:tier_1",
+      "room-instance/counter",
+      "slot/counter",
+      {
+        col: 4,
+        row: 0,
+        cols: 4,
+        rows: 3,
+      },
+      {
+        col: 4,
+        row: 1,
+        cols: 4,
+        rows: 2,
+      },
+    ),
+    createRoomSnapshot("room/dining_area:tier_1", "room-instance/dining_area", "slot/dining-area", {
+      col: 0,
+      row: 3,
       cols: 4,
       rows: 3,
     }),
+    createRoomSnapshot(
+      "room/supply_closet:tier_1",
+      "room-instance/supply_closet",
+      "slot/supply-closet",
+      {
+        col: 4,
+        row: 3,
+        cols: 4,
+        rows: 3,
+      },
+    ),
   ];
   world.staff = world.staff?.map((staff) =>
     staff.roleTag === "staff:reception"
@@ -85,7 +124,7 @@ function createUnionHallWorldSnapshot() {
           ...staff,
           assignment: {
             kind: "room",
-            targetId: "room-instance/front_desk",
+            targetId: "room-instance/register",
           },
         }
       : {
@@ -121,6 +160,129 @@ describe("runtime route request parsing", () => {
   });
 });
 
+describe("legacy save hydration", () => {
+  it("maps removed union hall content onto live bodega content", () => {
+    const baseWorld = createBootstrapWorldSnapshot(templateRegistry);
+
+    const legacySave = {
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-21T00:00:00.000Z",
+      },
+      world: {
+        ...baseWorld,
+        building: {
+          activeBuildingId: "building/union_hall",
+          activeBuildingTier: 2,
+          roomSlotCount: 5,
+          operatorSlotCount: 6,
+        },
+        rooms: [
+          {
+            id: "room-instance/front_desk",
+            templateId: "room/front_desk:tier_1",
+            tier: 1,
+            capacity: 2,
+            occupancy: 0,
+            isActive: true,
+            footprint: {
+              col: 0,
+              row: 0,
+              cols: 4,
+              rows: 3,
+            },
+          },
+          {
+            id: "room-instance/recruitment_office",
+            templateId: "room/recruitment_office:tier_1",
+            tier: 1,
+            capacity: 2,
+            occupancy: 0,
+            isActive: true,
+            footprint: {
+              col: 4,
+              row: 0,
+              cols: 4,
+              rows: 3,
+            },
+          },
+          {
+            id: "room-instance/infirmary",
+            templateId: "room/infirmary:tier_1",
+            tier: 1,
+            capacity: 3,
+            occupancy: 0,
+            isActive: true,
+            footprint: {
+              col: 0,
+              row: 3,
+              cols: 4,
+              rows: 3,
+            },
+          },
+          {
+            id: "room-instance/lounge",
+            templateId: "room/lounge:tier_1",
+            tier: 1,
+            capacity: 4,
+            occupancy: 0,
+            isActive: true,
+            footprint: {
+              col: 4,
+              row: 3,
+              cols: 4,
+              rows: 3,
+            },
+          },
+          {
+            id: "room-instance/gym",
+            templateId: "room/gym:tier_1",
+            tier: 1,
+            capacity: 2,
+            occupancy: 0,
+            isActive: true,
+            footprint: {
+              col: 8,
+              row: 3,
+              cols: 4,
+              rows: 3,
+            },
+          },
+        ],
+      },
+    } satisfies PersistedSaveGame;
+
+    const hydrated = hydratePersistedSaveGame(legacySave);
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.building.activeBuildingId).toBe("building/bodega");
+    expect(hydrated.save.world.building.roomSlotCount).toBe(4);
+    expect(hydrated.save.world.rooms).toEqual([
+      expect.objectContaining({
+        templateId: "room/register:tier_1",
+        slotId: "slot/register",
+      }),
+      expect.objectContaining({
+        templateId: "room/counter:tier_1",
+        slotId: "slot/counter",
+      }),
+      expect.objectContaining({
+        templateId: "room/dining_area:tier_1",
+        slotId: "slot/dining-area",
+      }),
+      expect.objectContaining({
+        templateId: "room/supply_closet:tier_1",
+        slotId: "slot/supply-closet",
+      }),
+    ]);
+    expect(() => createAscensionSimulation(hydrated.save.world, templateRegistry)).not.toThrow();
+  });
+});
+
 describe("runtime session lifecycle", () => {
   it("resolves preview mode to a seeded interactive session", async () => {
     const session = await resolveRuntimeSession({
@@ -151,7 +313,9 @@ describe("runtime session lifecycle", () => {
       weaponPartId: "weapon/tactical-rifle",
       outfitOverlayPartId: "outfit-overlay/tactical-vest",
     });
-    expect(session.state.phase1View.rooms.every((room) => room.footprint.cols > 0)).toBe(true);
+    expect(session.state.phase1View.rooms.every((room) => room.reservedFootprint.cols > 0)).toBe(
+      true,
+    );
     expect(session.state.raidWorldSnapshot?.features.length ?? 0).toBeGreaterThan(0);
     expect(session.state.raidWorldSnapshot?.enemies.length ?? 0).toBeGreaterThan(0);
     expect("svgCatalog" in session).toBe(false);
@@ -164,34 +328,37 @@ describe("runtime session lifecycle", () => {
     session.dispose();
   });
 
-  it("derives visible expansion bays and overlay props from HQ upgrade state", async () => {
+  it("derives live room state changes from HQ upgrades without inventing expansion bays", async () => {
     const session = await resolveRuntimeSession({
       mode: "preview",
     });
     const initialExpansionSlotCount = session.state.hqWorldSnapshot?.expansionSlots.length ?? 0;
 
     await session.commands.purchaseBuildingUpgrade({
-      upgradeId: "upgrade/building/bodega:annex",
+      upgradeId: "upgrade/building/bodega:frontage",
     });
     await session.commands.purchaseRoomUpgrade({
       roomId: "room-instance/register",
       upgradeId: "upgrade/room/register:records_wall",
     });
 
-    expect(session.state.hqWorldSnapshot?.expansionSlots.length).toBe(
-      initialExpansionSlotCount + 1,
-    );
+    expect(session.state.phase1View.building.tier).toBe(1);
+    expect(session.state.hqWorldSnapshot?.expansionSlots.length).toBe(initialExpansionSlotCount);
+    expect(session.worldSnapshot.appliedUpgradeIds).toContain("upgrade/building/bodega:frontage");
     expect(
-      session.state.hqWorldSnapshot?.roomProps.some((sprite) =>
-        sprite.id.includes("upgrade/upgrade/room/register:records_wall"),
-      ),
-    ).toBe(true);
+      session.state.phase1View.rooms.find((room) => room.id === "room-instance/register")
+        ?.roomStateId,
+    ).toBe("room-state/register:2");
+    expect(
+      session.state.hqWorldSnapshot?.rooms.find((room) => room.id === "room-instance/register")
+        ?.roomStateId,
+    ).toBe("room-state/register:2");
 
     session.dispose();
   });
 
   it("keeps deployed operators out of the HQ world snapshot", async () => {
-    const world = createBootstrapWorldSnapshot(templateRegistry);
+    const world = createBodegaWorldSnapshot();
     const missionId = templateRegistry.missions[0]?.id ?? "mission/test";
     world.activeRaidPackets = [
       {
@@ -255,21 +422,9 @@ describe("runtime session lifecycle", () => {
   });
 
   it("places recovering operators in the recovery room instead of falling back to the first room", async () => {
-    const world = createBootstrapWorldSnapshot(templateRegistry);
-    world.rooms.push({
-      id: "room-instance/infirmary",
-      templateId: "room/infirmary:tier_1",
-      tier: 1,
-      capacity: 2,
-      occupancy: 0,
-      isActive: true,
-      footprint: {
-        col: 8,
-        row: 0,
-        cols: 4,
-        rows: 3,
-      },
-    });
+    const world = createBodegaWorldSnapshot();
+    const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/dining_area");
+    expect(recoveryRoom).toBeTruthy();
     world.operators = world.operators?.map((operator) =>
       operator.id === "operator/rose-vega"
         ? {
@@ -305,7 +460,7 @@ describe("runtime session lifecycle", () => {
     expect(
       session.state.hqWorldSnapshot?.actors.find((actor) => actor.id === "operator/rose-vega")
         ?.roomId,
-    ).toBe("room-instance/infirmary");
+    ).toBe("room-instance/dining_area");
 
     session.dispose();
   });
@@ -411,21 +566,7 @@ describe("runtime session lifecycle", () => {
 
   it("places recovering operators into recovery rooms in the HQ world snapshot", async () => {
     const world = createBootstrapWorldSnapshot(templateRegistry);
-    world.rooms.push({
-      id: "room-instance/infirmary",
-      templateId: "room/infirmary:tier_1",
-      tier: 1,
-      capacity: 2,
-      occupancy: 0,
-      isActive: true,
-      footprint: {
-        col: 8,
-        row: 0,
-        cols: 4,
-        rows: 3,
-      },
-    });
-    const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/infirmary");
+    const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/dining_area");
     const recoveringOperator = world.operators?.find(
       (operator) => operator.id === "operator/rose-vega",
     );
@@ -543,7 +684,8 @@ describe("runtime session lifecycle", () => {
   });
 
   it("emits audio cues for place-room commands and drains them", async () => {
-    const world = createUnionHallWorldSnapshot();
+    const world = createBodegaWorldSnapshot();
+    world.rooms = world.rooms.filter((room) => room.id !== "room-instance/supply_closet");
 
     vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
       slotId: "slot/1",
@@ -564,7 +706,7 @@ describe("runtime session lifecycle", () => {
     });
 
     session.drainPendingCues();
-    await session.commands.placeRoom({ templateId: "room/lounge:tier_1" });
+    await session.commands.placeRoom({ templateId: "room/supply_closet:tier_1" });
 
     const cues = session.drainPendingCues();
     expect(cues).toEqual(["room.place"]);
@@ -576,7 +718,7 @@ describe("runtime session lifecycle", () => {
   });
 
   it("emits staff cues only for successful hire and assignment changes", async () => {
-    const world = createUnionHallWorldSnapshot();
+    const world = createBodegaWorldSnapshot();
 
     vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
       slotId: "slot/1",
@@ -598,27 +740,27 @@ describe("runtime session lifecycle", () => {
 
     session.drainPendingCues();
 
-    await session.commands.hireStaff({ roleTag: "staff:admin" });
+    await session.commands.hireStaff({ roleTag: "staff:reception" });
     expect(session.drainPendingCues()).toEqual(["staff.hire"]);
 
-    const recruiter = session.state.phase1View.staff.find(
+    const recruitDeskStaff = session.state.phase1View.staff.find(
       (staff) =>
-        staff.roleTag === "staff:admin" &&
+        staff.roleTag === "staff:reception" &&
         staff.assignment.kind === "idle" &&
         staff.assignment.targetId === "",
     );
 
-    expect(recruiter).toBeTruthy();
+    expect(recruitDeskStaff).toBeTruthy();
 
     await session.commands.assignStaff({
-      staffId: recruiter!.id,
-      roomId: "room-instance/recruitment_office",
+      staffId: recruitDeskStaff!.id,
+      roomId: "room-instance/register",
     });
     expect(session.drainPendingCues()).toEqual(["staff.assign"]);
 
     await session.commands.assignStaff({
-      staffId: recruiter!.id,
-      roomId: "room-instance/recruitment_office",
+      staffId: recruitDeskStaff!.id,
+      roomId: "room-instance/register",
     });
     expect(session.drainPendingCues()).toEqual([]);
 
@@ -755,7 +897,7 @@ describe("runtime session lifecycle", () => {
     const visitor = session.state.phase1View.visitors[0];
     if (visitor) {
       await session.commands.purchaseBuildingUpgrade({
-        upgradeId: "upgrade/building/bodega:annex",
+        upgradeId: "upgrade/building/bodega:frontage",
       });
       session.drainPendingCues();
 
@@ -767,27 +909,9 @@ describe("runtime session lifecycle", () => {
   });
 
   it("places recovering operators and recruitment staff into matching room functions", async () => {
-    const world = createUnionHallWorldSnapshot();
-    const infirmaryTemplate = templateRegistry.roomById.get("room/infirmary:tier_1");
-    expect(infirmaryTemplate).toBeTruthy();
-
-    world.rooms = [
-      ...(world.rooms ?? []),
-      {
-        id: "room-instance/infirmary",
-        templateId: infirmaryTemplate!.id,
-        tier: infirmaryTemplate!.tier,
-        capacity: infirmaryTemplate!.baseCapacity,
-        occupancy: 0,
-        isActive: true,
-        footprint: {
-          col: 8,
-          row: 0,
-          cols: 4,
-          rows: 3,
-        },
-      },
-    ];
+    const world = createBodegaWorldSnapshot();
+    const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/dining_area");
+    expect(recoveryRoom).toBeTruthy();
     world.operators = world.operators?.map((operator) =>
       operator.id === "operator/rose-vega"
         ? {
@@ -815,7 +939,7 @@ describe("runtime session lifecycle", () => {
             roleTag: "staff:admin",
             assignment: {
               kind: "room",
-              targetId: "room-instance/recruitment_office",
+              targetId: "room-instance/register",
             },
           }
         : staff,
@@ -842,12 +966,12 @@ describe("runtime session lifecycle", () => {
     expect(
       session.state.hqWorldSnapshot?.actors.find((actor) => actor.id === "operator/rose-vega")
         ?.roomId,
-    ).toBe("room-instance/infirmary");
+    ).toBe("room-instance/dining_area");
     expect(
       session.state.hqWorldSnapshot?.actors.find(
         (actor) => actor.kind === "staff" && actor.roleTag === "staff:admin",
       )?.roomId,
-    ).toBe("room-instance/recruitment_office");
+    ).toBe("room-instance/register");
 
     session.dispose();
   });
@@ -1128,5 +1252,40 @@ describe("runtime session lifecycle", () => {
 
     expect(persistedWrites).toHaveLength(3);
     expect(persistedWrites[2]?.world.time.tick).toBe(latestTick);
+  });
+
+  it("pauses and resumes autonomous ticking when a modal freeze reason is active", async () => {
+    vi.useFakeTimers();
+
+    const session = await resolveRuntimeSession({ mode: "preview" });
+    session.lifecycle.startAutoTick();
+
+    expect(session.isPaused).toBe(false);
+    expect(session.isAutoTicking).toBe(true);
+    expect(session.state.isPaused).toBe(false);
+    expect(session.state.isAutoTicking).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(AUTONOMOUS_TICK_INTERVAL_MS);
+    const tickBeforePause = session.worldSnapshot.time.tick;
+
+    session.lifecycle.pause("modal");
+    expect(session.isPaused).toBe(true);
+    expect(session.isAutoTicking).toBe(false);
+    expect(session.state.isPaused).toBe(true);
+    expect(session.state.isAutoTicking).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(AUTONOMOUS_TICK_INTERVAL_MS * 3);
+    expect(session.worldSnapshot.time.tick).toBe(tickBeforePause);
+
+    session.lifecycle.resume("modal");
+    expect(session.isPaused).toBe(false);
+    expect(session.isAutoTicking).toBe(true);
+    expect(session.state.isPaused).toBe(false);
+    expect(session.state.isAutoTicking).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(AUTONOMOUS_TICK_INTERVAL_MS);
+    expect(session.worldSnapshot.time.tick).toBeGreaterThan(tickBeforePause);
+
+    session.dispose();
   });
 });

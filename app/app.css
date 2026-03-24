@@ -329,21 +329,29 @@ a {
 
 /* --- Raid map tiles -------------------------------------------------------- */
 .raid-cell-corridor {
-  background: linear-gradient(180deg, #1a2030 0%, #141a28 100%);
+  background: linear-gradient(145deg, #151c2e 0%, #111722 50%, #0e1420 100%);
   box-shadow:
-    inset 0 1px 0 rgba(58, 69, 104, 0.35),
-    inset 0 -1px 0 rgba(58, 69, 104, 0.25);
+    inset 0 1px 0 rgba(58, 69, 104, 0.2),
+    inset 0 -1px 0 rgba(20, 26, 40, 0.6),
+    inset 1px 0 0 rgba(58, 69, 104, 0.08),
+    inset -1px 0 0 rgba(58, 69, 104, 0.08);
 }
 
 .raid-cell-chamber {
-  background: linear-gradient(180deg, #1d2435 0%, #171d2d 100%);
-  box-shadow: inset 0 0 0 0.5px rgba(224, 221, 214, 0.04);
+  background: linear-gradient(145deg, #1a2440 0%, #161e35 50%, #131a2d 100%);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(200, 168, 76, 0.04),
+    inset 0 0 12px rgba(200, 168, 76, 0.015);
 }
 
 /* --- Raid team goal-ring base ---------------------------------------------- */
 .raid-team-ring {
   border-radius: 50%;
   border: 1.5px solid;
+  transition:
+    border-color 600ms ease,
+    border-radius 400ms ease,
+    transform 400ms ease;
 }
 
 /* --- Raid map scanline overlay --------------------------------------------- */
@@ -352,11 +360,30 @@ a {
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    rgba(6, 8, 16, 0.08) 2px,
-    rgba(6, 8, 16, 0.08) 4px
+    transparent 3px,
+    rgba(6, 8, 16, 0.04) 3px,
+    rgba(6, 8, 16, 0.04) 6px
   );
   mix-blend-mode: multiply;
+}
+
+/* --- Raid frontier glow ---------------------------------------------------- */
+@keyframes raid-frontier-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 4px rgba(200, 168, 76, 0.02);
+    border-color: rgba(224, 221, 214, 0.05);
+  }
+  50% {
+    box-shadow: inset 0 0 10px rgba(200, 168, 76, 0.05);
+    border-color: rgba(224, 221, 214, 0.1);
+  }
+}
+
+.raid-frontier-glow {
+  animation: raid-frontier-pulse 4s ease-in-out infinite;
+  border: 1px solid rgba(224, 221, 214, 0.05);
+  border-radius: 1px;
 }
 
 /* --- Raid enemy pulse ------------------------------------------------------ */
@@ -368,7 +395,7 @@ a {
   }
   50% {
     opacity: 1;
-    transform: scale(1.08);
+    transform: scale(1.1);
   }
 }
 
@@ -380,7 +407,7 @@ a {
 @keyframes raid-feature-pulse {
   0%,
   100% {
-    opacity: 0.8;
+    opacity: 0.7;
   }
   50% {
     opacity: 1;
@@ -389,6 +416,50 @@ a {
 
 .raid-feature-pulse {
   animation: raid-feature-pulse 3s ease-in-out infinite;
+}
+
+/* --- Raid background atmosphere -------------------------------------------- */
+@keyframes raid-atmosphere {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.raid-atmosphere-glow {
+  animation: raid-atmosphere 8s ease-in-out infinite;
+}
+
+/* --- Raid grid holographic base lines -------------------------------------- */
+.raid-grid-lines {
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(200, 168, 76, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 168, 76, 0.015) 1px, transparent 1px);
+}
+
+/* --- Raid command panel ----------------------------------------------------- */
+.raid-command-panel {
+  background: rgba(6, 6, 8, 0.82);
+  border: 1px solid rgba(200, 168, 76, 0.08);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(30px) saturate(1.15);
+  -webkit-backdrop-filter: blur(30px) saturate(1.15);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(200, 168, 76, 0.04);
+}
+
+.raid-command-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(200, 168, 76, 0.04) 0%, transparent 40%);
 }
 
 /* --- Bottom panel slide-up ------------------------------------------------- */
@@ -467,4 +538,259 @@ a {
     transform: scale(2);
     opacity: 0;
   }
+}
+
+/* === Boss Encounter Surface ================================================ */
+
+/* --- Encounter entrance ---------------------------------------------------- */
+@keyframes encounter-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes encounter-boss-rise {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes encounter-squad-in {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes encounter-deck-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.enc-backdrop-in {
+  animation: encounter-backdrop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enc-boss-rise {
+  animation: encounter-boss-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+
+.enc-squad-in {
+  animation: encounter-squad-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
+}
+
+.enc-deck-in {
+  animation: encounter-deck-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
+}
+
+/* --- Boss menace / breathing ---------------------------------------------- */
+@keyframes boss-menace {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px rgba(212, 84, 30, 0.15));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(212, 84, 30, 0.3));
+    transform: scale(1.015);
+  }
+}
+
+.enc-boss-menace {
+  animation: boss-menace 4s ease-in-out infinite;
+}
+
+/* --- Boss phase transition flash ------------------------------------------ */
+@keyframes phase-flash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.enc-phase-flash {
+  animation: phase-flash 800ms ease-out both;
+}
+
+/* --- Damage flash on actor ------------------------------------------------ */
+@keyframes damage-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: rgba(212, 84, 30, 0.15);
+  }
+}
+
+.enc-damage-flash {
+  animation: damage-flash 400ms ease-out;
+}
+
+/* --- Heal flash on actor -------------------------------------------------- */
+@keyframes heal-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: rgba(46, 168, 122, 0.12);
+  }
+}
+
+.enc-heal-flash {
+  animation: heal-flash 400ms ease-out;
+}
+
+/* --- Shield break shimmer ------------------------------------------------- */
+@keyframes shield-break {
+  0% {
+    box-shadow: inset 0 0 12px rgba(200, 168, 76, 0.3);
+  }
+  100% {
+    box-shadow: inset 0 0 0 rgba(200, 168, 76, 0);
+  }
+}
+
+.enc-shield-break {
+  animation: shield-break 500ms ease-out;
+}
+
+/* --- Terminal state overlays ----------------------------------------------- */
+@keyframes victory-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes defeat-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.enc-victory-glow {
+  animation: victory-glow 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enc-defeat-fade {
+  animation: defeat-fade 600ms ease-out both;
+}
+
+/* --- Encounter chamber atmosphere ----------------------------------------- */
+@keyframes chamber-drift {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.04;
+  }
+  50% {
+    transform: translateY(-8px) translateX(4px);
+    opacity: 0.08;
+  }
+}
+
+.enc-chamber-particle {
+  animation: chamber-drift 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* --- Initiative marker pulse ---------------------------------------------- */
+@keyframes initiative-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 168, 76, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(200, 168, 76, 0);
+  }
+}
+
+.enc-initiative-active {
+  animation: initiative-pulse 2s ease-in-out infinite;
+}
+
+/* --- HP bar critical pulse ------------------------------------------------ */
+@keyframes hp-critical {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.enc-hp-critical {
+  animation: hp-critical 1.2s ease-in-out infinite;
+}
+
+/* --- Feed entry slide-in -------------------------------------------------- */
+@keyframes feed-entry-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.enc-feed-entry {
+  animation: feed-entry-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Intervention card hover glow ----------------------------------------- */
+.enc-intervention-card {
+  transition:
+    border-color 300ms ease,
+    box-shadow 300ms ease,
+    background 300ms ease;
+}
+
+.enc-intervention-card:hover:not(:disabled) {
+  border-color: rgba(200, 168, 76, 0.25);
+  box-shadow: 0 0 16px rgba(200, 168, 76, 0.1);
+  background: rgba(200, 168, 76, 0.06);
+}
+
+.enc-intervention-card:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }

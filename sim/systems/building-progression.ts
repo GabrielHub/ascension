@@ -51,10 +51,6 @@ export const refreshBuildingAuthoritySystem: SimSystem = ({ registry, singletonE
       return;
     }
 
-    if (upgrade.target === "building") {
-      activeBuildingTier += 1;
-    }
-
     upgrade.effects.forEach((effect) => {
       applyEffect(effect, {
         addRoomSlot(amount) {

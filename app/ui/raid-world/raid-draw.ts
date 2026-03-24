@@ -10,6 +10,8 @@
 
 import type { RaidTeamGoal, RaidTeamMarker, FogCell } from "render";
 
+import { getRaidGoalPresentation } from "./raid-goals";
+
 // ── Palette ─────────────────────────────────────────────────────────
 
 const RAID_VOID = "#060810";
@@ -65,23 +67,23 @@ function traceRoundedRect(
 // ── Goal color mapping ──────────────────────────────────────────────
 
 const GOAL_COLORS: Record<RaidTeamGoal, string> = {
-  exploring: "rgba(100,160,220,0.8)",
-  looting: "rgba(200,168,76,0.9)",
-  intel: "rgba(100,160,220,0.9)",
-  hunting: "rgba(212,84,30,0.8)",
-  boss: "rgba(212,84,30,0.95)",
-  retreating: "rgba(224,221,214,0.5)",
-  regrouping: "rgba(200,168,76,0.5)",
+  exploring: getRaidGoalPresentation("exploring").color,
+  looting: getRaidGoalPresentation("looting").color,
+  intel: getRaidGoalPresentation("intel").color,
+  hunting: getRaidGoalPresentation("hunting").color,
+  boss: getRaidGoalPresentation("boss").color,
+  retreating: getRaidGoalPresentation("retreating").color,
+  regrouping: getRaidGoalPresentation("regrouping").color,
 };
 
 const GOAL_LABELS: Record<RaidTeamGoal, string> = {
-  exploring: "EXP",
-  looting: "LOOT",
-  intel: "INT",
-  hunting: "HUNT",
-  boss: "BOSS",
-  retreating: "RET",
-  regrouping: "RGRP",
+  exploring: getRaidGoalPresentation("exploring").shortLabel,
+  looting: getRaidGoalPresentation("looting").shortLabel,
+  intel: getRaidGoalPresentation("intel").shortLabel,
+  hunting: getRaidGoalPresentation("hunting").shortLabel,
+  boss: getRaidGoalPresentation("boss").shortLabel,
+  retreating: getRaidGoalPresentation("retreating").shortLabel,
+  regrouping: getRaidGoalPresentation("regrouping").shortLabel,
 };
 
 // ── Tile classification ─────────────────────────────────────────────

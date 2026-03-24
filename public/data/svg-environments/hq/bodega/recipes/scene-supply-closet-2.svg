@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: Supply Closet — State 2 (Labeled Bins)
+       Upgraded from base state: organized shelves with labeled bins,
+       clean floor, sorted gear, proper inventory management.
+       Still a closet, but functional and findable.
+       No walls, floor, tile grid, or labels.
+       Origin (200,100). -->
+
+  <!-- == HERO: SHELF UNIT 1 (right wall — organized with labeled bins) == -->
+  <polygon points="310,100 358,124 334,136 286,112"
+    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="358,124 334,136 334,196 358,184"
+    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="286,112 334,136 334,196 286,172"
+    fill="#3a3838" stroke="#252525" stroke-width="0.7"/>
+  <!-- Shelf dividers -->
+  <line x1="286" y1="126" x2="334" y2="150" stroke="#2a2a2a" stroke-width="0.6"/>
+  <line x1="286" y1="140" x2="334" y2="164" stroke="#2a2a2a" stroke-width="0.6"/>
+  <line x1="286" y1="154" x2="334" y2="178" stroke="#2a2a2a" stroke-width="0.6"/>
+
+  <!-- Labeled bins (color-coded, organized) -->
+  <!-- Top shelf: tactical gear (green bins) -->
+  <polygon points="290,114 310,124 310,126 290,116" fill="#283028" opacity="0.8"/>
+  <rect x="290" y="115" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.12)"/>
+  <polygon points="312,120 330,130 330,132 312,122" fill="#283028" opacity="0.75"/>
+  <rect x="312" y="121" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.12)"/>
+  <!-- Second shelf: medical (white/red bins) -->
+  <polygon points="288,128 308,138 308,140 288,130" fill="#c8c4b8" opacity="0.12"/>
+  <rect x="288" y="129" width="4" height="1.5" rx="0.2" fill="rgba(138,48,48,0.15)"/>
+  <polygon points="310,134 328,144 328,146 310,136" fill="#c8c4b8" opacity="0.1"/>
+  <rect x="310" y="135" width="4" height="1.5" rx="0.2" fill="rgba(138,48,48,0.15)"/>
+  <!-- Third shelf: consumables (brown bins) -->
+  <polygon points="290,144 312,155 312,156 290,145" fill="#3a3020" opacity="0.7"/>
+  <rect x="290" y="145" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+  <polygon points="314,152 332,162 332,164 314,154" fill="#3a3020" opacity="0.65"/>
+  <rect x="314" y="153" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+  <!-- Bottom shelf: heavy gear (crate bins) -->
+  <polygon points="288,158 312,170 312,174 288,162" fill="#302820" opacity="0.7"/>
+  <rect x="288" y="159" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <polygon points="314,166 334,176 334,180 314,170" fill="#2a3030" opacity="0.6"/>
+  <rect x="314" y="167" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+
+  <!-- == SHELF UNIT 2 (left wall area — also organized) ================= -->
+  <polygon points="200,96 240,116 220,126 180,106"
+    fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
+  <polygon points="240,116 220,126 220,178 240,168"
+    fill="#333030" stroke="#252525" stroke-width="0.5"/>
+  <polygon points="180,106 220,126 220,178 180,158"
+    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
+  <line x1="180" y1="120" x2="220" y2="140" stroke="#2a2a2a" stroke-width="0.5"/>
+  <line x1="180" y1="134" x2="220" y2="154" stroke="#2a2a2a" stroke-width="0.5"/>
+  <line x1="180" y1="148" x2="220" y2="168" stroke="#2a2a2a" stroke-width="0.5"/>
+  <!-- Organized bins -->
+  <polygon points="184,108 204,118 204,120 184,110" fill="#302c24" opacity="0.7"/>
+  <rect x="184" y="109" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+  <polygon points="206,116 218,122 218,118 206,112" fill="#2a3828" opacity="0.6"/>
+  <rect x="206" y="113" width="3" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <polygon points="182,122 202,132 202,134 182,124" fill="#383028" opacity="0.6"/>
+  <rect x="182" y="123" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.1)"/>
+  <polygon points="204,130 216,136 216,138 204,132" fill="#2c2420" opacity="0.6"/>
+  <polygon points="184,138 204,148 204,150 184,140" fill="#2a2a38" opacity="0.6"/>
+  <rect x="184" y="139" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <polygon points="186,152 206,162 206,166 186,156" fill="#302820" opacity="0.65"/>
+
+  <!-- == FILING CABINET (same, but with label holder) =================== -->
+  <polygon points="110,120 132,131 152,120 130,109"
+    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="132,131 152,120 152,164 132,175"
+    fill="#3a3838" stroke="#252525" stroke-width="0.7"/>
+  <polygon points="110,120 132,131 132,175 110,164"
+    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <line x1="133" y1="141" x2="151" y2="131" stroke="#252525" stroke-width="0.5"/>
+  <line x1="133" y1="151" x2="151" y2="141" stroke="#252525" stroke-width="0.5"/>
+  <line x1="133" y1="161" x2="151" y2="151" stroke="#252525" stroke-width="0.5"/>
+  <!-- Handles (same) -->
+  <rect x="146" y="126" width="2.5" height="2.5" fill="#8a7040" rx="0.3"/>
+  <rect x="146" y="136" width="2.5" height="2.5" fill="#8a7040" rx="0.3"/>
+  <rect x="146" y="146" width="2.5" height="2.5" fill="#8a7040" rx="0.3"/>
+  <!-- Label holders (new) -->
+  <rect x="140" y="128" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <rect x="140" y="138" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <rect x="140" y="148" width="4" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+
+  <!-- == GEAR CRATE (center floor — now with label) ===================== -->
+  <polygon points="228,182 244,190 260,182 244,174"
+    fill="#283028" stroke="#1e261e" stroke-width="0.5"/>
+  <polygon points="228,182 244,190 244,204 228,196"
+    fill="#243028" stroke="#1c241c" stroke-width="0.4"/>
+  <polygon points="244,190 260,182 260,196 244,204"
+    fill="#1e261e" stroke="#1c241c" stroke-width="0.4"/>
+  <line x1="228" y1="188" x2="244" y2="196" stroke="#3a3a38" stroke-width="0.7"/>
+  <line x1="244" y1="196" x2="260" y2="188" stroke="#3a3838" stroke-width="0.6"/>
+  <rect x="234" y="194" width="3" height="1.5" rx="0.2" fill="#8a7040" opacity="0.3"/>
+  <rect x="250" y="186" width="3" height="1.5" rx="0.2" fill="#8a7040" opacity="0.25"/>
+  <!-- Label on crate -->
+  <rect x="232" y="188" width="8" height="2" rx="0.3" fill="rgba(200,168,76,0.08)"/>
+
+  <!-- == STACKED BOXES (neater, labeled) ================================ -->
+  <!-- Bottom box -->
+  <polygon points="280,202 296,210 312,202 296,194"
+    fill="#3a3020" stroke="#302818" stroke-width="0.5"/>
+  <polygon points="296,210 312,202 312,220 296,228"
+    fill="#302818" stroke="#281e14" stroke-width="0.4"/>
+  <polygon points="280,202 296,210 296,228 280,220"
+    fill="#342c20" stroke="#281e14" stroke-width="0.4"/>
+  <!-- Label -->
+  <rect x="284" y="212" width="6" height="2" rx="0.3" fill="rgba(200,168,76,0.08)"/>
+  <!-- Top box (aligned, not askew) -->
+  <polygon points="284,188 298,195 312,188 298,181"
+    fill="#3a3020" stroke="#302818" stroke-width="0.5"/>
+  <polygon points="298,195 312,188 312,202 298,209"
+    fill="#302818" stroke="#281e14" stroke-width="0.4"/>
+  <polygon points="284,188 298,195 298,209 284,202"
+    fill="#342c20" stroke="#281e14" stroke-width="0.4"/>
+  <!-- Label -->
+  <rect x="288" y="198" width="5" height="1.5" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <!-- Tape strip (centered, clean) -->
+  <line x1="298" y1="181" x2="298" y2="195" stroke="rgba(200,168,76,0.12)" stroke-width="1.5"/>
+
+  <!-- == CLIPBOARD (wall-mounted, not on shelf) ========================= -->
+  <polygon points="168,98 180,104 176,106 164,100"
+    fill="#2c2818" stroke="#241e12" stroke-width="0.3"/>
+  <!-- Inventory list (neat lines) -->
+  <line x1="166" y1="101" x2="176" y2="106" stroke="rgba(200,168,76,0.1)" stroke-width="0.3"/>
+  <line x1="166" y1="103" x2="174" y2="107" stroke="rgba(200,168,76,0.06)" stroke-width="0.3"/>
+  <line x1="166" y1="105" x2="172" y2="108" stroke="rgba(200,168,76,0.06)" stroke-width="0.3"/>
+  <!-- Pen holder next to clipboard -->
+  <line x1="182" y1="102" x2="182" y2="96" stroke="#3a3838" stroke-width="1"/>
+  <circle cx="182" cy="95" r="0.8" fill="#c8a84c" opacity="0.15"/>
+
+  <!-- == MOP AND BROOM (clean, hung up properly) ======================== -->
+  <!-- Wall hooks (new) -->
+  <rect x="82" y="102" width="2" height="2" rx="0.3" fill="#4a4a52" opacity="0.4"/>
+  <rect x="94" y="100" width="2" height="2" rx="0.3" fill="#4a4a52" opacity="0.4"/>
+  <!-- Broom handle (hung on hook) -->
+  <line x1="84" y1="104" x2="82" y2="164" stroke="#3a3020" stroke-width="1.8"/>
+  <polygon points="78,164 82,162 86,164 86,174 82,176 78,174"
+    fill="#342c1e" stroke="#281e14" stroke-width="0.4"/>
+  <line x1="80" y1="166" x2="79" y2="174" stroke="#281e14" stroke-width="0.3"/>
+  <line x1="82" y1="165" x2="82" y2="175" stroke="#281e14" stroke-width="0.3"/>
+  <line x1="84" y1="166" x2="85" y2="174" stroke="#281e14" stroke-width="0.3"/>
+  <line x1="79" y1="165" x2="85" y2="165" stroke="#2c2418" stroke-width="0.6"/>
+  <!-- Mop handle (hung on hook) -->
+  <line x1="96" y1="102" x2="98" y2="160" stroke="#3a3838" stroke-width="1.8"/>
+  <rect x="95" y="160" width="7" height="3" rx="0.5" fill="#4a4a52" stroke="#3a3a42" stroke-width="0.3"/>
+  <path d="M96,163 Q94,170 95,178" fill="none" stroke="#2c3830" stroke-width="1.2" opacity="0.8"/>
+  <path d="M98,163 Q97,172 98,178" fill="none" stroke="#283430" stroke-width="1.2" opacity="0.7"/>
+  <path d="M101,163 Q103,170 102,178" fill="none" stroke="#2c3830" stroke-width="1" opacity="0.8"/>
+  <path d="M97,163 Q95,174 96,178" fill="none" stroke="#263028" stroke-width="1" opacity="0.6"/>
+  <!-- No puddle — floor is clean now -->
+
+  <!-- == BUCKET (clean, with lid, stored properly) ====================== -->
+  <ellipse cx="120" cy="196" rx="8" ry="3" fill="#2a3038" stroke="#222830" stroke-width="0.4"/>
+  <rect x="112" y="182" width="16" height="14" fill="#2a3038"/>
+  <ellipse cx="120" cy="182" rx="8" ry="3" fill="#323a42" stroke="#2a3038" stroke-width="0.4"/>
+  <!-- Lid (closed) -->
+  <ellipse cx="120" cy="181" rx="8.5" ry="3.2" fill="#3a4248" stroke="#323a42" stroke-width="0.3"/>
+  <path d="M114,182 Q114,174 120,172 Q126,174 126,182" fill="none" stroke="#4a4a52" stroke-width="0.8"/>
+</svg>

@@ -79,6 +79,7 @@ export interface ActorMarker {
   label: string;
   presetId: string;
   roleTag?: string;
+  rank?: string;
   state: ActorState;
   moveProgress: number;
   tokenPalette?: ActorTokenPalette;
@@ -93,7 +94,7 @@ export interface WorldEffectsSnapshot {
   shadowIntensity: number;
 }
 
-export type FocusTargetKind = "room" | "operator" | "staff" | "team";
+export type FocusTargetKind = "room" | "operator" | "staff" | "visitor" | "team";
 
 export interface FocusPayload {
   targetKind: FocusTargetKind;
@@ -117,6 +118,7 @@ export interface HqWorldLayout {
   tileWidth: number;
   tileHeight: number;
   wallHeight: number;
+  activeFloorIndex: number;
   originX: number;
   originY: number;
   worldWidth: number;
@@ -136,26 +138,34 @@ export interface HqSpritePlacement {
   height: number;
   zIndex: number;
   opacity: number;
+  debugOrigin?: Readonly<{ x: number; y: number }>;
 }
 
 export interface HqRoomNode {
   id: string;
   templateId: string;
+  roomStateId: string;
+  slotId: string;
+  floorIndex: number;
   label: string;
   tier: number;
   isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
-  footprint: HqFootprint;
+  reservedFootprint: HqFootprint;
+  activeFootprint: HqFootprint;
   floorPoints: readonly HqPoint[];
   leftWallPoints: readonly HqPoint[];
   rightWallPoints: readonly HqPoint[];
   bounds: Readonly<{ x: number; y: number; width: number; height: number }>;
+  activeBounds: Readonly<{ x: number; y: number; width: number; height: number }>;
 }
 
 export interface HqExpansionSlotNode {
   id: string;
   label: string;
+  kind: "available" | "locked";
+  floorIndex: number;
   footprint: HqFootprint;
   floorPoints: readonly HqPoint[];
   leftWallPoints: readonly HqPoint[];

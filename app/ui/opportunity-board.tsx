@@ -1,3 +1,4 @@
+import { RAID_TIPS, getIntelMeta } from "./_glossary";
 import type {
   OperatorViewModel,
   RaidOpportunityViewModel,
@@ -43,11 +44,18 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
 
       <div className="mt-3 flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
-          <span className={threatColor}>Threat {opportunity.threatRank}</span>
-          <span className="text-gold/70">Intel: {opportunity.intelConfidence}</span>
+          <span className={threatColor} title={RAID_TIPS.threatRank}>
+            Threat {opportunity.threatRank}
+          </span>
+          <span
+            className="text-gold/70"
+            title={getIntelMeta(opportunity.intelConfidence.toLowerCase()).tip}
+          >
+            Intel: {opportunity.intelConfidence}
+          </span>
         </div>
         {opportunity.recommendedOperatorCount > 0 && (
-          <span className="text-silver/60">
+          <span className="text-silver/60" title={RAID_TIPS.recommended}>
             {opportunity.recommendedOperatorCount} ops recommended
           </span>
         )}
@@ -56,18 +64,26 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
       {(opportunity.reward > 0 || opportunity.risk > 0) && (
         <div className="mt-2 flex items-center gap-3 text-xs">
           {opportunity.reward > 0 && (
-            <span className="text-gold/70">Reward {Math.round(opportunity.reward)}</span>
+            <span className="text-gold/70" title={RAID_TIPS.reward}>
+              Reward {Math.round(opportunity.reward)}
+            </span>
           )}
           {opportunity.risk > 0 && (
-            <span className="text-ember">Risk {Math.round(opportunity.risk)}</span>
+            <span className="text-ember" title={RAID_TIPS.risk}>
+              Risk {Math.round(opportunity.risk)}
+            </span>
           )}
         </div>
       )}
 
       <div className="mt-3 flex items-center gap-4 border-t border-[rgba(200,168,76,0.04)] pt-2.5 text-xs">
-        <span className="text-gold/70">{opportunity.interestedCount} interested</span>
+        <span className="text-gold/70" title={RAID_TIPS.interested}>
+          {opportunity.interestedCount} interested
+        </span>
         {opportunity.claimedCount > 0 && (
-          <span className="text-ember">{opportunity.claimedCount} committed</span>
+          <span className="text-ember" title={RAID_TIPS.committed}>
+            {opportunity.claimedCount} committed
+          </span>
         )}
       </div>
     </div>

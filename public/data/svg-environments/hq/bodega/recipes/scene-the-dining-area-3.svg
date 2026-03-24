@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Dining Area — State 3 (Fully Upgraded)
+       Max upgrade: better tables (sturdier), more seating, first-aid corner
+       fully kitted, the space reads as a real common room now.
+       No walls, floor, tile grid, or labels.
+       Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24) -->
+
+  <!-- == FOLDING TABLE 1 (sturdier — replaced with real table) ========== -->
+  <!-- Sturdier top surface (slightly wider) -->
+  <polygon points="148,126 200,152 176,164 124,138"
+    fill="#3c3222" stroke="#2c2418" stroke-width="0.8"/>
+  <!-- Front-left face (deeper) -->
+  <polygon points="124,138 176,164 176,174 124,148"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <!-- Front-right face -->
+  <polygon points="200,152 176,164 176,174 200,162"
+    fill="#342c1a" stroke="#241c12" stroke-width="0.6"/>
+  <line x1="148" y1="126" x2="124" y2="138" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+  <!-- Real legs (not folding) -->
+  <line x1="130" y1="148" x2="130" y2="170" stroke="#302818" stroke-width="2"/>
+  <line x1="194" y1="158" x2="194" y2="180" stroke="#2c2418" stroke-width="2"/>
+  <line x1="172" y1="172" x2="172" y2="192" stroke="#2c2418" stroke-width="2"/>
+
+  <!-- == CHAIR 1A (sturdier) ============================================ -->
+  <polygon points="132,110 142,104 152,110 142,114"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="132,110 142,104 142,96 132,102"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="142,104 152,110 152,104 142,96"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="134" y1="114" x2="134" y2="130" stroke="#333030" stroke-width="1.5"/>
+  <line x1="150" y1="114" x2="150" y2="130" stroke="#2a2828" stroke-width="1.5"/>
+  <line x1="142" y1="116" x2="142" y2="132" stroke="#333030" stroke-width="1.2"/>
+
+  <!-- == CHAIR 1B ======================================================= -->
+  <polygon points="118,168 128,162 138,168 128,172"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="118,168 128,162 128,156 118,162"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="128,162 138,168 138,162 128,156"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="120" y1="172" x2="120" y2="188" stroke="#333030" stroke-width="1.5"/>
+  <line x1="136" y1="172" x2="136" y2="188" stroke="#2a2828" stroke-width="1.5"/>
+
+  <!-- == CHAIR 1C (new — third seat at table 1) ========================= -->
+  <polygon points="168,144 178,138 188,144 178,148"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="168,144 178,138 178,132 168,138"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="178,138 188,144 188,138 178,132"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="170" y1="148" x2="170" y2="162" stroke="#333030" stroke-width="1.2"/>
+  <line x1="186" y1="148" x2="186" y2="162" stroke="#2a2828" stroke-width="1.2"/>
+
+  <!-- == TABLE 2 (sturdier) ============================================= -->
+  <polygon points="244,186 296,212 272,224 220,198"
+    fill="#3c3222" stroke="#2c2418" stroke-width="0.8"/>
+  <polygon points="220,198 272,224 272,234 220,208"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <polygon points="296,212 272,224 272,234 296,222"
+    fill="#342c1a" stroke="#241c12" stroke-width="0.6"/>
+  <line x1="244" y1="186" x2="220" y2="198" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+  <line x1="226" y1="208" x2="226" y2="230" stroke="#302818" stroke-width="2"/>
+  <line x1="290" y1="218" x2="290" y2="240" stroke="#2c2418" stroke-width="2"/>
+  <line x1="268" y1="232" x2="268" y2="252" stroke="#2c2418" stroke-width="2"/>
+
+  <!-- == CHAIR 2A ======================================================= -->
+  <polygon points="260,170 270,164 280,170 270,174"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="260,170 270,164 270,158 260,164"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="270,164 280,170 280,164 270,158"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="262" y1="174" x2="262" y2="190" stroke="#333030" stroke-width="1.5"/>
+  <line x1="278" y1="174" x2="278" y2="190" stroke="#2a2828" stroke-width="1.5"/>
+
+  <!-- == CHAIR 2B (real chair, replaces milk crate) ===================== -->
+  <polygon points="216,228 226,222 236,228 226,232"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="216,228 226,222 226,216 216,222"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="226,222 236,228 236,222 226,216"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="218" y1="232" x2="218" y2="246" stroke="#333030" stroke-width="1.5"/>
+  <line x1="234" y1="232" x2="234" y2="246" stroke="#2a2828" stroke-width="1.5"/>
+
+  <!-- == CHAIR 2C (new third seat at table 2) =========================== -->
+  <polygon points="268,202 278,196 288,202 278,206"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="268,202 278,196 278,190 268,196"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="278,196 288,202 288,196 278,190"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="270" y1="206" x2="270" y2="220" stroke="#333030" stroke-width="1.2"/>
+  <line x1="286" y1="206" x2="286" y2="220" stroke="#2a2828" stroke-width="1.2"/>
+
+  <!-- == COFFEE MACHINE (back-left, upgraded — bigger, working) ========= -->
+  <!-- Body -->
+  <polygon points="76,104 96,114 110,107 90,97"
+    fill="#2c2830" stroke="#222028" stroke-width="0.5"/>
+  <polygon points="76,104 96,114 96,136 76,126"
+    fill="#28262e" stroke="#1c1a22" stroke-width="0.4"/>
+  <polygon points="96,114 110,107 110,129 96,136"
+    fill="#222028" stroke="#1c1a22" stroke-width="0.4"/>
+  <!-- Carafe -->
+  <polygon points="80,126 92,132 98,129 86,123"
+    fill="#1a1820" stroke="#222830" stroke-width="0.3"/>
+  <polygon points="80,126 92,132 92,138 80,132"
+    fill="#1e1820" opacity="0.85"/>
+  <!-- Coffee inside -->
+  <polygon points="82,128 90,132 90,136 82,132"
+    fill="rgba(60,30,10,0.2)"/>
+  <!-- Power light (working) -->
+  <circle cx="106" cy="112" r="1.2" fill="rgba(100,200,100,0.35)"/>
+  <!-- Steam -->
+  <path d="M88,120 Q87,116 89,112" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.7"/>
+
+  <!-- == MICROWAVE (same) =============================================== -->
+  <polygon points="340,120 356,128 368,122 352,114"
+    fill="#2c2c34" stroke="#222228" stroke-width="0.5"/>
+  <polygon points="340,120 356,128 356,140 340,132"
+    fill="#28282e" stroke="#1e1e24" stroke-width="0.4"/>
+  <polygon points="356,128 368,122 368,134 356,140"
+    fill="#24242a" stroke="#1e1e24" stroke-width="0.4"/>
+  <polygon points="342,122 354,128 354,136 342,130"
+    fill="#0e1018" stroke="#1a1a20" stroke-width="0.3"/>
+  <circle cx="360" cy="126" r="0.6" fill="#3a3838"/>
+  <circle cx="363" cy="125" r="0.6" fill="#3a3838"/>
+  <rect x="358" y="122" width="4" height="2" rx="0.3" fill="rgba(100,180,120,0.08)"/>
+
+  <!-- ============================================================== -->
+  <!-- == FIRST-AID CORNER (fully kitted from state 2) =============== -->
+  <!-- ============================================================== -->
+
+  <!-- == FIRST-AID KIT (wall-mounted) =================================== -->
+  <polygon points="372,96 392,106 384,110 364,100"
+    fill="#c8c4b8" stroke="#a0998c" stroke-width="0.5"/>
+  <polygon points="364,100 384,110 384,122 364,112"
+    fill="#b8b4a8" stroke="#989088" stroke-width="0.4"/>
+  <polygon points="392,106 384,110 384,122 392,118"
+    fill="#a8a498" stroke="#989088" stroke-width="0.4"/>
+  <line x1="372" y1="106" x2="376" y2="108" stroke="#8a3030" stroke-width="2" opacity="0.5"/>
+  <line x1="372" y1="108" x2="376" y2="106" stroke="#8a3030" stroke-width="2" opacity="0.5"/>
+  <rect x="374" y="112" width="3" height="1" rx="0.2" fill="#4a4a52" opacity="0.5"/>
+
+  <!-- == RECOVERY CURTAIN (extended, more coverage) ===================== -->
+  <line x1="342" y1="93" x2="396" y2="120" stroke="#4a4a52" stroke-width="1.2"/>
+  <circle cx="342" cy="93" r="1.5" fill="#4a4a52"/>
+  <circle cx="396" cy="120" r="1.5" fill="#4a4a52"/>
+  <polygon points="344,94 372,108 372,144 344,130"
+    fill="rgba(40,50,60,0.28)" stroke="rgba(60,70,80,0.16)" stroke-width="0.5"/>
+  <line x1="350" y1="97" x2="350" y2="133" stroke="rgba(60,70,80,0.1)" stroke-width="0.5"/>
+  <line x1="356" y1="100" x2="356" y2="136" stroke="rgba(60,70,80,0.08)" stroke-width="0.5"/>
+  <line x1="362" y1="103" x2="362" y2="139" stroke="rgba(60,70,80,0.1)" stroke-width="0.5"/>
+  <polygon points="372,108 392,118 392,152 372,144"
+    fill="rgba(40,50,60,0.38)" stroke="rgba(60,70,80,0.2)" stroke-width="0.5"/>
+  <line x1="378" y1="111" x2="378" y2="147" stroke="rgba(60,70,80,0.12)" stroke-width="0.6"/>
+  <line x1="384" y1="114" x2="384" y2="150" stroke="rgba(60,70,80,0.1)" stroke-width="0.6"/>
+
+  <!-- == BANDAGE BOX + MEDICAL TRAY (organized) ========================= -->
+  <polygon points="358,148 370,154 366,156 354,150"
+    fill="#c8c4b8" stroke="#a0998c" stroke-width="0.3" opacity="0.8"/>
+  <polygon points="354,150 366,156 366,162 354,156"
+    fill="#b8b4a8" stroke="#989088" stroke-width="0.3" opacity="0.7"/>
+  <polygon points="370,154 366,156 366,162 370,160"
+    fill="#a8a498" stroke="#989088" stroke-width="0.3" opacity="0.7"/>
+  <polygon points="348,158 360,164 356,166 344,160"
+    fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
+  <rect x="348" y="160" width="3" height="2" rx="0.3" fill="#c8c4b8" opacity="0.15"/>
+  <rect x="352" y="161" width="2" height="1.5" rx="0.2" fill="#382a2a" opacity="0.3"/>
+
+  <!-- == CEILING FANS (both working) ==================================== -->
+  <!-- Left fan -->
+  <ellipse cx="160" cy="50" rx="4" ry="1.5" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <line x1="160" y1="50" x2="160" y2="54" stroke="#3a3838" stroke-width="1.2"/>
+  <ellipse cx="160" cy="55" rx="5" ry="2.5" fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="165,55 180,58 179,60 164,56" fill="#3a3020" opacity="0.8"/>
+  <polygon points="155,55 140,58 141,60 156,56" fill="#342c20" opacity="0.8"/>
+  <polygon points="160,57 164,62 162,63 158,63 156,62" fill="#3a3020" opacity="0.75"/>
+  <!-- Right fan -->
+  <ellipse cx="300" cy="70" rx="4" ry="1.5" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <line x1="300" y1="70" x2="300" y2="74" stroke="#3a3838" stroke-width="1.2"/>
+  <ellipse cx="300" cy="75" rx="5" ry="2.5" fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="305,75 320,78 319,80 304,76" fill="#3a3020" opacity="0.8"/>
+  <polygon points="295,75 280,78 281,80 296,76" fill="#342c20" opacity="0.8"/>
+  <polygon points="300,77 304,82 302,83 298,83 296,82" fill="#3a3020" opacity="0.75"/>
+
+  <!-- == WATER COOLER (new — between tables) ============================ -->
+  <!-- Body -->
+  <polygon points="194,192 206,198 212,195 200,189"
+    fill="#2a3038" stroke="#222830" stroke-width="0.4"/>
+  <polygon points="194,192 206,198 206,218 194,212"
+    fill="#243038" stroke="#1e2830" stroke-width="0.4"/>
+  <polygon points="206,198 212,195 212,215 206,218"
+    fill="#222830" stroke="#1e2830" stroke-width="0.4"/>
+  <!-- Jug -->
+  <ellipse cx="202" cy="186" rx="5" ry="3" fill="rgba(60,80,100,0.15)" stroke="rgba(80,100,120,0.12)" stroke-width="0.3"/>
+  <ellipse cx="202" cy="180" rx="4" ry="2.5" fill="rgba(60,80,100,0.12)"/>
+  <!-- Spigot -->
+  <circle cx="198" cy="200" r="1" fill="#4a4a52" opacity="0.4"/>
+</svg>
