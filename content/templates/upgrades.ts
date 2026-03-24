@@ -30,41 +30,6 @@ export const upgradeTemplates = [
     ],
   },
   {
-    id: "upgrade/building/bodega:annex",
-    kind: "upgrade",
-    name: "Back-Alley Annex",
-    tags: ["upgrade:building", "progression:rooms"],
-    description: "Absorbs the empty unit next door and gives the bodega one more usable corner.",
-    target: "building",
-    targetId: "building/bodega",
-    requirements: [
-      {
-        type: "resource_min",
-        resourceId: "resource/cash",
-        minimum: 220,
-      },
-      {
-        type: "building_tier_min",
-        buildingId: "building/bodega",
-        minimum: 1,
-      },
-    ],
-    effects: [
-      {
-        type: "add_room_slot",
-        amount: 1,
-      },
-      {
-        type: "unlock_room_template",
-        roomId: "room/lounge:tier_1",
-      },
-      {
-        type: "grant_operator_slot",
-        amount: 1,
-      },
-    ],
-  },
-  {
     id: "upgrade/room/register:records_wall",
     kind: "upgrade",
     name: "Records Wall",
@@ -164,6 +129,38 @@ export const upgradeTemplates = [
     ],
   },
   {
+    id: "upgrade/room/dining_area:common_table",
+    kind: "upgrade",
+    name: "Common Table",
+    tags: ["upgrade:room", "room:social"],
+    description:
+      "Replaces the folding table with a real shared surface. People linger here now instead of eating standing up.",
+    target: "room",
+    targetId: "room/dining_area:tier_1",
+    requirements: [
+      {
+        type: "resource_min",
+        resourceId: "resource/cash",
+        minimum: 160,
+      },
+      {
+        type: "room_count_min",
+        roomId: "room/dining_area:tier_1",
+        minimum: 1,
+      },
+    ],
+    effects: [
+      {
+        type: "modify_morale",
+        amount: 1,
+      },
+      {
+        type: "modify_loyalty",
+        amount: 1,
+      },
+    ],
+  },
+  {
     id: "upgrade/room/supply_closet:labeled_bins",
     kind: "upgrade",
     name: "Labeled Bins",
@@ -193,95 +190,6 @@ export const upgradeTemplates = [
         type: "modify_resource_cost",
         resourceId: "resource/cash",
         multiplier: 0.95,
-      },
-    ],
-  },
-  {
-    id: "upgrade/room/gym:heavy_bags",
-    kind: "upgrade",
-    name: "Heavy Bags",
-    tags: ["upgrade:room", "room:training"],
-    description: "Punching bags and sparring pads that improve training output.",
-    target: "room",
-    targetId: "room/gym:tier_1",
-    requirements: [
-      {
-        type: "resource_min",
-        resourceId: "resource/cash",
-        minimum: 120,
-      },
-      {
-        type: "room_count_min",
-        roomId: "room/gym:tier_1",
-        minimum: 1,
-      },
-    ],
-    effects: [
-      {
-        type: "modify_training_rate",
-        amount: 1,
-      },
-    ],
-  },
-  {
-    id: "upgrade/room/lounge:jukebox",
-    kind: "upgrade",
-    name: "Jukebox",
-    tags: ["upgrade:room", "room:social"],
-    description: "A working jukebox that significantly lifts lounge morale.",
-    target: "room",
-    targetId: "room/lounge:tier_1",
-    requirements: [
-      {
-        type: "resource_min",
-        resourceId: "resource/cash",
-        minimum: 80,
-      },
-      {
-        type: "room_count_min",
-        roomId: "room/lounge:tier_1",
-        minimum: 1,
-      },
-    ],
-    effects: [
-      {
-        type: "modify_morale",
-        amount: 2,
-      },
-    ],
-  },
-  {
-    id: "upgrade/building/bodega:backyard_extension",
-    kind: "upgrade",
-    name: "Backyard Extension",
-    tags: ["upgrade:building", "progression:rooms"],
-    description: "Extends the bodega into the backyard, adding room and operator capacity.",
-    target: "building",
-    targetId: "building/bodega",
-    requirements: [
-      {
-        type: "resource_min",
-        resourceId: "resource/cash",
-        minimum: 300,
-      },
-      {
-        type: "building_tier_min",
-        buildingId: "building/bodega",
-        minimum: 1,
-      },
-    ],
-    effects: [
-      {
-        type: "add_room_slot",
-        amount: 1,
-      },
-      {
-        type: "unlock_room_template",
-        roomId: "room/gym:tier_1",
-      },
-      {
-        type: "grant_operator_slot",
-        amount: 1,
       },
     ],
   },

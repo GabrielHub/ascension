@@ -8,9 +8,9 @@ describe("template registry", () => {
     const registry = createTemplateRegistry();
 
     expect(registry.resources).toHaveLength(3);
-    expect(registry.buildings).toHaveLength(2);
-    expect(registry.rooms).toHaveLength(11);
-    expect(registry.upgrades).toHaveLength(9);
+    expect(registry.buildings).toHaveLength(1);
+    expect(registry.rooms).toHaveLength(4);
+    expect(registry.upgrades).toHaveLength(6);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(13);
     expect(registry.items).toHaveLength(31);
@@ -30,13 +30,6 @@ describe("template registry", () => {
       "room/counter:tier_1",
       "room/dining_area:tier_1",
       "room/supply_closet:tier_1",
-      "room/front_desk:tier_1",
-      "room/recruitment_office:tier_1",
-      "room/infirmary:tier_1",
-      "room/break_room:tier_1",
-      "room/lounge:tier_1",
-      "room/gym:tier_1",
-      "room/sparring_room:tier_1",
     ];
 
     expectedRoomIds.forEach((id) => {
@@ -49,14 +42,11 @@ describe("template registry", () => {
 
     const expectedUpgradeIds = [
       "upgrade/building/bodega:frontage",
-      "upgrade/building/bodega:annex",
       "upgrade/room/register:records_wall",
       "upgrade/room/counter:hot_coffee",
       "upgrade/room/dining_area:first_aid_station",
+      "upgrade/room/dining_area:common_table",
       "upgrade/room/supply_closet:labeled_bins",
-      "upgrade/room/gym:heavy_bags",
-      "upgrade/room/lounge:jukebox",
-      "upgrade/building/bodega:backyard_extension",
     ];
 
     expectedUpgradeIds.forEach((id) => {
@@ -238,20 +228,12 @@ describe("template registry", () => {
     });
   });
 
-  it("validates sparring room is only available in union hall", () => {
+  it("validates all room templates stay bodega-only", () => {
     const registry = createTemplateRegistry();
-    const sparring = registry.roomById.get("room/sparring_room:tier_1");
 
-    expect(sparring).toBeTruthy();
-    expect(sparring!.availableInBuildings).toEqual(["building/union_hall"]);
-  });
-
-  it("validates the dining area stays bodega-only", () => {
-    const registry = createTemplateRegistry();
-    const diningArea = registry.roomById.get("room/dining_area:tier_1");
-
-    expect(diningArea).toBeTruthy();
-    expect(diningArea!.availableInBuildings).toEqual(["building/bodega"]);
+    registry.rooms.forEach((room) => {
+      expect(room.availableInBuildings).toEqual(["building/bodega"]);
+    });
   });
 
   it("validates starting resource amount matches bootstrap treasury", () => {

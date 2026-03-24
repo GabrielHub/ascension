@@ -96,6 +96,7 @@ export interface FogOfWarState {
 export const BuildingAuthority = soa({
   activeBuildingTemplateIndex: [] as number[],
   activeBuildingTier: [] as number[],
+  activeFloorIndex: [] as number[],
   roomSlotCount: [] as number[],
   operatorSlotCount: [] as number[],
   appliedUpgradeIds: [] as string[][],

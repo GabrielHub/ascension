@@ -13,17 +13,20 @@ import {
   type EnvPartMeta,
   type EnvPartCategory,
   type EnvLightingPreset,
+  buildSceneReviewGroups,
   getLoadedEnvParts,
+  getSceneReviewContract,
   envPartSvgPath,
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
   resolveShellAssetUrl,
 } from "./environment-parts";
+import { SceneContractSummary } from "./svg-asset-viewer-page";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SVG Playground — Multi-Asset Experimentation Surface
    Operators: Recipe-driven modular portrait validation
-   HQ Environment: Bodega shell, structural parts, props, and background elements
+   HQ Environment: scene-first props-only room review and supporting asset surfaces
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type AssetClass = "operators" | "hq-environment";
@@ -37,7 +40,7 @@ const ASSET_CLASS_DESCRIPTIONS: Record<AssetClass, string> = {
   operators:
     "Recipe-driven modular portraits — one builder and one appearance contract for authored and future generated operators",
   "hq-environment":
-    "Bodega angled-isometric interior — shell, rooms, structural parts, and props for the first headquarters",
+    "Scene-first bodega HQ review — approved room scenes in recipes/ plus shell, structural, prop, and background support assets",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -426,6 +429,7 @@ function OperatorPlayground() {
 
 const ENV_CATEGORY_LABELS: Record<EnvPartCategory, string> = {
   shell: "Building Shell",
+  scene: "Room Scenes",
   structure: "Structural Parts",
   prop: "Props & Fixtures",
   background: "Background Elements",
@@ -434,6 +438,8 @@ const ENV_CATEGORY_LABELS: Record<EnvPartCategory, string> = {
 
 const ENV_CATEGORY_DESCRIPTIONS: Record<EnvPartCategory, string> = {
   shell: "Full building views — exterior storefront and angled-isometric interior shell",
+  scene:
+    "Approved room-scene compositions — props-only HQ interiors stored in recipes/ and reviewed against the shared room contract",
   structure: "Reusable architectural pieces — walls, floors, doors, and windows",
   prop: "Individual furniture and fixtures — desks, beds, lights, cabinets, plants, and signage",
   background: "Street, skyline, and storefront atmosphere pieces that snap around the HQ footprint",
@@ -443,6 +449,7 @@ const ENV_CATEGORY_DESCRIPTIONS: Record<EnvPartCategory, string> = {
 
 const ENV_CATEGORY_ORDER: EnvPartCategory[] = [
   "shell",
+  "scene",
   "structure",
   "prop",
   "background",
@@ -468,6 +475,23 @@ const SCALE_PRESETS: Record<
     {
       label: "Thumbnail",
       containerClass: "h-16 w-28",
+      svgClass: "[&>svg]:h-full [&>svg]:w-full",
+    },
+  ],
+  scene: [
+    {
+      label: "Room review",
+      containerClass: "h-44 w-full max-w-[420px]",
+      svgClass: "[&>svg]:h-full [&>svg]:w-full",
+    },
+    {
+      label: "State card",
+      containerClass: "h-28 w-40",
+      svgClass: "[&>svg]:h-full [&>svg]:w-full",
+    },
+    {
+      label: "Thumbnail",
+      containerClass: "h-14 w-20",
       svgClass: "[&>svg]:h-full [&>svg]:w-full",
     },
   ],
@@ -753,113 +777,234 @@ function EnvPresetSelector({
   );
 }
 
-const COMPOSED_PREVIEWS = [
-  {
-    label: "Reception Props",
-    detail: "props/iso-desk-reception",
-    description: "Reception desk and intake furnishing anchors for the operations footprint",
-    previewSrc: "/data/svg-environments/hq/bodega/parts/props/iso-desk-reception.svg",
-  },
-  {
-    label: "Infirmary Props",
-    detail: "props/iso-bed-medical",
-    description: "Recovery bed and medical storage that now slot into room recipes",
-    previewSrc: "/data/svg-environments/hq/bodega/parts/props/iso-bed-medical.svg",
-  },
-  {
-    label: "Recruitment Props",
-    detail: "props/iso-plant-potted",
-    description: "Lounge clutter and decor pieces that anchor into staffing/social rooms",
-    previewSrc: "/data/svg-environments/hq/bodega/parts/props/iso-plant-potted.svg",
-  },
-  {
-    label: "Structure Segment",
-    detail: "structure/iso-wall-corner",
-    description: "Reusable structure piece used by the grid-based room composition path",
-    previewSrc: "/data/svg-environments/hq/bodega/parts/structure/iso-wall-corner.svg",
-  },
-] as const;
-
-function ComposedRoomPreview({ preset }: { preset: EnvLightingPreset }) {
+function SceneReviewBoard({
+  parts,
+  preset,
+}: {
+  parts: readonly EnvPartMeta[];
+  preset: EnvLightingPreset;
+}) {
   const shellSrc = resolveShellAssetUrl();
+  const contract = getSceneReviewContract();
+  const sceneGroups = buildSceneReviewGroups(parts);
 
   return (
     <section className="glass-card overflow-hidden">
       <div className="border-b border-[rgba(200,168,76,0.06)] px-6 py-5">
         <h2 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
-          Grid Composition Preview
+          Scene Review Board
         </h2>
         <p className="mt-1 text-xs text-silver/60">
-          Shell and modular parts &mdash; reusable structure and prop art for the HQ tile system
+          Approved HQ room scenes are props-only compositions in <code>recipes/</code>, reviewed
+          against the shared room contract and supported by shell, structural, prop, and background
+          assets.
         </p>
         <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/50">
-          The runtime no longer resolves one monolithic SVG per room. The shell stays separate, and
-          structure plus prop assets are authored as reusable pieces that slot into room recipes.
+          The runtime keeps the shell separate. Room scenes are the review anchor, and their
+          metadata must stay aligned with the canonical geometry so new states can be reviewed
+          without depending on new art.
         </p>
       </div>
 
-      {/* Shell backdrop */}
-      <div className="border-b border-[rgba(200,168,76,0.04)] px-6 py-5">
-        <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
-          Building Shell Backdrop
-        </p>
-        <div className="flex justify-center">
-          <div
-            className="h-48 w-full max-w-[420px] overflow-hidden rounded-lg border"
-            style={{ backgroundColor: preset.background, borderColor: preset.border }}
-          >
-            <LazySvgPreview
-              src={shellSrc}
-              alt="Bodega shell"
-              className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
-            />
-            {preset.overlay && (
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ backgroundColor: preset.overlay }}
+      <div className="grid gap-4 border-b border-[rgba(200,168,76,0.04)] px-6 py-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+            Building Shell Backdrop
+          </p>
+          <div className="flex justify-center">
+            <div
+              className="relative h-48 w-full max-w-[420px] overflow-hidden rounded-lg border"
+              style={{ backgroundColor: preset.background, borderColor: preset.border }}
+            >
+              <LazySvgPreview
+                src={shellSrc}
+                alt="Bodega shell"
+                className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
               />
-            )}
+              {preset.overlay && (
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{ backgroundColor: preset.overlay }}
+                />
+              )}
+            </div>
           </div>
+        </div>
+        <div>
+          <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+            Canonical Scene Geometry
+          </p>
+          <SceneContractSummary contract={contract} />
         </div>
       </div>
 
-      {/* Modular composition pieces */}
-      <div className="grid gap-6 px-6 py-6 sm:grid-cols-2">
-        {COMPOSED_PREVIEWS.map((room) => {
-          return (
-            <div
-              key={room.detail}
-              className="animate-enter rounded-xl border border-[rgba(200,168,76,0.04)] bg-[rgba(15,14,18,0.25)] p-4"
-            >
-              <div className="mb-3 flex items-baseline gap-2">
-                <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
-                  {room.label}
-                </h3>
-                <span className="badge badge-gold text-[0.6rem]">{room.detail}</span>
-              </div>
-              <p className="mb-3 text-[0.6875rem] text-silver/50">{room.description}</p>
+      <div className="px-6 py-5">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <p className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+              Progression Review
+            </p>
+            <p className="mt-1 text-[0.6875rem] text-silver/50">
+              Approved scene states are grouped by series tag or room family. Missing steps stay
+              visible so future scene art can be reviewed without changing the layout.
+            </p>
+          </div>
+          <p className="text-[0.625rem] text-silver/40">{sceneGroups.length} scene series</p>
+        </div>
+
+        <div className="space-y-4">
+          {sceneGroups.map((group) => {
+            const filledCount = group.steps.filter((step) => !step.isPlaceholder).length;
+            return (
               <div
-                className="h-44 w-full overflow-hidden rounded-lg border"
-                style={{ backgroundColor: preset.background, borderColor: preset.border }}
+                key={group.seriesKey}
+                className="rounded-xl border border-[rgba(200,168,76,0.04)] bg-[rgba(15,14,18,0.25)] p-4"
               >
-                <LazySvgPreview
-                  src={room.previewSrc}
-                  alt={room.label}
-                  className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
-                />
-                {preset.overlay && (
-                  <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{ backgroundColor: preset.overlay }}
-                  />
-                )}
+                <div className="mb-3 flex flex-wrap items-baseline gap-2">
+                  <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
+                    {group.label}
+                  </h3>
+                  {group.roomFamily && (
+                    <span className="badge badge-slate text-[0.6rem]">{group.roomFamily}</span>
+                  )}
+                  <span className="badge badge-gold text-[0.6rem]">
+                    {filledCount}/{group.steps.length} states
+                  </span>
+                  {filledCount > 1 && (
+                    <span className="text-[0.6rem] text-gold/40">
+                      {group.steps
+                        .filter((s) => !s.isPlaceholder)
+                        .map((s) => s.index)
+                        .join(" \u2192 ")}
+                    </span>
+                  )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {group.steps.map((step) => {
+                    const part = step.part;
+                    if (!part) {
+                      return (
+                        <div
+                          key={`${group.seriesKey}-${step.index}`}
+                          className="flex min-h-[13rem] flex-col justify-between rounded-lg border border-dashed border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.22)] p-3"
+                        >
+                          <div>
+                            <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                              State {step.index}
+                            </p>
+                            <p className="mt-2 text-xs text-silver/60">Pending scene state</p>
+                          </div>
+                          <p className="text-[0.625rem] leading-relaxed text-silver/40">
+                            Placeholder only. Keep the geometry and metadata contract stable until
+                            the new room art arrives.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    const src = envPartSvgPath(part);
+                    const name = part.id.split("/").pop() ?? part.id;
+                    return (
+                      <div
+                        key={part.id}
+                        className="flex min-h-[13rem] flex-col gap-3 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.32)] p-3"
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                            State {step.index}
+                          </p>
+                          <span className="badge badge-gold text-[0.55rem]">{part.status}</span>
+                        </div>
+                        <div
+                          className="relative flex h-32 items-center justify-center overflow-hidden rounded-md border"
+                          style={{ backgroundColor: preset.background, borderColor: preset.border }}
+                        >
+                          <LazySvgPreview
+                            src={src}
+                            alt={name}
+                            className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
+                          />
+                          {preset.overlay && (
+                            <div
+                              className="pointer-events-none absolute inset-0"
+                              style={{ backgroundColor: preset.overlay }}
+                            />
+                          )}
+                        </div>
+                        <div className="space-y-1 text-[0.6875rem] text-silver/60">
+                          <p className="text-silver-bright">{name}</p>
+                          <p>Room family: {part.roomFamily ?? "n/a"}</p>
+                          <p>
+                            {part.tags.includes("props-only")
+                              ? "Props-only scene"
+                              : "Scene metadata mismatch"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <p className="mt-2 text-center text-[0.6rem] text-silver/40">
-                <code>{room.previewSrc}</code>
-              </p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="border-t border-[rgba(200,168,76,0.04)] px-6 py-5">
+        <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+          Supporting Assets
+        </p>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {[
+            {
+              label: "Reception Prop",
+              detail: "props/iso-desk-reception",
+              description:
+                "Reception furniture still reviews as a standalone prop outside the room scene.",
+              previewSrc: "/data/svg-environments/hq/bodega/parts/props/iso-desk-reception.svg",
+            },
+            {
+              label: "Structural Corner",
+              detail: "structure/iso-wall-corner",
+              description: "Reusable structural geometry remains available for support checks.",
+              previewSrc: "/data/svg-environments/hq/bodega/parts/structure/iso-wall-corner.svg",
+            },
+          ].map((asset) => {
+            return (
+              <div
+                key={asset.detail}
+                className="animate-enter rounded-xl border border-[rgba(200,168,76,0.04)] bg-[rgba(15,14,18,0.25)] p-4"
+              >
+                <div className="mb-3 flex items-baseline gap-2">
+                  <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
+                    {asset.label}
+                  </h3>
+                  <span className="badge badge-gold text-[0.6rem]">{asset.detail}</span>
+                </div>
+                <p className="mb-3 text-[0.6875rem] text-silver/50">{asset.description}</p>
+                <div
+                  className="relative h-44 w-full overflow-hidden rounded-lg border"
+                  style={{ backgroundColor: preset.background, borderColor: preset.border }}
+                >
+                  <LazySvgPreview
+                    src={asset.previewSrc}
+                    alt={asset.label}
+                    className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
+                  />
+                  {preset.overlay && (
+                    <div
+                      className="pointer-events-none absolute inset-0"
+                      style={{ backgroundColor: preset.overlay }}
+                    />
+                  )}
+                </div>
+                <p className="mt-2 text-center text-[0.6rem] text-silver/40">
+                  <code>{asset.previewSrc}</code>
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -880,23 +1025,22 @@ function HqEnvironmentPlayground() {
         style={{ animationDelay: "60ms" }}
       >
         <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
-          Bodega HQ Visual Language
+          Bodega HQ Scene Language
         </h2>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-silver/70">
           <p>
-            Angled-isometric interior of a converted NYC corner store &mdash;{" "}
-            <strong className="text-gold/80">dark atmospheric palette</strong> with{" "}
-            <strong className="text-gold/80">gold accent lighting</strong> and{" "}
-            <strong className="text-gold/80">cel-shaded hard shadows</strong> matching operator
-            portrait shading. Visible floor plane, wall planes, corners, and thresholds.
+            Approved room scenes are the first-class HQ review surface &mdash;{" "}
+            <strong className="text-gold/80">props-only</strong>, room-scale compositions stored in{" "}
+            <code className="text-gold/70">recipes/</code> and checked against the shared room
+            geometry contract.
           </p>
           <p>
-            The building shell provides the storefront envelope. Structural parts, props, and
-            background elements are authored as modular pieces that snap onto the shared isometric
-            tile grid. Actor markers are in-world operator tokens at HQ zoom scales.
+            The shell remains separate, while structure, props, and background elements continue to
+            provide support coverage for the scene review workflow. Actor markers are still in-world
+            operator tokens at HQ zoom scales.
           </p>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {ENV_CATEGORY_ORDER.map((cat) => {
             const count = parts.filter((p) => p.category === cat).length;
             return (
@@ -937,8 +1081,8 @@ function HqEnvironmentPlayground() {
         );
       })}
 
-      {/* Composed room previews */}
-      <ComposedRoomPreview preset={preset} />
+      {/* Room-scene review */}
+      <SceneReviewBoard parts={parts} preset={preset} />
 
       {/* Recipe-colorized actor marker grid */}
       <ActorMarkerGrid />
@@ -950,17 +1094,18 @@ function HqEnvironmentPlayground() {
         </h2>
         <div className="mt-4 space-y-3 text-xs leading-relaxed text-silver">
           <p>
-            <strong className="text-gold">Promoted assets:</strong> Shell, structure, prop, and
-            background assets have been promoted to{" "}
+            <strong className="text-gold">Promoted assets:</strong> Shell, room scene, structure,
+            prop, and background assets have been promoted to{" "}
             <span className="badge badge-gold text-[0.6rem]">approved</span> status and copied from{" "}
             <code className="text-gold/70">reference/</code> into canonical{" "}
-            <code className="text-gold/70">parts/</code> directories. Actor markers remain in
+            <code className="text-gold/70">parts/</code> and{" "}
+            <code className="text-gold/70">recipes/</code> directories. Actor markers remain in
             exploration.
           </p>
           <p>
             <strong className="text-gold">Composition:</strong> The HQ world canvas now renders a
-            tile-based composition. Rooms own footprints and anchors, while structure, prop, and
-            background SVGs slot into those anchors instead of stretching monolithic room scenes.
+            scene-first composition. Scene metadata owns the room-state contract, while structure,
+            prop, and background SVGs stay available for support checks.
           </p>
           <p>
             <strong className="text-gold">Scale readability:</strong> Each asset is shown at

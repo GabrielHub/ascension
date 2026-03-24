@@ -30,6 +30,9 @@ import {
 } from "./commands";
 import { reconcileAssignmentsSystem } from "./assignment";
 import { addToInventory, autoSelectAccessory, unequipItem } from "./inventory";
+import type { BossEncounterInstance } from "./encounter-types";
+import { createBossCommitmentPayload } from "./incidents";
+import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
 import { computeAutonomyFlags } from "./morale";
 import {
   applyRaidSocialOutcome,
@@ -956,6 +959,84 @@ function createResolutionPacket(
   };
 }
 
+function stripBossDefeatTags(tags: readonly string[]): string[] {
+  return tags.filter((tag) => tag !== "boss:defeated");
+}
+
+function buildBossRetreatResolutionPacket(
+  packet: ActiveRaidPacketRecord,
+): ActiveRaidResolutionPacket {
+  return {
+    ...packet.resolutionPacket,
+    result: "failure",
+    reputationDelta: Math.min(packet.resolutionPacket.reputationDelta, -4),
+    cashDelta: Math.min(packet.resolutionPacket.cashDelta, -Math.round(packet.threat * 0.35)),
+    operatorOutcomes: packet.operatorIds.map((operatorId) => ({
+      operatorId,
+      injuryDelta: 8,
+      moraleDelta: -6,
+      loyaltyDelta: -3,
+      status: "shaken" as const,
+    })),
+    narrativeTags: stripBossDefeatTags(packet.resolutionPacket.narrativeTags),
+  };
+}
+
+export function buildBossEncounterResolutionPacket(
+  packet: ActiveRaidPacketRecord,
+  encounter: BossEncounterInstance,
+): ActiveRaidResolutionPacket {
+  const isVictory = encounter.status === "victory";
+  const actorByOperatorId = new Map(
+    Object.values(encounter.actors)
+      .filter((actor) => actor.kind === "operator" && actor.operatorId)
+      .map((actor) => [actor.operatorId!, actor]),
+  );
+
+  return {
+    ...packet.resolutionPacket,
+    result: isVictory ? "success" : "failure",
+    reputationDelta: isVictory
+      ? Math.max(packet.resolutionPacket.reputationDelta, Math.round(packet.reward * 0.08))
+      : Math.min(
+          packet.resolutionPacket.reputationDelta,
+          -Math.max(4, Math.round(packet.threat * 0.08)),
+        ),
+    cashDelta: isVictory
+      ? Math.max(packet.resolutionPacket.cashDelta, Math.round(packet.reward))
+      : Math.min(packet.resolutionPacket.cashDelta, -Math.round(packet.threat * 0.4)),
+    operatorOutcomes: packet.operatorIds.map((operatorId) => {
+      const actor = actorByOperatorId.get(operatorId);
+      const missingHp = actor ? Math.max(0, actor.maxHp - actor.currentHp) : 0;
+      const injuryDelta = Math.max(
+        actor?.condition === "incapacitated" ? 30 : 0,
+        Math.round(missingHp / 4),
+      );
+      return {
+        operatorId,
+        injuryDelta,
+        moraleDelta: isVictory ? 7 : -10,
+        loyaltyDelta: isVictory ? 4 : -6,
+        status:
+          actor?.condition === "incapacitated"
+            ? ("hurt" as const)
+            : injuryDelta >= 12
+              ? ("hurt" as const)
+              : isVictory
+                ? ("steady" as const)
+                : ("shaken" as const),
+        ...(actor?.condition === "incapacitated" && encounter.status === "wipe"
+          ? { died: true }
+          : {}),
+      };
+    }),
+    narrativeTags: [
+      ...stripBossDefeatTags(packet.resolutionPacket.narrativeTags),
+      ...(isVictory ? ["boss:defeated"] : []),
+    ],
+  };
+}
+
 function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: number): void {
   // Treasury gate: do not launch raids when the guild is in debt
   if (GuildState.treasury[context.singletonEntities.guild] < 0) {
@@ -1071,6 +1152,187 @@ function launchFormedRaids(context: SimSystemContext): void {
     });
 }
 
+function finalizeRaidPacket(
+  context: SimSystemContext,
+  packet: ActiveRaidPacketRecord,
+  currentMinute: number,
+  operatorEntityById: ReadonlyMap<string, number>,
+): void {
+  const buildingEntity = context.singletonEntities.building;
+
+  GuildState.treasury[context.singletonEntities.guild] += packet.resolutionPacket.cashDelta;
+  GuildState.reputation[context.singletonEntities.guild] += packet.resolutionPacket.reputationDelta;
+  pushRuntimeCue(
+    context,
+    packet.resolutionPacket.result === "failure" ? "raid.return.failure" : "raid.return.success",
+  );
+
+  const missionTemplate = context.registry.missions.find((m) => m.id === packet.missionId);
+  const missionLabel = missionTemplate?.name ?? packet.missionId;
+  const res = packet.resolutionPacket;
+  const returningOperatorNames = packet.resolutionPacket.operatorOutcomes
+    .filter((outcome) => !outcome.died)
+    .map((outcome) => {
+      const operatorEntity = operatorEntityById.get(outcome.operatorId);
+      return operatorEntity === undefined
+        ? outcome.operatorId
+        : (OperatorIdentity.name[operatorEntity] ?? outcome.operatorId);
+    });
+  if (returningOperatorNames.length > 0) {
+    pushRuntimeEvent(context, {
+      kind: "team_return",
+      message: `${returningOperatorNames.join(", ")} returned from ${missionLabel}`,
+      accent: "gold",
+      targetKind: "team",
+      targetId: packet.id,
+    });
+  }
+  pushRuntimeEvent(context, {
+    kind: "raid_result",
+    message: `${missionLabel} ended ${res.result} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
+    accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
+  });
+
+  packet.resolutionPacket.operatorOutcomes.forEach((outcome) => {
+    const operatorEntity = operatorEntityById.get(outcome.operatorId);
+    if (operatorEntity === undefined) {
+      return;
+    }
+
+    MoraleState.current[operatorEntity] = clamp(
+      MoraleState.current[operatorEntity] + outcome.moraleDelta,
+      0,
+      100,
+    );
+    LoyaltyState.current[operatorEntity] = clamp(
+      LoyaltyState.current[operatorEntity] + outcome.loyaltyDelta,
+      0,
+      100,
+    );
+    InjuryState.severity[operatorEntity] = clamp(
+      InjuryState.severity[operatorEntity] + outcome.injuryDelta,
+      0,
+      100,
+    );
+    InjuryState.recoveryHoursRemaining[operatorEntity] = Math.max(
+      InjuryState.recoveryHoursRemaining[operatorEntity],
+      outcome.injuryDelta * 0.75,
+    );
+    RaidParticipationState.activeRaidId[operatorEntity] = "";
+    RaidParticipationState.missionId[operatorEntity] = "";
+    RaidParticipationState.returnTick[operatorEntity] = 0;
+
+    if (outcome.died) {
+      const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
+      unequipItem(context, outcome.operatorId, "weapon");
+      unequipItem(context, outcome.operatorId, "outfitOverlay");
+      unequipItem(context, outcome.operatorId, "accessory");
+      OperatorIdentity.lifecycleStatus[operatorEntity] = "dead";
+      OperatorIdentity.deathTick[operatorEntity] = getCurrentAbsoluteMinute(context);
+      OperatorIdentity.deathRaidSummaryId[operatorEntity] = packet.id;
+      OperatorIdentity.departureTick[operatorEntity] = 0;
+      OperatorIdentity.departureReason[operatorEntity] = "";
+      AssignmentState.kind[operatorEntity] = "idle";
+      AssignmentState.targetId[operatorEntity] = "";
+      ScheduleState.currentBlock[operatorEntity] = "idle";
+      pushRuntimeCue(context, "raid.death");
+      pushRuntimeEvent(context, {
+        kind: "death",
+        message: `${opName} killed in action`,
+        accent: "magma",
+        targetKind: "operator",
+        targetId: outcome.operatorId,
+      });
+      return;
+    }
+
+    if (outcome.injuryDelta > 20) {
+      const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
+      pushRuntimeEvent(context, {
+        kind: "injury",
+        message: `${opName} injured during the raid`,
+        accent: "ember",
+        targetKind: "operator",
+        targetId: outcome.operatorId,
+      });
+    }
+
+    AssignmentState.kind[operatorEntity] =
+      InjuryState.recoveryHoursRemaining[operatorEntity] > 0 ? "recovery" : "idle";
+    AssignmentState.targetId[operatorEntity] = "";
+  });
+
+  const lootRng = new SeededRng(seedFromKey(`loot:${packet.id}:${currentMinute}`));
+  const lootDrops = generateLootDrops(
+    context,
+    lootRng,
+    packet.resolutionPacket.result,
+    packet.missionId,
+  );
+  applyLootToInventory(context, lootDrops);
+
+  const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
+    .filter((outcome) => outcome.died)
+    .map((outcome) => outcome.operatorId);
+  const survivingOperatorIds = packet.operatorIds.filter((id) => !diedOperatorIds.includes(id));
+
+  updateRecurringTeamAfterRaid(
+    context,
+    packet.operatorIds,
+    packet.resolutionPacket.result,
+    currentMinute,
+  );
+
+  diedOperatorIds.forEach((deceasedId) => {
+    createGriefTies(context, deceasedId, survivingOperatorIds);
+    markTeamDamaged(context, [deceasedId], "death");
+  });
+
+  applyRaidSocialOutcome(context, packet.operatorIds, packet.resolutionPacket.result);
+
+  const MAX_RAID_SUMMARIES = 50;
+  const existingSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
+  const trimmed =
+    existingSummaries.length >= MAX_RAID_SUMMARIES
+      ? existingSummaries.slice(-MAX_RAID_SUMMARIES + 1)
+      : existingSummaries;
+  BuildingAuthority.raidSummaries[buildingEntity] = [
+    ...trimmed,
+    {
+      id: packet.id,
+      contractSiteId: packet.contractSiteId,
+      opportunityId: packet.opportunityId,
+      missionId: packet.missionId,
+      location: packet.location,
+      startedAt: packet.startedAt,
+      endedAt: formatWorldTimestamp(context),
+      result: packet.resolutionPacket.result,
+      reputationDelta: packet.resolutionPacket.reputationDelta,
+      cashDelta: packet.resolutionPacket.cashDelta,
+      threat: packet.threat,
+      intel: packet.intel,
+      reward: packet.reward,
+      cohesion: packet.cohesion,
+      operatorOutcomes: packet.resolutionPacket.operatorOutcomes,
+      narrativeTags: packet.resolutionPacket.narrativeTags,
+      intelMismatchTags: packet.resolutionPacket.intelMismatchTags,
+      bossDefeated: packet.resolutionPacket.narrativeTags.includes("boss:defeated"),
+      contributingFactors: [
+        ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
+        ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
+        ...(packet.intel >= 60 ? ["intel:high"] : []),
+        ...(packet.intel < 30 ? ["intel:low"] : []),
+        ...(packet.resolutionPacket.narrativeTags.includes("boss:weakness-exploited")
+          ? ["boss:weakness-exploited"]
+          : []),
+        ...(packet.resolutionPacket.narrativeTags.includes("boss:defeated")
+          ? ["boss:defeated"]
+          : []),
+      ],
+    },
+  ];
+}
+
 function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): boolean {
   const buildingEntity = context.singletonEntities.building;
   if ((BuildingAuthority.activeRaidPackets[buildingEntity] ?? []).length === 0) {
@@ -1091,192 +1353,101 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         100,
       );
 
+      const missionTemplate = context.registry.missionById.get(packet.missionId);
+      const bossProfile = missionTemplate?.combatProfile?.boss;
+      const shouldQueueBossCommitment =
+        deltaMs > 0 &&
+        currentMinute < packet.returnTick &&
+        bossProfile !== null &&
+        bossProfile !== undefined &&
+        packet.revealProgress >= 88 &&
+        context.runtimeState.activeEncounter === null &&
+        !hasBlockingInterruption(context.runtimeState.interruptionQueue);
+
+      if (shouldQueueBossCommitment) {
+        const interruptionQueue = context.runtimeState.interruptionQueue;
+        const hasQueuedCommitment =
+          interruptionQueue.active?.type === "raid_boss_commitment" &&
+          interruptionQueue.active.payload.kind === "raid_boss_commitment" &&
+          interruptionQueue.active.payload.activeRaidId === packet.id;
+
+        if (!hasQueuedCommitment) {
+          enqueueInterruption(
+            interruptionQueue,
+            "raid_boss_commitment",
+            createBossCommitmentPayload(
+              packet.id,
+              packet.contractSiteId,
+              packet.missionId,
+              packet.id,
+              packet.operatorIds,
+              bossProfile.bossId,
+              bossProfile.name,
+              bossProfile.rank,
+            ),
+            "raid-system",
+            currentMinute,
+          );
+          pushRuntimeCue(context, "raid.boss.approach");
+        }
+        return true;
+      }
+
       if (deltaMs <= 0 || currentMinute < packet.returnTick) {
         return true;
       }
 
       resolvedRaid = true;
-      GuildState.treasury[context.singletonEntities.guild] += packet.resolutionPacket.cashDelta;
-      GuildState.reputation[context.singletonEntities.guild] +=
-        packet.resolutionPacket.reputationDelta;
-      pushRuntimeCue(
-        context,
-        packet.resolutionPacket.result === "failure"
-          ? "raid.return.failure"
-          : "raid.return.success",
-      );
-
-      const missionTemplate = context.registry.missions.find((m) => m.id === packet.missionId);
-      const missionLabel = missionTemplate?.name ?? packet.missionId;
-      const res = packet.resolutionPacket;
-      const returningOperatorNames = packet.resolutionPacket.operatorOutcomes
-        .filter((outcome) => !outcome.died)
-        .map((outcome) => {
-          const operatorEntity = operatorEntityById.get(outcome.operatorId);
-          return operatorEntity === undefined
-            ? outcome.operatorId
-            : (OperatorIdentity.name[operatorEntity] ?? outcome.operatorId);
-        });
-      if (returningOperatorNames.length > 0) {
-        pushRuntimeEvent(context, {
-          kind: "team_return",
-          message: `${returningOperatorNames.join(", ")} returned from ${missionLabel}`,
-          accent: "gold",
-          targetKind: "team",
-          targetId: packet.id,
-        });
-      }
-      pushRuntimeEvent(context, {
-        kind: "raid_result",
-        message: `${missionLabel} ended ${res.result} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
-        accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
-      });
-
-      packet.resolutionPacket.operatorOutcomes.forEach((outcome) => {
-        const operatorEntity = operatorEntityById.get(outcome.operatorId);
-        if (operatorEntity === undefined) {
-          return;
-        }
-
-        MoraleState.current[operatorEntity] = clamp(
-          MoraleState.current[operatorEntity] + outcome.moraleDelta,
-          0,
-          100,
-        );
-        LoyaltyState.current[operatorEntity] = clamp(
-          LoyaltyState.current[operatorEntity] + outcome.loyaltyDelta,
-          0,
-          100,
-        );
-        InjuryState.severity[operatorEntity] = clamp(
-          InjuryState.severity[operatorEntity] + outcome.injuryDelta,
-          0,
-          100,
-        );
-        InjuryState.recoveryHoursRemaining[operatorEntity] = Math.max(
-          InjuryState.recoveryHoursRemaining[operatorEntity],
-          outcome.injuryDelta * 0.75,
-        );
-        RaidParticipationState.activeRaidId[operatorEntity] = "";
-        RaidParticipationState.missionId[operatorEntity] = "";
-        RaidParticipationState.returnTick[operatorEntity] = 0;
-
-        if (outcome.died) {
-          const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
-          unequipItem(context, outcome.operatorId, "weapon");
-          unequipItem(context, outcome.operatorId, "outfitOverlay");
-          unequipItem(context, outcome.operatorId, "accessory");
-          OperatorIdentity.lifecycleStatus[operatorEntity] = "dead";
-          OperatorIdentity.deathTick[operatorEntity] = getCurrentAbsoluteMinute(context);
-          OperatorIdentity.deathRaidSummaryId[operatorEntity] = packet.id;
-          OperatorIdentity.departureTick[operatorEntity] = 0;
-          OperatorIdentity.departureReason[operatorEntity] = "";
-          AssignmentState.kind[operatorEntity] = "idle";
-          AssignmentState.targetId[operatorEntity] = "";
-          ScheduleState.currentBlock[operatorEntity] = "idle";
-          pushRuntimeCue(context, "raid.death");
-          pushRuntimeEvent(context, {
-            kind: "death",
-            message: `${opName} killed in action`,
-            accent: "magma",
-            targetKind: "operator",
-            targetId: outcome.operatorId,
-          });
-          return;
-        }
-
-        if (outcome.injuryDelta > 20) {
-          const opName = OperatorIdentity.name[operatorEntity] ?? outcome.operatorId;
-          pushRuntimeEvent(context, {
-            kind: "injury",
-            message: `${opName} injured during the raid`,
-            accent: "ember",
-            targetKind: "operator",
-            targetId: outcome.operatorId,
-          });
-        }
-
-        AssignmentState.kind[operatorEntity] =
-          InjuryState.recoveryHoursRemaining[operatorEntity] > 0 ? "recovery" : "idle";
-        AssignmentState.targetId[operatorEntity] = "";
-      });
-
-      const lootRng = new SeededRng(seedFromKey(`loot:${packet.id}:${currentMinute}`));
-      const lootDrops = generateLootDrops(
-        context,
-        lootRng,
-        packet.resolutionPacket.result,
-        packet.missionId,
-      );
-      applyLootToInventory(context, lootDrops);
-
-      const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
-        .filter((outcome) => outcome.died)
-        .map((outcome) => outcome.operatorId);
-      const survivingOperatorIds = packet.operatorIds.filter((id) => !diedOperatorIds.includes(id));
-
-      updateRecurringTeamAfterRaid(
-        context,
-        packet.operatorIds,
-        packet.resolutionPacket.result,
-        currentMinute,
-      );
-
-      diedOperatorIds.forEach((deceasedId) => {
-        createGriefTies(context, deceasedId, survivingOperatorIds);
-        markTeamDamaged(context, [deceasedId], "death");
-      });
-
-      applyRaidSocialOutcome(context, packet.operatorIds, packet.resolutionPacket.result);
-
-      const MAX_RAID_SUMMARIES = 50;
-      const existingSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
-      const trimmed =
-        existingSummaries.length >= MAX_RAID_SUMMARIES
-          ? existingSummaries.slice(-MAX_RAID_SUMMARIES + 1)
-          : existingSummaries;
-      BuildingAuthority.raidSummaries[buildingEntity] = [
-        ...trimmed,
-        {
-          id: packet.id,
-          contractSiteId: packet.contractSiteId,
-          opportunityId: packet.opportunityId,
-          missionId: packet.missionId,
-          location: packet.location,
-          startedAt: packet.startedAt,
-          endedAt: formatWorldTimestamp(context),
-          result: packet.resolutionPacket.result,
-          reputationDelta: packet.resolutionPacket.reputationDelta,
-          cashDelta: packet.resolutionPacket.cashDelta,
-          threat: packet.threat,
-          intel: packet.intel,
-          reward: packet.reward,
-          cohesion: packet.cohesion,
-          operatorOutcomes: packet.resolutionPacket.operatorOutcomes,
-          narrativeTags: packet.resolutionPacket.narrativeTags,
-          intelMismatchTags: packet.resolutionPacket.intelMismatchTags,
-          bossDefeated: packet.resolutionPacket.narrativeTags.includes("boss:defeated"),
-          contributingFactors: [
-            ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
-            ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
-            ...(packet.intel >= 60 ? ["intel:high"] : []),
-            ...(packet.intel < 30 ? ["intel:low"] : []),
-            ...(packet.resolutionPacket.narrativeTags.includes("boss:weakness-exploited")
-              ? ["boss:weakness-exploited"]
-              : []),
-            ...(packet.resolutionPacket.narrativeTags.includes("boss:defeated")
-              ? ["boss:defeated"]
-              : []),
-          ],
-        },
-      ];
-
+      finalizeRaidPacket(context, packet, currentMinute, operatorEntityById);
       return false;
     },
   );
 
   BuildingAuthority.activeRaidPackets[buildingEntity] = nextPackets;
   return resolvedRaid;
+}
+
+export function resolveRaidBossRetreat(context: SimSystemContext, activeRaidId: string): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const packets = BuildingAuthority.activeRaidPackets[buildingEntity] ?? [];
+  const packet = packets.find((candidate) => candidate.id === activeRaidId);
+  if (!packet) {
+    return false;
+  }
+
+  packet.resolutionPacket = buildBossRetreatResolutionPacket(packet);
+  packet.returnTick = getCurrentAbsoluteMinute(context);
+  const operatorEntityById = new Map(
+    context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
+  );
+  finalizeRaidPacket(context, packet, getCurrentAbsoluteMinute(context), operatorEntityById);
+  BuildingAuthority.activeRaidPackets[buildingEntity] = packets.filter(
+    (candidate) => candidate.id !== activeRaidId,
+  );
+  return true;
+}
+
+export function resolveRaidBossEncounter(
+  context: SimSystemContext,
+  encounter: BossEncounterInstance,
+): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const packets = BuildingAuthority.activeRaidPackets[buildingEntity] ?? [];
+  const packet = packets.find((candidate) => candidate.id === encounter.activeRaidId);
+  if (!packet) {
+    return false;
+  }
+
+  packet.resolutionPacket = buildBossEncounterResolutionPacket(packet, encounter);
+  packet.returnTick = getCurrentAbsoluteMinute(context);
+  const operatorEntityById = new Map(
+    context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
+  );
+  finalizeRaidPacket(context, packet, getCurrentAbsoluteMinute(context), operatorEntityById);
+  BuildingAuthority.activeRaidPackets[buildingEntity] = packets.filter(
+    (candidate) => candidate.id !== encounter.activeRaidId,
+  );
+  return true;
 }
 
 function updateRaidPresentation(context: SimSystemContext): void {
@@ -2059,9 +2230,12 @@ export function selectTeamGoal(
   },
 ): RaidTeamGoal {
   const currentMinute = getCurrentAbsoluteMinute(context);
+  // Quantize to 15-minute epochs so goals persist for a meaningful period
+  // instead of re-rolling every single tick.
+  const goalEpoch = Math.floor(currentMinute / 15);
   const operatorKey = operatorEntities.map((entity) => OperatorIdentity.id[entity]).join("|");
   const rng = new SeededRng(
-    seedFromKey(`goal:${packet.id ?? packet.startedTick ?? 0}:${currentMinute}:${operatorKey}`),
+    seedFromKey(`goal:${packet.id ?? packet.startedTick ?? 0}:${goalEpoch}:${operatorKey}`),
   );
 
   // Compute team aggregate stats

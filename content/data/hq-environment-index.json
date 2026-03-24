@@ -230,9 +230,25 @@
       "status": "approved"
     },
     {
+      "id": "recipes/scene-the-register-2",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "register", "operations", "upgraded"],
+      "scale": "room",
+      "roomFamily": "operations",
+      "status": "approved"
+    },
+    {
       "id": "recipes/scene-the-counter",
       "category": "scene",
       "tags": ["room", "interior", "props-only", "bodega", "counter", "operations"],
+      "scale": "room",
+      "roomFamily": "operations",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-the-counter-2",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "counter", "operations", "upgraded"],
       "scale": "room",
       "roomFamily": "operations",
       "status": "approved"
@@ -246,9 +262,33 @@
       "status": "approved"
     },
     {
+      "id": "recipes/scene-the-dining-area-2",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "dining", "social", "upgraded"],
+      "scale": "room",
+      "roomFamily": "social",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-the-dining-area-3",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "dining", "social", "upgraded", "max"],
+      "scale": "room",
+      "roomFamily": "social",
+      "status": "approved"
+    },
+    {
       "id": "recipes/scene-supply-closet",
       "category": "scene",
       "tags": ["room", "interior", "props-only", "bodega", "storage", "operations"],
+      "scale": "room",
+      "roomFamily": "operations",
+      "status": "approved"
+    },
+    {
+      "id": "recipes/scene-supply-closet-2",
+      "category": "scene",
+      "tags": ["room", "interior", "props-only", "bodega", "storage", "operations", "upgraded"],
       "scale": "room",
       "roomFamily": "operations",
       "status": "approved"

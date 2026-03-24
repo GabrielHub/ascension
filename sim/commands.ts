@@ -1,6 +1,7 @@
 export const STABLE_SIM_COMMAND_TYPES = [
   "sim/tick",
   "sim/place-room",
+  "sim/set-active-floor",
   "sim/set-room-active",
   "sim/purchase-building-upgrade",
   "sim/purchase-room-upgrade",
@@ -12,6 +13,15 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/sell-item",
   "sim/auto-assign-accessory",
   "sim/unequip-item",
+  "sim/encounter-start",
+  "sim/encounter-pause",
+  "sim/encounter-resume",
+  "sim/encounter-step",
+  "sim/encounter-retreat",
+  "sim/encounter-use-intervention",
+  "sim/interruption-resolve",
+  "sim/interruption-dismiss",
+  "sim/incident-resolve",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -24,12 +34,18 @@ export type SimCommand =
   | {
       type: "sim/place-room";
       templateId: string;
+      slotId?: string;
+      floorIndex?: number;
       footprint?: {
         col?: number;
         row?: number;
         cols?: number;
         rows?: number;
       };
+    }
+  | {
+      type: "sim/set-active-floor";
+      floorIndex: number;
     }
   | {
       type: "sim/set-room-active";
@@ -81,6 +97,43 @@ export type SimCommand =
       slot: "weapon" | "outfitOverlay" | "accessory";
     }
   | {
+      type: "sim/encounter-start";
+      activeRaidId: string;
+      contractSiteId: string;
+      missionId: string;
+      teamId: string;
+      operatorIds: string[];
+      bossId: string;
+    }
+  | {
+      type: "sim/encounter-pause";
+    }
+  | {
+      type: "sim/encounter-resume";
+    }
+  | {
+      type: "sim/encounter-step";
+    }
+  | {
+      type: "sim/encounter-retreat";
+    }
+  | {
+      type: "sim/encounter-use-intervention";
+      interventionId: string;
+    }
+  | {
+      type: "sim/interruption-resolve";
+      instanceId: string;
+      choiceId?: string;
+    }
+  | {
+      type: "sim/interruption-dismiss";
+    }
+  | {
+      type: "sim/incident-resolve";
+      choiceId: string;
+    }
+  | {
       type: "sim/dev-set-resource";
       resourceId: "resource/cash" | "resource/reputation" | "resource/intel";
       amount: number;
@@ -88,6 +141,12 @@ export type SimCommand =
   | {
       type: "sim/dev-set-time";
       minuteOfDay: number;
+    }
+  | {
+      type: "sim/dev-trigger-boss-commitment";
+    }
+  | {
+      type: "sim/dev-trigger-incident";
     };
 
 export interface SimCommandQueue {

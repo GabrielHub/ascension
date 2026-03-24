@@ -1,9 +1,13 @@
 import type { TemplateRegistry } from "content/templates";
-import type { ActiveRaidSnapshot, RaidSummarySnapshot, RoomSnapshot, WorldSnapshot } from "save";
+import type { ActiveRaidSnapshot, RaidSummarySnapshot, WorldSnapshot } from "save";
+import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { Phase1RuntimeView, Phase2View } from "sim";
+import { getBuildingFloors } from "content/building-layouts";
+import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
 
 import type { VisibleGear } from "./operator-parts";
 import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
+import { getLocationLabel } from "./_glossary";
 
 // ── Callbacks ────────────────────────────────────────────────────────────
 
@@ -16,7 +20,8 @@ export interface GameCallbacks {
   rejectRecruit: (visitorId: string) => void;
   hireStaff: (roleTag: string) => void;
   assignStaff: (staffId: string, roomId?: string) => void;
-  placeRoom: (templateId: string) => void;
+  placeRoom: (templateId: string, floorIndex: number, slotId: string) => void;
+  setActiveFloor: (floorIndex: number) => void;
   buyItem: (itemId: string) => void;
   sellItem: (itemId: string, quantity: number) => void;
   autoAssignAccessory: (operatorId: string) => void;
@@ -43,11 +48,20 @@ export interface BuildingViewModel {
   name: string;
   description: string;
   tier: number;
+  activeFloorIndex: number;
+  floorCount: number;
   usedRoomSlots: number;
   totalRoomSlots: number;
   operatorSlots: number;
   unlockedRoomTemplateIds: readonly string[];
   availableBuildingUpgradeIds: readonly string[];
+}
+
+export interface RoomFootprintViewModel {
+  col: number;
+  row: number;
+  cols: number;
+  rows: number;
 }
 
 export interface RoomViewModel {
@@ -56,6 +70,9 @@ export interface RoomViewModel {
   name: string;
   description: string;
   tier: number;
+  floorIndex: number;
+  slotId: string;
+  roomStateId: string;
   capacity: number;
   occupancy: number;
   isActive: boolean;
@@ -65,11 +82,17 @@ export interface RoomViewModel {
   appliedUpgradeIds: readonly string[];
   availableUpgradeIds: readonly string[];
   tags: readonly string[];
-  footprint: RoomSnapshot["footprint"];
+  reservedFootprint: RoomFootprintViewModel;
+  activeFootprint: RoomFootprintViewModel;
 }
 
-export interface EmptySlotViewModel {
-  index: number;
+export interface ExpansionSlotViewModel {
+  id: string;
+  label: string;
+  kind: "available" | "locked";
+  floorIndex: number;
+  slotId: string;
+  footprint: RoomFootprintViewModel;
 }
 
 export interface UpgradeViewModel {
@@ -222,6 +245,8 @@ export interface VisitorViewModel {
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  presetId: string;
+  rank: string;
 }
 
 export interface RelationshipViewModel {
@@ -333,7 +358,7 @@ export interface HqViewModel {
   time: TimeViewModel;
   building: BuildingViewModel;
   rooms: readonly RoomViewModel[];
-  emptySlots: readonly EmptySlotViewModel[];
+  expansionSlots: readonly ExpansionSlotViewModel[];
   upgrades: readonly UpgradeViewModel[];
   roomUpgrades: readonly UpgradeViewModel[];
   operators: readonly OperatorViewModel[];
@@ -386,6 +411,14 @@ export interface OperationsViewModel {
 }
 
 // ── Tag formatting ──────────────────────────────────────────────────────
+
+export function visitorQualityToRank(quality: number): string {
+  if (quality >= 85) return "A";
+  if (quality >= 70) return "B";
+  if (quality >= 55) return "C";
+  if (quality >= 40) return "D";
+  return "E";
+}
 
 /** Strip a `prefix:` from a tag string and replace underscores with spaces. */
 export function formatTag(tag: string): string {
@@ -471,6 +504,74 @@ function normalizeOpportunityStatus(status: unknown): RaidOpportunityViewModel["
   return status === "expired" ? "expired" : "available";
 }
 
+function toFootprintViewModel(
+  footprint: Readonly<{ col: number; row: number; cols: number; rows: number }>,
+): RoomFootprintViewModel {
+  return {
+    col: footprint.col,
+    row: footprint.row,
+    cols: footprint.cols,
+    rows: footprint.rows,
+  };
+}
+
+function getOrderedBuildingSlots(
+  buildingId: string,
+  buildingTier: number,
+): readonly {
+  floorIndex: number;
+  slotId: string;
+  footprint: RoomFootprintViewModel;
+  floorSlotIndex: number;
+}[] {
+  return getBuildingFloors(buildingId, buildingTier).flatMap((floor) =>
+    floor.slots.map((slot, floorSlotIndex) => ({
+      floorIndex: floor.floorIndex,
+      slotId: slot.slotId,
+      footprint: toFootprintViewModel(slot),
+      floorSlotIndex,
+    })),
+  );
+}
+
+function buildExpansionSlots(
+  buildingId: string,
+  buildingTier: number,
+  activeFloorIndex: number,
+  roomSlotCount: number,
+  occupiedSlotKeys: ReadonlySet<string>,
+): ExpansionSlotViewModel[] {
+  const orderedSlots = getOrderedBuildingSlots(buildingId, buildingTier);
+  const unlockedSlotKeys = new Set(
+    orderedSlots
+      .slice(0, Math.max(roomSlotCount, occupiedSlotKeys.size))
+      .map((slot) => getSlotKey(slot.floorIndex, slot.slotId)),
+  );
+
+  return orderedSlots
+    .filter(
+      (slot) =>
+        slot.floorIndex === activeFloorIndex &&
+        !occupiedSlotKeys.has(getSlotKey(slot.floorIndex, slot.slotId)),
+    )
+    .map((slot) => {
+      const kind: ExpansionSlotViewModel["kind"] = unlockedSlotKeys.has(
+        getSlotKey(slot.floorIndex, slot.slotId),
+      )
+        ? "available"
+        : "locked";
+
+      return {
+        id: `room-slot/${slot.floorIndex}/${slot.slotId}`,
+        label: `${kind === "available" ? "Open" : "Locked"} ${formatSlotLabel(slot.slotId)}`,
+        kind,
+        floorIndex: slot.floorIndex,
+        slotId: slot.slotId,
+        footprint: slot.footprint,
+      };
+    });
+}
+
 // ── Phase1RuntimeView builders ───────────────────────────────────────────
 
 function mapUpgradeTemplate(
@@ -511,15 +612,25 @@ export function buildHqViewFromPhase1(
 ): HqViewModel {
   const buildingTemplate =
     registry.buildingById.get(view.building.activeBuildingId) ?? registry.buildings[0];
+  const activeFloorIndex = view.building.activeFloorIndex;
+  const floorCount = Math.max(
+    view.building.floorCount,
+    getBuildingFloors(buildingTemplate.id, view.building.tier).length || 1,
+  );
 
   const rooms: RoomViewModel[] = view.rooms.map((room) => {
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
+    const reservedFootprint = toFootprintViewModel(room.reservedFootprint ?? room.footprint);
+    const activeFootprint = toFootprintViewModel(room.activeFootprint ?? room.footprint);
     return {
       id: room.id,
       templateId: room.templateId,
       name: room.name,
       description: template.description ?? "",
       tier: room.tier,
+      floorIndex: room.floorIndex,
+      slotId: room.slotId,
+      roomStateId: room.roomStateId,
       capacity: room.capacity,
       occupancy: room.occupancy,
       isActive: room.isRequestedActive,
@@ -529,14 +640,20 @@ export function buildHqViewFromPhase1(
       appliedUpgradeIds: room.appliedUpgradeIds,
       availableUpgradeIds: room.availableUpgradeIds,
       tags: template.tags,
-      footprint: room.footprint,
+      reservedFootprint,
+      activeFootprint,
     };
   });
 
-  const emptySlotCount = view.building.roomSlotCount - view.building.roomsUsed;
-  const emptySlots: EmptySlotViewModel[] = Array.from(
-    { length: Math.max(0, emptySlotCount) },
-    (_, i) => ({ index: view.building.roomsUsed + i }),
+  const occupiedSlotKeys = new Set(
+    view.rooms.map((room) => getSlotKey(room.floorIndex, room.slotId)),
+  );
+  const expansionSlots = buildExpansionSlots(
+    buildingTemplate.id,
+    view.building.tier,
+    activeFloorIndex,
+    view.building.roomSlotCount,
+    occupiedSlotKeys,
   );
 
   const buildingUpgrades: UpgradeViewModel[] = buildingTemplate.upgradeIds
@@ -609,6 +726,8 @@ export function buildHqViewFromPhase1(
     patience: v.patience,
     quality: v.quality,
     expectedLoyalty: v.expectedLoyalty,
+    presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+    rank: visitorQualityToRank(v.quality),
   }));
 
   const relationships: RelationshipViewModel[] = view.relationshipSignals.map((rel) => ({
@@ -665,6 +784,8 @@ export function buildHqViewFromPhase1(
       name: buildingTemplate.name,
       description: buildingTemplate.description ?? "",
       tier: view.building.tier,
+      activeFloorIndex,
+      floorCount,
       usedRoomSlots: view.building.roomsUsed,
       totalRoomSlots: view.building.roomSlotCount,
       operatorSlots: view.building.operatorSlotCount,
@@ -672,7 +793,7 @@ export function buildHqViewFromPhase1(
       availableBuildingUpgradeIds: view.building.availableBuildingUpgradeIds,
     },
     rooms,
-    emptySlots,
+    expansionSlots,
     upgrades: buildingUpgrades,
     roomUpgrades,
     operators,
@@ -694,7 +815,7 @@ export function buildOpsViewFromPhase1(
       id: opp.id,
       missionName: resolveMissionName(opp.missionId, registry),
       missionId: opp.missionId,
-      location: opp.location,
+      location: getLocationLabel(opp.location),
       threatRank:
         opp.threat <= 30
           ? "E"
@@ -705,7 +826,7 @@ export function buildOpsViewFromPhase1(
               : opp.threat <= 85
                 ? "B"
                 : "A",
-      intelConfidence: opp.intel <= 30 ? "low" : opp.intel <= 60 ? "moderate" : "high",
+      intelConfidence: opp.intel <= 30 ? "Low" : opp.intel <= 60 ? "Moderate" : "High",
       status: normalizeOpportunityStatus(opp.status),
       interestedCount: opp.interestedCount,
       claimedCount: opp.claimedCount,
@@ -722,7 +843,7 @@ export function buildOpsViewFromPhase1(
     startedAt: raid.startedAt,
     revealProgress: raid.revealProgress,
     operatorIds: raid.operatorIds,
-    location: raid.location,
+    location: getLocationLabel(raid.location),
     threat: raid.threat,
     cohesion: raid.cohesion,
     durationHours: raid.durationHours,
@@ -749,7 +870,7 @@ export function buildOpsViewFromPhase1(
     result: summary.result,
     reputationDelta: summary.reputationDelta,
     cashDelta: summary.cashDelta,
-    location: summary.location,
+    location: getLocationLabel(summary.location),
     narrativeTags: summary.narrativeTags,
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
       operatorId: outcome.operatorId,
@@ -765,7 +886,7 @@ export function buildOpsViewFromPhase1(
     ? {
         contractSiteId: view.contractSite.contractSiteId,
         missionName: resolveMissionName(view.contractSite.missionId, registry),
-        location: view.contractSite.location,
+        location: getLocationLabel(view.contractSite.location),
         bossDefeated: view.contractSite.bossDefeated,
         contractLost: view.contractSite.contractLost,
         threat: view.contractSite.threat,
@@ -801,15 +922,25 @@ export function buildOpsViewFromPhase1(
 export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegistry): HqViewModel {
   const buildingTemplate =
     registry.buildingById.get(snapshot.building.activeBuildingId) ?? registry.buildings[0];
+  const activeFloorIndex = snapshot.building.activeFloorIndex ?? 0;
+  const floorCount = Math.max(
+    getBuildingFloors(buildingTemplate.id, snapshot.building.activeBuildingTier).length || 1,
+    1,
+  );
 
   const rooms: RoomViewModel[] = snapshot.rooms.map((room) => {
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
+    const reservedFootprint = toFootprintViewModel(room.reservedFootprint ?? room.footprint);
+    const activeFootprint = toFootprintViewModel(room.activeFootprint ?? room.footprint);
     return {
       id: room.id,
       templateId: room.templateId,
       name: template.name,
       description: template.description ?? "",
       tier: room.tier,
+      floorIndex: room.floorIndex,
+      slotId: room.slotId,
+      roomStateId: room.roomStateId,
       capacity: room.capacity,
       occupancy: room.occupancy,
       isActive: room.isActive ?? true,
@@ -819,14 +950,20 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       appliedUpgradeIds: [],
       availableUpgradeIds: [],
       tags: template.tags,
-      footprint: room.footprint,
+      reservedFootprint,
+      activeFootprint,
     };
   });
 
-  const emptySlotCount = snapshot.building.roomSlotCount - snapshot.rooms.length;
-  const emptySlots: EmptySlotViewModel[] = Array.from(
-    { length: Math.max(0, emptySlotCount) },
-    (_, i) => ({ index: snapshot.rooms.length + i }),
+  const occupiedSlotKeys = new Set(
+    snapshot.rooms.map((room) => getSlotKey(room.floorIndex, room.slotId)),
+  );
+  const expansionSlots = buildExpansionSlots(
+    buildingTemplate.id,
+    snapshot.building.activeBuildingTier,
+    activeFloorIndex,
+    snapshot.building.roomSlotCount,
+    occupiedSlotKeys,
   );
 
   const upgrades: UpgradeViewModel[] = buildingTemplate.upgradeIds
@@ -914,13 +1051,16 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
 
   const visitors: VisitorViewModel[] = (snapshot.visitors ?? []).map((v) => {
     const raw = v as Record<string, unknown>;
+    const quality = num(raw, "quality", 50);
     return {
       id: v.id,
       name: str(raw, "name", v.id.split("/").pop() ?? "Visitor"),
       desiredRoleTag: str(raw, "desiredRoleTag", "unknown"),
       patience: num(raw, "patience", 10),
-      quality: num(raw, "quality", 50),
+      quality,
       expectedLoyalty: num(raw, "expectedLoyalty", 50),
+      presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+      rank: visitorQualityToRank(quality),
     };
   });
 
@@ -958,14 +1098,16 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       name: buildingTemplate.name,
       description: buildingTemplate.description ?? "",
       tier: snapshot.building.activeBuildingTier,
-      usedRoomSlots: snapshot.rooms.length,
+      activeFloorIndex,
+      floorCount,
+      usedRoomSlots: snapshot.rooms.filter((room) => room.floorIndex === activeFloorIndex).length,
       totalRoomSlots: snapshot.building.roomSlotCount,
       operatorSlots: snapshot.building.operatorSlotCount,
       unlockedRoomTemplateIds: [],
       availableBuildingUpgradeIds: [],
     },
     rooms,
-    emptySlots,
+    expansionSlots,
     upgrades,
     roomUpgrades: [],
     operators,
@@ -1030,9 +1172,10 @@ export function buildOperationsViewModel(
         id: typeof opp["id"] === "string" ? opp["id"] : `opp-${index}`,
         missionName: resolveMissionName(opp.missionId, registry),
         missionId: opp.missionId,
-        location: typeof opp.location === "string" ? opp.location : "Unknown sector",
+        location:
+          typeof opp.location === "string" ? getLocationLabel(opp.location) : "Unknown Sector",
         threatRank: typeof opp.threat === "string" ? opp.threat : "E",
-        intelConfidence: typeof opp.intel === "string" ? opp.intel : "low",
+        intelConfidence: typeof opp.intel === "string" ? opp.intel : "Low",
         status: normalizeOpportunityStatus(opp.status),
         interestedCount: opp.interestedOperatorIds?.length ?? 0,
         claimedCount: opp.claimedOperatorIds?.length ?? 0,

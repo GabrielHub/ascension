@@ -1,7 +1,7 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 10;
+export const CURRENT_SAVE_SCHEMA_VERSION = 12;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -25,6 +25,7 @@ export interface WorldTimeSnapshot {
 export interface BuildingSnapshot {
   activeBuildingId: string;
   activeBuildingTier: number;
+  activeFloorIndex: number;
   roomSlotCount: number;
   operatorSlotCount: number;
 }
@@ -40,11 +41,16 @@ export interface RoomSnapshot {
   id: string;
   templateId: string;
   tier: number;
+  floorIndex: number;
+  slotId: string;
+  roomStateId: string;
   capacity: number;
   occupancy: number;
   isActive?: boolean;
   appliedUpgradeIds?: string[];
-  footprint: RoomFootprintSnapshot;
+  reservedFootprint: RoomFootprintSnapshot;
+  activeFootprint: RoomFootprintSnapshot;
+  footprint?: RoomFootprintSnapshot;
 }
 
 export type SaveStructuredRecord = Record<string, unknown>;
@@ -275,6 +281,9 @@ export interface WorldSnapshot {
   roomCultures?: RoomCultureSnapshot[];
   inventoryStacks?: InventoryStackSnapshot[];
   equipmentAssignments?: EquipmentAssignmentSnapshot[];
+  activeEncounter?: SaveStructuredRecord | null;
+  interruptionQueue?: SaveStructuredRecord | null;
+  incidentState?: SaveStructuredRecord | null;
 }
 
 export interface PersistedSaveGame {

@@ -1,3 +1,4 @@
+import { RAID_TIPS } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
@@ -50,15 +51,15 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
       {!isEnded && (
         <div className="mt-3 flex items-center gap-4 text-xs">
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.threat}>
             <span className="text-gold/70">Threat</span>
             <span className="tabular-nums text-silver-bright">{contract.threat}</span>
           </div>
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.intel}>
             <span className="text-gold/70">Intel</span>
             <span className="tabular-nums text-silver-bright">{contract.intel}</span>
           </div>
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.reward}>
             <span className="text-gold/70">Reward</span>
             <span className="tabular-nums text-silver-bright">{Math.round(contract.reward)}</span>
           </div>

@@ -7,6 +7,7 @@ import type {
 import { formatCultureLabel, formatTag } from "./view-models";
 import { Tooltip } from "./_tooltip";
 import { getTagTip, getToneTip, getSignalTip } from "./_glossary";
+import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
 
 interface RoomDetailPanelProps {
   room: RoomViewModel | null;
@@ -79,6 +80,15 @@ function UpgradeCard({
   );
 }
 
+function formatFootprintLabel(footprint: {
+  col: number;
+  row: number;
+  cols: number;
+  rows: number;
+}): string {
+  return `${footprint.cols}x${footprint.rows} @ ${footprint.col},${footprint.row}`;
+}
+
 export function RoomDetailPanel({
   room,
   buildingUpgrades,
@@ -115,6 +125,19 @@ export function RoomDetailPanel({
             )}
           </div>
           <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5 text-[0.625rem] text-silver/60">
+            <span className="badge badge-slate">{getRoomStateLabel(room.roomStateId)}</span>
+            <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
+            <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
+            <Tooltip
+              content={`Reserved ${formatFootprintLabel(room.reservedFootprint)}; active ${formatFootprintLabel(room.activeFootprint)}`}
+            >
+              <span className="badge badge-slate">
+                {room.reservedFootprint.cols}x{room.reservedFootprint.rows} /{" "}
+                {room.activeFootprint.cols}x{room.activeFootprint.rows}
+              </span>
+            </Tooltip>
+          </div>
         </div>
         <button
           type="button"
@@ -176,7 +199,7 @@ export function RoomDetailPanel({
           <div className="flex flex-wrap gap-1">
             {room.tags.map((tag) => (
               <Tooltip key={tag} content={getTagTip(tag)}>
-                <span className="badge badge-slate">{tag.split(":").pop()}</span>
+                <span className="badge badge-slate">{formatTag(tag)}</span>
               </Tooltip>
             ))}
           </div>

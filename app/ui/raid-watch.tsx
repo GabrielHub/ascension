@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 
+import { OPERATOR_TIPS, RAID_TIPS, getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
 import type { ActiveRaidViewModel, OperatorViewModel } from "./view-models";
-import { formatTag } from "./view-models";
 
 interface RaidWatchProps {
   activeRaids: readonly ActiveRaidViewModel[];
@@ -80,9 +80,11 @@ function ActiveRaidCard({
 
       <div className="mt-2 flex items-center gap-3 text-xs text-gold/70">
         {raid.operatorIds.length > 0 && <span>{raid.operatorIds.length} operators deployed</span>}
-        {raid.threat > 0 && <span>Threat {raid.threat}</span>}
-        {raid.cohesion > 0 && <span>Cohesion {Math.round(raid.cohesion)}</span>}
-        {raid.durationHours > 0 && <span>{raid.durationHours}h</span>}
+        {raid.threat > 0 && <span title={RAID_TIPS.threat}>Threat {raid.threat}</span>}
+        {raid.cohesion > 0 && (
+          <span title={RAID_TIPS.cohesion}>Cohesion {Math.round(raid.cohesion)}</span>
+        )}
+        {raid.durationHours > 0 && <span title={RAID_TIPS.duration}>{raid.durationHours}h</span>}
         {casualtyCount > 0 && (
           <span className="text-magma">
             {casualtyCount} {casualtyCount === 1 ? "casualty" : "casualties"}
@@ -99,7 +101,7 @@ function ActiveRaidCard({
         </div>
       )}
 
-      <div className="mt-3">
+      <div className="mt-3" title={RAID_TIPS.revealProgress}>
         <div className="flex items-center justify-between text-xs">
           <span className="uppercase tracking-wider text-gold/70">Reveal Progress</span>
           <span className="tabular-nums text-ember">{Math.round(progressPct)}%</span>
@@ -145,10 +147,23 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
           >
             {op.name}
           </span>
-          <span className="text-[0.6875rem] text-gold/70">{formatTag(op.roleTag)}</span>
-          {op.specialtyTag && (
-            <span className="text-[0.6875rem] text-silver/60">{op.specialtyTag}</span>
-          )}
+          {(() => {
+            const role = getRoleMeta(op.roleTag);
+            return (
+              <span className="text-[0.6875rem] text-gold/70" title={role.tip}>
+                {role.label}
+              </span>
+            );
+          })()}
+          {op.specialtyTag &&
+            (() => {
+              const spec = getSpecialtyMeta(op.specialtyTag);
+              return (
+                <span className="text-[0.6875rem] text-silver/60" title={spec.tip}>
+                  {spec.label}
+                </span>
+              );
+            })()}
           {isDead && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
           {!isDead && op.injurySeverity > 0 && (
             <span className="text-[0.6875rem] text-ember">Injured</span>
@@ -157,7 +172,7 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
 
         {!isDead && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.6875rem]">
-            <span className="text-silver/60">
+            <span className="text-silver/60" title={OPERATOR_TIPS.morale}>
               Morale{" "}
               <span
                 className={`tabular-nums ${op.moraleCurrent < 30 ? "text-ember" : "text-silver/80"}`}
@@ -165,7 +180,7 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
                 {op.moraleCurrent}
               </span>
             </span>
-            <span className="text-silver/60">
+            <span className="text-silver/60" title={OPERATOR_TIPS.loyalty}>
               Loyalty{" "}
               <span
                 className={`tabular-nums ${op.loyaltyCurrent < 30 ? "text-ember" : "text-silver/80"}`}
@@ -173,11 +188,19 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
                 {op.loyaltyCurrent}
               </span>
             </span>
-            <span className="text-silver/60">
+            <span className="text-silver/60" title={OPERATOR_TIPS.readiness}>
               Readiness <span className="tabular-nums text-silver/80">{op.readinessScore}</span>
             </span>
-            {op.needFatigue > 40 && <span className="text-ember">Fatigue {op.needFatigue}</span>}
-            {op.needStress > 40 && <span className="text-ember">Stress {op.needStress}</span>}
+            {op.needFatigue > 40 && (
+              <span className="text-ember" title={OPERATOR_TIPS.fatigue}>
+                Fatigue {op.needFatigue}
+              </span>
+            )}
+            {op.needStress > 40 && (
+              <span className="text-ember" title={OPERATOR_TIPS.stress}>
+                Stress {op.needStress}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -201,10 +224,14 @@ function RaidTeamInspection({
   const livingCount = deployedOps.filter((op) => op.lifecycle.status === "active").length;
   const casualtyCount = deployedOps.length - livingCount;
 
-  const roleBreakdown = new Map<string, number>();
+  const roleBreakdown = new Map<string, { count: number; tip: string }>();
   for (const op of deployedOps) {
-    const role = formatTag(op.roleTag);
-    roleBreakdown.set(role, (roleBreakdown.get(role) ?? 0) + 1);
+    const meta = getRoleMeta(op.roleTag);
+    const existing = roleBreakdown.get(meta.label);
+    roleBreakdown.set(meta.label, {
+      count: (existing?.count ?? 0) + 1,
+      tip: meta.tip,
+    });
   }
 
   return (
@@ -223,25 +250,25 @@ function RaidTeamInspection({
       {/* Team summary */}
       <div className="flex flex-wrap gap-3 text-xs">
         {raid.threat > 0 && (
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.threat}>
             <span className="text-gold/70">Threat</span>
             <span className="tabular-nums text-silver-bright">{raid.threat}</span>
           </div>
         )}
         {raid.cohesion > 0 && (
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.cohesion}>
             <span className="text-gold/70">Cohesion</span>
             <span className="tabular-nums text-silver-bright">{Math.round(raid.cohesion)}</span>
           </div>
         )}
         {raid.durationHours > 0 && (
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1" title={RAID_TIPS.duration}>
             <span className="text-gold/70">Duration</span>
             <span className="tabular-nums text-silver-bright">{raid.durationHours}h</span>
           </div>
         )}
-        {Array.from(roleBreakdown.entries()).map(([role, count]) => (
-          <div key={role} className="flex items-baseline gap-1">
+        {Array.from(roleBreakdown.entries()).map(([role, { count, tip }]) => (
+          <div key={role} className="flex items-baseline gap-1" title={tip}>
             <span className="text-gold/70">{role}</span>
             <span className="tabular-nums text-silver-bright">{count}</span>
           </div>

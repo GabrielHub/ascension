@@ -31,7 +31,7 @@ export function RaidMapOverlay({ snapshot }: RaidMapOverlayProps) {
   return (
     <div className="pointer-events-none absolute right-4 top-20 flex flex-col items-end gap-2">
       {/* Dungeon info chip */}
-      <div className="pointer-events-auto animate-enter rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.75)] px-3 py-2 backdrop-blur-xl">
+      <div className="glass-card pointer-events-auto animate-enter px-3 py-2">
         <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
           {snapshot.dungeonName}
         </p>
@@ -39,7 +39,7 @@ export function RaidMapOverlay({ snapshot }: RaidMapOverlayProps) {
       </div>
 
       {/* Discovery progress */}
-      <div className="pointer-events-auto animate-enter-delay-1 rounded-lg border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.6)] px-3 py-2 backdrop-blur-md">
+      <div className="glass-card pointer-events-auto animate-enter-delay-1 px-3 py-2">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[0.6875rem] uppercase tracking-[0.12em] text-silver/50">
             Explored
@@ -57,7 +57,7 @@ export function RaidMapOverlay({ snapshot }: RaidMapOverlayProps) {
       </div>
 
       {/* Team count */}
-      <div className="pointer-events-auto animate-enter-delay-1 rounded-lg border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.6)] px-3 py-2 backdrop-blur-md">
+      <div className="glass-card pointer-events-auto animate-enter-delay-1 px-3 py-2">
         <div className="flex items-center gap-2">
           <div className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_4px_rgba(200,168,76,0.4)]" />
           <span className="text-[0.6875rem] text-silver/60">

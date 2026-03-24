@@ -2,10 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { createAudioEngine, type AudioEngine, type AudioEngineState } from "app/features/audio";
-import { parseRuntimeRouteRequest, useRuntimeSession } from "app/features/runtime";
+import { useGameSettings } from "app/features/settings";
+import {
+  parseRuntimeRouteRequest,
+  useRuntimeSession,
+  type RuntimeSession,
+} from "app/features/runtime";
+import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
 import { HqWorldCanvas } from "render";
 import type {
   FocusPayload,
+  HqDebugOverlays,
   HqWorldSnapshot,
   RaidWorldSnapshot,
   WorldEffectsSnapshot,
@@ -21,8 +28,11 @@ import { OperationsPanel } from "./raid-panel";
 import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
 import { RaidWorldView } from "./raid-world-view";
 import { RosterPanel } from "./roster-panel";
+import { SettingsModal } from "./settings-modal";
 import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
+import { InterruptionHost } from "./interruption-host";
+import { EncounterSurface } from "./encounter-surface";
 import {
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
@@ -32,6 +42,7 @@ import {
   buildRoomCultureViewModels,
   buildTeamViewModels,
   enrichOperatorsWithAutonomy,
+  formatCultureLabel,
   formatTag,
 } from "./view-models";
 import type {
@@ -42,6 +53,7 @@ import type {
   OperatorViewModel,
   RoomCultureViewModel,
   TeamViewModel,
+  VisitorViewModel,
 } from "./view-models";
 
 /** Build context-aware world effects with focus dimming. */
@@ -54,11 +66,11 @@ function buildContextEffects(
     ...base,
     ambientTint: context === "raid" ? "rgba(26, 36, 64, 0.06)" : "rgba(200, 168, 76, 0.03)",
     focusDimAlpha: hasFocus ? 0.35 : 0,
-    focusTargetId: base.focusTargetId,
   };
 }
 
 type ShellTab = "hq" | "operations";
+type ActiveGameModal = "settings" | null;
 
 const TAB_LABELS: Record<ShellTab, string> = {
   hq: "Headquarters",
@@ -69,6 +81,41 @@ const TAB_ORDER: readonly ShellTab[] = ["hq", "operations"];
 
 // Manual advancement stays aligned with the simulation's hour-based tick contract.
 const TICK_HOUR_MS = 60 * 60 * 1000;
+
+export async function resolveInterruptionAction(
+  session: Pick<RuntimeSession, "commands">,
+  activeInterruption: RuntimeSession["phase1View"]["activeInterruption"],
+  instanceId: string,
+  choiceId: string | undefined,
+  isDevMode: boolean,
+): Promise<void> {
+  if (
+    activeInterruption?.type === "raid_boss_commitment" &&
+    activeInterruption.payload.kind === "raid_boss_commitment" &&
+    choiceId === "commit"
+  ) {
+    const payload = activeInterruption.payload;
+    const startPausedForDebug = isDevMode && activeInterruption.sourceSystem === "dev-menu";
+
+    await session.commands.dispatch({ type: "sim/interruption-resolve", instanceId, choiceId });
+    await session.commands.dispatch({
+      type: "sim/encounter-start",
+      activeRaidId: payload.activeRaidId,
+      contractSiteId: payload.contractSiteId,
+      missionId: payload.missionId,
+      teamId: payload.teamId,
+      operatorIds: [...payload.operatorIds],
+      bossId: payload.bossId,
+    });
+
+    if (startPausedForDebug) {
+      await session.commands.dispatch({ type: "sim/encounter-pause" });
+    }
+    return;
+  }
+
+  await session.commands.dispatch({ type: "sim/interruption-resolve", instanceId, choiceId });
+}
 
 // ── Category definitions ─────────────────────────────────────────────────
 
@@ -210,7 +257,7 @@ function FocusedOperatorOverlay({
   onDismiss: () => void;
 }) {
   return (
-    <div className="pointer-events-auto animate-enter absolute bottom-20 right-4 z-20 w-72 rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.85)] p-4 shadow-xl backdrop-blur-xl lg:right-[17rem]">
+    <div className="glass-card pointer-events-auto animate-enter w-72 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <OperatorPortrait
@@ -231,8 +278,13 @@ function FocusedOperatorOverlay({
             )}
           </div>
         </div>
-        <button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={onDismiss}>
-          close
+        <button
+          type="button"
+          className="btn-ghost shrink-0 px-1.5 py-1 text-sm leading-none text-silver/50 hover:text-gold"
+          onClick={onDismiss}
+          aria-label="Close"
+        >
+          &times;
         </button>
       </div>
 
@@ -305,6 +357,142 @@ function FocusedOperatorOverlay({
   );
 }
 
+// ── Visitor recruitment card ──────────────────────────────────────────────
+
+function FocusedVisitorOverlay({
+  visitor,
+  rosterFull,
+  onRecruit,
+  onDismissVisitor,
+  onClose,
+}: {
+  visitor: VisitorViewModel;
+  rosterFull: boolean;
+  onRecruit: () => void;
+  onDismissVisitor: () => void;
+  onClose: () => void;
+}) {
+  const patienceMinutes = Math.max(0, Math.ceil(visitor.patience));
+  const patienceHours = Math.floor(patienceMinutes / 60);
+  const patienceRemainder = patienceMinutes % 60;
+  const patienceDisplay =
+    patienceHours > 0 ? `${patienceHours}h ${patienceRemainder}m` : `${patienceRemainder}m`;
+  const patienceFraction = Math.max(0, Math.min(1, visitor.patience / 120));
+  const patienceUrgent = patienceFraction <= 0.25;
+
+  const estimatedMorale = Math.round(Math.min(80, Math.max(40, 52 + visitor.quality * 0.2)));
+  const estimatedLoyalty = Math.round(Math.min(85, Math.max(35, visitor.expectedLoyalty)));
+
+  return (
+    <div className="glass-card pointer-events-auto animate-enter w-72 border-[rgba(232,170,60,0.1)] p-4">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <OperatorPortrait
+            name={visitor.name}
+            roleTag={visitor.desiredRoleTag}
+            presetId={visitor.presetId}
+            size="detail"
+          />
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-medium text-silver-bright">{visitor.name}</h3>
+            <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.8)]">
+              {formatTag(visitor.desiredRoleTag)}
+            </p>
+            <span className="badge mt-1 border-[rgba(232,170,60,0.2)] bg-[rgba(232,170,60,0.1)] text-[0.625rem] text-[rgba(232,170,60,0.9)]">
+              Rank {visitor.rank}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="btn-ghost shrink-0 px-1.5 py-1 text-sm leading-none text-silver/50 hover:text-gold"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Visiting timer */}
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-[0.6875rem]">
+          <span className="uppercase tracking-[0.12em] text-silver/50">Visiting</span>
+          <span
+            className={patienceUrgent ? "tabular-nums text-ember" : "tabular-nums text-silver/60"}
+          >
+            {patienceDisplay} remaining
+          </span>
+        </div>
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
+          <div
+            className="h-full rounded-full transition-[width] duration-500"
+            style={{
+              width: `${patienceFraction * 100}%`,
+              background: patienceUrgent
+                ? "linear-gradient(90deg, #d4541e, #b42c1a)"
+                : "linear-gradient(90deg, rgba(232, 170, 60, 0.7), rgba(200, 168, 76, 0.5))",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Projected stats */}
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <Tooltip content="Projected starting morale if recruited">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-[rgba(232,170,60,0.6)]">Morale</p>
+            <p className="mt-1 tabular-nums text-silver-bright">{estimatedMorale}</p>
+          </div>
+        </Tooltip>
+        <Tooltip content="Projected starting loyalty if recruited">
+          <div className="glass-card-inset p-2">
+            <p className="uppercase tracking-[0.12em] text-[rgba(232,170,60,0.6)]">Loyalty</p>
+            <p className="mt-1 tabular-nums text-silver-bright">{estimatedLoyalty}</p>
+          </div>
+        </Tooltip>
+      </div>
+
+      {/* Quality indicator */}
+      <div className="mt-2 flex items-center gap-2 text-[0.6875rem] text-silver/50">
+        <Tooltip
+          content="Quality reflects raw potential — higher quality produces better starting stats"
+          side="top"
+        >
+          <span>Quality {Math.round(visitor.quality)}</span>
+        </Tooltip>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-4 flex gap-2">
+        <Tooltip
+          content={
+            rosterFull ? "Roster is full — no open operator slots" : "Add to your operator roster"
+          }
+        >
+          <button
+            type="button"
+            className="btn-primary flex-1"
+            disabled={rosterFull}
+            onClick={onRecruit}
+          >
+            Recruit
+          </button>
+        </Tooltip>
+        <Tooltip content="Turn away this visitor (-1 reputation)">
+          <button
+            type="button"
+            className="btn-ghost text-silver/50 hover:text-ember"
+            onClick={onDismissVisitor}
+          >
+            Pass
+          </button>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
+
 // ── Teams card (for HQ teams category) ───────────────────────────────────
 
 function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
@@ -327,12 +515,21 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
               {team.memberNames.join(", ")}
             </span>
             {team.damaged && (
-              <Tooltip content={team.damageReason || "Team cohesion has been damaged"} side="top">
+              <Tooltip
+                content={
+                  team.damageReason
+                    ? formatCultureLabel(team.damageReason)
+                    : "Team cohesion has been damaged"
+                }
+                side="top"
+              >
                 <span className="badge badge-ember">Damaged</span>
               </Tooltip>
             )}
           </div>
-          <div className="mt-1 text-[0.6875rem] text-silver/60">{team.statusSummary}</div>
+          <div className="mt-1 text-[0.6875rem] text-silver/60">
+            {formatCultureLabel(team.statusSummary)}
+          </div>
           {team.explanationReasons.slice(0, 2).map((reason) => (
             <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
               {reason}
@@ -346,7 +543,7 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
               <span>{team.raidCount} raids</span>
             </Tooltip>
             {team.damaged && team.damageReason && (
-              <span className="text-ember">{team.damageReason}</span>
+              <span className="text-ember">{formatCultureLabel(team.damageReason)}</span>
             )}
           </div>
         </div>
@@ -361,13 +558,32 @@ export function GameShell() {
   const location = useLocation();
   const request = parseRuntimeRouteRequest(location.search);
   const { status, session, errorMessage } = useRuntimeSession(request);
+  const { settings, updateSettings, resetSettings } = useGameSettings();
   const [activeTab, setActiveTab] = useState<ShellTab>("hq");
   const [hqCategory, setHqCategory] = useState<HqCategory | null>("rooms");
   const [opsCategory, setOpsCategory] = useState<OpsCategory | null>("contract");
+  const [activeModal, setActiveModal] = useState<ActiveGameModal>(null);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
+  const [debugOverlays, setDebugOverlays] = useState<HqDebugOverlays>({});
   const [focus, setFocus] = useState<FocusPayload | null>(null);
   const [audioState, setAudioState] = useState<AudioEngineState>("suspended");
   const audioEngineRef = useRef<AudioEngine | null>(null);
+  const activeInterruption = session?.phase1View.activeInterruption ?? null;
+  const activeEncounter = session?.phase1View.encounter ?? null;
+  const runtimeOverlayActive =
+    activeEncounter !== null ||
+    (activeInterruption !== null && activeInterruption.type !== "settings");
+  const blockingRuntimeFreeze =
+    activeEncounter !== null || activeInterruption?.blockingMode === "blocking";
+  const modalFreezesGame = activeModal !== null;
+  const shouldPauseSimulation = modalFreezesGame || blockingRuntimeFreeze;
+  const wakeLock = useScreenWakeLock(
+    settings.wakeLockEnabled &&
+      status === "ready" &&
+      session !== undefined &&
+      session.isAutoTicking &&
+      !shouldPauseSimulation,
+  );
 
   const prevTabRef = useRef<ShellTab>(activeTab);
   useEffect(() => {
@@ -387,6 +603,7 @@ export function GameShell() {
     if (!import.meta.env.DEV) return;
 
     function onKeyDown(e: KeyboardEvent) {
+      if (activeModal !== null || runtimeOverlayActive) return;
       if (e.key !== "`") return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
@@ -396,7 +613,15 @@ export function GameShell() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [activeModal, runtimeOverlayActive]);
+
+  useEffect(() => {
+    if (!devMenuOpen || !runtimeOverlayActive) {
+      return;
+    }
+
+    setDevMenuOpen(false);
+  }, [devMenuOpen, runtimeOverlayActive]);
 
   useEffect(() => {
     const engine = createAudioEngine();
@@ -415,6 +640,16 @@ export function GameShell() {
       audioEngineRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const engine = audioEngineRef.current;
+    if (!engine) {
+      return;
+    }
+
+    engine.setSfxVolume(settings.audio.sfxVolumeDb);
+    engine.setMusicVolume(settings.audio.musicVolumeDb);
+  }, [settings.audio.musicVolumeDb, settings.audio.sfxVolumeDb]);
 
   useEffect(() => {
     const engine = audioEngineRef.current;
@@ -442,6 +677,65 @@ export function GameShell() {
     return () => engine.stopMusic();
   }, [audioState]);
 
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    if (shouldPauseSimulation) {
+      session.lifecycle.pause("screen-overlay");
+    } else {
+      session.lifecycle.resume("screen-overlay");
+    }
+
+    return () => {
+      session.lifecycle.resume("screen-overlay");
+    };
+  }, [session, shouldPauseSimulation]);
+
+  const openSettingsModal = useCallback(() => {
+    setFocus(null);
+    setDevMenuOpen(false);
+    setActiveModal("settings");
+  }, []);
+
+  const closeActiveModal = useCallback(() => {
+    setActiveModal(null);
+  }, []);
+
+  const handleSfxVolumeChange = useCallback(
+    (sfxVolumeDb: number) => {
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        audio: {
+          ...currentSettings.audio,
+          sfxVolumeDb,
+        },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const handleMusicVolumeChange = useCallback(
+    (musicVolumeDb: number) => {
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        audio: {
+          ...currentSettings.audio,
+          musicVolumeDb,
+        },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const toggleWakeLock = useCallback(() => {
+    updateSettings((currentSettings) => ({
+      ...currentSettings,
+      wakeLockEnabled: !currentSettings.wakeLockEnabled,
+    }));
+  }, [updateSettings]);
+
   const callbacks: GameCallbacks | null = session
     ? {
         tick: (deltaMs: number) => {
@@ -468,8 +762,11 @@ export function GameShell() {
         assignStaff: (staffId: string, roomId?: string) => {
           void session.commands.assignStaff({ staffId, roomId });
         },
-        placeRoom: (templateId: string) => {
-          void session.commands.placeRoom({ templateId });
+        placeRoom: (templateId: string, floorIndex: number, slotId: string) => {
+          void session.commands.placeRoom({ templateId, floorIndex, slotId });
+        },
+        setActiveFloor: (floorIndex: number) => {
+          void session.commands.setActiveFloor({ floorIndex });
         },
         buyItem: (itemId: string) => {
           void session.commands.buyItem({ itemId });
@@ -489,6 +786,83 @@ export function GameShell() {
   const advanceHour = useCallback(() => {
     callbacks?.tick(TICK_HOUR_MS);
   }, [callbacks]);
+
+  // ── Encounter & interruption handlers ──────────────────────────────────
+  const handleInterruptionResolve = useCallback(
+    (instanceId: string, choiceId?: string) => {
+      if (!session) return;
+
+      void resolveInterruptionAction(
+        session,
+        activeInterruption,
+        instanceId,
+        choiceId,
+        import.meta.env.DEV,
+      );
+    },
+    [activeInterruption, session],
+  );
+
+  const handleInterruptionDismiss = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/interruption-dismiss" });
+  }, [session]);
+
+  const handleEncounterPause = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/encounter-pause" });
+  }, [session]);
+
+  const handleEncounterResume = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/encounter-resume" });
+  }, [session]);
+
+  const handleEncounterStep = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/encounter-step" });
+  }, [session]);
+
+  const handleEncounterRetreat = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/encounter-retreat" });
+  }, [session]);
+
+  const handleEncounterIntervention = useCallback(
+    (interventionId: string) => {
+      if (!session) return;
+      void session.commands.dispatch({
+        type: "sim/encounter-use-intervention",
+        interventionId: interventionId as import("sim/systems/encounter-types").InterventionId,
+      });
+    },
+    [session],
+  );
+
+  // Derive stable primitives for encounter state to avoid re-render loops
+  const encounterStatus = session?.phase1View.encounter?.status ?? null;
+  const encounterAutoplay = session?.phase1View.encounter?.autoplayEnabled ?? false;
+
+  // Encounter autoplay: advance rounds automatically when active.
+  const encounterAutoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (encounterAutoplayRef.current) {
+      clearInterval(encounterAutoplayRef.current);
+      encounterAutoplayRef.current = null;
+    }
+    if (!session || encounterStatus !== "active" || !encounterAutoplay) return;
+
+    encounterAutoplayRef.current = setInterval(() => {
+      void session.commands.dispatch({ type: "sim/encounter-step" });
+    }, 800);
+
+    return () => {
+      if (encounterAutoplayRef.current) {
+        clearInterval(encounterAutoplayRef.current);
+        encounterAutoplayRef.current = null;
+      }
+    };
+  }, [session, encounterStatus, encounterAutoplay]);
 
   const phase1View = session?.state.phase1View ?? null;
   const registry = session?.registry ?? null;
@@ -574,9 +948,21 @@ export function GameShell() {
     [rawRaidWorld, focus],
   );
 
-  const handleFocusChange = useCallback((newFocus: FocusPayload | null) => {
-    setFocus(newFocus);
-  }, []);
+  const handleFocusChange = useCallback(
+    (newFocus: FocusPayload | null) => {
+      setFocus(newFocus);
+      if (newFocus?.targetKind === "room" && hq) {
+        setHqCategory("rooms");
+        const room = hq.rooms.find((r) => r.id === newFocus.targetId);
+        if (room && room.floorIndex !== hq.building.activeFloorIndex) {
+          callbacks.setActiveFloor(room.floorIndex);
+        }
+      } else if (newFocus?.targetKind === "operator" || newFocus?.targetKind === "staff") {
+        setHqCategory("roster");
+      }
+    },
+    [hq, callbacks],
+  );
 
   const navActions = useMemo(() => ({ setActiveTab, setHqCategory, setOpsCategory, setFocus }), []);
   const handleEventLogClick = useCallback(
@@ -626,13 +1012,21 @@ export function GameShell() {
     activeTab === "hq" && focus?.targetKind === "operator"
       ? (hq.operators.find((operator) => operator.id === focus.targetId) ?? null)
       : null;
+  const focusedVisitor =
+    activeTab === "hq" && focus?.targetKind === "visitor"
+      ? (hq.visitors.find((v) => v.id === focus.targetId) ?? null)
+      : null;
   const focusedRaidTeam =
     activeTab === "operations" && focus?.targetKind === "team"
       ? (raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null)
       : null;
 
   const focusedOperatorId =
-    focus?.targetKind === "operator" || focus?.targetKind === "staff" ? focus.targetId : null;
+    focus?.targetKind === "operator" ||
+    focus?.targetKind === "staff" ||
+    focus?.targetKind === "visitor"
+      ? focus.targetId
+      : null;
   const persistenceTimestamp = formatPersistenceTimestamp(session.persistence.lastSavedAt);
   const persistenceLabel =
     session.isPreview || !session.isSaveBacked
@@ -660,16 +1054,13 @@ export function GameShell() {
             snapshot={hqWorldSnapshot}
             focus={focus}
             onFocusChange={handleFocusChange}
+            debugOverlays={debugOverlays}
           />
         )}
       </div>
 
       {/* ── UI overlays (absolutely positioned over the canvas) ── */}
       <div className="pointer-events-none absolute inset-0 z-10">
-        {focusedOperator && (
-          <FocusedOperatorOverlay operator={focusedOperator} onDismiss={() => setFocus(null)} />
-        )}
-
         {/* ── Command bar (top edge) ──────────────────────────── */}
         <header className="pointer-events-auto animate-enter absolute left-0 right-0 top-0 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.55)] backdrop-blur-2xl">
           <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-2.5">
@@ -679,9 +1070,32 @@ export function GameShell() {
               <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright">
                 {hq.building.name}
               </h1>
-              <Tooltip content="Building tier — determines room slots and upgrade access">
+              <Tooltip content="Building tier - determines room slots and upgrade access">
                 <span className="badge badge-gold">T{hq.building.tier}</span>
               </Tooltip>
+              {hq.building.floorCount > 1 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-[0.625rem] uppercase tracking-[0.15em] text-gold/60">
+                    Floor
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => (
+                      <button
+                        key={floorIndex}
+                        type="button"
+                        className={`rounded-full border px-2 py-1 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
+                          hq.building.activeFloorIndex === floorIndex
+                            ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
+                            : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
+                        }`}
+                        onClick={() => callbacks.setActiveFloor(floorIndex)}
+                      >
+                        {floorIndex + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Separator */}
@@ -774,6 +1188,9 @@ export function GameShell() {
                 )}
               </div>
 
+              <button type="button" className="btn-ghost text-xs" onClick={openSettingsModal}>
+                settings
+              </button>
               <Link to="/" className="btn-ghost text-xs">
                 exit
               </Link>
@@ -871,89 +1288,142 @@ export function GameShell() {
                 <p className="text-xs text-silver/40">No active contract site</p>
               </div>
             )}
-
-            {focusedRaidTeam && focus && (
-              <div className="pointer-events-none absolute inset-0 z-30">
-                <RaidFocusFrame
-                  team={focusedRaidTeam}
-                  getOperatorName={(id) =>
-                    hq.operators.find((operator) => operator.id === id)?.name ?? null
-                  }
-                  operatorStatuses={focusedRaidOperatorStatuses}
-                  encounter={focusedRaidState?.encounter ?? null}
-                  onDismiss={() => setFocus(null)}
-                />
-                <div className="glass-panel pointer-events-auto animate-enter absolute bottom-20 right-4 z-20 w-80 rounded-xl p-4 shadow-xl lg:right-[19rem]">
-                  <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* ── Event log (chatbox overlay) ── */}
-        <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
+        {/* ── Right column: event log + focus panels ── */}
+        <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
+          <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
+
+          {focusedOperator && (
+            <FocusedOperatorOverlay operator={focusedOperator} onDismiss={() => setFocus(null)} />
+          )}
+
+          {focusedVisitor && (
+            <FocusedVisitorOverlay
+              visitor={focusedVisitor}
+              rosterFull={hq.rosterPressure.vacancyCount <= 0}
+              onRecruit={() => {
+                callbacks.acceptRecruit(focusedVisitor.id);
+                setFocus(null);
+              }}
+              onDismissVisitor={() => {
+                callbacks.rejectRecruit(focusedVisitor.id);
+                setFocus(null);
+              }}
+              onClose={() => setFocus(null)}
+            />
+          )}
+
+          {focusedRaidTeam && focus && (
+            <>
+              <RaidFocusFrame
+                team={focusedRaidTeam}
+                getOperatorName={(id) =>
+                  hq.operators.find((operator) => operator.id === id)?.name ?? null
+                }
+                operatorStatuses={focusedRaidOperatorStatuses}
+                encounter={focusedRaidState?.encounter ?? null}
+                onDismiss={() => setFocus(null)}
+              />
+              <div className="glass-panel pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl">
+                <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
+              </div>
+            </>
+          )}
+        </div>
 
         {/* ── Bottom panel (slides up when category selected) ── */}
         {((activeTab === "hq" && hqCategory !== null) ||
           (activeTab === "operations" && opsCategory !== null)) && (
-          <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 pr-[22rem] shadow-[0_-8px_40px_rgba(0,0,0,0.4)] lg:pr-[26rem]">
-            {activeTab === "hq" && hqCategory === "rooms" && (
-              <HqPanel
-                hq={hq}
-                callbacks={callbacks}
-                focus={focus}
-                onClearFocus={() => setFocus(null)}
-                roomCultures={roomCultures}
-              />
-            )}
-            {activeTab === "hq" && hqCategory === "roster" && (
-              <RosterPanel
-                operators={hq.operators}
-                staff={hq.staff}
-                visitors={hq.visitors}
-                relationships={hq.relationships}
-                rooms={hq.rooms}
-                callbacks={callbacks}
-                rosterPressure={hq.rosterPressure}
-                focusedOperatorId={focusedOperatorId}
-                roomCultures={roomCultures}
-                teams={teams}
-              />
-            )}
-            {activeTab === "hq" && hqCategory === "teams" && (
-              <div className="animate-enter space-y-3">
-                <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                  Recurring Teams
-                </h3>
-                <TeamsCard teams={teams} />
+          <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]">
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                {activeTab === "hq" && hqCategory === "rooms" && (
+                  <HqPanel
+                    hq={hq}
+                    callbacks={callbacks}
+                    focus={focus}
+                    onFocusChange={handleFocusChange}
+                    onClearFocus={() => setFocus(null)}
+                    roomCultures={roomCultures}
+                  />
+                )}
+                {activeTab === "hq" && hqCategory === "roster" && (
+                  <RosterPanel
+                    operators={hq.operators}
+                    staff={hq.staff}
+                    visitors={hq.visitors}
+                    relationships={hq.relationships}
+                    rooms={hq.rooms}
+                    callbacks={callbacks}
+                    rosterPressure={hq.rosterPressure}
+                    focusedOperatorId={focusedOperatorId}
+                    roomCultures={roomCultures}
+                    teams={teams}
+                  />
+                )}
+                {activeTab === "hq" && hqCategory === "teams" && (
+                  <div className="animate-enter space-y-3">
+                    <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                      Recurring Teams
+                    </h3>
+                    <TeamsCard teams={teams} />
+                  </div>
+                )}
+                {activeTab === "hq" && hqCategory === "inventory" && (
+                  <InventoryPanel
+                    inventory={inventory}
+                    equipment={equipment}
+                    marketItems={marketItems}
+                    callbacks={callbacks}
+                  />
+                )}
+                {activeTab === "hq" && hqCategory === "market" && (
+                  <MarketPanel
+                    marketItems={marketItems}
+                    inventory={inventory}
+                    guild={hq.guild}
+                    callbacks={callbacks}
+                  />
+                )}
+                {activeTab === "operations" && opsCategory && (
+                  <OperationsPanel
+                    operations={operations}
+                    operators={hq.operators}
+                    rosterPressure={hq.rosterPressure}
+                    focus={focus}
+                    activeCategory={opsCategory}
+                  />
+                )}
               </div>
-            )}
-            {activeTab === "hq" && hqCategory === "inventory" && (
-              <InventoryPanel
-                inventory={inventory}
-                equipment={equipment}
-                marketItems={marketItems}
-                callbacks={callbacks}
-              />
-            )}
-            {activeTab === "hq" && hqCategory === "market" && (
-              <MarketPanel
-                marketItems={marketItems}
-                inventory={inventory}
-                guild={hq.guild}
-                callbacks={callbacks}
-              />
-            )}
-            {activeTab === "operations" && opsCategory && (
-              <OperationsPanel
-                operations={operations}
-                operators={hq.operators}
-                rosterPressure={hq.rosterPressure}
-                focus={focus}
-                activeCategory={opsCategory}
-              />
-            )}
+              {/* Collapse chevron — in-flow, rightmost element at header level */}
+              <button
+                type="button"
+                className="btn-ghost shrink-0 px-1.5 py-0.5 text-silver/50 hover:text-gold"
+                onClick={() => {
+                  if (activeTab === "hq") setHqCategory(null);
+                  else setOpsCategory(null);
+                }}
+                aria-label="Collapse panel"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
 
@@ -986,7 +1456,46 @@ export function GameShell() {
       </div>
 
       {import.meta.env.DEV && devMenuOpen && session && (
-        <DevMenuOverlay session={session} onClose={() => setDevMenuOpen(false)} />
+        <DevMenuOverlay
+          session={session}
+          onClose={() => setDevMenuOpen(false)}
+          debugOverlays={debugOverlays}
+          onDebugOverlaysChange={setDebugOverlays}
+          eventLogEntries={eventLog}
+        />
+      )}
+
+      {phase1View?.encounter && (
+        <EncounterSurface
+          encounter={phase1View.encounter}
+          onPause={handleEncounterPause}
+          onResume={handleEncounterResume}
+          onStep={handleEncounterStep}
+          onRetreat={handleEncounterRetreat}
+          onUseIntervention={handleEncounterIntervention}
+          isDevMode={import.meta.env.DEV}
+        />
+      )}
+
+      {phase1View?.activeInterruption && phase1View.activeInterruption.type !== "settings" && (
+        <InterruptionHost
+          activeInterruption={phase1View.activeInterruption}
+          onResolve={handleInterruptionResolve}
+          onDismiss={handleInterruptionDismiss}
+        />
+      )}
+
+      {activeModal === "settings" && (
+        <SettingsModal
+          settings={settings}
+          audioState={audioState}
+          wakeLock={wakeLock}
+          onClose={closeActiveModal}
+          onSfxVolumeChange={handleSfxVolumeChange}
+          onMusicVolumeChange={handleMusicVolumeChange}
+          onWakeLockToggle={toggleWakeLock}
+          onResetDefaults={resetSettings}
+        />
       )}
     </div>
   );

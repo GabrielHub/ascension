@@ -12,6 +12,8 @@
 
 import type { RaidTeamMarker } from "render";
 
+import { getRaidGoalPresentation } from "./raid-goals";
+
 // ── Types for enriched focus data ─────────────────────────────────────
 
 export type OperatorReadiness = "ready" | "injured" | "fatigued" | "critical";
@@ -33,63 +35,6 @@ export interface FocusEncounter {
   /** 0..1 enemy health fraction. */
   healthFraction: number;
 }
-
-// ── Goal display ─────────────────────────────────────────────────────────
-
-const GOAL_DISPLAY: Record<
-  string,
-  { label: string; accent: string; chip: string; border: string; dot: string }
-> = {
-  exploring: {
-    label: "Exploring",
-    accent: "text-[rgba(100,140,200,0.9)]",
-    chip: "bg-[rgba(100,140,200,0.08)]",
-    border: "border-[rgba(100,140,200,0.16)]",
-    dot: "rgba(100,140,200,0.9)",
-  },
-  looting: {
-    label: "Looting",
-    accent: "text-gold",
-    chip: "bg-[rgba(200,168,76,0.08)]",
-    border: "border-[rgba(200,168,76,0.16)]",
-    dot: "rgba(200,168,76,0.92)",
-  },
-  intel: {
-    label: "Gathering Intel",
-    accent: "text-[rgba(100,180,160,0.9)]",
-    chip: "bg-[rgba(100,180,160,0.08)]",
-    border: "border-[rgba(100,180,160,0.16)]",
-    dot: "rgba(100,180,160,0.9)",
-  },
-  hunting: {
-    label: "Hunting",
-    accent: "text-ember",
-    chip: "bg-[rgba(212,84,30,0.08)]",
-    border: "border-[rgba(212,84,30,0.16)]",
-    dot: "rgba(212,84,30,0.82)",
-  },
-  boss: {
-    label: "Boss Attempt",
-    accent: "text-magma",
-    chip: "bg-[rgba(166,42,42,0.1)]",
-    border: "border-[rgba(166,42,42,0.18)]",
-    dot: "rgba(166,42,42,0.9)",
-  },
-  retreating: {
-    label: "Retreating",
-    accent: "text-silver/60",
-    chip: "bg-[rgba(224,221,214,0.05)]",
-    border: "border-[rgba(224,221,214,0.1)]",
-    dot: "rgba(224,221,214,0.55)",
-  },
-  regrouping: {
-    label: "Regrouping",
-    accent: "text-gold/50",
-    chip: "bg-[rgba(200,168,76,0.05)]",
-    border: "border-[rgba(200,168,76,0.1)]",
-    dot: "rgba(200,168,76,0.62)",
-  },
-};
 
 const STATE_DISPLAY: Record<string, { label: string; badge: string }> = {
   active: { label: "Active", badge: "badge-gold" },
@@ -221,12 +166,12 @@ export function RaidFocusFrame({
   encounter,
   onDismiss,
 }: RaidFocusFrameProps) {
-  const goal = GOAL_DISPLAY[team.goal] ?? GOAL_DISPLAY.exploring;
+  const goal = getRaidGoalPresentation(team.goal);
   const state = STATE_DISPLAY[team.state] ?? STATE_DISPLAY.active;
   const inCombat = encounter != null && encounter.healthFraction > 0;
 
   return (
-    <div className="pointer-events-auto animate-enter absolute bottom-20 right-4 w-72 rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.85)] p-4 shadow-xl backdrop-blur-xl">
+    <div className="glass-card pointer-events-auto animate-enter w-72 p-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -250,10 +195,13 @@ export function RaidFocusFrame({
 
       {/* Goal */}
       <div
-        className={`mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 ${goal.chip} ${goal.border}`}
+        className="mt-3 flex items-center gap-2 rounded-lg border px-3 py-2"
+        style={{ backgroundColor: goal.chipBackground, borderColor: goal.chipBorder }}
       >
-        <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: goal.dot }} />
-        <span className={`text-xs font-medium ${goal.accent}`}>{goal.label}</span>
+        <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: goal.color }} />
+        <span className="text-xs font-medium" style={{ color: goal.color }}>
+          {goal.label}
+        </span>
       </div>
 
       {/* Active encounter */}

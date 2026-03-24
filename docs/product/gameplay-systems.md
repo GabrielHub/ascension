@@ -18,6 +18,20 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Autonomous decisions, event resolution, recruitment variance, team repair versus disband outcomes, and other chance-driven gameplay systems should route through that shared utility.
 - The first shipped implementation can stay lightweight, but the core contract is that uncertainty remains simulation-owned, seeded, inspectable, and extensible.
 
+## Interactive Incident Direction
+
+- The runtime now ships a second interactive layer on top of passive pressure: incidents bind to concrete runtime subjects, pause the simulation, and demand a player choice.
+- Incidents are simulation-owned decision moments, not bespoke UI popups. They are triggered from ECS state, selected through shared seeded uncertainty, and resolved by simulation-owned consequence handlers.
+- Pressure is the input pool; incidents are the escalation surface. Not every pressure event should freeze the game, but the game needs a blocking incident path for operator conflict, death fallout, rival poaching, contract ultimatums, boss confrontation commitment, room breakdowns, and similar high-salience moments.
+- Incident templates should be authored data with stable ids, tags, required-context rules, authored choices, and deterministic effect bundles. The first complete version should ship from a large static authored library rather than waiting on procedural narrative systems.
+- Incident triggers should still feel random. Use runtime pressure, seeded weighted selection, cooldowns, recency suppression, novelty weighting, and concrete-subject binding so authored content does not feel rote.
+- Incident consequences should be legible bundles applied through the ECS: morale, loyalty, treasury, reputation, room culture, team cohesion, injury progression, departure risk, and social-tie changes are all valid incident outputs.
+- Pending incidents are save-safe. Refreshing or reloading restores the same unresolved incident and the same available choices.
+- Raid teams deciding to confront a boss can raise a stop-the-game incident. That moment foregrounds the encounter, presents the stakes, and asks for a player decision instead of always staying inside passive raid-map updates.
+- If the player commits to the confrontation, the boss fight hands off into a runtime-owned encounter simulation rather than collapsing immediately back into abstract aggregate raid resolution.
+- Future AI support belongs on top of the structured incident payload, not inside the gameplay authority layer. AI may later help phrase the briefing, contextualize the same authored choices, or write a recap after resolution.
+- AI must not decide when an incident triggers, which outcomes exist, or what hidden modifiers apply. Core incident resolution must remain deterministic, replayable, and testable without model access.
+
 ## Operator Systems
 
 Roles describe what an operator does in the field. They should read like in-world operational assignments, not imported RPG classes.
@@ -40,6 +54,8 @@ Every operator has a fixed, permanent combat kit defined by their attunement:
 | Passives       | 0+    | Always-on effects. Modify stats, team dynamics, or situational behavior.                |
 
 These never change. The kit an operator has when Boss recruits them is the kit they will always have.
+
+Kits should be first-class structured combat content, not only stored ids. Their effects should execute through deterministic simulation rules that support real encounters, save/load safety, and later content breadth without requiring a schema rewrite.
 
 Current operator-system direction:
 
@@ -112,6 +128,15 @@ Bosses carry tags that apply persistent effects during the encounter. Current ex
 | `boss:swarm_summon`    | Periodically spawns additional enemies during the fight                                           |
 | `boss:intel_resist`    | Intel-based preparation bonuses are reduced                                                       |
 | `boss:aoe`             | Deals damage to all operators instead of only the current frontline                               |
+
+Boss confrontation direction:
+
+- Boss fights are real simulation-owned encounters with phases, action timing, hp, statuses, cooldowns, and deterministic operator-kit execution.
+- The player remains a manager. Encounter input should be limited to explicit managerial interventions and commitment choices, not direct per-operator tactics control.
+- The current shipped encounter includes limited managerial interventions; future expansion should broaden the intervention library without changing simulation ownership.
+- Encounter time freezes the broader simulation while the fight is active, then writes the elapsed time back into world progression when the encounter resolves.
+- The combat model should stay general enough that mixed enemy groups, summons, elites, and minibosses can reuse it later.
+- Ordinary raid travel and exploration may remain abstract, but committed boss confrontations should not resolve as a one-shot aggregate packet.
 
 Loot and early raid-economy direction:
 

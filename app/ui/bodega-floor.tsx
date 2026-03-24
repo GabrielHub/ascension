@@ -1,23 +1,21 @@
 import { useState } from "react";
 
+import { formatSlotLabel } from "lib/hq-room-state";
+
 import type {
-  EmptySlotViewModel,
+  ExpansionSlotViewModel,
   PlaceableRoomTemplate,
   RoomCultureViewModel,
   RoomViewModel,
 } from "./view-models";
-import { formatCultureLabel } from "./view-models";
+import { formatCultureLabel, formatTag } from "./view-models";
 import { Tooltip } from "./_tooltip";
 import { getTagTip, getToneTip, getSignalTip } from "./_glossary";
 
-interface BodegaFloorProps {
-  rooms: readonly RoomViewModel[];
-  emptySlots: readonly EmptySlotViewModel[];
-  placeableTemplates: readonly PlaceableRoomTemplate[];
-  selectedRoomId: string | null;
-  onSelectRoom: (roomId: string) => void;
-  onPlaceRoom: (templateId: string) => void;
-  cultureMap?: ReadonlyMap<string, RoomCultureViewModel>;
+function formatFootprintLabel(room: RoomViewModel): string {
+  const reserved = `${room.reservedFootprint.cols}x${room.reservedFootprint.rows}`;
+  const active = `${room.activeFootprint.cols}x${room.activeFootprint.rows}`;
+  return reserved === active ? reserved : `${reserved} -> ${active}`;
 }
 
 function StatusDot({ room }: { room: RoomViewModel }) {
@@ -36,7 +34,7 @@ function StatusDot({ room }: { room: RoomViewModel }) {
     );
   }
   return (
-    <Tooltip content="Inactive — not generating benefits">
+    <Tooltip content="Inactive - not generating benefits">
       <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate" />
     </Tooltip>
   );
@@ -63,11 +61,10 @@ function RoomCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`glass-card group relative min-w-0 flex-1 cursor-pointer p-3 text-left transition-all duration-300 ${
+      className={`glass-card group relative w-full cursor-pointer p-3 text-left transition-all duration-300 ${
         isSelected ? "border-[rgba(200,168,76,0.3)] shadow-[0_0_24px_rgba(200,168,76,0.1)]" : ""
       }`}
     >
-      {/* Top row: status dot, name, tier badge, occupancy */}
       <div className="flex items-center gap-2.5">
         <StatusDot room={room} />
         <span className="min-w-0 truncate text-sm font-medium text-silver-bright">{room.name}</span>
@@ -77,7 +74,7 @@ function RoomCard({
               <span className="badge badge-gold">+{upgradeCount}</span>
             </Tooltip>
           )}
-          <Tooltip content="Room tier — higher tiers unlock upgrades">
+          <Tooltip content="Room tier - higher tiers unlock upgrades">
             <span className="badge badge-gold">T{room.tier}</span>
           </Tooltip>
           <Tooltip content="Staff assigned / max capacity">
@@ -90,16 +87,13 @@ function RoomCard({
         </div>
       </div>
 
-      {/* Description + role tags */}
       <div className="mt-1.5 flex items-center gap-2">
         <p className="min-w-0 truncate text-[0.6875rem] leading-snug text-silver/50">
           {room.description}
         </p>
         {highlightTags.slice(0, 2).map((tag) => (
           <Tooltip key={tag} content={getTagTip(tag)}>
-            <span className="badge badge-slate shrink-0">
-              {tag.split(":")[1]?.replace(/_/g, " ")}
-            </span>
+            <span className="badge badge-slate shrink-0">{formatTag(tag)}</span>
           </Tooltip>
         ))}
         {!room.isActive && (
@@ -107,7 +101,14 @@ function RoomCard({
         )}
       </div>
 
-      {/* Culture tone */}
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+        <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
+        <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
+        <Tooltip content={`Reserved vs active footprint: ${formatFootprintLabel(room)}`}>
+          <span className="badge badge-slate">{formatFootprintLabel(room)}</span>
+        </Tooltip>
+      </div>
+
       {culture && (
         <div className="mt-1.5 flex items-center gap-1.5 text-[0.625rem] text-silver/45">
           <Tooltip content={getToneTip(culture.tone)} side="top">
@@ -124,7 +125,6 @@ function RoomCard({
         </div>
       )}
 
-      {/* Occupancy bar across bottom */}
       <div className="mt-2 h-0.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
         <div
           className="h-full rounded-full bg-gold/40 transition-all duration-500"
@@ -135,35 +135,51 @@ function RoomCard({
   );
 }
 
-function EmptySlotCard({
-  index,
+function ExpansionSlotCard({
+  slot,
   placeableTemplates,
   onPlaceRoom,
 }: {
-  index: number;
+  slot: ExpansionSlotViewModel;
   placeableTemplates: readonly PlaceableRoomTemplate[];
-  onPlaceRoom: (templateId: string) => void;
+  onPlaceRoom: (templateId: string, floorIndex: number, slotId: string) => void;
 }) {
   const [showPicker, setShowPicker] = useState(false);
+  const isAvailable = slot.kind === "available";
 
-  if (placeableTemplates.length === 0) {
+  if (!isAvailable) {
     return (
-      <div className="glass-card-inset flex min-w-0 flex-1 items-center justify-center gap-2.5 p-3 opacity-50">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-gold-dim/30">
-          <span className="text-xs text-gold/70">+</span>
+      <div className="glass-card-inset flex min-w-0 flex-col gap-2 p-3 opacity-65">
+        <div className="flex items-center gap-2">
+          <span className="badge badge-slate uppercase tracking-[0.14em]">Locked</span>
+          <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
         </div>
-        <span className="text-xs uppercase tracking-[0.15em] text-silver/60">Slot {index + 1}</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+          <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+          <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
+          <Tooltip content="Reserved interior footprint">
+            <span className="badge badge-slate">
+              {slot.footprint.cols}x{slot.footprint.rows}
+            </span>
+          </Tooltip>
+        </div>
       </div>
     );
   }
 
   if (showPicker) {
     return (
-      <div className="glass-card-inset min-w-0 flex-1 p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/80">
-            Place a room
-          </span>
+      <div className="glass-card-inset min-w-0 p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/80">
+              Place a room
+            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+              <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+              <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
+            </div>
+          </div>
           <button
             type="button"
             className="text-[0.6875rem] text-silver/60 hover:text-gold/80"
@@ -172,21 +188,25 @@ function EmptySlotCard({
             cancel
           </button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {placeableTemplates.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className="btn-primary px-2.5 py-1.5 text-[0.6875rem]"
-              onClick={() => {
-                onPlaceRoom(t.id);
-                setShowPicker(false);
-              }}
-            >
-              {t.name}
-            </button>
-          ))}
-        </div>
+        {placeableTemplates.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {placeableTemplates.map((template) => (
+              <button
+                key={template.id}
+                type="button"
+                className="btn-primary px-2.5 py-1.5 text-[0.6875rem]"
+                onClick={() => {
+                  onPlaceRoom(template.id, slot.floorIndex, slot.slotId);
+                  setShowPicker(false);
+                }}
+              >
+                {template.name}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-silver/50">No room templates are unlocked yet.</div>
+        )}
       </div>
     );
   }
@@ -194,20 +214,30 @@ function EmptySlotCard({
   return (
     <button
       type="button"
-      className="glass-card-inset flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2.5 p-3 opacity-70 transition-opacity hover:opacity-100"
+      className="glass-card-inset flex min-w-0 cursor-pointer flex-col gap-2 p-3 text-left opacity-85 transition-opacity hover:opacity-100"
       onClick={() => setShowPicker(true)}
     >
-      <div className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-gold-dim/30">
-        <span className="text-xs text-gold/70">+</span>
+      <div className="flex items-center gap-2">
+        <span className="badge badge-gold uppercase tracking-[0.14em]">Open</span>
+        <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
       </div>
-      <span className="text-xs uppercase tracking-[0.15em] text-silver/60">Build room</span>
+      <div className="flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+        <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+        <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
+        <Tooltip content="Reserved interior footprint">
+          <span className="badge badge-slate">
+            {slot.footprint.cols}x{slot.footprint.rows}
+          </span>
+        </Tooltip>
+      </div>
+      <div className="text-xs uppercase tracking-[0.15em] text-gold/70">Build room</div>
     </button>
   );
 }
 
 export function BodegaFloor({
   rooms,
-  emptySlots,
+  expansionSlots,
   placeableTemplates,
   selectedRoomId,
   onSelectRoom,
@@ -215,24 +245,61 @@ export function BodegaFloor({
   cultureMap,
 }: BodegaFloorProps) {
   return (
-    <div className="flex gap-3">
-      {rooms.map((room) => (
-        <RoomCard
-          key={room.id}
-          room={room}
-          isSelected={selectedRoomId === room.id}
-          onSelect={() => onSelectRoom(room.id)}
-          culture={cultureMap?.get(room.id)}
-        />
-      ))}
-      {emptySlots.map((slot) => (
-        <EmptySlotCard
-          key={`empty-${slot.index}`}
-          index={slot.index}
-          placeableTemplates={placeableTemplates}
-          onPlaceRoom={onPlaceRoom}
-        />
-      ))}
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-gold/70">
+            Current Floor Rooms
+          </h3>
+          <span className="text-xs text-silver/55">
+            {rooms.length} room{rooms.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {rooms.length > 0 ? (
+            rooms.map((room) => (
+              <RoomCard
+                key={room.id}
+                room={room}
+                isSelected={selectedRoomId === room.id}
+                onSelect={() => onSelectRoom(room.id)}
+                culture={cultureMap?.get(room.id)}
+              />
+            ))
+          ) : (
+            <div className="glass-card-inset p-4 text-sm text-silver/50">
+              No rooms are placed on this floor yet.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-gold/70">
+            Available Slots
+          </h3>
+          <span className="text-xs text-silver/55">
+            {expansionSlots.length} slot{expansionSlots.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {expansionSlots.length > 0 ? (
+            expansionSlots.map((slot) => (
+              <ExpansionSlotCard
+                key={slot.id}
+                slot={slot}
+                placeableTemplates={placeableTemplates}
+                onPlaceRoom={onPlaceRoom}
+              />
+            ))
+          ) : (
+            <div className="glass-card-inset p-4 text-sm text-silver/50">
+              No expansion slots are available on this floor.
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

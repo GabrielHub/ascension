@@ -44,6 +44,7 @@ const callbacks: GameCallbacks = {
   hireStaff: () => {},
   assignStaff: () => {},
   placeRoom: () => {},
+  setActiveFloor: () => {},
   buyItem: () => {},
   sellItem: () => {},
   autoAssignAccessory: () => {},

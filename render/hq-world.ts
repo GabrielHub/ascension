@@ -1,4 +1,4 @@
-import { getBuildingLayout } from "content/building-layouts";
+import { getBuildingLayout, type BuildingFloorLayout } from "content/building-layouts";
 import { buildNavigationGraph } from "sim/navigation";
 import { getHqBackdropManifest, getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
@@ -477,71 +477,15 @@ const TEMPLATE_RECIPES: Record<string, RoomRecipe> = {
   "room/supply_closet:tier_1": SUPPLY_CLOSET_RECIPE,
 };
 
-const ROOM_UPGRADE_OVERLAYS: Record<string, readonly RecipePropPlacement[]> = {
-  "upgrade/room/register:records_wall": [
-    {
-      assetKey: "corkboard",
-      relCol: 0.76,
-      relRow: 0.1,
-      width: 36,
-      height: 28,
-      zIndex: 44,
-      offsetY: -42,
-    },
-    {
-      assetKey: "clipboard",
-      relCol: 0.66,
-      relRow: 0.2,
-      width: 20,
-      height: 18,
-      zIndex: 45,
-      offsetY: -24,
-    },
-  ],
-  "upgrade/room/counter:hot_coffee": [
-    {
-      assetKey: "sign",
-      relCol: 0.8,
-      relRow: 0.12,
-      width: 34,
-      height: 38,
-      zIndex: 44,
-      offsetY: -44,
-    },
-    { assetKey: "coffeeMachine", relCol: 0.22, relRow: 0.3, width: 34, height: 44, zIndex: 45 },
-  ],
-  "upgrade/room/dining_area:first_aid_station": [
-    {
-      assetKey: "firstAid",
-      relCol: 0.8,
-      relRow: 0.12,
-      width: 22,
-      height: 30,
-      zIndex: 44,
-      offsetY: -42,
-    },
-    { assetKey: "trayMedical", relCol: 0.72, relRow: 0.38, width: 34, height: 36, zIndex: 45 },
-  ],
-  "upgrade/room/supply_closet:labeled_bins": [
-    { assetKey: "gearCrate", relCol: 0.38, relRow: 0.62, width: 28, height: 24, zIndex: 44 },
-    { assetKey: "milkCrate", relCol: 0.62, relRow: 0.62, width: 26, height: 22, zIndex: 44 },
-  ],
-  "upgrade/room/gym:heavy_bags": [
-    { assetKey: "punchBag", relCol: 0.72, relRow: 0.38, width: 24, height: 62, zIndex: 44 },
-    { assetKey: "mat", relCol: 0.68, relRow: 0.74, width: 56, height: 34, zIndex: 43 },
-  ],
-  "upgrade/room/lounge:jukebox": [
-    { assetKey: "radio", relCol: 0.78, relRow: 0.28, width: 40, height: 28, zIndex: 44 },
-    {
-      assetKey: "sign",
-      relCol: 0.18,
-      relRow: 0.16,
-      width: 30,
-      height: 34,
-      zIndex: 43,
-      offsetY: -38,
-    },
-  ],
+// Room-state scene overrides: maps roomStateId to a scene SVG filename.
+// When a room has been upgraded, its roomStateId changes (e.g. "room-state/register:2")
+// and the renderer swaps in the upgraded scene SVG.
+const ROOM_STATE_SCENES: Record<string, string> = {
+  "room-state/register:2": "scene-the-register-2.svg",
+  "room-state/counter:2": "scene-the-counter-2.svg",
+  "room-state/dining-area:2": "scene-the-dining-area-2.svg",
+  "room-state/dining-area:3": "scene-the-dining-area-3.svg",
+  "room-state/supply-closet:2": "scene-supply-closet-2.svg",
 };
 
 // Function-tag fallback recipes: used when no template-specific recipe exists.
@@ -554,8 +498,12 @@ const ROOM_RECIPES: Record<string, RoomRecipe> = {
   "room:training": TRAINING_RECIPE,
 };
 
-function getRecipe(templateId: string, functionTag: string): RoomRecipe {
-  return TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
+function getRecipe(templateId: string, functionTag: string, roomStateId?: string): RoomRecipe {
+  const base = TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
+  if (roomStateId && ROOM_STATE_SCENES[roomStateId]) {
+    return { ...base, sceneAsset: bodegaScene(ROOM_STATE_SCENES[roomStateId]) };
+  }
+  return base;
 }
 
 // ── Seed type ─────────────────────────────────────────────────────────────
@@ -563,18 +511,24 @@ function getRecipe(templateId: string, functionTag: string): RoomRecipe {
 interface HqRoomSeed {
   id: string;
   templateId: string;
+  roomStateId: string;
+  slotId: string;
+  floorIndex: number;
   name: string;
   tier: number;
   isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
   appliedUpgradeIds?: readonly string[];
-  footprint: HqFootprint;
+  reservedFootprint: HqFootprint;
+  activeFootprint: HqFootprint;
 }
 
 interface HqExpansionSlotSeed {
   id: string;
   label: string;
+  kind: "available" | "locked";
+  floorIndex: number;
   footprint: HqFootprint;
 }
 
@@ -582,6 +536,8 @@ interface ComposeHqWorldOptions {
   reservedSlots?: readonly HqExpansionSlotSeed[];
   /** Building template ID — used to look up the fixed building layout. */
   buildingId?: string;
+  buildingTier?: number;
+  floorIndex?: number;
 }
 
 // ── Geometry output ───────────────────────────────────────────────────────
@@ -632,14 +588,31 @@ function projectDoorCenter(
   };
 }
 
+export function getBoundsFromPoints(points: readonly { x: number; y: number }[]) {
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  };
+}
+
 // ── Room node (hit-test geometry) ─────────────────────────────────────────
 
 function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqRoomNode {
-  const fp = seed.footprint;
-  const top = projectIso(fp.col, fp.row, originX, originY);
-  const right = projectIso(fp.col + fp.cols, fp.row, originX, originY);
-  const bottom = projectIso(fp.col + fp.cols, fp.row + fp.rows, originX, originY);
-  const left = projectIso(fp.col, fp.row + fp.rows, originX, originY);
+  const reserved = seed.reservedFootprint;
+  const active = seed.activeFootprint;
+  const top = projectIso(reserved.col, reserved.row, originX, originY);
+  const right = projectIso(reserved.col + reserved.cols, reserved.row, originX, originY);
+  const bottom = projectIso(
+    reserved.col + reserved.cols,
+    reserved.row + reserved.rows,
+    originX,
+    originY,
+  );
+  const left = projectIso(reserved.col, reserved.row + reserved.rows, originX, originY);
   const topLift = { x: top.x, y: top.y - HQ_WALL_HEIGHT };
   const leftLift = { x: left.x, y: left.y - HQ_WALL_HEIGHT };
   const rightLift = { x: right.x, y: right.y - HQ_WALL_HEIGHT };
@@ -647,28 +620,34 @@ function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqR
   const floorPoints = [top, right, bottom, left];
   const leftWallPoints = [top, left, leftLift, topLift];
   const rightWallPoints = [top, right, rightLift, topLift];
-  const allPoints = [...floorPoints, ...leftWallPoints, ...rightWallPoints];
-  const xs = allPoints.map((p) => p.x);
-  const ys = allPoints.map((p) => p.y);
+  const activeTop = projectIso(active.col, active.row, originX, originY);
+  const activeRight = projectIso(active.col + active.cols, active.row, originX, originY);
+  const activeBottom = projectIso(
+    active.col + active.cols,
+    active.row + active.rows,
+    originX,
+    originY,
+  );
+  const activeLeft = projectIso(active.col, active.row + active.rows, originX, originY);
 
   return {
     id: seed.id,
     templateId: seed.templateId,
+    roomStateId: seed.roomStateId,
+    slotId: seed.slotId,
+    floorIndex: seed.floorIndex,
     label: seed.name,
     tier: seed.tier,
     isRequestedActive: seed.isRequestedActive,
     isOperational: seed.isOperational,
     functionTag: seed.functionTag,
-    footprint: fp,
+    reservedFootprint: reserved,
+    activeFootprint: active,
     floorPoints,
     leftWallPoints,
     rightWallPoints,
-    bounds: {
-      x: Math.min(...xs),
-      y: Math.min(...ys),
-      width: Math.max(...xs) - Math.min(...xs),
-      height: Math.max(...ys) - Math.min(...ys),
-    },
+    bounds: getBoundsFromPoints([...floorPoints, ...leftWallPoints, ...rightWallPoints]),
+    activeBounds: getBoundsFromPoints([activeTop, activeRight, activeBottom, activeLeft]),
   };
 }
 
@@ -695,6 +674,8 @@ function createExpansionSlotNode(
   return {
     id: seed.id,
     label: seed.label,
+    kind: seed.kind,
+    floorIndex: seed.floorIndex,
     footprint: fp,
     floorPoints,
     leftWallPoints,
@@ -716,7 +697,7 @@ function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
     const palette =
       seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
-    const fp = seed.footprint;
+    const fp = seed.reservedFootprint;
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
       for (let r = fp.row; r < fp.row + fp.rows; r++) {
         tiles.push({ col: c, row: r, tint: palette.floor, roomId: seed.id });
@@ -734,7 +715,7 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
     const palette =
       seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
-    const fp = seed.footprint;
+    const fp = seed.reservedFootprint;
 
     const openingSet = new Set(recipe.openings.map((o) => `${o.side}:${o.cellOffset}`));
 
@@ -860,13 +841,15 @@ function buildRoomProps(
   const props: HqSpritePlacement[] = [];
 
   for (const room of rooms) {
-    const recipe = getRecipe(room.templateId, room.functionTag);
-    const fp = room.footprint;
+    const recipe = getRecipe(room.templateId, room.functionTag, room.roomStateId);
+    const reserved = room.reservedFootprint;
+    const active = room.activeFootprint;
+    const activeTopCorner = projectIso(active.col, active.row, originX, originY);
 
     if (recipe.sceneAsset) {
-      // Pre-composed scene SVG — one sprite replaces all individual props
+      // Existing scene recipes are authored to the full reserved shell.
       const scene = recipe.sceneAsset;
-      const topCorner = projectIso(fp.col, fp.row, originX, originY);
+      const topCorner = projectIso(reserved.col, reserved.row, originX, originY);
       props.push({
         id: `${room.id}/scene`,
         assetUrl: scene.url,
@@ -876,37 +859,17 @@ function buildRoomProps(
         height: scene.svgHeight,
         zIndex: 35,
         opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35,
+        debugOrigin: activeTopCorner,
       });
     } else {
       // Per-prop sprite placement (fallback for rooms without scene SVGs)
       for (const propDef of recipe.props) {
-        props.push(
-          placeFloorSprite(
-            `${room.id}/${propDef.assetKey}`,
-            PROP_ASSETS[propDef.assetKey],
-            fp.col + fp.cols * propDef.relCol,
-            fp.row + fp.rows * propDef.relRow,
-            propDef.width,
-            propDef.height,
-            propDef.zIndex,
-            originX,
-            originY,
-            propDef.offsetX ?? 0,
-            propDef.offsetY ?? 0,
-          ),
-        );
-      }
-    }
-
-    for (const upgradeId of room.appliedUpgradeIds ?? []) {
-      const overlayProps = ROOM_UPGRADE_OVERLAYS[upgradeId] ?? [];
-      for (const [index, propDef] of overlayProps.entries()) {
         props.push({
           ...placeFloorSprite(
-            `${room.id}/upgrade/${upgradeId}/${propDef.assetKey}-${index}`,
+            `${room.id}/${propDef.assetKey}`,
             PROP_ASSETS[propDef.assetKey],
-            fp.col + fp.cols * propDef.relCol,
-            fp.row + fp.rows * propDef.relRow,
+            active.col + active.cols * propDef.relCol,
+            active.row + active.rows * propDef.relRow,
             propDef.width,
             propDef.height,
             propDef.zIndex,
@@ -915,7 +878,8 @@ function buildRoomProps(
             propDef.offsetX ?? 0,
             propDef.offsetY ?? 0,
           ),
-          opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.7 : 0.45,
+          opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35,
+          debugOrigin: activeTopCorner,
         });
       }
     }
@@ -926,14 +890,13 @@ function buildRoomProps(
 
 // ── Building layout: corridor + empty-slot tiles ─────────────────────────
 
-import type { BuildingLayout } from "content/building-layouts";
-
 const CORRIDOR_TINT = "#2a2420";
 const EMPTY_SLOT_TINT = "#1c1a18";
+const LOCKED_SLOT_TINT = "#161514";
 const BUILDING_WALL_LEFT = "#2c2014";
 const BUILDING_WALL_RIGHT = "#352616";
 
-function buildCorridorTiles(layout: BuildingLayout | undefined): HqFloorTile[] {
+function buildCorridorTiles(layout: BuildingFloorLayout | undefined): HqFloorTile[] {
   if (!layout) return [];
   // Every cell inside the shell that isn't a room slot is a corridor.
   const slotCells = new Set<string>();
@@ -956,33 +919,13 @@ function buildCorridorTiles(layout: BuildingLayout | undefined): HqFloorTile[] {
   return tiles;
 }
 
-function buildEmptySlotTiles(
-  layout: BuildingLayout | undefined,
-  placedRooms: readonly HqRoomSeed[],
-): HqFloorTile[] {
-  if (!layout) return [];
-  const occupied = new Set<string>();
-  for (const room of placedRooms) {
-    const fp = room.footprint;
-    for (let c = fp.col; c < fp.col + fp.cols; c++) {
-      for (let r = fp.row; r < fp.row + fp.rows; r++) {
-        occupied.add(`${c},${r}`);
-      }
-    }
-  }
-
+function buildExpansionSlotTiles(expansionSlots: readonly HqExpansionSlotSeed[]): HqFloorTile[] {
   const tiles: HqFloorTile[] = [];
-  for (const slot of layout.slots) {
-    let slotOccupied = false;
-    for (let c = slot.col; c < slot.col + slot.cols && !slotOccupied; c++) {
-      for (let r = slot.row; r < slot.row + slot.rows && !slotOccupied; r++) {
-        if (occupied.has(`${c},${r}`)) slotOccupied = true;
-      }
-    }
-    if (slotOccupied) continue;
-    for (let c = slot.col; c < slot.col + slot.cols; c++) {
-      for (let r = slot.row; r < slot.row + slot.rows; r++) {
-        tiles.push({ col: c, row: r, tint: EMPTY_SLOT_TINT, roomId: `empty-${slot.slotId}` });
+  for (const slot of expansionSlots) {
+    const tint = slot.kind === "available" ? EMPTY_SLOT_TINT : LOCKED_SLOT_TINT;
+    for (let c = slot.footprint.col; c < slot.footprint.col + slot.footprint.cols; c++) {
+      for (let r = slot.footprint.row; r < slot.footprint.row + slot.footprint.rows; r++) {
+        tiles.push({ col: c, row: r, tint, roomId: slot.id });
       }
     }
   }
@@ -990,7 +933,7 @@ function buildEmptySlotTiles(
 }
 
 /** Build a single continuous wall along the building shell exterior. */
-function buildBuildingShellWalls(layout: BuildingLayout | undefined): HqWallSegment[] {
+function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWallSegment[] {
   if (!layout) return [];
   const sh = layout.shell;
   const segments: HqWallSegment[] = [];
@@ -1195,6 +1138,12 @@ function shiftRoom(room: HqRoomNode, dx: number, dy: number): HqRoomNode {
       width: room.bounds.width,
       height: room.bounds.height,
     },
+    activeBounds: {
+      x: room.activeBounds.x + dx,
+      y: room.activeBounds.y + dy,
+      width: room.activeBounds.width,
+      height: room.activeBounds.height,
+    },
   };
 }
 
@@ -1277,13 +1226,17 @@ export function composeHqWorldGeometry(
   options: ComposeHqWorldOptions = {},
 ): HqWorldGeometry {
   const reservedSlots = options.reservedSlots ?? [];
-  const buildingLayout = options.buildingId ? getBuildingLayout(options.buildingId) : undefined;
+  const activeFloorIndex = options.floorIndex ?? 0;
+  const buildingLayout = options.buildingId
+    ? getBuildingLayout(options.buildingId, activeFloorIndex, options.buildingTier ?? 1)
+    : undefined;
 
   if (rooms.length === 0 && reservedSlots.length === 0 && !buildingLayout) {
     const layout: HqWorldLayout = {
       tileWidth: HQ_TILE_WIDTH,
       tileHeight: HQ_TILE_HEIGHT,
       wallHeight: HQ_WALL_HEIGHT,
+      activeFloorIndex,
       originX: WORLD_MARGIN_X,
       originY: WORLD_MARGIN_Y,
       minX: 0,
@@ -1307,7 +1260,10 @@ export function composeHqWorldGeometry(
   // so the building size stays fixed regardless of how many rooms are placed.
   const perimeterFootprints: HqFootprint[] = buildingLayout
     ? [buildingLayout.shell]
-    : [...rooms.map((room) => room.footprint), ...reservedSlots.map((slot) => slot.footprint)];
+    : [
+        ...rooms.map((room) => room.reservedFootprint),
+        ...reservedSlots.map((slot) => slot.footprint),
+      ];
   const maxRow = Math.max(...perimeterFootprints.map((fp) => fp.row + fp.rows));
   const originX = (maxRow + 6) * (HQ_TILE_WIDTH / 2);
   const originY = 180;
@@ -1316,7 +1272,7 @@ export function composeHqWorldGeometry(
   const floorTiles = [
     ...buildFloorTiles(rooms),
     ...buildCorridorTiles(buildingLayout),
-    ...buildEmptySlotTiles(buildingLayout, rooms),
+    ...buildExpansionSlotTiles(reservedSlots),
   ];
   const wallSegments = buildingLayout
     ? buildBuildingShellWalls(buildingLayout)
@@ -1361,19 +1317,26 @@ export function composeHqWorldGeometry(
   const navGraph = buildNavigationGraph(
     shiftedRooms.map((room) => ({
       id: room.id,
-      x: room.bounds.x,
-      y: room.bounds.y,
-      width: room.bounds.width,
-      height: room.bounds.height,
+      x: room.activeBounds.x,
+      y: room.activeBounds.y,
+      width: room.activeBounds.width,
+      height: room.activeBounds.height,
       functionTag: room.functionTag,
       ...(() => {
         const seed = rooms.find((candidate) => candidate.id === room.id);
-        const opening = seed ? getRecipe(seed.templateId, seed.functionTag).openings[0] : undefined;
+        const opening = seed
+          ? getRecipe(seed.templateId, seed.functionTag, seed.roomStateId).openings[0]
+          : undefined;
         if (!seed || !opening) {
           return {};
         }
 
-        const entry = projectDoorCenter(seed.footprint, opening, originX + dx, originY + dy);
+        const entry = projectDoorCenter(
+          seed.reservedFootprint,
+          opening,
+          originX + dx,
+          originY + dy,
+        );
         return {
           entryX: entry.x,
           entryY: entry.y,
@@ -1404,6 +1367,7 @@ export function composeHqWorldGeometry(
     tileWidth: HQ_TILE_WIDTH,
     tileHeight: HQ_TILE_HEIGHT,
     wallHeight: HQ_WALL_HEIGHT,
+    activeFloorIndex,
     originX: originX + dx,
     originY: originY + dy,
     minX: bounds.minX,

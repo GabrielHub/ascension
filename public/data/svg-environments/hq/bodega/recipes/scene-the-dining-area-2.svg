@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Dining Area — State 2 (First-Aid Station)
+       Upgraded from base state: adds a first-aid station in the back corner,
+       medical supplies, a recovery curtain. The dining space is still primary
+       but now has a functional medical/recovery corner.
+       No walls, floor, tile grid, or labels.
+       Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24) -->
+
+  <!-- == FOLDING TABLE 1 (back-left, same as base) ====================== -->
+  <polygon points="152,128 200,152 176,164 128,140"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.8"/>
+  <polygon points="128,140 176,164 176,172 128,148"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.6"/>
+  <polygon points="200,152 176,164 176,172 200,160"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <line x1="152" y1="128" x2="128" y2="140" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <line x1="134" y1="148" x2="134" y2="168" stroke="#2c2418" stroke-width="1.5"/>
+  <line x1="194" y1="156" x2="194" y2="176" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="172" y1="170" x2="172" y2="188" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="138" y1="160" x2="168" y2="180" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- == CHAIR 1A (behind table 1) ====================================== -->
+  <polygon points="132,112 142,106 152,112 142,116"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="132,112 142,106 142,100 132,106"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="142,106 152,112 152,106 142,100"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="134" y1="116" x2="134" y2="130" stroke="#333030" stroke-width="1.2"/>
+  <line x1="150" y1="116" x2="150" y2="130" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="142" y1="118" x2="142" y2="132" stroke="#333030" stroke-width="1"/>
+
+  <!-- == CHAIR 1B (in front of table 1) ================================= -->
+  <polygon points="120,170 130,164 140,170 130,174"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="120,170 130,164 130,158 120,164"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="130,164 140,170 140,164 130,158"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="122" y1="174" x2="122" y2="188" stroke="#333030" stroke-width="1.2"/>
+  <line x1="138" y1="174" x2="138" y2="188" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="130" y1="176" x2="130" y2="190" stroke="#333030" stroke-width="1"/>
+
+  <!-- == FOLDING TABLE 2 (front-right, same as base) ==================== -->
+  <polygon points="248,188 296,212 272,224 224,200"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.8"/>
+  <polygon points="224,200 272,224 272,232 224,208"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.6"/>
+  <polygon points="296,212 272,224 272,232 296,220"
+    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
+  <line x1="248" y1="188" x2="224" y2="200" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <line x1="230" y1="208" x2="230" y2="228" stroke="#2c2418" stroke-width="1.5"/>
+  <line x1="290" y1="216" x2="290" y2="236" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="268" y1="230" x2="268" y2="248" stroke="#241c12" stroke-width="1.5"/>
+  <line x1="234" y1="220" x2="264" y2="240" stroke="#241c12" stroke-width="0.5"/>
+
+  <!-- == CHAIR 2A (behind table 2) ====================================== -->
+  <polygon points="262,172 272,166 282,172 272,176"
+    fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <polygon points="262,172 272,166 272,160 262,166"
+    fill="#333030" stroke="#2a2a2a" stroke-width="0.4"/>
+  <polygon points="272,166 282,172 282,166 272,160"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <line x1="264" y1="176" x2="264" y2="190" stroke="#333030" stroke-width="1.2"/>
+  <line x1="280" y1="176" x2="280" y2="190" stroke="#2a2828" stroke-width="1.2"/>
+  <line x1="272" y1="178" x2="272" y2="192" stroke="#333030" stroke-width="1"/>
+
+  <!-- == MILK CRATE ("the bodega chair", at table 2) ==================== -->
+  <polygon points="218,230 228,224 238,230 228,234"
+    fill="#3a3838" stroke="#333030" stroke-width="0.5"/>
+  <polygon points="218,230 228,234 228,242 218,238"
+    fill="#333030" stroke="#2a2828" stroke-width="0.4"/>
+  <polygon points="238,230 228,234 228,242 238,238"
+    fill="#2a2828" stroke="#252525" stroke-width="0.4"/>
+  <rect x="220" y="232" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.15)"/>
+  <rect x="220" y="235" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.15)"/>
+  <rect x="224" y="233" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.12)"/>
+  <rect x="231" y="232" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.12)"/>
+  <rect x="231" y="235" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.1)"/>
+  <rect x="235" y="233" width="2" height="1.5" rx="0.2" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- == MICROWAVE (same position) ====================================== -->
+  <polygon points="340,120 356,128 368,122 352,114"
+    fill="#2c2c34" stroke="#222228" stroke-width="0.5"/>
+  <polygon points="340,120 356,128 356,140 340,132"
+    fill="#28282e" stroke="#1e1e24" stroke-width="0.4"/>
+  <polygon points="356,128 368,122 368,134 356,140"
+    fill="#24242a" stroke="#1e1e24" stroke-width="0.4"/>
+  <polygon points="342,122 354,128 354,136 342,130"
+    fill="#0e1018" stroke="#1a1a20" stroke-width="0.3"/>
+  <line x1="343" y1="123" x2="345" y2="124" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+  <circle cx="347" cy="128" r="1.2" fill="rgba(60,30,10,0.12)"/>
+  <circle cx="360" cy="126" r="0.6" fill="#3a3838"/>
+  <circle cx="363" cy="125" r="0.6" fill="#3a3838"/>
+  <rect x="358" y="122" width="4" height="2" rx="0.3" fill="rgba(100,180,120,0.08)"/>
+  <line x1="340" y1="120" x2="368" y2="122" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+  <!-- ============================================================== -->
+  <!-- == FIRST-AID STATION (UPGRADE — back-right corner) ============ -->
+  <!-- ============================================================== -->
+
+  <!-- == FIRST-AID KIT (wall-mounted, back-right) ======================= -->
+  <!-- Box body -->
+  <polygon points="372,96 392,106 384,110 364,100"
+    fill="#c8c4b8" stroke="#a0998c" stroke-width="0.5"/>
+  <polygon points="364,100 384,110 384,122 364,112"
+    fill="#b8b4a8" stroke="#989088" stroke-width="0.4"/>
+  <polygon points="392,106 384,110 384,122 392,118"
+    fill="#a8a498" stroke="#989088" stroke-width="0.4"/>
+  <!-- Red cross -->
+  <line x1="372" y1="106" x2="376" y2="108" stroke="#8a3030" stroke-width="2" opacity="0.5"/>
+  <line x1="372" y1="108" x2="376" y2="106" stroke="#8a3030" stroke-width="2" opacity="0.5"/>
+  <!-- Latch -->
+  <rect x="374" y="112" width="3" height="1" rx="0.2" fill="#4a4a52" opacity="0.5"/>
+
+  <!-- == BANDAGE BOX (on floor near first-aid area) ===================== -->
+  <polygon points="362,148 374,154 370,156 358,150"
+    fill="#c8c4b8" stroke="#a0998c" stroke-width="0.3" opacity="0.8"/>
+  <polygon points="358,150 370,156 370,162 358,156"
+    fill="#b8b4a8" stroke="#989088" stroke-width="0.3" opacity="0.7"/>
+  <polygon points="374,154 370,156 370,162 374,160"
+    fill="#a8a498" stroke="#989088" stroke-width="0.3" opacity="0.7"/>
+
+  <!-- == RECOVERY CURTAIN (partial screen in corner) ==================== -->
+  <!-- Curtain rod -->
+  <line x1="346" y1="95" x2="394" y2="119" stroke="#4a4a52" stroke-width="1.2"/>
+  <!-- Rod end caps -->
+  <circle cx="346" cy="95" r="1.5" fill="#4a4a52"/>
+  <circle cx="394" cy="119" r="1.5" fill="#4a4a52"/>
+  <!-- Curtain fabric (draped, partial privacy) -->
+  <polygon points="348,96 370,107 370,140 348,129"
+    fill="rgba(40,50,60,0.25)" stroke="rgba(60,70,80,0.15)" stroke-width="0.5"/>
+  <!-- Curtain folds -->
+  <line x1="354" y1="99" x2="354" y2="132" stroke="rgba(60,70,80,0.1)" stroke-width="0.5"/>
+  <line x1="360" y1="102" x2="360" y2="135" stroke="rgba(60,70,80,0.08)" stroke-width="0.5"/>
+  <line x1="366" y1="105" x2="366" y2="138" stroke="rgba(60,70,80,0.1)" stroke-width="0.5"/>
+  <!-- Curtain gathered portion (bunched up to one side) -->
+  <polygon points="370,107 390,117 390,148 370,140"
+    fill="rgba(40,50,60,0.35)" stroke="rgba(60,70,80,0.2)" stroke-width="0.5"/>
+  <line x1="376" y1="110" x2="376" y2="143" stroke="rgba(60,70,80,0.12)" stroke-width="0.6"/>
+  <line x1="382" y1="113" x2="382" y2="146" stroke="rgba(60,70,80,0.1)" stroke-width="0.6"/>
+
+  <!-- == SMALL MEDICAL TRAY (floor, near curtain area) ================== -->
+  <polygon points="350,160 362,166 358,168 346,162"
+    fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
+  <!-- Supplies on tray -->
+  <rect x="350" y="162" width="3" height="2" rx="0.3" fill="#c8c4b8" opacity="0.15"/>
+  <rect x="354" y="163" width="2" height="1.5" rx="0.2" fill="#382a2a" opacity="0.3"/>
+</svg>

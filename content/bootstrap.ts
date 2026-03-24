@@ -1,9 +1,17 @@
 export interface BootstrapRoomSeed {
   id: string;
   templateId: string;
+  slotId: string;
+  floorIndex: number;
   occupancy: number;
   isActive?: boolean;
-  footprint: {
+  reservedFootprint: {
+    col: number;
+    row: number;
+    cols: number;
+    rows: number;
+  };
+  activeFootprint?: {
     col: number;
     row: number;
     cols: number;
@@ -158,23 +166,39 @@ export const bootstrapScenario = {
     {
       id: "room-instance/dining_area",
       templateId: "room/dining_area:tier_1",
+      slotId: "slot/dining-area",
+      floorIndex: 0,
       occupancy: 0,
       isActive: true,
-      footprint: { col: 1, row: 15, cols: 8, rows: 3 },
+      reservedFootprint: { col: 1, row: 15, cols: 8, rows: 3 },
     },
     {
       id: "room-instance/register",
       templateId: "room/register:tier_1",
+      slotId: "slot/register",
+      floorIndex: 0,
       occupancy: 1,
       isActive: true,
-      footprint: { col: 0, row: 10, cols: 4, rows: 3 },
+      reservedFootprint: { col: 0, row: 10, cols: 4, rows: 3 },
     },
     {
       id: "room-instance/counter",
       templateId: "room/counter:tier_1",
+      slotId: "slot/counter",
+      floorIndex: 0,
       occupancy: 0,
       isActive: true,
-      footprint: { col: 6, row: 10, cols: 4, rows: 3 },
+      reservedFootprint: { col: 6, row: 10, cols: 4, rows: 3 },
+      activeFootprint: { col: 6, row: 11, cols: 4, rows: 2 },
+    },
+    {
+      id: "room-instance/supply_closet",
+      templateId: "room/supply_closet:tier_1",
+      slotId: "slot/supply-closet",
+      floorIndex: 0,
+      occupancy: 0,
+      isActive: false,
+      reservedFootprint: { col: 0, row: 5, cols: 4, rows: 3 },
     },
   ],
   operators: [
