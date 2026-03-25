@@ -108,7 +108,11 @@ function PostedContractCard({
     index === 0 ? "animate-enter" : index === 1 ? "animate-enter-delay-1" : "animate-enter-delay-2";
 
   return (
-    <div className={`glass-card ${delayClass} p-4`}>
+    <div
+      className={`glass-card ${delayClass} p-4`}
+      data-testid="contract-card"
+      data-posting-id={posting.postingId}
+    >
       {/* Header: site concept + rank */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -191,6 +195,8 @@ function PostedContractCard({
           Filing cost: <span className="tabular-nums text-silver/60">{posting.bidCost}</span>
         </p>
         <button
+          data-testid="contract-bid-button"
+          data-posting-id={posting.postingId}
           className="btn-primary"
           disabled={!posting.canBid}
           onClick={() => onBid(posting.postingId)}
@@ -221,7 +227,7 @@ function ContractBoard({
   }
 
   return (
-    <div>
+    <div data-testid="contract-board">
       <h3 className="mb-3 text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
         Contract Board
       </h3>
@@ -247,7 +253,7 @@ function ContractResolutionSurface({
   onAdvance: () => void;
 }) {
   return (
-    <div className="glass-card p-4">
+    <div className="glass-card p-4" data-testid="contract-review">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
@@ -259,7 +265,7 @@ function ContractResolutionSurface({
               : "Operations is waiting for the previous contract to close out before posting new work."}
           </p>
         </div>
-        <button className="btn-primary" onClick={onAdvance}>
+        <button className="btn-primary" data-testid="contract-review-next" onClick={onAdvance}>
           Review Next Board
         </button>
       </div>
@@ -273,7 +279,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
   const isEnded = contract.bossDefeated || contract.contractLost;
 
   return (
-    <div className="glass-card p-4">
+    <div className="glass-card p-4" data-testid="contract-status">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
@@ -391,7 +397,11 @@ export function OperationsPanel({
   const isBiddingPhase = lifecycle === "bidding";
 
   return (
-    <div className="animate-enter space-y-5">
+    <div
+      className="animate-enter space-y-5"
+      data-testid="operations-panel"
+      data-category={activeCategory}
+    >
       {activeCategory === "contract" ? (
         <>
           {operations.contractResult && (isResolvedPhase || isBiddingPhase) && (

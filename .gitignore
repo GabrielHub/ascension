@@ -37,3 +37,14 @@ vite.config.ts.timestamp-*
 !/playwright/logs/.gitkeep
 /playwright/artifacts/*
 !/playwright/artifacts/.gitkeep
+
+# Tauri test artifacts
+/tauri-test/screenshots/*
+!/tauri-test/screenshots/.gitkeep
+/tauri-test/logs/*
+!/tauri-test/logs/.gitkeep
+/tauri-test/artifacts/*
+!/tauri-test/artifacts/.gitkeep
+
+# Local Rust build output
+/src-tauri/target/

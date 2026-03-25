@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { buildGameShellHref } from "app/features/runtime";
 import { formatSaveSlotTimestamp, type StartScreenSaveSlot } from "app/features/save-slots";
 import { useSaveSlots } from "app/features/save-slots/use-save-slots";
+import type { SaveSlotId } from "save";
 
 const P = {
   void: "#060608",
@@ -40,6 +41,11 @@ type FlowingStarStyle = CSSProperties & {
 type OccupiedSaveSlotCard = StartScreenSaveSlot & {
   state: "occupied";
   metadata: NonNullable<StartScreenSaveSlot["metadata"]>;
+};
+
+type UnreadableSaveSlotCard = StartScreenSaveSlot & {
+  state: "error";
+  diagnostic: NonNullable<StartScreenSaveSlot["diagnostic"]>;
 };
 
 function generateFlowingStars(count: number): FlowingStar[] {
@@ -139,19 +145,73 @@ function SlotStateBadge({ label }: { label: string }) {
   );
 }
 
+type BusyAction = "delete" | "export" | "import";
+
+function SlotActionButton({
+  label,
+  busyLabel,
+  hoverColor = P.silverBody,
+  disabled,
+  onClick,
+  "data-testid": testId,
+  "data-slot-id": slotId,
+}: {
+  label: string;
+  busyLabel?: string;
+  hoverColor?: string;
+  disabled?: boolean;
+  onClick: () => void;
+  "data-testid"?: string;
+  "data-slot-id"?: string;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      type="button"
+      disabled={disabled}
+      data-testid={testId}
+      data-slot-id={slotId}
+      className="cursor-pointer px-3 py-2 transition-all duration-300 disabled:cursor-default"
+      style={{
+        fontFamily: "'Inter', sans-serif",
+        fontWeight: 400,
+        fontSize: "0.75rem",
+        letterSpacing: "0.04em",
+        color: hover ? hoverColor : P.dimGold,
+        background: "transparent",
+        border: "none",
+        opacity: hover ? 1 : 0.85,
+        textDecoration: hover ? "underline" : "none",
+        textUnderlineOffset: "3px",
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {busyLabel ?? label}
+    </button>
+  );
+}
+
 function OccupiedCard({
   slot,
-  isBusy,
+  busyAction,
+  canImport,
+  onExport,
+  onImport,
   onDelete,
 }: {
   slot: OccupiedSaveSlotCard;
-  isBusy: boolean;
+  busyAction?: BusyAction;
+  canImport: boolean;
+  onExport: (slotId: SaveSlotId) => void;
+  onImport: (slot: OccupiedSaveSlotCard) => void;
   onDelete: (slot: OccupiedSaveSlotCard) => void;
 }) {
+  const isBusy = busyAction !== undefined;
   const [hovered, setHovered] = useState(false);
   const [loadHover, setLoadHover] = useState(false);
   const [loadFocus, setLoadFocus] = useState(false);
-  const [deleteHover, setDeleteHover] = useState(false);
 
   const stats = [
     { label: "Created", value: formatSaveSlotTimestamp(slot.metadata.createdAt) },
@@ -162,6 +222,9 @@ function OccupiedCard({
   return (
     <div
       className="card-entrance group relative transition-all duration-500 ease-out"
+      data-testid="slot-card"
+      data-slot-id={slot.slotId}
+      data-slot-state={slot.state}
       style={{
         animationDelay: `${1.2 + (slot.slotNumber - 1) * 0.15}s`,
       }}
@@ -260,10 +323,27 @@ function OccupiedCard({
           ))}
         </div>
 
-        <div className="relative flex items-center gap-3">
+        {slot.diagnostic && (
+          <p
+            className="mb-4 rounded-lg px-3 py-2"
+            style={{
+              border: "1px solid rgba(200,168,76,0.18)",
+              background: "rgba(200,168,76,0.06)",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.75rem",
+              color: P.silverBody,
+            }}
+          >
+            {slot.diagnostic.message}
+          </p>
+        )}
+
+        <div className="relative flex flex-wrap items-center gap-3">
           <Link
             to={buildGameShellHref({ mode: "load", slotId: slot.slotId })}
             aria-disabled={isBusy}
+            data-testid="slot-load"
+            data-slot-id={slot.slotId}
             className="flex-1 rounded-lg px-5 py-2 text-center transition-all duration-300"
             style={{
               fontFamily: "'Inter', sans-serif",
@@ -288,44 +368,161 @@ function OccupiedCard({
           >
             {isBusy ? "Working" : "Load"}
           </Link>
-          <button
-            onClick={() => onDelete(slot)}
-            type="button"
+          <SlotActionButton
+            label="Export"
+            busyLabel={busyAction === "export" ? "Exporting" : undefined}
             disabled={isBusy}
-            className="cursor-pointer px-3 py-2 transition-all duration-300 disabled:cursor-default"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 400,
-              fontSize: "0.75rem",
-              letterSpacing: "0.04em",
-              color: deleteHover ? P.deleteRedHover : P.dimGold,
-              background: "transparent",
-              border: "none",
-              opacity: deleteHover ? 1 : 0.85,
-              textDecoration: deleteHover ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
-            onMouseEnter={() => setDeleteHover(true)}
-            onMouseLeave={() => setDeleteHover(false)}
-          >
-            {isBusy ? "Deleting" : "Delete"}
-          </button>
+            onClick={() => onExport(slot.slotId)}
+            data-testid="slot-export"
+            data-slot-id={slot.slotId}
+          />
+          {canImport && (
+            <SlotActionButton
+              label="Import"
+              busyLabel={busyAction === "import" ? "Importing" : undefined}
+              disabled={isBusy}
+              onClick={() => onImport(slot)}
+              data-testid="slot-import"
+              data-slot-id={slot.slotId}
+            />
+          )}
+          <SlotActionButton
+            label="Delete"
+            busyLabel={busyAction === "delete" ? "Deleting" : undefined}
+            hoverColor={P.deleteRedHover}
+            disabled={isBusy}
+            onClick={() => onDelete(slot)}
+            data-testid="slot-delete"
+            data-slot-id={slot.slotId}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function EmptyCard({ slot }: { slot: StartScreenSaveSlot }) {
+function ErrorCard({
+  slot,
+  busyAction,
+  canImport,
+  onImport,
+  onDelete,
+}: {
+  slot: UnreadableSaveSlotCard;
+  busyAction?: BusyAction;
+  canImport: boolean;
+  onImport: (slot: UnreadableSaveSlotCard) => void;
+  onDelete: (slot: UnreadableSaveSlotCard) => void;
+}) {
+  const isBusy = busyAction !== undefined;
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="card-entrance group relative transition-all duration-500 ease-out"
+      data-testid="slot-card"
+      data-slot-id={slot.slotId}
+      data-slot-state={slot.state}
+      style={{
+        animationDelay: `${1.2 + (slot.slotNumber - 1) * 0.15}s`,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        className="relative overflow-hidden rounded-xl transition-all duration-500"
+        style={{
+          background: P.cardBg,
+          backdropFilter: "blur(30px) saturate(1.2)",
+          WebkitBackdropFilter: "blur(30px) saturate(1.2)",
+          border: `1px solid ${hovered ? "rgba(176,64,64,0.35)" : "rgba(176,64,64,0.18)"}`,
+          boxShadow: hovered ? P.shadowHover : P.shadow,
+          padding: "1.5rem 1.75rem",
+        }}
+      >
+        <div className="relative mb-3 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3
+              className="truncate leading-tight"
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 400,
+                fontSize: "1.35rem",
+                color: P.deleteRedHover,
+                letterSpacing: "0.06em",
+              }}
+            >
+              Slot {slot.slotNumber}
+            </h3>
+          </div>
+          <SlotStateBadge label="Recovery Error" />
+        </div>
+
+        <p
+          className="mb-4 rounded-lg px-3 py-2"
+          style={{
+            border: "1px solid rgba(176,64,64,0.22)",
+            background: "rgba(176,64,64,0.08)",
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "0.8rem",
+            color: P.silverBody,
+          }}
+        >
+          {slot.diagnostic.message}
+        </p>
+
+        <div className="relative flex flex-wrap items-center gap-3">
+          {canImport && (
+            <SlotActionButton
+              label="Import"
+              busyLabel={busyAction === "import" ? "Importing" : undefined}
+              disabled={isBusy}
+              onClick={() => onImport(slot)}
+              data-testid="slot-import"
+              data-slot-id={slot.slotId}
+            />
+          )}
+          <SlotActionButton
+            label="Delete"
+            busyLabel={busyAction === "delete" ? "Deleting" : undefined}
+            hoverColor={P.deleteRedHover}
+            disabled={isBusy}
+            onClick={() => onDelete(slot)}
+            data-testid="slot-delete"
+            data-slot-id={slot.slotId}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyCard({
+  slot,
+  canImport,
+  busyAction,
+  onImport,
+}: {
+  slot: StartScreenSaveSlot;
+  canImport: boolean;
+  busyAction?: BusyAction;
+  onImport: (slot: StartScreenSaveSlot) => void;
+}) {
+  const isBusy = busyAction !== undefined;
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const active = hovered || focused;
 
   return (
-    <div className="card-entrance" style={{ animationDelay: "1.5s" }}>
-      <Link
-        to={buildGameShellHref({ mode: "new", slotId: slot.slotId })}
-        className="group relative block w-full overflow-hidden rounded-xl text-left transition-all duration-500"
+    <div
+      className="card-entrance"
+      data-testid="slot-card"
+      data-slot-id={slot.slotId}
+      data-slot-state={slot.state}
+      style={{ animationDelay: "1.5s" }}
+    >
+      <div
+        className="group relative overflow-hidden rounded-xl transition-all duration-500"
         style={{
           background: P.cardBg,
           backdropFilter: "blur(30px) saturate(1.2)",
@@ -334,66 +531,88 @@ function EmptyCard({ slot }: { slot: StartScreenSaveSlot }) {
           boxShadow: active ? P.shadowHover : P.shadow,
           padding: "1.5rem 1.75rem",
           minHeight: "14rem",
-          outline: focused ? `2px solid ${P.starGold}` : "none",
-          outlineOffset: focused ? "2px" : "0",
-          textDecoration: "none",
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
       >
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        <Link
+          to={buildGameShellHref({ mode: "new", slotId: slot.slotId })}
+          data-testid="slot-new"
+          data-slot-id={slot.slotId}
+          className="block text-left"
           style={{
-            background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${active ? 0.2 : 0.12}) 50%, transparent 90%)`,
-            transition: "background 0.5s ease",
+            outline: focused ? `2px solid ${P.starGold}` : "none",
+            outlineOffset: focused ? "2px" : "0",
+            textDecoration: "none",
           }}
-        />
-
-        <div className="relative flex h-full flex-col items-center justify-center py-6">
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        >
           <div
-            className="star-pulse mb-5 rounded-full transition-all duration-700"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px"
             style={{
-              width: active ? "10px" : "6px",
-              height: active ? "10px" : "6px",
-              background: P.starGold,
-              boxShadow: active
-                ? "0 0 20px rgba(200,168,76,0.5), 0 0 40px rgba(200,168,76,0.2)"
-                : "0 0 10px rgba(200,168,76,0.3)",
+              background: `linear-gradient(90deg, transparent 10%, rgba(200,168,76,${active ? 0.2 : 0.12}) 50%, transparent 90%)`,
+              transition: "background 0.5s ease",
             }}
           />
 
-          <span
-            className="transition-all duration-500"
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 300,
-              fontSize: "0.85rem",
-              letterSpacing: "0.2em",
-              textTransform: "lowercase",
-              color: active ? P.starGold : "rgba(200,168,76,0.35)",
-              opacity: active ? 1 : 0,
-              transform: active ? "translateY(0)" : "translateY(4px)",
-            }}
-          >
-            new
-          </span>
-          <span
-            className="mt-2"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 400,
-              fontSize: "0.75rem",
-              color: P.dimGold,
-              letterSpacing: "0.06em",
-              opacity: 0.7,
-            }}
-          >
-            Slot {slot.slotNumber}
-          </span>
-        </div>
-      </Link>
+          <div className="relative flex h-full flex-col items-center justify-center py-6">
+            <div
+              className="star-pulse mb-5 rounded-full transition-all duration-700"
+              style={{
+                width: active ? "10px" : "6px",
+                height: active ? "10px" : "6px",
+                background: P.starGold,
+                boxShadow: active
+                  ? "0 0 20px rgba(200,168,76,0.5), 0 0 40px rgba(200,168,76,0.2)"
+                  : "0 0 10px rgba(200,168,76,0.3)",
+              }}
+            />
+
+            <span
+              className="transition-all duration-500"
+              style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 300,
+                fontSize: "0.85rem",
+                letterSpacing: "0.2em",
+                textTransform: "lowercase",
+                color: active ? P.starGold : "rgba(200,168,76,0.35)",
+                opacity: active ? 1 : 0,
+                transform: active ? "translateY(0)" : "translateY(4px)",
+              }}
+            >
+              new
+            </span>
+            <span
+              className="mt-2"
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: "0.75rem",
+                color: P.dimGold,
+                letterSpacing: "0.06em",
+                opacity: 0.7,
+              }}
+            >
+              Slot {slot.slotNumber}
+            </span>
+          </div>
+        </Link>
+
+        {canImport && (
+          <div className="relative mt-2 flex justify-center">
+            <SlotActionButton
+              label="Import Save"
+              busyLabel={busyAction === "import" ? "Importing" : undefined}
+              disabled={isBusy}
+              onClick={() => onImport(slot)}
+              data-testid="slot-import"
+              data-slot-id={slot.slotId}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -448,23 +667,50 @@ function FooterLink({ label, to }: { label: string; to?: string }) {
 }
 
 export function StartScreenShell() {
-  const { slots, status, errorMessage, busySlotId, deleteSlot } = useSaveSlots();
+  const {
+    slots,
+    status,
+    errorMessage,
+    busySlotId,
+    busyAction,
+    canImport,
+    deleteSlot,
+    exportSlot,
+    importSlot,
+  } = useSaveSlots();
 
   const topRowSlots = slots.slice(0, 2);
   const bottomRowSlots = slots.slice(2);
   const statusLabel =
     status === "loading" ? "Syncing local save slots" : (errorMessage ?? "Local save slots ready");
 
-  const handleDelete = async (slot: OccupiedSaveSlotCard) => {
-    const confirmed = window.confirm(
-      `Delete ${slot.metadata.guildName} from slot ${slot.slotNumber}? This cannot be undone.`,
-    );
+  const handleDelete = async (slot: OccupiedSaveSlotCard | UnreadableSaveSlotCard) => {
+    const slotLabel =
+      slot.state === "occupied" && slot.metadata
+        ? `${slot.metadata.guildName} from slot ${slot.slotNumber}`
+        : `slot ${slot.slotNumber}`;
+    const confirmed = window.confirm(`Delete ${slotLabel}? This cannot be undone.`);
 
     if (!confirmed) {
       return;
     }
 
     await deleteSlot(slot.slotId);
+  };
+
+  const handleImport = async (slot: StartScreenSaveSlot) => {
+    const confirmed =
+      slot.state === "occupied" || slot.state === "error"
+        ? window.confirm(
+            `Import a save into slot ${slot.slotNumber}? This will replace its current contents.`,
+          )
+        : true;
+
+    if (!confirmed) {
+      return;
+    }
+
+    await importSlot(slot.slotId);
   };
 
   return (
@@ -523,6 +769,7 @@ export function StartScreenShell() {
 
       <div
         className="relative flex h-dvh flex-col overflow-hidden"
+        data-testid="start-screen"
         style={{
           background: P.void,
           fontFamily: "'Inter', sans-serif",
@@ -594,11 +841,29 @@ export function StartScreenShell() {
                   <OccupiedCard
                     key={slot.slotId}
                     slot={slot}
-                    isBusy={busySlotId === slot.slotId}
+                    busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                    canImport={canImport}
+                    onExport={exportSlot}
+                    onImport={handleImport}
+                    onDelete={handleDelete}
+                  />
+                ) : slot.state === "error" && slot.diagnostic ? (
+                  <ErrorCard
+                    key={slot.slotId}
+                    slot={slot}
+                    busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                    canImport={canImport}
+                    onImport={handleImport}
                     onDelete={handleDelete}
                   />
                 ) : (
-                  <EmptyCard key={slot.slotId} slot={slot} />
+                  <EmptyCard
+                    key={slot.slotId}
+                    slot={slot}
+                    canImport={canImport}
+                    busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                    onImport={handleImport}
+                  />
                 ),
               )}
             </div>
@@ -610,11 +875,29 @@ export function StartScreenShell() {
                     <OccupiedCard
                       key={slot.slotId}
                       slot={slot}
-                      isBusy={busySlotId === slot.slotId}
+                      busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                      canImport={canImport}
+                      onExport={exportSlot}
+                      onImport={handleImport}
+                      onDelete={handleDelete}
+                    />
+                  ) : slot.state === "error" && slot.diagnostic ? (
+                    <ErrorCard
+                      key={slot.slotId}
+                      slot={slot}
+                      busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                      canImport={canImport}
+                      onImport={handleImport}
                       onDelete={handleDelete}
                     />
                   ) : (
-                    <EmptyCard key={slot.slotId} slot={slot} />
+                    <EmptyCard
+                      key={slot.slotId}
+                      slot={slot}
+                      canImport={canImport}
+                      busyAction={busySlotId === slot.slotId ? busyAction : undefined}
+                      onImport={handleImport}
+                    />
                   ),
                 )}
               </div>
@@ -629,7 +912,9 @@ export function StartScreenShell() {
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
                 />
-                <FooterLink label="Sandbox" to={buildGameShellHref({ mode: "preview" })} />
+                <div data-testid="start-screen-sandbox-link">
+                  <FooterLink label="Sandbox" to={buildGameShellHref({ mode: "preview" })} />
+                </div>
                 <span
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
@@ -639,6 +924,7 @@ export function StartScreenShell() {
 
               <div className="text-right">
                 <div
+                  data-testid="start-screen-status"
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontWeight: 400,

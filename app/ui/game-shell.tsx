@@ -130,15 +130,19 @@ function CategoryPill({
   icon,
   isActive,
   onClick,
+  testId,
 }: {
   label: string;
   icon: string;
   isActive: boolean;
   onClick: () => void;
+  testId?: string;
 }) {
   return (
     <button
       type="button"
+      data-testid={testId}
+      data-active={isActive}
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.6875rem] font-medium tracking-[0.06em] transition-all duration-200 ${
         isActive
           ? "bg-[rgba(200,168,76,0.12)] text-gold border border-[rgba(200,168,76,0.25)] shadow-[0_0_8px_rgba(200,168,76,0.1)]"
@@ -159,16 +163,19 @@ function ResourceCounter({
   value,
   accent,
   tip,
+  valueTestId,
 }: {
   label: string;
   value: number | string;
   accent?: boolean;
   tip?: string;
+  valueTestId?: string;
 }) {
   const inner = (
     <div className="flex items-baseline gap-1.5">
       <span className="text-xs font-medium uppercase tracking-[0.18em] text-gold/70">{label}</span>
       <span
+        data-testid={valueTestId}
         className={`font-[family-name:var(--font-display)] text-[0.85rem] font-light tabular-nums ${
           accent ? "text-gold" : "text-silver-bright"
         }`}
@@ -1035,7 +1042,7 @@ export function GameShell() {
         : "text-silver/50";
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-void">
+    <div className="relative h-dvh w-full overflow-hidden bg-void" data-testid="game-shell">
       {/* ── Full-screen world canvas (background layer) ──────── */}
       <div className="absolute inset-0 z-0">
         {activeTab === "hq" && hqWorldSnapshot && (
@@ -1051,12 +1058,18 @@ export function GameShell() {
       {/* ── UI overlays (absolutely positioned over the canvas) ── */}
       <div className="pointer-events-none absolute inset-0 z-10">
         {/* ── Command bar (top edge) ──────────────────────────── */}
-        <header className="pointer-events-auto animate-enter absolute left-0 right-0 top-0 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.55)] backdrop-blur-2xl">
+        <header
+          className="pointer-events-auto animate-enter absolute left-0 right-0 top-0 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.55)] backdrop-blur-2xl"
+          data-testid="game-header"
+        >
           <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-2.5">
             {/* Guild identity */}
             <div className="flex items-center gap-3">
               <div className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_rgba(200,168,76,0.5)]" />
-              <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright">
+              <h1
+                className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright"
+                data-testid="guild-name"
+              >
                 {hq.building.name}
               </h1>
               <Tooltip content="Building tier - determines room slots and upgrade access">
@@ -1097,16 +1110,19 @@ export function GameShell() {
                 value={hq.guild.treasury}
                 accent
                 tip="Funds for upgrades, hiring, and purchases"
+                valueTestId="resource-cash-value"
               />
               <ResourceCounter
                 label="Rep"
                 value={hq.guild.reputation}
                 tip="Reputation — attracts better contracts and recruits"
+                valueTestId="resource-reputation-value"
               />
               <ResourceCounter
                 label="Intel"
                 value={hq.guild.intel}
                 tip="Intelligence — reveals raid opportunities"
+                valueTestId="resource-intel-value"
               />
             </div>
 
@@ -1125,7 +1141,12 @@ export function GameShell() {
                   </div>
                 </Tooltip>
                 <Tooltip content="Advance time by one hour">
-                  <button type="button" className="btn-ghost text-xs" onClick={advanceHour}>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    data-testid="advance-hour"
+                    onClick={advanceHour}
+                  >
                     +1h
                   </button>
                 </Tooltip>
@@ -1177,10 +1198,15 @@ export function GameShell() {
                 )}
               </div>
 
-              <button type="button" className="btn-ghost text-xs" onClick={openSettingsModal}>
+              <button
+                type="button"
+                className="btn-ghost text-xs"
+                data-testid="open-settings"
+                onClick={openSettingsModal}
+              >
                 settings
               </button>
-              <Link to="/" className="btn-ghost text-xs">
+              <Link to="/" className="btn-ghost text-xs" data-testid="exit-to-start">
                 exit
               </Link>
             </div>
@@ -1188,13 +1214,17 @@ export function GameShell() {
         </header>
 
         {/* ── Tab navigation + category pills (below header) ── */}
-        <nav className="pointer-events-auto animate-enter-delay-1 absolute left-0 right-0 top-[45px] border-b border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.35)] backdrop-blur-xl">
+        <nav
+          className="pointer-events-auto animate-enter-delay-1 absolute left-0 right-0 top-[45px] border-b border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.35)] backdrop-blur-xl"
+          data-testid="shell-nav"
+        >
           <div className="mx-auto flex max-w-[1400px] items-center gap-0 px-5">
             {TAB_ORDER.map((tab) => (
               <button
                 key={tab}
                 type="button"
                 className="tab-button"
+                data-testid={`shell-tab-${tab}`}
                 data-active={activeTab === tab}
                 onClick={() => setActiveTab(tab)}
               >
@@ -1211,6 +1241,7 @@ export function GameShell() {
                     label={cat.label}
                     icon={cat.icon}
                     isActive={hqCategory === cat.id}
+                    testId={`hq-category-${cat.id}`}
                     onClick={() => setHqCategory(hqCategory === cat.id ? null : cat.id)}
                   />
                 ))}
@@ -1221,6 +1252,7 @@ export function GameShell() {
                     label={cat.label}
                     icon={cat.icon}
                     isActive={opsCategory === cat.id}
+                    testId={`ops-category-${cat.id}`}
                     onClick={() => setOpsCategory(opsCategory === cat.id ? null : cat.id)}
                   />
                 ))}
@@ -1326,7 +1358,12 @@ export function GameShell() {
         {((activeTab === "hq" && hqCategory !== null) ||
           (activeTab === "operations" && opsCategory !== null)) && (
           <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]">
-            <div className="flex items-start gap-3">
+            <div
+              className="flex items-start gap-3"
+              data-testid="shell-bottom-panel"
+              data-active-tab={activeTab}
+              data-active-category={activeTab === "hq" ? (hqCategory ?? "") : (opsCategory ?? "")}
+            >
               <div className="min-w-0 flex-1">
                 {activeTab === "hq" && hqCategory === "rooms" && (
                   <HqPanel
@@ -1421,7 +1458,10 @@ export function GameShell() {
         <footer className="pointer-events-auto absolute bottom-0 left-0 right-0 border-t border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)] px-5 py-1.5 backdrop-blur-md">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60">
+              <span
+                className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60"
+                data-testid="session-mode"
+              >
                 {session.mode === "preview"
                   ? "sandbox session"
                   : session.mode === "new"
@@ -1430,6 +1470,7 @@ export function GameShell() {
               </span>
               {persistenceLabel && (
                 <span
+                  data-testid="persistence-label"
                   className={`text-[0.6875rem] uppercase tracking-[0.12em] ${persistenceClassName}`}
                   title={session.persistence.errorMessage}
                 >

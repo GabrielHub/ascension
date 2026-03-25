@@ -8,18 +8,53 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { registerDesktopTestDriver } from "./features/desktop/test-driver";
 import "./app.css";
 
+registerDesktopTestDriver();
+
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
+    rel: "preload",
+    href: "/fonts/inter-400.ttf",
+    as: "font",
+    type: "font/ttf",
     crossOrigin: "anonymous",
   },
   {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&family=Inter:wght@400;500&display=swap",
+    rel: "preload",
+    href: "/fonts/inter-500.ttf",
+    as: "font",
+    type: "font/ttf",
+    crossOrigin: "anonymous",
+  },
+  {
+    rel: "preload",
+    href: "/fonts/outfit-200.ttf",
+    as: "font",
+    type: "font/ttf",
+    crossOrigin: "anonymous",
+  },
+  {
+    rel: "preload",
+    href: "/fonts/outfit-300.ttf",
+    as: "font",
+    type: "font/ttf",
+    crossOrigin: "anonymous",
+  },
+  {
+    rel: "preload",
+    href: "/fonts/outfit-400.ttf",
+    as: "font",
+    type: "font/ttf",
+    crossOrigin: "anonymous",
+  },
+  {
+    rel: "preload",
+    href: "/fonts/outfit-600.ttf",
+    as: "font",
+    type: "font/ttf",
+    crossOrigin: "anonymous",
   },
 ];
 

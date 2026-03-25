@@ -6,13 +6,19 @@
     "build": "vp build",
     "check": "vp check",
     "dev": "vp dev",
+    "mcp:tauri-test": "tsx tauri-test/mcp/server.ts",
+    "tauri:build": "tauri build",
+    "tauri:dev": "tauri dev",
+    "test:tauri": "tsx tauri-test/run.ts",
     "typecheck": "react-router typegen && tsc",
     "start": "vp preview",
     "test": "vp test",
     "prepare": "vp config"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@react-router/node": "7.13.1",
+    "@tauri-apps/api": "^2.10.1",
     "bitecs": "^0.4.0",
     "idb": "^8.0.3",
     "isbot": "^5",
@@ -20,19 +26,23 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "7.13.1",
-    "tone": "^15.1.22"
+    "tone": "^15.1.22",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@react-router/dev": "7.13.1",
     "@tailwindcss/vite": "^4.2.2",
+    "@tauri-apps/cli": "^2.10.1",
     "@types/node": "^22",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-plus": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "webdriverio": "^9.27.0"
   },
   "packageManager": "pnpm@10.32.1",
   "pnpm": {

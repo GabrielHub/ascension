@@ -9,6 +9,7 @@ import {
   getRoomStateId,
   getSlotKey,
 } from "lib/hq-room-state";
+import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
@@ -619,6 +620,7 @@ function createOperatorEntity(
       roleTag: source.roleTag,
       specialtyTag: source.specialtyTag,
     });
+  const combat = deriveOperatorCombatDefaults(source.roleTag);
 
   addComponent(context.world, entity, OperatorIdentity);
   addComponent(context.world, entity, NeedState);
@@ -644,6 +646,19 @@ function createOperatorEntity(
   OperatorIdentity.deathRaidSummaryId[entity] = "";
   OperatorIdentity.departureTick[entity] = 0;
   OperatorIdentity.departureReason[entity] = "";
+  OperatorIdentity.rank[entity] = combat.rank;
+  OperatorIdentity.attunementTag[entity] = combat.attunementTag;
+  OperatorIdentity.traits[entity] = [...combat.traits];
+  OperatorIdentity.regularAttackId[entity] = combat.kit.regularAttackId;
+  OperatorIdentity.skillId[entity] = combat.kit.skillId;
+  OperatorIdentity.ultimateId[entity] = combat.kit.ultimateId;
+  OperatorIdentity.passiveIds[entity] = [...combat.kit.passiveIds];
+  OperatorIdentity.baseStrength[entity] = combat.baseStats.strength;
+  OperatorIdentity.baseSpeed[entity] = combat.baseStats.speed;
+  OperatorIdentity.baseEndurance[entity] = combat.baseStats.endurance;
+  OperatorIdentity.baseResilience[entity] = combat.baseStats.resilience;
+  OperatorIdentity.basePerception[entity] = combat.baseStats.perception;
+  OperatorIdentity.baseIntelligence[entity] = combat.baseStats.intelligence;
   NeedState.hunger[entity] = source.hunger;
   NeedState.fatigue[entity] = source.fatigue;
   NeedState.stress[entity] = source.stress;

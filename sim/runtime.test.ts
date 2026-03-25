@@ -275,6 +275,9 @@ describe("phase 1 runtime", () => {
     expect(phase1View.visitors).toHaveLength(2);
     const recruited = phase1View.operators[phase1View.operators.length - 1];
     expect(recruited.appearance.presetId).toEqual(expect.any(String));
+    expect(recruited.combat.rank).toBe("f");
+    expect(recruited.combat.attunementTag).toBeTruthy();
+    expect(recruited.combat.kit.skillId).toBeTruthy();
     expect(
       phase1View.relationshipSignals.some((relationship) => {
         return (

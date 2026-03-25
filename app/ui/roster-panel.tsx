@@ -89,7 +89,7 @@ function OperatorRow({
   const operatorTeam = teams.find((team) => team.memberIds.includes(op.id)) ?? null;
 
   return (
-    <div>
+    <div data-testid="operator-row" data-operator-id={op.id}>
       <button
         type="button"
         onClick={onToggle}
@@ -391,7 +391,11 @@ function VisitorRow({
   onReject: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5">
+    <div
+      className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+      data-testid="visitor-row"
+      data-visitor-id={visitor.id}
+    >
       <div className="min-w-0 flex-1">
         <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
         <span className="ml-1.5 text-[0.6875rem] text-gold/60">
@@ -404,6 +408,8 @@ function VisitorRow({
       >
         <button
           type="button"
+          data-testid="visitor-recruit"
+          data-visitor-id={visitor.id}
           className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
             canAccept ? "btn-primary" : "btn-ghost cursor-not-allowed text-silver/30"
           }`}
@@ -416,6 +422,8 @@ function VisitorRow({
       <Tooltip content="Dismiss this visitor" side="top">
         <button
           type="button"
+          data-testid="visitor-pass"
+          data-visitor-id={visitor.id}
           className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
           onClick={onReject}
         >
@@ -505,7 +513,7 @@ export function RosterPanel({
   const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
 
   return (
-    <div className="animate-enter space-y-3">
+    <div className="animate-enter space-y-3" data-testid="roster-panel">
       {/* ── Pressure banner ─────────────────────────────── */}
       {rosterPressure.replacementPressureLevel !== "stable" && (
         <div
@@ -535,6 +543,7 @@ export function RosterPanel({
           </h3>
           <Tooltip content="Active operators / maximum capacity">
             <span
+              data-testid="roster-operators-count"
               className={`text-[0.6875rem] tabular-nums ${
                 rosterPressure.replacementPressureLevel === "critical"
                   ? "text-ember"
@@ -618,7 +627,7 @@ export function RosterPanel({
       </div>
 
       {/* ── Visitors ──────────────────────────────────────── */}
-      <div>
+      <div data-testid="roster-visitors">
         <div className="mb-1 flex items-center justify-between px-1">
           <Tooltip content="Potential recruits passing through. Accept to add as operators">
             <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">

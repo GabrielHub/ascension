@@ -61,8 +61,18 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Do not autonomously launch follow-up tasks after finishing the requested work
 - Keep commits atomic when asked to prepare commits
 
+## Host Split
+
+- Ascension is a web-first game engine with a Windows Tauri desktop host
+- Browser mode remains the primary fast development surface
+- Browser mode keeps browser-backed saves for development work
+- Tauri desktop mode uses file-backed saves for playtesting and integration validation
+- Do not move gameplay authority into Rust or the Tauri shell
+- Validate browser behavior and desktop behavior on the host that actually owns the responsibility
+
 ## Playwright
 
+- Browser automation is the primary fast regression surface for gameplay and UI work
 - Assume any required dev server is already running when using Playwright
 - If the required dev server is not running, stop and ask the user to start it
 - Never start dev servers autonomously for Playwright work
@@ -76,6 +86,15 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Put logs and network captures in `playwright/logs/`
 - Put traces or other browser artifacts in `playwright/artifacts/`
 - If a Playwright tool accepts a filename, always target those folders explicitly
+
+## Tauri Automation
+
+- Use Tauri automation when the task touches the desktop host, file-backed saves, import/export, packaging, or installed-app behavior
+- Desktop automation artifacts live under `tauri-test/`
+- Put screenshots in `tauri-test/screenshots/`
+- Put logs in `tauri-test/logs/`
+- Put traces and other artifacts in `tauri-test/artifacts/`
+- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over ad hoc desktop automation stacks
 
 ## References
 

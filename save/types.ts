@@ -344,6 +344,7 @@ export interface OccupiedSaveSlot {
   schemaVersion: number;
   compatibilityVersion: string;
   metadata: SaveSlotMetadata;
+  diagnostic?: SaveSlotDiagnostic;
 }
 
 export interface EmptySaveSlot {
@@ -351,7 +352,18 @@ export interface EmptySaveSlot {
   state: "empty";
 }
 
-export type SaveSlotRecord = EmptySaveSlot | OccupiedSaveSlot;
+export interface SaveSlotDiagnostic {
+  level: "warning" | "error";
+  message: string;
+}
+
+export interface UnreadableSaveSlot {
+  slotId: SaveSlotId;
+  state: "error";
+  diagnostic: SaveSlotDiagnostic;
+}
+
+export type SaveSlotRecord = EmptySaveSlot | OccupiedSaveSlot | UnreadableSaveSlot;
 
 export function toOccupiedSaveSlot(save: PersistedSaveGame): OccupiedSaveSlot {
   return {
@@ -365,4 +377,21 @@ export function toOccupiedSaveSlot(save: PersistedSaveGame): OccupiedSaveSlot {
 
 export function createEmptySaveSlot(slotId: SaveSlotId): EmptySaveSlot {
   return { slotId, state: "empty" };
+}
+
+export function getSaveSlotNumber(slotId: SaveSlotId): number {
+  return SAVE_SLOT_IDS.indexOf(slotId) + 1;
+}
+
+export function slugifySaveName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+export function buildSaveExportFileName(save: PersistedSaveGame): string {
+  const guildSlug = slugifySaveName(save.metadata.guildName) || `slot-${getSaveSlotNumber(save.slotId)}`;
+  return `ascension-${guildSlug}.json`;
 }

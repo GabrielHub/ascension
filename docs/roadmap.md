@@ -16,7 +16,7 @@ This section is intentionally summary-level. The implementation itself is the so
 
 - `Vite+`, React, and React Router are in place for the local-first client shell.
 - The start screen supports new game, load, delete, preview/dev access, and SVG tooling entry points.
-- IndexedDB-backed save slots, slot metadata, schema migration, and strict save validation are implemented.
+- Browser-backed save slots, slot metadata, schema migration, and strict save validation are implemented for development mode, and the Windows Tauri host now uses file-backed desktop saves for playtesting.
 - The template registry covers resources, buildings, rooms, upgrades, items, missions, and events with deterministic validation.
 - The playable bodega slice exists with seeded rooms, operators, staff, visitors, inventory, and headquarters state.
 - The ECS runtime owns guild, time, building, room, operator, staff, visitor, raid, social, inventory, and event state.
@@ -56,6 +56,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - Loot distribution is now driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
 - Boss commitment now escalates into a blocking interruption beat, and committed confrontations can hand off into a save-safe runtime-owned encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
+- The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
 ## Phase 3: Union Hall Expansion
 

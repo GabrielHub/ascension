@@ -1,18 +1,15 @@
 # Ascension
 
-Ascension is a local-first management sim about running a dungeon-clearing guild in near-future New York City. The current build focuses on a playable bodega-headquarters slice with ECS-driven simulation, browser saves, and world-first presentation.
+Ascension is a web-first management sim about running a dungeon-clearing guild in near-future New York City. The shipped playtest host is now a Windows Tauri desktop app, while the gameplay runtime, ECS simulation, rendering, UI intents, and save codec remain web-owned.
 
-## Current Status
+## Current Posture
 
-The shipped slice includes:
-
-- a start screen with new game, load, delete, preview, and tooling entry points
-- IndexedDB-backed save slots with validation and schema migration
-- a data-driven bodega HQ with rooms, upgrades, staff, visitors, inventory, and market systems
-- autonomous operators, raid opportunities, recurring teams, morale and loyalty pressure, injuries, departures, and death
-- a full-screen raid view, persistent event log, operator portraits, and authored SVG environment content
-
-This repository is still preproduction-facing, but it is not a placeholder shell. The implementation already contains the main runtime, save, rendering, and content pipelines for the current phase.
+- Browser mode remains the fastest development surface through `vp dev`.
+- Browser mode keeps browser-backed save slots for day-to-day feature work.
+- The Tauri desktop host uses file-backed JSON saves under app-local storage for playtesting.
+- Save validation, migration, and compatibility still flow through the shared `PersistedSaveGame` codec.
+- Browser automation remains the primary fast regression loop for gameplay and UI work.
+- Tauri desktop automation covers desktop host behavior, file saves, import/export, and installer-facing integration.
 
 ## Stack
 
@@ -20,48 +17,44 @@ This repository is still preproduction-facing, but it is not a placeholder shell
 - React 19 + TypeScript
 - React Router 7 for shell routing
 - `bitECS` for mutable gameplay state
-- IndexedDB via `idb` for local saves
+- IndexedDB via `idb` for browser-mode saves
+- Tauri 2 for the Windows desktop host
 - Tailwind CSS 4 for styling
-- Vitest for tests
+- Vitest for unit and browser-surface tests
+- WebdriverIO + `tauri-driver` harness code for desktop integration validation
 
-## Architecture
+## Workflows
 
-The repo follows a strict split of responsibilities:
-
-- ECS owns mutable gameplay state
-- templates own static gameplay configuration
-- systems own gameplay behavior
-- UI owns presentation and typed intents
-- save code owns serialization, validation, and migration
-- React Router owns app-shell navigation only
-
-## Getting Started
-
-Preferred workflow:
+Preferred commands:
 
 ```bash
 vp install
 vp dev
+pnpm tauri:dev
 vp check
 vp test
+pnpm test:tauri
 vp build
+pnpm tauri:build
+pnpm mcp:tauri-test
 ```
 
-`package.json` mirrors the same workflow through scripts, but repo conventions prefer `vp`.
+Use `vp dev` for ordinary gameplay and UI iteration. Use `pnpm tauri:dev` when the change touches the desktop host, file-backed saves, import/export, or installed-app behavior.
 
 ## Repo Map
 
-- `app/` React Router entry points, UI, and app-facing feature hooks
+- `app/` React Router entry points, UI, desktop bridge wiring, and app-facing feature hooks
 - `content/` authored templates, requirements, effects, and bootstrap data
 - `sim/` ECS components, commands, systems, and runtime assembly
 - `render/` world rendering, camera logic, and SVG/world presentation helpers
-- `save/` snapshot codec, types, storage, and migration logic
+- `save/` snapshot codec, types, browser and desktop storage backends, and migration logic
+- `src-tauri/` Tauri desktop host, native save bridge commands, and Windows packaging config
+- `playwright/` browser automation screenshots, logs, and artifacts
+- `tauri-test/` desktop automation harness, MCP wrapper, screenshots, logs, and artifacts
 - `public/data/` environment, portrait, and other runtime-loaded asset data
-- `docs/` roadmap, product-plan, and world-foundation references
+- `docs/` roadmap, product-plan, world-foundation, and execution-plan references
 
 ## Documentation
-
-Use the docs for future-facing direction and reference, not as a duplicate of implementation details:
 
 - [Documentation Index](./docs/index.md)
 - [Roadmap](./docs/roadmap.md)
@@ -72,4 +65,5 @@ Use the docs for future-facing direction and reference, not as a duplicate of im
 ## Notes
 
 - Code, tests, templates, and assets are the source of truth for implemented behavior.
-- Keep secrets in local environment files and out of version control.
+- The web engine remains authoritative; Tauri is a thin desktop host.
+- Desktop save files are normalized JSON, written atomically with backup recovery.

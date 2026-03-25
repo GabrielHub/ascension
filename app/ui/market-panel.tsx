@@ -20,10 +20,12 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
   });
 
   return (
-    <div className="animate-enter space-y-4">
+    <div className="animate-enter space-y-4" data-testid="market-panel">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Market</h3>
-        <span className="text-[0.6875rem] tabular-nums text-gold">${guild.treasury}</span>
+        <span className="text-[0.6875rem] tabular-nums text-gold" data-testid="market-treasury">
+          ${guild.treasury}
+        </span>
       </div>
 
       {/* Buy section */}
@@ -40,6 +42,8 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
               return (
                 <div
                   key={item.itemId}
+                  data-testid="market-buy-row"
+                  data-item-id={item.itemId}
                   className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-[rgba(200,168,76,0.03)]"
                 >
                   <span className="min-w-0 truncate text-xs text-silver-bright">{item.name}</span>
@@ -48,6 +52,8 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                   </span>
                   <button
                     type="button"
+                    data-testid="market-buy-button"
+                    data-item-id={item.itemId}
                     className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
                     disabled={!canAfford}
                     onClick={() => callbacks.buyItem(item.itemId)}
@@ -81,6 +87,8 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
               return (
                 <div
                   key={inv.itemId}
+                  data-testid="market-sell-row"
+                  data-item-id={inv.itemId}
                   className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-[rgba(200,168,76,0.03)]"
                 >
                   <span className="min-w-0 truncate text-xs text-silver-bright">{inv.name}</span>
@@ -92,6 +100,8 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                   </span>
                   <button
                     type="button"
+                    data-testid="market-sell-button"
+                    data-item-id={inv.itemId}
                     className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
                     onClick={() => callbacks.sellItem(inv.itemId, 1)}
                   >
