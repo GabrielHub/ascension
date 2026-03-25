@@ -1,9 +1,15 @@
 import type { TemplateRegistry } from "content/templates";
 import type { ActiveRaidSnapshot, RaidSummarySnapshot, WorldSnapshot } from "save";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
-import type { Phase1RuntimeView, Phase2View } from "sim";
+import {
+  projectVisitorRecruitLoyalty,
+  projectVisitorRecruitMorale,
+  type Phase1RuntimeView,
+  type Phase2View,
+} from "sim";
 import { getBuildingFloors } from "content/building-layouts";
 import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
+import { visitorQualityToRank } from "lib/visitor-rank";
 
 import type { VisibleGear } from "./operator-parts";
 import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
@@ -247,6 +253,8 @@ export interface VisitorViewModel {
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  projectedMorale: number;
+  projectedLoyalty: number;
   presetId: string;
   rank: string;
 }
@@ -453,14 +461,6 @@ export interface OperationsViewModel {
 }
 
 // ── Tag formatting ──────────────────────────────────────────────────────
-
-export function visitorQualityToRank(quality: number): string {
-  if (quality >= 85) return "A";
-  if (quality >= 70) return "B";
-  if (quality >= 55) return "C";
-  if (quality >= 40) return "D";
-  return "E";
-}
 
 /** Strip a `prefix:` or `prefix/` from a tag string and replace separators with spaces. */
 export function formatTag(tag: string): string {
@@ -782,6 +782,10 @@ export function buildHqViewFromPhase1(
     patience: v.patience,
     quality: v.quality,
     expectedLoyalty: v.expectedLoyalty,
+    projectedMorale: Math.round(v.projectedMorale ?? projectVisitorRecruitMorale(v.quality)),
+    projectedLoyalty: Math.round(
+      v.projectedLoyalty ?? projectVisitorRecruitLoyalty(v.expectedLoyalty),
+    ),
     presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
     rank: visitorQualityToRank(v.quality),
   }));
@@ -1163,6 +1167,12 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       patience: num(raw, "patience", 10),
       quality,
       expectedLoyalty: num(raw, "expectedLoyalty", 50),
+      projectedMorale: Math.round(
+        num(raw, "projectedMorale", projectVisitorRecruitMorale(quality)),
+      ),
+      projectedLoyalty: Math.round(
+        num(raw, "projectedLoyalty", projectVisitorRecruitLoyalty(num(raw, "expectedLoyalty", 50))),
+      ),
       presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
       rank: visitorQualityToRank(quality),
     };

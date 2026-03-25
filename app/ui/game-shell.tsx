@@ -10,6 +10,7 @@ import {
 } from "app/features/runtime";
 import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
 import { HqWorldCanvas } from "render";
+import type { InterventionId } from "sim";
 import type {
   FocusPayload,
   HqDebugOverlays,
@@ -89,32 +90,17 @@ export async function resolveInterruptionAction(
   choiceId: string | undefined,
   isDevMode: boolean,
 ): Promise<void> {
-  if (
+  const startPausedForDebug =
+    isDevMode &&
     activeInterruption?.type === "raid_boss_commitment" &&
     activeInterruption.payload.kind === "raid_boss_commitment" &&
-    choiceId === "commit"
-  ) {
-    const payload = activeInterruption.payload;
-    const startPausedForDebug = isDevMode && activeInterruption.sourceSystem === "dev-menu";
-
-    await session.commands.dispatch({ type: "sim/interruption-resolve", instanceId, choiceId });
-    await session.commands.dispatch({
-      type: "sim/encounter-start",
-      activeRaidId: payload.activeRaidId,
-      contractSiteId: payload.contractSiteId,
-      missionId: payload.missionId,
-      teamId: payload.teamId,
-      operatorIds: [...payload.operatorIds],
-      bossId: payload.bossId,
-    });
-
-    if (startPausedForDebug) {
-      await session.commands.dispatch({ type: "sim/encounter-pause" });
-    }
-    return;
-  }
-
+    choiceId === "commit" &&
+    activeInterruption.sourceSystem === "dev-menu";
   await session.commands.dispatch({ type: "sim/interruption-resolve", instanceId, choiceId });
+
+  if (startPausedForDebug) {
+    await session.commands.dispatch({ type: "sim/encounter-pause" });
+  }
 }
 
 // ── Category definitions ─────────────────────────────────────────────────
@@ -380,9 +366,6 @@ function FocusedVisitorOverlay({
   const patienceFraction = Math.max(0, Math.min(1, visitor.patience / 120));
   const patienceUrgent = patienceFraction <= 0.25;
 
-  const estimatedMorale = Math.round(Math.min(80, Math.max(40, 52 + visitor.quality * 0.2)));
-  const estimatedLoyalty = Math.round(Math.min(85, Math.max(35, visitor.expectedLoyalty)));
-
   return (
     <div className="glass-card pointer-events-auto animate-enter w-72 border-[rgba(232,170,60,0.1)] p-4">
       {/* Header */}
@@ -442,13 +425,13 @@ function FocusedVisitorOverlay({
         <Tooltip content="Projected starting morale if recruited">
           <div className="glass-card-inset p-2">
             <p className="uppercase tracking-[0.12em] text-[rgba(232,170,60,0.6)]">Morale</p>
-            <p className="mt-1 tabular-nums text-silver-bright">{estimatedMorale}</p>
+            <p className="mt-1 tabular-nums text-silver-bright">{visitor.projectedMorale}</p>
           </div>
         </Tooltip>
         <Tooltip content="Projected starting loyalty if recruited">
           <div className="glass-card-inset p-2">
             <p className="uppercase tracking-[0.12em] text-[rgba(232,170,60,0.6)]">Loyalty</p>
-            <p className="mt-1 tabular-nums text-silver-bright">{estimatedLoyalty}</p>
+            <p className="mt-1 tabular-nums text-silver-bright">{visitor.projectedLoyalty}</p>
           </div>
         </Tooltip>
       </div>
@@ -839,7 +822,7 @@ export function GameShell() {
       if (!session) return;
       void session.commands.dispatch({
         type: "sim/encounter-use-intervention",
-        interventionId: interventionId as import("sim/systems/encounter-types").InterventionId,
+        interventionId: interventionId as InterventionId,
       });
     },
     [session],

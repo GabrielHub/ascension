@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { NavigationGraph } from "render/types";
+import type { NavigationGraph } from "lib/navigation-graph";
 
 import { findPath, interpolatePathPosition } from "./navigation";
 

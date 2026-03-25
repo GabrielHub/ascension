@@ -1,4 +1,8 @@
-import { applySimCommand, registerEncounterCommandHandler, registerContractCommandHandler } from "./commands";
+import {
+  applySimCommand,
+  registerEncounterCommandHandler,
+  registerContractCommandHandler,
+} from "./commands";
 import { refreshBuildingAuthoritySystem } from "./building-progression";
 import { reconcileAssignmentsSystem } from "./assignment";
 import { advanceEconomySystem } from "./economy";
@@ -60,7 +64,11 @@ export const simSystemSchedule: readonly SimSystemGroup[] = [
 // Register encounter commands and incident system after module init completes.
 // These modules have transitive imports that re-enter this barrel, so they
 // must load after the initial evaluation finishes.
-void Promise.all([import("./encounter-commands"), import("./incident-system"), import("./contract-commands")])
+void Promise.all([
+  import("./encounter-commands"),
+  import("./incident-system"),
+  import("./contract-commands"),
+])
   .then(([encounterMod, incidentMod, contractMod]) => {
     registerEncounterCommandHandler(encounterMod.applyEncounterCommand);
     incidentSystemFn = incidentMod.advanceIncidentSystem;

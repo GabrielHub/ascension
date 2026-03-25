@@ -1,8 +1,8 @@
 import { getBuildingLayout, type BuildingFloorLayout } from "content/building-layouts";
-import { buildNavigationGraph } from "sim/navigation";
 import { getHqBackdropManifest, getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
+import { buildNavigationGraph } from "./navigation";
 import { createEffectsWithOverrides } from "./world-effects";
 import type {
   ActorMarker,

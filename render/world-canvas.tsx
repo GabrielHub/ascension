@@ -38,7 +38,7 @@ import {
   drawFogEdges,
   drawTeamMarker,
   RAID_VOID,
-} from "app/ui/raid-world";
+} from "./raid-draw";
 import { getActorPortraitUrl } from "./actor-tokens";
 import { roundRect } from "./canvas-utils";
 import { projectIso } from "./hq-world";

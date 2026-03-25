@@ -4,6 +4,7 @@ Checked-in plan docs are execution briefs, not canon. Some are infrastructure pl
 
 ## Current Plans
 
+- [ECS Architecture Remediation Audit](./ecs-architecture-remediation-audit.md)
 - [Raid Contract Loop](./raid-contract-loop.md)
 - [Raid Rank And Dungeon Pool](./raid-rank-and-dungeon-pool.md)
 - [Raid Site Identity And UX](./raid-site-identity-and-ux.md)

@@ -254,6 +254,26 @@ describe("encounter simulation", () => {
     expect(encounter!.status).toBe("retreat");
   });
 
+  it("starts the boss encounter from interruption resolution when the player commits", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
+    const activeInterruption = simulation.getPhase1View().activeInterruption;
+
+    expect(activeInterruption?.payload.kind).toBe("raid_boss_commitment");
+
+    simulation.dispatch({
+      type: "sim/interruption-resolve",
+      instanceId: activeInterruption?.instanceId ?? "missing",
+      choiceId: "commit",
+    });
+
+    expect(simulation.runtimeState.interruptionQueue.active).toBeNull();
+    expect(simulation.runtimeState.activeEncounter).not.toBeNull();
+    expect(simulation.runtimeState.activeEncounter?.status).toBe("active");
+    expect(simulation.runtimeState.worldTimeFrozen).toBe(true);
+  });
+
   it("supports managerial interventions", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);

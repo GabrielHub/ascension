@@ -1,8 +1,12 @@
 export type { HqTimeOfDayPhase } from "lib/hq-time-phase";
 export type { HqBackdropZone } from "lib/hq-environment-manifest";
+export type { NavAnchor, NavAnchorKind, NavConnector, NavigationGraph } from "lib/navigation-graph";
+export type { RaidTeamGoal } from "lib/raid-team-goal";
 
 import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
 import type { HqBackdropZone } from "lib/hq-environment-manifest";
+import type { NavigationGraph } from "lib/navigation-graph";
+import type { RaidTeamGoal } from "lib/raid-team-goal";
 
 export interface HqBackdropSnapshot {
   phase: HqTimeOfDayPhase;
@@ -25,29 +29,6 @@ export interface CameraBounds {
   maxZoom: number;
   worldWidth: number;
   worldHeight: number;
-}
-
-export type NavAnchorKind = "entry" | "idle" | "work" | "social" | "recovery";
-
-export interface NavAnchor {
-  id: string;
-  roomId: string;
-  kind: NavAnchorKind;
-  x: number;
-  y: number;
-}
-
-export interface NavConnector {
-  id: string;
-  fromAnchorId: string;
-  toAnchorId: string;
-  waypoints: readonly Readonly<{ x: number; y: number }>[];
-  traversalMs: number;
-}
-
-export interface NavigationGraph {
-  anchors: readonly NavAnchor[];
-  connectors: readonly NavConnector[];
 }
 
 export type ActorKind = "operator" | "staff" | "visitor";
@@ -224,15 +205,6 @@ export interface HqWorldSnapshot {
   backdrop: HqBackdropSnapshot | null;
   focus: FocusPayload | null;
 }
-
-export type RaidTeamGoal =
-  | "exploring"
-  | "looting"
-  | "intel"
-  | "hunting"
-  | "boss"
-  | "retreating"
-  | "regrouping";
 
 export interface RaidTeamMarker {
   teamId: string;

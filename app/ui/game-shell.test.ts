@@ -31,15 +31,11 @@ function createBossCommitmentInterruption(sourceSystem = "raid-system") {
 }
 
 function createSession(dispatch: ReturnType<typeof vi.fn>): Pick<RuntimeSession, "commands"> {
-  return {
-    commands: {
-      dispatch,
-    },
-  } as Pick<RuntimeSession, "commands">;
+  return { commands: { dispatch } } as unknown as Pick<RuntimeSession, "commands">;
 }
 
 describe("resolveInterruptionAction", () => {
-  it("resolves boss commitment into an encounter start", async () => {
+  it("resolves boss commitment through the simulation-owned interruption path", async () => {
     const dispatch = vi.fn().mockResolvedValue(undefined);
 
     await resolveInterruptionAction(
@@ -50,20 +46,11 @@ describe("resolveInterruptionAction", () => {
       false,
     );
 
-    expect(dispatch).toHaveBeenCalledTimes(2);
+    expect(dispatch).toHaveBeenCalledTimes(1);
     expect(dispatch).toHaveBeenNthCalledWith(1, {
       type: "sim/interruption-resolve",
       instanceId: "interruption-1",
       choiceId: "commit",
-    });
-    expect(dispatch).toHaveBeenNthCalledWith(2, {
-      type: "sim/encounter-start",
-      activeRaidId: "raid/1",
-      contractSiteId: "site/1",
-      missionId: "mission/1",
-      teamId: "team/1",
-      operatorIds: ["operator/a", "operator/b", "operator/c"],
-      bossId: "boss/the-dispatcher",
     });
   });
 
@@ -78,8 +65,8 @@ describe("resolveInterruptionAction", () => {
       true,
     );
 
-    expect(dispatch).toHaveBeenCalledTimes(3);
-    expect(dispatch).toHaveBeenNthCalledWith(3, {
+    expect(dispatch).toHaveBeenCalledTimes(2);
+    expect(dispatch).toHaveBeenNthCalledWith(2, {
       type: "sim/encounter-pause",
     });
   });

@@ -4,7 +4,10 @@ import {
   buildRaidWorldSnapshot,
   composeHqWorldGeometry,
   createHqWorldSnapshot,
+  findPath,
   getBoundsFromPoints,
+  interpolatePathPosition,
+  resolveRoomAnchor,
 } from "render";
 import type {
   ActorMarker,
@@ -12,6 +15,7 @@ import type {
   FogCell,
   HqWorldSnapshot,
   NavAnchorKind,
+  NavPath,
   RaidTeamMarker,
   RaidWorldSnapshot,
 } from "render";
@@ -29,11 +33,7 @@ import {
   createAscensionSimulation,
   createBootstrapWorldSnapshot,
   createPreviewWorldSnapshot,
-  findPath,
-  interpolatePathPosition,
-  resolveRoomAnchor,
   type AscensionSimulation,
-  type NavPath,
   type RuntimeEvent,
   type SimCommand,
   type StableSimCommandType,
@@ -41,8 +41,8 @@ import {
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import { getSlotKey } from "lib/hq-room-state";
 import { stableStringHash } from "lib/stable-hash";
+import { visitorQualityToRank } from "lib/visitor-rank";
 import type { AudioCueId } from "app/features/audio";
-import { visitorQualityToRank } from "app/ui/view-models";
 
 const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
 const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;

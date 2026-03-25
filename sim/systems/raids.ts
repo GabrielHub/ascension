@@ -54,7 +54,7 @@ import {
   type ContractRank,
 } from "content/templates/site-concepts";
 import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
-import type { RaidTeamGoal } from "render/types";
+import type { RaidTeamGoal } from "lib/raid-team-goal";
 import type {
   RaidEncounterThreat,
   RaidFeatureKind,
@@ -68,7 +68,7 @@ import type {
   SimSystemContext,
 } from "./types";
 
-export type { RaidTeamGoal } from "render/types";
+export type { RaidTeamGoal } from "lib/raid-team-goal";
 
 const MAX_OPEN_OPPORTUNITIES = 1;
 const FORMATION_DELAY_MINUTES = 60;

@@ -8,8 +8,8 @@ import type {
   EncounterActionRecord,
   EncounterActionKind,
   InterventionId,
-} from "sim/systems/encounter-types";
-import { INTERVENTION_DEFINITIONS } from "sim/systems/encounter-types";
+} from "sim";
+import { INTERVENTION_DEFINITIONS } from "sim";
 import { OperatorPortrait } from "./operator-portrait";
 import { getBossArtPath } from "./boss-art";
 import { getRoleMeta } from "./_glossary";

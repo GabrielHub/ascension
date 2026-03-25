@@ -4,7 +4,7 @@ import type {
   RaidBossCommitmentPayload,
   AnnouncementPayload,
   WarningPayload,
-} from "sim/systems/interruptions";
+} from "sim";
 
 import { GameModal } from "./game-modal";
 

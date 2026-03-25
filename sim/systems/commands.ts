@@ -13,6 +13,7 @@ import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
 import type { SimCommand } from "../commands";
+import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "../recruitment";
 import { buyItem, sellItem, getMarketPriceForItem } from "./market";
 import { autoSelectAccessory, unequipItem } from "./inventory";
 import {
@@ -978,8 +979,8 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
           ].join(":"),
         }),
         preferences,
-        morale: clamp(52 + VisitorState.quality[visitorEntity] * 0.2, 40, 80),
-        loyalty: clamp(VisitorState.expectedLoyalty[visitorEntity], 35, 85),
+        morale: projectVisitorRecruitMorale(VisitorState.quality[visitorEntity]),
+        loyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[visitorEntity]),
         hunger: 10,
         fatigue: 12,
         stress: 18,

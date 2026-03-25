@@ -1,4 +1,4 @@
-import type { NavAnchor, NavAnchorKind, NavConnector, NavigationGraph } from "render/types";
+import type { NavAnchor, NavAnchorKind, NavConnector, NavigationGraph } from "lib/navigation-graph";
 
 // ── Navigation graph builder ──────────────────────────────────────────────
 
@@ -23,12 +23,10 @@ export function buildNavigationGraph(
   const anchors: NavAnchor[] = [];
   const connectors: NavConnector[] = [];
 
-  // Build anchors for each room
   for (const room of rooms) {
     const cx = room.x + room.width / 2;
     const cy = room.y + room.height / 2;
 
-    // Entry anchor at the room's door (top-center)
     anchors.push({
       id: `${room.id}/entry`,
       roomId: room.id,
@@ -37,34 +35,29 @@ export function buildNavigationGraph(
       y: room.entryY ?? room.y,
     });
 
-    // Functional anchors distributed within the room
     const kinds = getAnchorKindsForRoom(room.functionTag);
     const spacing = room.width / (kinds.length + 1);
 
-    for (let i = 0; i < kinds.length; i++) {
+    for (let index = 0; index < kinds.length; index += 1) {
       anchors.push({
-        id: `${room.id}/${kinds[i]}-${i}`,
+        id: `${room.id}/${kinds[index]}-${index}`,
         roomId: room.id,
-        kind: kinds[i],
-        x: room.x + spacing * (i + 1),
-        y: cy + room.height * (0.08 + (i % 2) * 0.18),
+        kind: kinds[index],
+        x: room.x + spacing * (index + 1),
+        y: cy + room.height * (0.08 + (index % 2) * 0.18),
       });
     }
   }
 
-  // Build connectors between every pair of room entry anchors
-  // using a corridor band running through the interior of the building.
-  const entryAnchors = anchors.filter((a) => a.kind === "entry");
-  // Place the corridor at the vertical center of all rooms so operators
-  // stay inside the building when moving between rooms.
-  const allYMidpoints = rooms.map((r) => r.y + r.height / 2);
+  const entryAnchors = anchors.filter((anchor) => anchor.kind === "entry");
+  const allYMidpoints = rooms.map((room) => room.y + room.height / 2);
   const corridorY =
     allYMidpoints.length > 0 ? (Math.min(...allYMidpoints) + Math.max(...allYMidpoints)) / 2 : 0;
 
-  for (let i = 0; i < entryAnchors.length; i++) {
-    for (let j = i + 1; j < entryAnchors.length; j++) {
-      const from = entryAnchors[i];
-      const to = entryAnchors[j];
+  for (let index = 0; index < entryAnchors.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < entryAnchors.length; otherIndex += 1) {
+      const from = entryAnchors[index];
+      const to = entryAnchors[otherIndex];
       const distance = Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
 
       connectors.push({
@@ -80,12 +73,15 @@ export function buildNavigationGraph(
     }
   }
 
-  // Intra-room connectors: entry to each functional anchor
   for (const room of rooms) {
-    const entry = anchors.find((a) => a.id === `${room.id}/entry`);
-    if (!entry) continue;
+    const entry = anchors.find((anchor) => anchor.id === `${room.id}/entry`);
+    if (!entry) {
+      continue;
+    }
 
-    const roomAnchors = anchors.filter((a) => a.roomId === room.id && a.kind !== "entry");
+    const roomAnchors = anchors.filter(
+      (anchor) => anchor.roomId === room.id && anchor.kind !== "entry",
+    );
 
     for (const target of roomAnchors) {
       connectors.push({
@@ -108,7 +104,6 @@ function getAnchorKindsForRoom(functionTag: string): NavAnchorKind[] {
     case "room:social":
       return ["social", "idle", "work"];
     case "room:training":
-      return ["work", "idle", "work"];
     case "room:operations":
       return ["work", "idle", "work"];
     case "room:staffing":
@@ -118,17 +113,11 @@ function getAnchorKindsForRoom(functionTag: string): NavAnchorKind[] {
   }
 }
 
-// ── Path finding ──────────────────────────────────────────────────────────
-
 export interface NavPath {
   anchorIds: readonly string[];
   totalMs: number;
 }
 
-/**
- * Find a path from one anchor to another using BFS over connectors.
- * Returns the sequence of anchor IDs and total traversal time.
- */
 export function findPath(
   graph: NavigationGraph,
   fromAnchorId: string,
@@ -138,7 +127,6 @@ export function findPath(
     return { anchorIds: [fromAnchorId], totalMs: 0 };
   }
 
-  // Build adjacency map
   const adjacency = new Map<
     string,
     Array<{ neighborId: string; connectorId: string; ms: number }>
@@ -167,10 +155,10 @@ export function findPath(
 
   while (frontier.length > 0) {
     frontier.sort(
-      (a, b) =>
-        a.totalMs - b.totalMs ||
-        a.path.length - b.path.length ||
-        a.pathKey.localeCompare(b.pathKey),
+      (left, right) =>
+        left.totalMs - right.totalMs ||
+        left.path.length - right.path.length ||
+        left.pathKey.localeCompare(right.pathKey),
     );
     const current = frontier.shift()!;
     const bestForCurrent = bestByAnchor.get(current.anchorId);
@@ -187,10 +175,8 @@ export function findPath(
     }
 
     const neighbors = adjacency.get(current.anchorId) ?? [];
-
-    // Sort neighbors for deterministic path selection
     const sorted = [...neighbors].sort(
-      (a, b) => a.ms - b.ms || a.neighborId.localeCompare(b.neighborId),
+      (left, right) => left.ms - right.ms || left.neighborId.localeCompare(right.neighborId),
     );
 
     for (const neighbor of sorted) {
@@ -222,12 +208,6 @@ export function findPath(
   return null;
 }
 
-// ── Interpolation ─────────────────────────────────────────────────────────
-
-/**
- * Resolve the world-space position along a path at a given progress (0..1).
- * Interpolates linearly through anchor positions and connector waypoints.
- */
 export function interpolatePathPosition(
   graph: NavigationGraph,
   path: NavPath,
@@ -236,27 +216,27 @@ export function interpolatePathPosition(
   const clamped = Math.max(0, Math.min(1, progress));
 
   if (path.anchorIds.length <= 1) {
-    const anchor = graph.anchors.find((a) => a.id === path.anchorIds[0]);
+    const anchor = graph.anchors.find((candidate) => candidate.id === path.anchorIds[0]);
     return anchor ? { x: anchor.x, y: anchor.y } : { x: 0, y: 0 };
   }
 
-  const anchorById = new Map(graph.anchors.map((a) => [a.id, a]));
+  const anchorById = new Map(graph.anchors.map((anchor) => [anchor.id, anchor]));
   const connectorIndex = new Map<string, NavConnector>();
-  for (const c of graph.connectors) {
-    connectorIndex.set(`${c.fromAnchorId}->${c.toAnchorId}`, c);
-    connectorIndex.set(`${c.toAnchorId}->${c.fromAnchorId}`, c);
+  for (const connector of graph.connectors) {
+    connectorIndex.set(`${connector.fromAnchorId}->${connector.toAnchorId}`, connector);
+    connectorIndex.set(`${connector.toAnchorId}->${connector.fromAnchorId}`, connector);
   }
 
   const legs: Array<{ traversalMs: number; points: Array<{ x: number; y: number }> }> = [];
-  for (let i = 1; i < path.anchorIds.length; i++) {
-    const fromAnchor = anchorById.get(path.anchorIds[i - 1]);
-    const toAnchor = anchorById.get(path.anchorIds[i]);
-    const connector = connectorIndex.get(`${path.anchorIds[i - 1]}->${path.anchorIds[i]}`);
+  for (let index = 1; index < path.anchorIds.length; index += 1) {
+    const fromAnchor = anchorById.get(path.anchorIds[index - 1]);
+    const toAnchor = anchorById.get(path.anchorIds[index]);
+    const connector = connectorIndex.get(`${path.anchorIds[index - 1]}->${path.anchorIds[index]}`);
     if (!fromAnchor || !toAnchor || !connector) {
       continue;
     }
 
-    const isForward = connector.fromAnchorId === path.anchorIds[i - 1];
+    const isForward = connector.fromAnchorId === path.anchorIds[index - 1];
     const waypoints = isForward ? connector.waypoints : [...connector.waypoints].reverse();
     legs.push({
       traversalMs: connector.traversalMs,
@@ -297,9 +277,9 @@ function interpolatePolylinePosition(
   const clamped = Math.max(0, Math.min(1, progress));
   let totalDist = 0;
   const segmentDists: number[] = [];
-  for (let i = 1; i < points.length; i++) {
-    const dx = points[i].x - points[i - 1].x;
-    const dy = points[i].y - points[i - 1].y;
+  for (let index = 1; index < points.length; index += 1) {
+    const dx = points[index].x - points[index - 1].x;
+    const dy = points[index].y - points[index - 1].y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     segmentDists.push(distance);
     totalDist += distance;
@@ -310,35 +290,29 @@ function interpolatePolylinePosition(
   }
 
   let targetDist = clamped * totalDist;
-  for (let i = 0; i < segmentDists.length; i++) {
-    if (targetDist <= segmentDists[i]) {
-      const segmentProgress = segmentDists[i] > 0 ? targetDist / segmentDists[i] : 0;
+  for (let index = 0; index < segmentDists.length; index += 1) {
+    if (targetDist <= segmentDists[index]) {
+      const segmentProgress = segmentDists[index] > 0 ? targetDist / segmentDists[index] : 0;
       return {
-        x: points[i].x + (points[i + 1].x - points[i].x) * segmentProgress,
-        y: points[i].y + (points[i + 1].y - points[i].y) * segmentProgress,
+        x: points[index].x + (points[index + 1].x - points[index].x) * segmentProgress,
+        y: points[index].y + (points[index + 1].y - points[index].y) * segmentProgress,
       };
     }
-    targetDist -= segmentDists[i];
+    targetDist -= segmentDists[index];
   }
 
   return points[points.length - 1];
 }
 
-// ── Anchor resolution ─────────────────────────────────────────────────────
-
-/**
- * Pick the best anchor in a room for a given activity.
- * Falls back to the first available anchor if no kind match.
- */
 export function resolveRoomAnchor(
   graph: NavigationGraph,
   roomId: string,
   preferredKind: NavAnchorKind,
 ): NavAnchor | null {
-  const roomAnchors = graph.anchors.filter((a) => a.roomId === roomId);
+  const roomAnchors = graph.anchors.filter((anchor) => anchor.roomId === roomId);
   return (
-    roomAnchors.find((a) => a.kind === preferredKind) ??
-    roomAnchors.find((a) => a.kind === "idle") ??
+    roomAnchors.find((anchor) => anchor.kind === preferredKind) ??
+    roomAnchors.find((anchor) => anchor.kind === "idle") ??
     roomAnchors[0] ??
     null
   );

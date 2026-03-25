@@ -37,6 +37,7 @@ import {
   type BossEncounterSnapshot,
   type EncounterView,
 } from "./systems/encounter-types";
+import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "./recruitment";
 
 function lazyCreateInterruptionQueueState(): InterruptionQueueState {
   return { active: null, queue: [], nextInstanceId: 1 };
@@ -52,10 +53,13 @@ function lazyCreateIncidentState(): IncidentState {
   };
 }
 
-function lazyBuildEncounterView(encounter: BossEncounterInstance): EncounterView {
+function lazyBuildEncounterView(
+  encounter: BossEncounterInstance,
+  registry: TemplateRegistry,
+): EncounterView {
   const bossActor = Object.values(encounter.actors).find((a) => a.kind === "boss");
   const bossDef = bossActor?.bossDefinitionId
-    ? getBossEncounterDefinition(templateRegistry, encounter.missionId, bossActor.bossDefinitionId)
+    ? getBossEncounterDefinition(registry, encounter.missionId, bossActor.bossDefinitionId)
     : undefined;
   return {
     encounterId: encounter.encounterId,
@@ -150,7 +154,7 @@ import {
   normalizeStaffRoleTag,
   type PreferenceProfileRecord,
 } from "./systems/commands";
-import type { RaidTeamGoal } from "render/types";
+import type { RaidTeamGoal } from "lib/raid-team-goal";
 import {
   describeAccessoryAssignment,
   describeAccessorySelectionReason,
@@ -306,6 +310,8 @@ export interface Phase1VisitorSnapshot {
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  projectedMorale?: number;
+  projectedLoyalty?: number;
 }
 
 export interface Phase1RaidOpportunitySnapshot {
@@ -1066,7 +1072,13 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
       createdTick: opportunity.createdTick ?? 0,
       expiresAtTick: opportunity.expiresAtTick ?? 0,
     })),
-    visitors: extendedSnapshot.visitors ?? [],
+    visitors: (extendedSnapshot.visitors ?? []).map((visitor) => ({
+      ...visitor,
+      projectedMorale:
+        visitor.projectedMorale ?? projectVisitorRecruitMorale(visitor.quality ?? 50),
+      projectedLoyalty:
+        visitor.projectedLoyalty ?? projectVisitorRecruitLoyalty(visitor.expectedLoyalty ?? 50),
+    })),
     activeEvents: extendedSnapshot.activeEvents ?? [],
     contractSite: extendedSnapshot.contractSite ?? null,
     fogOfWar: extendedSnapshot.fogOfWar ?? null,
@@ -1442,13 +1454,15 @@ function applyWorldSnapshot(
   // Hydrate contract lifecycle state
   BuildingAuthority.contractLifecycle[buildingEntity] =
     runtimeSnapshot.contractLifecycle ??
-    (runtimeSnapshot.contractSite && !runtimeSnapshot.contractSite.bossDefeated && !runtimeSnapshot.contractSite.contractLost
+    (runtimeSnapshot.contractSite &&
+    !runtimeSnapshot.contractSite.bossDefeated &&
+    !runtimeSnapshot.contractSite.contractLost
       ? "active"
       : runtimeSnapshot.contractSite
         ? "resolved"
         : "bidding");
-  BuildingAuthority.postedContracts[buildingEntity] =
-    (runtimeSnapshot.postedContracts ?? []).map((p) => ({
+  BuildingAuthority.postedContracts[buildingEntity] = (runtimeSnapshot.postedContracts ?? []).map(
+    (p) => ({
       ...p,
       rank: p.rank as ContractRank,
       knownTraits: p.knownTraits ?? [],
@@ -1457,15 +1471,15 @@ function applyWorldSnapshot(
       lootFamilyHints: p.lootFamilyHints ?? [],
       bossHint: p.bossHint ?? null,
       neighborhoodLabel: p.neighborhoodLabel ?? "",
-    }));
-  BuildingAuthority.contractResult[buildingEntity] =
-    runtimeSnapshot.contractResult
-      ? {
-          ...runtimeSnapshot.contractResult,
-          rank: runtimeSnapshot.contractResult.rank as ContractRank,
-          outcome: runtimeSnapshot.contractResult.outcome as "boss_defeated" | "contract_lost",
-        }
-      : null;
+    }),
+  );
+  BuildingAuthority.contractResult[buildingEntity] = runtimeSnapshot.contractResult
+    ? {
+        ...runtimeSnapshot.contractResult,
+        rank: runtimeSnapshot.contractResult.rank as ContractRank,
+        outcome: runtimeSnapshot.contractResult.outcome as "boss_defeated" | "contract_lost",
+      }
+    : null;
 
   BuildingAuthority.fogOfWar[buildingEntity] = runtimeSnapshot.fogOfWar
     ? {
@@ -2042,6 +2056,8 @@ function applyWorldSnapshot(
           patience: VisitorState.patience[entity],
           quality: VisitorState.quality[entity],
           expectedLoyalty: VisitorState.expectedLoyalty[entity],
+          projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
+          projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),
         })),
         raidOpportunities: runtimeState.raidOpportunityEntities.map((entity) => ({
           id: RaidOpportunityState.id[entity],
@@ -2077,7 +2093,9 @@ function applyWorldSnapshot(
           ? { ...BuildingAuthority.contractSite[buildingEntity]! }
           : null,
         contractLifecycle: BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding",
-        postedContracts: (BuildingAuthority.postedContracts[buildingEntity] ?? []).map((p) => ({ ...p })),
+        postedContracts: (BuildingAuthority.postedContracts[buildingEntity] ?? []).map((p) => ({
+          ...p,
+        })),
         contractResult: BuildingAuthority.contractResult[buildingEntity]
           ? { ...BuildingAuthority.contractResult[buildingEntity]! }
           : null,
@@ -2554,7 +2572,7 @@ function applyWorldSnapshot(
               }
             : null,
         encounter: runtimeState.activeEncounter
-          ? lazyBuildEncounterView(runtimeState.activeEncounter)
+          ? lazyBuildEncounterView(runtimeState.activeEncounter, registry)
           : null,
         activeInterruption: runtimeState.interruptionQueue.active,
         worldTimeFrozen: runtimeState.worldTimeFrozen,

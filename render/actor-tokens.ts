@@ -1,10 +1,10 @@
-import { deriveActorMarker } from "app/ui/_portrait-parts";
-import { PORTRAIT_PALETTES, SKIN_TONES, type BuildType } from "app/ui/_svg-shared";
-import type { AppearanceRecipeData } from "app/ui/operator-parts";
-import { resolveOperatorBuild } from "app/ui/operator-build";
-import { getDefaultRecipe, getRecipeById } from "app/ui/operator-parts";
-
-import type { ActorTokenPalette } from "./types";
+import {
+  deriveActorMarker,
+  getDefaultRecipe,
+  getRecipeById,
+  resolveOperatorBuild,
+  type BuildType,
+} from "./actor-appearance";
 
 const tokenUrlCache = new Map<string, string>();
 
@@ -41,25 +41,7 @@ function buildChibiSvg(
 </svg>`;
 }
 
-export function resolveActorTokenPalette(presetId: string): ActorTokenPalette | undefined {
-  const recipe = getRecipeById(presetId);
-  if (!recipe) {
-    return undefined;
-  }
-
-  const palette = PORTRAIT_PALETTES[recipe.palette];
-  if (!palette) {
-    return undefined;
-  }
-
-  const skinTone = SKIN_TONES[recipe.skinTone];
-  return {
-    skin: skinTone?.skin ?? palette.skin,
-    hair: palette.hair,
-    clothing: palette.clothing,
-    accent: palette.accent,
-  };
-}
+export { resolveActorTokenPalette } from "./actor-appearance";
 
 export function getActorPortraitUrl(presetId: string, roleTag: string): string {
   const cacheKey = `${presetId}:${roleTag}`;
@@ -68,7 +50,7 @@ export function getActorPortraitUrl(presetId: string, roleTag: string): string {
     return cached;
   }
 
-  const recipe = (getRecipeById(presetId) ?? getDefaultRecipe()) as AppearanceRecipeData;
+  const recipe = getRecipeById(presetId) ?? getDefaultRecipe();
   const build: BuildType = resolveOperatorBuild(roleTag, presetId);
   const marker = deriveActorMarker(recipe, build);
   const svgMarkup = buildChibiSvg(

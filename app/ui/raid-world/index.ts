@@ -14,23 +14,6 @@ export {
   validateRaidPartsIndex,
 } from "./raid-parts";
 
-export {
-  type DungeonFeatureKind,
-  type DungeonFeatureMarker,
-  type EnemyThreatLevel,
-  classifyCell,
-  drawChamberTile,
-  drawCorridorTile,
-  drawEnemyMarker,
-  drawFeatureMarker,
-  drawFogEdges,
-  drawTeamMarker,
-  FEATURE_COLORS,
-  GOAL_COLORS,
-  GOAL_LABELS,
-  RAID_VOID,
-} from "./raid-draw";
-
 export { type RaidGoalPresentation, getRaidGoalPresentation } from "./raid-goals";
 
 export {

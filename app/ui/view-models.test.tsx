@@ -120,6 +120,38 @@ describe("phase 1 view models", () => {
     });
   });
 
+  it("passes through runtime-owned recruit projections without recomputing them in UI", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const phase1View = simulation.getPhase1View();
+    const [firstVisitor, ...restVisitors] = phase1View.visitors;
+
+    if (!firstVisitor) {
+      throw new Error("expected bootstrap simulation to include a visitor");
+    }
+
+    const hq = buildHqViewFromPhase1(
+      {
+        ...phase1View,
+        visitors: [
+          {
+            ...firstVisitor,
+            projectedMorale: 61,
+            projectedLoyalty: 77,
+          },
+          ...restVisitors,
+        ],
+      },
+      templateRegistry,
+    );
+
+    expect(hq.visitors[0]).toEqual(
+      expect.objectContaining({
+        projectedMorale: 61,
+        projectedLoyalty: 77,
+      }),
+    );
+  });
+
   it("keeps legacy WorldSnapshot pressure on a safe stable fallback", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 

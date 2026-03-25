@@ -8,8 +8,8 @@
  * It is called by commands.ts via a late-bound function reference.
  */
 
-import type { SimSystemContext } from "./types";
-import { OperatorIdentity, WorldTimeState } from "../components";
+import type { RuntimeCueId, SimSystemContext } from "./types";
+import { OperatorIdentity } from "../components";
 import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
 import {
   createBossEncounter,
@@ -34,8 +34,43 @@ import {
 } from "./incidents";
 import type { InterventionId } from "./encounter-types";
 
-function pushRuntimeCue(context: SimSystemContext, cueId: string): void {
-  context.runtimeState.pendingCueIds.push(cueId as never);
+function pushRuntimeCue(context: SimSystemContext, cueId: RuntimeCueId): void {
+  context.runtimeState.pendingCueIds.push(cueId);
+}
+
+function startBossEncounterFromPayload(
+  context: SimSystemContext,
+  payload: {
+    activeRaidId: string;
+    contractSiteId: string;
+    missionId: string;
+    teamId: string;
+    operatorIds: readonly string[];
+    bossId: string;
+  },
+): void {
+  const encounter = createBossEncounter(
+    context,
+    payload.activeRaidId,
+    payload.contractSiteId,
+    payload.missionId,
+    payload.teamId,
+    [...payload.operatorIds],
+    payload.bossId,
+  );
+  if (!encounter) {
+    return;
+  }
+
+  startEncounter(encounter);
+  context.runtimeState.activeEncounter = encounter;
+  context.runtimeState.worldTimeFrozen = true;
+  pushRuntimeCue(context, "raid.boss.commit");
+  pushRuntimeEvent(context, {
+    kind: "encounter_start",
+    message: `Boss encounter started: ${encounter.bossDefinitionId}`,
+    accent: "danger",
+  });
 }
 
 function emitEncounterLogCues(
@@ -61,27 +96,14 @@ export function applyEncounterCommand(
 ): boolean {
   switch (type) {
     case "sim/encounter-start": {
-      const encounter = createBossEncounter(
-        context,
-        payload.activeRaidId as string,
-        payload.contractSiteId as string,
-        payload.missionId as string,
-        payload.teamId as string,
-        payload.operatorIds as string[],
-        payload.bossId as string,
-      );
-      if (encounter) {
-        startEncounter(encounter);
-        context.runtimeState.activeEncounter = encounter;
-        context.runtimeState.worldTimeFrozen = true;
-        pushRuntimeCue(context, "raid.boss.commit");
-        pushRuntimeEvent(context, {
-          kind: "encounter_start",
-          message: `Boss encounter started: ${encounter.bossDefinitionId}`,
-          timestamp: `Day ${WorldTimeState.day[context.singletonEntities.time]}`,
-          accent: "danger",
-        });
-      }
+      startBossEncounterFromPayload(context, {
+        activeRaidId: payload.activeRaidId as string,
+        contractSiteId: payload.contractSiteId as string,
+        missionId: payload.missionId as string,
+        teamId: payload.teamId as string,
+        operatorIds: payload.operatorIds as string[],
+        bossId: payload.bossId as string,
+      });
       return true;
     }
     case "sim/encounter-pause": {
@@ -132,7 +154,11 @@ export function applyEncounterCommand(
       return true;
     }
     case "sim/encounter-retreat": {
-      if (context.runtimeState.activeEncounter?.status === "active") {
+      if (
+        context.runtimeState.activeEncounter &&
+        (context.runtimeState.activeEncounter.status === "active" ||
+          context.runtimeState.activeEncounter.status === "paused")
+      ) {
         retreatFromEncounter(context.runtimeState.activeEncounter);
         const activeEncounter = context.runtimeState.activeEncounter;
         const resolvedRaid = resolveRaidBossEncounter(context, activeEncounter);
@@ -159,6 +185,9 @@ export function applyEncounterCommand(
       const resolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
       if (resolved?.payload?.kind === "incident" && payload.choiceId) {
         resolveIncident(context, context.runtimeState.incidentState, payload.choiceId as string);
+      }
+      if (resolved?.payload?.kind === "raid_boss_commitment" && payload.choiceId === "commit") {
+        startBossEncounterFromPayload(context, resolved.payload);
       }
       if (resolved?.payload?.kind === "raid_boss_commitment" && payload.choiceId === "retreat") {
         resolveRaidBossRetreat(context, resolved.payload.activeRaidId);

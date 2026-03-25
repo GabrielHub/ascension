@@ -609,13 +609,19 @@ export function DevMenuOverlay({
               <CheatButton
                 label="Force Boss Defeat"
                 onClick={() => {
-                  void session.commands.dispatch({ type: "sim/dev-force-contract-end", outcome: "boss_defeated" });
+                  void session.commands.dispatch({
+                    type: "sim/dev-force-contract-end",
+                    outcome: "boss_defeated",
+                  });
                 }}
               />
               <CheatButton
                 label="Force Contract Loss"
                 onClick={() => {
-                  void session.commands.dispatch({ type: "sim/dev-force-contract-end", outcome: "contract_lost" });
+                  void session.commands.dispatch({
+                    type: "sim/dev-force-contract-end",
+                    outcome: "contract_lost",
+                  });
                 }}
               />
               <CheatButton
