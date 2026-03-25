@@ -48,6 +48,17 @@ export function registerEncounterCommandHandler(
   encounterCommandHandler = handler;
 }
 
+// Late-bound contract command handler (registered by systems/index.ts).
+let contractCommandHandler:
+  | ((context: SimSystemContext, type: string, payload: Record<string, unknown>) => boolean)
+  | null = null;
+
+export function registerContractCommandHandler(
+  handler: (context: SimSystemContext, type: string, payload: Record<string, unknown>) => boolean,
+): void {
+  contractCommandHandler = handler;
+}
+
 const ROLE_TAG_PREFIX = "role:";
 const STAFF_TAG_PREFIX = "staff:";
 const CANONICAL_STAFF_ROLE_TAGS = [
@@ -1114,6 +1125,14 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
     case "sim/dev-set-time": {
       const timeEntity = context.singletonEntities.time;
       WorldTimeState.minuteOfDay[timeEntity] = Math.max(0, Math.min(1439, command.minuteOfDay));
+      return;
+    }
+    case "sim/bid-contract":
+    case "sim/advance-contract":
+    case "sim/dev-force-contract-end": {
+      if (contractCommandHandler) {
+        contractCommandHandler(context, command.type, { ...command });
+      }
       return;
     }
     default: {

@@ -72,13 +72,20 @@ function createBaseSave(): PersistedSaveGame {
       activeRaidPackets: [
         {
           id: "raid/1",
+          opportunityId: "opportunity/1",
+          contractSiteId: "contract/42",
           missionId: "mission/clearance",
+          location: "district/lower-east-side",
           startedAt: "2026-03-20T12:05:00.000Z",
           startedTick: 3005,
           revealProgress: 45,
           operatorIds: ["operator/1"],
           returnTick: 3185,
           durationHours: 3,
+          threat: 83,
+          intel: 59,
+          reward: 180,
+          cohesion: 64,
           resolutionPacket: {
             result: "success",
             reputationDelta: 7,
@@ -100,12 +107,19 @@ function createBaseSave(): PersistedSaveGame {
       raidSummaries: [
         {
           id: "raid/0",
+          opportunityId: "opportunity/legacy-0",
+          contractSiteId: "contract/legacy-0",
           missionId: "mission/extraction",
+          location: "district/bronx-overpass",
           startedAt: "2026-03-20T11:00:00.000Z",
           endedAt: "2026-03-20T11:20:00.000Z",
           result: "success",
           reputationDelta: 2,
           cashDelta: 180,
+          threat: 54,
+          intel: 47,
+          reward: 180,
+          cohesion: 58,
           operatorOutcomes: [
             {
               operatorId: "operator/1",
@@ -233,27 +247,57 @@ function createBaseSave(): PersistedSaveGame {
         {
           id: "opportunity/1",
           missionId: "mission/containment",
-          location: {
-            district: "harbor",
-          },
-          threat: {
-            rank: 2,
-            tags: ["threat:armed"],
-          },
-          intel: {
-            confidence: "medium",
-          },
+          location: "district/harbor",
+          threat: 46,
+          intel: 38,
+          reward: 92,
+          risk: 44,
           status: "open",
           interestedOperatorIds: ["operator/1"],
           claimedOperatorIds: [],
+          createdTick: 2800,
+          expiresAtTick: 3240,
         },
       ],
       activeEvents: [
         {
           id: "event/personnel_conflict",
-          severity: "medium",
+          templateId: "event/personnel_conflict",
+          severity: 2,
+          remainingHours: 6,
+          pressureContribution: 12,
         },
       ],
+      contractLifecycle: "active",
+      contractSite: {
+        contractSiteId: "contract/42",
+        missionId: "mission/clearance",
+        siteConceptId: "site/flooded-subway-tunnel",
+        location: "district/lower-east-side",
+        rank: "f",
+        bossDefeated: false,
+        contractLost: false,
+        threat: 83,
+        intel: 59,
+        reward: 180,
+        securedAtTick: 3000,
+        explorationProgress: 45,
+        bossIntelProgress: 18,
+        bossPressureProgress: 12,
+        bossAvailable: false,
+      },
+      fogOfWar: {
+        gridWidth: 16,
+        gridHeight: 16,
+        revealed: Array.from({ length: 16 * 16 }, () => false),
+        revealedCount: 0,
+      },
+      scheduler: {
+        lastPayrollDay: 3,
+        lastVisitorSpawnTick: 42,
+        lastEventTick: 42,
+        lastRaidOpportunityTick: 42,
+      },
     },
   };
 }
@@ -677,7 +721,7 @@ describe("save codec", () => {
   it("preserves active raid resolution packets and direct operator outcomes", () => {
     const hydrated = hydratePersistedSaveGame(createBaseSave());
 
-    expect(hydrated.changed).toBe(false);
+    expect(hydrated.changed).toBe(true);
     expect(hydrated.save.world.activeRaidPackets[0]).toMatchObject({
       startedTick: 3005,
       returnTick: 3185,
@@ -763,19 +807,16 @@ describe("save codec", () => {
       {
         id: "opportunity/1",
         missionId: "mission/containment",
-        location: {
-          district: "harbor",
-        },
-        threat: {
-          rank: 2,
-          tags: ["threat:armed"],
-        },
-        intel: {
-          confidence: "medium",
-        },
+        location: "district/harbor",
+        threat: 46,
+        intel: 38,
+        reward: 92,
+        risk: 44,
         status: "open",
         interestedOperatorIds: ["operator/1"],
         claimedOperatorIds: [],
+        createdTick: 2800,
+        expiresAtTick: 3240,
       },
     ]);
   });
@@ -792,16 +833,58 @@ describe("save codec", () => {
             appliedUpgradeIds: ["upgrade/room/register:records_wall"],
           },
         ],
+        contractLifecycle: "bidding",
         contractSite: {
           contractSiteId: "contract/test-site",
           missionId: "mission/clearance",
+          siteConceptId: "site/flooded-subway-tunnel",
           location: "district/lower-east-side",
+          rank: "f",
           bossDefeated: false,
           contractLost: false,
           threat: 80,
           intel: 44,
           reward: 150,
           securedAtTick: 480,
+          explorationProgress: 32,
+          bossIntelProgress: 18,
+          bossPressureProgress: 24,
+          bossAvailable: false,
+        },
+        postedContracts: [
+          {
+            postingId: "posting/test/0",
+            missionId: "mission/clearance",
+            siteConceptId: "site/flooded-subway-tunnel",
+            location: "district/lower-east-side",
+            rank: "f",
+            threat: 42,
+            intel: 48,
+            reward: 92,
+            risk: 34,
+            bidCost: 7,
+            minReputation: 0,
+            generatedAtTick: 481,
+            knownTraits: ["threat:clustered"],
+            hiddenTraitCount: 1,
+            enemyHints: ["enemy-family/tunnel-crawlers"],
+            lootFamilyHints: ["loot-family/tunnel-salvage"],
+            bossHint: "boss-family/tunnel-brood",
+            neighborhoodLabel: "lower east side",
+          },
+        ],
+        contractResult: {
+          contractSiteId: "contract/old-site",
+          missionId: "mission/extraction",
+          siteConceptId: "site/abandoned-school",
+          location: "district/bronx-overpass",
+          rank: "e",
+          outcome: "contract_lost",
+          totalRaids: 3,
+          totalCashEarned: 150,
+          totalReputationEarned: 2,
+          operatorDeaths: 1,
+          resolvedAtTick: 470,
         },
         fogOfWar: {
           gridWidth: 4,
@@ -838,16 +921,58 @@ describe("save codec", () => {
     expect(normalized.world.rooms[0]?.appliedUpgradeIds).toEqual([
       "upgrade/room/register:records_wall",
     ]);
+    expect(normalized.world.contractLifecycle).toBe("bidding");
     expect(normalized.world.contractSite).toEqual({
       contractSiteId: "contract/test-site",
       missionId: "mission/clearance",
+      siteConceptId: "site/flooded-subway-tunnel",
       location: "district/lower-east-side",
+      rank: "f",
       bossDefeated: false,
       contractLost: false,
       threat: 80,
       intel: 44,
       reward: 150,
       securedAtTick: 480,
+      explorationProgress: 32,
+      bossIntelProgress: 18,
+      bossPressureProgress: 24,
+      bossAvailable: false,
+    });
+    expect(normalized.world.postedContracts).toEqual([
+      {
+        postingId: "posting/test/0",
+        missionId: "mission/clearance",
+        siteConceptId: "site/flooded-subway-tunnel",
+        location: "district/lower-east-side",
+        rank: "f",
+        threat: 42,
+        intel: 48,
+        reward: 92,
+        risk: 34,
+        bidCost: 7,
+        minReputation: 0,
+        generatedAtTick: 481,
+        knownTraits: ["threat:clustered"],
+        hiddenTraitCount: 1,
+        enemyHints: ["enemy-family/tunnel-crawlers"],
+        lootFamilyHints: ["loot-family/tunnel-salvage"],
+        bossHint: "boss-family/tunnel-brood",
+        neighborhoodLabel: "lower east side",
+      },
+    ]);
+    expect(normalized.world.contractResult).toEqual({
+      contractSiteId: "contract/old-site",
+      missionId: "mission/extraction",
+      siteConceptId: "site/abandoned-school",
+      location: "district/bronx-overpass",
+      rank: "e",
+      outcome: "contract_lost",
+      totalRaids: 3,
+      totalCashEarned: 150,
+      totalReputationEarned: 2,
+      operatorDeaths: 1,
+      resolvedAtTick: 470,
     });
     expect(normalized.world.fogOfWar?.revealedCount).toBe(2);
     expect(normalized.world.scheduler).toEqual({

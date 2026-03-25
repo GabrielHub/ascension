@@ -3,6 +3,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
+import { siteConceptById, type ContractRank } from "content/templates/site-concepts";
 import { getBuildingFloors } from "content/building-layouts";
 import {
   getApplicableRoomUpgradeIds,
@@ -532,16 +533,55 @@ export interface Phase1RuntimeView {
   raidSummaries: Phase1RaidSummarySnapshot[];
   activeEvents: Phase1ActiveEventSnapshot[];
   rosterPressure: Phase1RosterPressureView;
+  contractLifecycle: "idle" | "bidding" | "active" | "resolved";
   contractSite: {
     contractSiteId: string;
     missionId: string;
+    siteConceptId: string;
+    siteConceptName: string;
     location: string;
+    rank: string;
     bossDefeated: boolean;
     contractLost: boolean;
     threat: number;
     intel: number;
     reward: number;
+    explorationProgress: number;
+    bossAvailable: boolean;
   } | null;
+  contractResult: {
+    contractSiteId: string;
+    missionId: string;
+    siteConceptId: string;
+    siteConceptName: string;
+    location: string;
+    rank: string;
+    outcome: "boss_defeated" | "contract_lost";
+    totalRaids: number;
+    totalCashEarned: number;
+    totalReputationEarned: number;
+    operatorDeaths: number;
+  } | null;
+  postedContracts: Array<{
+    postingId: string;
+    missionId: string;
+    siteConceptId: string;
+    siteConceptName: string;
+    location: string;
+    rank: string;
+    threat: number;
+    intel: number;
+    reward: number;
+    risk: number;
+    bidCost: number;
+    canBid: boolean;
+    knownTraits: string[];
+    hiddenTraitCount: number;
+    enemyHints: string[];
+    lootFamilyHints: string[];
+    bossHint: string | null;
+    neighborhoodLabel: string;
+  }>;
   fogOfWar: {
     gridWidth: number;
     gridHeight: number;
@@ -1388,8 +1428,45 @@ function applyWorldSnapshot(
       }, currentAbsoluteMinute - 150),
     );
   BuildingAuthority.contractSite[buildingEntity] = runtimeSnapshot.contractSite
-    ? { ...runtimeSnapshot.contractSite }
+    ? {
+        ...runtimeSnapshot.contractSite,
+        siteConceptId: runtimeSnapshot.contractSite.siteConceptId ?? "",
+        rank: (runtimeSnapshot.contractSite.rank as ContractRank) ?? "f",
+        explorationProgress: runtimeSnapshot.contractSite.explorationProgress ?? 0,
+        bossIntelProgress: runtimeSnapshot.contractSite.bossIntelProgress ?? 0,
+        bossPressureProgress: runtimeSnapshot.contractSite.bossPressureProgress ?? 0,
+        bossAvailable: runtimeSnapshot.contractSite.bossAvailable ?? false,
+      }
     : null;
+
+  // Hydrate contract lifecycle state
+  BuildingAuthority.contractLifecycle[buildingEntity] =
+    runtimeSnapshot.contractLifecycle ??
+    (runtimeSnapshot.contractSite && !runtimeSnapshot.contractSite.bossDefeated && !runtimeSnapshot.contractSite.contractLost
+      ? "active"
+      : runtimeSnapshot.contractSite
+        ? "resolved"
+        : "bidding");
+  BuildingAuthority.postedContracts[buildingEntity] =
+    (runtimeSnapshot.postedContracts ?? []).map((p) => ({
+      ...p,
+      rank: p.rank as ContractRank,
+      knownTraits: p.knownTraits ?? [],
+      hiddenTraitCount: p.hiddenTraitCount ?? 0,
+      enemyHints: p.enemyHints ?? [],
+      lootFamilyHints: p.lootFamilyHints ?? [],
+      bossHint: p.bossHint ?? null,
+      neighborhoodLabel: p.neighborhoodLabel ?? "",
+    }));
+  BuildingAuthority.contractResult[buildingEntity] =
+    runtimeSnapshot.contractResult
+      ? {
+          ...runtimeSnapshot.contractResult,
+          rank: runtimeSnapshot.contractResult.rank as ContractRank,
+          outcome: runtimeSnapshot.contractResult.outcome as "boss_defeated" | "contract_lost",
+        }
+      : null;
+
   BuildingAuthority.fogOfWar[buildingEntity] = runtimeSnapshot.fogOfWar
     ? {
         ...runtimeSnapshot.fogOfWar,
@@ -1999,6 +2076,11 @@ function applyWorldSnapshot(
         contractSite: BuildingAuthority.contractSite[buildingEntity]
           ? { ...BuildingAuthority.contractSite[buildingEntity]! }
           : null,
+        contractLifecycle: BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding",
+        postedContracts: (BuildingAuthority.postedContracts[buildingEntity] ?? []).map((p) => ({ ...p })),
+        contractResult: BuildingAuthority.contractResult[buildingEntity]
+          ? { ...BuildingAuthority.contractResult[buildingEntity]! }
+          : null,
         fogOfWar: BuildingAuthority.fogOfWar[buildingEntity]
           ? {
               ...BuildingAuthority.fogOfWar[buildingEntity]!,
@@ -2375,19 +2457,73 @@ function applyWorldSnapshot(
           BuildingAuthority.operatorSlotCount[buildingEntity],
           getCurrentAbsoluteMinute(context),
         ),
+        contractLifecycle: BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding",
         contractSite: (() => {
           const cs = BuildingAuthority.contractSite[buildingEntity];
           if (!cs) return null;
+          const concept = siteConceptById.get(cs.siteConceptId ?? "");
           return {
             contractSiteId: cs.contractSiteId,
             missionId: cs.missionId,
+            siteConceptId: cs.siteConceptId ?? "",
+            siteConceptName: concept?.name ?? "Unknown Site",
             location: cs.location,
+            rank: cs.rank ?? "f",
             bossDefeated: cs.bossDefeated,
             contractLost: cs.contractLost,
             threat: cs.threat,
             intel: cs.intel,
             reward: cs.reward,
+            explorationProgress: cs.explorationProgress ?? 0,
+            bossAvailable: cs.bossAvailable ?? false,
           };
+        })(),
+        contractResult: (() => {
+          const cr = BuildingAuthority.contractResult[buildingEntity];
+          if (!cr) return null;
+          const concept = siteConceptById.get(cr.siteConceptId ?? "");
+          return {
+            contractSiteId: cr.contractSiteId,
+            missionId: cr.missionId,
+            siteConceptId: cr.siteConceptId,
+            siteConceptName: concept?.name ?? "Unknown Site",
+            location: cr.location,
+            rank: cr.rank,
+            outcome: cr.outcome,
+            totalRaids: cr.totalRaids,
+            totalCashEarned: cr.totalCashEarned,
+            totalReputationEarned: cr.totalReputationEarned,
+            operatorDeaths: cr.operatorDeaths,
+          };
+        })(),
+        postedContracts: (() => {
+          const postings = BuildingAuthority.postedContracts[buildingEntity] ?? [];
+          const reputation = GuildState.reputation[context.singletonEntities.guild];
+          return postings.map((p) => {
+            const concept = siteConceptById.get(p.siteConceptId);
+            return {
+              postingId: p.postingId,
+              missionId: p.missionId,
+              siteConceptId: p.siteConceptId,
+              siteConceptName: concept?.name ?? "Unknown Site",
+              location: p.location,
+              rank: p.rank,
+              threat: p.threat,
+              intel: p.intel,
+              reward: p.reward,
+              risk: p.risk,
+              bidCost: p.bidCost,
+              canBid:
+                reputation >= p.minReputation &&
+                GuildState.treasury[context.singletonEntities.guild] >= p.bidCost,
+              knownTraits: [...p.knownTraits],
+              hiddenTraitCount: p.hiddenTraitCount,
+              enemyHints: [...p.enemyHints],
+              lootFamilyHints: [...p.lootFamilyHints],
+              bossHint: p.bossHint,
+              neighborhoodLabel: p.neighborhoodLabel,
+            };
+          });
         })(),
         fogOfWar: (() => {
           const fog = BuildingAuthority.fogOfWar[buildingEntity];

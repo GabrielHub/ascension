@@ -4,7 +4,9 @@ Checked-in plan docs are execution briefs, not canon. Some are infrastructure pl
 
 ## Current Plans
 
-There are no active checked-in execution plans right now. Completed briefs should be removed once their implementation and canon-doc updates land.
+- [Raid Contract Loop](./raid-contract-loop.md)
+- [Raid Rank And Dungeon Pool](./raid-rank-and-dungeon-pool.md)
+- [Raid Site Identity And UX](./raid-site-identity-and-ux.md)
 
 ## What Belongs Here
 

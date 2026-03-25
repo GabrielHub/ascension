@@ -600,6 +600,32 @@ export function DevMenuOverlay({
               />
             </div>
 
+            <SectionLabel>Contract Lifecycle</SectionLabel>
+            <div className="flex flex-wrap gap-1">
+              <CheatButton
+                label={`Phase: ${session.phase1View.contractLifecycle}`}
+                onClick={() => {}}
+              />
+              <CheatButton
+                label="Force Boss Defeat"
+                onClick={() => {
+                  void session.commands.dispatch({ type: "sim/dev-force-contract-end", outcome: "boss_defeated" });
+                }}
+              />
+              <CheatButton
+                label="Force Contract Loss"
+                onClick={() => {
+                  void session.commands.dispatch({ type: "sim/dev-force-contract-end", outcome: "contract_lost" });
+                }}
+              />
+              <CheatButton
+                label="Advance Contract"
+                onClick={() => {
+                  void session.commands.dispatch({ type: "sim/advance-contract" });
+                }}
+              />
+            </div>
+
             {session.phase1View.encounter && (
               <div className="space-y-2">
                 <div className="text-xs text-silver/60">

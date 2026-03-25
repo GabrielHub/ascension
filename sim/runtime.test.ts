@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createAscensionSimulation,
   createBootstrapSimulation,
+  createPreviewWorldSnapshot,
   createBootstrapWorldSnapshot,
 } from "./index";
 import { STABLE_SIM_COMMAND_TYPES } from "./commands";
@@ -403,7 +404,7 @@ describe("phase 1 runtime", () => {
   });
 
   it("claims aged raid opportunities deterministically before launching the formed team", () => {
-    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
     snapshot.raidOpportunities = [
       {
         id: "opportunity/seeded-1",
@@ -442,7 +443,10 @@ describe("phase 1 runtime", () => {
   });
 
   it("re-plans operators after raid return and updates relationship memory from outcomes", () => {
-    const simulation = createBootstrapSimulation(templateRegistry);
+    const simulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
 
     simulation.tick(10_800_000);
 
@@ -483,7 +487,10 @@ describe("phase 1 runtime", () => {
   });
 
   it("spawns autonomous raid opportunities from the secured contract site", () => {
-    const simulation = createBootstrapSimulation(templateRegistry);
+    const simulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
 
     simulation.tick(10_800_000);
 

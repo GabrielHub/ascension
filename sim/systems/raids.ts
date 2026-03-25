@@ -3,8 +3,12 @@ import { addComponent, addEntity, removeEntity } from "bitecs";
 import {
   AssignmentState,
   BuildingAuthority,
+  type ActiveRaidPacketRecord,
   type ActiveRaidResolutionPacket,
+  type ContractLifecyclePhase,
+  type ContractResultSummary,
   type ContractSiteState,
+  type PostedContract,
   GuildState,
   InjuryState,
   LoyaltyState,
@@ -44,6 +48,11 @@ import {
 } from "./social";
 import { computeDerivedStats, type OperatorBaseStats } from "./derived-stats";
 import type { BossTag, BossWeakness } from "content/templates/shared";
+import {
+  siteConceptTemplates,
+  siteConceptById,
+  type ContractRank,
+} from "content/templates/site-concepts";
 import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
 import type { RaidTeamGoal } from "render/types";
 import type {
@@ -64,14 +73,6 @@ export type { RaidTeamGoal } from "render/types";
 const MAX_OPEN_OPPORTUNITIES = 1;
 const FORMATION_DELAY_MINUTES = 60;
 const DEFAULT_OPPORTUNITY_LIFETIME_MINUTES = 300;
-const OPPORTUNITY_LOCATIONS = [
-  "district/lower-east-side",
-  "district/queens-railyard",
-  "district/bronx-overpass",
-  "district/red-hook-waterfront",
-  "district/harlem-substation",
-] as const;
-
 const FOG_GRID_WIDTH = 16;
 const FOG_GRID_HEIGHT = 16;
 
@@ -2036,12 +2037,16 @@ function processDamagedTeams(context: SimSystemContext, rng: SeededRng): void {
 }
 
 export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
-  // Ensure a contract site exists before processing raids
-  ensureContractSite(context);
+  // Manage contract lifecycle (replaces old ensureContractSite auto-replacement)
+  updateContractLifecycle(context);
 
-  updateOpportunityLifecycle(context);
-  if (deltaMs > 0) {
-    spawnRaidOpportunity(context);
+  const wasActiveAtTickStart = getContractLifecycle(context) === "active";
+
+  if (wasActiveAtTickStart) {
+    updateOpportunityLifecycle(context);
+    if (deltaMs > 0) {
+      spawnRaidOpportunity(context);
+    }
   }
 
   if (deltaMs > 0 && isDailyRaidConsequenceTick(context)) {
@@ -2050,82 +2055,384 @@ export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
     processDamagedTeams(context, tickRng);
   }
 
-  refreshOpportunityClaims(context);
-  if (deltaMs > 0) {
-    launchFormedRaids(context);
+  if (wasActiveAtTickStart) {
+    refreshOpportunityClaims(context);
+    if (deltaMs > 0) {
+      launchFormedRaids(context);
+    }
   }
 
   const resolvedRaid = resolveCompletedRaids(context, deltaMs);
 
-  // Advance fog-of-war for active raids
-  if (deltaMs > 0) {
+  // Advance fog-of-war and exploration progress per tick
+  if (deltaMs > 0 && wasActiveAtTickStart) {
     advanceFogOfWar(context);
+    updateExplorationProgress(context);
   }
 
-  // Check dungeon closure conditions
+  // On raid completion: update summary-derived progress and check closure
   if (resolvedRaid) {
+    updateSummaryDerivedProgress(context);
     checkDungeonClosure(context);
+    updateContractLifecycle(context);
     reconcileAssignmentsSystem(context, 0);
   }
 
-  updateRaidPresentation(context);
+  if (getContractLifecycle(context) === "active") {
+    updateRaidPresentation(context);
+  }
 };
 
-// ── Secured contract site ─────────────────────────────────────────────────
+// ── Contract lifecycle ─────────────────────────────────────────────────────
+
+/** Rank multipliers for threat, reward, and pacing. */
+const RANK_CONFIG: Record<
+  ContractRank,
+  { threatBase: number; rewardBase: number; paceMultiplier: number }
+> = {
+  f: { threatBase: 34, rewardBase: 54, paceMultiplier: 1.0 },
+  e: { threatBase: 48, rewardBase: 80, paceMultiplier: 1.15 },
+  d: { threatBase: 60, rewardBase: 120, paceMultiplier: 1.3 },
+  c: { threatBase: 72, rewardBase: 170, paceMultiplier: 1.5 },
+  b: { threatBase: 82, rewardBase: 230, paceMultiplier: 1.7 },
+  a: { threatBase: 90, rewardBase: 300, paceMultiplier: 2.0 },
+  s: { threatBase: 95, rewardBase: 400, paceMultiplier: 2.5 },
+};
+
+function getContractLifecycle(context: SimSystemContext): ContractLifecyclePhase {
+  return BuildingAuthority.contractLifecycle[context.singletonEntities.building] ?? "bidding";
+}
+
+function setContractLifecycle(context: SimSystemContext, phase: ContractLifecyclePhase): void {
+  BuildingAuthority.contractLifecycle[context.singletonEntities.building] = phase;
+}
 
 /**
- * Ensure the guild has one secured government contract site.
- * If no contract exists, secure one based on the current mission pool.
- * The contract determines the one active dungeon.
+ * Manage contract lifecycle instead of auto-replacing contracts.
+ * Returns early if the guild is in bidding/resolved — raids are paused.
  */
-function ensureContractSite(context: SimSystemContext): void {
+function updateContractLifecycle(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
+  const phase = getContractLifecycle(context);
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  const contractResult = BuildingAuthority.contractResult[buildingEntity];
+  const postedContracts = BuildingAuthority.postedContracts[buildingEntity] ?? [];
 
-  // Already have an active contract
-  if (contractSite && !contractSite.bossDefeated && !contractSite.contractLost) {
-    ensureRaidPresentationSeed(context, contractSite.contractSiteId);
-    return;
+  switch (phase) {
+    case "active": {
+      if (!contractSite) {
+        if (postedContracts.length > 0) {
+          setContractLifecycle(context, "bidding");
+          return;
+        }
+        enterBiddingPhase(context);
+        return;
+      }
+      if (contractSite.bossDefeated || contractSite.contractLost) {
+        enterResolvedPhase(context, contractSite);
+        return;
+      }
+      ensureRaidPresentationSeed(context, contractSite.contractSiteId);
+      return;
+    }
+    case "bidding": {
+      if (contractSite && !contractSite.bossDefeated && !contractSite.contractLost) {
+        setContractLifecycle(context, "active");
+        ensureRaidPresentationSeed(context, contractSite.contractSiteId);
+        return;
+      }
+      if (contractSite && (contractSite.bossDefeated || contractSite.contractLost)) {
+        BuildingAuthority.contractSite[buildingEntity] = null;
+      }
+      if (postedContracts.length === 0) {
+        generateContractBoard(context);
+      }
+      return;
+    }
+    case "resolved": {
+      if (
+        contractSite &&
+        (contractSite.bossDefeated || contractSite.contractLost) &&
+        !contractResult
+      ) {
+        enterResolvedPhase(context, contractSite);
+        return;
+      }
+      if (!contractResult) {
+        enterBiddingPhase(context);
+      }
+      return;
+    }
+    case "idle":
+      enterBiddingPhase(context);
+      return;
+  }
+}
+
+function enterResolvedPhase(context: SimSystemContext, contractSite: ContractSiteState): void {
+  const buildingEntity = context.singletonEntities.building;
+  const summaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
+    (s) => s.contractSiteId === contractSite.contractSiteId,
+  );
+
+  const result: ContractResultSummary = {
+    contractSiteId: contractSite.contractSiteId,
+    missionId: contractSite.missionId,
+    siteConceptId: contractSite.siteConceptId ?? "",
+    location: contractSite.location,
+    rank: contractSite.rank ?? "f",
+    outcome: contractSite.bossDefeated ? "boss_defeated" : "contract_lost",
+    totalRaids: summaries.length,
+    totalCashEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.cashDelta), 0),
+    totalReputationEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.reputationDelta), 0),
+    operatorDeaths: summaries.reduce(
+      (sum, s) => sum + (s.operatorOutcomes?.filter((o) => o.died).length ?? 0),
+      0,
+    ),
+    resolvedAtTick: getCurrentAbsoluteMinute(context),
+  };
+
+  BuildingAuthority.contractResult[buildingEntity] = result;
+  BuildingAuthority.contractSite[buildingEntity] = null;
+  BuildingAuthority.postedContracts[buildingEntity] = [];
+  setContractLifecycle(context, "resolved");
+
+  // Clear transient site state
+  clearSiteTransientState(context);
+
+  const outcomeLabel = contractSite.bossDefeated ? "Boss defeated" : "Contract lost";
+  pushRuntimeEvent(context, {
+    kind: "event_change",
+    message: `${outcomeLabel} — contract resolved`,
+    accent: contractSite.bossDefeated ? "gold" : "magma",
+  });
+}
+
+function clearSiteTransientState(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+
+  // Clear fog of war
+  BuildingAuthority.fogOfWar[buildingEntity] = null;
+
+  // Clear raid presentation
+  context.runtimeState.raidPresentation = {
+    contractSiteId: null,
+    teams: [],
+    enemies: [],
+    features: [],
+  };
+
+  // Expire all open raid opportunities
+  context.runtimeState.raidOpportunityEntities.slice().forEach((entity) => {
+    removeRaidOpportunityEntity(context, entity);
+  });
+}
+
+function enterBiddingPhase(context: SimSystemContext): void {
+  generateContractBoard(context);
+  setContractLifecycle(context, "bidding");
+}
+
+/**
+ * Generate 3 posted contracts for the bidding board.
+ * Biases early boards toward F and E rank.
+ */
+function generateContractBoard(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const guildEntity = context.singletonEntities.guild;
+  const currentMinute = getCurrentAbsoluteMinute(context);
+  const reputation = GuildState.reputation[guildEntity];
+  const rng = new SeededRng(seedFromKey(`board:${currentMinute}:${reputation}`));
+
+  // Determine available ranks based on reputation
+  const availableRanks: ContractRank[] = ["f"];
+  if (reputation >= 5) availableRanks.push("e");
+  if (reputation >= 20) availableRanks.push("d");
+  if (reputation >= 40) availableRanks.push("c");
+  if (reputation >= 60) availableRanks.push("b");
+  if (reputation >= 80) availableRanks.push("a");
+  if (reputation >= 95) availableRanks.push("s");
+
+  // Filter site concepts by available ranks
+  const eligibleConcepts = siteConceptTemplates.filter((sc) =>
+    sc.rankPool.some((r) => availableRanks.includes(r)),
+  );
+
+  // Pick 3 distinct site concepts (Fisher-Yates partial shuffle)
+  const pool = [...eligibleConcepts];
+  const pickCount = Math.min(3, pool.length);
+  for (let i = pool.length - 1; i > pool.length - 1 - pickCount && i > 0; i--) {
+    const j = rng.int(0, i);
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const selectedConcepts = pool.slice(pool.length - pickCount);
+
+  const postings: PostedContract[] = selectedConcepts.map((concept, index) => {
+    // Pick a rank from the intersection of concept ranks and available ranks
+    const validRanks = concept.rankPool.filter((r) => availableRanks.includes(r));
+    const rank = validRanks[rng.int(0, validRanks.length - 1)];
+
+    // Pick a mission objective
+    const missionIndex = rng.int(0, context.registry.missions.length - 1);
+    const mission = context.registry.missions[missionIndex];
+
+    // Pick a location from the concept's district pool
+    const locationIndex = rng.int(0, concept.districtPool.length - 1);
+    const location = concept.districtPool[locationIndex];
+
+    const rankCfg = RANK_CONFIG[rank];
+    const threat = clamp(
+      rankCfg.threatBase + mission.baseDurationHours * 6 + rng.int(-5, 8),
+      20,
+      95,
+    );
+    const intel = clamp(
+      28 +
+        GuildState.intel[guildEntity] * 14 +
+        mission.expectedThreatTags.length * 4 +
+        rng.int(-8, 8),
+      10,
+      92,
+    );
+    const reward = clamp(
+      rankCfg.rewardBase + mission.baseDurationHours * 12 + rng.int(-10, 15),
+      40,
+      500,
+    );
+    const risk = clamp(threat + mission.expectedThreatTags.length * 4 - intel * 0.35, 18, 96);
+    const bidCost = Math.round(reward * 0.08);
+
+    // Intel controls what the player knows before bidding
+    const allTraits = [...concept.threatProfileTags, ...concept.hazardTags];
+    const knownTraitCount =
+      intel >= 60
+        ? allTraits.length
+        : intel >= 30
+          ? Math.ceil(allTraits.length * 0.6)
+          : Math.ceil(allTraits.length * 0.3);
+    const knownTraits = allTraits.slice(0, knownTraitCount);
+    const hiddenTraitCount = allTraits.length - knownTraitCount;
+
+    // Enemy hints based on intel
+    const enemyHints = intel >= 40 ? [...concept.enemyFamilyIds] : [];
+
+    // Loot family hints
+    const lootFamilyHints = intel >= 30 ? [...concept.lootFamilyIds] : [];
+
+    // Boss hint
+    const bossHint = intel >= 50 ? concept.bossFamilyId : null;
+
+    return {
+      postingId: `posting/${currentMinute}/${index}`,
+      missionId: mission.id,
+      siteConceptId: concept.siteConceptId,
+      location,
+      rank,
+      threat,
+      intel,
+      reward,
+      risk,
+      bidCost,
+      minReputation: rank === "f" ? 0 : rank === "e" ? 3 : rank === "d" ? 15 : 30,
+      generatedAtTick: currentMinute,
+      knownTraits,
+      hiddenTraitCount,
+      enemyHints,
+      lootFamilyHints,
+      bossHint,
+      neighborhoodLabel: location.replace("district/", "").replace(/-/g, " "),
+    };
+  });
+
+  BuildingAuthority.postedContracts[buildingEntity] = postings;
+}
+
+/**
+ * Player selects a posted contract to bid on.
+ * Deterministic and forgiving: choosing a posting secures it if requirements are met.
+ */
+export function bidOnContract(context: SimSystemContext, postingId: string): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const guildEntity = context.singletonEntities.guild;
+  const phase = getContractLifecycle(context);
+
+  if (phase !== "bidding") {
+    return false;
   }
 
-  // Need to secure a new contract
+  const postings = BuildingAuthority.postedContracts[buildingEntity] ?? [];
+  const posting = postings.find((p) => p.postingId === postingId);
+  if (!posting) {
+    return false;
+  }
+
+  // Check requirements
+  if (GuildState.reputation[guildEntity] < posting.minReputation) {
+    return false;
+  }
+  if (GuildState.treasury[guildEntity] < posting.bidCost) {
+    return false;
+  }
+
+  // Deduct bid cost
+  GuildState.treasury[guildEntity] -= posting.bidCost;
+
+  // Create the new contract site from the posting
   const currentMinute = getCurrentAbsoluteMinute(context);
-  const guildEntity = context.singletonEntities.guild;
-  const reputation = GuildState.reputation[guildEntity];
-  const rng = new SeededRng(seedFromKey(`contract:${currentMinute}:${reputation}`));
-
-  // Pick a mission based on guild state
-  const missionIndex = rng.int(0, context.registry.missions.length - 1);
-  const mission = context.registry.missions[missionIndex];
-  const locationIndex = rng.int(0, OPPORTUNITY_LOCATIONS.length - 1);
-
-  const threat = clamp(
-    34 + mission.baseDurationHours * 8 + reputation * 2 + rng.int(0, 10),
-    20,
-    95,
-  );
-  const intel = clamp(
-    28 + GuildState.intel[guildEntity] * 18 + mission.expectedThreatTags.length * 6,
-    10,
-    92,
-  );
-  const reward = clamp(54 + mission.baseDurationHours * 18 + reputation * 4, 40, 180);
-
   const newContract: ContractSiteState = {
     contractSiteId: `contract/${currentMinute}`,
-    missionId: mission.id,
-    location: OPPORTUNITY_LOCATIONS[locationIndex],
+    missionId: posting.missionId,
+    siteConceptId: posting.siteConceptId,
+    location: posting.location,
+    rank: posting.rank,
     bossDefeated: false,
     contractLost: false,
-    threat,
-    intel,
-    reward,
+    threat: posting.threat,
+    intel: posting.intel,
+    reward: posting.reward,
     securedAtTick: currentMinute,
+    explorationProgress: 0,
+    bossIntelProgress: 0,
+    bossPressureProgress: 0,
+    bossAvailable: false,
   };
 
   BuildingAuthority.contractSite[buildingEntity] = newContract;
+  initializeFogOfWar(context);
 
-  // Initialize fog-of-war for the new dungeon
+  // Clear board and result
+  BuildingAuthority.postedContracts[buildingEntity] = [];
+  BuildingAuthority.contractResult[buildingEntity] = null;
+
+  // Enter active phase
+  setContractLifecycle(context, "active");
+  ensureRaidPresentationSeed(context, newContract.contractSiteId);
+
+  const concept = siteConceptById.get(posting.siteConceptId);
+  pushRuntimeEvent(context, {
+    kind: "event_change",
+    message: `Contract secured: ${concept?.name ?? "Unknown Site"} (Rank ${posting.rank.toUpperCase()})`,
+    accent: "gold",
+  });
+  pushRuntimeCue(context, "raid.opportunity");
+
+  return true;
+}
+
+/**
+ * Advance from resolved to bidding (player action).
+ */
+export function advanceContractPhase(context: SimSystemContext): void {
+  const phase = getContractLifecycle(context);
+  if (phase === "resolved") {
+    enterBiddingPhase(context);
+  }
+}
+
+// ── Fog-of-war ────────────────────────────────────────────────────────────
+
+function initializeFogOfWar(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
   const totalCells = FOG_GRID_WIDTH * FOG_GRID_HEIGHT;
   BuildingAuthority.fogOfWar[buildingEntity] = {
     gridWidth: FOG_GRID_WIDTH,
@@ -2133,10 +2440,7 @@ function ensureContractSite(context: SimSystemContext): void {
     revealed: Array.from({ length: totalCells }, () => false),
     revealedCount: 0,
   };
-  ensureRaidPresentationSeed(context, newContract.contractSiteId);
 }
-
-// ── Fog-of-war ────────────────────────────────────────────────────────────
 
 /**
  * Advance fog-of-war based on active raid teams' reveal progress.
@@ -2198,6 +2502,50 @@ function advanceFogOfWar(context: SimSystemContext): void {
     }
     attempts += 1;
   }
+}
+
+// ── Site progress tracking ──────────────────────────────────────────────
+
+/** Per-tick: update exploration progress from fog reveal. Cheap. */
+function updateExplorationProgress(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+
+  const fog = BuildingAuthority.fogOfWar[buildingEntity];
+  const totalCells = fog ? fog.gridWidth * fog.gridHeight : 1;
+  contractSite.explorationProgress = fog ? (fog.revealedCount / totalCells) * 100 : 0;
+}
+
+/** On raid completion: update summary-derived progress fields. */
+function updateSummaryDerivedProgress(context: SimSystemContext): void {
+  const buildingEntity = context.singletonEntities.building;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+
+  const summaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
+    (s) => s.contractSiteId === contractSite.contractSiteId,
+  );
+  let successCount = 0;
+  let intelContribution = 0;
+  for (const s of summaries) {
+    if (s.result === "success") {
+      successCount++;
+      intelContribution += 15;
+    } else if (s.result === "mixed") {
+      intelContribution += 5;
+    }
+  }
+  contractSite.bossIntelProgress = clamp(intelContribution, 0, 100);
+  contractSite.bossPressureProgress = clamp(
+    successCount * 18 + contractSite.explorationProgress * 0.3,
+    0,
+    100,
+  );
+  contractSite.bossAvailable =
+    contractSite.explorationProgress >= 70 &&
+    contractSite.bossPressureProgress >= 50 &&
+    !contractSite.bossDefeated;
 }
 
 /**
@@ -2309,37 +2657,22 @@ function checkDungeonClosure(context: SimSystemContext): void {
     (summary) => summary.contractSiteId === contractSite.contractSiteId,
   );
 
-  // Check for boss defeat: a successful raid with high reveal progress
-  const fog = BuildingAuthority.fogOfWar[buildingEntity];
-  const totalCells = fog ? fog.gridWidth * fog.gridHeight : 1;
-  const revealPct = fog ? (fog.revealedCount / totalCells) * 100 : 0;
-
-  // Boss defeat requires >80% reveal and a successful raid outcome
-  const recentSuccesses = raidSummaries.filter(
-    (s) => s.result === "success" && s.missionId === contractSite.missionId && revealPct > 80,
-  );
-
-  if (recentSuccesses.length > 0) {
-    const rng = new SeededRng(
-      seedFromKey(`boss:${contractSite.contractSiteId}:${raidSummaries.length}`),
+  // Boss defeat requires an actual boss encounter victory (bossDefeated flag on a summary)
+  const bossVictorySummary = raidSummaries.find((s) => s.bossDefeated === true);
+  if (bossVictorySummary) {
+    contractSite.bossDefeated = true;
+    // Award boss defeat bonus scaled by rank
+    const rankCfg = RANK_CONFIG[contractSite.rank ?? "f"];
+    GuildState.reputation[context.singletonEntities.guild] += 15;
+    GuildState.treasury[context.singletonEntities.guild] += Math.round(
+      contractSite.reward * 1.5 * rankCfg.paceMultiplier,
     );
-    const bossCheck = boundedRoll(
-      rng,
-      revealPct,
-      [
-        { label: "reveal_progress", value: revealPct * 0.5 },
-        { label: "recent_successes", value: recentSuccesses.length * 10 },
-      ],
-      120,
-      15,
-    );
-
-    if (bossCheck.outcome) {
-      contractSite.bossDefeated = true;
-      // Award bonus for boss defeat
-      GuildState.reputation[context.singletonEntities.guild] += 15;
-      GuildState.treasury[context.singletonEntities.guild] += Math.round(contractSite.reward * 1.5);
-    }
+    pushRuntimeEvent(context, {
+      kind: "event_change",
+      message: `Boss defeated! Contract complete.`,
+      accent: "gold",
+    });
+    return;
   }
 
   // Check for contract loss: too many consecutive failures
@@ -2348,7 +2681,6 @@ function checkDungeonClosure(context: SimSystemContext): void {
     if (raidSummaries[index].result !== "failure") {
       break;
     }
-
     failureStreak += 1;
   }
 
@@ -2366,8 +2698,12 @@ function checkDungeonClosure(context: SimSystemContext): void {
 
     if (lossCheck.outcome) {
       contractSite.contractLost = true;
-      // Early contract loss is survivable — reputation penalty only
       GuildState.reputation[context.singletonEntities.guild] -= 8;
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: `Contract lost after ${failureStreak} consecutive failures`,
+        accent: "magma",
+      });
     }
   }
 }

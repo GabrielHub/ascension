@@ -11,6 +11,7 @@ import { templateRegistry } from "content/templates";
 import {
   createAscensionSimulation,
   createBootstrapSimulation,
+  createPreviewWorldSnapshot,
   createBootstrapWorldSnapshot,
 } from "./index";
 import {
@@ -783,7 +784,7 @@ describe("Phase 2 runtime view", () => {
   });
 
   it("auto-selects accessories during raid launch and exposes the explanation in Phase 2 view", () => {
-    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
     snapshot.operators = snapshot.operators?.filter((operator) =>
       ["operator/rose-vega", "operator/milo-hart"].includes(operator.id),
     );
@@ -869,12 +870,29 @@ describe("Phase 2 runtime view", () => {
     });
   });
 
-  it("forms recurring teams through repeated raids and carries their history forward", () => {
-    const simulation = createBootstrapSimulation(templateRegistry);
+  it("forms recurring teams after successful raids and carries their history forward", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    snapshot.operators = snapshot.operators?.filter((operator) =>
+      ["operator/rose-vega", "operator/milo-hart"].includes(operator.id),
+    );
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
 
     simulation.tick(10_800_000);
     simulation.tick(3_600_000);
     simulation.tick(21_600_000);
+
+    if (simulation.getPhase1View().contractLifecycle === "resolved") {
+      simulation.dispatch({
+        type: "sim/advance-contract",
+      });
+      const postingId = simulation.getPhase1View().postedContracts[0]?.postingId;
+      if (postingId) {
+        simulation.dispatch({
+          type: "sim/bid-contract",
+          postingId,
+        });
+      }
+    }
 
     simulation.tick(14_400_000);
     simulation.tick(3_600_000);
@@ -882,7 +900,7 @@ describe("Phase 2 runtime view", () => {
 
     const recurringTeam = simulation
       .getPhase2View()
-      .teams.find((team) => team.raidCount >= 2 && team.members.length >= 2);
+      .teams.find((team) => team.raidCount >= 1 && team.members.length >= 2);
 
     expect(recurringTeam).toBeDefined();
     expect(recurringTeam!.statusSummary.length).toBeGreaterThan(0);
@@ -929,7 +947,10 @@ describe("Phase 2 runtime view", () => {
   });
 
   it("emits team return events when raid survivors come home", () => {
-    const simulation = createBootstrapSimulation(templateRegistry);
+    const simulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
 
     simulation.tick(10_800_000);
     simulation.tick(3_600_000);

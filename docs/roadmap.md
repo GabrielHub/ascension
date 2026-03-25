@@ -33,7 +33,9 @@ This section is intentionally summary-level. The implementation itself is the so
 - Interactive incidents now bind to runtime subjects, surface authored choices through blocking modals, resolve deterministic consequence bundles in simulation code, and persist through refresh/load.
 - Operator portraits use the shipped modular recipe-based SVG pipeline, including visible gear overlays where present.
 - The bodega now renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, staff, and visitor markers.
-- The operations view now presents the secured active contract site as a full-screen raid map with fog of war, team goals, focus overlays, and persisted raid presentation state.
+- The operations view now supports the full contract loop: a resolved-contract review beat, a posted-contract bidding board, and the secured active contract site as the live raid map.
+- Posted contracts, the active contract site, and the previous contract result now persist as separate save-safe state instead of collapsing into one implicit contract handoff.
+- New game now boots into a generated posted-contract bidding state, while preview/dev mode intentionally seeds an active contract so raid-map tooling and runtime verification can start in-media-res.
 - HQ and raid overlays use glass-card presentation, focused bottom-card inspection, compact category switching, and a persistent right-side event log.
 - The event log is the always-on notice surface for departures, returns, injuries, deaths, morale and loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.

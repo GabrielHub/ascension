@@ -780,6 +780,12 @@ export function GameShell() {
         unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => {
           void session.commands.unequipItem({ operatorId, slot });
         },
+        bidContract: (postingId: string) => {
+          void session.commands.dispatch({ type: "sim/bid-contract", postingId });
+        },
+        advanceContract: () => {
+          void session.commands.dispatch({ type: "sim/advance-contract" });
+        },
       }
     : null;
 
@@ -1387,13 +1393,14 @@ export function GameShell() {
                     callbacks={callbacks}
                   />
                 )}
-                {activeTab === "operations" && opsCategory && (
+                {activeTab === "operations" && opsCategory && callbacks && (
                   <OperationsPanel
                     operations={operations}
                     operators={hq.operators}
                     rosterPressure={hq.rosterPressure}
                     focus={focus}
                     activeCategory={opsCategory}
+                    callbacks={callbacks}
                   />
                 )}
               </div>

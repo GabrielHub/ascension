@@ -1,7 +1,7 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 12;
+export const CURRENT_SAVE_SCHEMA_VERSION = 13;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -190,13 +190,54 @@ export interface RaidSummarySnapshot extends SaveStructuredRecord {
 export interface ContractSiteSnapshot {
   contractSiteId: string;
   missionId: string;
+  siteConceptId?: string;
   location: string;
+  rank?: string;
   bossDefeated: boolean;
   contractLost: boolean;
   threat: number;
   intel: number;
   reward: number;
   securedAtTick: number;
+  explorationProgress?: number;
+  bossIntelProgress?: number;
+  bossPressureProgress?: number;
+  bossAvailable?: boolean;
+}
+
+export interface PostedContractSnapshot {
+  postingId: string;
+  missionId: string;
+  siteConceptId: string;
+  location: string;
+  rank: string;
+  threat: number;
+  intel: number;
+  reward: number;
+  risk: number;
+  bidCost: number;
+  minReputation: number;
+  generatedAtTick: number;
+  knownTraits?: string[];
+  hiddenTraitCount?: number;
+  enemyHints?: string[];
+  lootFamilyHints?: string[];
+  bossHint?: string | null;
+  neighborhoodLabel?: string;
+}
+
+export interface ContractResultSnapshot {
+  contractSiteId: string;
+  missionId: string;
+  siteConceptId: string;
+  location: string;
+  rank: string;
+  outcome: "boss_defeated" | "contract_lost";
+  totalRaids: number;
+  totalCashEarned: number;
+  totalReputationEarned: number;
+  operatorDeaths: number;
+  resolvedAtTick: number;
 }
 
 export interface FogOfWarSnapshot {
@@ -274,6 +315,9 @@ export interface WorldSnapshot {
   activeEvents?: ActiveEventSnapshot[];
   contractSite?: ContractSiteSnapshot | null;
   fogOfWar?: FogOfWarSnapshot | null;
+  contractLifecycle?: "idle" | "bidding" | "active" | "resolved";
+  postedContracts?: PostedContractSnapshot[];
+  contractResult?: ContractResultSnapshot | null;
   scheduler?: WorldSchedulerSnapshot;
   operatorDispositions?: OperatorDispositionSnapshot[];
   notableTies?: NotableTieSnapshot[];

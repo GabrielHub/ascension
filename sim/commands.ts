@@ -22,6 +22,8 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/interruption-resolve",
   "sim/interruption-dismiss",
   "sim/incident-resolve",
+  "sim/bid-contract",
+  "sim/advance-contract",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -134,6 +136,13 @@ export type SimCommand =
       choiceId: string;
     }
   | {
+      type: "sim/bid-contract";
+      postingId: string;
+    }
+  | {
+      type: "sim/advance-contract";
+    }
+  | {
       type: "sim/dev-set-resource";
       resourceId: "resource/cash" | "resource/reputation" | "resource/intel";
       amount: number;
@@ -147,6 +156,10 @@ export type SimCommand =
     }
   | {
       type: "sim/dev-trigger-incident";
+    }
+  | {
+      type: "sim/dev-force-contract-end";
+      outcome: "boss_defeated" | "contract_lost";
     };
 
 export interface SimCommandQueue {
