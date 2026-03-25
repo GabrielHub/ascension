@@ -1,5 +1,52 @@
 import { soa } from "bitecs";
 
+import type { ContractRank } from "content/templates/site-concepts";
+
+// ── Contract lifecycle ──────────────────────────────────────────────────
+
+export type ContractLifecyclePhase = "idle" | "bidding" | "active" | "resolved";
+
+export interface PostedContract {
+  postingId: string;
+  missionId: string;
+  siteConceptId: string;
+  location: string;
+  rank: ContractRank;
+  threat: number;
+  intel: number;
+  reward: number;
+  risk: number;
+  bidCost: number;
+  minReputation: number;
+  generatedAtTick: number;
+  /** Known traits visible at current intel level. */
+  knownTraits: readonly string[];
+  /** Hidden traits only revealed at higher intel. */
+  hiddenTraitCount: number;
+  /** Enemy family hints based on site concept. */
+  enemyHints: readonly string[];
+  /** Expected loot family based on site concept. */
+  lootFamilyHints: readonly string[];
+  /** Boss name hint (hidden if intel too low). */
+  bossHint: string | null;
+  /** Neighborhood label for display. */
+  neighborhoodLabel: string;
+}
+
+export interface ContractResultSummary {
+  contractSiteId: string;
+  missionId: string;
+  siteConceptId: string;
+  location: string;
+  rank: ContractRank;
+  outcome: "boss_defeated" | "contract_lost";
+  totalRaids: number;
+  totalCashEarned: number;
+  totalReputationEarned: number;
+  operatorDeaths: number;
+  resolvedAtTick: number;
+}
+
 export interface ActiveRaidResolutionPacket {
   result: "success" | "failure" | "mixed";
   reputationDelta: number;
@@ -64,8 +111,12 @@ export interface ContractSiteState {
   contractSiteId: string;
   /** Mission template id for this contract. */
   missionId: string;
+  /** Site concept id for dungeon identity. */
+  siteConceptId: string;
   /** Location string for the dungeon. */
   location: string;
+  /** Contract rank (F-S). */
+  rank: ContractRank;
   /** Whether the dungeon boss has been defeated. */
   bossDefeated: boolean;
   /** Whether the contract has been lost. */
@@ -78,6 +129,14 @@ export interface ContractSiteState {
   reward: number;
   /** Tick when the contract was secured. */
   securedAtTick: number;
+  /** Site progress: exploration completion 0-100. */
+  explorationProgress: number;
+  /** Site progress: boss intel gathered 0-100. */
+  bossIntelProgress: number;
+  /** Site progress: boss pressure from successful raids 0-100. */
+  bossPressureProgress: number;
+  /** Whether the boss encounter is available for commitment. */
+  bossAvailable: boolean;
 }
 
 // ── Fog-of-war state ──────────────────────────────────────────────────────
@@ -122,4 +181,10 @@ export const BuildingAuthority = soa({
   contractSite: [] as (ContractSiteState | null)[],
   /** Fog-of-war state for the current contract dungeon. */
   fogOfWar: [] as (FogOfWarState | null)[],
+  /** Current contract lifecycle phase. */
+  contractLifecycle: [] as ContractLifecyclePhase[],
+  /** Posted contracts available for bidding. */
+  postedContracts: [] as PostedContract[][],
+  /** Summary of the most recently completed contract (cleared on next bid). */
+  contractResult: [] as (ContractResultSummary | null)[],
 });

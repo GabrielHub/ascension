@@ -34,7 +34,7 @@ export * from "./runtime";
 export * from "./systems";
 export * from "./uncertainty";
 
-export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
+function buildBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
   const startingBuilding = registry.buildingById.get(bootstrapScenario.building.activeBuildingId);
 
   if (!startingBuilding) {
@@ -167,6 +167,57 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
   } satisfies Phase1RuntimeWorldSnapshot;
 
   return snapshot;
+}
+
+function getAbsoluteMinute(snapshot: WorldSnapshot): number {
+  return Math.max(0, (snapshot.time.day - 1) * 1440 + snapshot.time.minuteOfDay);
+}
+
+export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
+  const simulation = createAscensionSimulation(buildBootstrapWorldSnapshot(registry), registry);
+  simulation.tick(0);
+  return simulation.getWorldSnapshot();
+}
+
+export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
+  const world = createBootstrapWorldSnapshot(registry);
+  const posting = world.postedContracts?.[0];
+
+  if (!posting) {
+    return world;
+  }
+
+  const securedAtTick = getAbsoluteMinute(world);
+
+  return {
+    ...world,
+    contractLifecycle: "active",
+    contractSite: {
+      contractSiteId: `contract/${securedAtTick}`,
+      missionId: posting.missionId,
+      siteConceptId: posting.siteConceptId,
+      location: posting.location,
+      rank: posting.rank,
+      bossDefeated: false,
+      contractLost: false,
+      threat: posting.threat,
+      intel: posting.intel,
+      reward: posting.reward,
+      securedAtTick,
+      explorationProgress: 0,
+      bossIntelProgress: 0,
+      bossPressureProgress: 0,
+      bossAvailable: false,
+    },
+    postedContracts: [],
+    contractResult: null,
+    fogOfWar: {
+      gridWidth: 16,
+      gridHeight: 16,
+      revealed: Array.from({ length: 16 * 16 }, () => false),
+      revealedCount: 0,
+    },
+  };
 }
 
 export function createBootstrapSimulation(registry: TemplateRegistry) {

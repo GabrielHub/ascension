@@ -4,6 +4,7 @@ import { templateRegistry } from "content/templates";
 import {
   createAscensionSimulation,
   createBootstrapSimulation,
+  createPreviewWorldSnapshot,
   createBootstrapWorldSnapshot,
 } from "sim";
 
@@ -60,7 +61,7 @@ describe("phase 1 view models", () => {
   });
 
   it("maps forming opportunities to the claimed operations state", () => {
-    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
     snapshot.raidOpportunities = [
       {
         id: "opportunity/seeded-1",
@@ -79,6 +80,7 @@ describe("phase 1 view models", () => {
     ];
 
     const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.tick(0);
     const operations = buildOpsViewFromPhase1(simulation.getPhase1View(), templateRegistry);
 
     expect(operations.opportunities).toContainEqual(

@@ -9,7 +9,7 @@ import {
   type PersistedSaveGame,
 } from "save";
 import { hydratePersistedSaveGame } from "save/codec";
-import { createBootstrapWorldSnapshot } from "sim";
+import { createBootstrapWorldSnapshot, createPreviewWorldSnapshot } from "sim";
 import { createAscensionSimulation } from "sim";
 
 import { parseRuntimeRouteRequest, resolveRuntimeSession } from "./session";
@@ -986,7 +986,7 @@ describe("runtime session lifecycle", () => {
   });
 
   it("emits autonomous raid launch cues from simulation-owned raid formation", async () => {
-    const world = createBootstrapWorldSnapshot(templateRegistry);
+    const world = createPreviewWorldSnapshot(templateRegistry);
     const missionId = templateRegistry.missions[0]?.id ?? "mission/test";
     world.raidOpportunities = [
       {

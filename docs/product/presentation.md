@@ -80,7 +80,12 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - The raid base view is not an isometric room-scene presentation and should not inherit HQ room-box composition rules.
 - Raid authored assets for the base view should be top-down map tiles, fog treatments, feature icons, marker shapes, and encounter indicators optimized for exploration readability.
 - In the current gameplay scope, the guild secures one government clearance contract at a time.
+- Contract flow should surface three explicit operations states: contract result review, contract bidding, and active contract execution.
+- The result beat should be a dedicated operations-state surface or equivalent blocking interruption, not a silent handoff hidden in the event rail.
+- The bidding board should compare a small set of posted contracts and foreground site concept, neighborhood, rank, reward, intel, risk, known threat or hazard hints, and expected loot identity.
+- Starting a normal new campaign should open on that bidding board after the initial posted-contract set has been generated, rather than dropping the player into an empty operations state or auto-securing the first site.
 - That secured contract determines the one active dungeon currently available to raid.
+- Preview and dev-only entry points may intentionally fast-forward into a seeded active contract so map, fog, and encounter surfaces can be inspected immediately. That shortcut should stay clearly separate from the canonical player-facing flow.
 - Multiple operator teams may exist in that same contracted dungeon at once.
 - Fog of war should reveal explored space as teams move through the dungeon.
 - Raid teams should enter dungeons with explicit autonomous goals such as looting, exploring, gathering intel, hunting threats, or attempting the boss.
@@ -91,6 +96,7 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Ordinary enemies should continue to respawn in the dungeon over time.
 - The active dungeon remains the guild's contract focus until its boss is defeated or the contract is lost.
 - Early contract loss should be possible and survivable; later layers can escalate failure into more severe organizational consequences.
+- Once a contract closes, the active-site reference should clear; the old result summary and the next posted board should carry the inter-contract state instead.
 - Clicking a team enters a focused overlay mode that syncs the active bottom card to that team while leaving the event log visible on the right.
 - Raid rendering should stay lighter and more abstract than HQ rendering, even when the underlying assets are authored and real.
 - If raids use richer boss encounter backdrops or encounter scenes, those are secondary overlays, not the canonical base-map language.

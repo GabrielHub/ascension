@@ -131,6 +131,11 @@ Bosses carry tags that apply persistent effects during the encounter. Current ex
 
 Boss confrontation direction:
 
+- Contract progression should be explicit: `active` contract, `resolved` result review, `bidding` board, then the next `active` site.
+- Closing a dungeon must not silently secure the next contract. The player chooses the next job from posted work after the result beat.
+- A fresh player-facing campaign should enter operations on the bidding board with an authored or generated set of posted contracts already available. New game must not start in an empty contract state and must not skip directly to an active site.
+- The active contract site is authoritative only while the lifecycle is `active`; posted contracts and the previous contract result persist beside it and round-trip through save/load.
+- Preview and verification entry points may seed an `active` contract as a tooling shortcut, but that is a non-canonical fast path for testing, not the player-facing contract progression model.
 - Boss fights are real simulation-owned encounters with phases, action timing, hp, statuses, cooldowns, and deterministic operator-kit execution.
 - The player remains a manager. Encounter input should be limited to explicit managerial interventions and commitment choices, not direct per-operator tactics control.
 - The current shipped encounter includes limited managerial interventions; future expansion should broaden the intervention library without changing simulation ownership.

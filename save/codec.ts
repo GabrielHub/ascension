@@ -6,6 +6,7 @@ import {
   type OperatorCombatSnapshot,
   type ActiveEventSnapshot,
   type ActiveRaidSnapshot,
+  type ContractResultSnapshot,
   type ContractSiteSnapshot,
   type EquipmentAssignmentSnapshot,
   type FogOfWarSnapshot,
@@ -18,6 +19,7 @@ import {
   type OperatorSnapshot,
   type OperatorRelationshipSnapshot,
   type PersistedSaveGame,
+  type PostedContractSnapshot,
   type RaidOpportunitySnapshot,
   type RaidOperatorOutcomeSnapshot,
   type RaidSummarySnapshot,
@@ -72,9 +74,12 @@ export interface SaveCodecOptions {
 type ParsedActiveRaidSnapshot = ActiveRaidSnapshot & { _changed: boolean };
 type ParsedOperatorSnapshot = OperatorSnapshot & { _changed: boolean };
 type ParsedOperatorRelationshipSnapshot = OperatorRelationshipSnapshot & { _changed: boolean };
+type ParsedPostedContractSnapshot = PostedContractSnapshot & { _changed: boolean };
 type ParsedRaidOperatorOutcomeSnapshot = RaidOperatorOutcomeSnapshot & { _changed: boolean };
 type ParsedRaidOpportunitySnapshot = RaidOpportunitySnapshot & { _changed: boolean };
 type ParsedRaidSummarySnapshot = RaidSummarySnapshot & { _changed: boolean };
+
+const CONTRACT_LIFECYCLE_PHASES = ["idle", "bidding", "active", "resolved"] as const;
 
 interface OperatorAppearanceParseContext {
   getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
@@ -626,13 +631,159 @@ function parseContractSiteSnapshot(
     contractSite: {
       contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`),
       missionId: expectString(record.missionId, `${path}.missionId`),
+      ...(record.siteConceptId === undefined
+        ? { siteConceptId: "" }
+        : { siteConceptId: expectString(record.siteConceptId, `${path}.siteConceptId`) }),
       location: expectString(record.location, `${path}.location`),
+      ...(record.rank === undefined
+        ? { rank: "f" }
+        : { rank: expectString(record.rank, `${path}.rank`) }),
       bossDefeated: expectBoolean(record.bossDefeated, `${path}.bossDefeated`),
       contractLost: expectBoolean(record.contractLost, `${path}.contractLost`),
       threat: expectNumber(record.threat, `${path}.threat`),
       intel: expectNumber(record.intel, `${path}.intel`),
       reward: expectNumber(record.reward, `${path}.reward`),
       securedAtTick: expectInteger(record.securedAtTick, `${path}.securedAtTick`),
+      ...(record.explorationProgress === undefined
+        ? { explorationProgress: 0 }
+        : {
+            explorationProgress: expectNumber(
+              record.explorationProgress,
+              `${path}.explorationProgress`,
+            ),
+          }),
+      ...(record.bossIntelProgress === undefined
+        ? { bossIntelProgress: 0 }
+        : {
+            bossIntelProgress: expectNumber(record.bossIntelProgress, `${path}.bossIntelProgress`),
+          }),
+      ...(record.bossPressureProgress === undefined
+        ? { bossPressureProgress: 0 }
+        : {
+            bossPressureProgress: expectNumber(
+              record.bossPressureProgress,
+              `${path}.bossPressureProgress`,
+            ),
+          }),
+      ...(record.bossAvailable === undefined
+        ? { bossAvailable: false }
+        : { bossAvailable: expectBoolean(record.bossAvailable, `${path}.bossAvailable`) }),
+    },
+    changed:
+      record.siteConceptId === undefined ||
+      record.rank === undefined ||
+      record.explorationProgress === undefined ||
+      record.bossIntelProgress === undefined ||
+      record.bossPressureProgress === undefined ||
+      record.bossAvailable === undefined,
+  };
+}
+
+function parseContractLifecycleSnapshot(
+  value: unknown,
+  path: string,
+): {
+  contractLifecycle: WorldSnapshot["contractLifecycle"] | undefined;
+  changed: boolean;
+} {
+  if (value === undefined) {
+    return { contractLifecycle: undefined, changed: false };
+  }
+
+  const phase = expectString(value, path);
+  if (!CONTRACT_LIFECYCLE_PHASES.some((candidate) => candidate === phase)) {
+    fail(path, `must be one of ${CONTRACT_LIFECYCLE_PHASES.join(", ")}.`);
+  }
+
+  return {
+    contractLifecycle: phase as WorldSnapshot["contractLifecycle"],
+    changed: false,
+  };
+}
+
+function parsePostedContractSnapshot(value: unknown, path: string): ParsedPostedContractSnapshot {
+  const record = expectRecord(value, path);
+
+  return {
+    postingId: expectString(record.postingId, `${path}.postingId`),
+    missionId: expectString(record.missionId, `${path}.missionId`),
+    siteConceptId: expectString(record.siteConceptId, `${path}.siteConceptId`),
+    location: expectString(record.location, `${path}.location`),
+    rank: expectString(record.rank, `${path}.rank`),
+    threat: expectNumber(record.threat, `${path}.threat`),
+    intel: expectNumber(record.intel, `${path}.intel`),
+    reward: expectNumber(record.reward, `${path}.reward`),
+    risk: expectNumber(record.risk, `${path}.risk`),
+    bidCost: expectNumber(record.bidCost, `${path}.bidCost`),
+    minReputation: expectNumber(record.minReputation, `${path}.minReputation`),
+    generatedAtTick: expectInteger(record.generatedAtTick, `${path}.generatedAtTick`),
+    ...(record.knownTraits === undefined
+      ? { knownTraits: [] }
+      : { knownTraits: expectStringArray(record.knownTraits, `${path}.knownTraits`) }),
+    ...(record.hiddenTraitCount === undefined
+      ? { hiddenTraitCount: 0 }
+      : {
+          hiddenTraitCount: expectNonNegativeInteger(
+            record.hiddenTraitCount,
+            `${path}.hiddenTraitCount`,
+          ),
+        }),
+    ...(record.enemyHints === undefined
+      ? { enemyHints: [] }
+      : { enemyHints: expectStringArray(record.enemyHints, `${path}.enemyHints`) }),
+    ...(record.lootFamilyHints === undefined
+      ? { lootFamilyHints: [] }
+      : { lootFamilyHints: expectStringArray(record.lootFamilyHints, `${path}.lootFamilyHints`) }),
+    ...(record.bossHint === undefined
+      ? {}
+      : {
+          bossHint:
+            record.bossHint === null ? null : expectString(record.bossHint, `${path}.bossHint`),
+        }),
+    ...(record.neighborhoodLabel === undefined
+      ? { neighborhoodLabel: "" }
+      : {
+          neighborhoodLabel: expectString(record.neighborhoodLabel, `${path}.neighborhoodLabel`),
+        }),
+    _changed:
+      record.knownTraits === undefined ||
+      record.hiddenTraitCount === undefined ||
+      record.enemyHints === undefined ||
+      record.lootFamilyHints === undefined ||
+      record.neighborhoodLabel === undefined,
+  };
+}
+
+function parseContractResultSnapshot(
+  value: unknown,
+  path: string,
+): { contractResult: ContractResultSnapshot | null; changed: boolean } {
+  if (value == null) {
+    return { contractResult: null, changed: false };
+  }
+
+  const record = expectRecord(value, path);
+  const outcome = expectString(record.outcome, `${path}.outcome`);
+  if (outcome !== "boss_defeated" && outcome !== "contract_lost") {
+    fail(`${path}.outcome`, 'must be "boss_defeated" or "contract_lost".');
+  }
+
+  return {
+    contractResult: {
+      contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`),
+      missionId: expectString(record.missionId, `${path}.missionId`),
+      siteConceptId: expectString(record.siteConceptId, `${path}.siteConceptId`),
+      location: expectString(record.location, `${path}.location`),
+      rank: expectString(record.rank, `${path}.rank`),
+      outcome,
+      totalRaids: expectNonNegativeInteger(record.totalRaids, `${path}.totalRaids`),
+      totalCashEarned: expectNumber(record.totalCashEarned, `${path}.totalCashEarned`),
+      totalReputationEarned: expectNumber(
+        record.totalReputationEarned,
+        `${path}.totalReputationEarned`,
+      ),
+      operatorDeaths: expectNonNegativeInteger(record.operatorDeaths, `${path}.operatorDeaths`),
+      resolvedAtTick: expectInteger(record.resolvedAtTick, `${path}.resolvedAtTick`),
     },
     changed: false,
   };
@@ -1485,6 +1636,19 @@ function parseWorldSnapshot(
     parseActiveEventSnapshot,
   );
   const contractSite = parseContractSiteSnapshot(record.contractSite, `${path}.contractSite`);
+  const contractLifecycle = parseContractLifecycleSnapshot(
+    record.contractLifecycle,
+    `${path}.contractLifecycle`,
+  );
+  const postedContracts = parseOptionalCollection(
+    record.postedContracts,
+    `${path}.postedContracts`,
+    parsePostedContractSnapshot,
+  );
+  const contractResult = parseContractResultSnapshot(
+    record.contractResult,
+    `${path}.contractResult`,
+  );
   const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
   const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
   const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
@@ -1783,6 +1947,19 @@ function parseWorldSnapshot(
           }),
       ...(record.activeEvents === undefined ? {} : { activeEvents: activeEvents.items }),
       contractSite: contractSite.contractSite,
+      ...(record.contractLifecycle === undefined
+        ? {}
+        : { contractLifecycle: contractLifecycle.contractLifecycle }),
+      ...(record.postedContracts === undefined
+        ? {}
+        : {
+            postedContracts: postedContracts.items.map(
+              ({ _changed: _ignored, ...postedContract }) => postedContract,
+            ),
+          }),
+      ...(record.contractResult === undefined
+        ? {}
+        : { contractResult: contractResult.contractResult }),
       fogOfWar: fogOfWar.fogOfWar,
       ...(scheduler.scheduler === undefined ? {} : { scheduler: scheduler.scheduler }),
       operatorDispositions,
@@ -1816,6 +1993,10 @@ function parseWorldSnapshot(
       operatorRelationshipChanged ||
       raidOpportunityChanged ||
       contractSite.changed ||
+      contractLifecycle.changed ||
+      postedContracts.changed ||
+      postedContracts.items.some((postedContract) => postedContract._changed) ||
+      contractResult.changed ||
       fogOfWar.changed ||
       scheduler.changed ||
       raidSummaryChanged ||

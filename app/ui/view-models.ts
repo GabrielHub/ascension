@@ -26,6 +26,8 @@ export interface GameCallbacks {
   sellItem: (itemId: string, quantity: number) => void;
   autoAssignAccessory: (operatorId: string) => void;
   unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => void;
+  bidContract: (postingId: string) => void;
+  advanceContract: () => void;
 }
 
 // ── View model types ─────────────────────────────────────────────────────
@@ -373,12 +375,49 @@ export interface HqViewModel {
 export interface ContractSiteViewModel {
   contractSiteId: string;
   missionName: string;
+  siteConceptName: string;
   location: string;
+  rank: string;
   bossDefeated: boolean;
   contractLost: boolean;
   threat: number;
   intel: number;
   reward: number;
+  explorationProgress: number;
+  bossAvailable: boolean;
+}
+
+export interface PostedContractViewModel {
+  postingId: string;
+  missionName: string;
+  siteConceptName: string;
+  location: string;
+  rank: string;
+  threat: number;
+  intel: number;
+  reward: number;
+  risk: number;
+  bidCost: number;
+  canBid: boolean;
+  knownTraits: readonly string[];
+  hiddenTraitCount: number;
+  enemyHints: readonly string[];
+  lootFamilyHints: readonly string[];
+  bossHint: string | null;
+  neighborhoodLabel: string;
+}
+
+export interface ContractResultViewModel {
+  contractSiteId: string;
+  missionName: string;
+  siteConceptName: string;
+  location: string;
+  rank: string;
+  outcome: "boss_defeated" | "contract_lost";
+  totalRaids: number;
+  totalCashEarned: number;
+  totalReputationEarned: number;
+  operatorDeaths: number;
 }
 
 export interface RaidEnemyViewModel {
@@ -403,7 +442,10 @@ export interface RaidWorldViewModel {
 }
 
 export interface OperationsViewModel {
+  contractLifecycle: "idle" | "bidding" | "active" | "resolved";
   contractSite: ContractSiteViewModel | null;
+  contractResult: ContractResultViewModel | null;
+  postedContracts: readonly PostedContractViewModel[];
   opportunities: readonly RaidOpportunityViewModel[];
   activeRaids: readonly ActiveRaidViewModel[];
   raidHistory: readonly RaidSummaryViewModel[];
@@ -420,9 +462,23 @@ export function visitorQualityToRank(quality: number): string {
   return "E";
 }
 
-/** Strip a `prefix:` from a tag string and replace underscores with spaces. */
+/** Strip a `prefix:` or `prefix/` from a tag string and replace separators with spaces. */
 export function formatTag(tag: string): string {
-  return tag.replace(/^[a-z]+:/, "").replace(/_/g, " ");
+  return tag.replace(/^[a-z-]+[:/]/, "").replace(/[_-]/g, " ");
+}
+
+/** Map a contract rank letter to a badge CSS class. */
+export function rankBadgeClass(rank: string): string {
+  switch (rank.toUpperCase()) {
+    case "S":
+    case "A":
+      return "badge-gold";
+    case "B":
+    case "C":
+      return "badge-ember";
+    default:
+      return "badge-slate";
+  }
 }
 
 /** Title-case a raw culture tone or signal label for display.
@@ -886,14 +942,53 @@ export function buildOpsViewFromPhase1(
     ? {
         contractSiteId: view.contractSite.contractSiteId,
         missionName: resolveMissionName(view.contractSite.missionId, registry),
+        siteConceptName: view.contractSite.siteConceptName ?? "Unknown Site",
         location: getLocationLabel(view.contractSite.location),
+        rank: (view.contractSite.rank ?? "f").toUpperCase(),
         bossDefeated: view.contractSite.bossDefeated,
         contractLost: view.contractSite.contractLost,
         threat: view.contractSite.threat,
         intel: view.contractSite.intel,
         reward: view.contractSite.reward,
+        explorationProgress: view.contractSite.explorationProgress ?? 0,
+        bossAvailable: view.contractSite.bossAvailable ?? false,
       }
     : null;
+
+  const contractResult: ContractResultViewModel | null = view.contractResult
+    ? {
+        contractSiteId: view.contractResult.contractSiteId,
+        missionName: resolveMissionName(view.contractResult.missionId, registry),
+        siteConceptName: view.contractResult.siteConceptName ?? "Unknown Site",
+        location: getLocationLabel(view.contractResult.location),
+        rank: (view.contractResult.rank ?? "f").toUpperCase(),
+        outcome: view.contractResult.outcome,
+        totalRaids: view.contractResult.totalRaids,
+        totalCashEarned: view.contractResult.totalCashEarned,
+        totalReputationEarned: view.contractResult.totalReputationEarned,
+        operatorDeaths: view.contractResult.operatorDeaths,
+      }
+    : null;
+
+  const postedContracts: PostedContractViewModel[] = (view.postedContracts ?? []).map((p) => ({
+    postingId: p.postingId,
+    missionName: resolveMissionName(p.missionId, registry),
+    siteConceptName: p.siteConceptName ?? "Unknown Site",
+    location: getLocationLabel(p.location),
+    rank: (p.rank ?? "f").toUpperCase(),
+    threat: p.threat,
+    intel: p.intel,
+    reward: p.reward,
+    risk: p.risk,
+    bidCost: p.bidCost,
+    canBid: p.canBid,
+    knownTraits: p.knownTraits ?? [],
+    hiddenTraitCount: p.hiddenTraitCount ?? 0,
+    enemyHints: p.enemyHints ?? [],
+    lootFamilyHints: p.lootFamilyHints ?? [],
+    bossHint: p.bossHint ?? null,
+    neighborhoodLabel: p.neighborhoodLabel ?? "",
+  }));
 
   const raidWorld: RaidWorldViewModel | null = view.raidWorld
     ? {
@@ -914,7 +1009,16 @@ export function buildOpsViewFromPhase1(
       }
     : null;
 
-  return { contractSite, opportunities, activeRaids, raidHistory, raidWorld };
+  return {
+    contractLifecycle: view.contractLifecycle ?? "bidding",
+    contractSite,
+    contractResult,
+    postedContracts,
+    opportunities,
+    activeRaids,
+    raidHistory,
+    raidWorld,
+  };
 }
 
 // ── Legacy WorldSnapshot builders (retained for render-layer compat) ─────
@@ -1187,7 +1291,10 @@ export function buildOperationsViewModel(
   );
 
   return {
+    contractLifecycle: snapshot.contractLifecycle ?? "bidding",
     contractSite: null,
+    contractResult: null,
+    postedContracts: [],
     opportunities,
     activeRaids: snapshot.activeRaidPackets.map((r) => mapActiveRaid(r, registry)),
     raidHistory: snapshot.raidSummaries.map((s) => mapRaidSummary(s, registry)),

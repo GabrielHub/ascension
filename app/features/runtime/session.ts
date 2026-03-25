@@ -28,6 +28,7 @@ import {
   STABLE_SIM_COMMAND_TYPES,
   createAscensionSimulation,
   createBootstrapWorldSnapshot,
+  createPreviewWorldSnapshot,
   findPath,
   interpolatePathPosition,
   resolveRoomAnchor,
@@ -1665,10 +1666,13 @@ export function parseRuntimeRouteRequest(search: string): RuntimeRouteRequest {
 
 export async function resolveRuntimeSession(request: RuntimeRouteRequest): Promise<RuntimeSession> {
   switch (request.mode) {
-    case "preview":
-      return createRuntimeSession(createBootstrapWorldSnapshot(templateRegistry), {
+    case "preview": {
+      const session = createRuntimeSession(createPreviewWorldSnapshot(templateRegistry), {
         mode: "preview",
       });
+      await session.commands.tick(0);
+      return session;
+    }
     case "new":
       return createNewSaveSession(assertSlotId(request.slotId));
     case "load":
