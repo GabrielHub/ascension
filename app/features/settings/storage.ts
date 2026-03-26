@@ -4,6 +4,7 @@ export interface GameSettings {
     musicVolumeDb: number;
   };
   wakeLockEnabled: boolean;
+  tutorialEventsEnabled: boolean;
 }
 
 interface StorageLike {
@@ -23,6 +24,7 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
     musicVolumeDb: DEFAULT_MUSIC_VOLUME_DB,
   },
   wakeLockEnabled: true,
+  tutorialEventsEnabled: true,
 };
 
 function getStorage(storage?: StorageLike): StorageLike | undefined {
@@ -61,6 +63,10 @@ export function normalizeGameSettings(input: unknown): GameSettings {
       typeof record.wakeLockEnabled === "boolean"
         ? record.wakeLockEnabled
         : DEFAULT_GAME_SETTINGS.wakeLockEnabled,
+    tutorialEventsEnabled:
+      typeof record.tutorialEventsEnabled === "boolean"
+        ? record.tutorialEventsEnabled
+        : DEFAULT_GAME_SETTINGS.tutorialEventsEnabled,
   };
 }
 

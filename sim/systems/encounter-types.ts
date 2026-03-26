@@ -264,6 +264,7 @@ export interface BossEncounterInstance {
   rngSeed: number;
   rngCursor: number;
   initiativeQueue: string[];
+  pendingRoundStart: boolean;
   actors: Record<string, ActorCombatState>;
   interventions: InterventionUsageState[];
   encounterLog: EncounterActionRecord[];
@@ -289,6 +290,7 @@ export interface BossEncounterSnapshot {
   rngSeed: number;
   rngCursor: number;
   initiativeQueue: readonly string[];
+  pendingRoundStart?: boolean;
   actors: Record<string, ActorCombatState>;
   interventions: InterventionUsageState[];
   encounterLog: EncounterActionRecord[];

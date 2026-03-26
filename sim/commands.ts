@@ -24,6 +24,10 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/incident-resolve",
   "sim/bid-contract",
   "sim/advance-contract",
+  "sim/guidance-complete",
+  "sim/guidance-dismiss",
+  "sim/guidance-record-anchor-failure",
+  "sim/guidance-reset-opening",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -120,6 +124,9 @@ export type SimCommand =
       type: "sim/encounter-retreat";
     }
   | {
+      type: "sim/encounter-dismiss";
+    }
+  | {
       type: "sim/encounter-use-intervention";
       interventionId: string;
     }
@@ -141,6 +148,24 @@ export type SimCommand =
     }
   | {
       type: "sim/advance-contract";
+    }
+  | {
+      type: "sim/guidance-complete";
+      beatId: string;
+      signal: string;
+    }
+  | {
+      type: "sim/guidance-dismiss";
+      beatId: string;
+    }
+  | {
+      type: "sim/guidance-record-anchor-failure";
+      beatId: string;
+      anchorId: string;
+      fallbackUsed: boolean;
+    }
+  | {
+      type: "sim/guidance-reset-opening";
     }
   | {
       type: "sim/dev-set-resource";

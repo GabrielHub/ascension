@@ -58,6 +58,28 @@ This section is intentionally summary-level. The implementation itself is the so
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
+## Pre-Expansion: Tutorial And Narrative Framework
+
+Goal: make the player-facing game legible and tonally coherent before wider content and scope expansion.
+
+Deliverables:
+
+- a gameplay-owned onboarding framework that unifies tutorials, contextual hints, focused tours, and interruption-backed narrative beats
+- save-safe first-seen progression and deterministic early-game guidance for the player-facing new game path
+- a canonical opening sequence that teaches contract flow, staffing, roster state, raids, and incident handling through authored in-world framing
+- reuse of the existing interruption layer for high-salience narrative beats instead of adding a parallel modal authority path
+- custom spotlight, coachmark, and hint primitives built in-house, informed by current tour-library patterns rather than shipped as a dependency
+- explicit authoring guidance that requires world-foundation grounding for tutorial copy, narrative briefings, and future AI-assisted content workflows
+- a later extension point for AI-authored flavor, recap, or candidate content that stays above deterministic simulation authority
+
+Exit criteria:
+
+- new players can learn the opening slice without relying on prior dev knowledge or scattered tooltip hunting
+- tutorials, hints, and narrative beats read as one coherent authored layer instead of separate systems
+- onboarding state survives refresh and save/load when it is gameplay-relevant
+- the framework is ready to scale with new rooms, systems, contracts, and buildings without rewriting the authority model
+- AI remains optional and non-authoritative
+
 ## Phase 3: Union Hall Expansion
 
 Goal: prove that scale changes gameplay, not just numbers.

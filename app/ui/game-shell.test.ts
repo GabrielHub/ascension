@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { RuntimeSession } from "app/features/runtime";
 
-import { getDefaultShellNavigation, resolveInterruptionAction } from "./game-shell";
+import {
+  getDefaultShellNavigation,
+  isTutorialSuppressibleGuidanceBeat,
+  resolveInterruptionAction,
+} from "./game-shell";
 
 function createBossCommitmentInterruption(sourceSystem = "raid-system") {
   return {
@@ -111,5 +115,33 @@ describe("getDefaultShellNavigation", () => {
       hqCategory: "rooms",
       opsCategory: "contract",
     });
+  });
+});
+
+describe("isTutorialSuppressibleGuidanceBeat", () => {
+  it("suppresses instructional beats when tutorials are disabled", () => {
+    expect(
+      isTutorialSuppressibleGuidanceBeat({
+        completionKind: "acknowledged",
+      }),
+    ).toBe(true);
+    expect(
+      isTutorialSuppressibleGuidanceBeat({
+        completionKind: "market_opened",
+      }),
+    ).toBe(true);
+  });
+
+  it("preserves managerial guidance beats when tutorials are disabled", () => {
+    expect(
+      isTutorialSuppressibleGuidanceBeat({
+        completionKind: "incident_resolved",
+      }),
+    ).toBe(false);
+    expect(
+      isTutorialSuppressibleGuidanceBeat({
+        completionKind: "boss_commitment_resolved",
+      }),
+    ).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 13;
+export const CURRENT_SAVE_SCHEMA_VERSION = 14;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -433,6 +433,7 @@ export interface WorldSnapshot {
   activeEncounter?: SaveStructuredRecord | null;
   interruptionQueue?: SaveStructuredRecord | null;
   incidentState?: SaveStructuredRecord | null;
+  guidanceState?: SaveStructuredRecord | null;
   raidRuns?: RaidRunSnapshot[];
 }
 

@@ -1,6 +1,7 @@
 import { BuildingAuthority } from "../components";
 import type { SimSystemContext } from "./types";
 import { bidOnContract, advanceContractPhase } from "./raids";
+import { advanceGuidanceSystem } from "./guidance-system";
 
 export function applyContractCommand(
   context: SimSystemContext,
@@ -10,7 +11,11 @@ export function applyContractCommand(
   switch (type) {
     case "sim/bid-contract": {
       const postingId = typeof payload.postingId === "string" ? payload.postingId : "";
-      return bidOnContract(context, postingId);
+      const secured = bidOnContract(context, postingId);
+      if (secured) {
+        advanceGuidanceSystem(context, 0);
+      }
+      return secured;
     }
     case "sim/advance-contract": {
       advanceContractPhase(context);

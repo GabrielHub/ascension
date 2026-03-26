@@ -13,7 +13,8 @@ export type InterruptionType =
   | "incident"
   | "raid_boss_commitment"
   | "announcement"
-  | "warning";
+  | "warning"
+  | "guidance";
 
 export type InterruptionBlockingMode = "blocking" | "acknowledgment" | "deferrable";
 
@@ -40,7 +41,8 @@ export type InterruptionPayload =
   | IncidentPayload
   | RaidBossCommitmentPayload
   | AnnouncementPayload
-  | WarningPayload;
+  | WarningPayload
+  | GuidancePayload;
 
 export interface SettingsPayload {
   kind: "settings";
@@ -101,6 +103,21 @@ export interface WarningPayload {
   severity: "high" | "critical";
 }
 
+export interface GuidancePayload {
+  kind: "guidance";
+  beatId: string;
+  track: string;
+  title: string;
+  body: string;
+  subtitle?: string;
+  ctaLabel: string;
+  deliveryMode: string;
+  milestoneOrder: number;
+  totalMilestones: number;
+  completionKind: string;
+  fallbackBody?: string;
+}
+
 // ── Interruption queue state ─────────────────────────────────────────────
 
 export interface InterruptionQueueState {
@@ -123,6 +140,7 @@ const INTERRUPTION_PRIORITY: Record<InterruptionType, number> = {
   warning: 100,
   raid_boss_commitment: 90,
   incident: 70,
+  guidance: 60,
   announcement: 50,
   settings: 10,
 };
@@ -154,7 +172,7 @@ export function enqueueInterruption(
     createdAtMinute,
     sourceSystem,
     payload,
-    dismissible: options?.dismissible ?? type === "settings",
+    dismissible: options?.dismissible ?? (type === "settings" || type === "guidance"),
     persistence:
       options?.persistence ??
       (type === "settings" || type === "announcement" ? "transient" : "persistent"),

@@ -30,6 +30,17 @@ type IncidentState = {
   nextInstanceId: number;
   lastEvaluationMinute: number;
 };
+type GuidanceState = {
+  seenBeatIds: string[];
+  completedBeatIds: string[];
+  dismissedBeatIds: string[];
+  activeBeatId: string | null;
+  activeBeatView: unknown;
+  queuedBeatIds: string[];
+  lastEvaluationMinute: number;
+  openingPathState: string;
+  anchorResolutionFailures: unknown[];
+};
 // Safe to import: encounter-types is a leaf module with no circular deps.
 import {
   getBossEncounterDefinition,
@@ -50,6 +61,20 @@ function lazyCreateIncidentState(): IncidentState {
     cooldowns: {},
     nextInstanceId: 1,
     lastEvaluationMinute: 0,
+  };
+}
+
+function lazyCreateGuidanceState(openingPathState = "completed"): GuidanceState {
+  return {
+    seenBeatIds: [],
+    completedBeatIds: [],
+    dismissedBeatIds: [],
+    activeBeatId: null,
+    activeBeatView: null,
+    queuedBeatIds: [],
+    lastEvaluationMinute: 0,
+    openingPathState,
+    anchorResolutionFailures: [],
   };
 }
 
@@ -104,11 +129,12 @@ function lazyRestoreEncounter(snapshot: BossEncounterSnapshot): BossEncounterIns
     ...snapshot,
     participatingOperatorIds: [...snapshot.participatingOperatorIds],
     initiativeQueue: [...snapshot.initiativeQueue],
+    pendingRoundStart: snapshot.pendingRoundStart ?? snapshot.initiativeQueue.length === 0,
     actors: JSON.parse(JSON.stringify(snapshot.actors)),
     interventions: snapshot.interventions.map((i) => ({ ...i })),
     encounterLog: [...snapshot.encounterLog],
     debugTraceEnabled: false,
-    autoplayEnabled: true,
+    autoplayEnabled: snapshot.status === "active",
     autoplayIntervalMs: 800,
   };
 }
@@ -600,6 +626,31 @@ export interface Phase1RuntimeView {
   encounter: EncounterView | null;
   activeInterruption: import("./systems/interruptions").InterruptionInstance | null;
   worldTimeFrozen: boolean;
+  guidance: {
+    activeBeat: {
+      beatId: string;
+      track: string;
+      deliveryMode: string;
+      target: string | null;
+      fallbackIntent: string | null;
+      copy: {
+        title: string;
+        body: string;
+        subtitle?: string;
+        ctaLabel: string;
+        ctaDismissLabel?: string;
+        fallbackBody?: string;
+      };
+      milestoneOrder: number;
+      totalMilestones: number;
+      completionKind: string;
+      pauseWorld: boolean;
+      allowSkip: boolean;
+    } | null;
+    openingPathState: string;
+    completedOpeningBeats: number;
+    totalOpeningBeats: number;
+  };
 }
 
 // ── Phase 2 View Types ────────────────────────────────────────────────────
@@ -1148,8 +1199,11 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
       features: [],
     },
     activeEncounter: restoreEncounterFromSnapshot(snapshot),
-    interruptionQueue: restoreInterruptionQueueFromSnapshot(snapshot),
-    incidentState: restoreIncidentStateFromSnapshot(snapshot),
+    interruptionQueue: restoreInterruptionQueueFromSnapshot(
+      snapshot,
+    ) as SimRuntimeState["interruptionQueue"],
+    incidentState: restoreIncidentStateFromSnapshot(snapshot) as SimRuntimeState["incidentState"],
+    guidanceState: restoreGuidanceStateFromSnapshot(snapshot) as SimRuntimeState["guidanceState"],
     kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
     worldTimeFrozen: false,
   };
@@ -1202,6 +1256,34 @@ function restoreIncidentStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot):
     };
   } catch {
     return lazyCreateIncidentState();
+  }
+}
+
+function restoreGuidanceStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot): GuidanceState {
+  const raw = (snapshot as unknown as Record<string, unknown>).guidanceState;
+  if (!raw || typeof raw !== "object") {
+    return lazyCreateGuidanceState();
+  }
+  try {
+    const data = raw as Record<string, unknown>;
+    return {
+      seenBeatIds: Array.isArray(data.seenBeatIds) ? data.seenBeatIds : [],
+      completedBeatIds: Array.isArray(data.completedBeatIds) ? data.completedBeatIds : [],
+      dismissedBeatIds: Array.isArray(data.dismissedBeatIds) ? data.dismissedBeatIds : [],
+      activeBeatId: typeof data.activeBeatId === "string" ? data.activeBeatId : null,
+      activeBeatView:
+        data.activeBeatView && typeof data.activeBeatView === "object" ? data.activeBeatView : null,
+      queuedBeatIds: Array.isArray(data.queuedBeatIds) ? data.queuedBeatIds : [],
+      lastEvaluationMinute:
+        typeof data.lastEvaluationMinute === "number" ? data.lastEvaluationMinute : 0,
+      openingPathState:
+        typeof data.openingPathState === "string" ? data.openingPathState : "completed",
+      anchorResolutionFailures: Array.isArray(data.anchorResolutionFailures)
+        ? data.anchorResolutionFailures
+        : [],
+    };
+  } catch {
+    return lazyCreateGuidanceState();
   }
 }
 
@@ -2172,6 +2254,7 @@ function applyWorldSnapshot(
                 rngSeed: runtimeState.activeEncounter.rngSeed,
                 rngCursor: runtimeState.activeEncounter.rngCursor,
                 initiativeQueue: [...runtimeState.activeEncounter.initiativeQueue],
+                pendingRoundStart: runtimeState.activeEncounter.pendingRoundStart,
                 actors: JSON.parse(JSON.stringify(runtimeState.activeEncounter.actors)),
                 interventions: runtimeState.activeEncounter.interventions.map((i) => ({
                   ...i,
@@ -2204,6 +2287,28 @@ function applyWorldSnapshot(
                 nextInstanceId: runtimeState.incidentState.nextInstanceId,
                 lastEvaluationMinute: runtimeState.incidentState.lastEvaluationMinute,
               },
+            }
+          : {}),
+        // Guidance state: always persist when opening path is active or any beats have been seen
+        ...(runtimeState.guidanceState.openingPathState === "active" ||
+        runtimeState.guidanceState.completedBeatIds.length > 0 ||
+        runtimeState.guidanceState.activeBeatId
+          ? {
+              guidanceState: {
+                seenBeatIds: [...runtimeState.guidanceState.seenBeatIds],
+                completedBeatIds: [...runtimeState.guidanceState.completedBeatIds],
+                dismissedBeatIds: [...runtimeState.guidanceState.dismissedBeatIds],
+                activeBeatId: runtimeState.guidanceState.activeBeatId,
+                activeBeatView: runtimeState.guidanceState.activeBeatView
+                  ? { ...(runtimeState.guidanceState.activeBeatView as Record<string, unknown>) }
+                  : null,
+                queuedBeatIds: [...runtimeState.guidanceState.queuedBeatIds],
+                lastEvaluationMinute: runtimeState.guidanceState.lastEvaluationMinute,
+                openingPathState: runtimeState.guidanceState.openingPathState,
+                anchorResolutionFailures: (
+                  runtimeState.guidanceState.anchorResolutionFailures as unknown[]
+                ).map((f) => ({ ...(f as Record<string, unknown>) })),
+              } as Record<string, unknown>,
             }
           : {}),
       };
@@ -2576,6 +2681,37 @@ function applyWorldSnapshot(
           : null,
         activeInterruption: runtimeState.interruptionQueue.active,
         worldTimeFrozen: runtimeState.worldTimeFrozen,
+        guidance: {
+          activeBeat: runtimeState.guidanceState.activeBeatView
+            ? {
+                ...(runtimeState.guidanceState.activeBeatView as {
+                  beatId: string;
+                  track: string;
+                  deliveryMode: string;
+                  target: string | null;
+                  fallbackIntent: string | null;
+                  copy: {
+                    title: string;
+                    body: string;
+                    subtitle?: string;
+                    ctaLabel: string;
+                    ctaDismissLabel?: string;
+                    fallbackBody?: string;
+                  };
+                  milestoneOrder: number;
+                  totalMilestones: number;
+                  completionKind: string;
+                  pauseWorld: boolean;
+                  allowSkip: boolean;
+                }),
+              }
+            : null,
+          openingPathState: runtimeState.guidanceState.openingPathState,
+          completedOpeningBeats: runtimeState.guidanceState.completedBeatIds.filter((id) =>
+            id.startsWith("guidance/opening/"),
+          ).length,
+          totalOpeningBeats: 9,
+        },
       };
     },
     getPhase2View(): Phase2View {

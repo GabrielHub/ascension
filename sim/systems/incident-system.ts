@@ -13,6 +13,8 @@ import {
 } from "./incidents";
 import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
 
+const OPENING_INCIDENT_GATE_BEAT_ID = "guidance/opening/first-raid-flow";
+
 export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   // Skip incident evaluation during zero-delta initialization ticks
   if (deltaMs <= 0) return;
@@ -23,6 +25,12 @@ export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   // Don't evaluate if there's already a blocking interruption or the world is frozen
   if (hasBlockingInterruption(interruptionQueue)) return;
   if (context.runtimeState.worldTimeFrozen) return;
+  if (
+    context.runtimeState.guidanceState.openingPathState === "active" &&
+    !context.runtimeState.guidanceState.completedBeatIds.includes(OPENING_INCIDENT_GATE_BEAT_ID)
+  ) {
+    return;
+  }
   if (!shouldEvaluateIncidents(incidentState, currentMinute)) return;
 
   // Initialize lastEvaluationMinute on first real evaluation to prevent immediate trigger

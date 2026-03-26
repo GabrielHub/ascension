@@ -53,6 +53,11 @@ function worldToGrid(worldX: number, worldY: number) {
   };
 }
 
+function formatTeamLabel(teamId: string): string {
+  const suffix = teamId.split("/").pop();
+  return suffix ? `Team ${suffix}` : "Team";
+}
+
 // ── Fog grid cell ─────────────────────────────────────────────────────
 
 function FogGridCell({
@@ -666,7 +671,7 @@ function CommandPanel({ snapshot, revealPct }: { snapshot: RaidWorldSnapshot; re
                       }}
                     />
                     <span className="flex-1 text-[0.6875rem] text-silver/55">
-                      Team {team.operatorIds.length}
+                      {formatTeamLabel(team.teamId)}
                     </span>
                     <span
                       className="text-[0.6rem] font-medium uppercase tracking-wider"

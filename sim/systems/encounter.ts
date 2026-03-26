@@ -40,12 +40,21 @@ import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 
 // ── Kit lookup maps (built once at module load) ─────────────────────────
 
-const operatorAbilityLookup = new Map(
+interface OperatorAbilityRuntime {
+  targeting: TargetingRule;
+  effects: readonly AbilityEffect[];
+  cooldown?: number;
+  aiHints?: readonly string[];
+}
+
+const operatorAbilityLookup = new Map<string, OperatorAbilityRuntime>(
   [...REGULAR_ATTACKS, ...SKILLS, ...ULTIMATES].map((template) => [
     template.id,
     {
       targeting: template.targeting,
       effects: template.effects,
+      cooldown: "cooldown" in template ? template.cooldown : undefined,
+      aiHints: template.aiHints,
     },
   ]),
 );
@@ -140,12 +149,6 @@ export function createBossEncounter(
     encounterActions: bossDef.actions,
   };
 
-  // Build initiative queue
-  const allActorIds = Object.keys(actors);
-  const initiativeQueue = allActorIds
-    .slice()
-    .sort((a, b) => actors[b].initiative - actors[a].initiative);
-
   // Set up interventions
   const interventions: InterventionUsageState[] = INTERVENTION_DEFINITIONS.map((def) => ({
     interventionId: def.id,
@@ -166,7 +169,8 @@ export function createBossEncounter(
     elapsedMinutes: bossDef.elapsedMinutes,
     rngSeed: seed,
     rngCursor: 0,
-    initiativeQueue,
+    initiativeQueue: [],
+    pendingRoundStart: false,
     actors,
     interventions,
     encounterLog: [],
@@ -191,6 +195,9 @@ export function startEncounter(encounter: BossEncounterInstance): void {
   if (encounter.status !== "pending") return;
   encounter.status = "active";
   encounter.currentRound = 1;
+  encounter.initiativeQueue = [];
+  encounter.pendingRoundStart = true;
+  encounter.autoplayEnabled = true;
 
   logEncounterAction(encounter, {
     round: 0,
@@ -206,10 +213,80 @@ export function startEncounter(encounter: BossEncounterInstance): void {
 export function advanceEncounterRound(encounter: BossEncounterInstance): void {
   if (encounter.status !== "active") return;
 
+  const roundToResolve = encounter.currentRound;
+  let guard = 0;
+  while (encounter.status === "active" && encounter.currentRound === roundToResolve && guard < 64) {
+    advanceEncounterTurn(encounter);
+    guard++;
+  }
+}
+
+export function advanceEncounterTurn(encounter: BossEncounterInstance): void {
+  if (encounter.status !== "active") return;
+
+  if (encounter.pendingRoundStart || encounter.initiativeQueue.length === 0) {
+    beginEncounterRound(encounter);
+    return;
+  }
+
+  const actorId = encounter.initiativeQueue.shift();
+  if (!actorId) {
+    beginEncounterRound(encounter);
+    return;
+  }
+
+  const actor = encounter.actors[actorId];
+  if (actor?.condition === "alive") {
+    const rng = createEncounterRng(encounter);
+
+    // Tick statuses at turn start.
+    tickStatusesForActor(encounter, actor);
+
+    const terminationAfterStatus = checkEncounterTermination(encounter);
+    if (terminationAfterStatus) {
+      endEncounter(encounter, terminationAfterStatus);
+      return;
+    }
+
+    if (actor.condition === "alive") {
+      if (actor.side === "ally") {
+        resolveOperatorAction(encounter, actor, rng);
+      } else {
+        resolveEnemyAction(encounter, actor, rng);
+      }
+
+      const terminationAfterAction = checkEncounterTermination(encounter);
+      if (terminationAfterAction) {
+        endEncounter(encounter, terminationAfterAction);
+        return;
+      }
+    }
+  }
+
+  if (encounter.initiativeQueue.length === 0) {
+    finalizeEncounterRound(encounter);
+  }
+}
+
+function createEncounterRng(encounter: BossEncounterInstance): SeededRng {
   const rng = new SeededRng(
     encounter.rngSeed + encounter.currentRound * 1000 + encounter.rngCursor,
   );
   encounter.rngCursor++;
+  return rng;
+}
+
+function beginEncounterRound(encounter: BossEncounterInstance): void {
+  if (encounter.status !== "active") return;
+
+  const terminationResult = checkEncounterTermination(encounter);
+  if (terminationResult) {
+    endEncounter(encounter, terminationResult);
+    return;
+  }
+
+  encounter.initiativeQueue = getSortedAliveActors(encounter).map((actor) => actor.actorId);
+  encounter.pendingRoundStart = false;
 
   logEncounterAction(encounter, {
     round: encounter.currentRound,
@@ -220,45 +297,9 @@ export function advanceEncounterRound(encounter: BossEncounterInstance): void {
     effects: [],
     timestamp: Date.now(),
   });
+}
 
-  const aliveActors = getSortedAliveActors(encounter);
-  encounter.initiativeQueue = aliveActors.map((actor) => actor.actorId);
-
-  // Each actor takes a turn
-  for (const actor of aliveActors) {
-    if (actor.condition !== "alive") continue;
-
-    // Tick statuses at turn start
-    tickStatusesForActor(encounter, actor);
-
-    // Check if still alive after status ticks
-    if (actor.condition !== "alive") continue;
-
-    // Actor takes action
-    if (actor.side === "ally") {
-      resolveOperatorAction(encounter, actor, rng);
-    } else {
-      resolveEnemyAction(encounter, actor, rng);
-    }
-
-    // Check termination after each action
-    const terminationResult = checkEncounterTermination(encounter);
-    if (terminationResult) {
-      encounter.status = terminationResult;
-      logEncounterAction(encounter, {
-        round: encounter.currentRound,
-        actorId: "system",
-        actionKind: "encounter_end",
-        abilityId: terminationResult,
-        targetIds: [],
-        effects: [],
-        timestamp: Date.now(),
-      });
-      return;
-    }
-  }
-
-  // Tick cooldowns
+function finalizeEncounterRound(encounter: BossEncounterInstance): void {
   for (const actorId of Object.keys(encounter.actors)) {
     const actor = encounter.actors[actorId];
     if (actor.condition !== "alive") continue;
@@ -267,12 +308,38 @@ export function advanceEncounterRound(encounter: BossEncounterInstance): void {
     }
   }
 
-  // Check boss phase transitions (loop to handle multi-phase skips from burst damage)
-  while (checkBossPhaseTransition(encounter, rng)) {
-    // Keep checking until no more transitions occur
+  const transitionRng = createEncounterRng(encounter);
+  while (checkBossPhaseTransition(encounter, transitionRng)) {
+    // Keep checking until no more transitions occur.
   }
 
   encounter.currentRound++;
+  encounter.initiativeQueue = [];
+  encounter.pendingRoundStart = true;
+
+  const terminationResult = checkEncounterTermination(encounter);
+  if (terminationResult) {
+    endEncounter(encounter, terminationResult);
+  }
+}
+
+function endEncounter(
+  encounter: BossEncounterInstance,
+  status: Extract<EncounterStatus, "victory" | "wipe" | "forced_abort">,
+): void {
+  encounter.status = status;
+  encounter.pendingRoundStart = false;
+  encounter.initiativeQueue = [];
+
+  logEncounterAction(encounter, {
+    round: encounter.currentRound,
+    actorId: "system",
+    actionKind: "encounter_end",
+    abilityId: status,
+    targetIds: [],
+    effects: [],
+    timestamp: Date.now(),
+  });
 }
 
 // ── Operator action resolution ───────────────────────────────────────────
@@ -283,7 +350,7 @@ function resolveOperatorAction(
   rng: SeededRng,
 ): void {
   // Select ability: ultimate > skill > regular attack based on availability
-  const fallbackAbility = {
+  const fallbackAbility: OperatorAbilityRuntime = {
     targeting: "enemy_single" as const,
     effects: [{ kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.8 }],
   };
@@ -292,18 +359,25 @@ function resolveOperatorAction(
   let ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
 
   // Try ultimate
-  if (actor.ultimateId && !isOnCooldown(actor, actor.ultimateId)) {
+  if (
+    actor.ultimateId &&
+    !isOnCooldown(actor, actor.ultimateId) &&
+    shouldUseOperatorUltimate(
+      encounter,
+      operatorAbilityLookup.get(actor.ultimateId) ?? fallbackAbility,
+    )
+  ) {
     abilityId = actor.ultimateId;
     actionKind = "ultimate";
     ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
-    setCooldown(actor, actor.ultimateId, 8);
+    setCooldown(actor, actor.ultimateId, ability.cooldown ?? 8);
   }
   // Try skill
   else if (actor.skillId && !isOnCooldown(actor, actor.skillId)) {
     abilityId = actor.skillId;
     actionKind = "skill";
     ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
-    setCooldown(actor, actor.skillId, 3);
+    setCooldown(actor, actor.skillId, ability.cooldown ?? 3);
   }
 
   const targets = selectTargetsForRule(encounter, actor, ability.targeting, rng);
@@ -323,6 +397,50 @@ function resolveOperatorAction(
     effects: effectResults,
     timestamp: Date.now(),
   });
+}
+
+function shouldUseOperatorUltimate(
+  encounter: BossEncounterInstance,
+  ability: OperatorAbilityRuntime,
+): boolean {
+  if (encounter.currentRound >= 2) {
+    return true;
+  }
+
+  const hints = new Set(ability.aiHints ?? []);
+  const livingEnemies = Object.values(encounter.actors).filter(
+    (candidate) => candidate.side === "enemy" && candidate.condition === "alive",
+  );
+  const livingAllies = Object.values(encounter.actors).filter(
+    (candidate) => candidate.side === "ally" && candidate.condition === "alive",
+  );
+  const boss = livingEnemies.find((candidate) => candidate.kind === "boss");
+  const bossHpFraction = boss ? boss.currentHp / Math.max(1, boss.maxHp) : 1;
+  const lowestAllyHpFraction =
+    livingAllies.length > 0
+      ? Math.min(...livingAllies.map((candidate) => candidate.currentHp / candidate.maxHp))
+      : 1;
+  const nextPhaseThreshold =
+    getBossEncounterDefinitionFromEncounter(encounter)?.phases[encounter.currentPhaseIndex + 1]
+      ?.hpThresholdFraction ?? null;
+
+  if (hints.has("prefer_low_hp_ally") && lowestAllyHpFraction <= 0.6) {
+    return true;
+  }
+  if (hints.has("prefer_finishing") && bossHpFraction <= 0.45) {
+    return true;
+  }
+  if (hints.has("prefer_phase_transition") && nextPhaseThreshold !== null) {
+    return bossHpFraction <= nextPhaseThreshold + 0.15;
+  }
+  if (hints.has("prefer_aoe_opportunity") && livingEnemies.length >= 2) {
+    return true;
+  }
+  if (hints.has("prefer_boss") && bossHpFraction <= 0.75) {
+    return true;
+  }
+
+  return false;
 }
 
 // ── Enemy action resolution ──────────────────────────────────────────────
@@ -798,8 +916,6 @@ function checkBossPhaseTransition(encounter: BossEncounterInstance, rng: SeededR
       });
     }
 
-    encounter.initiativeQueue = getSortedAliveActors(encounter).map((actor) => actor.actorId);
-
     logEncounterAction(encounter, {
       round: encounter.currentRound,
       actorId: bossActor.actorId,
@@ -882,6 +998,8 @@ export function useIntervention(
 export function retreatFromEncounter(encounter: BossEncounterInstance): void {
   if (encounter.status !== "active") return;
   encounter.status = "retreat";
+  encounter.pendingRoundStart = false;
+  encounter.initiativeQueue = [];
 
   logEncounterAction(encounter, {
     round: encounter.currentRound,
@@ -1042,6 +1160,7 @@ export function snapshotEncounter(encounter: BossEncounterInstance): BossEncount
     rngSeed: encounter.rngSeed,
     rngCursor: encounter.rngCursor,
     initiativeQueue: [...encounter.initiativeQueue],
+    pendingRoundStart: encounter.pendingRoundStart,
     actors: JSON.parse(JSON.stringify(encounter.actors)),
     interventions: encounter.interventions.map((i) => ({ ...i })),
     encounterLog: encounter.encounterLog.slice(-50),
@@ -1053,11 +1172,12 @@ export function restoreEncounter(snapshot: BossEncounterSnapshot): BossEncounter
     ...snapshot,
     participatingOperatorIds: [...snapshot.participatingOperatorIds],
     initiativeQueue: [...snapshot.initiativeQueue],
+    pendingRoundStart: snapshot.pendingRoundStart ?? snapshot.initiativeQueue.length === 0,
     actors: JSON.parse(JSON.stringify(snapshot.actors)),
     interventions: snapshot.interventions.map((i) => ({ ...i })),
     encounterLog: [...snapshot.encounterLog],
     debugTraceEnabled: false,
-    autoplayEnabled: false,
+    autoplayEnabled: snapshot.status === "active",
     autoplayIntervalMs: 800,
   };
 }

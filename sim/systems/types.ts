@@ -5,6 +5,7 @@ import type { KitTemplateRegistry } from "content/templates/kits";
 import type { BossEncounterInstance } from "./encounter-types";
 import type { InterruptionQueueState } from "./interruptions";
 import type { IncidentState } from "./incidents";
+import type { GuidanceState } from "./guidance";
 
 export type RuntimeCueId =
   | "hq.visitor"
@@ -139,10 +140,11 @@ export interface SimRuntimeState {
   pendingCueIds: RuntimeCueId[];
   pendingEvents: RuntimeEvent[];
   raidPresentation: RaidPresentationState;
-  // Encounter, interruption, and incident state
+  // Encounter, interruption, incident, and guidance state
   activeEncounter: BossEncounterInstance | null;
   interruptionQueue: InterruptionQueueState;
   incidentState: IncidentState;
+  guidanceState: GuidanceState;
   kitRegistry: KitTemplateRegistry;
   worldTimeFrozen: boolean;
 }

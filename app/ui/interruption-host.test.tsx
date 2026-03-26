@@ -40,4 +40,45 @@ describe("interruption host", () => {
     expect(html).not.toContain("injury_setback");
     expect(html).not.toContain("operator/vera-santos");
   });
+
+  it("renders incident choices with interactive hover utility classes", () => {
+    const incident: InterruptionInstance = {
+      instanceId: "interruption-choices",
+      type: "incident",
+      priority: 70,
+      blockingMode: "blocking",
+      createdAtMinute: 120,
+      sourceSystem: "test",
+      dismissible: false,
+      persistence: "persistent",
+      payload: {
+        kind: "incident",
+        incidentInstanceId: "incident-choices",
+        templateId: "incident/test-choice",
+        category: "injury_setback",
+        title: "Recovery Complication Notice",
+        briefing: "Vera Santos's recovery has hit a complication.",
+        subjectSummary: "Vera Santos",
+        choices: [
+          {
+            choiceId: "choice-1",
+            label: "Push through",
+            description: "Accept a painful treatment plan with a faster recovery window.",
+            consequenceSummary: "Morale drops slightly",
+          },
+        ],
+        boundContext: {
+          operatorIds: ["operator/vera-santos"],
+        },
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <InterruptionHost activeInterruption={incident} onResolve={vi.fn()} onDismiss={vi.fn()} />,
+    );
+
+    expect(html).toContain("group-hover:text-gold");
+    expect(html).toContain("hover:border-[rgba(200,168,76,0.22)]");
+    expect(html).toContain("Push through");
+  });
 });

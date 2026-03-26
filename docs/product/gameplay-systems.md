@@ -32,6 +32,17 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Future AI support belongs on top of the structured incident payload, not inside the gameplay authority layer. AI may later help phrase the briefing, contextualize the same authored choices, or write a recap after resolution.
 - AI must not decide when an incident triggers, which outcomes exist, or what hidden modifiers apply. Core incident resolution must remain deterministic, replayable, and testable without model access.
 
+## Guided Onboarding And Narrative Framing
+
+- Tutorial, guidance, and first-run narrative framing should become a simulation-aware layer that sits beside incidents instead of living as isolated UI affordances.
+- ECS should own onboarding progression, first-seen state, gating rules, and save-safe completion flags for any beat that materially changes what the player can or must do next.
+- The guidance stack should support three presentation levels: passive hints/tooltips, focused contextual coachmarks or tours, and blocking interruption-backed narrative beats.
+- The opening player-facing path should be deterministic and authored. New players should learn contracts, staffing, roster health, raids, and interruptions through fixed early beats before the game leans on broader systemic discovery.
+- Guidance should explain systems in-world. The same authored beat should teach the mechanic and establish why Boss cares about it in the setting.
+- React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
+- Future AI support may help draft or vary non-authoritative copy only after the deterministic framework exists. It must not choose triggers, hidden weights, available choices, or outcome logic.
+- Any AI-assisted authoring workflow for tutorials or narrative events must include the world foundation as canonical tone and content input so generated material stays consistent with the setting.
+
 ## Operator Systems
 
 Roles describe what an operator does in the field. They should read like in-world operational assignments, not imported RPG classes.

@@ -23,16 +23,23 @@ const conditionalTimeSystem: SimSystem = (context, deltaMs) => {
   advanceWorldTimeSystem(context, deltaMs);
 };
 
-// Lazy-loaded incident system to break circular import chain.
-// incident-system -> incidents -> commands -> (cycle via systems barrel)
+// Lazy-loaded incident and guidance systems to break circular import chains.
 let incidentSystemFn: SimSystem | null = null;
+let guidanceSystemFn: SimSystem | null = null;
 let deferredSystemBootstrapError: Error | null = null;
 const lazyIncidentSystem: SimSystem = (context, deltaMs) => {
   if (deferredSystemBootstrapError) {
     throw deferredSystemBootstrapError;
   }
-  if (!incidentSystemFn) return; // Not yet loaded, skip silently
+  if (!incidentSystemFn) return;
   incidentSystemFn(context, deltaMs);
+};
+const lazyGuidanceSystem: SimSystem = (context, deltaMs) => {
+  if (deferredSystemBootstrapError) {
+    throw deferredSystemBootstrapError;
+  }
+  if (!guidanceSystemFn) return;
+  guidanceSystemFn(context, deltaMs);
 };
 
 function isEnvironmentTeardownError(error: unknown): boolean {
@@ -56,6 +63,7 @@ export const simSystemSchedule: readonly SimSystemGroup[] = [
   { id: "economy", systems: [advanceEconomySystem] },
   { id: "events", systems: [advanceEventPressureSystem] },
   { id: "incidents", systems: [lazyIncidentSystem] },
+  { id: "guidance", systems: [lazyGuidanceSystem] },
   { id: "morale", systems: [advanceMoraleSystem] },
   { id: "animation", systems: [noopSystem] },
   { id: "rendering", systems: [noopSystem] },
@@ -64,6 +72,7 @@ export const simSystemSchedule: readonly SimSystemGroup[] = [
 // Register encounter commands and incident system after module init completes.
 // These modules have transitive imports that re-enter this barrel, so they
 // must load after the initial evaluation finishes.
+// Core systems (encounter, incident, contract) — must succeed for the game to work.
 void Promise.all([
   import("./encounter-commands"),
   import("./incident-system"),
@@ -73,6 +82,21 @@ void Promise.all([
     registerEncounterCommandHandler(encounterMod.applyEncounterCommand);
     incidentSystemFn = incidentMod.advanceIncidentSystem;
     registerContractCommandHandler(contractMod.applyContractCommand);
+
+    // Guidance system loaded separately — failure does not block core systems.
+    void import("./guidance-system")
+      .then((guidanceMod) => {
+        guidanceSystemFn = guidanceMod.advanceGuidanceSystem;
+        encounterMod.registerGuidanceCommandHandlers({
+          complete: guidanceMod.handleGuidanceComplete,
+          dismiss: guidanceMod.handleGuidanceDismiss,
+          recordAnchorFailure: guidanceMod.handleGuidanceRecordAnchorFailure,
+          resetOpening: guidanceMod.handleGuidanceResetOpening,
+        });
+      })
+      .catch(() => {
+        // Guidance system optional — commands become no-ops if it fails.
+      });
   })
   .catch((error) => {
     if (isEnvironmentTeardownError(error)) {

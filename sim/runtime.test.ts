@@ -426,6 +426,8 @@ describe("phase 1 runtime", () => {
       },
     ];
 
+    delete (snapshot as Record<string, unknown>).guidanceState;
+    delete (snapshot as Record<string, unknown>).interruptionQueue;
     const simulation = createAscensionSimulation(snapshot, templateRegistry);
 
     let phase1View = simulation.getPhase1View();
@@ -693,6 +695,9 @@ describe("phase 1 runtime", () => {
         },
       },
     ];
+
+    delete (snapshot as Record<string, unknown>).guidanceState;
+    delete (snapshot as Record<string, unknown>).interruptionQueue;
 
     const simulation = createAscensionSimulation(snapshot, templateRegistry);
 

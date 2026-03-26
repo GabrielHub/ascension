@@ -175,13 +175,33 @@ function getAbsoluteMinute(snapshot: WorldSnapshot): number {
 }
 
 export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const simulation = createAscensionSimulation(buildBootstrapWorldSnapshot(registry), registry);
+  const bootstrap = buildBootstrapWorldSnapshot(registry);
+  const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
-  return simulation.getWorldSnapshot();
+  const snapshot = simulation.getWorldSnapshot();
+  // Set opening guidance AFTER the tick so the guidance system does not
+  // enqueue beats during bootstrap. The player-facing new game flow
+  // will restore this state and begin the opening path on first tick.
+  (snapshot as Record<string, unknown>).guidanceState = {
+    seenBeatIds: [],
+    completedBeatIds: [],
+    dismissedBeatIds: [],
+    activeBeatId: null,
+    activeBeatView: null,
+    queuedBeatIds: [],
+    lastEvaluationMinute: 0,
+    openingPathState: "active",
+    anchorResolutionFailures: [],
+  };
+  return snapshot;
 }
 
 export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
   const world = createBootstrapWorldSnapshot(registry);
+  // Preview mode: strip guidance so sandbox sessions skip the opening path.
+  delete (world as Record<string, unknown>).guidanceState;
+  // Also clear any stale interruption queue from bootstrap.
+  delete (world as Record<string, unknown>).interruptionQueue;
   const posting = world.postedContracts?.[0];
 
   if (!posting) {

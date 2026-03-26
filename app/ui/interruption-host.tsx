@@ -5,6 +5,7 @@ import type {
   AnnouncementPayload,
   WarningPayload,
 } from "sim";
+import type { GuidancePayload } from "sim/systems/interruptions";
 
 import { GameModal } from "./game-modal";
 import { getIncidentCategoryMeta } from "./_glossary";
@@ -43,10 +44,12 @@ function IncidentModal({
             <button
               key={choice.choiceId}
               type="button"
-              className="glass-card-inset flex w-full flex-col items-start gap-1 rounded-lg px-4 py-3 text-left transition-colors hover:border-[rgba(200,168,76,0.18)]"
+              className="glass-card-inset group flex w-full flex-col items-start gap-1 rounded-lg px-4 py-3 text-left transition-[background,border-color,box-shadow,color,transform] duration-200 hover:-translate-y-px hover:border-[rgba(200,168,76,0.22)] hover:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] hover:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:-translate-y-px focus-visible:border-[rgba(200,168,76,0.22)] focus-visible:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] focus-visible:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[rgba(200,168,76,0.35)]"
               onClick={() => onResolve(instance.instanceId, choice.choiceId)}
             >
-              <span className="text-sm font-medium text-silver-bright">{choice.label}</span>
+              <span className="text-sm font-medium text-silver-bright transition-colors duration-200 group-hover:text-gold group-focus-visible:text-gold">
+                {choice.label}
+              </span>
               <span className="text-[0.75rem] leading-relaxed text-silver/60">
                 {choice.description}
               </span>
@@ -201,6 +204,51 @@ function WarningModal({
   );
 }
 
+// ── Guidance modal (blocking beats) ───────────────────────────────────────
+
+function GuidanceModal({
+  instance,
+  payload,
+  onResolve,
+}: {
+  instance: InterruptionInstance;
+  payload: GuidancePayload;
+  onResolve: (instanceId: string, choiceId?: string) => void;
+}) {
+  const progressLabel =
+    payload.totalMilestones > 0
+      ? `Step ${payload.milestoneOrder} of ${payload.totalMilestones}`
+      : undefined;
+
+  return (
+    <GameModal
+      title={payload.title}
+      subtitle={payload.subtitle ?? progressLabel}
+      dismissible={false}
+      footer={
+        <div className="flex items-center justify-between gap-3">
+          {progressLabel && payload.subtitle && (
+            <span className="text-[0.6rem] uppercase tracking-[0.18em] text-gold-dim">
+              {progressLabel}
+            </span>
+          )}
+          <div className="ml-auto">
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => onResolve(instance.instanceId, "acknowledged")}
+            >
+              {payload.ctaLabel}
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <p className="text-sm leading-relaxed text-silver/80">{payload.body}</p>
+    </GameModal>
+  );
+}
+
 // ── Host component ────────────────────────────────────────────────────────
 
 export function InterruptionHost({
@@ -241,6 +289,15 @@ export function InterruptionHost({
 
     case "warning":
       return <WarningModal instance={activeInterruption} payload={payload} onResolve={onResolve} />;
+
+    case "guidance":
+      return (
+        <GuidanceModal
+          instance={activeInterruption}
+          payload={payload as GuidancePayload}
+          onResolve={onResolve}
+        />
+      );
 
     default:
       return null;

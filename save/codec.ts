@@ -1978,6 +1978,9 @@ function parseWorldSnapshot(
       ...(record.incidentState && typeof record.incidentState === "object"
         ? { incidentState: record.incidentState as SaveStructuredRecord }
         : {}),
+      ...(record.guidanceState && typeof record.guidanceState === "object"
+        ? { guidanceState: record.guidanceState as SaveStructuredRecord }
+        : {}),
     },
     changed:
       building.changed ||

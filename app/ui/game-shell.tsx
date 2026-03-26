@@ -11,7 +11,7 @@ import {
 } from "app/features/runtime";
 import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
 import { HqWorldCanvas } from "render";
-import type { InterventionId } from "sim";
+import type { EncounterActionRecord, EncounterStatus, InterventionId } from "sim";
 import type {
   FocusPayload,
   HqDebugOverlays,
@@ -35,6 +35,8 @@ import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
 import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
+import { GuidanceHost } from "./guidance-host";
+import { AnchorRegistryProvider, useAnchorRegistry, useGuidanceAnchor } from "./guidance-anchor";
 import { getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import {
   buildEquipmentViewModels,
@@ -88,6 +90,20 @@ const TAB_ORDER: readonly ShellTab[] = ["hq", "operations"];
 
 // Manual advancement stays aligned with the simulation's hour-based tick contract.
 const TICK_HOUR_MS = 60 * 60 * 1000;
+const PERSISTENT_GUIDANCE_COMPLETION_KINDS = new Set([
+  "incident_resolved",
+  "boss_commitment_resolved",
+]);
+
+export function isTutorialSuppressibleGuidanceBeat(
+  beat: { completionKind: string } | null | undefined,
+): boolean {
+  if (!beat) {
+    return false;
+  }
+
+  return !PERSISTENT_GUIDANCE_COMPLETION_KINDS.has(beat.completionKind);
+}
 
 export function getDefaultShellNavigation(request: RuntimeRouteRequest): ShellNavigationState {
   if (request.mode === "preview") {
@@ -224,6 +240,41 @@ function formatPersistenceTimestamp(timestamp: string | undefined): string | nul
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function formatDebugClock(timestamp: number): string {
+  return new Date(timestamp).toISOString();
+}
+
+function getEncounterDebugEntryKey(entry: EncounterActionRecord): string {
+  return [
+    entry.timestamp,
+    entry.round,
+    entry.actorId,
+    entry.actionKind,
+    entry.abilityId,
+    entry.targetIds.join(","),
+  ].join("|");
+}
+
+function summarizeEncounterDebugEntry(entry: EncounterActionRecord): string {
+  const targets = entry.targetIds.length > 0 ? ` -> ${entry.targetIds.join(", ")}` : "";
+  const effects =
+    entry.effects.length > 0
+      ? ` | ${entry.effects
+          .map((effect) => {
+            const suffix = effect.blocked
+              ? "blocked"
+              : effect.statusApplied
+                ? `${effect.effectKind}:${effect.statusApplied}`
+                : effect.statusRemoved
+                  ? `${effect.effectKind}:${effect.statusRemoved}`
+                  : `${effect.effectKind}:${effect.value}`;
+            return `${effect.targetId}:${suffix}`;
+          })
+          .join(", ")}`
+      : "";
+  return `r${entry.round} ${entry.actionKind} ${entry.actorId}${targets}${effects}`;
 }
 
 function LoadingShell() {
@@ -751,6 +802,18 @@ export function GameShell() {
     }));
   }, [updateSettings]);
 
+  const toggleTutorialEvents = useCallback(() => {
+    updateSettings((currentSettings) => ({
+      ...currentSettings,
+      tutorialEventsEnabled: !currentSettings.tutorialEventsEnabled,
+    }));
+  }, [updateSettings]);
+
+  const resetOpeningGuidance = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/guidance-reset-opening" });
+  }, [session]);
+
   const callbacks: GameCallbacks | null = session
     ? {
         tick: (deltaMs: number) => {
@@ -849,6 +912,11 @@ export function GameShell() {
     void session.commands.dispatch({ type: "sim/encounter-retreat" });
   }, [session]);
 
+  const handleEncounterDismiss = useCallback(() => {
+    if (!session) return;
+    void session.commands.dispatch({ type: "sim/encounter-dismiss" });
+  }, [session]);
+
   const handleEncounterIntervention = useCallback(
     (interventionId: string) => {
       if (!session) return;
@@ -864,8 +932,17 @@ export function GameShell() {
   const encounterStatus = session?.phase1View.encounter?.status ?? null;
   const encounterAutoplay = session?.phase1View.encounter?.autoplayEnabled ?? false;
 
-  // Encounter autoplay: advance rounds automatically when active.
+  // Encounter autoplay: advance encounter beats automatically when active.
   const encounterAutoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const encounterDebugRef = useRef<{
+    encounterId: string | null;
+    status: EncounterStatus | null;
+    loggedEntryKeys: Set<string>;
+  }>({
+    encounterId: null,
+    status: null,
+    loggedEntryKeys: new Set<string>(),
+  });
   useEffect(() => {
     if (encounterAutoplayRef.current) {
       clearInterval(encounterAutoplayRef.current);
@@ -884,6 +961,56 @@ export function GameShell() {
       }
     };
   }, [session, encounterStatus, encounterAutoplay]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const debugState = encounterDebugRef.current;
+    const encounter = activeEncounter;
+
+    if (!encounter) {
+      if (debugState.encounterId !== null) {
+        console.log(`[encounter ${formatDebugClock(Date.now())}] ${debugState.encounterId} closed`);
+      }
+      debugState.encounterId = null;
+      debugState.status = null;
+      debugState.loggedEntryKeys = new Set<string>();
+      return;
+    }
+
+    if (debugState.encounterId !== encounter.encounterId) {
+      debugState.encounterId = encounter.encounterId;
+      debugState.status = null;
+      debugState.loggedEntryKeys = new Set<string>();
+      console.log(`[encounter ${formatDebugClock(Date.now())}] ${encounter.encounterId} opened`, {
+        boss: encounter.bossName,
+        round: encounter.currentRound,
+      });
+    }
+
+    if (debugState.status !== encounter.status) {
+      debugState.status = encounter.status;
+      console.log(
+        `[encounter ${formatDebugClock(Date.now())}] ${encounter.encounterId} status=${encounter.status}`,
+        {
+          round: encounter.currentRound,
+          autoplayEnabled: encounter.autoplayEnabled,
+        },
+      );
+    }
+
+    for (const entry of encounter.recentLog) {
+      const key = getEncounterDebugEntryKey(entry);
+      if (debugState.loggedEntryKeys.has(key)) {
+        continue;
+      }
+      debugState.loggedEntryKeys.add(key);
+      console.log(
+        `[encounter ${formatDebugClock(entry.timestamp)}] ${encounter.encounterId} ${summarizeEncounterDebugEntry(entry)}`,
+        entry,
+      );
+    }
+  }, [activeEncounter]);
 
   const phase1View = session?.state.phase1View ?? null;
   const registry = session?.registry ?? null;
@@ -993,6 +1120,149 @@ export function GameShell() {
     [handleEventLogEntryClick, navActions],
   );
 
+  // ── Guidance handlers ───────────────────────────────────────────────
+  const guidanceBeat = phase1View?.guidance?.activeBeat ?? null;
+  const guidanceProgress = phase1View?.guidance
+    ? {
+        current: phase1View.guidance.completedOpeningBeats,
+        total: phase1View.guidance.totalOpeningBeats,
+      }
+    : { current: 0, total: 9 };
+  const activeGuidanceInterruption =
+    phase1View?.activeInterruption?.type === "guidance" ? phase1View.activeInterruption : null;
+  const suppressTutorialInterruption =
+    !settings.tutorialEventsEnabled &&
+    isTutorialSuppressibleGuidanceBeat(activeGuidanceInterruption?.payload);
+  const suppressTutorialBeat =
+    !settings.tutorialEventsEnabled &&
+    guidanceBeat?.deliveryMode !== "blocking" &&
+    isTutorialSuppressibleGuidanceBeat(guidanceBeat);
+
+  const handleGuidanceComplete = useCallback(
+    (beatId: string, signal: string) => {
+      if (!session) return;
+      void session.commands.dispatch({ type: "sim/guidance-complete", beatId, signal });
+    },
+    [session],
+  );
+
+  const handleGuidanceDismiss = useCallback(
+    (beatId: string) => {
+      if (!session) return;
+      void session.commands.dispatch({ type: "sim/guidance-dismiss", beatId });
+    },
+    [session],
+  );
+
+  const attemptedGuidanceIntentRef = useRef<string | null>(null);
+  const recordedGuidanceFallbackRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    attemptedGuidanceIntentRef.current = null;
+    recordedGuidanceFallbackRef.current = null;
+  }, [guidanceBeat?.beatId]);
+
+  // Anchor registration refs for guidance targets
+  const anchorRegistry = useAnchorRegistry();
+  const contractBoardAnchorRef = useGuidanceAnchor("ui/ops/contract-board");
+  const eventLogAnchorRef = useGuidanceAnchor("ui/shared/event-log");
+  const rosterCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/roster");
+  const roomsCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/rooms");
+  const marketCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/market");
+
+  // Resolve anchor bounds inline so layout changes are always reflected.
+  const guidanceAnchorBounds =
+    guidanceBeat?.target && anchorRegistry ? anchorRegistry.getBounds(guidanceBeat.target) : null;
+
+  const applyGuidanceFallbackIntent = useCallback(
+    (intent: string) => {
+      setFocus(null);
+
+      switch (intent) {
+        case "ops/open-contract-board":
+          setActiveTab("operations");
+          setOpsCategory("contract");
+          return;
+        case "hq/open-roster":
+          setActiveTab("hq");
+          setHqCategory("roster");
+          return;
+        case "hq/open-rooms":
+          setActiveTab("hq");
+          setHqCategory("rooms");
+          return;
+        case "hq/open-market":
+          setActiveTab("hq");
+          setHqCategory("market");
+          return;
+        default:
+          return;
+      }
+    },
+    [setFocus],
+  );
+
+  useEffect(() => {
+    if (
+      !guidanceBeat ||
+      !session ||
+      guidanceBeat.deliveryMode === "blocking" ||
+      !guidanceBeat.target
+    ) {
+      return;
+    }
+
+    if (guidanceAnchorBounds) {
+      return;
+    }
+
+    if (guidanceBeat.fallbackIntent && attemptedGuidanceIntentRef.current !== guidanceBeat.beatId) {
+      attemptedGuidanceIntentRef.current = guidanceBeat.beatId;
+      applyGuidanceFallbackIntent(guidanceBeat.fallbackIntent);
+      return;
+    }
+
+    if (recordedGuidanceFallbackRef.current === guidanceBeat.beatId) {
+      return;
+    }
+
+    recordedGuidanceFallbackRef.current = guidanceBeat.beatId;
+    void session.commands.dispatch({
+      type: "sim/guidance-record-anchor-failure",
+      beatId: guidanceBeat.beatId,
+      anchorId: guidanceBeat.target,
+      fallbackUsed: true,
+    });
+  }, [applyGuidanceFallbackIntent, guidanceAnchorBounds, guidanceBeat, session]);
+
+  // Handle UI-signaled guidance completion (target_opened, market_opened)
+  useEffect(() => {
+    if (!guidanceBeat || !session) return;
+    if (!suppressTutorialBeat) return;
+
+    const { beatId, completionKind } = guidanceBeat;
+
+    attemptedGuidanceIntentRef.current = null;
+    recordedGuidanceFallbackRef.current = null;
+    void session.commands.dispatch({
+      type: "sim/guidance-complete",
+      beatId,
+      signal: completionKind,
+    });
+  }, [guidanceBeat, session, suppressTutorialBeat]);
+
+  useEffect(() => {
+    if (!session || !activeGuidanceInterruption || !suppressTutorialInterruption) {
+      return;
+    }
+
+    void session.commands.dispatch({
+      type: "sim/interruption-resolve",
+      instanceId: activeGuidanceInterruption.instanceId,
+      choiceId: "acknowledged",
+    });
+  }, [activeGuidanceInterruption, session, suppressTutorialInterruption]);
+
   useEffect(() => {
     const engine = audioEngineRef.current;
     if (!engine || audioState !== "running" || !session) {
@@ -1071,493 +1341,526 @@ export function GameShell() {
         : "text-silver/50";
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-void" data-testid="game-shell">
-      {/* ── Full-screen world canvas (background layer) ──────── */}
-      <div className="absolute inset-0 z-0">
-        {activeTab === "hq" && hqWorldSnapshot && (
-          <HqWorldCanvas
-            snapshot={hqWorldSnapshot}
-            focus={focus}
-            onFocusChange={handleFocusChange}
-            debugOverlays={debugOverlays}
-          />
-        )}
-      </div>
-
-      {/* ── UI overlays (absolutely positioned over the canvas) ── */}
-      <div className="pointer-events-none absolute inset-0 z-10">
-        {/* ── Command bar (top edge) ──────────────────────────── */}
-        <header
-          className="pointer-events-auto animate-enter absolute left-0 right-0 top-0 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.55)] backdrop-blur-2xl"
-          data-testid="game-header"
-        >
-          <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-2.5">
-            {/* Guild identity */}
-            <div className="flex items-center gap-3">
-              <div className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_rgba(200,168,76,0.5)]" />
-              <h1
-                className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright"
-                data-testid="guild-name"
-              >
-                {hq.building.name}
-              </h1>
-              <Tooltip content="Building tier - determines room slots and upgrade access">
-                <span className="badge badge-gold">T{hq.building.tier}</span>
-              </Tooltip>
-              {hq.building.floorCount > 1 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[0.625rem] uppercase tracking-[0.15em] text-gold/60">
-                    Floor
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => (
-                      <button
-                        key={floorIndex}
-                        type="button"
-                        className={`rounded-full border px-2 py-1 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
-                          hq.building.activeFloorIndex === floorIndex
-                            ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
-                            : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
-                        }`}
-                        onClick={() => callbacks.setActiveFloor(floorIndex)}
-                      >
-                        {floorIndex + 1}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Separator */}
-            <div className="hidden h-5 w-px bg-[rgba(200,168,76,0.08)] sm:block" />
-
-            {/* Resources */}
-            <div className="hidden items-center gap-4 sm:flex">
-              <ResourceCounter
-                label="Cash"
-                value={hq.guild.treasury}
-                accent
-                tip="Funds for upgrades, hiring, and purchases"
-                valueTestId="resource-cash-value"
-              />
-              <ResourceCounter
-                label="Rep"
-                value={hq.guild.reputation}
-                tip="Reputation — attracts better contracts and recruits"
-                valueTestId="resource-reputation-value"
-              />
-              <ResourceCounter
-                label="Intel"
-                value={hq.guild.intel}
-                tip="Intelligence — reveals raid opportunities"
-                valueTestId="resource-intel-value"
-              />
-            </div>
-
-            {/* Push right */}
-            <div className="ml-auto flex items-center gap-4">
-              {/* Time + advance */}
-              <div className="flex items-center gap-2">
-                <Tooltip content="Current in-game day and time of day">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-                      D{hq.time.day}
-                    </span>
-                    <span className="font-[family-name:var(--font-display)] text-[0.8rem] font-light tabular-nums text-silver/80">
-                      {hq.time.formatted}
-                    </span>
-                  </div>
-                </Tooltip>
-                <Tooltip content="Advance time by one hour">
-                  <button
-                    type="button"
-                    className="btn-ghost text-xs"
-                    data-testid="advance-hour"
-                    onClick={advanceHour}
-                  >
-                    +1h
-                  </button>
-                </Tooltip>
-              </div>
-
-              {/* Capacity glance */}
-              <div className="hidden items-center gap-1.5 text-xs text-silver/60 lg:flex">
-                <Tooltip content="Rooms placed / total room slots">
-                  <span>
-                    {hq.building.usedRoomSlots}/{hq.building.totalRoomSlots}
-                  </span>
-                </Tooltip>
-                <span className="opacity-60">rooms</span>
-                <span className="mx-0.5 opacity-40">|</span>
-                <Tooltip content="Active operators / max capacity">
-                  <span
-                    className={
-                      hq.rosterPressure.replacementPressureLevel === "critical"
-                        ? "text-ember"
-                        : hq.rosterPressure.replacementPressureLevel === "strained"
-                          ? "text-smolder"
-                          : ""
-                    }
-                  >
-                    {hq.rosterPressure.livingOperatorCount}/{hq.rosterPressure.operatorCapacity}
-                  </span>
-                </Tooltip>
-                <span className="opacity-60">ops</span>
-                {hq.rosterPressure.vacancyCount > 0 && (
-                  <Tooltip content="Open operator slots that need filling">
-                    <span className="text-ember">({hq.rosterPressure.vacancyCount} vacant)</span>
-                  </Tooltip>
-                )}
-                {hq.rosterPressure.recentDeathOperatorIds.length > 0 && (
-                  <Tooltip content="Operators recently killed in action">
-                    <span className="text-magma">
-                      &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
-                    </span>
-                  </Tooltip>
-                )}
-                {hq.staff.length > 0 && (
-                  <>
-                    <span className="mx-0.5 opacity-40">|</span>
-                    <Tooltip content="Total hired staff across all rooms">
-                      <span>{hq.staff.length}</span>
-                    </Tooltip>
-                    <span className="opacity-60">staff</span>
-                  </>
-                )}
-              </div>
-
-              <button
-                type="button"
-                className="btn-ghost text-xs"
-                data-testid="open-settings"
-                onClick={openSettingsModal}
-              >
-                settings
-              </button>
-              <Link to="/" className="btn-ghost text-xs" data-testid="exit-to-start">
-                exit
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* ── Tab navigation + category pills (below header) ── */}
-        <nav
-          className="pointer-events-auto animate-enter-delay-1 absolute left-0 right-0 top-[45px] border-b border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.35)] backdrop-blur-xl"
-          data-testid="shell-nav"
-        >
-          <div className="mx-auto flex max-w-[1400px] items-center gap-0 px-5">
-            {TAB_ORDER.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className="tab-button"
-                data-testid={`shell-tab-${tab}`}
-                data-active={activeTab === tab}
-                onClick={() => setActiveTab(tab)}
-              >
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
-
-            {/* Category pills */}
-            <div className="ml-auto flex items-center gap-1.5 overflow-x-auto py-1">
-              {activeTab === "hq" &&
-                HQ_CATEGORIES.map((cat) => (
-                  <CategoryPill
-                    key={cat.id}
-                    label={cat.label}
-                    icon={cat.icon}
-                    isActive={hqCategory === cat.id}
-                    testId={`hq-category-${cat.id}`}
-                    onClick={() => setHqCategory(hqCategory === cat.id ? null : cat.id)}
-                  />
-                ))}
-              {activeTab === "operations" &&
-                OPS_CATEGORIES.map((cat) => (
-                  <CategoryPill
-                    key={cat.id}
-                    label={cat.label}
-                    icon={cat.icon}
-                    isActive={opsCategory === cat.id}
-                    testId={`ops-category-${cat.id}`}
-                    onClick={() => setOpsCategory(opsCategory === cat.id ? null : cat.id)}
-                  />
-                ))}
-            </div>
-
-            {/* Status badges */}
-            <div className="hidden shrink-0 items-center gap-2 pl-3 md:flex">
-              {hq.rosterPressure.replacementPressureLevel !== "stable" && (
-                <Tooltip
-                  content={
-                    hq.rosterPressure.replacementPressureLevel === "critical"
-                      ? "Dangerously low — recruit operators urgently"
-                      : "Below ideal strength — consider recruiting"
-                  }
-                >
-                  <span
-                    className={`badge animate-enter ${
-                      hq.rosterPressure.replacementPressureLevel === "critical"
-                        ? "badge-ember"
-                        : "badge-slate"
-                    }`}
-                  >
-                    {hq.rosterPressure.replacementPressureLevel === "critical"
-                      ? "roster critical"
-                      : "roster strained"}
-                  </span>
-                </Tooltip>
-              )}
-              {operations.activeRaids.length > 0 && (
-                <span className="badge badge-ember animate-enter">
-                  {operations.activeRaids.length} active
-                </span>
-              )}
-              {hq.activeEvents.length > 0 && (
-                <span className="badge badge-slate animate-enter">
-                  {hq.activeEvents.length} {hq.activeEvents.length === 1 ? "event" : "events"}
-                </span>
-              )}
-            </div>
-          </div>
-        </nav>
-
-        {/* ── Operations map overlay ── */}
-        {activeTab === "operations" && (
-          <div className="pointer-events-auto absolute bottom-10 left-0 right-0 top-[85px]">
-            {raidWorldSnapshot ? (
-              <RaidWorldView
-                snapshot={raidWorldSnapshot}
-                focus={focus}
-                onFocusChange={handleFocusChange}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <p className="text-xs text-silver/40">No active contract site</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Right column: event log + focus panels ── */}
-        <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
-          <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
-
-          {focusedOperator && (
-            <FocusedOperatorOverlay operator={focusedOperator} onDismiss={() => setFocus(null)} />
-          )}
-
-          {focusedVisitor && (
-            <FocusedVisitorOverlay
-              visitor={focusedVisitor}
-              rosterFull={hq.rosterPressure.vacancyCount <= 0}
-              onRecruit={() => {
-                callbacks.acceptRecruit(focusedVisitor.id);
-                setFocus(null);
-              }}
-              onDismissVisitor={() => {
-                callbacks.rejectRecruit(focusedVisitor.id);
-                setFocus(null);
-              }}
-              onClose={() => setFocus(null)}
+    <AnchorRegistryProvider>
+      <div className="relative h-dvh w-full overflow-hidden bg-void" data-testid="game-shell">
+        {/* ── Full-screen world canvas (background layer) ──────── */}
+        <div className="absolute inset-0 z-0">
+          {activeTab === "hq" && hqWorldSnapshot && (
+            <HqWorldCanvas
+              snapshot={hqWorldSnapshot}
+              focus={focus}
+              onFocusChange={handleFocusChange}
+              debugOverlays={debugOverlays}
             />
-          )}
-
-          {focusedRaidTeam && focus && (
-            <>
-              <RaidFocusFrame
-                team={focusedRaidTeam}
-                getOperatorName={(id) =>
-                  hq.operators.find((operator) => operator.id === id)?.name ?? null
-                }
-                operatorStatuses={focusedRaidOperatorStatuses}
-                encounter={focusedRaidState?.encounter ?? null}
-                focusedDetail={focusedRaidDetail}
-                onDismiss={() => setFocus(null)}
-              />
-              <div className="glass-panel pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl">
-                <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
-              </div>
-            </>
           )}
         </div>
 
-        {/* ── Bottom panel (slides up when category selected) ── */}
-        {((activeTab === "hq" && hqCategory !== null) ||
-          (activeTab === "operations" && opsCategory !== null)) && (
-          <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]">
-            <div
-              className="flex items-start gap-3"
-              data-testid="shell-bottom-panel"
-              data-active-tab={activeTab}
-              data-active-category={activeTab === "hq" ? (hqCategory ?? "") : (opsCategory ?? "")}
-            >
-              <div className="min-w-0 flex-1">
-                {activeTab === "hq" && hqCategory === "rooms" && (
-                  <HqPanel
-                    hq={hq}
-                    callbacks={callbacks}
-                    focus={focus}
-                    onFocusChange={handleFocusChange}
-                    onClearFocus={() => setFocus(null)}
-                    roomCultures={roomCultures}
-                  />
-                )}
-                {activeTab === "hq" && hqCategory === "roster" && (
-                  <RosterPanel
-                    operators={hq.operators}
-                    staff={hq.staff}
-                    visitors={hq.visitors}
-                    relationships={hq.relationships}
-                    rooms={hq.rooms}
-                    callbacks={callbacks}
-                    rosterPressure={hq.rosterPressure}
-                    focusedOperatorId={focusedOperatorId}
-                    roomCultures={roomCultures}
-                    teams={teams}
-                  />
-                )}
-                {activeTab === "hq" && hqCategory === "teams" && (
-                  <div className="animate-enter space-y-3">
-                    <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                      Recurring Teams
-                    </h3>
-                    <TeamsCard teams={teams} />
+        {/* ── UI overlays (absolutely positioned over the canvas) ── */}
+        <div className="pointer-events-none absolute inset-0 z-10">
+          {/* ── Command bar (top edge) ──────────────────────────── */}
+          <header
+            className="pointer-events-auto animate-enter absolute left-0 right-0 top-0 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.55)] backdrop-blur-2xl"
+            data-testid="game-header"
+          >
+            <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-5 py-2.5">
+              {/* Guild identity */}
+              <div className="flex items-center gap-3">
+                <div className="h-1.5 w-1.5 rounded-full bg-gold shadow-[0_0_6px_rgba(200,168,76,0.5)]" />
+                <h1
+                  className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright"
+                  data-testid="guild-name"
+                >
+                  {hq.building.name}
+                </h1>
+                <Tooltip content="Building tier - determines room slots and upgrade access">
+                  <span className="badge badge-gold">T{hq.building.tier}</span>
+                </Tooltip>
+                {hq.building.floorCount > 1 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-[0.625rem] uppercase tracking-[0.15em] text-gold/60">
+                      Floor
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => (
+                        <button
+                          key={floorIndex}
+                          type="button"
+                          className={`rounded-full border px-2 py-1 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
+                            hq.building.activeFloorIndex === floorIndex
+                              ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
+                              : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
+                          }`}
+                          onClick={() => callbacks.setActiveFloor(floorIndex)}
+                        >
+                          {floorIndex + 1}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {activeTab === "hq" && hqCategory === "inventory" && (
-                  <InventoryPanel
-                    inventory={inventory}
-                    equipment={equipment}
-                    marketItems={marketItems}
-                    callbacks={callbacks}
-                  />
+              </div>
+
+              {/* Separator */}
+              <div className="hidden h-5 w-px bg-[rgba(200,168,76,0.08)] sm:block" />
+
+              {/* Resources */}
+              <div className="hidden items-center gap-4 sm:flex">
+                <ResourceCounter
+                  label="Cash"
+                  value={hq.guild.treasury}
+                  accent
+                  tip="Funds for upgrades, hiring, and purchases"
+                  valueTestId="resource-cash-value"
+                />
+                <ResourceCounter
+                  label="Rep"
+                  value={hq.guild.reputation}
+                  tip="Reputation — attracts better contracts and recruits"
+                  valueTestId="resource-reputation-value"
+                />
+                <ResourceCounter
+                  label="Intel"
+                  value={hq.guild.intel}
+                  tip="Intelligence — reveals raid opportunities"
+                  valueTestId="resource-intel-value"
+                />
+              </div>
+
+              {/* Push right */}
+              <div className="ml-auto flex items-center gap-4">
+                {/* Time + advance */}
+                <div className="flex items-center gap-2">
+                  <Tooltip content="Current in-game day and time of day">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+                        D{hq.time.day}
+                      </span>
+                      <span className="font-[family-name:var(--font-display)] text-[0.8rem] font-light tabular-nums text-silver/80">
+                        {hq.time.formatted}
+                      </span>
+                    </div>
+                  </Tooltip>
+                  <Tooltip content="Advance time by one hour">
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs"
+                      data-testid="advance-hour"
+                      onClick={advanceHour}
+                    >
+                      +1h
+                    </button>
+                  </Tooltip>
+                </div>
+
+                {/* Capacity glance */}
+                <div className="hidden items-center gap-1.5 text-xs text-silver/60 lg:flex">
+                  <Tooltip content="Rooms placed / total room slots">
+                    <span>
+                      {hq.building.usedRoomSlots}/{hq.building.totalRoomSlots}
+                    </span>
+                  </Tooltip>
+                  <span className="opacity-60">rooms</span>
+                  <span className="mx-0.5 opacity-40">|</span>
+                  <Tooltip content="Active operators / max capacity">
+                    <span
+                      className={
+                        hq.rosterPressure.replacementPressureLevel === "critical"
+                          ? "text-ember"
+                          : hq.rosterPressure.replacementPressureLevel === "strained"
+                            ? "text-smolder"
+                            : ""
+                      }
+                    >
+                      {hq.rosterPressure.livingOperatorCount}/{hq.rosterPressure.operatorCapacity}
+                    </span>
+                  </Tooltip>
+                  <span className="opacity-60">ops</span>
+                  {hq.rosterPressure.vacancyCount > 0 && (
+                    <Tooltip content="Open operator slots that need filling">
+                      <span className="text-ember">({hq.rosterPressure.vacancyCount} vacant)</span>
+                    </Tooltip>
+                  )}
+                  {hq.rosterPressure.recentDeathOperatorIds.length > 0 && (
+                    <Tooltip content="Operators recently killed in action">
+                      <span className="text-magma">
+                        &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
+                      </span>
+                    </Tooltip>
+                  )}
+                  {hq.staff.length > 0 && (
+                    <>
+                      <span className="mx-0.5 opacity-40">|</span>
+                      <Tooltip content="Total hired staff across all rooms">
+                        <span>{hq.staff.length}</span>
+                      </Tooltip>
+                      <span className="opacity-60">staff</span>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-ghost text-xs"
+                  data-testid="open-settings"
+                  onClick={openSettingsModal}
+                >
+                  settings
+                </button>
+                <Link to="/" className="btn-ghost text-xs" data-testid="exit-to-start">
+                  exit
+                </Link>
+              </div>
+            </div>
+          </header>
+
+          {/* ── Tab navigation + category pills (below header) ── */}
+          <nav
+            className="pointer-events-auto animate-enter-delay-1 absolute left-0 right-0 top-[45px] border-b border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.35)] backdrop-blur-xl"
+            data-testid="shell-nav"
+          >
+            <div className="mx-auto flex max-w-[1400px] items-center gap-0 px-5">
+              {TAB_ORDER.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className="tab-button"
+                  data-testid={`shell-tab-${tab}`}
+                  data-active={activeTab === tab}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {TAB_LABELS[tab]}
+                </button>
+              ))}
+
+              {/* Category pills */}
+              <div className="ml-auto flex items-center gap-1.5 overflow-x-auto py-1">
+                {activeTab === "hq" &&
+                  HQ_CATEGORIES.map((cat) => {
+                    const anchorRef =
+                      cat.id === "roster"
+                        ? rosterCategoryAnchorRef
+                        : cat.id === "rooms"
+                          ? roomsCategoryAnchorRef
+                          : cat.id === "market"
+                            ? marketCategoryAnchorRef
+                            : undefined;
+                    return (
+                      <div key={cat.id} ref={anchorRef}>
+                        <CategoryPill
+                          label={cat.label}
+                          icon={cat.icon}
+                          isActive={hqCategory === cat.id}
+                          testId={`hq-category-${cat.id}`}
+                          onClick={() => setHqCategory(hqCategory === cat.id ? null : cat.id)}
+                        />
+                      </div>
+                    );
+                  })}
+                {activeTab === "operations" &&
+                  OPS_CATEGORIES.map((cat) => (
+                    <CategoryPill
+                      key={cat.id}
+                      label={cat.label}
+                      icon={cat.icon}
+                      isActive={opsCategory === cat.id}
+                      testId={`ops-category-${cat.id}`}
+                      onClick={() => setOpsCategory(opsCategory === cat.id ? null : cat.id)}
+                    />
+                  ))}
+              </div>
+
+              {/* Status badges */}
+              <div className="hidden shrink-0 items-center gap-2 pl-3 md:flex">
+                {hq.rosterPressure.replacementPressureLevel !== "stable" && (
+                  <Tooltip
+                    content={
+                      hq.rosterPressure.replacementPressureLevel === "critical"
+                        ? "Dangerously low — recruit operators urgently"
+                        : "Below ideal strength — consider recruiting"
+                    }
+                  >
+                    <span
+                      className={`badge animate-enter ${
+                        hq.rosterPressure.replacementPressureLevel === "critical"
+                          ? "badge-ember"
+                          : "badge-slate"
+                      }`}
+                    >
+                      {hq.rosterPressure.replacementPressureLevel === "critical"
+                        ? "roster critical"
+                        : "roster strained"}
+                    </span>
+                  </Tooltip>
                 )}
-                {activeTab === "hq" && hqCategory === "market" && (
-                  <MarketPanel
-                    marketItems={marketItems}
-                    inventory={inventory}
-                    guild={hq.guild}
-                    callbacks={callbacks}
-                  />
+                {operations.activeRaids.length > 0 && (
+                  <span className="badge badge-ember animate-enter">
+                    {operations.activeRaids.length} active
+                  </span>
                 )}
-                {activeTab === "operations" && opsCategory && callbacks && (
-                  <OperationsPanel
-                    operations={operations}
-                    operators={hq.operators}
-                    rosterPressure={hq.rosterPressure}
-                    focus={focus}
-                    activeCategory={opsCategory}
-                    callbacks={callbacks}
-                  />
+                {hq.activeEvents.length > 0 && (
+                  <span className="badge badge-slate animate-enter">
+                    {hq.activeEvents.length} {hq.activeEvents.length === 1 ? "event" : "events"}
+                  </span>
                 )}
               </div>
-              {/* Collapse chevron — in-flow, rightmost element at header level */}
-              <button
-                type="button"
-                className="btn-ghost shrink-0 px-1.5 py-0.5 text-silver/50 hover:text-gold"
-                onClick={() => {
-                  if (activeTab === "hq") setHqCategory(null);
-                  else setOpsCategory(null);
-                }}
-                aria-label="Collapse panel"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
             </div>
-          </div>
-        )}
+          </nav>
 
-        {/* ── Status strip ────────────────────────────────────── */}
-        <footer className="pointer-events-auto absolute bottom-0 left-0 right-0 border-t border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)] px-5 py-1.5 backdrop-blur-md">
-          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span
-                className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60"
-                data-testid="session-mode"
-              >
-                {session.mode === "preview"
-                  ? "sandbox session"
-                  : session.mode === "new"
-                    ? "new session"
-                    : "saved session"}
-              </span>
-              {persistenceLabel && (
-                <span
-                  data-testid="persistence-label"
-                  className={`text-[0.6875rem] uppercase tracking-[0.12em] ${persistenceClassName}`}
-                  title={session.persistence.errorMessage}
-                >
-                  {persistenceLabel}
-                </span>
+          {/* ── Operations map overlay ── */}
+          {activeTab === "operations" && (
+            <div className="pointer-events-auto absolute bottom-10 left-0 right-0 top-[85px]">
+              {raidWorldSnapshot ? (
+                <RaidWorldView
+                  snapshot={raidWorldSnapshot}
+                  focus={focus}
+                  onFocusChange={handleFocusChange}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-xs text-silver/40">No active contract site</p>
+                </div>
               )}
             </div>
-            <span className="shrink-0 text-[0.6875rem] tabular-nums text-silver/60">
-              {session.registry.rooms.length} rooms &middot; {session.registry.missions.length}{" "}
-              missions
-            </span>
+          )}
+
+          {/* ── Right column: event log + focus panels ── */}
+          <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
+            <div ref={eventLogAnchorRef}>
+              <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
+            </div>
+
+            {focusedOperator && (
+              <FocusedOperatorOverlay operator={focusedOperator} onDismiss={() => setFocus(null)} />
+            )}
+
+            {focusedVisitor && (
+              <FocusedVisitorOverlay
+                visitor={focusedVisitor}
+                rosterFull={hq.rosterPressure.vacancyCount <= 0}
+                onRecruit={() => {
+                  callbacks.acceptRecruit(focusedVisitor.id);
+                  setFocus(null);
+                }}
+                onDismissVisitor={() => {
+                  callbacks.rejectRecruit(focusedVisitor.id);
+                  setFocus(null);
+                }}
+                onClose={() => setFocus(null)}
+              />
+            )}
+
+            {focusedRaidTeam && focus && (
+              <>
+                <RaidFocusFrame
+                  team={focusedRaidTeam}
+                  getOperatorName={(id) =>
+                    hq.operators.find((operator) => operator.id === id)?.name ?? null
+                  }
+                  operatorStatuses={focusedRaidOperatorStatuses}
+                  encounter={focusedRaidState?.encounter ?? null}
+                  focusedDetail={focusedRaidDetail}
+                  onDismiss={() => setFocus(null)}
+                />
+                <div className="glass-panel pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl">
+                  <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
+                </div>
+              </>
+            )}
           </div>
-        </footer>
+
+          {/* ── Bottom panel (slides up when category selected) ── */}
+          {((activeTab === "hq" && hqCategory !== null) ||
+            (activeTab === "operations" && opsCategory !== null)) && (
+            <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]">
+              <div
+                className="flex items-start gap-3"
+                data-testid="shell-bottom-panel"
+                data-active-tab={activeTab}
+                data-active-category={activeTab === "hq" ? (hqCategory ?? "") : (opsCategory ?? "")}
+              >
+                <div className="min-w-0 flex-1">
+                  {activeTab === "hq" && hqCategory === "rooms" && (
+                    <HqPanel
+                      hq={hq}
+                      callbacks={callbacks}
+                      focus={focus}
+                      onFocusChange={handleFocusChange}
+                      onClearFocus={() => setFocus(null)}
+                      roomCultures={roomCultures}
+                    />
+                  )}
+                  {activeTab === "hq" && hqCategory === "roster" && (
+                    <RosterPanel
+                      operators={hq.operators}
+                      staff={hq.staff}
+                      visitors={hq.visitors}
+                      relationships={hq.relationships}
+                      rooms={hq.rooms}
+                      callbacks={callbacks}
+                      rosterPressure={hq.rosterPressure}
+                      focusedOperatorId={focusedOperatorId}
+                      roomCultures={roomCultures}
+                      teams={teams}
+                    />
+                  )}
+                  {activeTab === "hq" && hqCategory === "teams" && (
+                    <div className="animate-enter space-y-3">
+                      <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+                        Recurring Teams
+                      </h3>
+                      <TeamsCard teams={teams} />
+                    </div>
+                  )}
+                  {activeTab === "hq" && hqCategory === "inventory" && (
+                    <InventoryPanel
+                      inventory={inventory}
+                      equipment={equipment}
+                      marketItems={marketItems}
+                      callbacks={callbacks}
+                    />
+                  )}
+                  {activeTab === "hq" && hqCategory === "market" && (
+                    <MarketPanel
+                      marketItems={marketItems}
+                      inventory={inventory}
+                      guild={hq.guild}
+                      callbacks={callbacks}
+                    />
+                  )}
+                  {activeTab === "operations" && opsCategory && callbacks && (
+                    <div ref={opsCategory === "contract" ? contractBoardAnchorRef : undefined}>
+                      <OperationsPanel
+                        operations={operations}
+                        operators={hq.operators}
+                        rosterPressure={hq.rosterPressure}
+                        focus={focus}
+                        activeCategory={opsCategory}
+                        callbacks={callbacks}
+                      />
+                    </div>
+                  )}
+                </div>
+                {/* Collapse chevron — in-flow, rightmost element at header level */}
+                <button
+                  type="button"
+                  className="btn-ghost shrink-0 px-1.5 py-0.5 text-silver/50 hover:text-gold"
+                  onClick={() => {
+                    if (activeTab === "hq") setHqCategory(null);
+                    else setOpsCategory(null);
+                  }}
+                  aria-label="Collapse panel"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4 6L8 10L12 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Status strip ────────────────────────────────────── */}
+          <footer className="pointer-events-auto absolute bottom-0 left-0 right-0 border-t border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)] px-5 py-1.5 backdrop-blur-md">
+            <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60"
+                  data-testid="session-mode"
+                >
+                  {session.mode === "preview"
+                    ? "sandbox session"
+                    : session.mode === "new"
+                      ? "new session"
+                      : "saved session"}
+                </span>
+                {persistenceLabel && (
+                  <span
+                    data-testid="persistence-label"
+                    className={`text-[0.6875rem] uppercase tracking-[0.12em] ${persistenceClassName}`}
+                    title={session.persistence.errorMessage}
+                  >
+                    {persistenceLabel}
+                  </span>
+                )}
+              </div>
+              <span className="shrink-0 text-[0.6875rem] tabular-nums text-silver/60">
+                {session.registry.rooms.length} rooms &middot; {session.registry.missions.length}{" "}
+                missions
+              </span>
+            </div>
+          </footer>
+        </div>
+
+        {import.meta.env.DEV && devMenuOpen && session && (
+          <DevMenuOverlay
+            session={session}
+            onClose={() => setDevMenuOpen(false)}
+            debugOverlays={debugOverlays}
+            onDebugOverlaysChange={setDebugOverlays}
+            eventLogEntries={eventLog}
+          />
+        )}
+
+        {phase1View?.encounter && (
+          <EncounterSurface
+            encounter={phase1View.encounter}
+            onPause={handleEncounterPause}
+            onResume={handleEncounterResume}
+            onStep={handleEncounterStep}
+            onRetreat={handleEncounterRetreat}
+            onDismiss={handleEncounterDismiss}
+            onUseIntervention={handleEncounterIntervention}
+            isDevMode={import.meta.env.DEV}
+          />
+        )}
+
+        {/* ── Guidance host (focused beats with spotlight/coachmark) ── */}
+        {guidanceBeat && !suppressTutorialBeat && (
+          <GuidanceHost
+            activeBeat={guidanceBeat}
+            anchorBounds={guidanceAnchorBounds}
+            onComplete={handleGuidanceComplete}
+            onDismiss={handleGuidanceDismiss}
+            progress={guidanceProgress}
+          />
+        )}
+
+        {phase1View?.activeInterruption &&
+          phase1View.activeInterruption.type !== "settings" &&
+          !(phase1View.activeInterruption.type === "guidance" && suppressTutorialInterruption) && (
+            <InterruptionHost
+              activeInterruption={phase1View.activeInterruption}
+              onResolve={handleInterruptionResolve}
+              onDismiss={handleInterruptionDismiss}
+            />
+          )}
+
+        {activeModal === "settings" && (
+          <SettingsModal
+            settings={settings}
+            audioState={audioState}
+            wakeLock={wakeLock}
+            onClose={closeActiveModal}
+            onSfxVolumeChange={handleSfxVolumeChange}
+            onMusicVolumeChange={handleMusicVolumeChange}
+            onWakeLockToggle={toggleWakeLock}
+            onTutorialEventsToggle={toggleTutorialEvents}
+            onReplayOpeningGuidance={resetOpeningGuidance}
+            onResetDefaults={resetSettings}
+          />
+        )}
       </div>
-
-      {import.meta.env.DEV && devMenuOpen && session && (
-        <DevMenuOverlay
-          session={session}
-          onClose={() => setDevMenuOpen(false)}
-          debugOverlays={debugOverlays}
-          onDebugOverlaysChange={setDebugOverlays}
-          eventLogEntries={eventLog}
-        />
-      )}
-
-      {phase1View?.encounter && (
-        <EncounterSurface
-          encounter={phase1View.encounter}
-          onPause={handleEncounterPause}
-          onResume={handleEncounterResume}
-          onStep={handleEncounterStep}
-          onRetreat={handleEncounterRetreat}
-          onUseIntervention={handleEncounterIntervention}
-          isDevMode={import.meta.env.DEV}
-        />
-      )}
-
-      {phase1View?.activeInterruption && phase1View.activeInterruption.type !== "settings" && (
-        <InterruptionHost
-          activeInterruption={phase1View.activeInterruption}
-          onResolve={handleInterruptionResolve}
-          onDismiss={handleInterruptionDismiss}
-        />
-      )}
-
-      {activeModal === "settings" && (
-        <SettingsModal
-          settings={settings}
-          audioState={audioState}
-          wakeLock={wakeLock}
-          onClose={closeActiveModal}
-          onSfxVolumeChange={handleSfxVolumeChange}
-          onMusicVolumeChange={handleMusicVolumeChange}
-          onWakeLockToggle={toggleWakeLock}
-          onResetDefaults={resetSettings}
-        />
-      )}
-    </div>
+    </AnchorRegistryProvider>
   );
 }

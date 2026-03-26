@@ -30,6 +30,7 @@ export interface EncounterSurfaceProps {
   onResume: () => void;
   onStep: () => void;
   onRetreat: () => void;
+  onDismiss: () => void;
   onUseIntervention: (interventionId: string) => void;
   isDevMode: boolean;
 }
@@ -812,6 +813,7 @@ export function EncounterSurface({
   onResume,
   onStep,
   onRetreat,
+  onDismiss,
   onUseIntervention,
   isDevMode,
 }: EncounterSurfaceProps) {
@@ -999,9 +1001,14 @@ export function EncounterSurface({
       {/* Terminal state dismiss hint — overlaid on top */}
       {terminal && (
         <div className="absolute inset-x-0 bottom-0 z-40 pb-8 text-center">
-          <p className="text-[0.6875rem] uppercase tracking-[0.14em] text-silver/30">
-            The encounter will resolve shortly
-          </p>
+          <div className="pointer-events-auto flex flex-col items-center gap-3">
+            <p className="text-[0.6875rem] uppercase tracking-[0.14em] text-silver/30">
+              Outcome recorded. Review the log, then close the encounter.
+            </p>
+            <button type="button" className="btn-primary" onClick={onDismiss}>
+              return to operations
+            </button>
+          </div>
         </div>
       )}
     </div>

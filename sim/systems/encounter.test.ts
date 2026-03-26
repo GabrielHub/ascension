@@ -13,6 +13,7 @@ import {
 } from "content/templates/kits";
 import {
   createBossEncounter,
+  advanceEncounterTurn,
   advanceEncounterRound,
   startEncounter,
   useIntervention,
@@ -195,6 +196,30 @@ describe("encounter simulation", () => {
     expect(encounter!.currentRound).toBe(1);
   });
 
+  it("starts encounters in autoplay mode and advances one visible turn at a time", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    expect(encounter!.autoplayEnabled).toBe(true);
+    expect(encounter!.pendingRoundStart).toBe(true);
+
+    advanceEncounterTurn(encounter!);
+    expect(encounter!.encounterLog.at(-1)?.actionKind).toBe("round_start");
+    expect(encounter!.initiativeQueue.length).toBeGreaterThan(0);
+
+    const queueLengthBeforeAction = encounter!.initiativeQueue.length;
+    const logLengthBeforeAction = encounter!.encounterLog.length;
+    advanceEncounterTurn(encounter!);
+
+    expect(encounter!.encounterLog.length).toBeGreaterThan(logLengthBeforeAction);
+    expect(encounter!.initiativeQueue.length).toBeLessThan(queueLengthBeforeAction);
+    expect(
+      encounter!.encounterLog.some((entry) =>
+        ["attack", "skill", "ultimate", "boss_action"].includes(entry.actionKind),
+      ),
+    ).toBe(true);
+  });
+
   it("advances encounter rounds deterministically", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);
@@ -205,6 +230,18 @@ describe("encounter simulation", () => {
     expect(encounter!.encounterLog.length).toBeGreaterThan(logBefore);
     expect(encounter!.currentRound).toBeGreaterThanOrEqual(1);
     expect(["active", "victory", "wipe", "forced_abort"]).toContain(encounter!.status);
+  });
+
+  it("holds operator ultimates until the fight has progressed", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    advanceEncounterRound(encounter!);
+
+    const roundOneUltimates = encounter!.encounterLog.filter(
+      (entry) => entry.round === 1 && entry.actionKind === "ultimate",
+    );
+    expect(roundOneUltimates).toHaveLength(0);
   });
 
   it("produces deterministic results for the same seed", () => {
@@ -254,8 +291,15 @@ describe("encounter simulation", () => {
     expect(encounter!.status).toBe("retreat");
   });
 
-  it("starts the boss encounter from interruption resolution when the player commits", () => {
+  it("starts the boss encounter from interruption resolution when the player commits", async () => {
     const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.runtimeState.guidanceState.openingPathState = "completed";
+    simulation.runtimeState.guidanceState.activeBeatId = null;
+    simulation.runtimeState.guidanceState.activeBeatView = null;
+    simulation.runtimeState.guidanceState.queuedBeatIds = [];
+    simulation.runtimeState.interruptionQueue.active = null;
+    simulation.runtimeState.interruptionQueue.queue = [];
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
     const activeInterruption = simulation.getPhase1View().activeInterruption;
@@ -272,6 +316,47 @@ describe("encounter simulation", () => {
     expect(simulation.runtimeState.activeEncounter).not.toBeNull();
     expect(simulation.runtimeState.activeEncounter?.status).toBe("active");
     expect(simulation.runtimeState.worldTimeFrozen).toBe(true);
+  });
+
+  it("keeps resolved encounters visible until they are dismissed", async () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.runtimeState.guidanceState.openingPathState = "completed";
+    simulation.runtimeState.guidanceState.activeBeatId = null;
+    simulation.runtimeState.guidanceState.activeBeatView = null;
+    simulation.runtimeState.guidanceState.queuedBeatIds = [];
+    simulation.runtimeState.interruptionQueue.active = null;
+    simulation.runtimeState.interruptionQueue.queue = [];
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
+    const activeInterruption = simulation.getPhase1View().activeInterruption;
+
+    simulation.dispatch({
+      type: "sim/interruption-resolve",
+      instanceId: activeInterruption?.instanceId ?? "missing",
+      choiceId: "commit",
+    });
+
+    const encounter = simulation.runtimeState.activeEncounter;
+    expect(encounter).not.toBeNull();
+    if (!encounter) {
+      return;
+    }
+
+    const boss = Object.values(encounter.actors).find((actor) => actor.kind === "boss");
+    expect(boss).toBeDefined();
+    if (!boss) {
+      return;
+    }
+
+    boss.currentHp = 0;
+    boss.condition = "incapacitated";
+    simulation.dispatch({ type: "sim/encounter-step" });
+
+    expect(simulation.runtimeState.activeEncounter?.status).toBe("victory");
+
+    simulation.dispatch({ type: "sim/encounter-dismiss" });
+    expect(simulation.runtimeState.activeEncounter).toBeNull();
   });
 
   it("supports managerial interventions", () => {
@@ -414,6 +499,8 @@ describe("encounter simulation", () => {
     startEncounter(encounter!);
     advanceEncounterRound(encounter!);
     advanceEncounterRound(encounter!);
+    encounter!.status = "paused";
+    encounter!.autoplayEnabled = false;
 
     const snapshot = snapshotEncounter(encounter!);
     const restored = restoreEncounter(snapshot);
@@ -424,6 +511,7 @@ describe("encounter simulation", () => {
     expect(restored.status).toBe(encounter!.status);
     expect(restored.rngSeed).toBe(encounter!.rngSeed);
     expect(restored.rngCursor).toBe(encounter!.rngCursor);
+    expect(restored.autoplayEnabled).toBe(false);
 
     const originalActorIds = Object.keys(encounter!.actors).sort();
     const restoredActorIds = Object.keys(restored.actors).sort();

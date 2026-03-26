@@ -60,6 +60,8 @@ export interface SettingsModalProps {
   onSfxVolumeChange: (db: number) => void;
   onMusicVolumeChange: (db: number) => void;
   onWakeLockToggle: () => void;
+  onTutorialEventsToggle: () => void;
+  onReplayOpeningGuidance: () => void;
   onResetDefaults: () => void;
 }
 
@@ -71,9 +73,12 @@ export function SettingsModal({
   onSfxVolumeChange,
   onMusicVolumeChange,
   onWakeLockToggle,
+  onTutorialEventsToggle,
+  onReplayOpeningGuidance,
   onResetDefaults,
 }: SettingsModalProps) {
   const wakeLockEnabled = settings.wakeLockEnabled;
+  const tutorialEventsEnabled = settings.tutorialEventsEnabled;
 
   return (
     <GameModal
@@ -154,6 +159,47 @@ export function SettingsModal({
 
             <div className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.4)] px-3 py-2 text-[0.75rem] leading-relaxed text-silver/55">
               {renderWakeLockMessage(wakeLock, wakeLockEnabled)}
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div>
+            <h3 className="text-xs font-medium uppercase tracking-[0.16em] text-gold/80">
+              Guidance
+            </h3>
+            <p className="mt-1 text-sm text-silver/60">
+              Control tutorial-only walkthroughs without suppressing gameplay-owned narrative
+              interruptions.
+            </p>
+          </div>
+
+          <div className="glass-card-inset space-y-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm text-silver-bright">Tutorial events</div>
+                <p className="mt-1 text-sm leading-relaxed text-silver/60">
+                  Toggle guided highlights and onboarding coachmarks. Narrative interruption
+                  briefings still appear when the simulation requires a managerial decision.
+                </p>
+              </div>
+              <ToggleButton
+                active={tutorialEventsEnabled}
+                label={tutorialEventsEnabled ? "enabled" : "disabled"}
+                onClick={onTutorialEventsToggle}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.4)] px-3 py-3">
+              <div>
+                <div className="text-sm text-silver-bright">Replay opening walkthrough</div>
+                <p className="mt-1 text-sm leading-relaxed text-silver/60">
+                  Reset the opening guidance sequence for this active run.
+                </p>
+              </div>
+              <button type="button" className="btn-ghost text-xs" onClick={onReplayOpeningGuidance}>
+                reset opening
+              </button>
             </div>
           </div>
         </section>

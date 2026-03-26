@@ -16,6 +16,8 @@ describe("settings modal", () => {
         onSfxVolumeChange={vi.fn()}
         onMusicVolumeChange={vi.fn()}
         onWakeLockToggle={vi.fn()}
+        onTutorialEventsToggle={vi.fn()}
+        onReplayOpeningGuidance={vi.fn()}
         onResetDefaults={vi.fn()}
       />,
     );
@@ -24,5 +26,7 @@ describe("settings modal", () => {
     expect(html).toContain("Keep screen awake");
     expect(html).toContain("Audio");
     expect(html).toContain("Music");
+    expect(html).toContain("Tutorial events");
+    expect(html).toContain("reset opening");
   });
 });

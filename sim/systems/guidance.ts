@@ -1,0 +1,374 @@
+/**
+ * Runtime guidance system — types, state, evaluation, and save/load.
+ *
+ * Owns progression, eligibility, and completion state for tutorials,
+ * focused walkthroughs, and blocking narrative beats.
+ * Reuses the interruption framework for blocking delivery.
+ *
+ * This is a leaf module with no circular dependencies.
+ */
+
+// ── Beat schema ──────────────────────────────────────────────────────
+
+export type GuidanceTrack = "opening" | "feature_intro" | "narrative";
+export type GuidanceDeliveryMode = "passive" | "focused" | "blocking";
+export type GuidanceReplayPolicy = "none" | "manual_replay";
+
+export type GuidanceCompletionKind =
+  | "acknowledged"
+  | "intent_fired"
+  | "target_opened"
+  | "contract_secured"
+  | "team_departed"
+  | "team_returned"
+  | "incident_resolved"
+  | "boss_commitment_resolved"
+  | "market_opened";
+
+export interface GuidanceCompletionRule {
+  kind: GuidanceCompletionKind;
+  targetAnchorId?: string;
+  intentType?: string;
+}
+
+export interface GuidanceBeatGating {
+  requiredCompletedBeatIds: string[];
+  requiredContractLifecycle?: "idle" | "bidding" | "active" | "resolved";
+  requireFirstContractSecured?: boolean;
+  requireFirstIncidentEligible?: boolean;
+  requireFirstRaidReturn?: boolean;
+  requireFirstBossCommitment?: boolean;
+  requireFirstTeamDeparture?: boolean;
+  requireFirstRaidReturnWithLoot?: boolean;
+}
+
+export interface GuidanceBeatCopy {
+  title: string;
+  body: string;
+  subtitle?: string;
+  ctaLabel: string;
+  ctaDismissLabel?: string;
+  fallbackBody?: string;
+  eventLogSummary?: string;
+}
+
+export interface GuidanceBeatDelivery {
+  mode: GuidanceDeliveryMode;
+  target?: string;
+  fallbackIntent?: string;
+  pauseWorld: boolean;
+  allowSkip: boolean;
+  replayPolicy: GuidanceReplayPolicy;
+}
+
+export interface GuidanceBeat {
+  id: string;
+  track: GuidanceTrack;
+  featureIds: string[];
+  milestoneOrder: number;
+  delivery: GuidanceBeatDelivery;
+  gating: GuidanceBeatGating;
+  bindings: Record<string, string>;
+  copy: GuidanceBeatCopy;
+  completion: GuidanceCompletionRule;
+}
+
+// ── Active beat view (stored in runtime state for view projection) ───
+
+export interface GuidanceActiveBeatView {
+  beatId: string;
+  track: GuidanceTrack;
+  deliveryMode: GuidanceDeliveryMode;
+  target: string | null;
+  fallbackIntent: string | null;
+  copy: GuidanceBeatCopy;
+  milestoneOrder: number;
+  totalMilestones: number;
+  completionKind: GuidanceCompletionKind;
+  pauseWorld: boolean;
+  allowSkip: boolean;
+}
+
+// ── Anchor types ─────────────────────────────────────────────────────
+
+export interface AnchorRegistration {
+  anchorId: string;
+  element: HTMLElement | null;
+  visible: boolean;
+}
+
+export interface AnchorResolutionFailure {
+  beatId: string;
+  anchorId: string;
+  attemptedAt: number;
+  fallbackUsed: boolean;
+}
+
+// ── Runtime state ────────────────────────────────────────────────────
+
+export type OpeningPathState = "active" | "completed" | "reset";
+
+export interface GuidanceState {
+  seenBeatIds: string[];
+  completedBeatIds: string[];
+  dismissedBeatIds: string[];
+  activeBeatId: string | null;
+  activeBeatView: GuidanceActiveBeatView | null;
+  queuedBeatIds: string[];
+  lastEvaluationMinute: number;
+  openingPathState: OpeningPathState;
+  anchorResolutionFailures: AnchorResolutionFailure[];
+}
+
+export function createGuidanceState(
+  openingPathState: OpeningPathState = "completed",
+): GuidanceState {
+  return {
+    seenBeatIds: [],
+    completedBeatIds: [],
+    dismissedBeatIds: [],
+    activeBeatId: null,
+    activeBeatView: null,
+    queuedBeatIds: [],
+    lastEvaluationMinute: 0,
+    openingPathState,
+    anchorResolutionFailures: [],
+  };
+}
+
+// ── Save/load ────────────────────────────────────────────────────────
+
+export interface GuidanceStateSnapshot {
+  seenBeatIds: string[];
+  completedBeatIds: string[];
+  dismissedBeatIds: string[];
+  activeBeatId: string | null;
+  activeBeatView: GuidanceActiveBeatView | null;
+  queuedBeatIds: string[];
+  lastEvaluationMinute: number;
+  openingPathState: OpeningPathState;
+  anchorResolutionFailures: AnchorResolutionFailure[];
+}
+
+export function snapshotGuidanceState(state: GuidanceState): GuidanceStateSnapshot {
+  return {
+    seenBeatIds: [...state.seenBeatIds],
+    completedBeatIds: [...state.completedBeatIds],
+    dismissedBeatIds: [...state.dismissedBeatIds],
+    activeBeatId: state.activeBeatId,
+    activeBeatView: state.activeBeatView ? { ...state.activeBeatView } : null,
+    queuedBeatIds: [...state.queuedBeatIds],
+    lastEvaluationMinute: state.lastEvaluationMinute,
+    openingPathState: state.openingPathState,
+    anchorResolutionFailures: state.anchorResolutionFailures.map((f) => ({ ...f })),
+  };
+}
+
+export function restoreGuidanceState(snapshot: GuidanceStateSnapshot | undefined): GuidanceState {
+  if (!snapshot) {
+    // Old saves without guidance → default to completed (no guidance)
+    return createGuidanceState("completed");
+  }
+  return {
+    seenBeatIds: [...(snapshot.seenBeatIds ?? [])],
+    completedBeatIds: [...(snapshot.completedBeatIds ?? [])],
+    dismissedBeatIds: [...(snapshot.dismissedBeatIds ?? [])],
+    activeBeatId: snapshot.activeBeatId ?? null,
+    activeBeatView: snapshot.activeBeatView ? { ...snapshot.activeBeatView } : null,
+    queuedBeatIds: [...(snapshot.queuedBeatIds ?? [])],
+    lastEvaluationMinute: snapshot.lastEvaluationMinute ?? 0,
+    openingPathState: snapshot.openingPathState ?? "completed",
+    anchorResolutionFailures: (snapshot.anchorResolutionFailures ?? []).map((f) => ({ ...f })),
+  };
+}
+
+// ── Eligibility ──────────────────────────────────────────────────────
+
+export interface GuidanceEvaluationContext {
+  currentMinute: number;
+  contractLifecycle: string;
+  hasSecuredContract: boolean;
+  hasActiveIncident: boolean;
+  hasCompletedRaid: boolean;
+  hasTeamDeparted: boolean;
+  hasBossCommitment: boolean;
+  hasRaidReturnWithLoot: boolean;
+  isPreview: boolean;
+}
+
+export function isBeatEligible(
+  state: GuidanceState,
+  beat: GuidanceBeat,
+  evalContext: GuidanceEvaluationContext,
+): boolean {
+  // Already completed, dismissed, or currently active
+  if (state.completedBeatIds.includes(beat.id)) return false;
+  if (state.activeBeatId !== null) return false;
+
+  // Opening path must be active for opening-track beats
+  if (beat.track === "opening" && state.openingPathState !== "active") return false;
+
+  // Suppressed in preview mode
+  if (evalContext.isPreview) return false;
+
+  // Required completed beats
+  for (const requiredId of beat.gating.requiredCompletedBeatIds) {
+    if (!state.completedBeatIds.includes(requiredId)) return false;
+  }
+
+  // Contract lifecycle gate
+  if (
+    beat.gating.requiredContractLifecycle &&
+    evalContext.contractLifecycle !== beat.gating.requiredContractLifecycle
+  ) {
+    return false;
+  }
+
+  // First-seen gates
+  if (beat.gating.requireFirstContractSecured && !evalContext.hasSecuredContract) return false;
+  if (beat.gating.requireFirstIncidentEligible && !evalContext.hasActiveIncident) return false;
+  if (beat.gating.requireFirstRaidReturn && !evalContext.hasCompletedRaid) return false;
+  if (beat.gating.requireFirstTeamDeparture && !evalContext.hasTeamDeparted) return false;
+  if (beat.gating.requireFirstBossCommitment && !evalContext.hasBossCommitment) return false;
+  if (beat.gating.requireFirstRaidReturnWithLoot && !evalContext.hasRaidReturnWithLoot) {
+    return false;
+  }
+
+  return true;
+}
+
+// ── Beat activation ──────────────────────────────────────────────────
+
+export function activateBeat(
+  state: GuidanceState,
+  beat: GuidanceBeat,
+  totalMilestones: number,
+): void {
+  state.activeBeatId = beat.id;
+  state.activeBeatView = {
+    beatId: beat.id,
+    track: beat.track,
+    deliveryMode: beat.delivery.mode,
+    target: beat.delivery.target ?? null,
+    fallbackIntent: beat.delivery.fallbackIntent ?? null,
+    copy: beat.copy,
+    milestoneOrder: beat.milestoneOrder,
+    totalMilestones,
+    completionKind: beat.completion.kind,
+    pauseWorld: beat.delivery.pauseWorld,
+    allowSkip: beat.delivery.allowSkip,
+  };
+  if (!state.seenBeatIds.includes(beat.id)) {
+    state.seenBeatIds.push(beat.id);
+  }
+}
+
+export function completeBeat(state: GuidanceState, beatId: string): void {
+  if (state.activeBeatId === beatId) {
+    state.activeBeatId = null;
+    state.activeBeatView = null;
+  }
+  if (!state.completedBeatIds.includes(beatId)) {
+    state.completedBeatIds.push(beatId);
+  }
+  const idx = state.queuedBeatIds.indexOf(beatId);
+  if (idx >= 0) state.queuedBeatIds.splice(idx, 1);
+}
+
+export function dismissBeat(state: GuidanceState, beatId: string): void {
+  if (state.activeBeatId === beatId) {
+    state.activeBeatId = null;
+    state.activeBeatView = null;
+  }
+  if (!state.dismissedBeatIds.includes(beatId)) {
+    state.dismissedBeatIds.push(beatId);
+  }
+}
+
+export function recordAnchorFailure(
+  state: GuidanceState,
+  beatId: string,
+  anchorId: string,
+  currentMinute: number,
+  fallbackUsed: boolean,
+): void {
+  state.anchorResolutionFailures.push({
+    beatId,
+    anchorId,
+    attemptedAt: currentMinute,
+    fallbackUsed,
+  });
+}
+
+// ── Opening path helpers ─────────────────────────────────────────────
+
+export function checkOpeningPathCompletion(
+  state: GuidanceState,
+  openingBeatIds: readonly string[],
+): void {
+  if (state.openingPathState !== "active") return;
+  const allCompleted = openingBeatIds.every((id) => state.completedBeatIds.includes(id));
+  if (allCompleted) {
+    state.openingPathState = "completed";
+  }
+}
+
+export function resetOpeningPath(state: GuidanceState, openingBeatIds: readonly string[]): void {
+  state.openingPathState = "active";
+  for (const id of openingBeatIds) {
+    const completedIdx = state.completedBeatIds.indexOf(id);
+    if (completedIdx >= 0) state.completedBeatIds.splice(completedIdx, 1);
+    const seenIdx = state.seenBeatIds.indexOf(id);
+    if (seenIdx >= 0) state.seenBeatIds.splice(seenIdx, 1);
+    const dismissedIdx = state.dismissedBeatIds.indexOf(id);
+    if (dismissedIdx >= 0) state.dismissedBeatIds.splice(dismissedIdx, 1);
+  }
+  state.activeBeatId = null;
+  state.activeBeatView = null;
+  state.queuedBeatIds = [];
+  state.lastEvaluationMinute = 0;
+  state.anchorResolutionFailures = [];
+}
+
+// ── Completion checking ──────────────────────────────────────────────
+
+export interface GuidanceCompletionContext {
+  contractLifecycle: string;
+  hasContractSite: boolean;
+  hasActiveRaidPackets: boolean;
+  hasCompletedRaidReturn: boolean;
+  hasPendingIncident: boolean;
+  hasResolvedIncidentSinceActivation: boolean;
+  hasBossCommitmentResolved: boolean;
+  hasRaidReturnWithLoot: boolean;
+}
+
+export function isCompletionMet(
+  rule: GuidanceCompletionRule,
+  completionContext: GuidanceCompletionContext,
+): boolean {
+  switch (rule.kind) {
+    case "acknowledged":
+      // Completed by explicit user action (handled by command)
+      return false;
+    case "target_opened":
+      // Completed by UI signal (handled by command)
+      return false;
+    case "intent_fired":
+      // Completed by UI signal (handled by command)
+      return false;
+    case "market_opened":
+      // Completed by UI signal (handled by command)
+      return false;
+    case "contract_secured":
+      return completionContext.hasContractSite && completionContext.contractLifecycle === "active";
+    case "team_departed":
+      return completionContext.hasActiveRaidPackets;
+    case "team_returned":
+      return completionContext.hasCompletedRaidReturn;
+    case "incident_resolved":
+      return completionContext.hasResolvedIncidentSinceActivation;
+    case "boss_commitment_resolved":
+      return completionContext.hasBossCommitmentResolved;
+  }
+}

@@ -30,6 +30,7 @@ describe("game settings storage", () => {
           musicVolumeDb: 999,
         },
         wakeLockEnabled: "yes",
+        tutorialEventsEnabled: "no",
       }),
     ).toEqual({
       audio: {
@@ -37,6 +38,7 @@ describe("game settings storage", () => {
         musicVolumeDb: 0,
       },
       wakeLockEnabled: DEFAULT_GAME_SETTINGS.wakeLockEnabled,
+      tutorialEventsEnabled: DEFAULT_GAME_SETTINGS.tutorialEventsEnabled,
     });
   });
 
@@ -50,6 +52,7 @@ describe("game settings storage", () => {
           musicVolumeDb: -20,
         },
         wakeLockEnabled: false,
+        tutorialEventsEnabled: false,
       },
       storage,
     );
@@ -61,6 +64,7 @@ describe("game settings storage", () => {
         musicVolumeDb: -20,
       },
       wakeLockEnabled: false,
+      tutorialEventsEnabled: false,
     });
   });
 });

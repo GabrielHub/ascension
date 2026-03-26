@@ -14,7 +14,7 @@ import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
 import {
   createBossEncounter,
   startEncounter,
-  advanceEncounterRound,
+  advanceEncounterTurn,
   retreatFromEncounter,
   writeEncounterOutcome,
   useIntervention,
@@ -33,6 +33,28 @@ import {
   INCIDENT_TEMPLATES,
 } from "./incidents";
 import type { InterventionId } from "./encounter-types";
+
+// Lazy-bound guidance command handlers (registered after module init).
+let lazyHandleGuidanceComplete:
+  | ((context: SimSystemContext, beatId: string, signal: string) => void)
+  | null = null;
+let lazyHandleGuidanceDismiss: ((context: SimSystemContext, beatId: string) => void) | null = null;
+let lazyHandleGuidanceRecordAnchorFailure:
+  | ((context: SimSystemContext, beatId: string, anchorId: string, fallbackUsed: boolean) => void)
+  | null = null;
+let lazyHandleGuidanceResetOpening: ((context: SimSystemContext) => void) | null = null;
+
+export function registerGuidanceCommandHandlers(handlers: {
+  complete: typeof lazyHandleGuidanceComplete;
+  dismiss: typeof lazyHandleGuidanceDismiss;
+  recordAnchorFailure: typeof lazyHandleGuidanceRecordAnchorFailure;
+  resetOpening: typeof lazyHandleGuidanceResetOpening;
+}): void {
+  lazyHandleGuidanceComplete = handlers.complete;
+  lazyHandleGuidanceDismiss = handlers.dismiss;
+  lazyHandleGuidanceRecordAnchorFailure = handlers.recordAnchorFailure;
+  lazyHandleGuidanceResetOpening = handlers.resetOpening;
+}
 
 function pushRuntimeCue(context: SimSystemContext, cueId: RuntimeCueId): void {
   context.runtimeState.pendingCueIds.push(cueId);
@@ -92,6 +114,25 @@ function emitEncounterLogCues(
   }
 }
 
+function finalizeEncounterResolution(
+  context: SimSystemContext,
+  encounter: NonNullable<SimSystemContext["runtimeState"]["activeEncounter"]>,
+): void {
+  encounter.autoplayEnabled = false;
+
+  const resolvedRaid = resolveRaidBossEncounter(context, encounter);
+  pushRuntimeCue(
+    context,
+    encounter.status === "victory" ? "raid.boss.victory" : "raid.boss.failure",
+  );
+
+  if (!resolvedRaid) {
+    writeEncounterOutcome(context, encounter);
+  } else {
+    context.runtimeState.worldTimeFrozen = false;
+  }
+}
+
 export function applyEncounterCommand(
   context: SimSystemContext,
   type: string,
@@ -129,29 +170,23 @@ export function applyEncounterCommand(
         (context.runtimeState.activeEncounter.status === "active" ||
           context.runtimeState.activeEncounter.status === "paused")
       ) {
-        if (context.runtimeState.activeEncounter.status === "paused") {
+        const wasPaused = context.runtimeState.activeEncounter.status === "paused";
+        if (wasPaused) {
           context.runtimeState.activeEncounter.status = "active";
         }
         const previousLogLength = context.runtimeState.activeEncounter.encounterLog.length;
-        advanceEncounterRound(context.runtimeState.activeEncounter);
+        advanceEncounterTurn(context.runtimeState.activeEncounter);
         const active = context.runtimeState.activeEncounter;
+        if (wasPaused && active.status === "active" && !active.autoplayEnabled) {
+          active.status = "paused";
+        }
         emitEncounterLogCues(context, active, previousLogLength);
         if (
           active.status !== "active" &&
           active.status !== "paused" &&
           active.status !== "pending"
         ) {
-          const resolvedRaid = resolveRaidBossEncounter(context, active);
-          pushRuntimeCue(
-            context,
-            active.status === "victory" ? "raid.boss.victory" : "raid.boss.failure",
-          );
-          if (!resolvedRaid) {
-            writeEncounterOutcome(context, active);
-          } else {
-            context.runtimeState.worldTimeFrozen = false;
-          }
-          context.runtimeState.activeEncounter = null;
+          finalizeEncounterResolution(context, active);
         }
       }
       return true;
@@ -163,14 +198,15 @@ export function applyEncounterCommand(
           context.runtimeState.activeEncounter.status === "paused")
       ) {
         retreatFromEncounter(context.runtimeState.activeEncounter);
-        const activeEncounter = context.runtimeState.activeEncounter;
-        const resolvedRaid = resolveRaidBossEncounter(context, activeEncounter);
-        pushRuntimeCue(context, "raid.boss.failure");
-        if (!resolvedRaid) {
-          writeEncounterOutcome(context, activeEncounter);
-        } else {
-          context.runtimeState.worldTimeFrozen = false;
-        }
+        finalizeEncounterResolution(context, context.runtimeState.activeEncounter);
+      }
+      return true;
+    }
+    case "sim/encounter-dismiss": {
+      if (
+        context.runtimeState.activeEncounter &&
+        !["active", "paused", "pending"].includes(context.runtimeState.activeEncounter.status)
+      ) {
         context.runtimeState.activeEncounter = null;
       }
       return true;
@@ -188,13 +224,32 @@ export function applyEncounterCommand(
       const resolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
       if (resolved?.payload?.kind === "incident" && payload.choiceId) {
         resolveIncident(context, context.runtimeState.incidentState, payload.choiceId as string);
+        const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
+        if (activeBeatId) {
+          lazyHandleGuidanceComplete?.(context, activeBeatId, "incident_resolved");
+        }
       }
       if (resolved?.payload?.kind === "raid_boss_commitment" && payload.choiceId === "commit") {
         startBossEncounterFromPayload(context, resolved.payload);
+        const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
+        if (activeBeatId) {
+          lazyHandleGuidanceComplete?.(context, activeBeatId, "boss_commitment_resolved");
+        }
       }
       if (resolved?.payload?.kind === "raid_boss_commitment" && payload.choiceId === "retreat") {
         resolveRaidBossRetreat(context, resolved.payload.activeRaidId);
         pushRuntimeCue(context, "raid.boss.failure");
+        const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
+        if (activeBeatId) {
+          lazyHandleGuidanceComplete?.(context, activeBeatId, "boss_commitment_resolved");
+        }
+      }
+      // Guidance interruptions: complete the beat on resolve
+      if (resolved?.payload?.kind === "guidance") {
+        const guidanceBeatId = (resolved.payload as { beatId?: string }).beatId;
+        if (guidanceBeatId) {
+          lazyHandleGuidanceComplete?.(context, guidanceBeatId, "acknowledged");
+        }
       }
       return true;
     }
@@ -205,6 +260,10 @@ export function applyEncounterCommand(
     case "sim/incident-resolve": {
       resolveIncident(context, context.runtimeState.incidentState, payload.choiceId as string);
       resolveActiveInterruption(context.runtimeState.interruptionQueue);
+      const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
+      if (activeBeatId) {
+        lazyHandleGuidanceComplete?.(context, activeBeatId, "incident_resolved");
+      }
       return true;
     }
     case "sim/dev-trigger-boss-commitment": {
@@ -259,6 +318,30 @@ export function applyEncounterCommand(
           );
         }
       }
+      return true;
+    }
+    case "sim/guidance-complete": {
+      const beatId = payload.beatId as string;
+      const signal = payload.signal as string;
+      lazyHandleGuidanceComplete?.(context, beatId, signal);
+      return true;
+    }
+    case "sim/guidance-dismiss": {
+      const beatId = payload.beatId as string;
+      lazyHandleGuidanceDismiss?.(context, beatId);
+      return true;
+    }
+    case "sim/guidance-record-anchor-failure": {
+      lazyHandleGuidanceRecordAnchorFailure?.(
+        context,
+        payload.beatId as string,
+        payload.anchorId as string,
+        payload.fallbackUsed === true,
+      );
+      return true;
+    }
+    case "sim/guidance-reset-opening": {
+      lazyHandleGuidanceResetOpening?.(context);
       return true;
     }
     default:
