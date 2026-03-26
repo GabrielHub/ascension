@@ -1,6 +1,7 @@
 import { soa } from "bitecs";
 
 import type { ContractRank } from "content/templates/site-concepts";
+import type { RaidRunSnapshot } from "save/types";
 
 // ── Contract lifecycle ──────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ export interface ActiveRaidPacketRecord {
   reward: number;
   cohesion: number;
   resolutionPacket: ActiveRaidResolutionPacket;
+  raidRun?: RaidRunSnapshot;
 }
 
 export interface RaidSummaryRecord {

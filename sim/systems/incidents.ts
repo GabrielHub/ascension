@@ -678,6 +678,9 @@ export function createIncidentInterruptionPayload(
     description: c.description,
     consequenceSummary: c.consequenceSummary,
   }));
+  const subjectSummary = incident.boundContext.operatorIds
+    .map((operatorId) => operatorNames[operatorId] ?? operatorId)
+    .join(", ");
 
   return {
     kind: "incident",
@@ -686,7 +689,7 @@ export function createIncidentInterruptionPayload(
     category: template.category,
     title: template.name,
     briefing,
-    subjectSummary: incident.boundContext.operatorIds.join(", "),
+    subjectSummary,
     choices: choiceViews,
     boundContext: incident.boundContext,
   };

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { RuntimeSession } from "app/features/runtime";
 
-import { resolveInterruptionAction } from "./game-shell";
+import { getDefaultShellNavigation, resolveInterruptionAction } from "./game-shell";
 
 function createBossCommitmentInterruption(sourceSystem = "raid-system") {
   return {
@@ -87,6 +87,29 @@ describe("resolveInterruptionAction", () => {
       type: "sim/interruption-resolve",
       instanceId: "interruption-1",
       choiceId: "retreat",
+    });
+  });
+});
+
+describe("getDefaultShellNavigation", () => {
+  it("opens preview sessions on the HQ rooms panel", () => {
+    expect(getDefaultShellNavigation({ mode: "preview" })).toEqual({
+      activeTab: "hq",
+      hqCategory: "rooms",
+      opsCategory: "contract",
+    });
+  });
+
+  it("opens slot-backed sessions on the contract board", () => {
+    expect(getDefaultShellNavigation({ mode: "new", slotId: "slot/1" })).toEqual({
+      activeTab: "operations",
+      hqCategory: "rooms",
+      opsCategory: "contract",
+    });
+    expect(getDefaultShellNavigation({ mode: "load", slotId: "slot/2" })).toEqual({
+      activeTab: "operations",
+      hqCategory: "rooms",
+      opsCategory: "contract",
     });
   });
 });

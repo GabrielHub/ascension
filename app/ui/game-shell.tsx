@@ -6,6 +6,7 @@ import { useGameSettings } from "app/features/settings";
 import {
   parseRuntimeRouteRequest,
   useRuntimeSession,
+  type RuntimeRouteRequest,
   type RuntimeSession,
 } from "app/features/runtime";
 import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
@@ -34,6 +35,7 @@ import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
 import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
+import { getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import {
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
@@ -43,8 +45,6 @@ import {
   buildRoomCultureViewModels,
   buildTeamViewModels,
   enrichOperatorsWithAutonomy,
-  formatCultureLabel,
-  formatTag,
 } from "./view-models";
 import type {
   EquipmentViewModel,
@@ -73,6 +73,12 @@ function buildContextEffects(
 type ShellTab = "hq" | "operations";
 type ActiveGameModal = "settings" | null;
 
+type ShellNavigationState = {
+  activeTab: ShellTab;
+  hqCategory: HqCategory | null;
+  opsCategory: OpsCategory | null;
+};
+
 const TAB_LABELS: Record<ShellTab, string> = {
   hq: "Headquarters",
   operations: "Operations",
@@ -82,6 +88,22 @@ const TAB_ORDER: readonly ShellTab[] = ["hq", "operations"];
 
 // Manual advancement stays aligned with the simulation's hour-based tick contract.
 const TICK_HOUR_MS = 60 * 60 * 1000;
+
+export function getDefaultShellNavigation(request: RuntimeRouteRequest): ShellNavigationState {
+  if (request.mode === "preview") {
+    return {
+      activeTab: "hq",
+      hqCategory: "rooms",
+      opsCategory: "contract",
+    };
+  }
+
+  return {
+    activeTab: "operations",
+    hqCategory: "rooms",
+    opsCategory: "contract",
+  };
+}
 
 export async function resolveInterruptionAction(
   session: Pick<RuntimeSession, "commands">,
@@ -262,11 +284,11 @@ function FocusedOperatorOverlay({
           <div className="min-w-0">
             <h3 className="truncate text-sm font-medium text-silver-bright">{operator.name}</h3>
             <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/70">
-              {formatTag(operator.roleTag)}
+              {getRoleMeta(operator.roleTag).label}
             </p>
             {operator.specialtyTag && (
               <p className="mt-0.5 text-[0.6875rem] text-silver/60">
-                {formatTag(operator.specialtyTag)}
+                {getSpecialtyMeta(operator.specialtyTag).label}
               </p>
             )}
           </div>
@@ -387,10 +409,10 @@ function FocusedVisitorOverlay({
           <div className="min-w-0">
             <h3 className="truncate text-sm font-medium text-silver-bright">{visitor.name}</h3>
             <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.8)]">
-              {formatTag(visitor.desiredRoleTag)}
+              {getRoleMeta(visitor.desiredRoleTag).label}
             </p>
             <span className="badge mt-1 border-[rgba(232,170,60,0.2)] bg-[rgba(232,170,60,0.1)] text-[0.625rem] text-[rgba(232,170,60,0.9)]">
-              Rank {visitor.rank}
+              Rank {visitor.rank.toUpperCase()}
             </span>
           </div>
         </div>
@@ -506,20 +528,14 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
             </span>
             {team.damaged && (
               <Tooltip
-                content={
-                  team.damageReason
-                    ? formatCultureLabel(team.damageReason)
-                    : "Team cohesion has been damaged"
-                }
+                content={team.damageReason ? team.damageReason : "Team cohesion has been damaged"}
                 side="top"
               >
                 <span className="badge badge-ember">Damaged</span>
               </Tooltip>
             )}
           </div>
-          <div className="mt-1 text-[0.6875rem] text-silver/60">
-            {formatCultureLabel(team.statusSummary)}
-          </div>
+          <div className="mt-1 text-[0.6875rem] text-silver/60">{team.statusSummary}</div>
           {team.explanationReasons.slice(0, 2).map((reason) => (
             <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
               {reason}
@@ -533,7 +549,7 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
               <span>{team.raidCount} raids</span>
             </Tooltip>
             {team.damaged && team.damageReason && (
-              <span className="text-ember">{formatCultureLabel(team.damageReason)}</span>
+              <span className="text-ember">{team.damageReason}</span>
             )}
           </div>
         </div>
@@ -549,9 +565,10 @@ export function GameShell() {
   const request = parseRuntimeRouteRequest(location.search);
   const { status, session, errorMessage } = useRuntimeSession(request);
   const { settings, updateSettings, resetSettings } = useGameSettings();
-  const [activeTab, setActiveTab] = useState<ShellTab>("hq");
-  const [hqCategory, setHqCategory] = useState<HqCategory | null>("rooms");
-  const [opsCategory, setOpsCategory] = useState<OpsCategory | null>("contract");
+  const initialNavigation = getDefaultShellNavigation(request);
+  const [activeTab, setActiveTab] = useState<ShellTab>(initialNavigation.activeTab);
+  const [hqCategory, setHqCategory] = useState<HqCategory | null>(initialNavigation.hqCategory);
+  const [opsCategory, setOpsCategory] = useState<OpsCategory | null>(initialNavigation.opsCategory);
   const [activeModal, setActiveModal] = useState<ActiveGameModal>(null);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const [debugOverlays, setDebugOverlays] = useState<HqDebugOverlays>({});
@@ -576,6 +593,14 @@ export function GameShell() {
   );
 
   const prevTabRef = useRef<ShellTab>(activeTab);
+  useEffect(() => {
+    const nextNavigation = getDefaultShellNavigation(request);
+    setActiveTab(nextNavigation.activeTab);
+    setHqCategory(nextNavigation.hqCategory);
+    setOpsCategory(nextNavigation.opsCategory);
+    setFocus(null);
+  }, [request.mode, request.slotId]);
+
   useEffect(() => {
     setFocus(null);
     const engine = audioEngineRef.current;
@@ -1016,6 +1041,10 @@ export function GameShell() {
     activeTab === "operations" && focus?.targetKind === "team"
       ? (raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null)
       : null;
+  const focusedRaidDetail =
+    activeTab === "operations" && focus?.targetKind === "team" && operations
+      ? (operations.activeRaids.find((r) => r.id === focus.targetId)?.focusedDetail ?? null)
+      : null;
 
   const focusedOperatorId =
     focus?.targetKind === "operator" ||
@@ -1345,6 +1374,7 @@ export function GameShell() {
                 }
                 operatorStatuses={focusedRaidOperatorStatuses}
                 encounter={focusedRaidState?.encounter ?? null}
+                focusedDetail={focusedRaidDetail}
                 onDismiss={() => setFocus(null)}
               />
               <div className="glass-panel pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl">

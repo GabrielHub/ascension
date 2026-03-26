@@ -1,6 +1,6 @@
 import { StatBar } from "./_stat-bar";
+import { getRoleMeta } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
-import { formatTag } from "./view-models";
 
 interface OperatorCardProps {
   name?: string;
@@ -23,7 +23,7 @@ export function OperatorCard({
         <OperatorPortrait name={name} roleTag={roleTag} presetId={presetId} size="card" />
         <div className="min-w-0 flex-1">
           <h4 className="truncate text-sm font-medium text-silver-bright">{name}</h4>
-          <span className="badge badge-gold mt-1">{formatTag(roleTag)}</span>
+          <span className="badge badge-gold mt-1">{getRoleMeta(roleTag).label}</span>
           <div className="mt-3 space-y-2">
             <StatBar label="Morale" value={morale} max={100} />
             <StatBar label="Loyalty" value={loyalty} max={100} />

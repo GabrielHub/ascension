@@ -12,6 +12,9 @@
 
 import type { RaidTeamMarker } from "render";
 
+import { getIdentifierLabel, getRoleMeta } from "../_glossary";
+import { GoalCheckBadge, TranscriptEventLine } from "../transcript-event-display";
+import type { RaidFocusedTeamDetail } from "../view-models";
 import { getRaidGoalPresentation } from "./raid-goals";
 
 // ── Types for enriched focus data ─────────────────────────────────────
@@ -55,12 +58,6 @@ const THREAT_STYLE: Record<EncounterThreat, { badge: string; label: string }> = 
   boss: { badge: "badge-ember", label: "Boss" },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  field_lead: "Lead",
-  scout: "Scout",
-  medic: "Medic",
-};
-
 // ── Sub-components ────────────────────────────────────────────────────────
 
 function HealthBar({ fraction, accent }: { fraction: number; accent: string }) {
@@ -86,14 +83,18 @@ function OperatorLine({
 }) {
   const readiness = status?.readiness ?? "ready";
   const style = READINESS_STYLE[readiness];
-  const roleLabel = status?.roleTag ? (ROLE_LABELS[status.roleTag] ?? null) : null;
+  const roleLabel = status?.roleTag ? getRoleMeta(`role:${status.roleTag}`) : null;
 
   return (
     <div className="flex items-center gap-2 py-0.5">
       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`} />
-      <span className={`flex-1 truncate text-xs ${style.text}`}>{name ?? operatorId}</span>
+      <span className={`flex-1 truncate text-xs ${style.text}`}>
+        {name ?? getIdentifierLabel(operatorId)}
+      </span>
       {roleLabel && (
-        <span className="text-[0.6rem] uppercase tracking-wider text-silver/40">{roleLabel}</span>
+        <span className="text-[0.6rem] uppercase tracking-wider text-silver/40">
+          {roleLabel.shortLabel ?? roleLabel.label}
+        </span>
       )}
       {status?.healthFraction != null && (
         <HealthBar
@@ -146,6 +147,66 @@ function EncounterCard({ encounter }: { encounter: FocusEncounter }) {
   );
 }
 
+function FocusedTranscriptStream({ detail }: { detail: RaidFocusedTeamDetail }) {
+  const visible = detail.events.slice(-10).reverse();
+  const goalCheckSummary = detail.goalChecks;
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-[rgba(200,168,76,0.04)] pt-3">
+      <p className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/60">
+        Transcript
+      </p>
+
+      {/* Goal check summary badges */}
+      {goalCheckSummary.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {goalCheckSummary.map((gc, i) => {
+            const badgeCls =
+              gc.grade === "pass"
+                ? "border-[rgba(200,168,76,0.2)] bg-[rgba(200,168,76,0.08)] text-gold/80"
+                : gc.grade === "mixed"
+                  ? "border-[rgba(180,180,180,0.15)] bg-[rgba(180,180,180,0.06)] text-silver/70"
+                  : "border-[rgba(212,84,30,0.2)] bg-[rgba(212,84,30,0.08)] text-ember/80";
+            return (
+              <span
+                key={`${gc.kind}-${i}`}
+                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[0.55rem]`}
+                style={{ borderColor: undefined }}
+              >
+                <span className={badgeCls}>{gc.kind}</span>
+                <GoalCheckBadge grade={gc.grade} />
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Enemies encountered */}
+      {detail.enemiesEncountered.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          <span className="text-[0.55rem] font-medium uppercase tracking-wider text-ember/50">
+            Hostiles:
+          </span>
+          <span className="text-[0.55rem] text-silver/50">
+            {detail.enemiesEncountered.length} encountered
+          </span>
+        </div>
+      )}
+
+      {/* Scrollable event stream */}
+      <div className="max-h-36 space-y-0.5 overflow-y-auto rounded-md bg-[rgba(6,6,8,0.25)] px-2 py-1">
+        {visible.length > 0 ? (
+          visible.map((evt, i) => (
+            <TranscriptEventLine key={`${evt.tickOffset}-${i}`} event={evt} />
+          ))
+        ) : (
+          <p className="py-1 text-[0.6rem] text-silver/40">Awaiting events...</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Component ────────────────────────────────────────────────────────────
 
 interface RaidFocusFrameProps {
@@ -156,6 +217,8 @@ interface RaidFocusFrameProps {
   operatorStatuses?: ReadonlyMap<string, FocusOperatorStatus>;
   /** Active combat encounter, if the team is currently fighting. */
   encounter?: FocusEncounter | null;
+  /** Transcript-backed focused team detail, when a RaidRun is available. */
+  focusedDetail?: RaidFocusedTeamDetail | null;
   onDismiss: () => void;
 }
 
@@ -164,6 +227,7 @@ export function RaidFocusFrame({
   getOperatorName,
   operatorStatuses,
   encounter,
+  focusedDetail,
   onDismiss,
 }: RaidFocusFrameProps) {
   const goal = getRaidGoalPresentation(team.goal);
@@ -213,6 +277,9 @@ export function RaidFocusFrame({
           <EncounterCard encounter={encounter} />
         </div>
       )}
+
+      {/* Transcript-backed event stream */}
+      {focusedDetail && <FocusedTranscriptStream detail={focusedDetail} />}
 
       {/* Team members */}
       <div className="mt-3 space-y-1 border-t border-[rgba(200,168,76,0.04)] pt-3">

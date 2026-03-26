@@ -12,8 +12,15 @@ import type {
 import { INTERVENTION_DEFINITIONS } from "sim";
 import { OperatorPortrait } from "./operator-portrait";
 import { getBossArtPath } from "./boss-art";
-import { getRoleMeta } from "./_glossary";
-import { getNarrativeTagMeta } from "./_glossary";
+import {
+  getAbilityMeta,
+  getEncounterActorKindMeta,
+  getEncounterConditionMeta,
+  getNarrativeTagMeta,
+  getRoleMeta,
+  getStatusMeta,
+  getWeaknessTargetMeta,
+} from "./_glossary";
 
 // ── Props ─────────────────────────────────────────────────────────────────
 
@@ -102,7 +109,10 @@ function formatFeedEntry(
 ): FeedEntry {
   const actor = actorLabels.get(entry.actorId) ?? entry.actorId.split(":").pop() ?? "?";
   const abilityName = entry.abilityId
-    ? entry.abilityId.replace(/^(action|ability)\//, "").replace(/[-_]/g, " ")
+    ? entry.actionKind === "intervention"
+      ? (INTERVENTION_MAP.get(entry.abilityId as InterventionId)?.name ??
+        getAbilityMeta(entry.abilityId).label)
+      : getAbilityMeta(entry.abilityId).label
     : "";
 
   let text = "";
@@ -196,9 +206,9 @@ function formatEffects(entry: EncounterActionRecord, actorLabels: Map<string, st
     } else if (eff.effectKind === "shield") {
       parts.push(`${target} +${eff.value} shield`);
     } else if (eff.statusApplied) {
-      parts.push(`${target} \u2190 ${eff.statusApplied}`);
+      parts.push(`${target} \u2190 ${getStatusMeta(eff.statusApplied).label}`);
     } else if (eff.statusRemoved) {
-      parts.push(`${target}: ${eff.statusRemoved} removed`);
+      parts.push(`${target}: ${getStatusMeta(eff.statusRemoved).label} removed`);
     } else if (eff.value !== 0) {
       parts.push(`${target} ${eff.value > 0 ? "+" : ""}${eff.value}`);
     }
@@ -365,7 +375,7 @@ function SquadMemberCard({
         {/* Condition badge */}
         {actor.condition !== "alive" && (
           <span className="mt-1 inline-block text-[0.5625rem] uppercase tracking-[0.1em] text-magma">
-            {actor.condition}
+            {getEncounterConditionMeta(actor.condition).label}
           </span>
         )}
 
@@ -377,7 +387,7 @@ function SquadMemberCard({
                 key={`${s.statusId}-${i}`}
                 className="rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.05)] px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-gold-dim"
               >
-                {s.statusId.replace(/_/g, " ")}
+                {getStatusMeta(s.statusId).label}
                 <span className="ml-0.5 text-silver/30">({s.remainingDuration})</span>
               </span>
             ))}
@@ -400,7 +410,9 @@ function EnemyCard({ actor }: { actor: EncounterActorView }) {
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[0.75rem] font-medium text-[#e08060]">{actor.label}</span>
         <span className="text-[0.5625rem] uppercase tracking-[0.08em] text-silver/35">
-          {actor.condition !== "alive" ? actor.condition : actor.kind}
+          {actor.condition !== "alive"
+            ? getEncounterConditionMeta(actor.condition).label
+            : getEncounterActorKindMeta(actor.kind).label}
         </span>
       </div>
       <div className="mt-1">
@@ -452,7 +464,7 @@ function InterventionCard({
             {INTERVENTION_ICONS[intervention.interventionId] ?? "\u2726"}
           </span>
           <span className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-silver-bright">
-            {def?.name ?? intervention.interventionId.replace(/_/g, " ")}
+            {def?.name ?? getAbilityMeta(intervention.interventionId).label}
           </span>
         </div>
         {/* Charge pips */}
@@ -750,7 +762,7 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
                 key={tag}
                 className="rounded border border-[rgba(212,84,30,0.12)] bg-[rgba(212,84,30,0.04)] px-2 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-ember/70"
               >
-                {meta.label !== tag ? meta.label : tag.replace(/^boss:/, "").replace(/[-_]/g, " ")}
+                {meta.label}
               </span>
             );
           })}
@@ -783,7 +795,7 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
               key={`${s.statusId}-${i}`}
               className="rounded border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-gold-dim"
             >
-              {s.statusId.replace(/_/g, " ")} ({s.remainingDuration})
+              {getStatusMeta(s.statusId).label} ({s.remainingDuration})
             </span>
           ))}
         </div>
@@ -862,7 +874,7 @@ export function EncounterSurface({
               </span>
               {encounter.bossWeaknesses.map((w, i) => (
                 <span key={i} className="text-[0.5625rem] text-[#6eb8e0]/70">
-                  {w.target.replace(/^role:/, "").replace(/_/g, " ")}
+                  {getWeaknessTargetMeta(w.target).label}
                 </span>
               ))}
             </div>

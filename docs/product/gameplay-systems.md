@@ -111,6 +111,23 @@ Enemy stats should mirror the operator stat model at a simplified level:
 | Speed   | Action frequency and positioning                                        |
 | Threat  | How aggressively the enemy targets operators (affects who takes damage) |
 
+Ordinary raid enemies should be authored content, not anonymous threat bundles:
+
+- Every ordinary enemy family should have a stable id, name, and short description.
+- Enemy families should match the dungeon concept and read like corrupted extensions of that site.
+- Contract-board threat hints should be able to surface likely enemy families when intel is sufficient.
+- Ordinary raids should use those authored enemies in lightweight simulation-owned skirmishes instead of resolving from aggregate threat alone.
+
+Ordinary enemy content should support at least:
+
+- Attack
+- Defense
+- HP
+- Speed
+- Threat
+- lightweight action profiles
+- tags for behaviors such as ambush, suppression, hazard synergy, swarm pressure, armor break, or similar authored traits
+
 Bosses use the same stat model as enemies but at significantly higher values, plus:
 
 | Stat     | Description                                                                           |
@@ -140,8 +157,30 @@ Boss confrontation direction:
 - The player remains a manager. Encounter input should be limited to explicit managerial interventions and commitment choices, not direct per-operator tactics control.
 - The current shipped encounter includes limited managerial interventions; future expansion should broaden the intervention library without changing simulation ownership.
 - Encounter time freezes the broader simulation while the fight is active, then writes the elapsed time back into world progression when the encounter resolves.
+- Boss commitment must hand off into a live encounter state. Entering a committed boss fight must not instantly auto-complete or skip directly to summary resolution.
 - The combat model should stay general enough that mixed enemy groups, summons, elites, and minibosses can reuse it later.
 - Ordinary raid travel and exploration may remain abstract, but committed boss confrontations should not resolve as a one-shot aggregate packet.
+- Ordinary raids should produce a deterministic transcript from deployment through resolution. The raid UI should play back that transcript rather than inventing separate presentation events.
+- Focused team views should be able to surface the underlying precomputed team event log, including attacks, damage, health changes, and non-combat check results.
+- Exploration, looting, intel gathering, regrouping, and withdrawal should all resolve through explicit simulation-owned pass, mixed, or fail checks.
+- Boss access should use a hybrid rule: contract progress determines whether boss contact is possible at all, and run-level progression determines whether a specific team reaches that threshold.
+
+Raid contract-surface direction:
+
+- The contract board should surface likely enemy families, boss hints when available, and other intel-gated threat information.
+- Those hints should come from authored enemy and site content, not only from generic placeholder labels.
+
+Raid presentation direction:
+
+- The operations and raid presentation should reflect time of day in the surrounding screen atmosphere, even when the map itself remains an abstract tactical surface.
+- Unexplored raid-map space must remain easy to read. Fog, explored cells, ambient background, and tactical markers should maintain clear contrast separation.
+- The raid view should not rely on low-contrast palettes that make unexplored space disappear into the background.
+
+Player-facing startup direction:
+
+- New game should begin from the bidding board with posted contracts available.
+- Preview and sandbox flows may seed an active contract for tooling and testing only.
+- The default player-facing entry path should not silently route players into sandbox preview when they intend to start a real campaign.
 
 Loot and early raid-economy direction:
 

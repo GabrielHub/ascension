@@ -1,5 +1,13 @@
 import type { TemplateRegistry } from "content/templates";
-import type { ActiveRaidSnapshot, RaidSummarySnapshot, WorldSnapshot } from "save";
+import type {
+  ActiveRaidSnapshot,
+  GoalCheckGrade,
+  GoalCheckKind,
+  RaidRunSnapshot,
+  RaidStepKind,
+  RaidSummarySnapshot,
+  WorldSnapshot,
+} from "save";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import {
   projectVisitorRecruitLoyalty,
@@ -13,7 +21,12 @@ import { visitorQualityToRank } from "lib/visitor-rank";
 
 import type { VisibleGear } from "./operator-parts";
 import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
-import { getLocationLabel } from "./_glossary";
+import {
+  getEffectLabel,
+  getIdentifierLabel,
+  getLocationLabel,
+  getRequirementLabel,
+} from "./_glossary";
 
 // ── Callbacks ────────────────────────────────────────────────────────────
 
@@ -147,6 +160,25 @@ export interface RaidEventViewModel {
   tick: number;
 }
 
+export interface RaidTranscriptEvent {
+  kind: RaidStepKind;
+  message: string;
+  tickOffset: number;
+  goalCheckKind?: GoalCheckKind;
+  goalCheckGrade?: GoalCheckGrade;
+  enemyTemplateId?: string;
+}
+
+export interface RaidFocusedTeamDetail {
+  raidId: string;
+  operatorIds: string[];
+  events: RaidTranscriptEvent[];
+  siteNodes: { nodeId: string; kind: string; discovered: boolean }[];
+  currentNodeId: string;
+  enemiesEncountered: string[];
+  goalChecks: { kind: GoalCheckKind; grade: GoalCheckGrade }[];
+}
+
 export interface ActiveRaidViewModel {
   id: string;
   missionName: string;
@@ -163,6 +195,8 @@ export interface ActiveRaidViewModel {
   x?: number;
   y?: number;
   recentEvents: readonly RaidEventViewModel[];
+  transcriptEvents?: RaidTranscriptEvent[];
+  focusedDetail?: RaidFocusedTeamDetail;
 }
 
 export interface RaidOperatorOutcomeViewModel {
@@ -458,13 +492,7 @@ export interface OperationsViewModel {
   activeRaids: readonly ActiveRaidViewModel[];
   raidHistory: readonly RaidSummaryViewModel[];
   raidWorld: RaidWorldViewModel | null;
-}
-
-// ── Tag formatting ──────────────────────────────────────────────────────
-
-/** Strip a `prefix:` or `prefix/` from a tag string and replace separators with spaces. */
-export function formatTag(tag: string): string {
-  return tag.replace(/^[a-z-]+[:/]/, "").replace(/[_-]/g, " ");
+  minuteOfDay: number;
 }
 
 /** Map a contract rank letter to a badge CSS class. */
@@ -481,12 +509,6 @@ export function rankBadgeClass(rank: string): string {
   }
 }
 
-/** Title-case a raw culture tone or signal label for display.
- *  "lived_in" → "Lived-In", "tight-knit" → "Tight-Knit", "quiet" → "Quiet" */
-export function formatCultureLabel(raw: string): string {
-  return raw.replace(/_/g, "-").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 // ── Formatting helpers ───────────────────────────────────────────────────
 
 function formatTimeOfDay(minuteOfDay: number): string {
@@ -497,59 +519,8 @@ function formatTimeOfDay(minuteOfDay: number): string {
   return `${displayHour}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
-function formatTemplateSlug(id: string): string {
-  return (
-    id
-      .split("/")
-      .pop()
-      ?.replace(/:tier_\d+$/, "")
-      .replace(/[_-]/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase()) ?? id
-  );
-}
-
-function formatRequirement(req: { type: string; [key: string]: unknown }): string {
-  switch (req.type) {
-    case "resource_min":
-      return `${req.minimum} ${String(req.resourceId).split("/").pop()}`;
-    case "building_tier_min":
-      return `Building tier ${req.minimum}+`;
-    case "room_count_min":
-      return `${req.minimum}+ rooms`;
-    case "room_tier_min":
-      return `Room tier ${req.minimum}+`;
-    case "staff_role_min":
-      return `${req.minimum}+ staff (${req.roleTag})`;
-    case "operator_count_min":
-      return `${req.minimum}+ operators`;
-    default:
-      return req.type;
-  }
-}
-
-function formatEffect(eff: { type: string; [key: string]: unknown }): string {
-  switch (eff.type) {
-    case "add_room_slot":
-      return `+${eff.amount} room slot`;
-    case "unlock_room_template":
-      return `Unlock ${formatTemplateSlug(String(eff.roomId))}`;
-    case "unlock_room_tier":
-      return `Unlock tier ${eff.tier}`;
-    case "grant_operator_slot":
-      return `+${eff.amount} operator slot`;
-    case "modify_room_capacity":
-      return `+${eff.amount} room capacity`;
-    case "modify_morale":
-      return `${Number(eff.amount) > 0 ? "+" : ""}${eff.amount} morale`;
-    case "modify_loyalty":
-      return `${Number(eff.amount) > 0 ? "+" : ""}${eff.amount} loyalty`;
-    default:
-      return eff.type.replace(/_/g, " ");
-  }
-}
-
 function resolveMissionName(missionId: string, registry: TemplateRegistry): string {
-  return registry.missionById.get(missionId)?.name ?? missionId.split("/").pop() ?? "Unknown";
+  return registry.missionById.get(missionId)?.name ?? getIdentifierLabel(missionId);
 }
 
 function normalizeOpportunityStatus(status: unknown): RaidOpportunityViewModel["status"] {
@@ -652,11 +623,11 @@ function mapUpgradeTemplate(
     isApplied: appliedIds.includes(template.id),
     isAffordable: affordableIds.includes(template.id),
     requirements: template.requirements.map((req) => ({
-      label: formatRequirement(req),
+      label: getRequirementLabel(req),
       type: req.type,
     })),
     effects: template.effects.map((eff) => ({
-      label: formatEffect(eff),
+      label: getEffectLabel(eff),
       type: eff.type,
     })),
   };
@@ -793,8 +764,8 @@ export function buildHqViewFromPhase1(
   const relationships: RelationshipViewModel[] = view.relationshipSignals.map((rel) => ({
     operatorAId: rel.operatorAId,
     operatorBId: rel.operatorBId,
-    operatorAName: operatorNameById.get(rel.operatorAId) ?? rel.operatorAId.split("/").pop() ?? "?",
-    operatorBName: operatorNameById.get(rel.operatorBId) ?? rel.operatorBId.split("/").pop() ?? "?",
+    operatorAName: operatorNameById.get(rel.operatorAId) ?? getIdentifierLabel(rel.operatorAId),
+    operatorBName: operatorNameById.get(rel.operatorBId) ?? getIdentifierLabel(rel.operatorBId),
     trust: rel.trust,
     friction: rel.friction,
     familiarity: rel.familiarity,
@@ -806,7 +777,9 @@ export function buildHqViewFromPhase1(
   const activeEvents: ActiveEventViewModel[] = view.activeEvents.map((evt) => ({
     id: evt.id,
     templateId: evt.templateId,
-    name: registry.events.find((e) => e.id === evt.templateId)?.name ?? evt.templateId,
+    name:
+      registry.events.find((e) => e.id === evt.templateId)?.name ??
+      getIdentifierLabel(evt.templateId),
     severity: evt.severity,
     remainingHours: evt.remainingHours,
   }));
@@ -896,28 +869,67 @@ export function buildOpsViewFromPhase1(
     };
   });
 
-  const activeRaids: ActiveRaidViewModel[] = view.activeRaids.map((raid) => ({
-    id: raid.id,
-    missionName: resolveMissionName(raid.missionId, registry),
-    missionId: raid.missionId,
-    startedAt: raid.startedAt,
-    revealProgress: raid.revealProgress,
-    operatorIds: raid.operatorIds,
-    location: getLocationLabel(raid.location),
-    threat: raid.threat,
-    cohesion: raid.cohesion,
-    durationHours: raid.durationHours,
-    teamGoal: raid.teamGoal,
-    teamState: raid.teamState,
-    x: raid.x,
-    y: raid.y,
-    recentEvents: (raid.recentEvents ?? []).map((evt) => ({
-      id: evt.id,
-      kind: evt.kind,
-      message: evt.message,
-      tick: evt.tick,
-    })),
-  }));
+  const activeRaids: ActiveRaidViewModel[] = view.activeRaids.map((raid) => {
+    const run: RaidRunSnapshot | undefined = raid.raidRun;
+    const transcriptEvents: RaidTranscriptEvent[] | undefined = run
+      ? run.steps
+          .filter((s) => s.message != null)
+          .map((s) => ({
+            kind: s.kind,
+            message: s.message ?? "",
+            tickOffset: s.tickOffset,
+            goalCheckKind: s.goalCheckKind,
+            goalCheckGrade: s.goalCheckGrade,
+            enemyTemplateId: s.enemyTemplateId,
+          }))
+      : undefined;
+
+    const focusedDetail: RaidFocusedTeamDetail | undefined = run
+      ? {
+          raidId: run.raidId,
+          operatorIds: run.teamOperatorIds,
+          events: transcriptEvents ?? [],
+          siteNodes: run.siteGraph.map((n) => ({
+            nodeId: n.nodeId,
+            kind: n.kind,
+            discovered: n.discovered ?? false,
+          })),
+          currentNodeId: run.derivedState.currentNodeId,
+          enemiesEncountered: run.derivedState.discoveredEnemyIds,
+          goalChecks: run.steps
+            .filter((s) => s.kind === "goal_check" && s.goalCheckKind && s.goalCheckGrade)
+            .map((s) => ({
+              kind: s.goalCheckKind as GoalCheckKind,
+              grade: s.goalCheckGrade as GoalCheckGrade,
+            })),
+        }
+      : undefined;
+
+    return {
+      id: raid.id,
+      missionName: resolveMissionName(raid.missionId, registry),
+      missionId: raid.missionId,
+      startedAt: raid.startedAt,
+      revealProgress: raid.revealProgress,
+      operatorIds: raid.operatorIds,
+      location: getLocationLabel(raid.location),
+      threat: raid.threat,
+      cohesion: raid.cohesion,
+      durationHours: raid.durationHours,
+      teamGoal: raid.teamGoal,
+      teamState: raid.teamState,
+      x: raid.x,
+      y: raid.y,
+      recentEvents: (raid.recentEvents ?? []).map((evt) => ({
+        id: evt.id,
+        kind: evt.kind,
+        message: evt.message,
+        tick: evt.tick,
+      })),
+      transcriptEvents,
+      focusedDetail,
+    };
+  });
 
   const operatorNameById = new Map(view.operators.map((op) => [op.id, op.identity.name]));
 
@@ -935,9 +947,7 @@ export function buildOpsViewFromPhase1(
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
       operatorId: outcome.operatorId,
       operatorName:
-        operatorNameById.get(outcome.operatorId) ??
-        outcome.operatorId.split("/").pop() ??
-        "Unknown",
+        operatorNameById.get(outcome.operatorId) ?? getIdentifierLabel(outcome.operatorId),
       died: outcome.died === true,
     })),
   }));
@@ -1022,6 +1032,7 @@ export function buildOpsViewFromPhase1(
     activeRaids,
     raidHistory,
     raidWorld,
+    minuteOfDay: view.clock.minuteOfDay,
   };
 }
 
@@ -1086,11 +1097,11 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       isApplied: snapshot.appliedUpgradeIds.includes(template.id),
       isAffordable: false,
       requirements: template.requirements.map((req) => ({
-        label: formatRequirement(req),
+        label: getRequirementLabel(req),
         type: req.type,
       })),
       effects: template.effects.map((eff) => ({
-        label: formatEffect(eff),
+        label: getEffectLabel(eff),
         type: eff.type,
       })),
     }));
@@ -1108,7 +1119,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
 
     return {
       id: op.id,
-      name: str(identity, "name", op.id.split("/").pop() ?? "Unknown"),
+      name: str(identity, "name", getIdentifierLabel(op.id)),
       roleTag: str(identity, "roleTag", "unassigned"),
       specialtyTag: str(identity, "specialtyTag", ""),
       moraleCurrent: num(morale, "current", 50),
@@ -1148,7 +1159,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     const assignment = rec(raw, "assignment");
     return {
       id: s.id,
-      name: str(raw, "name", s.id.split("/").pop() ?? "Staff"),
+      name: str(raw, "name", getIdentifierLabel(s.id)),
       roleTag: str(raw, "roleTag", "general"),
       status: str(raw, "status", "unassigned"),
       wage: num(raw, "wage", 0),
@@ -1162,7 +1173,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     const quality = num(raw, "quality", 50);
     return {
       id: v.id,
-      name: str(raw, "name", v.id.split("/").pop() ?? "Visitor"),
+      name: str(raw, "name", getIdentifierLabel(v.id)),
       desiredRoleTag: str(raw, "desiredRoleTag", "unknown"),
       patience: num(raw, "patience", 10),
       quality,
@@ -1182,10 +1193,8 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     (rel) => ({
       operatorAId: rel.operatorAId,
       operatorBId: rel.operatorBId,
-      operatorAName:
-        operatorNameById.get(rel.operatorAId) ?? rel.operatorAId.split("/").pop() ?? "?",
-      operatorBName:
-        operatorNameById.get(rel.operatorBId) ?? rel.operatorBId.split("/").pop() ?? "?",
+      operatorAName: operatorNameById.get(rel.operatorAId) ?? getIdentifierLabel(rel.operatorAId),
+      operatorBName: operatorNameById.get(rel.operatorBId) ?? getIdentifierLabel(rel.operatorBId),
       trust: rel.trust,
       friction: rel.friction,
       familiarity: rel.familiarity ?? 0,
@@ -1270,7 +1279,7 @@ function mapRaidSummary(
     narrativeTags: [],
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
       operatorId: outcome.operatorId,
-      operatorName: outcome.operatorId.split("/").pop() ?? "Unknown",
+      operatorName: getIdentifierLabel(outcome.operatorId),
       died: outcome.died === true,
     })),
   };
@@ -1419,8 +1428,7 @@ function rec(
 function resolveItemName(itemId: string, registry: TemplateRegistry): string {
   const item = registry.itemById.get(itemId);
   if (item) return item.name;
-  const slug = itemId.split("/").pop() ?? itemId;
-  return slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return getIdentifierLabel(itemId);
 }
 
 /** Classify an item id into a display category. */
@@ -1459,7 +1467,7 @@ export function buildTeamViewModels(
   return phase2.teams.map((team) => ({
     id: team.id,
     memberIds: team.members,
-    memberNames: team.members.map((id) => operatorNameById.get(id) ?? id.split("/").pop() ?? "?"),
+    memberNames: team.members.map((id) => operatorNameById.get(id) ?? getIdentifierLabel(id)),
     cohesion: team.cohesion,
     raidCount: team.raidCount,
     damaged: team.damaged,
@@ -1476,7 +1484,7 @@ export function buildRoomCultureViewModels(
 ): RoomCultureViewModel[] {
   return phase2.roomCultures.map((rc) => ({
     roomId: rc.roomId,
-    roomName: roomNameById.get(rc.roomId) ?? rc.roomId.split("/").pop() ?? "?",
+    roomName: roomNameById.get(rc.roomId) ?? getIdentifierLabel(rc.roomId),
     tone: rc.tone,
     summary: rc.summary,
     signals: rc.signals,
@@ -1520,7 +1528,7 @@ export function buildEquipmentViewModels(
 ): EquipmentViewModel[] {
   return phase2.equipment.map((eq) => ({
     operatorId: eq.operatorId,
-    operatorName: operatorNameById.get(eq.operatorId) ?? eq.operatorId.split("/").pop() ?? "?",
+    operatorName: operatorNameById.get(eq.operatorId) ?? getIdentifierLabel(eq.operatorId),
     weaponId: eq.weaponId,
     weaponName: resolveItemName(eq.weaponId, registry),
     outfitOverlayId: eq.outfitOverlayId,

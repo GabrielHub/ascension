@@ -11,10 +11,16 @@ import type {
   TeamViewModel,
   VisitorViewModel,
 } from "./view-models";
-import { formatCultureLabel, formatTag } from "./view-models";
 import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
-import { getToneTip, getSignalTip } from "./_glossary";
+import {
+  getCultureSummaryLabel,
+  getRoleMeta,
+  getSignalMeta,
+  getSpecialtyMeta,
+  getTagMeta,
+  getToneMeta,
+} from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
 
 interface RosterPanelProps {
@@ -112,7 +118,7 @@ function OperatorRow({
             <span className="shrink-0 text-[0.6rem] text-ember">!</span>
           </Tooltip>
         )}
-        <span className="badge badge-gold ml-auto shrink-0">{formatTag(op.roleTag)}</span>
+        <span className="badge badge-gold ml-auto shrink-0">{getRoleMeta(op.roleTag).label}</span>
         <span className={`shrink-0 text-[0.6875rem] ${statusLabelClass(op)}`}>
           {statusLabel(op)}
         </span>
@@ -131,10 +137,10 @@ function OperatorRow({
             <div className="min-w-0 flex-1 pt-0.5">
               <div className="text-xs text-silver-bright">{op.name}</div>
               <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="badge badge-gold">{formatTag(op.roleTag)}</span>
+                <span className="badge badge-gold">{getRoleMeta(op.roleTag).label}</span>
                 {op.specialtyTag && (
                   <span className="text-[0.6875rem] text-gold/60">
-                    {formatTag(op.specialtyTag)}
+                    {getSpecialtyMeta(op.specialtyTag).label}
                   </span>
                 )}
               </div>
@@ -198,17 +204,17 @@ function OperatorRow({
                 Room: {assignedRoomCulture.roomName}
               </div>
               <div className="mt-0.5 text-[0.6875rem] text-silver/55">
-                {formatCultureLabel(assignedRoomCulture.summary)}
+                {getCultureSummaryLabel(assignedRoomCulture.summary)}
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
-                <Tooltip content={getToneTip(assignedRoomCulture.tone)}>
+                <Tooltip content={getToneMeta(assignedRoomCulture.tone || "neutral").tip}>
                   <span className="badge badge-slate">
-                    {formatCultureLabel(assignedRoomCulture.tone || "neutral")}
+                    {getToneMeta(assignedRoomCulture.tone || "neutral").label}
                   </span>
                 </Tooltip>
                 {assignedRoomCulture.signals.map((signal) => (
-                  <Tooltip key={signal} content={getSignalTip(signal)}>
-                    <span className="badge badge-slate">{formatCultureLabel(signal)}</span>
+                  <Tooltip key={signal} content={getSignalMeta(signal).tip}>
+                    <span className="badge badge-slate">{getSignalMeta(signal).label}</span>
                   </Tooltip>
                 ))}
               </div>
@@ -328,7 +334,9 @@ function StaffRow({
         }`}
       >
         <span className="min-w-0 truncate text-xs text-silver-bright">{member.name}</span>
-        <span className="badge badge-slate ml-auto shrink-0">{formatTag(member.roleTag)}</span>
+        <span className="badge badge-slate ml-auto shrink-0">
+          {getTagMeta(member.roleTag).label}
+        </span>
         <span className="shrink-0 text-[0.6875rem] text-silver/40">
           {isAssigned ? "assigned" : member.status}
         </span>
@@ -399,7 +407,7 @@ function VisitorRow({
       <div className="min-w-0 flex-1">
         <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
         <span className="ml-1.5 text-[0.6875rem] text-gold/60">
-          {formatTag(visitor.desiredRoleTag)}
+          {getRoleMeta(visitor.desiredRoleTag).label}
         </span>
       </div>
       <Tooltip
@@ -437,11 +445,11 @@ function VisitorRow({
 // ── Staff hire menu ──────────────────────────────────────────────────────
 
 const HIREABLE_ROLES = [
-  { tag: "staff:admin", label: "Admin" },
-  { tag: "staff:reception", label: "Reception" },
-  { tag: "staff:logistics", label: "Logistics" },
-  { tag: "staff:medical", label: "Medical" },
-  { tag: "staff:maintenance", label: "Maintenance" },
+  "staff:admin",
+  "staff:reception",
+  "staff:logistics",
+  "staff:medical",
+  "staff:maintenance",
 ] as const;
 
 function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
@@ -461,17 +469,17 @@ function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
 
   return (
     <div className="flex items-center gap-1">
-      {HIREABLE_ROLES.map((role) => (
+      {HIREABLE_ROLES.map((roleTag) => (
         <button
-          key={role.tag}
+          key={roleTag}
           type="button"
           className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
           onClick={() => {
-            onHire(role.tag);
+            onHire(roleTag);
             setOpen(false);
           }}
         >
-          {role.label}
+          {getTagMeta(roleTag).label}
         </button>
       ))}
       <button

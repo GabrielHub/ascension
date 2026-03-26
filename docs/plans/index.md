@@ -1,5 +1,8 @@
 # Plans Index
 
-There are no active checked-in execution plans right now.
+This folder is reserved for active execution plans only.
 
-Use this folder for temporary implementation briefs that coordinate live work across a bounded execution pass.
+- Add a focused implementation brief here when work needs a temporary plan.
+- Remove completed plans once the code and tests become the source of truth.
+
+Current status: no active plans.

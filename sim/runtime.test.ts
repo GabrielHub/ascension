@@ -10,6 +10,7 @@ import { STABLE_SIM_COMMAND_TYPES } from "./commands";
 import { templateRegistry } from "content/templates";
 import { OperatorIdentity } from "./components";
 import { computeDerivedStats } from "./systems/derived-stats";
+import { markRaidBossCommitment } from "./systems/raids";
 
 describe("time-unit contract", () => {
   it("advances exactly 60 in-game minutes from a 3600000ms tick", () => {
@@ -558,6 +559,265 @@ describe("phase 1 runtime", () => {
     }
 
     expect(fastForwarded.getPhase1View().resources).toEqual(stepped.getPhase1View().resources);
+  });
+
+  it("waits for transcript playback to reach the boss threshold before surfacing commitment", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    const operatorIds = ["operator/rose-vega", "operator/milo-hart"];
+
+    snapshot.time.day = 1;
+    snapshot.time.minuteOfDay = 52;
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/boss-breakpoint",
+        contractSiteId: "contract/test-site",
+        opportunityId: "opportunity/boss-breakpoint",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 00:00",
+        startedTick: 0,
+        revealProgress: 0,
+        operatorIds,
+        returnTick: 60,
+        durationHours: 1,
+        threat: 90,
+        intel: 50,
+        reward: 180,
+        cohesion: 65,
+        resolutionPacket: {
+          result: "mixed",
+          reputationDelta: 0,
+          cashDelta: 0,
+          operatorOutcomes: operatorIds.map((operatorId) => ({
+            operatorId,
+            injuryDelta: 0,
+            moraleDelta: 0,
+            loyaltyDelta: 0,
+            status: "steady" as const,
+          })),
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+        raidRun: {
+          raidId: "raid/boss-breakpoint",
+          contractSiteId: "contract/test-site",
+          missionId: "mission/clearance",
+          siteSeed: 42,
+          teamOperatorIds: operatorIds,
+          startedTick: 0,
+          status: "awaiting_boss_commitment",
+          currentStepIndex: 9,
+          steps: [
+            { kind: "deploy", tickOffset: 0, siteNodeId: "node/entry", actorIds: operatorIds },
+            { kind: "move", tickOffset: 1, siteNodeId: "node/corridor-1" },
+            { kind: "goal_check", tickOffset: 2, siteNodeId: "node/corridor-1" },
+            { kind: "move", tickOffset: 3, siteNodeId: "node/chamber-1" },
+            { kind: "discover_enemy", tickOffset: 4, siteNodeId: "node/chamber-1" },
+            { kind: "skirmish_start", tickOffset: 5, siteNodeId: "node/chamber-1" },
+            { kind: "skirmish_end", tickOffset: 6, siteNodeId: "node/chamber-1" },
+            { kind: "move", tickOffset: 7, siteNodeId: "node/boss-approach" },
+            { kind: "goal_check", tickOffset: 8, siteNodeId: "node/boss-approach" },
+            {
+              kind: "boss_threshold",
+              tickOffset: 9,
+              siteNodeId: "node/boss-approach",
+              actorIds: operatorIds,
+              message: "Boss chamber located. Awaiting commitment decision.",
+            },
+          ],
+          siteGraph: [
+            {
+              nodeId: "node/entry",
+              kind: "chamber",
+              x: 1,
+              y: 1,
+              edges: ["node/corridor-1"],
+              discovered: true,
+            },
+            {
+              nodeId: "node/corridor-1",
+              kind: "corridor",
+              x: 4,
+              y: 2,
+              edges: ["node/entry", "node/chamber-1"],
+            },
+            {
+              nodeId: "node/chamber-1",
+              kind: "chamber",
+              x: 8,
+              y: 4,
+              edges: ["node/corridor-1", "node/boss-approach"],
+            },
+            {
+              nodeId: "node/boss-approach",
+              kind: "boss_approach",
+              x: 13,
+              y: 7,
+              edges: ["node/chamber-1", "node/boss-chamber"],
+            },
+            {
+              nodeId: "node/boss-chamber",
+              kind: "boss_chamber",
+              x: 14,
+              y: 7,
+              edges: ["node/boss-approach"],
+            },
+          ],
+          derivedState: {
+            revealedNodeIds: [
+              "node/entry",
+              "node/corridor-1",
+              "node/chamber-1",
+              "node/boss-approach",
+            ],
+            discoveredEnemyIds: ["enemy/tunnel-crawler"],
+            discoveredFeatureIds: ["node/chamber-1"],
+            operatorHp: {
+              "operator/rose-vega": 52,
+              "operator/milo-hart": 46,
+            },
+            operatorMaxHp: {
+              "operator/rose-vega": 60,
+              "operator/milo-hart": 55,
+            },
+            operatorInjury: {
+              "operator/rose-vega": 4,
+              "operator/milo-hart": 6,
+            },
+            currentNodeId: "node/boss-approach",
+            bossThresholdReached: true,
+            retreating: false,
+            lootGained: [],
+            intelGained: 0,
+          },
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(1000);
+    expect(simulation.getPhase1View().activeInterruption).toBeNull();
+
+    simulation.tick(1000);
+    const activeInterruption = simulation.getPhase1View().activeInterruption;
+    expect(activeInterruption?.payload.kind).toBe("raid_boss_commitment");
+    expect(activeInterruption?.payload.activeRaidId).toBe("raid/boss-breakpoint");
+  });
+
+  it("records boss commitment on the active raid run before entering the live encounter", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    const operatorIds = ["operator/rose-vega", "operator/milo-hart"];
+
+    snapshot.time.day = 1;
+    snapshot.time.minuteOfDay = 52;
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/boss-breakpoint",
+        contractSiteId: "contract/test-site",
+        opportunityId: "opportunity/boss-breakpoint",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 00:00",
+        startedTick: 0,
+        revealProgress: 90,
+        operatorIds,
+        returnTick: 60,
+        durationHours: 1,
+        threat: 90,
+        intel: 50,
+        reward: 180,
+        cohesion: 65,
+        resolutionPacket: {
+          result: "mixed",
+          reputationDelta: 0,
+          cashDelta: 0,
+          operatorOutcomes: operatorIds.map((operatorId) => ({
+            operatorId,
+            injuryDelta: 0,
+            moraleDelta: 0,
+            loyaltyDelta: 0,
+            status: "steady" as const,
+          })),
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+        raidRun: {
+          raidId: "raid/boss-breakpoint",
+          contractSiteId: "contract/test-site",
+          missionId: "mission/clearance",
+          siteSeed: 42,
+          teamOperatorIds: operatorIds,
+          startedTick: 0,
+          status: "awaiting_boss_commitment",
+          currentStepIndex: 2,
+          steps: [
+            { kind: "deploy", tickOffset: 0, siteNodeId: "node/entry", actorIds: operatorIds },
+            { kind: "move", tickOffset: 1, siteNodeId: "node/boss-approach" },
+            {
+              kind: "boss_threshold",
+              tickOffset: 2,
+              siteNodeId: "node/boss-approach",
+              actorIds: operatorIds,
+              message: "Boss chamber located. Awaiting commitment decision.",
+            },
+          ],
+          siteGraph: [
+            {
+              nodeId: "node/entry",
+              kind: "chamber",
+              x: 1,
+              y: 1,
+              edges: ["node/boss-approach"],
+              discovered: true,
+            },
+            {
+              nodeId: "node/boss-approach",
+              kind: "boss_approach",
+              x: 13,
+              y: 7,
+              edges: ["node/entry", "node/boss-chamber"],
+            },
+            {
+              nodeId: "node/boss-chamber",
+              kind: "boss_chamber",
+              x: 14,
+              y: 7,
+              edges: ["node/boss-approach"],
+            },
+          ],
+          derivedState: {
+            revealedNodeIds: ["node/entry", "node/boss-approach"],
+            discoveredEnemyIds: [],
+            discoveredFeatureIds: [],
+            operatorHp: {
+              "operator/rose-vega": 52,
+              "operator/milo-hart": 46,
+            },
+            operatorMaxHp: {
+              "operator/rose-vega": 60,
+              "operator/milo-hart": 55,
+            },
+            operatorInjury: {
+              "operator/rose-vega": 4,
+              "operator/milo-hart": 6,
+            },
+            currentNodeId: "node/boss-approach",
+            bossThresholdReached: true,
+            retreating: false,
+            lootGained: [],
+            intelGained: 0,
+          },
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    expect(markRaidBossCommitment(simulation, "raid/boss-breakpoint")).toBe(true);
+
+    const raidRun = simulation.getWorldSnapshot().activeRaidPackets[0].raidRun;
+    expect(raidRun?.status).toBe("boss_encounter");
+    expect(raidRun?.steps.at(-1)?.kind).toBe("boss_commit");
   });
 
   it("reveals fog cumulatively instead of re-applying the full reveal budget each minute", () => {

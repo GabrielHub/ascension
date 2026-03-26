@@ -1,6 +1,7 @@
 import { validateEffect } from "../effects";
 import { validateRequirement } from "../requirements";
 import { buildingTemplates } from "./buildings";
+import { enemyFamilyTemplates } from "./enemies";
 import { eventTemplates } from "./events";
 import { dropTables as dropTableData, itemTemplates } from "./items";
 import { missionTemplates } from "./missions";
@@ -9,9 +10,11 @@ import { roomTemplates } from "./rooms";
 import {
   type BuildingTemplate,
   type DropTable,
+  type EnemyFamilyTemplate,
   type EventTemplate,
   type ItemTemplate,
   type MissionTemplate,
+  type OrdinaryEnemyTemplate,
   type ResourceTemplate,
   type RoomTemplate,
   type TemplateBase,
@@ -32,6 +35,7 @@ const TEMPLATE_CATEGORY_ORDER: readonly TemplateCategory[] = [
   "events",
   "items",
   "dropTables",
+  "enemyFamilies",
 ] as const;
 
 function makeLookup<T extends TemplateBase>(
@@ -400,6 +404,131 @@ function validateDropTables(
   });
 }
 
+function validateEnemyFamilies(
+  families: readonly EnemyFamilyTemplate[],
+  dropTables: ReadonlyMap<string, DropTable>,
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenFamilyIds = new Set<string>();
+  const seenEnemyIds = new Set<string>();
+
+  families.forEach((family) => {
+    if (family.familyId.trim().length === 0) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: family.familyId,
+        message: "Family id must be a non-empty string.",
+      });
+    }
+
+    if (seenFamilyIds.has(family.familyId)) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: family.familyId,
+        message: "Duplicate enemy family id.",
+      });
+    }
+    seenFamilyIds.add(family.familyId);
+
+    if (family.name.trim().length === 0) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: family.familyId,
+        message: "Family name must be a non-empty string.",
+      });
+    }
+
+    if (family.members.length === 0) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: family.familyId,
+        message: "Family must have at least one member.",
+      });
+    }
+
+    family.members.forEach((member) => {
+      if (seenEnemyIds.has(member.enemyTemplateId)) {
+        issues.push({
+          category: "enemyFamilies",
+          templateId: family.familyId,
+          message: `Duplicate enemy template id "${member.enemyTemplateId}".`,
+        });
+      }
+      seenEnemyIds.add(member.enemyTemplateId);
+
+      if (member.familyId !== family.familyId) {
+        issues.push({
+          category: "enemyFamilies",
+          templateId: family.familyId,
+          message: `Member "${member.enemyTemplateId}" familyId mismatch: expected "${family.familyId}", got "${member.familyId}".`,
+        });
+      }
+
+      if (member.name.trim().length === 0) {
+        issues.push({
+          category: "enemyFamilies",
+          templateId: family.familyId,
+          message: `Member "${member.enemyTemplateId}" name must be a non-empty string.`,
+        });
+      }
+
+      if (!dropTables.has(member.dropTableId)) {
+        issues.push({
+          category: "enemyFamilies",
+          templateId: family.familyId,
+          message: `Member "${member.enemyTemplateId}" references unknown drop table "${member.dropTableId}".`,
+        });
+      }
+
+      if (member.actions.length === 0) {
+        issues.push({
+          category: "enemyFamilies",
+          templateId: family.familyId,
+          message: `Member "${member.enemyTemplateId}" must have at least one action.`,
+        });
+      }
+
+      const seenActionIds = new Set<string>();
+      member.actions.forEach((action) => {
+        if (seenActionIds.has(action.id)) {
+          issues.push({
+            category: "enemyFamilies",
+            templateId: family.familyId,
+            message: `Member "${member.enemyTemplateId}" has duplicate action id "${action.id}".`,
+          });
+        }
+        seenActionIds.add(action.id);
+
+        if (action.weight <= 0) {
+          issues.push({
+            category: "enemyFamilies",
+            templateId: family.familyId,
+            message: `Member "${member.enemyTemplateId}" action "${action.id}" weight must be greater than zero.`,
+          });
+        }
+      });
+    });
+  });
+}
+
+function makeEnemyFamilyLookup(
+  families: readonly EnemyFamilyTemplate[],
+): ReadonlyMap<string, EnemyFamilyTemplate> {
+  return new Map(families.map((f) => [f.familyId, f]));
+}
+
+function makeEnemyTemplateLookup(
+  families: readonly EnemyFamilyTemplate[],
+): ReadonlyMap<string, OrdinaryEnemyTemplate> {
+  const byId = new Map<string, OrdinaryEnemyTemplate>();
+  families.forEach((family) => {
+    family.members.forEach((member) => {
+      byId.set(member.enemyTemplateId, member);
+    });
+  });
+  return byId;
+}
+
 function makeDropTableLookup(tables: readonly DropTable[]): ReadonlyMap<string, DropTable> {
   const byId = new Map<string, DropTable>();
   tables.forEach((table) => {
@@ -441,6 +570,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   const events = [...eventTemplates];
   const items = [...itemTemplates];
   const dropTables = [...dropTableData];
+  const enemyFamilies = [...enemyFamilyTemplates];
 
   const resourceLookup = makeLookup("resources", resources, issues);
   const buildingLookup = makeLookup("buildings", buildings, issues);
@@ -450,6 +580,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   const eventLookup = makeLookup("events", events, issues);
   const itemLookup = makeLookup("items", items, issues);
   const dropTableLookup = makeDropTableLookup(dropTables);
+  const enemyFamilyLookup = makeEnemyFamilyLookup(enemyFamilies);
+  const enemyTemplateLookup = makeEnemyTemplateLookup(enemyFamilies);
 
   validateResourceTemplates(resources, issues);
   validateBuildingTemplates(buildings, upgradeLookup.byId, issues);
@@ -465,6 +597,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   validateEventTemplates(events, issues);
   validateItemTemplates(items, issues);
   validateDropTables(dropTables, itemLookup.byId, issues);
+  validateEnemyFamilies(enemyFamilies, dropTableLookup, issues);
 
   if (issues.length > 0) {
     throw new Error(`Template registry validation failed.\n${formatIssues(issues)}`);
@@ -479,6 +612,7 @@ export function createTemplateRegistry(): TemplateRegistry {
     events,
     items,
     dropTables,
+    enemyFamilies,
     resourceById: resourceLookup.byId,
     buildingById: buildingLookup.byId,
     roomById: roomLookup.byId,
@@ -487,6 +621,8 @@ export function createTemplateRegistry(): TemplateRegistry {
     eventById: eventLookup.byId,
     itemById: itemLookup.byId,
     dropTableById: dropTableLookup,
+    enemyFamilyById: enemyFamilyLookup,
+    enemyTemplateById: enemyTemplateLookup,
     resourceIndexById: resourceLookup.indexById,
     buildingIndexById: buildingLookup.indexById,
     roomIndexById: roomLookup.indexById,

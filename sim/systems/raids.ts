@@ -55,6 +55,12 @@ import {
 } from "content/templates/site-concepts";
 import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
 import type { RaidTeamGoal } from "lib/raid-team-goal";
+import {
+  simulateRaidRun,
+  resolveRaidRunAfterBoss,
+  markRaidRunBossCommitment,
+  type SimOperator,
+} from "./raid-simulation";
 import type {
   RaidEncounterThreat,
   RaidFeatureKind,
@@ -69,6 +75,34 @@ import type {
 } from "./types";
 
 export type { RaidTeamGoal } from "lib/raid-team-goal";
+
+// ── Simulation bridge helpers ──────────────────────────────────────────
+
+function buildSimOperators(context: SimSystemContext, operatorEntities: number[]): SimOperator[] {
+  return operatorEntities.map((entity) => {
+    const derived = computeDerivedStats(context, entity);
+    const maxHp = derived.effective.endurance * 5 + derived.effective.resilience * 3 + 40;
+    return {
+      operatorId: OperatorIdentity.id[entity],
+      name: OperatorIdentity.name[entity] ?? OperatorIdentity.id[entity],
+      roleTag: OperatorIdentity.roleTag[entity] || "",
+      stats: derived.effective,
+      combatPower: derived.combatPower,
+      currentHp: maxHp - Math.round(InjuryState.severity[entity] * 0.5),
+      maxHp,
+      injury: InjuryState.severity[entity],
+      morale: MoraleState.current[entity],
+      fatigue: NeedState.fatigue[entity],
+      kitRegularAttackPower: Math.round(derived.effective.strength * 1.2),
+      kitSkillPower: Math.round(derived.effective.strength * 1.8 + derived.effective.speed * 0.5),
+      kitUltimatePower: Math.round(
+        derived.effective.strength * 2.5 + derived.effective.perception * 0.8,
+      ),
+      passiveBonus: Math.round(derived.combatPower * 0.15),
+      down: false,
+    };
+  });
+}
 
 const MAX_OPEN_OPPORTUNITIES = 1;
 const FORMATION_DELAY_MINUTES = 60;
@@ -91,6 +125,299 @@ function getCellCenter(x: number, y: number) {
   return {
     x: x * 32 + 16,
     y: y * 32 + 16,
+  };
+}
+
+function getRaidPlaybackStepIndex(packet: ActiveRaidPacketRecord): number {
+  const run = packet.raidRun;
+  if (!run || run.steps.length === 0) {
+    return -1;
+  }
+
+  return Math.min(
+    run.steps.length - 1,
+    Math.floor((clamp(packet.revealProgress, 0, 100) / 100) * run.steps.length),
+  );
+}
+
+function getRaidPlaybackSteps(packet: ActiveRaidPacketRecord) {
+  const stepIndex = getRaidPlaybackStepIndex(packet);
+  const run = packet.raidRun;
+  if (!run || stepIndex < 0) {
+    return [];
+  }
+
+  return run.steps.slice(0, stepIndex + 1);
+}
+
+function hasRaidPlaybackReachedStep(
+  packet: ActiveRaidPacketRecord,
+  stepKind: import("save/types").RaidStepKind,
+): boolean {
+  return getRaidPlaybackSteps(packet).some((step) => step.kind === stepKind);
+}
+
+function getPlaybackNodeId(
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): string {
+  for (let index = steps.length - 1; index >= 0; index -= 1) {
+    const siteNodeId = steps[index]?.siteNodeId;
+    if (siteNodeId) {
+      return siteNodeId;
+    }
+  }
+
+  return run.siteGraph[0]?.nodeId ?? "node/entry";
+}
+
+function getPlaybackNodeMap(
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): Set<string> {
+  const discovered = new Set<string>();
+  const entryNodeId = run.siteGraph[0]?.nodeId;
+  if (entryNodeId) {
+    discovered.add(entryNodeId);
+  }
+
+  for (const node of run.siteGraph) {
+    if (node.discovered) {
+      discovered.add(node.nodeId);
+    }
+  }
+
+  for (const step of steps) {
+    if (step.siteNodeId) {
+      discovered.add(step.siteNodeId);
+    }
+  }
+
+  return discovered;
+}
+
+function getPlaybackNode(
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+) {
+  const currentNodeId = getPlaybackNodeId(run, steps);
+  return run.siteGraph.find((node) => node.nodeId === currentNodeId) ?? run.siteGraph[0];
+}
+
+function getPlaybackGoal(
+  packet: ActiveRaidPacketRecord,
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): RaidTeamGoal {
+  const latestStep = steps[steps.length - 1];
+  const currentNode = getPlaybackNode(run, steps);
+
+  if (latestStep?.goalCheckKind) {
+    return latestStep.goalCheckKind;
+  }
+
+  switch (latestStep?.kind) {
+    case "discover_enemy":
+    case "skirmish_start":
+    case "skirmish_round":
+    case "skirmish_end":
+    case "operator_down":
+      return "hunting";
+    case "loot_gain":
+      return "looting";
+    case "intel_gain":
+      return "intel";
+    case "retreat_begin":
+    case "boss_retreat":
+    case "return":
+      return "retreating";
+    case "boss_threshold":
+    case "boss_commit":
+    case "boss_result":
+      return "boss";
+  }
+
+  switch (currentNode?.kind) {
+    case "cache":
+      return "looting";
+    case "intel_point":
+      return "intel";
+    case "boss_approach":
+    case "boss_chamber":
+      return "boss";
+    case "hazard":
+    case "chamber":
+    case "corridor":
+    default:
+      return hasRaidPlaybackReachedStep(packet, "retreat_begin") ? "retreating" : "exploring";
+  }
+}
+
+function getPlaybackState(
+  packet: ActiveRaidPacketRecord,
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): RaidPresentationTeam["state"] {
+  const latestStep = steps[steps.length - 1];
+  const hasLivingOperators = run.teamOperatorIds.some((operatorId) => {
+    return (run.derivedState.operatorHp[operatorId] ?? 1) > 0;
+  });
+
+  switch (latestStep?.kind) {
+    case "retreat_begin":
+    case "boss_retreat":
+    case "return":
+      return hasLivingOperators ? "returning" : "defeated";
+    case "resolve":
+      return hasLivingOperators ? "returning" : "defeated";
+    default:
+      return hasLivingOperators ? "active" : "defeated";
+  }
+}
+
+function getPlaybackFeatureKind(
+  nodeKind: NonNullable<ActiveRaidPacketRecord["raidRun"]>["siteGraph"][number]["kind"],
+): RaidFeatureKind | null {
+  switch (nodeKind) {
+    case "cache":
+      return "loot-cache";
+    case "intel_point":
+      return "intel-node";
+    case "hazard":
+      return "hazard-zone";
+    default:
+      return null;
+  }
+}
+
+function getEncounterLabelFromStep(
+  step: NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"][number],
+): string {
+  if (
+    step.kind === "boss_threshold" ||
+    step.kind === "boss_commit" ||
+    step.kind === "boss_result"
+  ) {
+    return "Boss Contact";
+  }
+
+  if (step.message) {
+    const match = /^Engaged (.+?)(?: \(|\.)/.exec(step.message);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return "Hostile Contact";
+}
+
+function getTranscriptEncounter(
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): RaidPresentationTeam["encounter"] {
+  let openEncounter: RaidPresentationTeam["encounter"] = null;
+
+  for (const step of steps) {
+    switch (step.kind) {
+      case "discover_enemy":
+      case "skirmish_start":
+        openEncounter = {
+          enemyLabel: getEncounterLabelFromStep(step),
+          threat: "generic",
+          healthFraction: 1,
+        };
+        break;
+      case "skirmish_round": {
+        const enemyHpFraction = step.deltas?.["enemyHpFraction"];
+        if (
+          openEncounter &&
+          typeof enemyHpFraction === "number" &&
+          Number.isFinite(enemyHpFraction)
+        ) {
+          openEncounter = {
+            ...openEncounter,
+            healthFraction: clamp(enemyHpFraction, 0, 1),
+          };
+        }
+        break;
+      }
+      case "boss_threshold":
+      case "boss_commit":
+        openEncounter = {
+          enemyLabel: "Boss Contact",
+          threat: "boss",
+          healthFraction: 1,
+        };
+        break;
+      case "boss_result":
+      case "boss_retreat":
+      case "skirmish_end":
+        openEncounter = null;
+        break;
+    }
+  }
+
+  return openEncounter;
+}
+
+function buildTranscriptWorldMarkers(
+  packet: ActiveRaidPacketRecord,
+  run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
+  steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+): {
+  enemies: RaidPresentationEnemy[];
+  features: RaidPresentationFeature[];
+} {
+  const discoveredNodeIds = getPlaybackNodeMap(run, steps);
+  const features = run.siteGraph
+    .map((node) => {
+      const kind = getPlaybackFeatureKind(node.kind);
+      if (!kind) {
+        return null;
+      }
+
+      return {
+        id: node.nodeId,
+        kind,
+        discovered: discoveredNodeIds.has(node.nodeId),
+        ...getCellCenter(node.x, node.y),
+      } satisfies RaidPresentationFeature;
+    })
+    .filter((feature): feature is RaidPresentationFeature => feature !== null);
+
+  const enemyMarkers = new Map<string, RaidPresentationEnemy>();
+  for (const step of steps) {
+    if (step.kind !== "discover_enemy" || !step.siteNodeId) {
+      continue;
+    }
+
+    const node = run.siteGraph.find((candidate) => candidate.nodeId === step.siteNodeId);
+    if (!node) {
+      continue;
+    }
+
+    enemyMarkers.set(`${packet.id}:${step.siteNodeId}:${step.enemyTemplateId ?? "generic"}`, {
+      id: `${packet.id}:${step.siteNodeId}:${step.enemyTemplateId ?? "generic"}`,
+      threat: "generic",
+      discovered: true,
+      ...getCellCenter(node.x, node.y),
+    });
+  }
+
+  if (hasRaidPlaybackReachedStep(packet, "boss_threshold")) {
+    const bossNode = run.siteGraph.find((node) => node.kind === "boss_chamber");
+    if (bossNode) {
+      enemyMarkers.set(`${packet.id}:${bossNode.nodeId}:boss`, {
+        id: `${packet.id}:${bossNode.nodeId}:boss`,
+        threat: "boss",
+        discovered: true,
+        ...getCellCenter(bossNode.x, bossNode.y),
+      });
+    }
+  }
+
+  return {
+    enemies: [...enemyMarkers.values()],
+    features,
   };
 }
 
@@ -303,6 +630,11 @@ function getEncounterLabel(threat: RaidEncounterThreat): string {
   }
 }
 
+function formatNeighborhoodLabel(location: string): string {
+  const slug = location.replace("district/", "");
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getFeatureEventKind(kind: RaidFeatureKind): RaidPresentationEvent["kind"] {
   switch (kind) {
     case "loot-cache":
@@ -326,6 +658,59 @@ function getFeatureEventMessage(kind: RaidFeatureKind): string {
       return "Team is navigating a hazardous zone.";
     default:
       return "Team picked through collapsed debris.";
+  }
+}
+
+function getRaidGoalLabel(goal: RaidTeamGoal): string {
+  switch (goal) {
+    case "exploring":
+      return "the interior";
+    case "looting":
+      return "recovering loot";
+    case "intel":
+      return "gathering intel";
+    case "hunting":
+      return "hostile patrols";
+    case "boss":
+      return "the boss chamber";
+    case "retreating":
+      return "the exit";
+    case "regrouping":
+      return "a regroup point";
+  }
+}
+
+function getRaidResultSummaryLabel(result: "success" | "failure" | "mixed"): string {
+  switch (result) {
+    case "success":
+      return "succeeded";
+    case "mixed":
+      return "ended with losses";
+    case "failure":
+      return "failed";
+  }
+}
+
+function humanizeRuntimeReason(reason: string): string {
+  return reason
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getTeamDamageReasonLabel(reason: string): string {
+  switch (reason) {
+    case "retention_break":
+      return "a retention break";
+    case "morale_collapse":
+      return "a morale collapse";
+    case "losses":
+      return "losses";
+    case "recent damage":
+      return "recent damage";
+    default:
+      return humanizeRuntimeReason(reason).toLowerCase();
   }
 }
 
@@ -960,6 +1345,45 @@ function createResolutionPacket(
   };
 }
 
+/**
+ * Derive a legacy-compatible resolution packet from a simulation-owned RaidRun.
+ * This is the transition bridge: the RaidRun is the authority, and this function
+ * projects into the format downstream consumers still expect.
+ */
+function deriveResolutionFromRun(
+  run: import("save/types").RaidRunSnapshot,
+  _operatorEntities: number[],
+): ActiveRaidResolutionPacket {
+  const summary = run.summaryDraft;
+  const result = summary?.result ?? "mixed";
+
+  return {
+    result,
+    reputationDelta: summary?.reputationDelta ?? 0,
+    cashDelta: summary?.cashDelta ?? 0,
+    operatorOutcomes: run.teamOperatorIds.map((operatorId) => {
+      const injuryDelta = run.derivedState.operatorInjury[operatorId] ?? 0;
+      const hp = run.derivedState.operatorHp[operatorId] ?? 1;
+      const down = hp <= 0;
+      const died = down && result === "failure" && injuryDelta >= 30;
+
+      return {
+        operatorId,
+        injuryDelta,
+        moraleDelta: result === "failure" ? -10 : result === "mixed" ? -3 : 6,
+        loyaltyDelta: result === "failure" ? -7 : result === "mixed" ? -2 : 3,
+        status: (down ? "hurt" : result === "failure" ? "shaken" : "steady") as
+          | "steady"
+          | "shaken"
+          | "hurt",
+        ...(died ? { died: true } : {}),
+      };
+    }),
+    narrativeTags: [`result:${result}`, ...(summary?.contributingFactors ?? [])],
+    intelMismatchTags: [],
+  };
+}
+
 function stripBossDefeatTags(tags: readonly string[]): string[] {
   return tags.filter((tag) => tag !== "boss:defeated");
 }
@@ -1088,6 +1512,41 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
 
   const teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
 
+  // ── Run deterministic raid simulation ──
+  const siteSeed = seedFromKey(`raid-sim:${raidId}:${contractSite?.contractSiteId ?? "none"}`);
+  const siteConceptId = contractSite?.siteConceptId;
+  const siteConcept = siteConceptId ? siteConceptById.get(siteConceptId) : undefined;
+  const simOperators = buildSimOperators(context, operatorEntities);
+
+  const raidRun = simulateRaidRun({
+    raidId,
+    contractSiteId: contractSite?.contractSiteId ?? "",
+    missionId: mission.id,
+    siteSeed,
+    missionDurationHours: mission.baseDurationHours,
+    operators: simOperators,
+    enemyFamilies: context.registry.enemyFamilies,
+    enemyFamilyIds: siteConcept?.enemyFamilyIds ?? [],
+    hazardTags: siteConcept?.hazardTags ?? [],
+    hasBoss: (mission.combatProfile?.boss ?? null) !== null,
+    bossId: mission.combatProfile?.boss?.bossId,
+    intelLevel: RaidOpportunityState.intel[opportunityEntity],
+    teamCohesion,
+    contractExplorationProgress: contractSite?.explorationProgress ?? 0,
+    contractBossIntelProgress: contractSite?.bossIntelProgress ?? 0,
+  });
+
+  // Derive resolution packet from simulation transcript for compatibility
+  const resolutionPacket = raidRun.summaryDraft
+    ? deriveResolutionFromRun(raidRun, operatorEntities)
+    : createResolutionPacket(
+        context,
+        opportunityEntity,
+        operatorEntities,
+        averageReadiness,
+        teamCohesion,
+      );
+
   BuildingAuthority.activeRaidPackets[context.singletonEntities.building] = [
     ...(BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []),
     {
@@ -1106,13 +1565,8 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
       intel: RaidOpportunityState.intel[opportunityEntity],
       reward: RaidOpportunityState.reward[opportunityEntity],
       cohesion: teamCohesion,
-      resolutionPacket: createResolutionPacket(
-        context,
-        opportunityEntity,
-        operatorEntities,
-        averageReadiness,
-        teamCohesion,
-      ),
+      resolutionPacket,
+      raidRun,
     },
   ];
 
@@ -1190,7 +1644,7 @@ function finalizeRaidPacket(
   }
   pushRuntimeEvent(context, {
     kind: "raid_result",
-    message: `${missionLabel} ended ${res.result} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
+    message: `${missionLabel} ${getRaidResultSummaryLabel(res.result)} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
     accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
   });
 
@@ -1318,7 +1772,7 @@ function finalizeRaidPacket(
       narrativeTags: packet.resolutionPacket.narrativeTags,
       intelMismatchTags: packet.resolutionPacket.intelMismatchTags,
       bossDefeated: packet.resolutionPacket.narrativeTags.includes("boss:defeated"),
-      contributingFactors: [
+      contributingFactors: packet.raidRun?.summaryDraft?.contributingFactors ?? [
         ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
         ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
         ...(packet.intel >= 60 ? ["intel:high"] : []),
@@ -1356,12 +1810,20 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
 
       const missionTemplate = context.registry.missionById.get(packet.missionId);
       const bossProfile = missionTemplate?.combatProfile?.boss;
+      // Boss commitment should only surface once playback actually reaches the
+      // transcript breakpoint. Precomputing a paused run is not enough.
+      const transcriptBossThresholdReached =
+        packet.raidRun !== undefined ? hasRaidPlaybackReachedStep(packet, "boss_threshold") : false;
+      const legacyBossThreshold = packet.raidRun === undefined && packet.revealProgress >= 88;
+      const runCanSurfaceBossCommitment =
+        packet.raidRun === undefined || packet.raidRun.status === "awaiting_boss_commitment";
       const shouldQueueBossCommitment =
         deltaMs > 0 &&
         currentMinute < packet.returnTick &&
         bossProfile !== null &&
         bossProfile !== undefined &&
-        packet.revealProgress >= 88 &&
+        runCanSurfaceBossCommitment &&
+        (transcriptBossThresholdReached || legacyBossThreshold) &&
         context.runtimeState.activeEncounter === null &&
         !hasBlockingInterruption(context.runtimeState.interruptionQueue);
 
@@ -1394,6 +1856,14 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
         return true;
       }
 
+      // Do not finalize a raid while a live boss encounter is active for it
+      if (
+        context.runtimeState.activeEncounter !== null &&
+        context.runtimeState.activeEncounter.activeRaidId === packet.id
+      ) {
+        return true;
+      }
+
       if (deltaMs <= 0 || currentMinute < packet.returnTick) {
         return true;
       }
@@ -1418,6 +1888,12 @@ export function resolveRaidBossRetreat(context: SimSystemContext, activeRaidId: 
 
   packet.resolutionPacket = buildBossRetreatResolutionPacket(packet);
   packet.returnTick = getCurrentAbsoluteMinute(context);
+
+  // Update the RaidRun with boss retreat
+  if (packet.raidRun) {
+    packet.raidRun = resolveRaidRunAfterBoss(packet.raidRun, "retreat", {});
+  }
+
   const operatorEntityById = new Map(
     context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
   );
@@ -1425,6 +1901,17 @@ export function resolveRaidBossRetreat(context: SimSystemContext, activeRaidId: 
   BuildingAuthority.activeRaidPackets[buildingEntity] = packets.filter(
     (candidate) => candidate.id !== activeRaidId,
   );
+  return true;
+}
+
+export function markRaidBossCommitment(context: SimSystemContext, activeRaidId: string): boolean {
+  const packets = BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? [];
+  const packet = packets.find((candidate) => candidate.id === activeRaidId);
+  if (!packet || !packet.raidRun) {
+    return false;
+  }
+
+  packet.raidRun = markRaidRunBossCommitment(packet.raidRun);
   return true;
 }
 
@@ -1441,6 +1928,24 @@ export function resolveRaidBossEncounter(
 
   packet.resolutionPacket = buildBossEncounterResolutionPacket(packet, encounter);
   packet.returnTick = getCurrentAbsoluteMinute(context);
+
+  // Update the RaidRun with boss result
+  if (packet.raidRun) {
+    const bossResult =
+      encounter.status === "victory"
+        ? ("victory" as const)
+        : encounter.status === "retreat"
+          ? ("retreat" as const)
+          : ("wipe" as const);
+    const operatorHpAfter: Record<string, number> = {};
+    for (const actor of Object.values(encounter.actors)) {
+      if (actor.kind === "operator" && actor.operatorId) {
+        operatorHpAfter[actor.operatorId] = Math.max(0, actor.currentHp);
+      }
+    }
+    packet.raidRun = resolveRaidRunAfterBoss(packet.raidRun, bossResult, operatorHpAfter);
+  }
+
   const operatorEntityById = new Map(
     context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
   );
@@ -1451,15 +1956,58 @@ export function resolveRaidBossEncounter(
   return true;
 }
 
+/** Map transcript step kinds to presentation event kinds. */
+function mapStepKindToEventKind(
+  stepKind: import("save/types").RaidStepKind,
+): import("./types").RaidEventKind | null {
+  switch (stepKind) {
+    case "deploy":
+    case "move":
+      return "goal-change";
+    case "discover_enemy":
+    case "skirmish_start":
+    case "skirmish_round":
+    case "skirmish_end":
+      return "encounter";
+    case "discover_feature":
+      return "discovery";
+    case "loot_gain":
+      return "loot";
+    case "intel_gain":
+      return "intel";
+    case "hazard":
+      return "hazard";
+    case "goal_check":
+      return "status-change";
+    case "retreat_begin":
+    case "boss_retreat":
+      return "retreat";
+    case "boss_threshold":
+    case "boss_commit":
+    case "boss_result":
+    case "return":
+    case "resolve":
+      return "status-change";
+    case "injury":
+    case "operator_down":
+      return "encounter";
+    default:
+      return null;
+  }
+}
+
 function updateRaidPresentation(context: SimSystemContext): void {
   const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
   if (!contractSite || contractSite.contractLost || contractSite.bossDefeated) {
+    context.runtimeState.raidPresentation = {
+      contractSiteId: null,
+      teams: [],
+      enemies: [],
+      features: [],
+    };
     context.runtimeState.raidPresentation.teams = [];
     return;
   }
-
-  ensureRaidPresentationSeed(context, contractSite.contractSiteId);
-  revealRaidPresentationFromFog(context);
 
   const activePackets =
     BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? [];
@@ -1467,16 +2015,102 @@ function updateRaidPresentation(context: SimSystemContext): void {
     context.runtimeState.raidPresentation.teams.map((team) => [team.raidId, team]),
   );
   const nextTeams: RaidPresentationTeam[] = [];
+  const transcriptEnemyMarkers = new Map<string, RaidPresentationEnemy>();
+  const transcriptFeatureMarkers = new Map<string, RaidPresentationFeature>();
+  const hasTranscriptPackets = activePackets.some((packet) => packet.raidRun !== undefined);
   const operatorEntityById = new Map(
     context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
   );
   const currentTick = getCurrentAbsoluteMinute(context);
+
+  if (!hasTranscriptPackets) {
+    ensureRaidPresentationSeed(context, contractSite.contractSiteId);
+    revealRaidPresentationFromFog(context);
+  }
 
   activePackets.forEach((packet, index) => {
     const previousTeam = previousTeams.get(packet.id);
     const operatorEntities = packet.operatorIds
       .map((operatorId) => operatorEntityById.get(operatorId))
       .filter((entity): entity is number => entity !== undefined);
+    const run = packet.raidRun;
+
+    if (run && run.steps.length > 0) {
+      const playbackSteps = getRaidPlaybackSteps(packet);
+      const playbackNode = getPlaybackNode(run, playbackSteps);
+      const position = playbackNode
+        ? getCellCenter(playbackNode.x, playbackNode.y)
+        : getCellCenter(1, 1);
+      const goal = getPlaybackGoal(packet, run, playbackSteps);
+      const state = getPlaybackState(packet, run, playbackSteps);
+      const operatorStatuses = operatorEntities.map((entity) => {
+        const operatorId = OperatorIdentity.id[entity];
+        const wasDown = playbackSteps.some(
+          (step) => step.kind === "operator_down" && step.actorIds?.includes(operatorId),
+        );
+        const isPlaybackComplete = playbackSteps.length === run.steps.length;
+        const maxHp = run.derivedState.operatorMaxHp[operatorId] ?? null;
+        const currentHp = run.derivedState.operatorHp[operatorId] ?? null;
+
+        return {
+          operatorId,
+          readiness: wasDown ? "critical" : resolveRaidOperatorReadiness(entity),
+          healthFraction: wasDown
+            ? 0
+            : isPlaybackComplete && maxHp && currentHp !== null
+              ? clamp(currentHp / maxHp, 0, 1)
+              : null,
+          roleTag: OperatorIdentity.roleTag[entity] || null,
+        };
+      });
+
+      const encounter = getTranscriptEncounter(playbackSteps);
+      const recentEvents = [...(previousTeam?.recentEvents ?? [])];
+      const progressIndex = playbackSteps.length - 1;
+      for (let si = 0; si <= progressIndex; si++) {
+        const step = playbackSteps[si];
+        const eventKind = mapStepKindToEventKind(step.kind);
+        if (!eventKind) {
+          continue;
+        }
+
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:transcript:${si}`,
+          kind: eventKind,
+          message: step.message ?? `${step.kind}`,
+          tick: currentTick - (progressIndex - si),
+        });
+      }
+
+      const transcriptMarkers = buildTranscriptWorldMarkers(packet, run, playbackSteps);
+      transcriptMarkers.features.forEach((feature) => {
+        transcriptFeatureMarkers.set(feature.id, feature);
+      });
+      transcriptMarkers.enemies.forEach((enemy) => {
+        transcriptEnemyMarkers.set(enemy.id, {
+          ...enemy,
+          engagedRaidId:
+            encounter &&
+            Math.hypot(enemy.x - position.x, enemy.y - position.y) <= 72 &&
+            enemy.discovered
+              ? packet.id
+              : undefined,
+        });
+      });
+
+      nextTeams.push({
+        raidId: packet.id,
+        x: position.x,
+        y: position.y,
+        goal,
+        state,
+        operatorStatuses,
+        encounter,
+        recentEvents,
+      });
+      return;
+    }
+
     const goal =
       operatorEntities.length > 0
         ? selectTeamGoal(context, operatorEntities, packet)
@@ -1522,59 +2156,62 @@ function updateRaidPresentation(context: SimSystemContext): void {
     }
 
     const recentEvents = [...(previousTeam?.recentEvents ?? [])];
-    if (!previousTeam) {
-      upsertRaidEvent(recentEvents, {
-        id: `${packet.id}:deploy`,
-        kind: "goal-change",
-        message: `Team deployed toward ${goal}.`,
-        tick: currentTick,
-      });
-    }
-    if (previousTeam?.goal !== goal) {
-      upsertRaidEvent(recentEvents, {
-        id: `${packet.id}:goal:${goal}:${Math.floor(packet.revealProgress / 10)}`,
-        kind: "goal-change",
-        message: `Team shifted focus to ${goal}.`,
-        tick: currentTick,
-      });
-    }
-    if (previousTeam?.state !== state) {
-      upsertRaidEvent(recentEvents, {
-        id: `${packet.id}:state:${state}:${Math.floor(packet.revealProgress / 10)}`,
-        kind: state === "returning" ? "retreat" : "status-change",
-        message:
-          state === "returning"
-            ? "Team is returning from the site."
-            : state === "defeated"
-              ? "Team has been overwhelmed."
-              : "Team is active in the dungeon.",
-        tick: currentTick,
-      });
-    }
-    if (encounter) {
-      upsertRaidEvent(recentEvents, {
-        id: `${packet.id}:encounter:${encounter.threat}:${Math.floor(packet.revealProgress / 15)}`,
-        kind: "encounter",
-        message: `Team engaged ${encounter.enemyLabel.toLowerCase()}.`,
-        tick: currentTick,
-      });
-    }
+    {
+      // Legacy path: derive events from presentation state
+      if (!previousTeam) {
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:deploy`,
+          kind: "goal-change",
+          message: `Team deployed toward ${getRaidGoalLabel(goal)}.`,
+          tick: currentTick,
+        });
+      }
+      if (previousTeam?.goal !== goal) {
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:goal:${goal}:${Math.floor(packet.revealProgress / 10)}`,
+          kind: "goal-change",
+          message: `Team shifted focus to ${getRaidGoalLabel(goal)}.`,
+          tick: currentTick,
+        });
+      }
+      if (previousTeam?.state !== state) {
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:state:${state}:${Math.floor(packet.revealProgress / 10)}`,
+          kind: state === "returning" ? "retreat" : "status-change",
+          message:
+            state === "returning"
+              ? "Team is returning from the site."
+              : state === "defeated"
+                ? "Team has been overwhelmed."
+                : "Team is active in the dungeon.",
+          tick: currentTick,
+        });
+      }
+      if (encounter) {
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:encounter:${encounter.threat}:${Math.floor(packet.revealProgress / 15)}`,
+          kind: "encounter",
+          message: `Team engaged ${encounter.enemyLabel.toLowerCase()}.`,
+          tick: currentTick,
+        });
+      }
 
-    context.runtimeState.raidPresentation.features.forEach((feature) => {
-      if (!feature.discovered) {
-        return;
-      }
-      const isNearby = Math.hypot(feature.x - position.x, feature.y - position.y) <= 80;
-      if (!isNearby) {
-        return;
-      }
-      upsertRaidEvent(recentEvents, {
-        id: `${packet.id}:feature:${feature.id}`,
-        kind: getFeatureEventKind(feature.kind),
-        message: getFeatureEventMessage(feature.kind),
-        tick: currentTick,
+      context.runtimeState.raidPresentation.features.forEach((feature) => {
+        if (!feature.discovered) {
+          return;
+        }
+        const isNearby = Math.hypot(feature.x - position.x, feature.y - position.y) <= 80;
+        if (!isNearby) {
+          return;
+        }
+        upsertRaidEvent(recentEvents, {
+          id: `${packet.id}:feature:${feature.id}`,
+          kind: getFeatureEventKind(feature.kind),
+          message: getFeatureEventMessage(feature.kind),
+          tick: currentTick,
+        });
       });
-    });
+    }
 
     nextTeams.push({
       raidId: packet.id,
@@ -1588,7 +2225,16 @@ function updateRaidPresentation(context: SimSystemContext): void {
     });
   });
 
-  context.runtimeState.raidPresentation.teams = nextTeams;
+  context.runtimeState.raidPresentation = {
+    contractSiteId: contractSite.contractSiteId,
+    teams: nextTeams,
+    enemies: hasTranscriptPackets
+      ? [...transcriptEnemyMarkers.values()]
+      : context.runtimeState.raidPresentation.enemies,
+    features: hasTranscriptPackets
+      ? [...transcriptFeatureMarkers.values()]
+      : context.runtimeState.raidPresentation.features,
+  };
 }
 
 // ── Loot generation ──────────────────────────────────────────────────────
@@ -1792,7 +2438,7 @@ function disbandRecurringTeam(
 
   pushRuntimeEvent(context, {
     kind: "team_status",
-    message: `${survivingNames.join(", ")} disbanded after ${reason.replace(/_/g, " ")}`,
+    message: `${survivingNames.join(", ")} disbanded after ${getTeamDamageReasonLabel(reason)}`,
     accent: "ember",
   });
 }
@@ -2022,7 +2668,7 @@ function processDamagedTeams(context: SimSystemContext, rng: SeededRng): void {
       RecurringTeam.memberIds[entity] = [...livingMembers];
       pushRuntimeEvent(context, {
         kind: "team_status",
-        message: `${livingMembers.length}-operator team recovered from ${damageReason.replace(/_/g, " ")}`,
+        message: `${livingMembers.length}-operator team recovered from ${getTeamDamageReasonLabel(damageReason)}`,
         accent: "gold",
         targetKind: "team",
         targetId: RecurringTeam.id[entity],
@@ -2340,7 +2986,7 @@ function generateContractBoard(context: SimSystemContext): void {
       enemyHints,
       lootFamilyHints,
       bossHint,
-      neighborhoodLabel: location.replace("district/", "").replace(/-/g, " "),
+      neighborhoodLabel: formatNeighborhoodLabel(location),
     };
   });
 

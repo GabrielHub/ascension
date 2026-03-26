@@ -4,9 +4,15 @@ import type {
   RoomViewModel,
   UpgradeViewModel,
 } from "./view-models";
-import { formatCultureLabel, formatTag } from "./view-models";
 import { Tooltip } from "./_tooltip";
-import { getTagTip, getToneTip, getSignalTip } from "./_glossary";
+import {
+  getCultureSummaryLabel,
+  getEffectTypeMeta,
+  getRequirementTypeMeta,
+  getSignalMeta,
+  getTagMeta,
+  getToneMeta,
+} from "./_glossary";
 import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
 
 interface RoomDetailPanelProps {
@@ -39,7 +45,13 @@ function UpgradeCard({
           </span>
           <div className="mt-0.5 flex flex-wrap gap-1">
             {upgrade.requirements.map((req) => (
-              <Tooltip key={req.type + req.label} content={`Requirement: ${req.type}`} side="top">
+              <Tooltip
+                key={req.type + req.label}
+                content={
+                  getRequirementTypeMeta(req.type).tip || getRequirementTypeMeta(req.type).label
+                }
+                side="top"
+              >
                 <span className="rounded bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/60">
                   {req.label}
                 </span>
@@ -56,7 +68,11 @@ function UpgradeCard({
           </span>
           <div className="mt-0.5 flex flex-wrap gap-1">
             {upgrade.effects.map((eff) => (
-              <Tooltip key={eff.type + eff.label} content={`Effect type: ${eff.type}`} side="top">
+              <Tooltip
+                key={eff.type + eff.label}
+                content={getEffectTypeMeta(eff.type).tip || getEffectTypeMeta(eff.type).label}
+                side="top"
+              >
                 <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-xs text-gold">
                   {eff.label}
                 </span>
@@ -186,11 +202,11 @@ export function RoomDetailPanel({
               Requires{" "}
               <Tooltip
                 content={
-                  getTagTip(room.requiredStaffTag) || "Staff role needed to operate this room"
+                  getTagMeta(room.requiredStaffTag).tip || "Staff role needed to operate this room"
                 }
                 side="top"
               >
-                <span className="text-gold/80">{formatTag(room.requiredStaffTag)}</span>
+                <span className="text-gold/80">{getTagMeta(room.requiredStaffTag).label}</span>
               </Tooltip>{" "}
               staff
             </div>
@@ -198,8 +214,8 @@ export function RoomDetailPanel({
 
           <div className="flex flex-wrap gap-1">
             {room.tags.map((tag) => (
-              <Tooltip key={tag} content={getTagTip(tag)}>
-                <span className="badge badge-slate">{formatTag(tag)}</span>
+              <Tooltip key={tag} content={getTagMeta(tag).tip}>
+                <span className="badge badge-slate">{getTagMeta(tag).label}</span>
               </Tooltip>
             ))}
           </div>
@@ -215,18 +231,18 @@ export function RoomDetailPanel({
                 <div>
                   <div className="text-[0.625rem] uppercase tracking-wider text-gold/60">Tone</div>
                   <div className="mt-0.5 text-xs text-silver-bright">
-                    {formatCultureLabel(roomCulture.summary)}
+                    {getCultureSummaryLabel(roomCulture.summary)}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Tooltip content={getToneTip(roomCulture.tone)}>
+                  <Tooltip content={getToneMeta(roomCulture.tone || "neutral").tip}>
                     <span className="badge badge-slate">
-                      {formatCultureLabel(roomCulture.tone || "neutral")}
+                      {getToneMeta(roomCulture.tone || "neutral").label}
                     </span>
                   </Tooltip>
                   {roomCulture.signals.map((signal) => (
-                    <Tooltip key={signal} content={getSignalTip(signal)}>
-                      <span className="badge badge-slate">{formatCultureLabel(signal)}</span>
+                    <Tooltip key={signal} content={getSignalMeta(signal).tip}>
+                      <span className="badge badge-slate">{getSignalMeta(signal).label}</span>
                     </Tooltip>
                   ))}
                 </div>

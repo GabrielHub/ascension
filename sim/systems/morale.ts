@@ -25,6 +25,11 @@ interface ThresholdEventSubject {
   operatorName: string;
 }
 
+function humanizeEntityId(identifier: string): string {
+  const slug = identifier.split("/").pop() ?? identifier;
+  return slug.replace(/[_-]/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function computeAutonomyFlags(entity: number): AutonomyFlags {
   const morale = MoraleState.current[entity];
   const loyalty = LoyaltyState.current[entity];
@@ -149,7 +154,7 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
 
   [...livingOperatorEntities, ...context.runtimeState.staffEntities].forEach((entity) => {
     const operatorId = OperatorIdentity.id[entity] ?? "";
-    const operatorName = OperatorIdentity.name[entity] ?? operatorId.split("/").pop() ?? "Unknown";
+    const operatorName = OperatorIdentity.name[entity] ?? humanizeEntityId(operatorId);
     const griefPenalty =
       operatorId.length > 0 ? getGriefPenaltyForOperator(context, operatorId) : 0;
 

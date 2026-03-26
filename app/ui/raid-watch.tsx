@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 
 import { OPERATOR_TIPS, RAID_TIPS, getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
-import type { ActiveRaidViewModel, OperatorViewModel } from "./view-models";
+import { TranscriptEventLine } from "./transcript-event-display";
+import type { ActiveRaidViewModel, OperatorViewModel, RaidTranscriptEvent } from "./view-models";
 
 interface RaidWatchProps {
   activeRaids: readonly ActiveRaidViewModel[];
@@ -38,6 +39,18 @@ function DeployedOperatorPortrait({ op }: { op: OperatorViewModel }) {
         {op.name}
       </span>
       {isDead && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
+    </div>
+  );
+}
+
+function TranscriptEventStream({ events }: { events: readonly RaidTranscriptEvent[] }) {
+  // Show last 8 events, most recent on top
+  const visible = events.slice(-8).reverse();
+  return (
+    <div className="mt-2 max-h-32 space-y-0.5 overflow-y-auto rounded-md bg-[rgba(6,6,8,0.3)] px-2 py-1.5">
+      {visible.map((evt, i) => (
+        <TranscriptEventLine key={`${evt.tickOffset}-${i}`} event={evt} />
+      ))}
     </div>
   );
 }
@@ -113,6 +126,11 @@ function ActiveRaidCard({
           />
         </div>
       </div>
+
+      {/* Transcript event stream — shown when RaidRun data is available */}
+      {raid.transcriptEvents && raid.transcriptEvents.length > 0 && (
+        <TranscriptEventStream events={raid.transcriptEvents} />
+      )}
     </button>
   );
 }

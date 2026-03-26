@@ -1,10 +1,9 @@
-import { RAID_TIPS } from "./_glossary";
+import { RAID_TIPS, getContractHintMeta } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
 import type { FocusPayload } from "render";
 import {
-  formatTag,
   rankBadgeClass,
   type ContractResultViewModel,
   type ContractSiteViewModel,
@@ -53,7 +52,7 @@ function ContractResultCard({ result }: { result: ContractResultViewModel }) {
           </p>
         </div>
         <span className={`badge ${isVictory ? "badge-gold" : "badge-ember"}`}>
-          Rank {result.rank}
+          Rank {result.rank.toUpperCase()}
         </span>
       </div>
 
@@ -120,11 +119,11 @@ function PostedContractCard({
             {posting.siteConceptName}
           </p>
           <p className="mt-0.5 text-xs text-silver/50">
-            {posting.neighborhoodLabel} — {posting.missionName}
+            {posting.location} — {posting.missionName}
           </p>
         </div>
         <span className={`badge ${rankBadgeClass(posting.rank)} shrink-0`}>
-          Rank {posting.rank}
+          Rank {posting.rank.toUpperCase()}
         </span>
       </div>
 
@@ -152,14 +151,18 @@ function PostedContractCard({
       <div className="mt-3 space-y-1.5">
         {posting.knownTraits.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {posting.knownTraits.map((trait) => (
-              <span
-                key={trait}
-                className="rounded-sm bg-steel/60 px-1.5 py-0.5 text-[0.625rem] text-silver/70"
-              >
-                {formatTag(trait)}
-              </span>
-            ))}
+            {posting.knownTraits.map((trait) => {
+              const meta = getContractHintMeta(trait);
+              return (
+                <span
+                  key={trait}
+                  className="rounded-sm bg-steel/60 px-1.5 py-0.5 text-[0.625rem] text-silver/70"
+                  title={meta.tip || undefined}
+                >
+                  {meta.label}
+                </span>
+              );
+            })}
             {posting.hiddenTraitCount > 0 && (
               <span className="rounded-sm bg-steel/30 px-1.5 py-0.5 text-[0.625rem] text-silver/40">
                 +{posting.hiddenTraitCount} unknown
@@ -171,20 +174,21 @@ function PostedContractCard({
         {posting.enemyHints.length > 0 && (
           <p className="text-[0.625rem] text-silver/45">
             <span className="text-gold/50">Hostiles:</span>{" "}
-            {posting.enemyHints.map(formatTag).join(", ")}
+            {posting.enemyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
           </p>
         )}
 
         {posting.lootFamilyHints.length > 0 && (
           <p className="text-[0.625rem] text-silver/45">
             <span className="text-gold/50">Loot:</span>{" "}
-            {posting.lootFamilyHints.map(formatTag).join(", ")}
+            {posting.lootFamilyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
           </p>
         )}
 
         {posting.bossHint && (
           <p className="text-[0.625rem] text-silver/45">
-            <span className="text-gold/50">Boss:</span> {formatTag(posting.bossHint)}
+            <span className="text-gold/50">Boss:</span>{" "}
+            {getContractHintMeta(posting.bossHint).label}
           </p>
         )}
       </div>
@@ -293,7 +297,9 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`badge ${rankBadgeClass(contract.rank)}`}>Rank {contract.rank}</span>
+          <span className={`badge ${rankBadgeClass(contract.rank)}`}>
+            Rank {contract.rank.toUpperCase()}
+          </span>
           <span
             className={`badge ${
               contract.bossDefeated
@@ -363,7 +369,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                 }}
               />
               <span className="text-[0.625rem] font-medium uppercase tracking-wider text-ember/90">
-                Boss encounter available
+                Boss route unlocked
               </span>
             </div>
           )}
@@ -371,6 +377,32 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
       )}
     </div>
   );
+}
+
+// ── Time-of-day ambient treatment ─────────────────────────────────────────
+
+function getTimeOfDayStyle(minuteOfDay: number): Record<string, string> {
+  const hour = Math.floor(minuteOfDay / 60);
+  if (hour >= 5 && hour < 8) {
+    // Dawn: warm amber tint
+    return {
+      background: "linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, transparent 40%)",
+    };
+  }
+  if (hour >= 18 && hour < 21) {
+    // Dusk: deep orange
+    return {
+      background: "linear-gradient(180deg, rgba(212, 84, 30, 0.05) 0%, transparent 40%)",
+    };
+  }
+  if (hour >= 21 || hour < 5) {
+    // Night: dark navy/void
+    return {
+      background: "linear-gradient(180deg, rgba(26, 36, 64, 0.08) 0%, transparent 40%)",
+    };
+  }
+  // Day (8-18): neutral/clear
+  return {};
 }
 
 // ── Main Panel ───────────────────────────────────────────────────────────
@@ -395,12 +427,14 @@ export function OperationsPanel({
   const lifecycle = operations.contractLifecycle;
   const isResolvedPhase = lifecycle === "resolved";
   const isBiddingPhase = lifecycle === "bidding";
+  const timeStyle = getTimeOfDayStyle(operations.minuteOfDay);
 
   return (
     <div
       className="animate-enter space-y-5"
       data-testid="operations-panel"
       data-category={activeCategory}
+      style={timeStyle}
     >
       {activeCategory === "contract" ? (
         <>

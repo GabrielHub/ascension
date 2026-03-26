@@ -8,9 +8,8 @@ import type {
   RoomCultureViewModel,
   RoomViewModel,
 } from "./view-models";
-import { formatCultureLabel, formatTag } from "./view-models";
 import { Tooltip } from "./_tooltip";
-import { getTagTip, getToneTip, getSignalTip } from "./_glossary";
+import { getSignalMeta, getTagMeta, getToneMeta } from "./_glossary";
 
 function formatFootprintLabel(room: RoomViewModel): string {
   const reserved = `${room.reservedFootprint.cols}x${room.reservedFootprint.rows}`;
@@ -92,8 +91,8 @@ function RoomCard({
           {room.description}
         </p>
         {highlightTags.slice(0, 2).map((tag) => (
-          <Tooltip key={tag} content={getTagTip(tag)}>
-            <span className="badge badge-slate shrink-0">{formatTag(tag)}</span>
+          <Tooltip key={tag} content={getTagMeta(tag).tip}>
+            <span className="badge badge-slate shrink-0">{getTagMeta(tag).label}</span>
           </Tooltip>
         ))}
         {!room.isActive && (
@@ -111,14 +110,14 @@ function RoomCard({
 
       {culture && (
         <div className="mt-1.5 flex items-center gap-1.5 text-[0.625rem] text-silver/45">
-          <Tooltip content={getToneTip(culture.tone)} side="top">
-            <span>{formatCultureLabel(culture.tone || "neutral")}</span>
+          <Tooltip content={getToneMeta(culture.tone || "neutral").tip} side="top">
+            <span>{getToneMeta(culture.tone || "neutral").label}</span>
           </Tooltip>
           {culture.signals[0] && (
             <>
               <span className="opacity-40">&middot;</span>
-              <Tooltip content={getSignalTip(culture.signals[0])} side="top">
-                <span>{formatCultureLabel(culture.signals[0])}</span>
+              <Tooltip content={getSignalMeta(culture.signals[0]).tip} side="top">
+                <span>{getSignalMeta(culture.signals[0]).label}</span>
               </Tooltip>
             </>
           )}

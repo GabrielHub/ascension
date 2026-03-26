@@ -153,6 +153,110 @@ export interface RaidOpportunitySnapshot extends SaveStructuredRecord {
   expiresAtTick?: number;
 }
 
+// ── Raid run transcript types ────────────────────────────────────────
+
+export type RaidRunStatus =
+  | "active"
+  | "awaiting_boss_commitment"
+  | "boss_encounter"
+  | "returning"
+  | "resolved";
+
+export type RaidStepKind =
+  | "deploy"
+  | "move"
+  | "discover_enemy"
+  | "discover_feature"
+  | "hazard"
+  | "skirmish_start"
+  | "skirmish_round"
+  | "skirmish_end"
+  | "goal_check"
+  | "loot_gain"
+  | "intel_gain"
+  | "injury"
+  | "operator_down"
+  | "retreat_begin"
+  | "boss_threshold"
+  | "boss_commit"
+  | "boss_retreat"
+  | "boss_result"
+  | "return"
+  | "resolve";
+
+export type GoalCheckKind =
+  | "exploring"
+  | "looting"
+  | "intel"
+  | "hunting"
+  | "regrouping"
+  | "retreating";
+
+export type GoalCheckGrade = "pass" | "mixed" | "fail";
+
+export interface RaidStepSnapshot {
+  kind: RaidStepKind;
+  tickOffset: number;
+  siteNodeId?: string;
+  actorIds?: string[];
+  message?: string;
+  deltas?: SaveStructuredRecord;
+  goalCheckKind?: GoalCheckKind;
+  goalCheckGrade?: GoalCheckGrade;
+  enemyTemplateId?: string;
+  lootItemIds?: string[];
+}
+
+export interface SiteNodeSnapshot {
+  nodeId: string;
+  kind:
+    | "chamber"
+    | "corridor"
+    | "hazard"
+    | "cache"
+    | "intel_point"
+    | "boss_approach"
+    | "boss_chamber";
+  x: number;
+  y: number;
+  edges: string[];
+  enemyGroupIds?: string[];
+  hazardTags?: string[];
+  discovered?: boolean;
+}
+
+export interface RaidRunSnapshot {
+  raidId: string;
+  contractSiteId: string;
+  missionId: string;
+  siteSeed: number;
+  teamOperatorIds: string[];
+  startedTick: number;
+  status: RaidRunStatus;
+  currentStepIndex: number;
+  steps: RaidStepSnapshot[];
+  siteGraph: SiteNodeSnapshot[];
+  derivedState: {
+    revealedNodeIds: string[];
+    discoveredEnemyIds: string[];
+    discoveredFeatureIds: string[];
+    operatorHp: Record<string, number>;
+    operatorMaxHp: Record<string, number>;
+    operatorInjury: Record<string, number>;
+    currentNodeId: string;
+    bossThresholdReached: boolean;
+    retreating: boolean;
+    lootGained: string[];
+    intelGained: number;
+  };
+  summaryDraft?: {
+    result: "success" | "failure" | "mixed";
+    reputationDelta: number;
+    cashDelta: number;
+    contributingFactors: string[];
+  };
+}
+
 export interface ActiveRaidSnapshot extends SaveStructuredRecord {
   id: string;
   contractSiteId?: string;
@@ -164,6 +268,7 @@ export interface ActiveRaidSnapshot extends SaveStructuredRecord {
   returnTick?: number;
   durationHours?: number;
   resolutionPacket?: SaveStructuredRecord;
+  raidRun?: RaidRunSnapshot;
 }
 
 export interface RaidOperatorOutcomeSnapshot extends SaveStructuredRecord {
@@ -328,6 +433,7 @@ export interface WorldSnapshot {
   activeEncounter?: SaveStructuredRecord | null;
   interruptionQueue?: SaveStructuredRecord | null;
   incidentState?: SaveStructuredRecord | null;
+  raidRuns?: RaidRunSnapshot[];
 }
 
 export interface PersistedSaveGame {
@@ -392,6 +498,7 @@ export function slugifySaveName(value: string): string {
 }
 
 export function buildSaveExportFileName(save: PersistedSaveGame): string {
-  const guildSlug = slugifySaveName(save.metadata.guildName) || `slot-${getSaveSlotNumber(save.slotId)}`;
+  const guildSlug =
+    slugifySaveName(save.metadata.guildName) || `slot-${getSaveSlotNumber(save.slotId)}`;
   return `ascension-${guildSlug}.json`;
 }

@@ -57,6 +57,53 @@ export interface EnemyGroupProfile {
   threat: number;
   count: number;
   dropTableId: string;
+  enemyFamilyId?: string;
+}
+
+// ── Ordinary enemy templates ──────────────────────────────────────────
+
+export type OrdinaryEnemyTag =
+  | "ambush"
+  | "suppression"
+  | "hazard-synergy"
+  | "swarm-pressure"
+  | "armor-break"
+  | "hit-and-run"
+  | "entangle"
+  | "corrosive"
+  | "ranged"
+  | "heavy";
+
+export interface OrdinaryEnemyActionProfile {
+  id: string;
+  name: string;
+  weight: number;
+  basePower: number;
+  targeting: "single" | "all" | "weakest";
+  tags?: readonly OrdinaryEnemyTag[];
+}
+
+export interface OrdinaryEnemyTemplate {
+  enemyTemplateId: string;
+  familyId: string;
+  name: string;
+  description: string;
+  attack: number;
+  defense: number;
+  hp: number;
+  speed: number;
+  threat: number;
+  actions: readonly OrdinaryEnemyActionProfile[];
+  tags: readonly OrdinaryEnemyTag[];
+  dropTableId: string;
+}
+
+export interface EnemyFamilyTemplate {
+  familyId: string;
+  name: string;
+  description: string;
+  siteConceptIds: readonly string[];
+  members: readonly OrdinaryEnemyTemplate[];
 }
 
 export interface BossProfile {
@@ -196,7 +243,8 @@ export interface TemplateRegistryValidationIssue {
     | "missions"
     | "events"
     | "items"
-    | "dropTables";
+    | "dropTables"
+    | "enemyFamilies";
   templateId: string;
   message: string;
 }
@@ -210,6 +258,7 @@ export interface TemplateRegistry {
   events: readonly EventTemplate[];
   items: readonly ItemTemplate[];
   dropTables: readonly DropTable[];
+  enemyFamilies: readonly EnemyFamilyTemplate[];
   resourceById: ReadonlyMap<string, ResourceTemplate>;
   buildingById: ReadonlyMap<string, BuildingTemplate>;
   roomById: ReadonlyMap<string, RoomTemplate>;
@@ -218,6 +267,8 @@ export interface TemplateRegistry {
   eventById: ReadonlyMap<string, EventTemplate>;
   itemById: ReadonlyMap<string, ItemTemplate>;
   dropTableById: ReadonlyMap<string, DropTable>;
+  enemyFamilyById: ReadonlyMap<string, EnemyFamilyTemplate>;
+  enemyTemplateById: ReadonlyMap<string, OrdinaryEnemyTemplate>;
   resourceIndexById: ReadonlyMap<string, number>;
   buildingIndexById: ReadonlyMap<string, number>;
   roomIndexById: ReadonlyMap<string, number>;

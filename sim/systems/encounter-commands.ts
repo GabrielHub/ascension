@@ -19,7 +19,7 @@ import {
   writeEncounterOutcome,
   useIntervention,
 } from "./encounter";
-import { resolveRaidBossEncounter, resolveRaidBossRetreat } from "./raids";
+import { markRaidBossCommitment, resolveRaidBossEncounter, resolveRaidBossRetreat } from "./raids";
 import {
   resolveActiveInterruption,
   dismissActiveInterruption,
@@ -62,13 +62,16 @@ function startBossEncounterFromPayload(
     return;
   }
 
+  markRaidBossCommitment(context, payload.activeRaidId);
   startEncounter(encounter);
   context.runtimeState.activeEncounter = encounter;
   context.runtimeState.worldTimeFrozen = true;
   pushRuntimeCue(context, "raid.boss.commit");
+  const bossName =
+    Object.values(encounter.actors).find((actor) => actor.kind === "boss")?.label ?? "the boss";
   pushRuntimeEvent(context, {
     kind: "encounter_start",
-    message: `Boss encounter started: ${encounter.bossDefinitionId}`,
+    message: `Boss encounter started: ${bossName}`,
     accent: "danger",
   });
 }

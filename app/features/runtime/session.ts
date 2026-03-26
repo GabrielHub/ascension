@@ -1606,6 +1606,21 @@ async function loadSaveGameIntoSession(slotId: SaveSlotId): Promise<RuntimeSessi
     throw new Error(`Save slot ${getSlotNumber(slotId)} is empty.`);
   }
 
+  return restoreSaveSession(save, {
+    mode: "load",
+    slotId,
+  });
+}
+
+async function restoreSaveSession(
+  save: PersistedSaveGame,
+  options: {
+    mode: "load" | "new";
+    slotId: SaveSlotId;
+  },
+): Promise<RuntimeSession> {
+  const { mode, slotId } = options;
+
   assertCompatibleSave(save);
 
   const updatedSave = {
@@ -1619,7 +1634,7 @@ async function loadSaveGameIntoSession(slotId: SaveSlotId): Promise<RuntimeSessi
   await saveStorage.writeSaveGame(updatedSave);
 
   return createRuntimeSession(updatedSave.world, {
-    mode: "load",
+    mode,
     slotId,
     save: updatedSave,
   });
@@ -1628,7 +1643,12 @@ async function loadSaveGameIntoSession(slotId: SaveSlotId): Promise<RuntimeSessi
 async function createNewSaveSession(slotId: SaveSlotId): Promise<RuntimeSession> {
   const existingSave = await saveStorage.readSaveGame(slotId);
   if (existingSave) {
-    throw new Error(`Save slot ${getSlotNumber(slotId)} is already occupied.`);
+    // Refreshing a freshly-started game keeps the original route, so resume the slot instead
+    // of surfacing a spurious "already occupied" error.
+    return restoreSaveSession(existingSave, {
+      mode: "load",
+      slotId,
+    });
   }
 
   const save = createNewSaveGame(slotId);
@@ -1658,7 +1678,7 @@ export function parseRuntimeRouteRequest(search: string): RuntimeRouteRequest {
   const rawSlotId = params.get("slot");
 
   const mode: RuntimeRouteMode =
-    rawMode === "new" || rawMode === "load" || rawMode === "preview" ? rawMode : "preview";
+    rawMode === "new" || rawMode === "load" || rawMode === "preview" ? rawMode : "new";
   const slotId = SAVE_SLOT_IDS.find((candidate) => candidate === rawSlotId);
 
   return { mode, slotId };

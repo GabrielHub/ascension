@@ -145,9 +145,9 @@ afterEach(() => {
 });
 
 describe("runtime route request parsing", () => {
-  it("defaults to preview mode for empty search params", () => {
+  it("defaults to new-game mode for empty search params", () => {
     expect(parseRuntimeRouteRequest("")).toEqual({
-      mode: "preview",
+      mode: "new",
       slotId: undefined,
     });
   });
@@ -324,6 +324,63 @@ describe("runtime session lifecycle", () => {
     expect(session.stableCommandTypes).toContain("sim/place-room");
     expect(session.stableCommandTypes).toContain("sim/accept-recruit");
     expect(session.stableCommandTypes).toContain("sim/assign-staff");
+
+    session.dispose();
+  });
+
+  it("resumes an occupied new-game slot instead of erroring", async () => {
+    const world = createBootstrapWorldSnapshot(templateRegistry);
+    world.time = {
+      ...world.time,
+      tick: 4321,
+      minuteOfDay: 555,
+    };
+    world.guild = {
+      ...world.guild,
+      treasury: 321,
+    };
+
+    const existingSave: PersistedSaveGame = {
+      slotId: "slot/1",
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: "Guild Slot 1",
+        createdAt: "2026-03-21T00:00:00.000Z",
+        lastPlayedAt: "2026-03-22T00:00:00.000Z",
+      },
+      world,
+    };
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(existingSave);
+    const writeSaveGame = vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "new",
+      slotId: "slot/1",
+    });
+
+    expect(session.mode).toBe("load");
+    expect(session.isSaveBacked).toBe(true);
+    expect(session.worldSnapshot.time.tick).toBe(4321);
+    expect(session.worldSnapshot.guild.treasury).toBe(321);
+    expect(writeSaveGame).toHaveBeenCalledTimes(1);
+    expect(writeSaveGame).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slotId: "slot/1",
+        metadata: expect.objectContaining({
+          createdAt: "2026-03-21T00:00:00.000Z",
+        }),
+        world: expect.objectContaining({
+          time: expect.objectContaining({
+            tick: 4321,
+          }),
+          guild: expect.objectContaining({
+            treasury: 321,
+          }),
+        }),
+      }),
+    );
 
     session.dispose();
   });

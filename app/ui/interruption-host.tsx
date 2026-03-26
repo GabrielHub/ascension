@@ -7,6 +7,7 @@ import type {
 } from "sim";
 
 import { GameModal } from "./game-modal";
+import { getIncidentCategoryMeta } from "./_glossary";
 
 // ── Props ─────────────────────────────────────────────────────────────────
 
@@ -27,12 +28,13 @@ function IncidentModal({
   payload: IncidentPayload;
   onResolve: (instanceId: string, choiceId?: string) => void;
 }) {
+  const subtitleParts = [
+    getIncidentCategoryMeta(payload.category).label,
+    payload.subjectSummary,
+  ].filter(Boolean);
+
   return (
-    <GameModal
-      title={payload.title}
-      subtitle={`${payload.category} — ${payload.subjectSummary}`}
-      dismissible={false}
-    >
+    <GameModal title={payload.title} subtitle={subtitleParts.join(" — ")} dismissible={false}>
       <div className="space-y-5">
         <p className="text-sm leading-relaxed text-silver/80">{payload.briefing}</p>
 
@@ -85,7 +87,7 @@ function BossCommitmentModal({
             <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-[0.1em] text-gold">
               {payload.bossName}
             </h3>
-            <span className="badge badge-ember">{payload.bossRank}</span>
+            <span className="badge badge-ember">Rank {payload.bossRank.toUpperCase()}</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-silver/70">{payload.stakeSummary}</p>
         </div>

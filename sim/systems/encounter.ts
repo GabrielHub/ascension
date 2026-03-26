@@ -171,7 +171,7 @@ export function createBossEncounter(
     interventions,
     encounterLog: [],
     debugTraceEnabled: false,
-    autoplayEnabled: true,
+    autoplayEnabled: false,
     autoplayIntervalMs: 800,
   };
 
@@ -948,6 +948,8 @@ export function writeEncounterOutcome(
 ): void {
   const isVictory = encounter.status === "victory";
   const isWipe = encounter.status === "wipe";
+  const bossName =
+    Object.values(encounter.actors).find((actor) => actor.kind === "boss")?.label ?? "the boss";
 
   // Write elapsed time back to world clock
   const timeEntity = context.singletonEntities.time;
@@ -993,7 +995,7 @@ export function writeEncounterOutcome(
   if (isVictory) {
     pushRuntimeEvent(context, {
       kind: "boss_defeated",
-      message: `Boss defeated: ${encounter.bossDefinitionId}`,
+      message: `Boss defeated: ${bossName}`,
       timestamp: `Day ${WorldTimeState.day[timeEntity]}`,
       accent: "success",
     });
@@ -1055,7 +1057,7 @@ export function restoreEncounter(snapshot: BossEncounterSnapshot): BossEncounter
     interventions: snapshot.interventions.map((i) => ({ ...i })),
     encounterLog: [...snapshot.encounterLog],
     debugTraceEnabled: false,
-    autoplayEnabled: true,
+    autoplayEnabled: false,
     autoplayIntervalMs: 800,
   };
 }

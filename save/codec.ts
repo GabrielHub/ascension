@@ -631,7 +631,7 @@ function parseContractSiteSnapshot(
     contractSite: {
       contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`),
       missionId: expectString(record.missionId, `${path}.missionId`),
-      ...(record.siteConceptId === undefined
+      ...(record.siteConceptId === undefined || record.siteConceptId === ""
         ? { siteConceptId: "" }
         : { siteConceptId: expectString(record.siteConceptId, `${path}.siteConceptId`) }),
       location: expectString(record.location, `${path}.location`),
