@@ -46,5 +46,8 @@ vite.config.ts.timestamp-*
 /tauri-test/artifacts/*
 !/tauri-test/artifacts/.gitkeep
 
+# Generated reports
+/reports/
+
 # Local Rust build output
 /src-tauri/target/
