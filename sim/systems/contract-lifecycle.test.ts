@@ -89,6 +89,11 @@ function createFullContext(): SimSystemContext {
         lastEvaluationMinute: 0,
         openingPathState: "completed",
         anchorResolutionFailures: [],
+        activeBeatProgressBaseline: null,
+        interactionCounts: {
+          staffingActions: 0,
+          upgradesPurchased: 0,
+        },
       },
       kitRegistry: {
         regularAttacks: [],

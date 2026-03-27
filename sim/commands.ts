@@ -1,8 +1,11 @@
+import type { PolicyId, PolicyValue } from "lib/policies";
+
 export const STABLE_SIM_COMMAND_TYPES = [
   "sim/tick",
   "sim/place-room",
   "sim/set-active-floor",
   "sim/set-room-active",
+  "sim/set-policy",
   "sim/purchase-building-upgrade",
   "sim/purchase-room-upgrade",
   "sim/accept-recruit",
@@ -57,6 +60,11 @@ export type SimCommand =
       type: "sim/set-room-active";
       roomId: string;
       isActive: boolean;
+    }
+  | {
+      type: "sim/set-policy";
+      policyId: PolicyId;
+      value: PolicyValue;
     }
   | {
       type: "sim/purchase-building-upgrade";

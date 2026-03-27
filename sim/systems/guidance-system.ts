@@ -6,8 +6,25 @@
  * Loaded lazily from systems/index.ts to avoid circular imports.
  */
 
-import { BuildingAuthority } from "../components";
-import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
+import { getNextPendingRoomUpgradeIds } from "lib/hq-room-state";
+
+import {
+  AssignmentState,
+  BuildingAuthority,
+  EventState,
+  InjuryState,
+  MoraleState,
+  NeedState,
+  OperatorIdentity,
+  RoomInstance,
+} from "../components";
+import {
+  getCurrentAbsoluteMinute,
+  getAdjustedUpgradeCosts,
+  meetsRequirements,
+  pushRuntimeEvent,
+  readResourceBalance,
+} from "./commands";
 import { hasBlockingInterruption, enqueueInterruption } from "./interruptions";
 import type { InterruptionInstance } from "./interruptions";
 import type { SimSystemContext } from "./types";
@@ -15,14 +32,17 @@ import {
   activateBeat,
   completeBeat,
   checkOpeningPathCompletion,
+  ensureOpeningTimingState,
   isBeatEligible,
   isCompletionMet,
   recordAnchorFailure,
+  recordGuidanceInteraction,
   resetOpeningPath,
   type GuidanceBeat,
   type GuidanceCompletionContext,
   type GuidanceEvaluationContext,
 } from "./guidance";
+import { forceSeedOpeningIncident, queueIncident } from "./incidents";
 import {
   OPENING_BEATS,
   OPENING_BEAT_BY_ID,
@@ -31,6 +51,9 @@ import {
 } from "./guidance-beats";
 
 const EVALUATION_INTERVAL_MINUTES = 5;
+const FIRST_RAID_RETURN_BEAT_ID = "guidance/opening/first-raid-return";
+const FIRST_INCIDENT_BEAT_ID = "guidance/opening/first-incident";
+const FIRST_INCIDENT_FORCE_SEED_DELAY_MINUTES = 60;
 
 function canLayerGuidanceOverInterruption(
   activeInterruption: InterruptionInstance | null,
@@ -46,6 +69,203 @@ function canLayerGuidanceOverInterruption(
 
   if (beat.completion.kind === "boss_commitment_resolved") {
     return activeInterruption.payload.kind === "raid_boss_commitment";
+  }
+
+  return false;
+}
+
+function hasOperatorWorn(context: SimSystemContext): boolean {
+  return context.runtimeState.operatorEntities.some((entity) => {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") {
+      return false;
+    }
+
+    return (
+      NeedState.fatigue[entity] > 30 ||
+      InjuryState.severity[entity] > 0 ||
+      MoraleState.current[entity] < MoraleState.baseline[entity] - 10
+    );
+  });
+}
+
+function hasUnassignedManagementAction(context: SimSystemContext): boolean {
+  const hasIdleStaff = context.runtimeState.staffEntities.some(
+    (entity) => AssignmentState.kind[entity] === "idle",
+  );
+  const hasInactiveRoom = context.runtimeState.roomEntities.some(
+    (entity) =>
+      RoomInstance.isRequestedActive[entity] === 0 || RoomInstance.isOperational[entity] === 0,
+  );
+
+  return hasIdleStaff || hasInactiveRoom;
+}
+
+function hasAnyUpgradePurchased(context: SimSystemContext): boolean {
+  const buildingEntity = context.singletonEntities.building;
+
+  if ((BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? []).length > 0) {
+    return true;
+  }
+
+  return context.runtimeState.roomEntities.some(
+    (entity) => (RoomInstance.appliedUpgradeIds[entity] ?? []).length > 0,
+  );
+}
+
+function hasAffordableUpgrade(context: SimSystemContext): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const activeBuilding =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+  const buildingAppliedUpgradeIds = new Set(
+    BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? [],
+  );
+
+  const canAffordCosts = (costs: Map<string, number>) =>
+    Array.from(costs.entries()).every(([resourceId, amount]) => {
+      return readResourceBalance(context, resourceId) >= amount;
+    });
+
+  const buildingUpgradeAffordable = context.registry.upgrades.some((upgrade) => {
+    if (upgrade.target !== "building" || upgrade.targetId !== activeBuilding?.id) {
+      return false;
+    }
+    if (
+      buildingAppliedUpgradeIds.has(upgrade.id) ||
+      !meetsRequirements(context, upgrade.requirements)
+    ) {
+      return false;
+    }
+    return canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements));
+  });
+
+  if (buildingUpgradeAffordable) {
+    return true;
+  }
+
+  return context.runtimeState.roomEntities.some((roomEntity) => {
+    const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[roomEntity]];
+    const appliedUpgradeIds = RoomInstance.appliedUpgradeIds[roomEntity] ?? [];
+    const nextPendingIds = new Set(
+      getNextPendingRoomUpgradeIds(roomTemplate.id, appliedUpgradeIds),
+    );
+
+    return context.registry.upgrades.some((upgrade) => {
+      if (upgrade.target !== "room" || upgrade.targetId !== roomTemplate.id) {
+        return false;
+      }
+      if (appliedUpgradeIds.includes(upgrade.id)) {
+        return false;
+      }
+      if (nextPendingIds.size > 0 && !nextPendingIds.has(upgrade.id)) {
+        return false;
+      }
+      if (!meetsRequirements(context, upgrade.requirements)) {
+        return false;
+      }
+
+      return canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements));
+    });
+  });
+}
+
+function hasSignificantSetback(context: SimSystemContext): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const contractResult = BuildingAuthority.contractResult[buildingEntity];
+  const raidSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
+
+  if (contractResult?.outcome === "contract_lost" || (contractResult?.operatorDeaths ?? 0) > 0) {
+    return true;
+  }
+
+  if (
+    raidSummaries.some(
+      (summary) =>
+        summary.result === "failure" ||
+        (summary.result === "mixed" &&
+          summary.operatorOutcomes.some((outcome) => outcome.died === true)),
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    context.runtimeState.operatorEntities.some(
+      (entity) =>
+        OperatorIdentity.lifecycleStatus[entity] === "active" && InjuryState.severity[entity] >= 40,
+    )
+  ) {
+    return true;
+  }
+
+  return context.runtimeState.eventEntities.some((entity) => {
+    const template = context.registry.events[EventState.templateIndex[entity]];
+    return template?.category === "departure_warning";
+  });
+}
+
+function hasSetbackRecoveryFallbackCondition(context: SimSystemContext): boolean {
+  return context.runtimeState.operatorEntities.some((entity) => {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") {
+      return false;
+    }
+
+    return MoraleState.current[entity] < 45 || InjuryState.severity[entity] > 0;
+  });
+}
+
+function updateOpeningContractTracking(context: SimSystemContext): number {
+  const { guidanceState } = context.runtimeState;
+  const openingTiming = ensureOpeningTimingState(guidanceState);
+  const buildingEntity = context.singletonEntities.building;
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  const contractLifecycle = BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding";
+
+  if (
+    contractLifecycle === "active" &&
+    contractSite?.contractSiteId &&
+    openingTiming.lastTrackedContractSiteId !== contractSite.contractSiteId
+  ) {
+    openingTiming.lastTrackedContractSiteId = contractSite.contractSiteId;
+    openingTiming.securedContractCount = (openingTiming.securedContractCount ?? 0) + 1;
+  }
+
+  return openingTiming.securedContractCount ?? 0;
+}
+
+function shouldAutoCompleteBeat(
+  context: SimSystemContext,
+  beat: GuidanceBeat,
+  evalContext: GuidanceEvaluationContext,
+): boolean {
+  const { guidanceState } = context.runtimeState;
+
+  if (guidanceState.completedBeatIds.includes(beat.id) || guidanceState.activeBeatId !== null) {
+    return false;
+  }
+  if (beat.track === "opening" && guidanceState.openingPathState !== "active") {
+    return false;
+  }
+  if (evalContext.isPreview) {
+    return false;
+  }
+  if (
+    beat.gating.requiredContractLifecycle &&
+    evalContext.contractLifecycle !== beat.gating.requiredContractLifecycle
+  ) {
+    return false;
+  }
+  for (const requiredId of beat.gating.requiredCompletedBeatIds) {
+    if (!guidanceState.completedBeatIds.includes(requiredId)) {
+      return false;
+    }
+  }
+
+  if (beat.completion.kind === "staffing_action_taken") {
+    return !evalContext.hasUnassignedManagementAction;
+  }
+
+  if (beat.completion.kind === "upgrade_purchased") {
+    return evalContext.hasAnyUpgradePurchased;
   }
 
   return false;
@@ -69,6 +289,15 @@ function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationCo
   const hasRaidReturnWithLoot = raidSummaries.some(
     (s) => s.result === "success" || s.result === "mixed",
   );
+  const contractsSecuredCount = updateOpeningContractTracking(context);
+  const hasReachedContractFivePoint =
+    contractsSecuredCount >= 5 ||
+    (contractsSecuredCount >= 4 &&
+      (contractLifecycle === "bidding" || contractLifecycle === "resolved"));
+  const significantSetback = hasSignificantSetback(context);
+  const setbackRecoveryTrigger =
+    significantSetback ||
+    (hasReachedContractFivePoint && hasSetbackRecoveryFallbackCondition(context));
 
   return {
     currentMinute: getCurrentAbsoluteMinute(context),
@@ -79,6 +308,12 @@ function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationCo
     hasTeamDeparted: activeRaidPackets.length > 0 || raidSummaries.length > 0,
     hasBossCommitment,
     hasRaidReturnWithLoot,
+    hasOperatorWorn: hasOperatorWorn(context),
+    hasUnassignedManagementAction: hasUnassignedManagementAction(context),
+    hasUpgradeAffordable: hasAffordableUpgrade(context),
+    hasSignificantSetback: significantSetback,
+    hasSetbackRecoveryTrigger: setbackRecoveryTrigger,
+    hasAnyUpgradePurchased: hasAnyUpgradePurchased(context),
     isPreview:
       context.runtimeState.guidanceState.openingPathState === "completed" &&
       context.runtimeState.guidanceState.completedBeatIds.length === 0,
@@ -104,7 +339,61 @@ function buildCompletionContext(context: SimSystemContext): GuidanceCompletionCo
     hasRaidReturnWithLoot: raidSummaries.some(
       (s) => s.result === "success" || s.result === "mixed",
     ),
+    hasStaffingActionTaken:
+      context.runtimeState.guidanceState.activeBeatProgressBaseline !== null &&
+      context.runtimeState.guidanceState.interactionCounts.staffingActions >
+        context.runtimeState.guidanceState.activeBeatProgressBaseline,
+    hasUpgradePurchased:
+      context.runtimeState.guidanceState.activeBeatProgressBaseline !== null &&
+      context.runtimeState.guidanceState.interactionCounts.upgradesPurchased >
+        context.runtimeState.guidanceState.activeBeatProgressBaseline,
   };
+}
+
+function maybeForceFirstIncident(context: SimSystemContext, currentMinute: number): void {
+  const { guidanceState, incidentState, interruptionQueue } = context.runtimeState;
+  if (guidanceState.openingPathState !== "active") {
+    return;
+  }
+  if (!guidanceState.completedBeatIds.includes(FIRST_RAID_RETURN_BEAT_ID)) {
+    return;
+  }
+  if (guidanceState.completedBeatIds.includes(FIRST_INCIDENT_BEAT_ID)) {
+    return;
+  }
+  if (incidentState.pendingIncident !== null || incidentState.history.length > 0) {
+    return;
+  }
+  if (hasBlockingInterruption(interruptionQueue)) {
+    return;
+  }
+
+  const openingTiming = ensureOpeningTimingState(guidanceState);
+  if (openingTiming.firstIncidentSeededAtMinute !== null) {
+    return;
+  }
+  if (openingTiming.firstRaidReturnCompletedAtMinute === null) {
+    openingTiming.firstRaidReturnCompletedAtMinute = currentMinute;
+  }
+
+  const contractLifecycle =
+    BuildingAuthority.contractLifecycle[context.singletonEntities.building] ?? "bidding";
+  const dueByTimer =
+    currentMinute - openingTiming.firstRaidReturnCompletedAtMinute >=
+    FIRST_INCIDENT_FORCE_SEED_DELAY_MINUTES;
+  const dueByBoardFallback = contractLifecycle === "bidding" || contractLifecycle === "resolved";
+  if (!dueByTimer && !dueByBoardFallback) {
+    return;
+  }
+
+  const candidate = forceSeedOpeningIncident(context, incidentState, currentMinute);
+  if (!candidate) {
+    return;
+  }
+
+  if (queueIncident(context, incidentState, candidate, "guidance-system")) {
+    openingTiming.firstIncidentSeededAtMinute = currentMinute;
+  }
 }
 
 function enqueueGuidanceInterruption(context: SimSystemContext, beat: GuidanceBeat): void {
@@ -167,9 +456,17 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
   if (currentMinute - guidanceState.lastEvaluationMinute < EVALUATION_INTERVAL_MINUTES) return;
   guidanceState.lastEvaluationMinute = currentMinute;
 
+  maybeForceFirstIncident(context, currentMinute);
+
   // Find the next eligible beat
   const evalContext = buildEvaluationContext(context);
   for (const beat of OPENING_BEATS) {
+    if (shouldAutoCompleteBeat(context, beat, evalContext)) {
+      completeBeat(guidanceState, beat.id);
+      checkOpeningPathCompletion(guidanceState, OPENING_BEAT_IDS);
+      continue;
+    }
+
     if (isBeatEligible(guidanceState, beat, evalContext)) {
       if (
         hasBlockingInterruption(interruptionQueue) &&
@@ -205,6 +502,11 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
 function completeActiveBeat(context: SimSystemContext, beat: GuidanceBeat): void {
   const { guidanceState } = context.runtimeState;
   completeBeat(guidanceState, beat.id);
+
+  if (beat.id === FIRST_RAID_RETURN_BEAT_ID) {
+    ensureOpeningTimingState(guidanceState).firstRaidReturnCompletedAtMinute =
+      getCurrentAbsoluteMinute(context);
+  }
 
   // Unfreeze world if this beat was pausing it
   if (beat.delivery.pauseWorld && beat.delivery.mode === "focused") {
@@ -257,6 +559,14 @@ export function handleGuidanceDismiss(context: SimSystemContext, beatId: string)
 
 export function handleGuidanceResetOpening(context: SimSystemContext): void {
   resetOpeningPath(context.runtimeState.guidanceState, OPENING_BEAT_IDS);
+}
+
+export function recordGuidanceStaffingAction(context: SimSystemContext): void {
+  recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+}
+
+export function recordGuidanceUpgradePurchase(context: SimSystemContext): void {
+  recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
 }
 
 export function handleGuidanceRecordAnchorFailure(

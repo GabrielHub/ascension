@@ -41,8 +41,8 @@ const COACHMARK_MAX_WIDTH = 380;
 
 type CoachmarkPlacement = "top" | "bottom" | "left" | "right";
 
-function requiresExplicitCompletion(signal: string): boolean {
-  return signal === "acknowledged" || signal === "target_opened" || signal === "market_opened";
+function requiresExplicitCompletion(beat: GuidanceBeatView): boolean {
+  return beat.requiresManualCompletion === true || beat.completionKind === "acknowledged";
 }
 
 function pickPlacement(
@@ -192,7 +192,7 @@ function AnchoredCoachmark({
   const placement = pickPlacement(anchor, window.innerWidth, window.innerHeight);
   const style = getCoachmarkStyle(anchor, placement);
   const panelRef = useRef<HTMLDivElement>(null);
-  const requiresManualCompletion = requiresExplicitCompletion(beat.completionKind);
+  const requiresManualCompletion = requiresExplicitCompletion(beat);
 
   useEffect(() => {
     panelRef.current?.focus();
@@ -283,7 +283,7 @@ function CenteredFallbackShell({
   }, [beat.beatId]);
 
   const displayBody = beat.copy.fallbackBody || beat.copy.body;
-  const requiresManualCompletion = requiresExplicitCompletion(beat.completionKind);
+  const requiresManualCompletion = requiresExplicitCompletion(beat);
 
   return (
     <>
@@ -399,7 +399,7 @@ export function GuidanceHost({
     (e: KeyboardEvent) => {
       if (!activeBeat) return;
 
-      if (e.key === "Enter" && requiresExplicitCompletion(activeBeat.completionKind)) {
+      if (e.key === "Enter" && requiresExplicitCompletion(activeBeat)) {
         e.preventDefault();
         onComplete(activeBeat.beatId, activeBeat.completionKind);
       }

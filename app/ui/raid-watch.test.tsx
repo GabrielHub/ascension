@@ -31,6 +31,10 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     appearancePresetId: "kael-001",
     visibleGear: {},
     lifecycle: { status: "active" },
+    refusalRisk: false,
+    quitRisk: false,
+    retentionRisk: false,
+    autonomyReasons: [],
     ...overrides,
   };
 }

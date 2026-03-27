@@ -4,6 +4,18 @@ import { getBuildingFloors, getBuildingLayout } from "content/building-layouts";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
 import {
+  canChangePolicy,
+  DEFAULT_POLICY_STATE,
+  getPolicyLabel,
+  getPolicyOptionLabel,
+  getRosterFlowConfig,
+  isValidPolicyValue,
+  normalizePolicyState,
+  type PolicyContractLifecycle,
+  type PolicyId,
+  type PolicyValue,
+} from "lib/policies";
+import {
   getNextPendingRoomUpgradeIds,
   getRoomActiveFootprint,
   getRoomStateId,
@@ -17,6 +29,7 @@ import type { SimCommand } from "../commands";
 import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "../recruitment";
 import { buyItem, sellItem, getMarketPriceForItem } from "./market";
 import { autoSelectAccessory, unequipItem } from "./inventory";
+import { recordGuidanceInteraction } from "./guidance";
 import {
   AssignmentState,
   BuildingAuthority,
@@ -278,6 +291,30 @@ function getBuildingEntity(context: SimSystemContext): number {
   return context.singletonEntities.building;
 }
 
+export function getBuildingPolicies(context: SimSystemContext) {
+  return normalizePolicyState(
+    BuildingAuthority.policies[getBuildingEntity(context)] ?? DEFAULT_POLICY_STATE,
+  );
+}
+
+function canSetPolicy(context: SimSystemContext, policyId: PolicyId, value: PolicyValue): boolean {
+  if (!isValidPolicyValue(policyId, value)) {
+    return false;
+  }
+
+  if (
+    !canChangePolicy(
+      policyId,
+      (BuildingAuthority.contractLifecycle[getBuildingEntity(context)] ??
+        "bidding") as PolicyContractLifecycle,
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 export function getActiveBuildingTemplate(context: SimSystemContext) {
   const template =
     context.registry.buildings[
@@ -301,7 +338,7 @@ export function getRoomTemplateForEntity(context: SimSystemContext, entity: numb
   return template;
 }
 
-function readResourceBalance(context: SimSystemContext, resourceId: string): number {
+export function readResourceBalance(context: SimSystemContext, resourceId: string): number {
   const guildEntity = context.singletonEntities.guild;
 
   switch (resourceId) {
@@ -885,7 +922,32 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
+      if (RoomInstance.isRequestedActive[roomEntity] !== (command.isActive ? 1 : 0)) {
+        recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+      }
       RoomInstance.isRequestedActive[roomEntity] = command.isActive ? 1 : 0;
+      return;
+    }
+    case "sim/set-policy": {
+      if (!canSetPolicy(context, command.policyId, command.value)) {
+        return;
+      }
+
+      const policies = getBuildingPolicies(context);
+      if (policies[command.policyId] === command.value) {
+        return;
+      }
+
+      const nextPolicies = {
+        ...policies,
+        [command.policyId]: command.value,
+      };
+      BuildingAuthority.policies[buildingEntity] = nextPolicies;
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: `Boss changed ${getPolicyLabel(command.policyId)} to ${getPolicyOptionLabel(command.policyId, command.value)}.`,
+        accent: "gold",
+      });
       return;
     }
     case "sim/purchase-building-upgrade": {
@@ -913,6 +975,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       applyCosts(context, costs);
       BuildingAuthority.appliedUpgradeIds[buildingEntity] = [...appliedUpgradeIds, upgrade.id];
+      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
       return;
     }
     case "sim/purchase-room-upgrade": {
@@ -945,6 +1008,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       applyCosts(context, costs);
       const nextAppliedUpgradeIds = [...appliedUpgradeIds, upgrade.id];
       RoomInstance.appliedUpgradeIds[roomEntity] = nextAppliedUpgradeIds;
+      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
       RoomInstance.roomStateId[roomEntity] = getRoomStateId(template.id, nextAppliedUpgradeIds);
       const activeFootprint = getRoomActiveFootprint(
         template.id,
@@ -1025,10 +1089,13 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       const rejectName = VisitorState.name[visitorEntity];
       removeEntity(context.world, visitorEntity);
       removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
-      GuildState.reputation[context.singletonEntities.guild] -= 1;
+      const rejectPolicies = getBuildingPolicies(context);
+      const reputationDelta = getRosterFlowConfig(rejectPolicies).rejectReputationDelta;
+      const rosterFlow = rejectPolicies.rosterFlow;
+      GuildState.reputation[context.singletonEntities.guild] += reputationDelta;
       pushRuntimeEvent(context, {
         kind: "staffing_change",
-        message: `${rejectName} was turned away (-1 rep)`,
+        message: `${rejectName} was turned away (${reputationDelta} rep under ${getPolicyOptionLabel("rosterFlow", rosterFlow)})`,
         accent: "ember",
       });
       return;
@@ -1054,9 +1121,17 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
+      const previousAssignment = {
+        kind: AssignmentState.kind[staffEntity],
+        targetId: AssignmentState.targetId[staffEntity],
+      };
+
       if (!command.roomId) {
         AssignmentState.kind[staffEntity] = "idle";
         AssignmentState.targetId[staffEntity] = "";
+        if (previousAssignment.kind !== "idle" || previousAssignment.targetId !== "") {
+          recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+        }
         return;
       }
 
@@ -1073,6 +1148,12 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       AssignmentState.kind[staffEntity] = "room";
       AssignmentState.targetId[staffEntity] = command.roomId;
+      if (
+        previousAssignment.kind !== AssignmentState.kind[staffEntity] ||
+        previousAssignment.targetId !== AssignmentState.targetId[staffEntity]
+      ) {
+        recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+      }
       return;
     }
 

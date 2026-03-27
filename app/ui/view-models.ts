@@ -1,4 +1,11 @@
 import type { TemplateRegistry } from "content/templates";
+import {
+  DEFAULT_POLICY_STATE,
+  type PolicyContractLifecycle,
+  type PolicyId,
+  type PolicyState,
+  type PolicyValue,
+} from "lib/policies";
 import type {
   ActiveRaidSnapshot,
   GoalCheckGrade,
@@ -33,6 +40,7 @@ import {
 export interface GameCallbacks {
   tick: (deltaMs: number) => void;
   setRoomActive: (roomId: string, isActive: boolean) => void;
+  setPolicy: (policyId: PolicyId, value: PolicyValue) => void;
   purchaseBuildingUpgrade: (upgradeId: string) => void;
   purchaseRoomUpgrade: (roomId: string, upgradeId: string) => void;
   acceptRecruit: (visitorId: string) => void;
@@ -207,6 +215,7 @@ export interface RaidOperatorOutcomeViewModel {
 
 export interface RaidSummaryViewModel {
   id: string;
+  contractSiteId: string;
   missionName: string;
   missionId: string;
   startedAt: string;
@@ -216,6 +225,7 @@ export interface RaidSummaryViewModel {
   cashDelta: number;
   location: string;
   narrativeTags: readonly string[];
+  contributingFactors: readonly string[];
   operatorOutcomes: readonly RaidOperatorOutcomeViewModel[];
 }
 
@@ -400,6 +410,8 @@ export interface PlaceableRoomTemplate {
 export interface HqViewModel {
   guild: GuildViewModel;
   time: TimeViewModel;
+  policies: PolicyState;
+  contractLifecycle: PolicyContractLifecycle;
   building: BuildingViewModel;
   rooms: readonly RoomViewModel[];
   expansionSlots: readonly ExpansionSlotViewModel[];
@@ -460,6 +472,7 @@ export interface ContractResultViewModel {
   totalCashEarned: number;
   totalReputationEarned: number;
   operatorDeaths: number;
+  contributingFactors: readonly string[];
 }
 
 export interface RaidEnemyViewModel {
@@ -484,7 +497,7 @@ export interface RaidWorldViewModel {
 }
 
 export interface OperationsViewModel {
-  contractLifecycle: "idle" | "bidding" | "active" | "resolved";
+  contractLifecycle: PolicyContractLifecycle;
   contractSite: ContractSiteViewModel | null;
   contractResult: ContractResultViewModel | null;
   postedContracts: readonly PostedContractViewModel[];
@@ -812,6 +825,8 @@ export function buildHqViewFromPhase1(
       minuteOfDay: view.clock.minuteOfDay,
       formatted: formatTimeOfDay(view.clock.minuteOfDay),
     },
+    policies: { ...view.policies },
+    contractLifecycle: view.contractLifecycle ?? "bidding",
     building: {
       id: buildingTemplate.id,
       name: buildingTemplate.name,
@@ -935,6 +950,7 @@ export function buildOpsViewFromPhase1(
 
   const raidHistory: RaidSummaryViewModel[] = view.raidSummaries.map((summary) => ({
     id: summary.id,
+    contractSiteId: summary.contractSiteId,
     missionName: resolveMissionName(summary.missionId, registry),
     missionId: summary.missionId,
     startedAt: summary.startedAt,
@@ -944,6 +960,7 @@ export function buildOpsViewFromPhase1(
     cashDelta: summary.cashDelta,
     location: getLocationLabel(summary.location),
     narrativeTags: summary.narrativeTags,
+    contributingFactors: summary.contributingFactors ?? [],
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
       operatorId: outcome.operatorId,
       operatorName:
@@ -981,6 +998,13 @@ export function buildOpsViewFromPhase1(
         totalCashEarned: view.contractResult.totalCashEarned,
         totalReputationEarned: view.contractResult.totalReputationEarned,
         operatorDeaths: view.contractResult.operatorDeaths,
+        contributingFactors: Array.from(
+          new Set(
+            view.raidSummaries
+              .filter((summary) => summary.contractSiteId === view.contractResult?.contractSiteId)
+              .flatMap((summary) => summary.contributingFactors ?? []),
+          ),
+        ),
       }
     : null;
 
@@ -1216,6 +1240,8 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       minuteOfDay: snapshot.time.minuteOfDay,
       formatted: formatTimeOfDay(snapshot.time.minuteOfDay),
     },
+    policies: { ...DEFAULT_POLICY_STATE },
+    contractLifecycle: "bidding",
     building: {
       id: buildingTemplate.id,
       name: buildingTemplate.name,
@@ -1268,6 +1294,7 @@ function mapRaidSummary(
 ): RaidSummaryViewModel {
   return {
     id: summary.id,
+    contractSiteId: summary.contractSiteId ?? "",
     missionName: resolveMissionName(summary.missionId, registry),
     missionId: summary.missionId,
     startedAt: summary.startedAt,
@@ -1277,6 +1304,7 @@ function mapRaidSummary(
     cashDelta: summary.cashDelta,
     location: "",
     narrativeTags: [],
+    contributingFactors: summary.contributingFactors ?? [],
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
       operatorId: outcome.operatorId,
       operatorName: getIdentifierLabel(outcome.operatorId),

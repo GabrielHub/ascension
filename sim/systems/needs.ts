@@ -1,4 +1,9 @@
 import {
+  DEFAULT_POLICY_STATE,
+  getRecoveryTriageConfig,
+  type RecoveryTriageConfig,
+} from "lib/policies";
+import {
   BuildingAuthority,
   InjuryState,
   NeedState,
@@ -16,10 +21,15 @@ export interface NeedReadinessFlags {
   hungerReducesTraining: boolean;
 }
 
-export function computeNeedReadinessFlags(entity: number): NeedReadinessFlags {
+const DEFAULT_RECOVERY_TRIAGE_CONFIG = getRecoveryTriageConfig(DEFAULT_POLICY_STATE);
+
+export function computeNeedReadinessFlags(
+  entity: number,
+  recoveryTriage: RecoveryTriageConfig = DEFAULT_RECOVERY_TRIAGE_CONFIG,
+): NeedReadinessFlags {
   return {
-    injuryPreventsRaid: InjuryState.severity[entity] > 60,
-    exhaustionPenalty: NeedState.fatigue[entity] > 80,
+    injuryPreventsRaid: InjuryState.severity[entity] > recoveryTriage.injuryRaidThreshold,
+    exhaustionPenalty: NeedState.fatigue[entity] > recoveryTriage.fatigueRaidPenaltyThreshold,
     stressPenalty: NeedState.stress[entity] > 70,
     hungerReducesTraining: NeedState.hunger[entity] > 70,
   };
@@ -28,6 +38,7 @@ export function computeNeedReadinessFlags(entity: number): NeedReadinessFlags {
 function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
   const buildingEntity = context.singletonEntities.building;
   const buildingRecoveryModifier = BuildingAuthority.recoveryRateModifier[buildingEntity] ?? 0;
+  const recoveryPolicy = getRecoveryTriageConfig(BuildingAuthority.policies[buildingEntity]);
 
   const roomRecoveryModifier = context.runtimeState.roomEntities.reduce((total, roomEntity) => {
     const template = getRoomTemplateForEntity(context, roomEntity);
@@ -55,7 +66,9 @@ function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
     );
   }, 0);
 
-  return 1 + buildingRecoveryModifier + roomRecoveryModifier;
+  return (
+    (1 + buildingRecoveryModifier + roomRecoveryModifier) * recoveryPolicy.recoveryRateMultiplier
+  );
 }
 
 function advanceEntityNeeds(

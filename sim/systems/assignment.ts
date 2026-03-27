@@ -1,5 +1,7 @@
+import { getRecoveryTriageConfig, getStaffingPriorityConfig } from "lib/policies";
 import {
   AssignmentState,
+  BuildingAuthority,
   InjuryState,
   LoyaltyState,
   MoraleState,
@@ -33,12 +35,20 @@ function hasOperationalRoomForFunction(
  */
 const SCHEDULE_STABILITY_BONUS = 10;
 
-function chooseOperatorBlock(
+export interface OperatorBlockScores {
+  recovery: number;
+  social: number;
+  training: number;
+  work: number;
+  rest: number;
+}
+
+export function scoreOperatorBlocks(
   context: Parameters<SimSystem>[0],
   entity: number,
   localMinute: number,
   livingOperatorIds: ReadonlySet<string>,
-): string {
+): OperatorBlockScores {
   const workStartMinute = ScheduleState.workStartMinute[entity] || 480;
   const workEndMinute = ScheduleState.workEndMinute[entity] || 1080;
   const inShift = localMinute >= workStartMinute && localMinute < workEndMinute;
@@ -49,50 +59,80 @@ function chooseOperatorBlock(
   );
 
   const autonomyFlags = computeAutonomyFlags(entity);
-  const needFlags = computeNeedReadinessFlags(entity);
+  const policies = BuildingAuthority.policies[context.singletonEntities.building];
+  const recoveryTriage = getRecoveryTriageConfig(policies);
+  const staffingPriority = getStaffingPriorityConfig(policies);
+  const needFlags = computeNeedReadinessFlags(entity, recoveryTriage);
 
   const injuryRecoveryUrgency = needFlags.injuryPreventsRaid ? 30 : 0;
   const quitRiskSocialBonus = autonomyFlags.quitRisk ? 25 : autonomyFlags.retentionRisk ? 12 : 0;
   const hungerTrainingPenalty = needFlags.hungerReducesTraining ? -18 : 0;
+  const staffingRecoveryModifier =
+    InjuryState.severity[entity] > 60 ? 0 : staffingPriority.recoveryBlockScoreModifier;
 
-  const recoveryScore =
+  const recovery =
     InjuryState.recoveryHoursRemaining[entity] * 2.6 +
     NeedState.fatigue[entity] * 0.72 +
     NeedState.stress[entity] * 0.45 +
     PreferenceState.recoveryBias[entity] * 0.35 +
     PreferenceState.comfortBias[entity] * 0.14 +
-    injuryRecoveryUrgency;
-  const socialScore =
+    injuryRecoveryUrgency +
+    recoveryTriage.recoveryBlockScoreModifier +
+    staffingRecoveryModifier;
+  const social =
     PreferenceState.socialBias[entity] * 0.72 +
     Math.max(0, relationshipSignal) * 0.18 +
     Math.max(0, 70 - NeedState.stress[entity]) * 0.25 -
     NeedState.fatigue[entity] * 0.08 +
-    quitRiskSocialBonus;
-  const trainingScore =
+    quitRiskSocialBonus +
+    staffingPriority.socialBlockScoreModifier;
+  const training =
     PreferenceState.trainingBias[entity] * 0.7 +
     MoraleState.current[entity] * 0.2 +
     LoyaltyState.current[entity] * 0.14 -
     NeedState.fatigue[entity] * 0.24 -
     NeedState.stress[entity] * 0.08 +
     hungerTrainingPenalty;
-  const workScore =
+  const work =
     (inShift ? 54 : 18) +
     LoyaltyState.current[entity] * 0.22 +
     MoraleState.current[entity] * 0.18 -
     NeedState.stress[entity] * 0.12 -
-    NeedState.fatigue[entity] * 0.1;
-  const restScore =
+    NeedState.fatigue[entity] * 0.1 +
+    staffingPriority.workBlockScoreModifier;
+  const rest =
     PreferenceState.comfortBias[entity] * 0.45 +
     NeedState.fatigue[entity] * 0.52 +
     NeedState.hunger[entity] * 0.24 +
-    NeedState.stress[entity] * 0.2;
+    NeedState.stress[entity] * 0.2 +
+    staffingPriority.restBlockScoreModifier;
+
+  return {
+    recovery,
+    social,
+    training,
+    work,
+    rest,
+  };
+}
+
+function chooseOperatorBlock(
+  context: Parameters<SimSystem>[0],
+  entity: number,
+  localMinute: number,
+  livingOperatorIds: ReadonlySet<string>,
+): string {
+  const workStartMinute = ScheduleState.workStartMinute[entity] || 480;
+  const workEndMinute = ScheduleState.workEndMinute[entity] || 1080;
+  const inShift = localMinute >= workStartMinute && localMinute < workEndMinute;
+  const scores = scoreOperatorBlocks(context, entity, localMinute, livingOperatorIds);
 
   const ranked = [
-    { block: "recovery", score: recoveryScore },
-    { block: "social", score: socialScore },
-    { block: "training", score: trainingScore },
-    { block: "work", score: workScore },
-    { block: "rest", score: restScore },
+    { block: "recovery", score: scores.recovery },
+    { block: "social", score: scores.social },
+    { block: "training", score: scores.training },
+    { block: "work", score: scores.work },
+    { block: "rest", score: scores.rest },
   ];
 
   // Hysteresis: give the current block a stability bonus to prevent

@@ -17,6 +17,14 @@ import type {
   SiteNodeSnapshot,
 } from "save/types";
 import type { EnemyFamilyTemplate, OrdinaryEnemyTemplate } from "content/templates/shared";
+import {
+  getObjectiveBiasConfig,
+  type ContractPostureOption,
+  type ObjectiveBiasOption,
+  type RecoveryTriageOption,
+  type RosterFlowOption,
+  type StaffingPriorityOption,
+} from "lib/policies";
 import { SeededRng, boundedRoll, shuffle } from "../uncertainty";
 import type { OperatorBaseStats } from "./derived-stats";
 
@@ -619,10 +627,16 @@ export interface RaidSimulationInput {
   teamCohesion: number;
   contractExplorationProgress: number;
   contractBossIntelProgress: number;
+  objectiveBias: ObjectiveBiasOption;
+  contractPosture?: ContractPostureOption;
+  recoveryTriage?: RecoveryTriageOption;
+  staffingPriority?: StaffingPriorityOption;
+  rosterFlow?: RosterFlowOption;
 }
 
 export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
   const rng = new SeededRng(input.siteSeed);
+  const objectiveBias = getObjectiveBiasConfig({ objectiveBias: input.objectiveBias });
   const steps: RaidStepSnapshot[] = [];
   let tickOffset = 0;
 
@@ -695,7 +709,7 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
   tickOffset += 1;
 
   // ── Simulate node-by-node progression ──
-  const visitOrder = buildTraversalOrder(siteGraph, rng, input.hasBoss);
+  const visitOrder = buildTraversalOrder(siteGraph, rng, input.hasBoss, objectiveBias);
   let retreating = false;
   let bossThresholdReached = false;
   let totalEnemiesDefeated = 0;
@@ -853,7 +867,11 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
       steps.push(lootCheck.step);
       applyGoalCheckConsequences(operators, derivedState, lootCheck);
       if (lootCheck.consequences.loot) {
-        totalLoot.push(...lootCheck.consequences.loot);
+        const targetLootCount = Math.max(
+          1,
+          Math.round(lootCheck.consequences.loot.length * objectiveBias.lootMultiplier),
+        );
+        totalLoot.push(...lootCheck.consequences.loot.slice(0, targetLootCount));
         steps.push({
           kind: "loot_gain",
           tickOffset: tickOffset + 1,
@@ -885,13 +903,17 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
       steps.push(intelCheck.step);
       applyGoalCheckConsequences(operators, derivedState, intelCheck);
       if (intelCheck.consequences.intelGain) {
-        totalIntel += intelCheck.consequences.intelGain;
-        derivedState.intelGained += intelCheck.consequences.intelGain;
+        const scaledIntel = Math.max(
+          1,
+          Math.round(intelCheck.consequences.intelGain * objectiveBias.intelMultiplier),
+        );
+        totalIntel += scaledIntel;
+        derivedState.intelGained += scaledIntel;
         steps.push({
           kind: "intel_gain",
           tickOffset: tickOffset + 1,
           siteNodeId: node.nodeId,
-          message: `Recovered ${intelCheck.consequences.intelGain} intel.`,
+          message: `Recovered ${scaledIntel} intel.`,
         });
         tickOffset += 1;
       }
@@ -922,8 +944,11 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
     // ── Boss threshold check ──
     if (node.kind === "boss_approach" && input.hasBoss && !retreating && aliveOps().length > 0) {
       // Check if contract progress is sufficient for boss contact
-      const progressSufficient = input.contractExplorationProgress >= 60;
-      const runProgressSufficient = nodeIndex >= visitOrder.length - 3;
+      const progressSufficient =
+        input.contractExplorationProgress >= objectiveBias.contractExplorationThreshold;
+      const runProgressSufficient =
+        visitOrder.length <= 1 ||
+        nodeIndex / Math.max(1, visitOrder.length - 1) >= objectiveBias.bossRunProgressThreshold;
 
       if (progressSufficient && runProgressSufficient) {
         bossThresholdReached = true;
@@ -998,9 +1023,9 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
     const cashBase = 100 + input.missionDurationHours * 15;
     const cashDelta =
       result === "success"
-        ? Math.round(cashBase)
+        ? Math.round(cashBase * objectiveBias.lootMultiplier)
         : result === "mixed"
-          ? Math.round(cashBase * 0.55)
+          ? Math.round(cashBase * 0.55 * objectiveBias.lootMultiplier)
           : -Math.round(cashBase * 0.3);
 
     const contributingFactors = buildContributingFactors(
@@ -1190,6 +1215,7 @@ function buildTraversalOrder(
   siteGraph: SiteNodeSnapshot[],
   rng: SeededRng,
   _hasBoss: boolean,
+  objectiveBias: ReturnType<typeof getObjectiveBiasConfig>,
 ): SiteNodeSnapshot[] {
   // Simple path: visit nodes in order, skipping entry (already deployed there)
   const order: SiteNodeSnapshot[] = [];
@@ -1207,7 +1233,17 @@ function buildTraversalOrder(
     // Prefer progressing forward, but add randomness
     const next =
       unvisitedEdges.length > 1
-        ? unvisitedEdges[rng.int(0, unvisitedEdges.length - 1)]
+        ? (() => {
+            if (objectiveBias.bossRunProgressThreshold <= 0.5) {
+              const bossFacingNode = unvisitedEdges.find(
+                (node) => node.kind === "boss_approach" || node.kind === "boss_chamber",
+              );
+              if (bossFacingNode) {
+                return bossFacingNode;
+              }
+            }
+            return unvisitedEdges[rng.int(0, unvisitedEdges.length - 1)];
+          })()
         : unvisitedEdges[0];
 
     visited.add(next.nodeId);
@@ -1288,6 +1324,11 @@ function buildContributingFactors(
 
   const fieldLeadCount = input.operators.filter((op) => op.roleTag === "role:field_lead").length;
   if (fieldLeadCount > 0) factors.push("field_lead:present");
+  if (input.contractPosture) factors.push(`policy:contract_posture:${input.contractPosture}`);
+  factors.push(`policy:objective_bias:${input.objectiveBias}`);
+  if (input.recoveryTriage) factors.push(`policy:recovery_triage:${input.recoveryTriage}`);
+  if (input.staffingPriority) factors.push(`policy:staffing_priority:${input.staffingPriority}`);
+  if (input.rosterFlow) factors.push(`policy:roster_flow:${input.rosterFlow}`);
 
   return factors;
 }

@@ -1,6 +1,7 @@
 import { soa } from "bitecs";
 
 import type { ContractRank } from "content/templates/site-concepts";
+import type { PolicyState } from "lib/policies";
 import type { RaidRunSnapshot } from "save/types";
 
 // ── Contract lifecycle ──────────────────────────────────────────────────
@@ -152,6 +153,8 @@ export interface FogOfWarState {
   revealed: boolean[];
   /** Total cells revealed so far. */
   revealedCount: number;
+  /** Cells revealed by completed raids. Active raids add on top. */
+  completedRaidRevealBase?: number;
 }
 
 export const BuildingAuthority = soa({
@@ -189,4 +192,6 @@ export const BuildingAuthority = soa({
   postedContracts: [] as PostedContract[][],
   /** Summary of the most recently completed contract (cleared on next bid). */
   contractResult: [] as (ContractResultSummary | null)[],
+  /** Active HQ management policies. */
+  policies: [] as PolicyState[],
 });

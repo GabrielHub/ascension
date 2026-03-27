@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_POLICY_STATE } from "lib/policies";
+
 import { RosterPanel } from "./roster-panel";
 import type { GameCallbacks, OperatorViewModel } from "./view-models";
 
@@ -30,6 +32,10 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     appearancePresetId: "kael-001",
     visibleGear: {},
     lifecycle: { status: "active" },
+    refusalRisk: false,
+    quitRisk: false,
+    retentionRisk: false,
+    autonomyReasons: [],
     ...overrides,
   };
 }
@@ -37,6 +43,7 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
 const callbacks: GameCallbacks = {
   tick: () => {},
   setRoomActive: () => {},
+  setPolicy: () => {},
   purchaseBuildingUpgrade: () => {},
   purchaseRoomUpgrade: () => {},
   acceptRecruit: () => {},
@@ -49,6 +56,8 @@ const callbacks: GameCallbacks = {
   sellItem: () => {},
   autoAssignAccessory: () => {},
   unequipItem: () => {},
+  bidContract: () => {},
+  advanceContract: () => {},
 };
 
 describe("roster panel", () => {
@@ -80,6 +89,7 @@ describe("roster panel", () => {
           recentDeathOperatorIds: ["operator/fallen"],
           replacementPressureLevel: "critical",
         }}
+        policies={DEFAULT_POLICY_STATE}
       />,
     );
 
@@ -117,11 +127,73 @@ describe("roster panel", () => {
           recentDeathOperatorIds: [],
           replacementPressureLevel: "stable",
         }}
+        policies={DEFAULT_POLICY_STATE}
       />,
     );
 
     expect(html).toContain("Roster full");
     expect(html).toContain("disabled");
     expect(html).toContain(">Full<");
+  });
+
+  it("surfaces recovery and recruitment policy context in ordinary roster play", () => {
+    const html = renderToStaticMarkup(
+      <RosterPanel
+        operators={[
+          makeOperator({
+            id: "operator/recovering",
+            name: "Recovering",
+            assignmentKind: "recovery",
+            injurySeverity: 42,
+            injuryRecoveryHours: 7,
+            availableForRaid: false,
+          }),
+        ]}
+        staff={[]}
+        visitors={[
+          {
+            id: "visitor/selective",
+            name: "Nika Voss",
+            desiredRoleTag: "role:medic",
+            patience: 90,
+            quality: 61,
+            expectedLoyalty: 53,
+            projectedMorale: 61,
+            projectedLoyalty: 77,
+            presetId: "kael-001",
+            rank: "b",
+          },
+        ]}
+        relationships={[]}
+        rooms={[]}
+        callbacks={callbacks}
+        rosterPressure={{
+          operatorCapacity: 2,
+          livingOperatorCount: 1,
+          vacancyCount: 1,
+          unavailableOperatorIds: ["operator/recovering"],
+          recentDeathOperatorIds: [],
+          replacementPressureLevel: "stable",
+        }}
+        policies={{
+          ...DEFAULT_POLICY_STATE,
+          recoveryTriage: "full_recovery",
+          staffingPriority: "welfare_priority",
+          rosterFlow: "selective_intake",
+        }}
+        focusedOperatorId="operator/recovering"
+      />,
+    );
+
+    expect(html).toContain("Daily Routine");
+    expect(html).toContain("Welfare Priority");
+    expect(html).toContain("Recruitment Policy");
+    expect(html).toContain("Selective Intake");
+    expect(html).toContain("Visitor volume is lower than usual.");
+    expect(html).toContain("Quality 61");
+    expect(html).toContain("2h patience");
+    expect(html).toContain("Recovering");
+    expect(html).toContain("Recovery Standards: Full Recovery.");
+    expect(html).toContain("injury severity 42");
   });
 });

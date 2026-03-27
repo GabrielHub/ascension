@@ -31,7 +31,7 @@ import {
 import {
   STABLE_SIM_COMMAND_TYPES,
   createAscensionSimulation,
-  createBootstrapWorldSnapshot,
+  createNewGameWorldSnapshot,
   createPreviewWorldSnapshot,
   type AscensionSimulation,
   type RuntimeEvent,
@@ -110,6 +110,7 @@ export interface RuntimeSessionCommands {
   setRoomActive(
     input: Omit<Extract<SimCommand, { type: "sim/set-room-active" }>, "type">,
   ): Promise<void>;
+  setPolicy(input: Omit<Extract<SimCommand, { type: "sim/set-policy" }>, "type">): Promise<void>;
   purchaseBuildingUpgrade(
     input: Omit<Extract<SimCommand, { type: "sim/purchase-building-upgrade" }>, "type">,
   ): Promise<void>;
@@ -183,7 +184,7 @@ function createNewSaveGame(slotId: SaveSlotId): PersistedSaveGame {
       createdAt: timestamp,
       lastPlayedAt: timestamp,
     },
-    world: createBootstrapWorldSnapshot(templateRegistry),
+    world: createNewGameWorldSnapshot(templateRegistry),
   };
 }
 
@@ -1395,6 +1396,13 @@ function createRuntimeSession(
     setRoomActive(input) {
       return commands.dispatch({
         type: "sim/set-room-active",
+        ...input,
+      });
+    },
+
+    setPolicy(input) {
+      return commands.dispatch({
+        type: "sim/set-policy",
         ...input,
       });
     },

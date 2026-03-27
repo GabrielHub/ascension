@@ -1,3 +1,5 @@
+import { getPolicyFactorMetadata } from "lib/policies";
+
 import type { RaidOperatorOutcomeViewModel, RaidSummaryViewModel } from "./view-models";
 import { getNarrativeTagMeta } from "./_glossary";
 import { Tooltip } from "./_tooltip";
@@ -39,6 +41,35 @@ function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewMode
   );
 }
 
+function PolicyAttributionRow({ factors }: { factors: readonly string[] }) {
+  const policyFactors = factors
+    .map((factor) => ({ factor, meta: getPolicyFactorMetadata(factor) }))
+    .filter(
+      (
+        entry,
+      ): entry is {
+        factor: string;
+        meta: NonNullable<ReturnType<typeof getPolicyFactorMetadata>>;
+      } => entry.meta !== null,
+    );
+
+  if (policyFactors.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {policyFactors.map(({ factor, meta }) => (
+        <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
+          <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-[0.6875rem] text-gold/80">
+            {meta.policyLabel}: {meta.optionLabel}
+          </span>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
 function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
   const style = RESULT_STYLES[summary.result] ?? RESULT_STYLES.mixed;
   const casualties = summary.operatorOutcomes.filter((o) => o.died);
@@ -70,6 +101,8 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
           {Math.round(summary.reputationDelta)} rep
         </span>
       </div>
+
+      <PolicyAttributionRow factors={summary.contributingFactors} />
 
       {/* Per-operator outcome lines */}
       {summary.operatorOutcomes.length > 0 && (

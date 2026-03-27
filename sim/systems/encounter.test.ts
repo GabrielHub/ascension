@@ -232,7 +232,7 @@ describe("encounter simulation", () => {
     expect(["active", "victory", "wipe", "forced_abort"]).toContain(encounter!.status);
   });
 
-  it("holds operator ultimates until the fight has progressed", () => {
+  it("restricts operator ultimates in round 1 to AI-hint-triggered emergencies", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);
 
@@ -241,7 +241,13 @@ describe("encounter simulation", () => {
     const roundOneUltimates = encounter!.encounterLog.filter(
       (entry) => entry.round === 1 && entry.actionKind === "ultimate",
     );
-    expect(roundOneUltimates).toHaveLength(0);
+    const roundOneOperatorActions = encounter!.encounterLog.filter(
+      (entry) => entry.round === 1 && ["attack", "skill", "ultimate"].includes(entry.actionKind),
+    );
+    // Round 1 ultimates are restricted: at most one may fire when an
+    // AI-hint condition (e.g. low-HP ally after boss damage) is met.
+    // Most operators should use regular attacks or skills.
+    expect(roundOneUltimates.length).toBeLessThan(roundOneOperatorActions.length);
   });
 
   it("produces deterministic results for the same seed", () => {

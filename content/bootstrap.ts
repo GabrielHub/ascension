@@ -687,3 +687,97 @@ export const bootstrapScenario = {
     { itemId: "loot/monster-part/fang", quantity: 3 },
   ],
 } satisfies BootstrapScenario;
+
+const CANONICAL_OPERATOR_IDS = new Set([
+  "operator/rose-vega",
+  "operator/milo-hart",
+  "operator/jin-tanaka",
+  "operator/vera-santos",
+]);
+
+const CANONICAL_STAFF_IDS = new Set(["staff/aina", "staff/boris"]);
+const CANONICAL_RELATIONSHIP_OPERATOR_IDS = new Set(["operator/rose-vega", "operator/milo-hart"]);
+
+export const previewBootstrapScenario = bootstrapScenario;
+
+export const canonicalNewGameScenario = {
+  guild: {
+    ...bootstrapScenario.guild,
+    treasury: 400,
+  },
+  time: {
+    ...bootstrapScenario.time,
+  },
+  building: {
+    ...bootstrapScenario.building,
+  },
+  rooms: bootstrapScenario.rooms.map((room) => ({
+    ...room,
+    reservedFootprint: { ...room.reservedFootprint },
+    ...(room.activeFootprint ? { activeFootprint: { ...room.activeFootprint } } : {}),
+  })),
+  operators: bootstrapScenario.operators
+    .filter((operator) => CANONICAL_OPERATOR_IDS.has(operator.id))
+    .map((operator) => ({
+      ...operator,
+      identity: { ...operator.identity },
+      preferences: {
+        ...operator.preferences,
+        preferredMissionTags: [...operator.preferences.preferredMissionTags],
+        preferredPartnerIds:
+          operator.id === "operator/jin-tanaka" || operator.id === "operator/vera-santos"
+            ? []
+            : [...operator.preferences.preferredPartnerIds],
+      },
+      schedule: { ...operator.schedule },
+      needs: { ...operator.needs },
+      morale:
+        operator.id === "operator/vera-santos"
+          ? {
+              current: 70,
+              baseline: 65,
+            }
+          : { ...operator.morale },
+      loyalty: { ...operator.loyalty },
+      injury: { ...operator.injury },
+      assignment: { ...operator.assignment },
+      combat: {
+        ...operator.combat,
+        traits: [...operator.combat.traits],
+        kit: {
+          ...operator.combat.kit,
+          passiveIds: [...operator.combat.kit.passiveIds],
+        },
+        baseStats: { ...operator.combat.baseStats },
+      },
+    })),
+  operatorRelationships: bootstrapScenario.operatorRelationships
+    .filter(
+      (relationship) =>
+        CANONICAL_RELATIONSHIP_OPERATOR_IDS.has(relationship.operatorAId) &&
+        CANONICAL_RELATIONSHIP_OPERATOR_IDS.has(relationship.operatorBId),
+    )
+    .map((relationship) => ({
+      ...relationship,
+      historyTags: [...relationship.historyTags],
+    })),
+  staff: bootstrapScenario.staff
+    .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
+    .map((staff) => ({
+      ...staff,
+      assignment: { ...staff.assignment },
+    })),
+  visitors: [
+    {
+      ...bootstrapScenario.visitors[0],
+      id: "visitor/nika",
+    },
+  ],
+  raidOpportunities: [],
+  inventory: [
+    { itemId: "weapon/pipe-wrench", quantity: 2 },
+    { itemId: "weapon/kitchen-knife", quantity: 1 },
+    { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
+    { itemId: "accessory/comm-earpiece", quantity: 1 },
+  ],
+} satisfies BootstrapScenario;

@@ -1,7 +1,10 @@
+import { getPolicyFactorMetadata } from "lib/policies";
+
 import { RAID_TIPS, getContractHintMeta } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
+import { Tooltip } from "./_tooltip";
 import type { FocusPayload } from "render";
 import {
   rankBadgeClass,
@@ -13,6 +16,38 @@ import {
   type PostedContractViewModel,
   type RosterPressureViewModel,
 } from "./view-models";
+
+function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
+  const policyFactors = factors
+    .map((factor) => ({ factor, meta: getPolicyFactorMetadata(factor) }))
+    .filter(
+      (
+        entry,
+      ): entry is {
+        factor: string;
+        meta: NonNullable<ReturnType<typeof getPolicyFactorMetadata>>;
+      } => entry.meta !== null,
+    );
+
+  if (policyFactors.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="relative mt-4 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-3">
+      <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">Management Context</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {policyFactors.map(({ factor, meta }) => (
+          <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
+            <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-[0.6875rem] text-gold/85">
+              {meta.policyLabel}: {meta.optionLabel}
+            </span>
+          </Tooltip>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Contract Result Summary ──────────────────────────────────────────────
 
@@ -88,6 +123,8 @@ function ContractResultCard({ result }: { result: ContractResultViewModel }) {
           </p>
         </div>
       </div>
+
+      <ContractPolicySummary factors={result.contributingFactors} />
     </div>
   );
 }

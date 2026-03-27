@@ -36,6 +36,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - The operations view now supports the full contract loop: a resolved-contract review beat, a posted-contract bidding board, and the secured active contract site as the live raid map.
 - Posted contracts, the active contract site, and the previous contract result now persist as separate save-safe state instead of collapsing into one implicit contract handoff.
 - New game now boots into a generated posted-contract bidding state, while preview/dev mode intentionally seeds an active contract so raid-map tooling and runtime verification can start in-media-res.
+- A first-pass gameplay-owned onboarding layer is shipped: save-safe opening guidance state, authored opening beats, focused coachmarks/spotlights, blocking narrative briefings, and interruption-backed delivery that is suppressed in preview mode.
 - HQ and raid overlays use glass-card presentation, focused bottom-card inspection, compact category switching, and a persistent right-side event log.
 - The event log is the always-on notice surface for departures, returns, injuries, deaths, morale and loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
@@ -58,17 +59,20 @@ This section is intentionally summary-level. The implementation itself is the so
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
-## Pre-Expansion: Tutorial And Narrative Framework
+## Pre-Expansion: Tutorial And Narrative Remediation
 
-Goal: make the player-facing game legible and tonally coherent before wider content and scope expansion.
+Goal: finish and tune the shipped player-facing onboarding layer so the opening game is legible and tonally coherent before wider content and scope expansion.
+
+The first-pass framework already exists in runtime and UI. This phase is not "invent onboarding from scratch." It is "close the opening path so the shipped framework teaches the real game cleanly."
 
 Deliverables:
 
-- a gameplay-owned onboarding framework that unifies tutorials, contextual hints, focused tours, and interruption-backed narrative beats
-- save-safe first-seen progression and deterministic early-game guidance for the player-facing new game path
-- a canonical opening sequence that teaches contract flow, staffing, roster state, raids, and incident handling through authored in-world framing
+- audit and remediate the shipped gameplay-owned onboarding framework so tutorials, contextual hints, focused tours, and interruption-backed narrative beats behave as one coherent layer
+- keep onboarding progression save-safe and deterministic for the player-facing new game path
+- expand the canonical opening sequence so it teaches contract flow, staffing, roster state, raids, incidents, the first upgrade decision, and early failure recovery through authored in-world framing
+- a canonical new-campaign starting state that is lighter and more controlled than the dense bootstrap/dev slice
 - reuse of the existing interruption layer for high-salience narrative beats instead of adding a parallel modal authority path
-- custom spotlight, coachmark, and hint primitives built in-house, informed by current tour-library patterns rather than shipped as a dependency
+- keep the shipped spotlight, coachmark, and hint primitives as the delivery surface rather than replacing them with a dependency
 - explicit authoring guidance that requires world-foundation grounding for tutorial copy, narrative briefings, and future AI-assisted content workflows
 - a later extension point for AI-authored flavor, recap, or candidate content that stays above deterministic simulation authority
 
@@ -77,8 +81,42 @@ Exit criteria:
 - new players can learn the opening slice without relying on prior dev knowledge or scattered tooltip hunting
 - tutorials, hints, and narrative beats read as one coherent authored layer instead of separate systems
 - onboarding state survives refresh and save/load when it is gameplay-relevant
+- new game no longer starts from the same crowded state used for preview/dev verification
 - the framework is ready to scale with new rooms, systems, contracts, and buildings without rewriting the authority model
 - AI remains optional and non-authoritative
+
+## Pre-Union Hall: Bodega Closure And Balance Harness
+
+Goal: finish the bodega as a management game and make balance iteration cheap before the building-scale jump.
+
+Deliverables:
+
+- finish the full bodega upgrade arc, including Frontage, Annex, and Backyard Extension
+- define a canonical bodega campaign arc from first day to relocation trigger instead of treating the current bootstrap slice as the opening game
+- use the bodega's remaining footprint for bodega-native hybrid rooms instead of prematurely importing union-hall specialization
+- prioritize an intel/admin room first so contract prep, compliance buffering, and staffing pressure gain a real facility surface
+- optionally add a narrow consumable-prep layer later in the bodega as a lightweight precursor to crafting, without turning the bodega into a workshop tier
+- expand early-game content breadth across F, E, and D recruits, gear, sites, enemies, and bosses
+- define weighted recruit-rank distributions by progression band so low-rank outcomes never fully disappear and higher-rank outcomes enter through explicit probability shifts
+- define contract and loot-rank ceilings so site rank constrains direct gear quality, with rare higher-band drops limited to the intended cap and mainly sourced from elites or bosses
+- add authored balance ledgers for recruit weights, item budgets, contract budgets, and unlock pacing
+- define starter roster, room, staff, visitor, inventory, and slot-count envelopes so the bodega feels cramped and readable at the beginning instead of front-loaded and crowded
+- split canonical `new game` seed data from the denser `preview/dev` seed used for verification and sandboxing
+- enforce hard early-bodega roster-cap rules, including recruit overflow handling when the intake surface is active but the active roster is full
+- define the first contract-board envelope and early failure-recovery floor so the campaign cannot softlock from a bad opening result
+- define the relocation gate and transition event so a full bodega playthrough has a real ending point before union hall
+- add deterministic browser-driven autoplay and regression harness coverage so seeded campaign runs can generate usable balance metrics for human review and AI-assisted analysis
+
+Exit criteria:
+
+- the bodega consistently asks the player to make recruitment, staffing, gear, and upgrade decisions between contracts
+- new rooms deepen existing management loops instead of diluting the bodega's identity
+- early campaigns expose meaningful F/E/D variation without making D feel common or trivial
+- the opening campaign starts sparse, readable, and intentionally constrained rather than feeling like a pre-populated sandbox
+- the first several contracts teach risk, recovery, and recruitment pressure without producing frequent unwinnable starts
+- the bodega has a complete beginning, middle, and end, including a credible relocation handoff into union hall
+- balance iteration no longer depends on pure manual play or intuition alone
+- union hall expansion can begin from a closed early-game baseline instead of a still-moving target
 
 ## Phase 3: Union Hall Expansion
 
@@ -154,6 +192,31 @@ Exit criteria:
 
 - the world pushes back instead of acting like a passive mission board
 
+## Post-Basegame: AI Content Layer
+
+Goal: add generative narrative and content breadth only after the deterministic game is already stable, enjoyable, and fully playable without model access.
+
+Deliverables:
+
+- AI incident framing layered on top of deterministic triggers, subject bindings, and consequence bundles
+- AI-generated event briefings, interruption copy, and recaps that consume structured simulation payloads and world-grounded tone guidance
+- AI-generated operator identity packets that assemble approved prefab appearance parts and authored personality/social tags through structured output
+- AI-authored skill, item, and operator descriptive text that binds to locked numeric payloads and schema-valid deterministic runtime definitions
+- explicit validation and fallback paths so failed or low-quality AI output falls back to approved authored copy, approved prefab operator assemblies, or no-op event generation without breaking the run
+- AI features exposed as opt-in settings, available from the start screen before campaign launch and from in-game settings during a live run
+- AI features can be toggled on or off mid-campaign without corrupting saves or making the run unplayable
+- the game remains fully playable offline, with AI-disabled behavior treated as a first-class supported path rather than a degraded emergency mode
+- operator-generation guardrails that keep gameplay-affecting stats, rank, kit slots, and numeric effect payloads inside deterministic authored envelopes unless a later product update explicitly introduces a bounded exception system
+
+Exit criteria:
+
+- the base game is already accepted as content-complete enough to stand on its own without AI
+- the game remains fully playable without model access and with AI toggled off
+- AI output changes presentation, identity, and variation more than it changes hidden gameplay authority
+- incident triggers, hidden modifiers, resolution rolls, and consequence application remain simulation-owned
+- operator generation remains schema-valid, save-safe, and compatible with the existing prefab part pipeline
+- narrative variety improves without making balance, progression, or debugging unreadable
+
 ## Deferred Until Proven Necessary
 
 - S-rank endgame content
@@ -168,9 +231,10 @@ Exit criteria:
 1. Completed: get the content-definition infrastructure working.
 2. Completed: get the bodega playable on top of that infrastructure.
 3. Completed: finish the bodega visually.
-4. Completed: make the bodega good.
-5. Expand the building scale.
-6. Add systemic competitors.
-7. Add prestige content.
+4. Completed: make the first bodega slice good.
+5. Complete the bodega as an early-game management game and lock the balance harness.
+6. Expand the building scale.
+7. Add systemic competitors.
+8. Add prestige content.
 
 That order matters more than any specific library choice.

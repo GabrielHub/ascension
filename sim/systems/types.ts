@@ -117,6 +117,7 @@ export interface RaidPresentationState {
 }
 
 export interface SimRuntimeState {
+  simulationSeed?: number;
   roomEntities: number[];
   operatorEntities: number[];
   raidOpportunityEntities: number[];

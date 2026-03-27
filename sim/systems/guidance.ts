@@ -18,17 +18,22 @@ export type GuidanceCompletionKind =
   | "acknowledged"
   | "intent_fired"
   | "target_opened"
+  | "room_inspected"
+  | "operator_inspected"
   | "contract_secured"
   | "team_departed"
   | "team_returned"
   | "incident_resolved"
   | "boss_commitment_resolved"
-  | "market_opened";
+  | "market_opened"
+  | "staffing_action_taken"
+  | "upgrade_purchased";
 
 export interface GuidanceCompletionRule {
   kind: GuidanceCompletionKind;
   targetAnchorId?: string;
   intentType?: string;
+  requiresManualCompletion?: boolean;
 }
 
 export interface GuidanceBeatGating {
@@ -40,6 +45,11 @@ export interface GuidanceBeatGating {
   requireFirstBossCommitment?: boolean;
   requireFirstTeamDeparture?: boolean;
   requireFirstRaidReturnWithLoot?: boolean;
+  requireOperatorWorn?: boolean;
+  requireUnassignedManagementAction?: boolean;
+  requireUpgradeAffordable?: boolean;
+  requireSignificantSetback?: boolean;
+  requireSetbackRecoveryTrigger?: boolean;
 }
 
 export interface GuidanceBeatCopy {
@@ -85,6 +95,7 @@ export interface GuidanceActiveBeatView {
   milestoneOrder: number;
   totalMilestones: number;
   completionKind: GuidanceCompletionKind;
+  requiresManualCompletion?: boolean;
   pauseWorld: boolean;
   allowSkip: boolean;
 }
@@ -108,6 +119,22 @@ export interface AnchorResolutionFailure {
 
 export type OpeningPathState = "active" | "completed" | "reset";
 
+export interface GuidanceOpeningTimingState {
+  firstRaidReturnCompletedAtMinute: number | null;
+  firstIncidentSeededAtMinute: number | null;
+  securedContractCount?: number;
+  lastTrackedContractSiteId?: string | null;
+}
+
+function createOpeningTimingState(): GuidanceOpeningTimingState {
+  return {
+    firstRaidReturnCompletedAtMinute: null,
+    firstIncidentSeededAtMinute: null,
+    securedContractCount: 0,
+    lastTrackedContractSiteId: null,
+  };
+}
+
 export interface GuidanceState {
   seenBeatIds: string[];
   completedBeatIds: string[];
@@ -118,6 +145,12 @@ export interface GuidanceState {
   lastEvaluationMinute: number;
   openingPathState: OpeningPathState;
   anchorResolutionFailures: AnchorResolutionFailure[];
+  activeBeatProgressBaseline: number | null;
+  interactionCounts: {
+    staffingActions: number;
+    upgradesPurchased: number;
+  };
+  openingTiming?: GuidanceOpeningTimingState;
 }
 
 export function createGuidanceState(
@@ -133,6 +166,12 @@ export function createGuidanceState(
     lastEvaluationMinute: 0,
     openingPathState,
     anchorResolutionFailures: [],
+    activeBeatProgressBaseline: null,
+    interactionCounts: {
+      staffingActions: 0,
+      upgradesPurchased: 0,
+    },
+    openingTiming: createOpeningTimingState(),
   };
 }
 
@@ -148,9 +187,17 @@ export interface GuidanceStateSnapshot {
   lastEvaluationMinute: number;
   openingPathState: OpeningPathState;
   anchorResolutionFailures: AnchorResolutionFailure[];
+  activeBeatProgressBaseline: number | null;
+  interactionCounts: {
+    staffingActions: number;
+    upgradesPurchased: number;
+  };
+  openingTiming?: GuidanceOpeningTimingState;
 }
 
 export function snapshotGuidanceState(state: GuidanceState): GuidanceStateSnapshot {
+  const openingTiming = ensureOpeningTimingState(state);
+
   return {
     seenBeatIds: [...state.seenBeatIds],
     completedBeatIds: [...state.completedBeatIds],
@@ -161,6 +208,9 @@ export function snapshotGuidanceState(state: GuidanceState): GuidanceStateSnapsh
     lastEvaluationMinute: state.lastEvaluationMinute,
     openingPathState: state.openingPathState,
     anchorResolutionFailures: state.anchorResolutionFailures.map((f) => ({ ...f })),
+    activeBeatProgressBaseline: state.activeBeatProgressBaseline,
+    interactionCounts: { ...state.interactionCounts },
+    openingTiming: { ...openingTiming },
   };
 }
 
@@ -179,7 +229,41 @@ export function restoreGuidanceState(snapshot: GuidanceStateSnapshot | undefined
     lastEvaluationMinute: snapshot.lastEvaluationMinute ?? 0,
     openingPathState: snapshot.openingPathState ?? "completed",
     anchorResolutionFailures: (snapshot.anchorResolutionFailures ?? []).map((f) => ({ ...f })),
+    activeBeatProgressBaseline:
+      typeof snapshot.activeBeatProgressBaseline === "number"
+        ? snapshot.activeBeatProgressBaseline
+        : null,
+    interactionCounts: {
+      staffingActions: snapshot.interactionCounts?.staffingActions ?? 0,
+      upgradesPurchased: snapshot.interactionCounts?.upgradesPurchased ?? 0,
+    },
+    openingTiming: {
+      firstRaidReturnCompletedAtMinute:
+        typeof snapshot.openingTiming?.firstRaidReturnCompletedAtMinute === "number"
+          ? snapshot.openingTiming.firstRaidReturnCompletedAtMinute
+          : null,
+      firstIncidentSeededAtMinute:
+        typeof snapshot.openingTiming?.firstIncidentSeededAtMinute === "number"
+          ? snapshot.openingTiming.firstIncidentSeededAtMinute
+          : null,
+      securedContractCount:
+        typeof snapshot.openingTiming?.securedContractCount === "number"
+          ? snapshot.openingTiming.securedContractCount
+          : 0,
+      lastTrackedContractSiteId:
+        typeof snapshot.openingTiming?.lastTrackedContractSiteId === "string"
+          ? snapshot.openingTiming.lastTrackedContractSiteId
+          : null,
+    },
   };
+}
+
+export function ensureOpeningTimingState(state: GuidanceState): GuidanceOpeningTimingState {
+  if (!state.openingTiming) {
+    state.openingTiming = createOpeningTimingState();
+  }
+
+  return state.openingTiming;
 }
 
 // ── Eligibility ──────────────────────────────────────────────────────
@@ -193,6 +277,12 @@ export interface GuidanceEvaluationContext {
   hasTeamDeparted: boolean;
   hasBossCommitment: boolean;
   hasRaidReturnWithLoot: boolean;
+  hasOperatorWorn: boolean;
+  hasUnassignedManagementAction: boolean;
+  hasUpgradeAffordable: boolean;
+  hasSignificantSetback: boolean;
+  hasSetbackRecoveryTrigger: boolean;
+  hasAnyUpgradePurchased: boolean;
   isPreview: boolean;
 }
 
@@ -233,6 +323,15 @@ export function isBeatEligible(
   if (beat.gating.requireFirstRaidReturnWithLoot && !evalContext.hasRaidReturnWithLoot) {
     return false;
   }
+  if (beat.gating.requireOperatorWorn && !evalContext.hasOperatorWorn) return false;
+  if (beat.gating.requireUnassignedManagementAction && !evalContext.hasUnassignedManagementAction) {
+    return false;
+  }
+  if (beat.gating.requireUpgradeAffordable && !evalContext.hasUpgradeAffordable) return false;
+  if (beat.gating.requireSignificantSetback && !evalContext.hasSignificantSetback) return false;
+  if (beat.gating.requireSetbackRecoveryTrigger && !evalContext.hasSetbackRecoveryTrigger) {
+    return false;
+  }
 
   return true;
 }
@@ -245,6 +344,12 @@ export function activateBeat(
   totalMilestones: number,
 ): void {
   state.activeBeatId = beat.id;
+  state.activeBeatProgressBaseline =
+    beat.completion.kind === "staffing_action_taken"
+      ? state.interactionCounts.staffingActions
+      : beat.completion.kind === "upgrade_purchased"
+        ? state.interactionCounts.upgradesPurchased
+        : null;
   state.activeBeatView = {
     beatId: beat.id,
     track: beat.track,
@@ -255,6 +360,7 @@ export function activateBeat(
     milestoneOrder: beat.milestoneOrder,
     totalMilestones,
     completionKind: beat.completion.kind,
+    requiresManualCompletion: beat.completion.requiresManualCompletion,
     pauseWorld: beat.delivery.pauseWorld,
     allowSkip: beat.delivery.allowSkip,
   };
@@ -267,6 +373,7 @@ export function completeBeat(state: GuidanceState, beatId: string): void {
   if (state.activeBeatId === beatId) {
     state.activeBeatId = null;
     state.activeBeatView = null;
+    state.activeBeatProgressBaseline = null;
   }
   if (!state.completedBeatIds.includes(beatId)) {
     state.completedBeatIds.push(beatId);
@@ -279,6 +386,7 @@ export function dismissBeat(state: GuidanceState, beatId: string): void {
   if (state.activeBeatId === beatId) {
     state.activeBeatId = null;
     state.activeBeatView = null;
+    state.activeBeatProgressBaseline = null;
   }
   if (!state.dismissedBeatIds.includes(beatId)) {
     state.dismissedBeatIds.push(beatId);
@@ -328,6 +436,24 @@ export function resetOpeningPath(state: GuidanceState, openingBeatIds: readonly 
   state.queuedBeatIds = [];
   state.lastEvaluationMinute = 0;
   state.anchorResolutionFailures = [];
+  state.activeBeatProgressBaseline = null;
+  state.interactionCounts = {
+    staffingActions: 0,
+    upgradesPurchased: 0,
+  };
+  state.openingTiming = createOpeningTimingState();
+}
+
+export function recordGuidanceInteraction(
+  state: GuidanceState,
+  kind: "staffing_action" | "upgrade_purchase",
+): void {
+  if (kind === "staffing_action") {
+    state.interactionCounts.staffingActions += 1;
+    return;
+  }
+
+  state.interactionCounts.upgradesPurchased += 1;
 }
 
 // ── Completion checking ──────────────────────────────────────────────
@@ -341,17 +467,29 @@ export interface GuidanceCompletionContext {
   hasResolvedIncidentSinceActivation: boolean;
   hasBossCommitmentResolved: boolean;
   hasRaidReturnWithLoot: boolean;
+  hasStaffingActionTaken: boolean;
+  hasUpgradePurchased: boolean;
 }
 
 export function isCompletionMet(
   rule: GuidanceCompletionRule,
   completionContext: GuidanceCompletionContext,
 ): boolean {
+  if (rule.requiresManualCompletion) {
+    return false;
+  }
+
   switch (rule.kind) {
     case "acknowledged":
       // Completed by explicit user action (handled by command)
       return false;
     case "target_opened":
+      // Completed by UI signal (handled by command)
+      return false;
+    case "room_inspected":
+      // Completed by UI signal (handled by command)
+      return false;
+    case "operator_inspected":
       // Completed by UI signal (handled by command)
       return false;
     case "intent_fired":
@@ -370,5 +508,9 @@ export function isCompletionMet(
       return completionContext.hasResolvedIncidentSinceActivation;
     case "boss_commitment_resolved":
       return completionContext.hasBossCommitmentResolved;
+    case "staffing_action_taken":
+      return completionContext.hasStaffingActionTaken;
+    case "upgrade_purchased":
+      return completionContext.hasUpgradePurchased;
   }
 }

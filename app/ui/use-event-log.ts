@@ -7,7 +7,7 @@ import type { EventLogEntry, EventLogKind } from "./view-models";
 // ── Types ────────────────────────────────────────────────────────────────
 
 type ShellTab = "hq" | "operations";
-type HqCategory = "rooms" | "roster" | "teams" | "inventory" | "market";
+type HqCategory = "rooms" | "roster" | "management" | "teams" | "inventory" | "market";
 type OpsCategory = "contract" | "active" | "opportunities" | "history";
 
 interface EventLogNavActions {

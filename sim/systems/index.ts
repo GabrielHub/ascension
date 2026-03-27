@@ -27,6 +27,18 @@ const conditionalTimeSystem: SimSystem = (context, deltaMs) => {
 let incidentSystemFn: SimSystem | null = null;
 let guidanceSystemFn: SimSystem | null = null;
 let deferredSystemBootstrapError: Error | null = null;
+let resolveDeferredSystemsReady: (() => void) | null = null;
+let rejectDeferredSystemsReady: ((reason?: unknown) => void) | null = null;
+let resolveDeferredGuidanceReady: (() => void) | null = null;
+let rejectDeferredGuidanceReady: ((reason?: unknown) => void) | null = null;
+export const deferredSimulationSystemsReady = new Promise<void>((resolve, reject) => {
+  resolveDeferredSystemsReady = resolve;
+  rejectDeferredSystemsReady = reject;
+});
+export const deferredSimulationGuidanceReady = new Promise<void>((resolve, reject) => {
+  resolveDeferredGuidanceReady = resolve;
+  rejectDeferredGuidanceReady = reject;
+});
 const lazyIncidentSystem: SimSystem = (context, deltaMs) => {
   if (deferredSystemBootstrapError) {
     throw deferredSystemBootstrapError;
@@ -82,6 +94,9 @@ void Promise.all([
     registerEncounterCommandHandler(encounterMod.applyEncounterCommand);
     incidentSystemFn = incidentMod.advanceIncidentSystem;
     registerContractCommandHandler(contractMod.applyContractCommand);
+    resolveDeferredSystemsReady?.();
+    resolveDeferredSystemsReady = null;
+    rejectDeferredSystemsReady = null;
 
     // Guidance system loaded separately — failure does not block core systems.
     void import("./guidance-system")
@@ -93,9 +108,17 @@ void Promise.all([
           recordAnchorFailure: guidanceMod.handleGuidanceRecordAnchorFailure,
           resetOpening: guidanceMod.handleGuidanceResetOpening,
         });
+        resolveDeferredGuidanceReady?.();
+        resolveDeferredGuidanceReady = null;
+        rejectDeferredGuidanceReady = null;
       })
-      .catch(() => {
-        // Guidance system optional — commands become no-ops if it fails.
+      .catch((error) => {
+        if (!isEnvironmentTeardownError(error)) {
+          rejectDeferredGuidanceReady?.(error);
+        }
+        resolveDeferredGuidanceReady = null;
+        rejectDeferredGuidanceReady = null;
+        // Guidance system optional for the app runtime — commands become no-ops if it fails.
       });
   })
   .catch((error) => {
@@ -107,6 +130,12 @@ void Promise.all([
       error instanceof Error
         ? error
         : new Error(`Deferred system bootstrap failed: ${String(error)}`);
+    rejectDeferredSystemsReady?.(deferredSystemBootstrapError);
+    rejectDeferredGuidanceReady?.(deferredSystemBootstrapError);
+    resolveDeferredSystemsReady = null;
+    rejectDeferredSystemsReady = null;
+    resolveDeferredGuidanceReady = null;
+    rejectDeferredGuidanceReady = null;
   });
 
 export function runSimCommand(

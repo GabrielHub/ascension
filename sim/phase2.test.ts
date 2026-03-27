@@ -171,6 +171,11 @@ function createPhase2TestContext(): SimSystemContext {
         lastEvaluationMinute: 0,
         openingPathState: "completed",
         anchorResolutionFailures: [],
+        activeBeatProgressBaseline: null,
+        interactionCounts: {
+          staffingActions: 0,
+          upgradesPurchased: 0,
+        },
       },
       kitRegistry: {
         regularAttacks: [],
@@ -509,6 +514,11 @@ describe("Phase 2 inventory system", () => {
           lastEvaluationMinute: 0,
           openingPathState: "completed",
           anchorResolutionFailures: [],
+          activeBeatProgressBaseline: null,
+          interactionCounts: {
+            staffingActions: 0,
+            upgradesPurchased: 0,
+          },
         },
         kitRegistry: {
           regularAttacks: [],

@@ -1,4 +1,14 @@
 import {
+  DEFAULT_AUTONOMY_THRESHOLDS,
+  getAutonomyThresholdsForPolicies,
+  getContractPostureConfig,
+  getPolicyOptionLabel,
+  getRecoveryTriageConfig,
+  getRosterFlowConfig,
+  getStaffingPriorityConfig,
+  type AutonomyThresholdConfig,
+} from "lib/policies";
+import {
   BuildingAuthority,
   EventState,
   InjuryState,
@@ -30,14 +40,17 @@ function humanizeEntityId(identifier: string): string {
   return slug.replace(/[_-]/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function computeAutonomyFlags(entity: number): AutonomyFlags {
+export function computeAutonomyFlags(
+  entity: number,
+  thresholds: AutonomyThresholdConfig = DEFAULT_AUTONOMY_THRESHOLDS,
+): AutonomyFlags {
   const morale = MoraleState.current[entity];
   const loyalty = LoyaltyState.current[entity];
 
   return {
-    refusalRisk: morale < 30,
-    quitRisk: morale < 15,
-    retentionRisk: loyalty < 25,
+    refusalRisk: morale < thresholds.refusalRiskMoraleFloor,
+    quitRisk: morale < thresholds.quitRiskMoraleFloor,
+    retentionRisk: loyalty < thresholds.retentionRiskLoyaltyFloor,
   };
 }
 
@@ -133,6 +146,7 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
     return;
   }
 
+  const elapsedHours = Math.max(1, Math.floor(deltaMs / 60000)) / 60;
   const buildingEntity = context.singletonEntities.building;
   const activeRoomBonus = context.runtimeState.roomEntities.filter((entity) => {
     return RoomInstance.isOperational[entity] === 1;
@@ -142,6 +156,12 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
   }, 0);
   const moraleModifier = BuildingAuthority.moraleModifier[buildingEntity] ?? 0;
   const loyaltyModifier = BuildingAuthority.loyaltyModifier[buildingEntity] ?? 0;
+  const policies = BuildingAuthority.policies[buildingEntity];
+  const autonomyThresholds = getAutonomyThresholdsForPolicies(policies);
+  const contractPosture = getContractPostureConfig(policies);
+  const recoveryTriage = getRecoveryTriageConfig(policies);
+  const staffingPriority = getStaffingPriorityConfig(policies);
+  const rosterFlow = getRosterFlowConfig(policies);
 
   const roomCulture = getRoomCultureModifiers(context);
 
@@ -157,14 +177,21 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
     const operatorName = OperatorIdentity.name[entity] ?? humanizeEntityId(operatorId);
     const griefPenalty =
       operatorId.length > 0 ? getGriefPenaltyForOperator(context, operatorId) : 0;
+    const isOperator = operatorId.length > 0;
+    const passiveMoraleDrift = isOperator
+      ? contractPosture.moraleDriftPerHour + staffingPriority.moraleDriftPerHour
+      : 0;
+    const passiveLoyaltyDrift = isOperator
+      ? staffingPriority.loyaltyDriftPerHour + rosterFlow.loyaltyDriftPerHour
+      : 0;
 
-    const prevFlags = computeAutonomyFlags(entity);
+    const prevFlags = computeAutonomyFlags(entity, autonomyThresholds);
 
     const moraleTarget =
       MoraleState.baseline[entity] +
       activeRoomBonus * 1.5 +
       moraleModifier -
-      NeedState.stress[entity] * 0.22 -
+      NeedState.stress[entity] * 0.22 * recoveryTriage.stressMoraleContributionMultiplier -
       NeedState.fatigue[entity] * 0.16 -
       InjuryState.severity[entity] * 0.35 -
       activeEventPenalty * 1.6 +
@@ -179,17 +206,21 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
       activeEventPenalty * 0.8;
 
     MoraleState.current[entity] = clamp(
-      MoraleState.current[entity] + (moraleTarget - MoraleState.current[entity]) * 0.18,
+      MoraleState.current[entity] +
+        (moraleTarget - MoraleState.current[entity]) * 0.18 +
+        passiveMoraleDrift * elapsedHours,
       0,
       100,
     );
     LoyaltyState.current[entity] = clamp(
-      LoyaltyState.current[entity] + (loyaltyTarget - LoyaltyState.current[entity]) * 0.1,
+      LoyaltyState.current[entity] +
+        (loyaltyTarget - LoyaltyState.current[entity]) * 0.1 +
+        passiveLoyaltyDrift * elapsedHours,
       0,
       100,
     );
 
-    const nextFlags = computeAutonomyFlags(entity);
+    const nextFlags = computeAutonomyFlags(entity, autonomyThresholds);
     if (operatorId.length > 0) {
       const subject = { operatorId, operatorName };
 
@@ -220,8 +251,10 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
   pushThresholdEvent(context, lowLoyaltySubjects, {
     kind: "loyalty_threshold",
     accent: "ember",
-    singleMessage: (subject) => `${subject.operatorName} loyalty low — retention risk`,
-    summaryMessage: (subjectList) => `Low loyalty: ${subjectList} at retention risk`,
+    singleMessage: (subject) =>
+      `${subject.operatorName} loyalty low — retention risk under ${getPolicyOptionLabel("rosterFlow", policies?.rosterFlow ?? "open_doors")}`,
+    summaryMessage: (subjectList) =>
+      `Low loyalty: ${subjectList} at retention risk under ${getPolicyOptionLabel("rosterFlow", policies?.rosterFlow ?? "open_doors")}`,
   });
 
   const operatorEntityById = new Map<string, number>();

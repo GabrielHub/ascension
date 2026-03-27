@@ -13,6 +13,7 @@ import {
   type IncidentChoiceView,
   type RaidBossCommitmentPayload,
 } from "./interruptions";
+import { enqueueInterruption } from "./interruptions";
 import {
   GuildState,
   MoraleState,
@@ -21,7 +22,8 @@ import {
   WorldTimeState,
 } from "../components";
 import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
-import { SeededRng, seedFromKey, weightedChoice, type WeightedItem } from "../uncertainty";
+import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
+import { seedFromSimulationKey } from "./seed-utils";
 
 // ── Incident template schema ─────────────────────────────────────────────
 
@@ -114,6 +116,23 @@ export function createIncidentState(): IncidentState {
   };
 }
 
+const OPENING_INCIDENT_LEARNED_BEAT_ID = "guidance/opening/first-incident";
+
+export const OPENING_SAFE_INCIDENT_CATEGORIES = [
+  "personnel_conflict",
+  "team_friction",
+  "supply_shortage",
+  "morale_surge",
+  "contract_opportunity",
+] as const;
+
+const OPENING_FORCE_SEED_INCIDENT_CATEGORIES = [
+  "personnel_conflict",
+  "team_friction",
+  "supply_shortage",
+  "morale_surge",
+] as const;
+
 // ── Authored incident library ────────────────────────────────────────────
 
 export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
@@ -200,6 +219,53 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
           { kind: "morale_delta", targetRef: "subject_a", value: -5 },
           { kind: "loyalty_delta", targetRef: "subject_a", value: -3 },
           { kind: "injury_progression", targetRef: "subject_a", value: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/team-friction-brief",
+    name: "Team Friction Brief",
+    category: "team_friction",
+    tags: ["conflict", "team", "low-stakes"],
+    weight: 24,
+    triggerFamily: "operator_conflict",
+    pressureTags: ["pressure:social", "pressure:morale"],
+    pressureThreshold: 25,
+    requiredContext: ["operator_a", "operator_b"],
+    cooldownMinutes: 360,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "{operator_a} and {operator_b} are grinding on each other after the last run. It is not a crisis yet, but it will become one if you leave it alone.",
+    choices: [
+      {
+        choiceId: "cool_off",
+        label: "Mandate a Cool-Off",
+        description: "Split the pair up for the rest of the day and let the heat bleed off.",
+        consequenceSummary: "Small morale recovery, no dramatic fallout.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 3 },
+          { kind: "morale_delta", targetRef: "subject_b", value: 3 },
+        ],
+      },
+      {
+        choiceId: "forced_apology",
+        label: "Demand an Apology",
+        description: "Settle it fast and keep the room moving.",
+        consequenceSummary: "One operator feels heard, the other resents the handling.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 4 },
+          { kind: "morale_delta", targetRef: "subject_b", value: -3 },
+        ],
+      },
+      {
+        choiceId: "shrug_it_off",
+        label: "Tell Them to Work It Out",
+        description: "Keep management bandwidth for bigger problems.",
+        consequenceSummary: "No cash cost, but the mood sours.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: -2 },
+          { kind: "morale_delta", targetRef: "subject_b", value: -2 },
         ],
       },
     ],
@@ -297,6 +363,50 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     ],
   },
   {
+    id: "incident/supply-pinch",
+    name: "Supply Pinch",
+    category: "supply_shortage",
+    tags: ["supplies", "ops", "low-stakes"],
+    weight: 18,
+    triggerFamily: "contract_pressure",
+    pressureTags: ["pressure:logistics", "pressure:economy"],
+    pressureThreshold: 20,
+    requiredContext: [],
+    cooldownMinutes: 480,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "Basic field supplies are running thinner than expected. Nothing is broken yet, but you need to decide how much slack the crew gets.",
+    choices: [
+      {
+        choiceId: "buy_restock",
+        label: "Buy a Restock",
+        description: "Spend cash now and keep everyone moving normally.",
+        consequenceSummary: "Treasury down, pressure eased.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -40 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -6 },
+        ],
+      },
+      {
+        choiceId: "ration",
+        label: "Ration the Stock",
+        description: "Stretch what is left until the next payout.",
+        consequenceSummary: "Free now, but the crew notices.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+      {
+        choiceId: "improvise",
+        label: "Improvise Around It",
+        description: "Have the team patch together workarounds from what is on hand.",
+        consequenceSummary: "Low direct cost, slight intel gain from the process.",
+        effects: [{ kind: "intel_delta", targetRef: "guild", value: 3 }],
+      },
+    ],
+  },
+  {
     id: "incident/morale-windfall",
     name: "Morale Windfall",
     category: "morale_surge",
@@ -338,6 +448,50 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         description: "Acknowledge the win and move on. There's work to do.",
         consequenceSummary: "No cost, no bonus. Professional.",
         effects: [{ kind: "loyalty_delta", targetRef: "subject_a", value: 2 }],
+      },
+    ],
+  },
+  {
+    id: "incident/walk-in-contract-lead",
+    name: "Walk-In Contract Lead",
+    category: "contract_opportunity",
+    tags: ["contract", "opportunity", "low-stakes"],
+    weight: 16,
+    triggerFamily: "morale_opportunity",
+    pressureTags: ["pressure:low"],
+    pressureThreshold: 15,
+    requiredContext: [],
+    cooldownMinutes: 720,
+    noveltyWeight: 1.25,
+    briefingTemplate:
+      "A neighborhood contact has floated a small lead your way. It is not a windfall, but it could turn into the next clean job if you handle it right.",
+    choices: [
+      {
+        choiceId: "pay_for_details",
+        label: "Pay for Details",
+        description: "Spend a little cash to get the full story before someone else does.",
+        consequenceSummary: "Treasury down, intel up.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -25 },
+          { kind: "intel_delta", targetRef: "guild", value: 6 },
+        ],
+      },
+      {
+        choiceId: "take_the_meeting",
+        label: "Take the Meeting",
+        description: "Hear them out and work the relationship.",
+        consequenceSummary: "Small reputation and intel upside.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+          { kind: "intel_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+      {
+        choiceId: "pass_for_now",
+        label: "Pass for Now",
+        description: "Keep the current workload stable.",
+        consequenceSummary: "No immediate change.",
+        effects: [],
       },
     ],
   },
@@ -422,9 +576,68 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
 
 const EVALUATION_INTERVAL_MINUTES = 120;
 
+interface IncidentSelectionOptions {
+  allowedCategories?: readonly string[];
+  ignorePressureThreshold?: boolean;
+  ignoreCooldowns?: boolean;
+  ignoreRecentFamilyLimit?: boolean;
+  seedKey?: string;
+}
+
 export function shouldEvaluateIncidents(state: IncidentState, currentMinute: number): boolean {
   if (state.pendingIncident !== null) return false;
   return currentMinute - state.lastEvaluationMinute >= EVALUATION_INTERVAL_MINUTES;
+}
+
+export function isOpeningIncidentMercyWindowActive(context: SimSystemContext): boolean {
+  const guidanceState = context.runtimeState.guidanceState;
+
+  // Hard gate: mercy window always covers the first 3 contracts regardless
+  // of guidance beat progression.
+  const securedContracts = guidanceState.openingTiming?.securedContractCount ?? 0;
+  if (securedContracts <= 3) {
+    return true;
+  }
+
+  return (
+    guidanceState.openingPathState === "active" &&
+    !guidanceState.completedBeatIds.includes(OPENING_INCIDENT_LEARNED_BEAT_ID)
+  );
+}
+
+function buildEligibleIncidentTemplates(
+  context: SimSystemContext,
+  state: IncidentState,
+  currentMinute: number,
+  pressure: number,
+  options: IncidentSelectionOptions,
+): IncidentTemplate[] {
+  const mercyWindowActive = isOpeningIncidentMercyWindowActive(context);
+  return INCIDENT_TEMPLATES.filter((template) => {
+    if (
+      mercyWindowActive &&
+      !OPENING_SAFE_INCIDENT_CATEGORIES.includes(
+        template.category as (typeof OPENING_SAFE_INCIDENT_CATEGORIES)[number],
+      )
+    ) {
+      return false;
+    }
+    if (options.allowedCategories && !options.allowedCategories.includes(template.category)) {
+      return false;
+    }
+    if (!options.ignorePressureThreshold && pressure < template.pressureThreshold) return false;
+    if (!options.ignoreCooldowns && isIncidentOnCooldown(state, template, currentMinute)) {
+      return false;
+    }
+    if (!options.ignoreRecentFamilyLimit) {
+      const recentCount = state.history.filter(
+        (h) =>
+          h.triggerFamily === template.triggerFamily && currentMinute - h.resolvedAtMinute < 480,
+      ).length;
+      if (recentCount >= 2) return false;
+    }
+    return true;
+  });
 }
 
 export function isIncidentOnCooldown(
@@ -442,21 +655,15 @@ export function selectIncidentCandidate(
   state: IncidentState,
   currentMinute: number,
   pressure: number,
+  options: IncidentSelectionOptions = {},
 ): PendingIncident | null {
-  const eligible = INCIDENT_TEMPLATES.filter((template) => {
-    if (pressure < template.pressureThreshold) return false;
-    if (isIncidentOnCooldown(state, template, currentMinute)) return false;
-    // Check recency suppression
-    const recentCount = state.history.filter(
-      (h) => h.triggerFamily === template.triggerFamily && currentMinute - h.resolvedAtMinute < 480,
-    ).length;
-    if (recentCount >= 2) return false;
-    return true;
-  });
+  const eligible = buildEligibleIncidentTemplates(context, state, currentMinute, pressure, options);
 
   if (eligible.length === 0) return null;
 
-  const rng = new SeededRng(seedFromKey(`incident:${currentMinute}`));
+  const rng = new SeededRng(
+    seedFromSimulationKey(context, options.seedKey ?? `incident:${currentMinute}`),
+  );
   const weighted: WeightedItem<IncidentTemplate>[] = eligible.map((t) => ({
     item: t,
     weight: t.weight * t.noveltyWeight,
@@ -480,6 +687,71 @@ export function selectIncidentCandidate(
   return incident;
 }
 
+export function forceSeedOpeningIncident(
+  context: SimSystemContext,
+  state: IncidentState,
+  currentMinute: number,
+): PendingIncident | null {
+  return selectIncidentCandidate(context, state, currentMinute, 0, {
+    allowedCategories: OPENING_FORCE_SEED_INCIDENT_CATEGORIES,
+    ignorePressureThreshold: true,
+    ignoreCooldowns: true,
+    ignoreRecentFamilyLimit: true,
+    seedKey: `opening-incident:${currentMinute}:${state.nextInstanceId}`,
+  });
+}
+
+function buildOperatorNameMap(context: SimSystemContext): Record<string, string> {
+  const operatorNames: Record<string, string> = {};
+  for (const entity of context.runtimeState.operatorEntities) {
+    operatorNames[OperatorIdentity.id[entity]] = OperatorIdentity.name[entity];
+  }
+  return operatorNames;
+}
+
+export function queueIncident(
+  context: SimSystemContext,
+  state: IncidentState,
+  incident: PendingIncident,
+  sourceSystem: string,
+): boolean {
+  if (state.pendingIncident !== null) {
+    return false;
+  }
+
+  const template = INCIDENT_TEMPLATES.find((entry) => entry.id === incident.templateId);
+  if (!template) {
+    return false;
+  }
+
+  const currentMinute = getCurrentAbsoluteMinute(context);
+  state.pendingIncident = incident;
+  state.lastEvaluationMinute = currentMinute;
+
+  const payload = createIncidentInterruptionPayload(
+    incident,
+    template,
+    buildOperatorNameMap(context),
+  );
+  const subjectSummary = payload.subjectSummary.trim();
+  const subjectSuffix = subjectSummary.length > 0 ? ` (${subjectSummary})` : "";
+
+  pushRuntimeEvent(context, {
+    kind: "event_change",
+    message: `Incident: ${payload.title}${subjectSuffix} requires attention.`,
+    accent: "ember",
+  });
+
+  enqueueInterruption(
+    context.runtimeState.interruptionQueue,
+    "incident",
+    payload,
+    sourceSystem,
+    currentMinute,
+  );
+  return true;
+}
+
 function bindIncidentSubjects(
   context: SimSystemContext,
   template: IncidentTemplate,
@@ -492,14 +764,20 @@ function bindIncidentSubjects(
   if (template.requiredContext.includes("operator_a") && activeOperators.length > 0) {
     // Pick the operator with lowest morale for conflict/negative incidents
     const rng = new SeededRng(
-      seedFromKey(`bind:${template.id}:${context.runtimeState.nextOperatorSequence}`),
+      seedFromSimulationKey(
+        context,
+        `bind:${template.id}:${context.runtimeState.nextOperatorSequence}`,
+      ),
     );
     const idx = rng.int(0, activeOperators.length - 1);
     operatorIds.push(OperatorIdentity.id[activeOperators[idx]]);
   }
   if (template.requiredContext.includes("operator_b") && activeOperators.length > 1) {
     const rng = new SeededRng(
-      seedFromKey(`bind-b:${template.id}:${context.runtimeState.nextOperatorSequence}`),
+      seedFromSimulationKey(
+        context,
+        `bind-b:${template.id}:${context.runtimeState.nextOperatorSequence}`,
+      ),
     );
     let idx = rng.int(0, activeOperators.length - 1);
     const firstId = operatorIds[0];

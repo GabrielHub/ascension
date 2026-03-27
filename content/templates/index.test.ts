@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { bootstrapScenario } from "../bootstrap";
+import {
+  bootstrapScenario,
+  canonicalNewGameScenario,
+  previewBootstrapScenario,
+} from "../bootstrap";
 import { createTemplateRegistry } from "./index";
 
 describe("template registry", () => {
@@ -241,8 +245,8 @@ describe("template registry", () => {
     const cash = registry.resourceById.get("resource/cash");
 
     expect(cash).toBeTruthy();
-    expect(cash!.startingAmount).toBe(500);
-    expect(bootstrapScenario.guild.treasury).toBe(500);
+    expect(cash!.startingAmount).toBe(400);
+    expect(canonicalNewGameScenario.guild.treasury).toBe(400);
   });
 });
 
@@ -335,5 +339,40 @@ describe("bootstrap validation", () => {
     expect(roles).toContain("role:field_lead");
     expect(roles).toContain("role:scout");
     expect(roles).toContain("role:medic");
+  });
+});
+
+describe("canonical new-game validation", () => {
+  it("keeps the sparse canonical opening roster separate from preview bootstrap data", () => {
+    expect(canonicalNewGameScenario.operators.map((operator) => operator.id)).toEqual([
+      "operator/rose-vega",
+      "operator/milo-hart",
+      "operator/jin-tanaka",
+      "operator/vera-santos",
+    ]);
+    expect(canonicalNewGameScenario.staff.map((staff) => staff.id)).toEqual([
+      "staff/aina",
+      "staff/boris",
+    ]);
+    expect(canonicalNewGameScenario.visitors.map((visitor) => visitor.id)).toEqual([
+      "visitor/nika",
+    ]);
+    expect(canonicalNewGameScenario.guild.treasury).toBe(400);
+    expect(canonicalNewGameScenario.inventory).toEqual([
+      { itemId: "weapon/pipe-wrench", quantity: 2 },
+      { itemId: "weapon/kitchen-knife", quantity: 1 },
+      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
+      { itemId: "accessory/comm-earpiece", quantity: 1 },
+    ]);
+  });
+
+  it("preserves the denser preview bootstrap scenario", () => {
+    expect(previewBootstrapScenario.operators).toHaveLength(6);
+    expect(previewBootstrapScenario.staff).toHaveLength(3);
+    expect(previewBootstrapScenario.visitors).toHaveLength(3);
+    expect(previewBootstrapScenario.guild.treasury).toBe(500);
+    expect(
+      previewBootstrapScenario.inventory.some((entry) => entry.itemId === "loot/monster-part/fang"),
+    ).toBe(true);
   });
 });

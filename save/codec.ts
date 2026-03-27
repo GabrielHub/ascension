@@ -48,6 +48,15 @@ import {
 import { templateRegistry } from "content/templates";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import {
+  CONTRACT_POSTURE_OPTIONS,
+  DEFAULT_POLICY_STATE,
+  OBJECTIVE_BIAS_OPTIONS,
+  RECOVERY_TRIAGE_OPTIONS,
+  ROSTER_FLOW_OPTIONS,
+  STAFFING_PRIORITY_OPTIONS,
+  type PolicyState,
+} from "lib/policies";
+import {
   getApplicableRoomUpgradeIds,
   getKnownBuildingSlotPlacements,
   getRoomActiveFootprint,
@@ -1570,6 +1579,59 @@ function parseEquipmentAssignmentSnapshot(
   };
 }
 
+function expectPolicyOption<T extends readonly string[]>(
+  value: unknown,
+  path: string,
+  options: T,
+): T[number] {
+  const parsed = expectString(value, path);
+  if (!options.includes(parsed as T[number])) {
+    fail(path, `must be one of ${options.join(", ")}, got "${parsed}".`);
+  }
+  return parsed as T[number];
+}
+
+function parsePolicyStateSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): { policies: PolicyState; changed: boolean } {
+  if (value === undefined || value === null) {
+    return {
+      policies: { ...DEFAULT_POLICY_STATE },
+      changed: schemaVersion < 15 || value === undefined,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  return {
+    policies: {
+      contractPosture: expectPolicyOption(
+        record.contractPosture,
+        `${path}.contractPosture`,
+        CONTRACT_POSTURE_OPTIONS,
+      ),
+      objectiveBias: expectPolicyOption(
+        record.objectiveBias,
+        `${path}.objectiveBias`,
+        OBJECTIVE_BIAS_OPTIONS,
+      ),
+      recoveryTriage: expectPolicyOption(
+        record.recoveryTriage,
+        `${path}.recoveryTriage`,
+        RECOVERY_TRIAGE_OPTIONS,
+      ),
+      staffingPriority: expectPolicyOption(
+        record.staffingPriority,
+        `${path}.staffingPriority`,
+        STAFFING_PRIORITY_OPTIONS,
+      ),
+      rosterFlow: expectPolicyOption(record.rosterFlow, `${path}.rosterFlow`, ROSTER_FLOW_OPTIONS),
+    },
+    changed: false,
+  };
+}
+
 function deriveDispositionFromOperator(operator: OperatorSnapshot): OperatorDispositionSnapshot {
   const moraleRecord = operator.morale;
   const loyaltyRecord = operator.loyalty;
@@ -1651,6 +1713,7 @@ function parseWorldSnapshot(
   );
   const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
   const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
+  const policies = parsePolicyStateSnapshot(record.policies, `${path}.policies`, schemaVersion);
   const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
   const rooms = parseCollection(record.rooms, `${path}.rooms`, (entry, entryPath) =>
     parseRoomSnapshot(entry, entryPath, schemaVersion, building.building),
@@ -1968,6 +2031,7 @@ function parseWorldSnapshot(
       roomCultures,
       inventoryStacks,
       equipmentAssignments,
+      policies: policies.policies,
       // Encounter, interruption, and incident state: pass through if present, ignore if absent
       ...(record.activeEncounter && typeof record.activeEncounter === "object"
         ? { activeEncounter: record.activeEncounter as SaveStructuredRecord }
@@ -2002,6 +2066,7 @@ function parseWorldSnapshot(
       contractResult.changed ||
       fogOfWar.changed ||
       scheduler.changed ||
+      policies.changed ||
       raidSummaryChanged ||
       phase2Changed ||
       legacyContent.changed,

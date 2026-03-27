@@ -25,7 +25,7 @@ import { INTERVENTION_DEFINITIONS, getBossEncounterDefinition } from "./encounte
 import { templateRegistry } from "content/templates";
 import type { AbilityEffect, StatusId, TargetingRule } from "content/templates/kits";
 import { REGULAR_ATTACKS, SKILLS, ULTIMATES } from "content/templates/kits";
-import { SeededRng, seedFromKey, weightedChoice, type WeightedItem } from "../uncertainty";
+import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
 import type { SimSystemContext } from "./types";
 import {
   GuildState,
@@ -37,6 +37,7 @@ import {
 } from "../components";
 import { pushRuntimeEvent } from "./commands";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { seedFromSimulationKey } from "./seed-utils";
 
 // ── Kit lookup maps (built once at module load) ─────────────────────────
 
@@ -73,7 +74,7 @@ export function createBossEncounter(
   const bossDef = getBossEncounterDefinition(context.registry, missionId, bossId);
   if (!bossDef) return null;
 
-  const seed = seedFromKey(`encounter:${activeRaidId}:${bossId}`);
+  const seed = seedFromSimulationKey(context, `encounter:${activeRaidId}:${bossId}`);
   const rng = new SeededRng(seed);
 
   const actors: Record<string, ActorCombatState> = {};

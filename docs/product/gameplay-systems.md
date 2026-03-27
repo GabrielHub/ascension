@@ -7,8 +7,11 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Recruitment is the core progression loop. The game should not be about grinding a weak operator into a fundamentally different one.
 - Attunement and field role are fixed at recruitment. Training improves the operator you already have; it does not redefine what their attunement is.
 - Rank advancement is possible but rare, dramatic, and not a standard progression path.
+- The real early-game progression band should span F, E, and D content, but with strongly weighted rarity rather than even availability.
+- Lower-rank content should never disappear completely. Progression should shift weighted pools upward instead of hard-deleting F or E outcomes from the game.
 - The first post-bodega building should unlock systems and room families that do not fit in a bodega, not just increase capacity.
 - Early external pressure should come primarily from the dungeon economy and the operator labor market, with city institutions layered in later.
+- The next bodega management expansion should prioritize intel and administrative control before introducing broader new subloops.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
 
 ## Shared Uncertainty Resolution
@@ -99,6 +102,15 @@ Rank advancement is technically possible but represents a rare, dramatic event:
 - Is a late-game event, not a standard progression
 - Should feel like a story moment, not a level-up
 - Most operators never advance in rank. This is normal and expected.
+
+Recruitment rarity direction should work like a weighted labor-market ladder, not a clean era switch:
+
+- Early bodega progression should be mostly F recruits, with E as a meaningful improvement band and D as a rare early jackpot.
+- Late bodega should still produce many F and E recruits, but D should become a plausible if uncommon outcome once reputation, facilities, and staffing improve.
+- Midgame should shift the center of gravity toward D, C, and B.
+- Late midgame should make the first A-rank recruit feel like a real milestone, not a routine pull.
+- Endgame should center on B, A, and S while still allowing occasional lower-rank filler outcomes for labor-market texture.
+- Recruit distribution should be authored through inspectable weight tables keyed by campaign progression, reputation, room support, and other explicit simulation inputs rather than one-off hand tuning.
 
 Staff are hired, assigned to rooms, and provide gameplay bonuses, but they should still read as authored people rather than faceless modifiers. They are the infrastructure that lets operators focus on the dangerous work.
 
@@ -196,9 +208,12 @@ Player-facing startup direction:
 Loot and early raid-economy direction:
 
 - Regular enemies can drop stackable loot items. The default early loot family is monster parts.
+- Regular enemies should usually drop resources, salvage, and monster parts; direct gear drops should be the minority case.
 - Tougher enemies within a dungeon have better drop rates and can more credibly drop usable gear.
 - Bosses drop larger or rarer monster-part stacks tied to their dungeon theme and rank, and they can also drop gear.
 - Higher-rank dungeons improve both loot value and gear quality.
+- Site rank should hard-cap direct gear drop quality at roughly site rank plus one band. An E-rank site may rarely drop D-rank gear, but should not jump past that cap.
+- Upper-cap drops should skew toward elite and boss sources rather than ordinary fodder.
 - Defeated bosses close the dungeon and remove access to that dungeon's drop table.
 
 ## Gear, Resources, And Rooms
@@ -236,6 +251,7 @@ Gear, inventory, and market defaults:
 - Gear drops can go directly into the shared inventory stack when recovered from raids.
 - Accessories should auto-select from eligible inventory stacks using operator role, rank, preferences, and current needs.
 - Phase 2 only requires auto-selection for accessories. Broader automated weapon or outfit policy can land later if it proves necessary.
+- The bodega may introduce lightweight consumable preparation as a precursor system, but that should stay deliberately narrow: short recipe lists, temporary raid aids, and no full workshop identity.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
 
@@ -275,6 +291,8 @@ Later role-specific room variants should include:
 
 Staff assigned to rooms improve the room's effectiveness. This should remain a core management loop.
 
+Low-tier headquarters should be allowed to introduce bodega-native hybrid operations rooms that cover missing management surfaces without pretending the guild already has a union-hall facility stack. Valid early additions include intel/admin support, deployment staging, and lightweight consumable prep. Those are extensions of management, not proof that the bodega secretly contains a full workshop, infirmary, or training wing.
+
 Multi-floor headquarters direction:
 
 - The first post-bodega building should be allowed to span multiple floors rather than only widening the same ground plane.
@@ -296,3 +314,22 @@ Multi-floor headquarters direction:
 - When city institutions become real pressure sources, start with licensing and compliance, labor and worker-safety oversight, emergency-response and site-containment pressure, and borough-level contracting or political pressure.
 - Crafting should deepen through authored recipe families, resource families, rare site-specific materials, and tag-driven quality rules rather than through an exhaustive part-by-part manufacturing sim.
 - Room and staff quality rules should stay legible and tiered. Favor authored packages, tags, thresholds, and a few strong modifiers over sprawling hidden formula stacks.
+
+## AI Content Layer Defaults
+
+- AI can phrase, contextualize, and vary structured deterministic gameplay payloads, but it must not become the authority for triggers, hidden modifiers, or consequence application.
+- Incident generation should work from simulation-owned structured inputs such as subjects, trigger family, tags, available choices, and deterministic effect bundles. The model may write the briefing, option phrasing, and recap. The simulation still decides what happened.
+- Operator generation should use structured outputs that select from approved prefab appearance parts, recipe slots, names, personality hooks, social flavor, and descriptive text. The model may assemble and flavor the operator identity, but it must not invent unsupported asset types or bypass the approved part registry.
+- Skill and ability text may be AI-authored if the underlying numeric payloads, targeting rules, cooldowns, and schema shape are already locked by deterministic content data.
+- Schema validity is necessary but not sufficient. A schema-valid payload can still be balance-breaking, tonally wrong, or content-incompatible.
+- Canonical campaign generation must keep gameplay-affecting stats, rank, kit slots, and numeric effect payloads inside authored budget envelopes. If the product later wants rare exceptional operators, that exception must be explicit, bounded, and simulation-owned rather than an accidental side effect of prompt drift.
+- AI-generated outputs must be save-safe, debuggable, and replaceable. If model output fails validation or quality checks, the game must fall back to approved authored copy, approved prefab combinations, or approved candidate pools.
+- AI-assisted systems must be optional at runtime. The game should support AI-disabled play as a first-class mode, remain fully playable offline, and allow the player to toggle AI features from the start screen before loading a run or from in-game settings during an active campaign.
+- The game must remain fully playable without live model access. AI is a variation layer, not a runtime dependency for the core management loop.
+
+## Balance Authoring And Verification
+
+- Balance should be owned by authored tables and deterministic simulation, not by vibes-only content drops.
+- Maintain explicit ledgers for recruit-rank weights, item stat budgets, dungeon reward budgets, and room unlock pacing so new content can be validated against a known envelope.
+- Browser-driven autoplay and regression scenarios should be able to run seeded campaigns end to end, capture treasury, roster, contract, and casualty metrics, and compare those runs against expected thresholds.
+- AI can later help inspect those run outputs, summarize outliers, and suggest tuning targets, but it must not become the hidden gameplay authority or replace deterministic balance data.

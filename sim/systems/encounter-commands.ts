@@ -29,8 +29,7 @@ import {
   resolveIncident,
   createBossCommitmentPayload,
   selectIncidentCandidate,
-  createIncidentInterruptionPayload,
-  INCIDENT_TEMPLATES,
+  queueIncident,
 } from "./incidents";
 import type { InterventionId } from "./encounter-types";
 
@@ -301,22 +300,7 @@ export function applyEncounterCommand(
         80,
       );
       if (candidate) {
-        context.runtimeState.incidentState.pendingIncident = candidate;
-        const operatorNames: Record<string, string> = {};
-        for (const entity of context.runtimeState.operatorEntities) {
-          operatorNames[OperatorIdentity.id[entity]] = OperatorIdentity.name[entity];
-        }
-        const template = INCIDENT_TEMPLATES.find((t) => t.id === candidate.templateId);
-        if (template) {
-          const incPayload = createIncidentInterruptionPayload(candidate, template, operatorNames);
-          enqueueInterruption(
-            context.runtimeState.interruptionQueue,
-            "incident",
-            incPayload,
-            "dev-menu",
-            currentMinute,
-          );
-        }
+        queueIncident(context, context.runtimeState.incidentState, candidate, "dev-menu");
       }
       return true;
     }

@@ -1,6 +1,14 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
 
 import {
+  getAutonomyThresholdsForPolicies,
+  getContractPostureConfig,
+  getObjectiveBiasConfig,
+  getPolicyOptionLabel,
+  getRecoveryTriageConfig,
+  getRosterFlowConfig,
+} from "lib/policies";
+import {
   AssignmentState,
   BuildingAuthority,
   type ActiveRaidPacketRecord,
@@ -28,6 +36,7 @@ import {
 import {
   clamp,
   formatWorldTimestamp,
+  getBuildingPolicies,
   getCurrentAbsoluteMinute,
   pushRuntimeEvent,
   removeTrackedEntity,
@@ -48,12 +57,8 @@ import {
 } from "./social";
 import { computeDerivedStats, type OperatorBaseStats } from "./derived-stats";
 import type { BossTag, BossWeakness } from "content/templates/shared";
-import {
-  siteConceptTemplates,
-  siteConceptById,
-  type ContractRank,
-} from "content/templates/site-concepts";
-import { SeededRng, weightedChoice, boundedRoll, seedFromKey } from "../uncertainty";
+import { siteConceptTemplates, siteConceptById } from "content/templates/site-concepts";
+import { SeededRng, weightedChoice, boundedRoll } from "../uncertainty";
 import type { RaidTeamGoal } from "lib/raid-team-goal";
 import {
   simulateRaidRun,
@@ -61,6 +66,18 @@ import {
   markRaidRunBossCommitment,
   type SimOperator,
 } from "./raid-simulation";
+import {
+  POSTED_CONTRACT_VARIANCE,
+  RAID_OPPORTUNITY_VARIANCE,
+  computeBossCompletionCashBonus,
+  computeBossCompletionReputationBonus,
+  computePostedContractEconomyBudget,
+  computeRaidCashDelta,
+  computeRaidOpportunityEconomyBudget,
+  computeRaidReputationDelta,
+  getAvailableContractRanksForReputation,
+  getMinimumReputationForContractRank,
+} from "./contract-economy";
 import type {
   RaidEncounterThreat,
   RaidFeatureKind,
@@ -73,10 +90,15 @@ import type {
   SimSystem,
   SimSystemContext,
 } from "./types";
+import { seedFromSimulationKey } from "./seed-utils";
 
 export type { RaidTeamGoal } from "lib/raid-team-goal";
 
 // ── Simulation bridge helpers ──────────────────────────────────────────
+
+function getPolicyState(context: SimSystemContext) {
+  return getBuildingPolicies(context);
+}
 
 function buildSimOperators(context: SimSystemContext, operatorEntities: number[]): SimOperator[] {
   return operatorEntities.map((entity) => {
@@ -109,6 +131,9 @@ const FORMATION_DELAY_MINUTES = 60;
 const DEFAULT_OPPORTUNITY_LIFETIME_MINUTES = 300;
 const FOG_GRID_WIDTH = 16;
 const FOG_GRID_HEIGHT = 16;
+const FIRST_CONTRACT_SHIELD_END_BEAT_ID = "guidance/opening/first-raid-return";
+const FIRST_CONTRACT_SHIELDED_INJURY_TOTAL = 85;
+const FIRST_CONTRACT_FATAL_INJURY_THRESHOLD = 95;
 
 export interface RaidReadinessSignal {
   availabilityScore: number;
@@ -458,7 +483,7 @@ function ensureRaidPresentationSeed(context: SimSystemContext, contractSiteId: s
     return;
   }
 
-  const rng = new SeededRng(seedFromKey(`raid-presentation:${contractSiteId}`));
+  const rng = new SeededRng(seedFromSimulationKey(context, `raid-presentation:${contractSiteId}`));
   const features: RaidPresentationFeature[] = [
     {
       id: `${contractSiteId}:feature:intel-0`,
@@ -699,6 +724,60 @@ function humanizeRuntimeReason(reason: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function isFirstContractDeathShieldActive(context: SimSystemContext): boolean {
+  const guidanceState = context.runtimeState.guidanceState;
+
+  return (
+    guidanceState.openingPathState === "active" &&
+    !guidanceState.completedBeatIds.includes(FIRST_CONTRACT_SHIELD_END_BEAT_ID)
+  );
+}
+
+function applyFirstContractDeathShield(
+  context: SimSystemContext,
+  resolutionPacket: ActiveRaidResolutionPacket,
+  operatorEntityById?: ReadonlyMap<string, number>,
+): void {
+  if (!isFirstContractDeathShieldActive(context)) {
+    return;
+  }
+
+  let shieldApplied = false;
+  resolutionPacket.operatorOutcomes = resolutionPacket.operatorOutcomes.map((outcome) => {
+    if (!outcome.died) {
+      return outcome;
+    }
+
+    const operatorEntity =
+      operatorEntityById?.get(outcome.operatorId) ??
+      context.runtimeState.operatorEntities.find(
+        (entity) => OperatorIdentity.id[entity] === outcome.operatorId,
+      );
+    const currentSeverity = operatorEntity === undefined ? 0 : InjuryState.severity[operatorEntity];
+    const shieldedTotalInjury = clamp(
+      Math.max(currentSeverity + outcome.injuryDelta, FIRST_CONTRACT_SHIELDED_INJURY_TOTAL),
+      0,
+      FIRST_CONTRACT_FATAL_INJURY_THRESHOLD - 1,
+    );
+
+    shieldApplied = true;
+    return {
+      operatorId: outcome.operatorId,
+      injuryDelta: Math.max(0, shieldedTotalInjury - currentSeverity),
+      moraleDelta: outcome.moraleDelta,
+      loyaltyDelta: outcome.loyaltyDelta,
+      status: "hurt" as const,
+    };
+  });
+
+  if (shieldApplied && !resolutionPacket.narrativeTags.includes("opening:first-contract-shield")) {
+    resolutionPacket.narrativeTags = [
+      ...resolutionPacket.narrativeTags,
+      "opening:first-contract-shield",
+    ];
+  }
+}
+
 function getTeamDamageReasonLabel(reason: string): string {
   switch (reason) {
     case "retention_break":
@@ -801,6 +880,7 @@ function computeRiskRewardFit(
   entity: number,
   opportunityEntity: number,
 ): number {
+  const contractPosture = getContractPostureConfig(getPolicyState(context));
   const riskGap = Math.abs(
     PreferenceState.riskTolerance[entity] - RaidOpportunityState.risk[opportunityEntity],
   );
@@ -813,7 +893,15 @@ function computeRiskRewardFit(
     getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]).tags,
   );
 
-  return clamp(22 + rewardPull + intelConfidence + missionFit - riskGap * 0.4, 0, 100);
+  return clamp(
+    22 +
+      rewardPull +
+      intelConfidence +
+      missionFit -
+      riskGap * 0.4 * contractPosture.riskGapPenaltyMultiplier,
+    0,
+    100,
+  );
 }
 
 export function computeOperatorRaidReadiness(
@@ -821,14 +909,20 @@ export function computeOperatorRaidReadiness(
   entity: number,
   opportunityEntity: number,
 ): RaidReadinessSignal {
+  const recoveryTriage = getRecoveryTriageConfig(getPolicyState(context));
   const schedulePressure = computeSchedulePressure(ScheduleState.currentBlock[entity] || "idle");
   const assignmentPenalty = AssignmentState.kind[entity] === "raid" ? 40 : 0;
+  const fatiguePenalty =
+    NeedState.fatigue[entity] > recoveryTriage.fatigueRaidPenaltyThreshold
+      ? (NeedState.fatigue[entity] - recoveryTriage.fatigueRaidPenaltyThreshold) * 0.9
+      : 0;
   const availabilityScore = clamp(
     100 -
       InjuryState.severity[entity] * 0.85 -
       NeedState.fatigue[entity] * 0.55 -
       NeedState.stress[entity] * 0.35 -
       NeedState.hunger[entity] * 0.18 -
+      fatiguePenalty -
       schedulePressure * 0.45 -
       assignmentPenalty +
       LoyaltyState.current[entity] * 0.08,
@@ -913,26 +1007,41 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   const mission = getMissionTemplate(context, contractSite.missionId);
   const entity = addEntity(context.world);
   const rng = new SeededRng(
-    seedFromKey(`contract-opportunity:${contractSite.contractSiteId}:${sequence}`),
+    seedFromSimulationKey(
+      context,
+      `contract-opportunity:${contractSite.contractSiteId}:${sequence}`,
+    ),
   );
-  const threatVariance = rng.int(-4, 6);
-  const intelVariance = rng.int(-6, 4);
-  const rewardVariance = rng.int(-8, 12);
+  const threatVariance = rng.int(
+    RAID_OPPORTUNITY_VARIANCE.threat.min,
+    RAID_OPPORTUNITY_VARIANCE.threat.max,
+  );
+  const intelVariance = rng.int(
+    RAID_OPPORTUNITY_VARIANCE.intel.min,
+    RAID_OPPORTUNITY_VARIANCE.intel.max,
+  );
+  const rewardVariance = rng.int(
+    RAID_OPPORTUNITY_VARIANCE.reward.min,
+    RAID_OPPORTUNITY_VARIANCE.reward.max,
+  );
+  const opportunityBudget = computeRaidOpportunityEconomyBudget({
+    contractThreat: contractSite.threat,
+    contractIntel: contractSite.intel,
+    contractReward: contractSite.reward,
+    missionExpectedThreatTagCount: mission.expectedThreatTags.length,
+    threatVariance,
+    intelVariance,
+    rewardVariance,
+  });
 
   addComponent(context.world, entity, RaidOpportunityState);
   RaidOpportunityState.id[entity] = `opportunity/${sequence}`;
   RaidOpportunityState.missionId[entity] = mission.id;
   RaidOpportunityState.location[entity] = contractSite.location;
-  RaidOpportunityState.threat[entity] = clamp(contractSite.threat + threatVariance, 20, 95);
-  RaidOpportunityState.intel[entity] = clamp(contractSite.intel + intelVariance, 10, 92);
-  RaidOpportunityState.reward[entity] = clamp(contractSite.reward + rewardVariance, 40, 180);
-  RaidOpportunityState.risk[entity] = clamp(
-    RaidOpportunityState.threat[entity] +
-      mission.expectedThreatTags.length * 4 -
-      RaidOpportunityState.intel[entity] * 0.35,
-    18,
-    96,
-  );
+  RaidOpportunityState.threat[entity] = opportunityBudget.threat;
+  RaidOpportunityState.intel[entity] = opportunityBudget.intel;
+  RaidOpportunityState.reward[entity] = opportunityBudget.reward;
+  RaidOpportunityState.risk[entity] = opportunityBudget.risk;
   RaidOpportunityState.status[entity] = "open";
   RaidOpportunityState.interestedOperatorIds[entity] = [];
   RaidOpportunityState.claimedOperatorIds[entity] = [];
@@ -968,6 +1077,10 @@ function planOpportunityTeam(
   opportunityEntity: number,
   reservedOperatorIds: Set<string>,
 ) {
+  const policies = getPolicyState(context);
+  const contractPosture = getContractPostureConfig(policies);
+  const recoveryTriage = getRecoveryTriageConfig(policies);
+  const autonomyThresholds = getAutonomyThresholdsForPolicies(policies);
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
   const minimumRaidSize = getRecommendedOperatorCountForMission(mission.baseDurationHours);
 
@@ -977,12 +1090,14 @@ function planOpportunityTeam(
       if (reservedOperatorIds.has(OperatorIdentity.id[entity])) return false;
       if (RaidParticipationState.activeRaidId[entity].length > 0) return false;
 
-      if (InjuryState.severity[entity] > 60) return false;
+      if (InjuryState.severity[entity] > recoveryTriage.injuryRaidThreshold) return false;
+      if (NeedState.fatigue[entity] > recoveryTriage.fatigueRaidPenaltyThreshold) return false;
 
-      const autonomyFlags = computeAutonomyFlags(entity);
+      const autonomyFlags = computeAutonomyFlags(entity, autonomyThresholds);
       if (autonomyFlags.refusalRisk) {
         const refusalRng = new SeededRng(
-          seedFromKey(
+          seedFromSimulationKey(
+            context,
             `refusal:${OperatorIdentity.id[entity]}:${getCurrentAbsoluteMinute(context)}`,
           ),
         );
@@ -1013,7 +1128,9 @@ function planOpportunityTeam(
         },
       };
     })
-    .filter(({ readiness }) => readiness.willingnessScore >= 54)
+    .filter(({ readiness }) => {
+      return readiness.willingnessScore >= contractPosture.minimumWillingnessThreshold;
+    })
     .sort((left, right) => {
       const readinessDelta = right.readiness.willingnessScore - left.readiness.willingnessScore;
       if (readinessDelta !== 0) {
@@ -1284,13 +1401,8 @@ function createResolutionPacket(
 
   return {
     result,
-    reputationDelta: result === "success" ? 7 : result === "mixed" ? 2 : -5,
-    cashDelta:
-      result === "success"
-        ? Math.round(opportunityReward)
-        : result === "mixed"
-          ? Math.round(opportunityReward * 0.55)
-          : -Math.round(opportunityRisk * 0.5),
+    reputationDelta: computeRaidReputationDelta(result),
+    cashDelta: computeRaidCashDelta(result, opportunityReward, opportunityRisk),
     operatorOutcomes: operatorEntities.map((entity, index) => {
       const injuryDelta =
         result === "failure"
@@ -1382,6 +1494,25 @@ function deriveResolutionFromRun(
     narrativeTags: [`result:${result}`, ...(summary?.contributingFactors ?? [])],
     intelMismatchTags: [],
   };
+}
+
+function scaleObjectiveBiasLootDrops(lootDrops: readonly string[], multiplier: number): string[] {
+  if (lootDrops.length === 0 || multiplier === 1) {
+    return [...lootDrops];
+  }
+
+  if (multiplier > 1) {
+    const targetCount = Math.max(lootDrops.length, Math.round(lootDrops.length * multiplier));
+    const extrasNeeded = targetCount - lootDrops.length;
+    return [...lootDrops, ...lootDrops.slice(0, extrasNeeded)];
+  }
+
+  const targetCount = Math.round(lootDrops.length * multiplier);
+  if (targetCount <= 0) {
+    return [];
+  }
+
+  return lootDrops.slice(0, targetCount);
 }
 
 function stripBossDefeatTags(tags: readonly string[]): string[] {
@@ -1476,6 +1607,8 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
 
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
   const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+  const objectiveBiasState = getPolicyState(context);
+  const objectiveBias = getObjectiveBiasConfig(objectiveBiasState);
   const claimedOperatorIds = [
     ...(RaidOpportunityState.claimedOperatorIds[opportunityEntity] ?? []),
   ];
@@ -1493,7 +1626,8 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
 
   const startedTick = getCurrentAbsoluteMinute(context);
   const raidId = `raid/${context.runtimeState.nextRaidSequence}`;
-  const returnTick = startedTick + mission.baseDurationHours * 60;
+  const durationHours = Math.max(1, mission.baseDurationHours * objectiveBias.durationMultiplier);
+  const returnTick = startedTick + Math.max(60, Math.round(durationHours * 60));
   const averageReadiness =
     operatorEntities.reduce((total, entity) => {
       return (
@@ -1513,7 +1647,10 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
   const teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
 
   // ── Run deterministic raid simulation ──
-  const siteSeed = seedFromKey(`raid-sim:${raidId}:${contractSite?.contractSiteId ?? "none"}`);
+  const siteSeed = seedFromSimulationKey(
+    context,
+    `raid-sim:${raidId}:${contractSite?.contractSiteId ?? "none"}`,
+  );
   const siteConceptId = contractSite?.siteConceptId;
   const siteConcept = siteConceptId ? siteConceptById.get(siteConceptId) : undefined;
   const simOperators = buildSimOperators(context, operatorEntities);
@@ -1534,6 +1671,11 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     teamCohesion,
     contractExplorationProgress: contractSite?.explorationProgress ?? 0,
     contractBossIntelProgress: contractSite?.bossIntelProgress ?? 0,
+    contractPosture: objectiveBiasState.contractPosture,
+    objectiveBias: objectiveBiasState.objectiveBias,
+    recoveryTriage: objectiveBiasState.recoveryTriage,
+    staffingPriority: objectiveBiasState.staffingPriority,
+    rosterFlow: objectiveBiasState.rosterFlow,
   });
 
   // Derive resolution packet from simulation transcript for compatibility
@@ -1546,6 +1688,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
         averageReadiness,
         teamCohesion,
       );
+  applyFirstContractDeathShield(context, resolutionPacket);
 
   BuildingAuthority.activeRaidPackets[context.singletonEntities.building] = [
     ...(BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []),
@@ -1560,7 +1703,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
       revealProgress: 0,
       operatorIds: claimedOperatorIds,
       returnTick,
-      durationHours: mission.baseDurationHours,
+      durationHours,
       threat: RaidOpportunityState.threat[opportunityEntity],
       intel: RaidOpportunityState.intel[opportunityEntity],
       reward: RaidOpportunityState.reward[opportunityEntity],
@@ -1591,7 +1734,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
   });
   pushRuntimeEvent(context, {
     kind: "team_departure",
-    message: `${operatorNames.join(", ")} departed on ${mission.name}`,
+    message: `${operatorNames.join(", ")} departed on ${mission.name} under ${getPolicyOptionLabel("contractPosture", objectiveBiasState.contractPosture)} posture`,
     accent: "gold",
     targetKind: "team",
     targetId: raidId,
@@ -1614,6 +1757,7 @@ function finalizeRaidPacket(
   operatorEntityById: ReadonlyMap<string, number>,
 ): void {
   const buildingEntity = context.singletonEntities.building;
+  applyFirstContractDeathShield(context, packet.resolutionPacket, operatorEntityById);
 
   GuildState.treasury[context.singletonEntities.guild] += packet.resolutionPacket.cashDelta;
   GuildState.reputation[context.singletonEntities.guild] += packet.resolutionPacket.reputationDelta;
@@ -1642,9 +1786,10 @@ function finalizeRaidPacket(
       targetId: packet.id,
     });
   }
+  const activePolicies = getPolicyState(context);
   pushRuntimeEvent(context, {
     kind: "raid_result",
-    message: `${missionLabel} ${getRaidResultSummaryLabel(res.result)} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash)`,
+    message: `${missionLabel} ${getRaidResultSummaryLabel(res.result)} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash, ${getPolicyOptionLabel("contractPosture", activePolicies.contractPosture)} posture)`,
     accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
   });
 
@@ -1717,12 +1862,13 @@ function finalizeRaidPacket(
     AssignmentState.targetId[operatorEntity] = "";
   });
 
-  const lootRng = new SeededRng(seedFromKey(`loot:${packet.id}:${currentMinute}`));
-  const lootDrops = generateLootDrops(
-    context,
-    lootRng,
-    packet.resolutionPacket.result,
-    packet.missionId,
+  const lootRng = new SeededRng(
+    seedFromSimulationKey(context, `loot:${packet.id}:${currentMinute}`),
+  );
+  const objectiveBias = getObjectiveBiasConfig(getPolicyState(context));
+  const lootDrops = scaleObjectiveBiasLootDrops(
+    generateLootDrops(context, lootRng, packet.resolutionPacket.result, packet.missionId),
+    objectiveBias.lootMultiplier,
   );
   applyLootToInventory(context, lootDrops);
 
@@ -1875,6 +2021,15 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
   );
 
   BuildingAuthority.activeRaidPackets[buildingEntity] = nextPackets;
+
+  // Lock current fog level as the base for subsequent raids.
+  if (resolvedRaid) {
+    const fog = BuildingAuthority.fogOfWar[buildingEntity];
+    if (fog) {
+      fog.completedRaidRevealBase = fog.revealedCount;
+    }
+  }
+
   return resolvedRaid;
 }
 
@@ -1887,6 +2042,7 @@ export function resolveRaidBossRetreat(context: SimSystemContext, activeRaidId: 
   }
 
   packet.resolutionPacket = buildBossRetreatResolutionPacket(packet);
+  applyFirstContractDeathShield(context, packet.resolutionPacket);
   packet.returnTick = getCurrentAbsoluteMinute(context);
 
   // Update the RaidRun with boss retreat
@@ -1927,6 +2083,7 @@ export function resolveRaidBossEncounter(
   }
 
   packet.resolutionPacket = buildBossEncounterResolutionPacket(packet, encounter);
+  applyFirstContractDeathShield(context, packet.resolutionPacket);
   packet.returnTick = getCurrentAbsoluteMinute(context);
 
   // Update the RaidRun with boss result
@@ -2479,7 +2636,7 @@ function getDamagedTeamPenalty(context: SimSystemContext, operatorId: string): n
     : 0;
 }
 
-function getDepartureCheck(
+export function getDepartureCheck(
   context: SimSystemContext,
   entity: number,
   rng: SeededRng,
@@ -2488,7 +2645,10 @@ function getDepartureCheck(
   reason: string;
 } {
   const operatorId = OperatorIdentity.id[entity];
-  const flags = computeAutonomyFlags(entity);
+  const flags = computeAutonomyFlags(
+    entity,
+    getAutonomyThresholdsForPolicies(getPolicyState(context)),
+  );
   const dispositionEntity = findDispositionEntity(context, operatorId);
   const grievanceLevel =
     dispositionEntity === undefined ? 25 : OperatorDisposition.grievanceLevel[dispositionEntity];
@@ -2497,12 +2657,13 @@ function getDepartureCheck(
   const avgComfort = getAverageRoomComfort(context);
   const griefTieCount = getGriefTieCountForOperator(context, operatorId);
   const damagedTeamPenalty = getDamagedTeamPenalty(context, operatorId);
+  const rosterFlow = getRosterFlowConfig(getPolicyState(context));
 
   const reason =
     flags.quitRisk || morale <= loyalty ? "morale collapse" : "loss of faith in the guild";
   const roll = boundedRoll(
     rng,
-    flags.quitRisk ? 28 : 12,
+    (flags.quitRisk ? 28 : 12) + rosterFlow.departurePressureModifier,
     [
       { label: "morale", value: Math.max(0, 22 - morale) * 1.5 },
       { label: "loyalty", value: Math.max(0, 30 - loyalty) * 1.1 },
@@ -2562,12 +2723,14 @@ function checkRefusalAndQuit(context: SimSystemContext, rng: SeededRng): void {
     return;
   }
 
+  const autonomyThresholds = getAutonomyThresholdsForPolicies(getPolicyState(context));
+
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
     (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   );
 
   livingOperatorEntities.forEach((entity) => {
-    const flags = computeAutonomyFlags(entity);
+    const flags = computeAutonomyFlags(entity, autonomyThresholds);
     if (!flags.quitRisk && !flags.retentionRisk) {
       return;
     }
@@ -2696,7 +2859,9 @@ export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
   }
 
   if (deltaMs > 0 && isDailyRaidConsequenceTick(context)) {
-    const tickRng = new SeededRng(seedFromKey(`raid-tick:${getCurrentAbsoluteMinute(context)}`));
+    const tickRng = new SeededRng(
+      seedFromSimulationKey(context, `raid-tick:${getCurrentAbsoluteMinute(context)}`),
+    );
     checkRefusalAndQuit(context, tickRng);
     processDamagedTeams(context, tickRng);
   }
@@ -2730,20 +2895,6 @@ export const resolveRaidSystem: SimSystem = (context, deltaMs) => {
 };
 
 // ── Contract lifecycle ─────────────────────────────────────────────────────
-
-/** Rank multipliers for threat, reward, and pacing. */
-const RANK_CONFIG: Record<
-  ContractRank,
-  { threatBase: number; rewardBase: number; paceMultiplier: number }
-> = {
-  f: { threatBase: 34, rewardBase: 54, paceMultiplier: 1.0 },
-  e: { threatBase: 48, rewardBase: 80, paceMultiplier: 1.15 },
-  d: { threatBase: 60, rewardBase: 120, paceMultiplier: 1.3 },
-  c: { threatBase: 72, rewardBase: 170, paceMultiplier: 1.5 },
-  b: { threatBase: 82, rewardBase: 230, paceMultiplier: 1.7 },
-  a: { threatBase: 90, rewardBase: 300, paceMultiplier: 2.0 },
-  s: { threatBase: 95, rewardBase: 400, paceMultiplier: 2.5 },
-};
 
 function getContractLifecycle(context: SimSystemContext): ContractLifecyclePhase {
   return BuildingAuthority.contractLifecycle[context.singletonEntities.building] ?? "bidding";
@@ -2888,16 +3039,10 @@ function generateContractBoard(context: SimSystemContext): void {
   const guildEntity = context.singletonEntities.guild;
   const currentMinute = getCurrentAbsoluteMinute(context);
   const reputation = GuildState.reputation[guildEntity];
-  const rng = new SeededRng(seedFromKey(`board:${currentMinute}:${reputation}`));
+  const rng = new SeededRng(seedFromSimulationKey(context, `board:${currentMinute}:${reputation}`));
 
   // Determine available ranks based on reputation
-  const availableRanks: ContractRank[] = ["f"];
-  if (reputation >= 5) availableRanks.push("e");
-  if (reputation >= 20) availableRanks.push("d");
-  if (reputation >= 40) availableRanks.push("c");
-  if (reputation >= 60) availableRanks.push("b");
-  if (reputation >= 80) availableRanks.push("a");
-  if (reputation >= 95) availableRanks.push("s");
+  const availableRanks = getAvailableContractRanksForReputation(reputation);
 
   // Filter site concepts by available ranks
   const eligibleConcepts = siteConceptTemplates.filter((sc) =>
@@ -2926,47 +3071,44 @@ function generateContractBoard(context: SimSystemContext): void {
     const locationIndex = rng.int(0, concept.districtPool.length - 1);
     const location = concept.districtPool[locationIndex];
 
-    const rankCfg = RANK_CONFIG[rank];
-    const threat = clamp(
-      rankCfg.threatBase + mission.baseDurationHours * 6 + rng.int(-5, 8),
-      20,
-      95,
-    );
-    const intel = clamp(
-      28 +
-        GuildState.intel[guildEntity] * 14 +
-        mission.expectedThreatTags.length * 4 +
-        rng.int(-8, 8),
-      10,
-      92,
-    );
-    const reward = clamp(
-      rankCfg.rewardBase + mission.baseDurationHours * 12 + rng.int(-10, 15),
-      40,
-      500,
-    );
-    const risk = clamp(threat + mission.expectedThreatTags.length * 4 - intel * 0.35, 18, 96);
-    const bidCost = Math.round(reward * 0.08);
+    const budget = computePostedContractEconomyBudget({
+      rank,
+      missionBaseDurationHours: mission.baseDurationHours,
+      missionExpectedThreatTagCount: mission.expectedThreatTags.length,
+      guildIntel: GuildState.intel[guildEntity],
+      threatVariance: rng.int(
+        POSTED_CONTRACT_VARIANCE.threat.min,
+        POSTED_CONTRACT_VARIANCE.threat.max,
+      ),
+      intelVariance: rng.int(
+        POSTED_CONTRACT_VARIANCE.intel.min,
+        POSTED_CONTRACT_VARIANCE.intel.max,
+      ),
+      rewardVariance: rng.int(
+        POSTED_CONTRACT_VARIANCE.reward.min,
+        POSTED_CONTRACT_VARIANCE.reward.max,
+      ),
+    });
 
     // Intel controls what the player knows before bidding
     const allTraits = [...concept.threatProfileTags, ...concept.hazardTags];
     const knownTraitCount =
-      intel >= 60
+      budget.intel >= 60
         ? allTraits.length
-        : intel >= 30
+        : budget.intel >= 30
           ? Math.ceil(allTraits.length * 0.6)
           : Math.ceil(allTraits.length * 0.3);
     const knownTraits = allTraits.slice(0, knownTraitCount);
     const hiddenTraitCount = allTraits.length - knownTraitCount;
 
     // Enemy hints based on intel
-    const enemyHints = intel >= 40 ? [...concept.enemyFamilyIds] : [];
+    const enemyHints = budget.intel >= 40 ? [...concept.enemyFamilyIds] : [];
 
     // Loot family hints
-    const lootFamilyHints = intel >= 30 ? [...concept.lootFamilyIds] : [];
+    const lootFamilyHints = budget.intel >= 30 ? [...concept.lootFamilyIds] : [];
 
     // Boss hint
-    const bossHint = intel >= 50 ? concept.bossFamilyId : null;
+    const bossHint = budget.intel >= 50 ? concept.bossFamilyId : null;
 
     return {
       postingId: `posting/${currentMinute}/${index}`,
@@ -2974,12 +3116,12 @@ function generateContractBoard(context: SimSystemContext): void {
       siteConceptId: concept.siteConceptId,
       location,
       rank,
-      threat,
-      intel,
-      reward,
-      risk,
-      bidCost,
-      minReputation: rank === "f" ? 0 : rank === "e" ? 3 : rank === "d" ? 15 : 30,
+      threat: budget.threat,
+      intel: budget.intel,
+      reward: budget.reward,
+      risk: budget.risk,
+      bidCost: budget.bidCost,
+      minReputation: getMinimumReputationForContractRank(rank),
       generatedAtTick: currentMinute,
       knownTraits,
       hiddenTraitCount,
@@ -3102,20 +3244,31 @@ function advanceFogOfWar(context: SimSystemContext): void {
 
   const totalCells = fog.gridWidth * fog.gridHeight;
   const currentMinute = getCurrentAbsoluteMinute(context);
+  const objectiveBias = getObjectiveBiasConfig(getPolicyState(context));
 
-  const targetRevealed = Math.min(
-    totalCells,
-    activePackets.reduce((total, packet) => {
-      return total + Math.floor((packet.revealProgress / 100) * totalCells * 0.3);
-    }, 0),
-  );
+  // Completed raids lock their fog contribution into the base.
+  // Active raids add their reveal progress on top.
+  const base = fog.completedRaidRevealBase ?? 0;
+  const activeContribution = activePackets.reduce((total, packet) => {
+    return (
+      total +
+      Math.floor(
+        (packet.revealProgress / 100) *
+          totalCells *
+          0.3 *
+          objectiveBias.explorationCoverageMultiplier,
+      )
+    );
+  }, 0);
+  const targetRevealed = Math.min(totalCells, base + activeContribution);
   const revealBudget = Math.max(0, targetRevealed - fog.revealedCount);
   if (revealBudget === 0) {
     return;
   }
 
   const rng = new SeededRng(
-    seedFromKey(
+    seedFromSimulationKey(
+      context,
       `fog:${BuildingAuthority.contractSite[buildingEntity]?.contractSiteId ?? "site"}:${currentMinute}`,
     ),
   );
@@ -3131,11 +3284,14 @@ function advanceFogOfWar(context: SimSystemContext): void {
 
   let revealed = 0;
   let attempts = 0;
+  // Widen radius when nearby cells are saturated so that
+  // exploration can reach the boss-threshold percentage.
+  let localMisses = 0;
   while (revealed < revealBudget && attempts < revealBudget * 4) {
     // Pick a random team to reveal around
     const team = teamGridPositions[rng.int(0, teamGridPositions.length - 1)];
-    // Reveal within a radius around the team
-    const radius = 3;
+    // Start with proximity reveal, widen when local area is saturated
+    const radius = localMisses > 12 ? Math.min(8, 3 + Math.floor(localMisses / 6)) : 3;
     const rx = team.gx + rng.int(-radius, radius);
     const ry = team.gy + rng.int(-radius, radius);
     const cx = Math.max(0, Math.min(fog.gridWidth - 1, rx));
@@ -3145,6 +3301,9 @@ function advanceFogOfWar(context: SimSystemContext): void {
       fog.revealed[cellIndex] = true;
       fog.revealedCount += 1;
       revealed += 1;
+      localMisses = 0;
+    } else {
+      localMisses += 1;
     }
     attempts += 1;
   }
@@ -3168,6 +3327,7 @@ function updateSummaryDerivedProgress(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
   if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+  const objectiveBias = getObjectiveBiasConfig(getPolicyState(context));
 
   const summaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
     (s) => s.contractSiteId === contractSite.contractSiteId,
@@ -3177,9 +3337,9 @@ function updateSummaryDerivedProgress(context: SimSystemContext): void {
   for (const s of summaries) {
     if (s.result === "success") {
       successCount++;
-      intelContribution += 15;
+      intelContribution += 15 * objectiveBias.intelMultiplier;
     } else if (s.result === "mixed") {
-      intelContribution += 5;
+      intelContribution += 5 * objectiveBias.intelMultiplier;
     }
   }
   contractSite.bossIntelProgress = clamp(intelContribution, 0, 100);
@@ -3189,8 +3349,8 @@ function updateSummaryDerivedProgress(context: SimSystemContext): void {
     100,
   );
   contractSite.bossAvailable =
-    contractSite.explorationProgress >= 70 &&
-    contractSite.bossPressureProgress >= 50 &&
+    contractSite.explorationProgress >= objectiveBias.contractExplorationThreshold &&
+    contractSite.bossPressureProgress >= objectiveBias.contractPressureThreshold &&
     !contractSite.bossDefeated;
 }
 
@@ -3223,13 +3383,17 @@ export function selectTeamGoal(
     revealProgress: number;
   },
 ): RaidTeamGoal {
+  const objectiveBias = getObjectiveBiasConfig(getPolicyState(context));
   const currentMinute = getCurrentAbsoluteMinute(context);
   // Quantize to 15-minute epochs so goals persist for a meaningful period
   // instead of re-rolling every single tick.
   const goalEpoch = Math.floor(currentMinute / 15);
   const operatorKey = operatorEntities.map((entity) => OperatorIdentity.id[entity]).join("|");
   const rng = new SeededRng(
-    seedFromKey(`goal:${packet.id ?? packet.startedTick ?? 0}:${goalEpoch}:${operatorKey}`),
+    seedFromSimulationKey(
+      context,
+      `goal:${packet.id ?? packet.startedTick ?? 0}:${goalEpoch}:${operatorKey}`,
+    ),
   );
 
   // Compute team aggregate stats
@@ -3251,25 +3415,52 @@ export function selectTeamGoal(
   const choices: Array<{ item: RaidTeamGoal; weight: number }> = [
     {
       item: "exploring",
-      weight: Math.max(5, 40 - fogReveal * 0.3 + (lowIntel ? 15 : 0)),
+      weight: Math.max(
+        5,
+        40 -
+          fogReveal * 0.3 +
+          (lowIntel ? 15 : 0) +
+          (objectiveBias.goalWeightModifiers.exploring ?? 0),
+      ),
     },
     {
       item: "looting",
-      weight: Math.max(5, 25 + fogReveal * 0.15 - (highThreat ? 10 : 0)),
+      weight: Math.max(
+        5,
+        25 +
+          fogReveal * 0.15 -
+          (highThreat ? 10 : 0) +
+          (objectiveBias.goalWeightModifiers.looting ?? 0),
+      ),
     },
     {
       item: "intel",
-      weight: Math.max(5, 20 + (lowIntel ? 20 : 0) - fogReveal * 0.1),
+      weight: Math.max(
+        5,
+        20 + (lowIntel ? 20 : 0) - fogReveal * 0.1 + (objectiveBias.goalWeightModifiers.intel ?? 0),
+      ),
     },
     {
       item: "hunting",
-      weight: Math.max(5, 15 + avgRiskTolerance * 0.2 + avgMorale * 0.1),
+      weight: Math.max(
+        5,
+        15 +
+          avgRiskTolerance * 0.2 +
+          avgMorale * 0.1 +
+          (objectiveBias.goalWeightModifiers.hunting ?? 0),
+      ),
     },
     {
       item: "boss",
       weight: Math.max(
         0,
-        fogReveal > 60 ? 10 + avgMorale * 0.15 + avgRiskTolerance * 0.1 - avgFatigue * 0.2 : 0,
+        fogReveal > 60
+          ? 10 +
+              avgMorale * 0.15 +
+              avgRiskTolerance * 0.1 -
+              avgFatigue * 0.2 +
+              (objectiveBias.goalWeightModifiers.boss ?? 0)
+          : 0,
       ),
     },
     {
@@ -3307,11 +3498,11 @@ function checkDungeonClosure(context: SimSystemContext): void {
   const bossVictorySummary = raidSummaries.find((s) => s.bossDefeated === true);
   if (bossVictorySummary) {
     contractSite.bossDefeated = true;
-    // Award boss defeat bonus scaled by rank
-    const rankCfg = RANK_CONFIG[contractSite.rank ?? "f"];
-    GuildState.reputation[context.singletonEntities.guild] += 15;
-    GuildState.treasury[context.singletonEntities.guild] += Math.round(
-      contractSite.reward * 1.5 * rankCfg.paceMultiplier,
+    GuildState.reputation[context.singletonEntities.guild] +=
+      computeBossCompletionReputationBonus();
+    GuildState.treasury[context.singletonEntities.guild] += computeBossCompletionCashBonus(
+      contractSite.reward,
+      contractSite.rank ?? "f",
     );
     pushRuntimeEvent(context, {
       kind: "event_change",
@@ -3332,7 +3523,7 @@ function checkDungeonClosure(context: SimSystemContext): void {
 
   if (failureStreak >= 3) {
     const rng = new SeededRng(
-      seedFromKey(`loss:${contractSite.contractSiteId}:${raidSummaries.length}`),
+      seedFromSimulationKey(context, `loss:${contractSite.contractSiteId}:${raidSummaries.length}`),
     );
     const lossCheck = boundedRoll(
       rng,

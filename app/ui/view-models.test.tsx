@@ -152,6 +152,75 @@ describe("phase 1 view models", () => {
     );
   });
 
+  it("passes raid contributing factors through to history and resolved contract summaries", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const phase1View = simulation.getPhase1View();
+
+    const operations = buildOpsViewFromPhase1(
+      {
+        ...phase1View,
+        contractLifecycle: "resolved",
+        contractResult: {
+          contractSiteId: "contract/policy",
+          missionId: "mission/clearance",
+          siteConceptId: "site-concept/test",
+          siteConceptName: "Basement Annex",
+          location: "district/lower-east-side",
+          rank: "f",
+          outcome: "boss_defeated",
+          totalRaids: 1,
+          totalCashEarned: 120,
+          totalReputationEarned: 8,
+          operatorDeaths: 0,
+        },
+        raidSummaries: [
+          {
+            id: "raid/policy",
+            contractSiteId: "contract/policy",
+            opportunityId: "opportunity/policy",
+            missionId: "mission/clearance",
+            location: "district/lower-east-side",
+            startedAt: "day-1 09:00",
+            endedAt: "day-1 12:00",
+            result: "success",
+            reputationDelta: 8,
+            cashDelta: 120,
+            threat: 60,
+            intel: 55,
+            reward: 120,
+            cohesion: 70,
+            operatorOutcomes: [],
+            narrativeTags: [],
+            intelMismatchTags: [],
+            contributingFactors: [
+              "policy:contract_posture:aggressive",
+              "policy:staffing_priority:welfare_priority",
+            ],
+          },
+        ],
+      },
+      templateRegistry,
+    );
+
+    expect(operations.raidHistory[0]).toEqual(
+      expect.objectContaining({
+        contractSiteId: "contract/policy",
+        contributingFactors: [
+          "policy:contract_posture:aggressive",
+          "policy:staffing_priority:welfare_priority",
+        ],
+      }),
+    );
+    expect(operations.contractResult).toEqual(
+      expect.objectContaining({
+        contributingFactors: [
+          "policy:contract_posture:aggressive",
+          "policy:staffing_priority:welfare_priority",
+        ],
+      }),
+    );
+  });
+
   it("keeps legacy WorldSnapshot pressure on a safe stable fallback", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 

@@ -12,6 +12,7 @@ import {
 import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
 import { HqWorldCanvas } from "render";
 import type { EncounterActionRecord, EncounterStatus, InterventionId } from "sim";
+import { getPolicyOptionLabel, type PolicyState } from "lib/policies";
 import type {
   FocusPayload,
   HqDebugOverlays,
@@ -24,6 +25,7 @@ import { DevMenuOverlay } from "./dev-menu";
 import { EventLog } from "./event-log";
 import { HqPanel } from "./hq-panel";
 import { InventoryPanel } from "./inventory-panel";
+import { ManagementPanel } from "./management-panel";
 import { MarketPanel } from "./market-panel";
 import { OperatorPortrait } from "./operator-portrait";
 import { OperationsPanel } from "./raid-panel";
@@ -33,6 +35,7 @@ import { RosterPanel } from "./roster-panel";
 import { SettingsModal } from "./settings-modal";
 import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
+import { getRecoveryStateSummary, getRosterFlowSurfaceSummary } from "./policy-summaries";
 import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
 import { GuidanceHost } from "./guidance-host";
@@ -143,16 +146,79 @@ export async function resolveInterruptionAction(
 
 // ── Category definitions ─────────────────────────────────────────────────
 
-type HqCategory = "rooms" | "roster" | "teams" | "inventory" | "market";
+type HqCategory = "rooms" | "roster" | "management" | "teams" | "inventory" | "market";
 type OpsCategory = "contract" | "active" | "opportunities" | "history";
 
 const HQ_CATEGORIES: readonly { id: HqCategory; label: string; icon: string }[] = [
   { id: "rooms", label: "Rooms", icon: "\u25A3" },
   { id: "roster", label: "Roster", icon: "\u2616" },
+  { id: "management", label: "Management", icon: "\u2696" },
   { id: "teams", label: "Teams", icon: "\u2689" },
   { id: "inventory", label: "Inventory", icon: "\u25A8" },
   { id: "market", label: "Market", icon: "\u25C8" },
 ];
+
+export function buildGameCallbacks(
+  session: Pick<RuntimeSession, "commands"> | null,
+): GameCallbacks | null {
+  if (!session) {
+    return null;
+  }
+
+  return {
+    tick: (deltaMs: number) => {
+      void session.commands.tick(deltaMs);
+    },
+    setRoomActive: (roomId: string, isActive: boolean) => {
+      void session.commands.setRoomActive({ roomId, isActive });
+    },
+    setPolicy: (policyId, value) => {
+      void session.commands.setPolicy({ policyId, value });
+    },
+    purchaseBuildingUpgrade: (upgradeId: string) => {
+      void session.commands.purchaseBuildingUpgrade({ upgradeId });
+    },
+    purchaseRoomUpgrade: (roomId: string, upgradeId: string) => {
+      void session.commands.purchaseRoomUpgrade({ roomId, upgradeId });
+    },
+    acceptRecruit: (visitorId: string) => {
+      void session.commands.acceptRecruit({ visitorId });
+    },
+    rejectRecruit: (visitorId: string) => {
+      void session.commands.rejectRecruit({ visitorId });
+    },
+    hireStaff: (roleTag: string) => {
+      void session.commands.hireStaff({ roleTag });
+    },
+    assignStaff: (staffId: string, roomId?: string) => {
+      void session.commands.assignStaff({ staffId, roomId });
+    },
+    placeRoom: (templateId: string, floorIndex: number, slotId: string) => {
+      void session.commands.placeRoom({ templateId, floorIndex, slotId });
+    },
+    setActiveFloor: (floorIndex: number) => {
+      void session.commands.setActiveFloor({ floorIndex });
+    },
+    buyItem: (itemId: string) => {
+      void session.commands.buyItem({ itemId });
+    },
+    sellItem: (itemId: string, quantity: number) => {
+      void session.commands.sellItem({ itemId, quantity });
+    },
+    autoAssignAccessory: (operatorId: string) => {
+      void session.commands.autoAssignAccessory({ operatorId });
+    },
+    unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => {
+      void session.commands.unequipItem({ operatorId, slot });
+    },
+    bidContract: (postingId: string) => {
+      void session.commands.dispatch({ type: "sim/bid-contract", postingId });
+    },
+    advanceContract: () => {
+      void session.commands.dispatch({ type: "sim/advance-contract" });
+    },
+  };
+}
 
 const OPS_CATEGORIES: readonly { id: OpsCategory; label: string; icon: string }[] = [
   { id: "contract", label: "Contract", icon: "\u2691" },
@@ -317,11 +383,15 @@ function ErrorShell({ message }: { message: string }) {
 
 function FocusedOperatorOverlay({
   operator,
+  policies,
   onDismiss,
 }: {
   operator: OperatorViewModel;
+  policies: PolicyState;
   onDismiss: () => void;
 }) {
+  const recoverySummary = getRecoveryStateSummary(operator, policies);
+
   return (
     <div className="glass-card pointer-events-auto animate-enter w-72 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -419,6 +489,27 @@ function FocusedOperatorOverlay({
           ))}
         </div>
       )}
+
+      {recoverySummary && (
+        <div className="mt-2 space-y-1 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/55">
+              {recoverySummary.statusLabel}
+            </span>
+            <span className="text-[0.625rem] text-ember">
+              {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
+            </span>
+          </div>
+          <p className="text-[0.6875rem] leading-relaxed text-silver/60">
+            {recoverySummary.reason}
+          </p>
+          {recoverySummary.policyLines.map((line) => (
+            <p key={line} className="text-[0.6875rem] leading-relaxed text-gold/70">
+              {line}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -427,12 +518,14 @@ function FocusedOperatorOverlay({
 
 function FocusedVisitorOverlay({
   visitor,
+  policies,
   rosterFull,
   onRecruit,
   onDismissVisitor,
   onClose,
 }: {
   visitor: VisitorViewModel;
+  policies: PolicyState;
   rosterFull: boolean;
   onRecruit: () => void;
   onDismissVisitor: () => void;
@@ -445,6 +538,7 @@ function FocusedVisitorOverlay({
     patienceHours > 0 ? `${patienceHours}h ${patienceRemainder}m` : `${patienceRemainder}m`;
   const patienceFraction = Math.max(0, Math.min(1, visitor.patience / 120));
   const patienceUrgent = patienceFraction <= 0.25;
+  const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
 
   return (
     <div className="glass-card pointer-events-auto animate-enter w-72 border-[rgba(232,170,60,0.1)] p-4">
@@ -524,6 +618,27 @@ function FocusedVisitorOverlay({
         >
           <span>Quality {Math.round(visitor.quality)}</span>
         </Tooltip>
+        <span className="opacity-30">&middot;</span>
+        <span>Patience {patienceDisplay}</span>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.06)] px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[0.625rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
+            Recruitment Policy
+          </span>
+          <span className="text-[0.6875rem] text-[rgba(232,170,60,0.92)]">
+            {rosterFlowSummary.label}
+          </span>
+        </div>
+        <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+          {rosterFlowSummary.summary}
+        </p>
+        <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+          {rosterFlowSummary.details.slice(0, 3).map((detail) => (
+            <span key={detail}>{detail}</span>
+          ))}
+        </div>
       </div>
 
       {/* Actions */}
@@ -542,7 +657,9 @@ function FocusedVisitorOverlay({
             Recruit
           </button>
         </Tooltip>
-        <Tooltip content="Turn away this visitor (-1 reputation)">
+        <Tooltip
+          content={`Turn away this visitor (${rosterFlowSummary.rejectReputationDelta} rep)`}
+        >
           <button
             type="button"
             className="btn-ghost text-silver/50 hover:text-ember"
@@ -814,58 +931,7 @@ export function GameShell() {
     void session.commands.dispatch({ type: "sim/guidance-reset-opening" });
   }, [session]);
 
-  const callbacks: GameCallbacks | null = session
-    ? {
-        tick: (deltaMs: number) => {
-          void session.commands.tick(deltaMs);
-        },
-        setRoomActive: (roomId: string, isActive: boolean) => {
-          void session.commands.setRoomActive({ roomId, isActive });
-        },
-        purchaseBuildingUpgrade: (upgradeId: string) => {
-          void session.commands.purchaseBuildingUpgrade({ upgradeId });
-        },
-        purchaseRoomUpgrade: (roomId: string, upgradeId: string) => {
-          void session.commands.purchaseRoomUpgrade({ roomId, upgradeId });
-        },
-        acceptRecruit: (visitorId: string) => {
-          void session.commands.acceptRecruit({ visitorId });
-        },
-        rejectRecruit: (visitorId: string) => {
-          void session.commands.rejectRecruit({ visitorId });
-        },
-        hireStaff: (roleTag: string) => {
-          void session.commands.hireStaff({ roleTag });
-        },
-        assignStaff: (staffId: string, roomId?: string) => {
-          void session.commands.assignStaff({ staffId, roomId });
-        },
-        placeRoom: (templateId: string, floorIndex: number, slotId: string) => {
-          void session.commands.placeRoom({ templateId, floorIndex, slotId });
-        },
-        setActiveFloor: (floorIndex: number) => {
-          void session.commands.setActiveFloor({ floorIndex });
-        },
-        buyItem: (itemId: string) => {
-          void session.commands.buyItem({ itemId });
-        },
-        sellItem: (itemId: string, quantity: number) => {
-          void session.commands.sellItem({ itemId, quantity });
-        },
-        autoAssignAccessory: (operatorId: string) => {
-          void session.commands.autoAssignAccessory({ operatorId });
-        },
-        unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => {
-          void session.commands.unequipItem({ operatorId, slot });
-        },
-        bidContract: (postingId: string) => {
-          void session.commands.dispatch({ type: "sim/bid-contract", postingId });
-        },
-        advanceContract: () => {
-          void session.commands.dispatch({ type: "sim/advance-contract" });
-        },
-      }
-    : null;
+  const callbacks: GameCallbacks | null = useMemo(() => buildGameCallbacks(session), [session]);
 
   const advanceHour = useCallback(() => {
     callbacks?.tick(TICK_HOUR_MS);
@@ -1127,7 +1193,7 @@ export function GameShell() {
         current: phase1View.guidance.completedOpeningBeats,
         total: phase1View.guidance.totalOpeningBeats,
       }
-    : { current: 0, total: 9 };
+    : { current: 0, total: 13 };
   const activeGuidanceInterruption =
     phase1View?.activeInterruption?.type === "guidance" ? phase1View.activeInterruption : null;
   const suppressTutorialInterruption =
@@ -1169,6 +1235,8 @@ export function GameShell() {
   const rosterCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/roster");
   const roomsCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/rooms");
   const marketCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/market");
+  const raidMapAnchorRef = useGuidanceAnchor("ui/raid/map");
+  const opsHistoryPanelAnchorRef = useGuidanceAnchor("ui/ops/panel/history");
 
   // Resolve anchor bounds inline so layout changes are always reflected.
   const guidanceAnchorBounds =
@@ -1182,6 +1250,13 @@ export function GameShell() {
         case "ops/open-contract-board":
           setActiveTab("operations");
           setOpsCategory("contract");
+          return;
+        case "ops/open-raid-map":
+          setActiveTab("operations");
+          return;
+        case "ops/open-history":
+          setActiveTab("operations");
+          setOpsCategory("history");
           return;
         case "hq/open-roster":
           setActiveTab("hq");
@@ -1250,6 +1325,53 @@ export function GameShell() {
       signal: completionKind,
     });
   }, [guidanceBeat, session, suppressTutorialBeat]);
+
+  useEffect(() => {
+    if (!guidanceBeat || !session) {
+      return;
+    }
+
+    if (
+      guidanceBeat.completionKind === "market_opened" &&
+      activeTab === "hq" &&
+      hqCategory === "market"
+    ) {
+      void session.commands.dispatch({
+        type: "sim/guidance-complete",
+        beatId: guidanceBeat.beatId,
+        signal: "market_opened",
+      });
+    }
+  }, [activeTab, guidanceBeat, hqCategory, session]);
+
+  useEffect(() => {
+    if (!guidanceBeat || !session || !focus) {
+      return;
+    }
+
+    if (guidanceBeat.completionKind === "room_inspected" && focus.targetKind === "room") {
+      void session.commands.dispatch({
+        type: "sim/guidance-complete",
+        beatId: guidanceBeat.beatId,
+        signal: "room_inspected",
+      });
+    }
+  }, [focus, guidanceBeat, session]);
+
+  const handleInspectOperator = useCallback(
+    (_operatorId: string) => {
+      if (!session || guidanceBeat?.completionKind !== "operator_inspected") {
+        return;
+      }
+
+      void session.commands.dispatch({
+        type: "sim/guidance-complete",
+        beatId: guidanceBeat.beatId,
+        signal: "operator_inspected",
+      });
+    },
+    [guidanceBeat, session],
+  );
 
   useEffect(() => {
     if (!session || !activeGuidanceInterruption || !suppressTutorialInterruption) {
@@ -1608,7 +1730,10 @@ export function GameShell() {
 
           {/* ── Operations map overlay ── */}
           {activeTab === "operations" && (
-            <div className="pointer-events-auto absolute bottom-10 left-0 right-0 top-[85px]">
+            <div
+              ref={raidMapAnchorRef}
+              className="pointer-events-auto absolute bottom-10 left-0 right-0 top-[85px]"
+            >
               {raidWorldSnapshot ? (
                 <RaidWorldView
                   snapshot={raidWorldSnapshot}
@@ -1630,12 +1755,17 @@ export function GameShell() {
             </div>
 
             {focusedOperator && (
-              <FocusedOperatorOverlay operator={focusedOperator} onDismiss={() => setFocus(null)} />
+              <FocusedOperatorOverlay
+                operator={focusedOperator}
+                policies={hq.policies}
+                onDismiss={() => setFocus(null)}
+              />
             )}
 
             {focusedVisitor && (
               <FocusedVisitorOverlay
                 visitor={focusedVisitor}
+                policies={hq.policies}
                 rosterFull={hq.rosterPressure.vacancyCount <= 0}
                 onRecruit={() => {
                   callbacks.acceptRecruit(focusedVisitor.id);
@@ -1698,9 +1828,18 @@ export function GameShell() {
                       rooms={hq.rooms}
                       callbacks={callbacks}
                       rosterPressure={hq.rosterPressure}
+                      policies={hq.policies}
                       focusedOperatorId={focusedOperatorId}
                       roomCultures={roomCultures}
                       teams={teams}
+                      onInspectOperator={handleInspectOperator}
+                    />
+                  )}
+                  {activeTab === "hq" && hqCategory === "management" && (
+                    <ManagementPanel
+                      policies={hq.policies}
+                      contractLifecycle={hq.contractLifecycle}
+                      callbacks={callbacks}
                     />
                   )}
                   {activeTab === "hq" && hqCategory === "teams" && (
@@ -1728,7 +1867,15 @@ export function GameShell() {
                     />
                   )}
                   {activeTab === "operations" && opsCategory && callbacks && (
-                    <div ref={opsCategory === "contract" ? contractBoardAnchorRef : undefined}>
+                    <div
+                      ref={
+                        opsCategory === "contract"
+                          ? contractBoardAnchorRef
+                          : opsCategory === "history"
+                            ? opsHistoryPanelAnchorRef
+                            : undefined
+                      }
+                    >
                       <OperationsPanel
                         operations={operations}
                         operators={hq.operators}

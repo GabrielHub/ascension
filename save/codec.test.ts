@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
+import { DEFAULT_POLICY_STATE } from "lib/policies";
 
 import {
   CURRENT_CONTENT_COMPATIBILITY,
@@ -292,6 +293,7 @@ function createBaseSave(): PersistedSaveGame {
         revealed: Array.from({ length: 16 * 16 }, () => false),
         revealedCount: 0,
       },
+      policies: { ...DEFAULT_POLICY_STATE },
       scheduler: {
         lastPayrollDay: 3,
         lastVisitorSpawnTick: 42,
@@ -1914,5 +1916,41 @@ describe("save codec", () => {
     expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
     const op = normalized.world.operators?.[0];
     expect(op?.combat).toEqual(combat);
+  });
+
+  it("hydrates missing policy state with migration-safe defaults", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 14,
+      world: {
+        ...base.world,
+        policies: undefined,
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.policies).toEqual(DEFAULT_POLICY_STATE);
+  });
+
+  it("round-trips explicit policy state through storage preparation", () => {
+    const base = createBaseSave();
+    const policies = {
+      contractPosture: "aggressive" as const,
+      objectiveBias: "boss_rush" as const,
+      recoveryTriage: "full_recovery" as const,
+      staffingPriority: "welfare_priority" as const,
+      rosterFlow: "retention_focus" as const,
+    };
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        policies,
+      },
+    });
+
+    expect(normalized.world.policies).toEqual(policies);
   });
 });

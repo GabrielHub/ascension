@@ -1,5 +1,6 @@
 import { removeEntity } from "bitecs";
 
+import { getRosterFlowConfig } from "lib/policies";
 import { BuildingAuthority, VisitorState } from "../components";
 import {
   getCurrentAbsoluteMinute,
@@ -36,8 +37,35 @@ const VISITOR_NAMES = [
 
 const VISITOR_ROLE_CYCLE = ["role:field_lead", "role:scout", "role:medic"] as const;
 
+function describeArrivalPolicy(
+  rosterFlow: "selective_intake" | "open_doors" | "retention_focus",
+): string {
+  switch (rosterFlow) {
+    case "selective_intake":
+      return "Selective Intake slows walk-ins, but better prospects do not wait long.";
+    case "retention_focus":
+      return "Retention Focus slows walk-ins while the guild spends more effort keeping current operators.";
+    default:
+      return "Open Doors keeps the visitor queue moving at a steady pace.";
+  }
+}
+
+function describePatiencePolicy(
+  rosterFlow: "selective_intake" | "open_doors" | "retention_focus",
+): string {
+  switch (rosterFlow) {
+    case "selective_intake":
+      return "Selective Intake prospects have less patience for delays.";
+    case "retention_focus":
+      return "Retention Focus keeps normal patience, but fewer visitors appear.";
+    default:
+      return "Open Doors keeps patience and visitor flow at the default pace.";
+  }
+}
+
 export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   const buildingEntity = context.singletonEntities.building;
+  const rosterFlow = getRosterFlowConfig(BuildingAuthority.policies[buildingEntity]);
 
   context.runtimeState.visitorEntities.slice().forEach((entity) => {
     if (deltaMs > 0) {
@@ -51,7 +79,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
       context.runtimeState.pendingCueIds.push("hq.dismiss");
       pushRuntimeEvent(context, {
         kind: "staffing_change",
-        message: `${name} left — no one made an offer`,
+        message: `${name} left — no one made an offer. ${describePatiencePolicy(BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors")}`,
         accent: "silver",
       });
     }
@@ -68,7 +96,11 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
 
   const currentMinute = getCurrentAbsoluteMinute(context);
   const lastSpawnTick = BuildingAuthority.lastVisitorSpawnTick[buildingEntity] ?? 0;
-  if (currentMinute - lastSpawnTick < 180) {
+  const spawnIntervalMinutes = Math.max(
+    60,
+    Math.round(180 * rosterFlow.visitorSpawnIntervalMultiplier),
+  );
+  if (currentMinute - lastSpawnTick < spawnIntervalMinutes) {
     return;
   }
 
@@ -80,8 +112,8 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   spawnVisitorEntity(context, {
     name: VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length],
     desiredRoleTag,
-    patience: 120,
-    quality: 50 + attractionBonus * 6,
+    patience: Math.max(30, Math.round(120 * rosterFlow.visitorPatienceMultiplier)),
+    quality: 50 + rosterFlow.visitorBaseQualityBonus + attractionBonus * 6,
     expectedLoyalty: 45 + attractionBonus * 4,
   });
 
@@ -89,7 +121,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   context.runtimeState.pendingCueIds.push("hq.visitor");
   pushRuntimeEvent(context, {
     kind: "staffing_change",
-    message: `${VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length]} arrived looking for work`,
+    message: `${VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length]} arrived looking for work. ${describeArrivalPolicy(BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors")}`,
     accent: "silver",
   });
 };

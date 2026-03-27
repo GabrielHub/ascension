@@ -5,15 +5,10 @@
 import { GuildState, MoraleState, OperatorIdentity } from "../components";
 import { getCurrentAbsoluteMinute } from "./commands";
 import type { SimSystem, SimSystemContext } from "./types";
-import {
-  shouldEvaluateIncidents,
-  selectIncidentCandidate,
-  createIncidentInterruptionPayload,
-  INCIDENT_TEMPLATES,
-} from "./incidents";
-import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
+import { shouldEvaluateIncidents, selectIncidentCandidate, queueIncident } from "./incidents";
+import { hasBlockingInterruption } from "./interruptions";
 
-const OPENING_INCIDENT_GATE_BEAT_ID = "guidance/opening/first-raid-flow";
+const OPENING_INCIDENT_GATE_BEAT_ID = "guidance/opening/first-team-departure";
 
 export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   // Skip incident evaluation during zero-delta initialization ticks
@@ -47,24 +42,7 @@ export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   const candidate = selectIncidentCandidate(context, incidentState, currentMinute, pressure);
   if (!candidate) return;
 
-  // Store as pending
-  incidentState.pendingIncident = candidate;
-
-  // Build operator name map for briefing
-  const operatorNames: Record<string, string> = {};
-  for (const entity of context.runtimeState.operatorEntities) {
-    operatorNames[OperatorIdentity.id[entity]] = OperatorIdentity.name[entity];
-  }
-
-  // Find the template
-  const template = INCIDENT_TEMPLATES.find((t) => t.id === candidate.templateId);
-  if (!template) return;
-
-  // Create interruption payload
-  const payload = createIncidentInterruptionPayload(candidate, template, operatorNames);
-
-  // Enqueue as blocking interruption
-  enqueueInterruption(interruptionQueue, "incident", payload, "incident-system", currentMinute);
+  queueIncident(context, incidentState, candidate, "incident-system");
 };
 
 function computeSimplifiedPressure(context: SimSystemContext): number {

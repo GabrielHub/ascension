@@ -1,7 +1,9 @@
+import type { PolicyState } from "lib/policies";
+
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 14;
+export const CURRENT_SAVE_SCHEMA_VERSION = 15;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -350,6 +352,7 @@ export interface FogOfWarSnapshot {
   gridHeight: number;
   revealed: boolean[];
   revealedCount: number;
+  completedRaidRevealBase?: number;
 }
 
 export interface WorldSchedulerSnapshot {
@@ -404,6 +407,8 @@ export interface EquipmentAssignmentSnapshot {
   accessoryId: string;
 }
 
+export type PolicyStateSnapshot = PolicyState;
+
 export interface WorldSnapshot {
   guild: GuildSnapshot;
   time: WorldTimeSnapshot;
@@ -430,6 +435,7 @@ export interface WorldSnapshot {
   roomCultures?: RoomCultureSnapshot[];
   inventoryStacks?: InventoryStackSnapshot[];
   equipmentAssignments?: EquipmentAssignmentSnapshot[];
+  policies?: PolicyStateSnapshot;
   activeEncounter?: SaveStructuredRecord | null;
   interruptionQueue?: SaveStructuredRecord | null;
   incidentState?: SaveStructuredRecord | null;

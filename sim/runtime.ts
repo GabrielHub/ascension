@@ -13,6 +13,7 @@ import {
   resolveKnownRoomSlotPlacement,
 } from "lib/hq-room-state";
 import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
+import { DEFAULT_POLICY_STATE, normalizePolicyState, type PolicyState } from "lib/policies";
 import {
   buildKitTemplateRegistry,
   REGULAR_ATTACKS,
@@ -20,6 +21,7 @@ import {
   ULTIMATES,
   PASSIVES,
 } from "content/templates/kits";
+import { OPENING_BEAT_COUNT } from "./systems/guidance-beats";
 // Type-only re-declarations to avoid importing from systems/ modules.
 // Those modules have init-time circular dependencies through the systems barrel.
 type InterruptionQueueState = { active: unknown; queue: unknown[]; nextInstanceId: number };
@@ -40,6 +42,17 @@ type GuidanceState = {
   lastEvaluationMinute: number;
   openingPathState: string;
   anchorResolutionFailures: unknown[];
+  activeBeatProgressBaseline: number | null;
+  interactionCounts: {
+    staffingActions: number;
+    upgradesPurchased: number;
+  };
+  openingTiming?: {
+    firstRaidReturnCompletedAtMinute: number | null;
+    firstIncidentSeededAtMinute: number | null;
+    securedContractCount?: number;
+    lastTrackedContractSiteId?: string | null;
+  };
 };
 // Safe to import: encounter-types is a leaf module with no circular deps.
 import {
@@ -75,6 +88,17 @@ function lazyCreateGuidanceState(openingPathState = "completed"): GuidanceState 
     lastEvaluationMinute: 0,
     openingPathState,
     anchorResolutionFailures: [],
+    activeBeatProgressBaseline: null,
+    interactionCounts: {
+      staffingActions: 0,
+      upgradesPurchased: 0,
+    },
+    openingTiming: {
+      firstRaidReturnCompletedAtMinute: null,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 0,
+      lastTrackedContractSiteId: null,
+    },
   };
 }
 
@@ -483,6 +507,7 @@ export interface Phase1RuntimeView {
     intel: number;
     pressure: number;
   };
+  policies: PolicyState;
   building: {
     activeBuildingId: string;
     activeBuildingName: string;
@@ -1134,6 +1159,7 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     contractSite: extendedSnapshot.contractSite ?? null,
     fogOfWar: extendedSnapshot.fogOfWar ?? null,
     scheduler: extendedSnapshot.scheduler,
+    policies: normalizePolicyState(extendedSnapshot.policies),
     operatorDispositions: extendedSnapshot.operatorDispositions ?? [],
     notableTies: extendedSnapshot.notableTies ?? [],
     recurringTeams: extendedSnapshot.recurringTeams ?? [],
@@ -1155,7 +1181,10 @@ function nextSequenceFromIds(ids: string[]): number {
   return Math.max(maxParsed, ids.length) + 1;
 }
 
-function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeState {
+function createRuntimeState(
+  snapshot: Phase1RuntimeWorldSnapshot,
+  options?: { simulationSeed?: number },
+): SimRuntimeState {
   const roomIds = snapshot.rooms.map((r) => r.id);
   const operatorIds = (snapshot.operators ?? []).map((o) => o.id);
   const staffIds = (snapshot.staff ?? []).map((s) => s.id);
@@ -1170,6 +1199,7 @@ function createRuntimeState(snapshot: Phase1RuntimeWorldSnapshot): SimRuntimeSta
   const teamIds = (snapshot.recurringTeams ?? []).map((t) => t.id);
 
   return {
+    simulationSeed: options?.simulationSeed ?? 0,
     roomEntities: [],
     operatorEntities: [],
     raidOpportunityEntities: [],
@@ -1281,6 +1311,62 @@ function restoreGuidanceStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot):
       anchorResolutionFailures: Array.isArray(data.anchorResolutionFailures)
         ? data.anchorResolutionFailures
         : [],
+      activeBeatProgressBaseline:
+        typeof data.activeBeatProgressBaseline === "number"
+          ? data.activeBeatProgressBaseline
+          : null,
+      interactionCounts:
+        data.interactionCounts && typeof data.interactionCounts === "object"
+          ? {
+              staffingActions:
+                typeof (data.interactionCounts as Record<string, unknown>).staffingActions ===
+                "number"
+                  ? ((data.interactionCounts as Record<string, unknown>).staffingActions as number)
+                  : 0,
+              upgradesPurchased:
+                typeof (data.interactionCounts as Record<string, unknown>).upgradesPurchased ===
+                "number"
+                  ? ((data.interactionCounts as Record<string, unknown>)
+                      .upgradesPurchased as number)
+                  : 0,
+            }
+          : {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+      openingTiming:
+        data.openingTiming && typeof data.openingTiming === "object"
+          ? {
+              firstRaidReturnCompletedAtMinute:
+                typeof (data.openingTiming as Record<string, unknown>)
+                  .firstRaidReturnCompletedAtMinute === "number"
+                  ? ((data.openingTiming as Record<string, unknown>)
+                      .firstRaidReturnCompletedAtMinute as number)
+                  : null,
+              firstIncidentSeededAtMinute:
+                typeof (data.openingTiming as Record<string, unknown>)
+                  .firstIncidentSeededAtMinute === "number"
+                  ? ((data.openingTiming as Record<string, unknown>)
+                      .firstIncidentSeededAtMinute as number)
+                  : null,
+              securedContractCount:
+                typeof (data.openingTiming as Record<string, unknown>).securedContractCount ===
+                "number"
+                  ? ((data.openingTiming as Record<string, unknown>).securedContractCount as number)
+                  : 0,
+              lastTrackedContractSiteId:
+                typeof (data.openingTiming as Record<string, unknown>).lastTrackedContractSiteId ===
+                "string"
+                  ? ((data.openingTiming as Record<string, unknown>)
+                      .lastTrackedContractSiteId as string)
+                  : null,
+            }
+          : {
+              firstRaidReturnCompletedAtMinute: null,
+              firstIncidentSeededAtMinute: null,
+              securedContractCount: 0,
+              lastTrackedContractSiteId: null,
+            },
     };
   } catch {
     return lazyCreateGuidanceState();
@@ -1429,10 +1515,11 @@ function computeRosterPressure(
 function applyWorldSnapshot(
   snapshot: WorldSnapshot,
   registry: TemplateRegistry,
+  options?: { simulationSeed?: number },
 ): AscensionSimulation {
   const runtimeSnapshot = toRuntimeSnapshot(snapshot);
   const world = createWorld();
-  const runtimeState = createRuntimeState(runtimeSnapshot);
+  const runtimeState = createRuntimeState(runtimeSnapshot, options);
   const guildEntity = addEntity(world);
   const timeEntity = addEntity(world);
   const buildingEntity = addEntity(world);
@@ -1569,6 +1656,9 @@ function applyWorldSnapshot(
         revealed: [...runtimeSnapshot.fogOfWar.revealed],
       }
     : null;
+  BuildingAuthority.policies[buildingEntity] = {
+    ...normalizePolicyState(runtimeSnapshot.policies ?? DEFAULT_POLICY_STATE),
+  };
 
   runtimeSnapshot.rooms.forEach((room, index) => {
     const entity = addEntity(world);
@@ -2041,6 +2131,9 @@ function applyWorldSnapshot(
         activeRaidPackets,
         raidSummaries,
         appliedUpgradeIds: [...(BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? [])],
+        policies: {
+          ...(BuildingAuthority.policies[buildingEntity] ?? DEFAULT_POLICY_STATE),
+        },
         operators: runtimeState.operatorEntities.map((entity) => ({
           id: OperatorIdentity.id[entity],
           identity: {
@@ -2305,6 +2398,16 @@ function applyWorldSnapshot(
                 queuedBeatIds: [...runtimeState.guidanceState.queuedBeatIds],
                 lastEvaluationMinute: runtimeState.guidanceState.lastEvaluationMinute,
                 openingPathState: runtimeState.guidanceState.openingPathState,
+                activeBeatProgressBaseline: runtimeState.guidanceState.activeBeatProgressBaseline,
+                interactionCounts: { ...runtimeState.guidanceState.interactionCounts },
+                openingTiming: runtimeState.guidanceState.openingTiming
+                  ? { ...runtimeState.guidanceState.openingTiming }
+                  : {
+                      firstRaidReturnCompletedAtMinute: null,
+                      firstIncidentSeededAtMinute: null,
+                      securedContractCount: 0,
+                      lastTrackedContractSiteId: null,
+                    },
                 anchorResolutionFailures: (
                   runtimeState.guidanceState.anchorResolutionFailures as unknown[]
                 ).map((f) => ({ ...(f as Record<string, unknown>) })),
@@ -2411,6 +2514,9 @@ function applyWorldSnapshot(
           reputation: snapshot.guild.reputation,
           intel: snapshot.guild.intel,
           pressure: BuildingAuthority.pressure[buildingEntity] ?? 0,
+        },
+        policies: {
+          ...(BuildingAuthority.policies[buildingEntity] ?? DEFAULT_POLICY_STATE),
         },
         building: {
           activeBuildingId: snapshot.building.activeBuildingId,
@@ -2710,7 +2816,7 @@ function applyWorldSnapshot(
           completedOpeningBeats: runtimeState.guidanceState.completedBeatIds.filter((id) =>
             id.startsWith("guidance/opening/"),
           ).length,
-          totalOpeningBeats: 9,
+          totalOpeningBeats: OPENING_BEAT_COUNT,
         },
       };
     },
@@ -2864,6 +2970,7 @@ function applyWorldSnapshot(
 export function createAscensionSimulation(
   snapshot: WorldSnapshot,
   registry: TemplateRegistry,
+  options?: { simulationSeed?: number },
 ): AscensionSimulation {
-  return applyWorldSnapshot(snapshot, registry);
+  return applyWorldSnapshot(snapshot, registry, options);
 }

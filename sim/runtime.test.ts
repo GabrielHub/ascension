@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_POLICY_STATE } from "lib/policies";
 
 import {
   createAscensionSimulation,
@@ -10,7 +11,74 @@ import { STABLE_SIM_COMMAND_TYPES } from "./commands";
 import { templateRegistry } from "content/templates";
 import { OperatorIdentity } from "./components";
 import { computeDerivedStats } from "./systems/derived-stats";
+import { OPENING_BEAT_IDS } from "./systems/guidance-beats";
 import { markRaidBossCommitment } from "./systems/raids";
+
+function createPolicyRaidSnapshot() {
+  const snapshot = createPreviewWorldSnapshot(templateRegistry);
+  const claimedOperatorIds = snapshot.operators?.slice(0, 2).map((operator) => operator.id) ?? [];
+
+  snapshot.time = {
+    tick: 0,
+    day: 2,
+    minuteOfDay: 600,
+  };
+  snapshot.raidOpportunities = [
+    {
+      id: "opportunity/policy-test",
+      missionId: snapshot.contractSite?.missionId ?? "mission/clearance",
+      location: snapshot.contractSite?.location ?? "district/lower-east-side",
+      threat: 44,
+      intel: 62,
+      reward: 132,
+      risk: 34,
+      status: "open",
+      interestedOperatorIds: [],
+      claimedOperatorIds: [],
+      createdTick: 1_900,
+      expiresAtTick: 2_400,
+    },
+  ];
+  snapshot.operators = snapshot.operators?.map((operator) =>
+    claimedOperatorIds.includes(operator.id)
+      ? {
+          ...operator,
+          schedule: {
+            ...operator.schedule,
+            currentBlock: "work",
+          },
+          needs: {
+            ...operator.needs,
+            hunger: 10,
+            fatigue: 12,
+            stress: 8,
+          },
+          morale: {
+            ...operator.morale,
+            current: 72,
+            baseline: 72,
+          },
+          loyalty: {
+            ...operator.loyalty,
+            current: 70,
+            baseline: 70,
+          },
+          injury: {
+            ...operator.injury,
+            severity: 0,
+            recoveryHoursRemaining: 0,
+            treated: false,
+          },
+          assignment: {
+            kind: "idle",
+            targetId: "",
+          },
+        }
+      : operator,
+  );
+
+  return snapshot;
+}
 
 describe("time-unit contract", () => {
   it("advances exactly 60 in-game minutes from a 3600000ms tick", () => {
@@ -67,7 +135,101 @@ describe("phase 1 runtime", () => {
     expect(phase1View.operatorIntentReadiness).toHaveLength(6);
     expect(phase1View.relationshipSignals).toHaveLength(15);
     expect(phase1View.raidOpportunities).toHaveLength(0);
+    expect(phase1View.policies).toEqual(DEFAULT_POLICY_STATE);
     expect(phase1View.building.operatorSlotCount).toBe(7);
+    expect(STABLE_SIM_COMMAND_TYPES).toContain("sim/set-policy");
+  });
+
+  it("updates runtime-owned policy state and emits event-log feedback", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/set-policy",
+      policyId: "contractPosture",
+      value: "aggressive",
+    });
+
+    expect(simulation.getWorldSnapshot().policies).toEqual({
+      ...DEFAULT_POLICY_STATE,
+      contractPosture: "aggressive",
+    });
+    expect(simulation.getPhase1View().policies.contractPosture).toBe("aggressive");
+    expect(simulation.drainRuntimeEvents()).toEqual([
+      expect.objectContaining({
+        kind: "event_change",
+        message: "Boss changed Contract Posture to Aggressive.",
+      }),
+    ]);
+  });
+
+  it("refuses to change objective bias during an active contract", () => {
+    const simulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
+
+    simulation.dispatch({
+      type: "sim/set-policy",
+      policyId: "objectiveBias",
+      value: "boss_rush",
+    });
+
+    expect(simulation.getWorldSnapshot().policies).toEqual(DEFAULT_POLICY_STATE);
+    expect(simulation.drainRuntimeEvents()).toEqual([]);
+  });
+
+  it("changes launched raid pacing and projected outcome when objective bias changes", () => {
+    const runPolicyRaid = (objectiveBias: "thorough_sweep" | "boss_rush") => {
+      const snapshot = createPolicyRaidSnapshot();
+      snapshot.policies = {
+        ...DEFAULT_POLICY_STATE,
+        objectiveBias,
+      };
+
+      const simulation = createAscensionSimulation(snapshot, templateRegistry);
+      simulation.tick(1000);
+      return simulation.getWorldSnapshot().activeRaidPackets[0];
+    };
+
+    const thoroughPacket = runPolicyRaid("thorough_sweep");
+    const bossRushPacket = runPolicyRaid("boss_rush");
+
+    expect(thoroughPacket?.durationHours).toBeGreaterThan(bossRushPacket?.durationHours ?? 0);
+    expect(thoroughPacket?.resolutionPacket?.cashDelta).toBeGreaterThan(
+      bossRushPacket?.resolutionPacket?.cashDelta ?? 0,
+    );
+    expect(thoroughPacket?.raidRun?.summaryDraft?.contributingFactors).toContain(
+      "policy:objective_bias:thorough_sweep",
+    );
+    expect(bossRushPacket?.raidRun?.summaryDraft?.contributingFactors).toContain(
+      "policy:objective_bias:boss_rush",
+    );
+  });
+
+  it("captures active management policies in completed raid summaries", () => {
+    const snapshot = createPolicyRaidSnapshot();
+    snapshot.policies = {
+      contractPosture: "aggressive",
+      objectiveBias: "boss_rush",
+      recoveryTriage: "full_recovery",
+      staffingPriority: "welfare_priority",
+      rosterFlow: "retention_focus",
+    };
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.tick(1000);
+    simulation.tick(6 * 60 * 60 * 1000);
+
+    const summary = simulation.getPhase1View().raidSummaries[0];
+    expect(summary?.contributingFactors).toEqual(
+      expect.arrayContaining([
+        "policy:contract_posture:aggressive",
+        "policy:objective_bias:boss_rush",
+        "policy:recovery_triage:full_recovery",
+        "policy:staffing_priority:welfare_priority",
+        "policy:roster_flow:retention_focus",
+      ]),
+    );
   });
 
   it("fails closed when a cached phase-1 snapshot omits an active operator", () => {
@@ -894,7 +1056,51 @@ describe("phase 1 runtime", () => {
       simulation.tick(1000);
     }
 
-    expect(simulation.getWorldSnapshot().fogOfWar?.revealedCount).toBeLessThanOrEqual(12);
+    const revealed = simulation.getWorldSnapshot().fogOfWar?.revealedCount ?? 0;
+    // A single raid's per-tick contribution is bounded by its reveal progress.
+    // 10 short ticks on a 1-hour raid should not reveal the whole grid.
+    expect(revealed).toBeLessThanOrEqual(20);
+    expect(revealed).toBeGreaterThan(0);
+  });
+
+  it("preserves fog progress across completed raids via completedRaidRevealBase", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    snapshot.contractSite = {
+      contractSiteId: "contract/cross-raid",
+      missionId: "mission/clearance",
+      location: "district/lower-east-side",
+      bossDefeated: false,
+      contractLost: false,
+      threat: 80,
+      intel: 45,
+      reward: 160,
+      securedAtTick: 480,
+    };
+    snapshot.fogOfWar = {
+      gridWidth: 16,
+      gridHeight: 16,
+      revealed: Array.from({ length: 16 * 16 }, (_, i) => i < 50),
+      revealedCount: 50,
+      completedRaidRevealBase: 50,
+    };
+    // No active raid packets — simulates the gap between raids
+    snapshot.activeRaidPackets = [];
+    snapshot.raidSummaries = [];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const fogBefore = simulation.getWorldSnapshot().fogOfWar;
+
+    // Tick a few times with no active raids
+    for (let i = 0; i < 5; i++) {
+      simulation.tick(60_000);
+    }
+
+    const fogAfter = simulation.getWorldSnapshot().fogOfWar;
+    // Fog should NOT regress without active raids
+    expect(fogAfter?.revealedCount).toBeGreaterThanOrEqual(fogBefore?.revealedCount ?? 0);
+    // completedRaidRevealBase should persist
+    expect(fogAfter?.completedRaidRevealBase).toBe(50);
   });
 
   it("requires consecutive failures to lose a contract", () => {
@@ -1538,6 +1744,147 @@ describe("phase 1 runtime", () => {
     // rosterPressure reflects the death
     expect(phase1View.rosterPressure.recentDeathOperatorIds).toContain(targetOperatorId);
     expect(phase1View.rosterPressure.livingOperatorCount).toBe(5);
+  });
+
+  it("shields first-contract lethal outcomes into severe injuries before the first raid-return beat", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    const targetOperatorId = "operator/rose-vega";
+    (snapshot as Record<string, unknown>).guidanceState = {
+      seenBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+      completedBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+      dismissedBeatIds: [],
+      activeBeatId: null,
+      activeBeatView: null,
+      queuedBeatIds: [],
+      lastEvaluationMinute: 0,
+      openingPathState: "active",
+      anchorResolutionFailures: [],
+      activeBeatProgressBaseline: null,
+      interactionCounts: {
+        staffingActions: 0,
+        upgradesPurchased: 0,
+      },
+      openingTiming: {
+        firstRaidReturnCompletedAtMinute: null,
+        firstIncidentSeededAtMinute: null,
+        securedContractCount: 0,
+        lastTrackedContractSiteId: null,
+      },
+    };
+
+    snapshot.operators = snapshot.operators?.map((operator) =>
+      operator.id === targetOperatorId
+        ? {
+            ...operator,
+            assignment: { kind: "raid", targetId: "raid/first-contract-shield" },
+            schedule: { currentBlock: "raid", workStartMinute: 480, workEndMinute: 1080 },
+          }
+        : operator,
+    );
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/first-contract-shield",
+        opportunityId: "opportunity/first-contract-shield",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 08:00",
+        startedTick: 480,
+        revealProgress: 100,
+        operatorIds: [targetOperatorId],
+        returnTick: 481,
+        durationHours: 1,
+        threat: 95,
+        intel: 10,
+        reward: 40,
+        cohesion: 50,
+        resolutionPacket: {
+          result: "failure",
+          reputationDelta: -5,
+          cashDelta: -45,
+          operatorOutcomes: [
+            {
+              operatorId: targetOperatorId,
+              injuryDelta: 40,
+              moraleDelta: -10,
+              loyaltyDelta: -7,
+              status: "hurt",
+              died: true,
+            },
+          ],
+          narrativeTags: ["result:failure"],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(60000);
+
+    const phase1View = simulation.getPhase1View();
+    const operator = phase1View.operators.find((entry) => entry.id === targetOperatorId);
+    const summary = phase1View.raidSummaries.find(
+      (entry) => entry.id === "raid/first-contract-shield",
+    );
+
+    expect(summary).toBeTruthy();
+    expect(summary?.operatorOutcomes[0].died).toBeUndefined();
+    expect(summary?.narrativeTags).toContain("opening:first-contract-shield");
+    expect(operator?.lifecycle.status).toBe("active");
+    expect(operator?.injury.severity).toBeGreaterThanOrEqual(85);
+  });
+
+  it("preserves the forced first-incident deadline through snapshot restore", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    const contractSiteId = snapshot.contractSite?.contractSiteId;
+    snapshot.time.minuteOfDay = 539;
+    (snapshot as Record<string, unknown>).guidanceState = {
+      seenBeatIds: OPENING_BEAT_IDS.slice(0, 6),
+      completedBeatIds: OPENING_BEAT_IDS.slice(0, 6),
+      dismissedBeatIds: [],
+      activeBeatId: null,
+      activeBeatView: null,
+      queuedBeatIds: [],
+      lastEvaluationMinute: 0,
+      openingPathState: "active",
+      anchorResolutionFailures: [],
+      activeBeatProgressBaseline: null,
+      interactionCounts: {
+        staffingActions: 0,
+        upgradesPurchased: 0,
+      },
+      openingTiming: {
+        firstRaidReturnCompletedAtMinute: 480,
+        firstIncidentSeededAtMinute: null,
+        securedContractCount: 0,
+        lastTrackedContractSiteId: null,
+      },
+    };
+
+    const normalized = createAscensionSimulation(snapshot, templateRegistry).getWorldSnapshot();
+    const restored = createAscensionSimulation(normalized, templateRegistry);
+    const normalizedGuidanceState = (normalized as Record<string, unknown>).guidanceState as
+      | {
+          openingTiming?: {
+            firstRaidReturnCompletedAtMinute: number | null;
+            firstIncidentSeededAtMinute: number | null;
+            securedContractCount?: number;
+            lastTrackedContractSiteId?: string | null;
+          };
+        }
+      | undefined;
+
+    // Initialization runs the system schedule once, so guidance normalizes the
+    // active contract into openingTiming before the snapshot round-trip.
+    expect(normalizedGuidanceState?.openingTiming).toEqual({
+      firstRaidReturnCompletedAtMinute: 480,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 1,
+      lastTrackedContractSiteId: contractSiteId ?? null,
+    });
+    expect(restored.runtimeState.guidanceState.openingTiming).toEqual(
+      normalizedGuidanceState?.openingTiming,
+    );
   });
 
   it("autonomous raid resolution generates death when failure injury crosses the fatal threshold", () => {

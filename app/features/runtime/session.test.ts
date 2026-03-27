@@ -9,8 +9,13 @@ import {
   type PersistedSaveGame,
 } from "save";
 import { hydratePersistedSaveGame } from "save/codec";
-import { createBootstrapWorldSnapshot, createPreviewWorldSnapshot } from "sim";
+import {
+  createBootstrapWorldSnapshot,
+  createNewGameWorldSnapshot,
+  createPreviewWorldSnapshot,
+} from "sim";
 import { createAscensionSimulation } from "sim";
+import { OPENING_BEAT_BY_ID, OPENING_BEAT_IDS } from "sim/systems/guidance-beats";
 
 import { parseRuntimeRouteRequest, resolveRuntimeSession } from "./session";
 
@@ -137,6 +142,45 @@ function createBodegaWorldSnapshot() {
   );
 
   return world;
+}
+
+function createOpeningActiveBeatView(beatId: string) {
+  const beat = OPENING_BEAT_BY_ID.get(beatId);
+  if (!beat) {
+    throw new Error(`Missing opening beat ${beatId}`);
+  }
+
+  return {
+    beatId: beat.id,
+    track: beat.track,
+    deliveryMode: beat.delivery.mode,
+    target: beat.delivery.target ?? null,
+    fallbackIntent: beat.delivery.fallbackIntent ?? null,
+    copy: beat.copy,
+    milestoneOrder: beat.milestoneOrder,
+    totalMilestones: OPENING_BEAT_IDS.length,
+    completionKind: beat.completion.kind,
+    requiresManualCompletion: beat.completion.requiresManualCompletion,
+    pauseWorld: beat.delivery.pauseWorld,
+    allowSkip: beat.delivery.allowSkip,
+  };
+}
+
+function createPersistedSave(
+  slotId: "slot/1" | "slot/2" | "slot/3",
+  world: PersistedSaveGame["world"],
+) {
+  return {
+    slotId,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+    compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+    metadata: {
+      guildName: `Guild ${slotId}`,
+      createdAt: "2026-03-21T00:00:00.000Z",
+      lastPlayedAt: "2026-03-21T00:00:00.000Z",
+    },
+    world,
+  } satisfies PersistedSaveGame;
 }
 
 afterEach(() => {
@@ -284,6 +328,403 @@ describe("legacy save hydration", () => {
 });
 
 describe("runtime session lifecycle", () => {
+  it("creates new-game sessions from the canonical sparse opening seed", async () => {
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(undefined);
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "new",
+      slotId: "slot/1",
+    });
+
+    expect(session.mode).toBe("new");
+    expect(session.worldSnapshot.guild.treasury).toBe(400);
+    expect(session.worldSnapshot.operators?.map((operator) => operator.id)).toEqual([
+      "operator/rose-vega",
+      "operator/milo-hart",
+      "operator/jin-tanaka",
+      "operator/vera-santos",
+    ]);
+    expect(session.worldSnapshot.staff?.map((staff) => staff.id)).toEqual([
+      "staff/aina",
+      "staff/boris",
+    ]);
+    expect(session.worldSnapshot.visitors?.map((visitor) => visitor.id)).toEqual(["visitor/nika"]);
+    expect(session.worldSnapshot.inventoryStacks).toEqual([
+      { itemId: "weapon/pipe-wrench", quantity: 2 },
+      { itemId: "weapon/kitchen-knife", quantity: 1 },
+      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
+      { itemId: "accessory/comm-earpiece", quantity: 1 },
+    ]);
+    expect(session.state.phase1View.guidance.openingPathState).toBe("active");
+    expect(
+      (createNewGameWorldSnapshot(templateRegistry) as Record<string, unknown>).guidanceState,
+    ).toEqual(
+      expect.objectContaining({
+        openingPathState: "active",
+      }),
+    );
+
+    session.dispose();
+  });
+
+  it("restores representative opening checkpoints through save-backed load sessions", async () => {
+    let currentSave: PersistedSaveGame | undefined;
+    vi.spyOn(saveStorage, "readSaveGame").mockImplementation(async () => currentSave);
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const checkpoints = [
+      {
+        name: "before first contract",
+        beatId: "guidance/opening/first-contract-choice",
+        configure(world: PersistedSaveGame["world"]) {
+          (world as Record<string, unknown>).guidanceState = {
+            seenBeatIds: ["guidance/opening/board-briefing"],
+            completedBeatIds: ["guidance/opening/board-briefing"],
+            dismissedBeatIds: [],
+            activeBeatId: "guidance/opening/first-contract-choice",
+            activeBeatView: createOpeningActiveBeatView("guidance/opening/first-contract-choice"),
+            queuedBeatIds: [],
+            lastEvaluationMinute: 480,
+            openingPathState: "active",
+            anchorResolutionFailures: [],
+            activeBeatProgressBaseline: null,
+            interactionCounts: {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+            openingTiming: {
+              firstRaidReturnCompletedAtMinute: null,
+              firstIncidentSeededAtMinute: null,
+            },
+          };
+        },
+      },
+      {
+        name: "after first contract secured",
+        beatId: "guidance/opening/bodega-overview",
+        configure(world: PersistedSaveGame["world"]) {
+          world.contractSite = {
+            contractSiteId: "contract/test-1",
+            missionId: "mission/clearance",
+            siteConceptId: "site/flooded-subway-tunnel",
+            location: "district/lower-east-side",
+            rank: "f",
+            bossDefeated: false,
+            contractLost: false,
+            threat: 40,
+            intel: 45,
+            reward: 90,
+            securedAtTick: 540,
+            explorationProgress: 0,
+            bossIntelProgress: 0,
+            bossPressureProgress: 0,
+            bossAvailable: false,
+          };
+          world.contractLifecycle = "active";
+          world.postedContracts = [];
+          (world as Record<string, unknown>).guidanceState = {
+            seenBeatIds: [
+              "guidance/opening/board-briefing",
+              "guidance/opening/first-contract-choice",
+            ],
+            completedBeatIds: [
+              "guidance/opening/board-briefing",
+              "guidance/opening/first-contract-choice",
+            ],
+            dismissedBeatIds: [],
+            activeBeatId: "guidance/opening/bodega-overview",
+            activeBeatView: createOpeningActiveBeatView("guidance/opening/bodega-overview"),
+            queuedBeatIds: [],
+            lastEvaluationMinute: 540,
+            openingPathState: "active",
+            anchorResolutionFailures: [],
+            activeBeatProgressBaseline: null,
+            interactionCounts: {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+            openingTiming: {
+              firstRaidReturnCompletedAtMinute: null,
+              firstIncidentSeededAtMinute: null,
+            },
+          };
+        },
+      },
+      {
+        name: "after first raid departure",
+        expectedRaidCount: 1,
+        configure(world: PersistedSaveGame["world"]) {
+          world.contractSite = {
+            contractSiteId: "contract/test-2",
+            missionId: "mission/clearance",
+            siteConceptId: "site/flooded-subway-tunnel",
+            location: "district/lower-east-side",
+            rank: "f",
+            bossDefeated: false,
+            contractLost: false,
+            threat: 42,
+            intel: 40,
+            reward: 92,
+            securedAtTick: 600,
+            explorationProgress: 12,
+            bossIntelProgress: 0,
+            bossPressureProgress: 0,
+            bossAvailable: false,
+          };
+          world.contractLifecycle = "active";
+          world.activeRaidPackets = [
+            {
+              id: "raid/test-2",
+              opportunityId: "opportunity/test-2",
+              missionId: "mission/clearance",
+              location: "district/lower-east-side",
+              startedAt: "day-1 10:00",
+              startedTick: 600,
+              revealProgress: 22,
+              operatorIds: ["operator/rose-vega", "operator/milo-hart", "operator/jin-tanaka"],
+              returnTick: 840,
+              durationHours: 4,
+              threat: 42,
+              intel: 40,
+              reward: 92,
+              cohesion: 58,
+            },
+          ];
+          (world as Record<string, unknown>).guidanceState = {
+            seenBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+            completedBeatIds: OPENING_BEAT_IDS.slice(0, 4),
+            dismissedBeatIds: [],
+            activeBeatId: "guidance/opening/first-team-departure",
+            activeBeatView: createOpeningActiveBeatView("guidance/opening/first-team-departure"),
+            queuedBeatIds: [],
+            lastEvaluationMinute: 600,
+            openingPathState: "active",
+            anchorResolutionFailures: [],
+            activeBeatProgressBaseline: null,
+            interactionCounts: {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+            openingTiming: {
+              firstRaidReturnCompletedAtMinute: null,
+              firstIncidentSeededAtMinute: null,
+            },
+          };
+        },
+      },
+      {
+        name: "after first raid return",
+        beatId: "guidance/opening/first-raid-return",
+        configure(world: PersistedSaveGame["world"]) {
+          world.contractSite = {
+            contractSiteId: "contract/test-3",
+            missionId: "mission/clearance",
+            siteConceptId: "site/flooded-subway-tunnel",
+            location: "district/lower-east-side",
+            rank: "f",
+            bossDefeated: false,
+            contractLost: false,
+            threat: 45,
+            intel: 44,
+            reward: 95,
+            securedAtTick: 660,
+            explorationProgress: 40,
+            bossIntelProgress: 15,
+            bossPressureProgress: 20,
+            bossAvailable: false,
+          };
+          world.contractLifecycle = "active";
+          world.raidSummaries = [
+            {
+              id: "raid/test-3",
+              contractSiteId: "contract/test-3",
+              missionId: "mission/clearance",
+              location: "district/lower-east-side",
+              result: "mixed",
+              reward: 95,
+              cashDelta: 38,
+              reputationDelta: 2,
+              returnedAtTick: 900,
+              operatorIds: ["operator/rose-vega", "operator/milo-hart", "operator/jin-tanaka"],
+              operatorOutcomes: [
+                {
+                  operatorId: "operator/jin-tanaka",
+                  injuryDelta: 18,
+                  moraleDelta: -8,
+                  loyaltyDelta: -3,
+                  status: "hurt",
+                },
+              ],
+              loot: [{ itemId: "loot/monster-part/fang", quantity: 2 }],
+              narrativeTags: ["result:mixed"],
+              intelMismatchTags: [],
+              bossDefeated: false,
+            },
+          ];
+          (world as Record<string, unknown>).guidanceState = {
+            seenBeatIds: OPENING_BEAT_IDS.slice(0, 6),
+            completedBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+            dismissedBeatIds: [],
+            activeBeatId: "guidance/opening/first-raid-return",
+            activeBeatView: createOpeningActiveBeatView("guidance/opening/first-raid-return"),
+            queuedBeatIds: [],
+            lastEvaluationMinute: 900,
+            openingPathState: "active",
+            anchorResolutionFailures: [],
+            activeBeatProgressBaseline: null,
+            interactionCounts: {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+            openingTiming: {
+              firstRaidReturnCompletedAtMinute: null,
+              firstIncidentSeededAtMinute: null,
+            },
+          };
+        },
+      },
+      {
+        name: "during the first incident",
+        beatId: "guidance/opening/first-incident",
+        expectedInterruptionKind: "guidance",
+        configure(world: PersistedSaveGame["world"]) {
+          (world as Record<string, unknown>).guidanceState = {
+            seenBeatIds: OPENING_BEAT_IDS.slice(0, 8),
+            completedBeatIds: OPENING_BEAT_IDS.slice(0, 6),
+            dismissedBeatIds: [],
+            activeBeatId: "guidance/opening/first-incident",
+            activeBeatView: createOpeningActiveBeatView("guidance/opening/first-incident"),
+            queuedBeatIds: [],
+            lastEvaluationMinute: 960,
+            openingPathState: "active",
+            anchorResolutionFailures: [],
+            activeBeatProgressBaseline: null,
+            interactionCounts: {
+              staffingActions: 0,
+              upgradesPurchased: 0,
+            },
+            openingTiming: {
+              firstRaidReturnCompletedAtMinute: 900,
+              firstIncidentSeededAtMinute: 960,
+            },
+          };
+          (world as Record<string, unknown>).incidentState = {
+            pendingIncident: {
+              instanceId: "incident-1",
+              templateId: "incident/team-friction-brief",
+              triggerFamily: "operator_conflict",
+              boundContext: {
+                operatorIds: ["operator/rose-vega", "operator/vera-santos"],
+              },
+              choices: [
+                {
+                  choiceId: "cool_off",
+                  label: "Mandate a Cool-Off",
+                  description: "Split the pair up for the rest of the day.",
+                  consequenceSummary: "Small morale recovery, no dramatic fallout.",
+                  effects: [],
+                },
+              ],
+              createdAtMinute: 960,
+            },
+            history: [],
+            cooldowns: {},
+            nextInstanceId: 2,
+            lastEvaluationMinute: 960,
+          };
+          (world as Record<string, unknown>).interruptionQueue = {
+            active: {
+              instanceId: "interruption-guidance-1",
+              type: "guidance",
+              priority: 71,
+              blockingMode: "blocking",
+              createdAtMinute: 960,
+              sourceSystem: "guidance",
+              dismissible: false,
+              persistence: "persistent",
+              payload: {
+                kind: "guidance",
+                beatId: "guidance/opening/first-incident",
+                track: "opening",
+                title: "Incident Report",
+                body: "Incidents stop the clock because Boss has to choose.",
+                subtitle: "Management decision required",
+                ctaLabel: "Handle it",
+                deliveryMode: "blocking",
+                milestoneOrder: 8,
+                totalMilestones: OPENING_BEAT_IDS.length,
+                completionKind: "incident_resolved",
+                fallbackBody:
+                  "An incident has landed and the simulation is paused until Boss responds.",
+              },
+            },
+            queue: [
+              {
+                instanceId: "interruption-incident-1",
+                type: "incident",
+                priority: 70,
+                blockingMode: "blocking",
+                createdAtMinute: 960,
+                sourceSystem: "guidance-system",
+                dismissible: false,
+                persistence: "persistent",
+                payload: {
+                  kind: "incident",
+                  incidentInstanceId: "incident-1",
+                  templateId: "incident/team-friction-brief",
+                  category: "team_friction",
+                  title: "Team Friction Brief",
+                  briefing:
+                    "Rose Vega and Vera Santos are grinding on each other after the last run.",
+                  subjectSummary: "Rose Vega, Vera Santos",
+                  choices: [
+                    {
+                      choiceId: "cool_off",
+                      label: "Mandate a Cool-Off",
+                      description: "Split the pair up for the rest of the day.",
+                      consequenceSummary: "Small morale recovery, no dramatic fallout.",
+                    },
+                  ],
+                  boundContext: {
+                    operatorIds: ["operator/rose-vega", "operator/vera-santos"],
+                  },
+                },
+              },
+            ],
+            nextInstanceId: 3,
+          };
+        },
+      },
+    ] as const;
+
+    for (const checkpoint of checkpoints) {
+      const world = createNewGameWorldSnapshot(templateRegistry);
+      checkpoint.configure(world);
+      currentSave = createPersistedSave("slot/1", world);
+
+      const session = await resolveRuntimeSession({
+        mode: "load",
+        slotId: "slot/1",
+      });
+
+      if ("beatId" in checkpoint) {
+        expect(session.state.phase1View.guidance.activeBeat?.beatId).toBe(checkpoint.beatId);
+      }
+      expect(session.state.phase1View.guidance.openingPathState).toBe("active");
+      if ("expectedRaidCount" in checkpoint) {
+        expect(session.state.phase1View.activeRaids).toHaveLength(checkpoint.expectedRaidCount);
+      }
+      if (checkpoint.expectedInterruptionKind) {
+        expect(session.state.phase1View.activeInterruption?.payload.kind).toBe(
+          checkpoint.expectedInterruptionKind,
+        );
+      }
+
+      session.dispose();
+    }
+  });
+
   it("resolves preview mode to a seeded interactive session", async () => {
     const session = await resolveRuntimeSession({
       mode: "preview",
@@ -293,11 +734,17 @@ describe("runtime session lifecycle", () => {
     expect(session.isPreview).toBe(true);
     expect(session.isSaveBacked).toBe(false);
     expect(session.state.phase1View.rooms.length).toBeGreaterThan(0);
-    expect(session.state.phase1View.operators.length).toBeGreaterThan(0);
+    expect(session.state.phase1View.operators.length).toBe(6);
     expect(session.state.phase1View.operatorIntentReadiness.length).toBeGreaterThan(0);
     expect(session.state.phase1View.relationshipSignals.length).toBeGreaterThan(0);
     expect(session.state.phase1View.staff.length).toBeGreaterThan(0);
-    expect(session.state.phase1View.visitors.length).toBeGreaterThan(0);
+    expect(session.state.phase1View.visitors.length).toBe(3);
+    expect(session.worldSnapshot.guild.treasury).toBe(500);
+    expect(
+      session.worldSnapshot.inventoryStacks.some(
+        (entry) => entry.itemId === "loot/monster-part/fang",
+      ),
+    ).toBe(true);
     expect(
       session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
         ?.appearance.presetId,

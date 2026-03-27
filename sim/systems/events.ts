@@ -21,7 +21,8 @@ import {
   removeTrackedEntity,
 } from "./commands";
 import { computeAutonomyFlags } from "./morale";
-import { SeededRng, weightedChoice, seedFromKey } from "../uncertainty";
+import { SeededRng, weightedChoice } from "../uncertainty";
+import { seedFromSimulationKey } from "./seed-utils";
 import type { SimSystem } from "./types";
 
 function getAverageValue(values: number[]): number {
@@ -191,7 +192,10 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
 
   const selection = weightedChoice(
     new SeededRng(
-      seedFromKey(`event:${currentMinute}:${BuildingAuthority.pressure[buildingEntity]}`),
+      seedFromSimulationKey(
+        context,
+        `event:${currentMinute}:${BuildingAuthority.pressure[buildingEntity]}`,
+      ),
     ),
     candidateTemplates.map(({ index, template }) => ({ item: index, weight: template.weight })),
   );

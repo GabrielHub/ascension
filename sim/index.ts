@@ -1,4 +1,4 @@
-import { bootstrapScenario } from "content/bootstrap";
+import { bootstrapScenario, canonicalNewGameScenario } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
 import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 
@@ -35,18 +35,21 @@ export * from "./runtime";
 export * from "./systems";
 export * from "./uncertainty";
 
-function buildBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const startingBuilding = registry.buildingById.get(bootstrapScenario.building.activeBuildingId);
+function buildScenarioWorldSnapshot(
+  scenario: typeof bootstrapScenario,
+  registry: TemplateRegistry,
+): WorldSnapshot {
+  const startingBuilding = registry.buildingById.get(scenario.building.activeBuildingId);
 
   if (!startingBuilding) {
     throw new Error(
-      `Bootstrap scenario references unknown building "${bootstrapScenario.building.activeBuildingId}".`,
+      `Bootstrap scenario references unknown building "${scenario.building.activeBuildingId}".`,
     );
   }
 
   const snapshot = {
-    guild: { ...bootstrapScenario.guild },
-    time: { ...bootstrapScenario.time },
+    guild: { ...scenario.guild },
+    time: { ...scenario.time },
     building: {
       activeBuildingId: startingBuilding.id,
       activeBuildingTier: startingBuilding.baseTier,
@@ -54,7 +57,7 @@ function buildBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot 
       roomSlotCount: startingBuilding.baseRoomSlots,
       operatorSlotCount: startingBuilding.baseOperatorSlots,
     },
-    rooms: bootstrapScenario.rooms.map((seed) => {
+    rooms: scenario.rooms.map((seed) => {
       const roomTemplate = registry.roomById.get(seed.templateId);
 
       if (!roomTemplate) {
@@ -80,7 +83,7 @@ function buildBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot 
     activeRaidPackets: [],
     raidSummaries: [],
     appliedUpgradeIds: [],
-    operators: bootstrapScenario.operators.map((operator) => ({
+    operators: scenario.operators.map((operator) => ({
       ...operator,
       identity: { ...operator.identity },
       preferences: {
@@ -118,30 +121,30 @@ function buildBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot 
         baseStats: { ...operator.combat.baseStats },
       },
     })),
-    operatorRelationships: bootstrapScenario.operatorRelationships.map((relationship) => ({
+    operatorRelationships: scenario.operatorRelationships.map((relationship) => ({
       ...relationship,
       historyTags: [...relationship.historyTags],
     })),
-    staff: bootstrapScenario.staff.map((staff) => ({
+    staff: scenario.staff.map((staff) => ({
       ...staff,
       assignment: { ...staff.assignment },
     })),
-    visitors: bootstrapScenario.visitors.map((visitor) => ({ ...visitor })),
-    raidOpportunities: bootstrapScenario.raidOpportunities.map((opportunity) => ({
+    visitors: scenario.visitors.map((visitor) => ({ ...visitor })),
+    raidOpportunities: scenario.raidOpportunities.map((opportunity) => ({
       ...opportunity,
       interestedOperatorIds: [...opportunity.interestedOperatorIds],
       claimedOperatorIds: [...opportunity.claimedOperatorIds],
     })),
     activeEvents: [],
-    operatorDispositions: bootstrapScenario.operators.map((operator) => ({
+    operatorDispositions: scenario.operators.map((operator) => ({
       operatorId: operator.id,
       sociability: 50,
       temperament: 50,
       grievanceLevel: Math.max(0, Math.round(50 - operator.morale.current * 0.5)),
       satisfactionLevel: Math.round((operator.morale.current + operator.loyalty.current) / 2),
     })),
-    inventoryStacks: bootstrapScenario.inventory.map((entry) => ({ ...entry })),
-    equipmentAssignments: bootstrapScenario.operators
+    inventoryStacks: scenario.inventory.map((entry) => ({ ...entry })),
+    equipmentAssignments: scenario.operators
       .map((operator) => {
         const appearance = BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id];
         if (!appearance?.visibleGear) {
@@ -175,7 +178,14 @@ function getAbsoluteMinute(snapshot: WorldSnapshot): number {
 }
 
 export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const bootstrap = buildBootstrapWorldSnapshot(registry);
+  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry);
+  const simulation = createAscensionSimulation(bootstrap, registry);
+  simulation.tick(0);
+  return simulation.getWorldSnapshot();
+}
+
+export function createNewGameWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
+  const bootstrap = buildScenarioWorldSnapshot(canonicalNewGameScenario, registry);
   const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
   const snapshot = simulation.getWorldSnapshot();
@@ -192,12 +202,26 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
     lastEvaluationMinute: 0,
     openingPathState: "active",
     anchorResolutionFailures: [],
+    activeBeatProgressBaseline: null,
+    interactionCounts: {
+      staffingActions: 0,
+      upgradesPurchased: 0,
+    },
+    openingTiming: {
+      firstRaidReturnCompletedAtMinute: null,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 0,
+      lastTrackedContractSiteId: null,
+    },
   };
   return snapshot;
 }
 
 export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const world = createBootstrapWorldSnapshot(registry);
+  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry);
+  const simulation = createAscensionSimulation(bootstrap, registry);
+  simulation.tick(0);
+  const world = simulation.getWorldSnapshot();
   // Preview mode: strip guidance so sandbox sessions skip the opening path.
   delete (world as Record<string, unknown>).guidanceState;
   // Also clear any stale interruption queue from bootstrap.

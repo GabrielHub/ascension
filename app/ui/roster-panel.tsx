@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { getPolicyOptionLabel, type PolicyState } from "lib/policies";
+
 import type {
   GameCallbacks,
   OperatorViewModel,
@@ -13,6 +15,12 @@ import type {
 } from "./view-models";
 import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
+import {
+  getRecoveryStateSummary,
+  getRetentionPressureLine,
+  getRosterFlowSurfaceSummary,
+  getStaffingPrioritySurfaceSummary,
+} from "./policy-summaries";
 import {
   getCultureSummaryLabel,
   getRoleMeta,
@@ -31,9 +39,11 @@ interface RosterPanelProps {
   rooms: readonly RoomViewModel[];
   callbacks: GameCallbacks;
   rosterPressure: RosterPressureViewModel;
+  policies: PolicyState;
   focusedOperatorId?: string | null;
   roomCultures?: readonly RoomCultureViewModel[];
   teams?: readonly TeamViewModel[];
+  onInspectOperator?: (operatorId: string) => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -77,6 +87,7 @@ function OperatorRow({
   bonds,
   roomCultures,
   teams,
+  policies,
 }: {
   op: OperatorViewModel;
   isExpanded: boolean;
@@ -84,6 +95,7 @@ function OperatorRow({
   bonds: readonly RelationshipViewModel[];
   roomCultures: readonly RoomCultureViewModel[];
   teams: readonly TeamViewModel[];
+  policies: PolicyState;
 }) {
   // Find room culture if assigned to a room
   const assignedRoomCulture =
@@ -93,6 +105,11 @@ function OperatorRow({
 
   // Find team membership
   const operatorTeam = teams.find((team) => team.memberIds.includes(op.id)) ?? null;
+  const recoverySummary = getRecoveryStateSummary(op, policies);
+  const retentionLine =
+    op.retentionRisk || op.lifecycle.status === "departed"
+      ? getRetentionPressureLine(policies.rosterFlow, op.lifecycle.status)
+      : null;
 
   return (
     <div data-testid="operator-row" data-operator-id={op.id}>
@@ -194,6 +211,43 @@ function OperatorRow({
                   {reason}
                 </div>
               ))}
+            </div>
+          )}
+
+          {recoverySummary && (
+            <div className="glass-card-inset space-y-1.5 px-2 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+                  {recoverySummary.statusLabel}
+                </span>
+                <span className="text-[0.625rem] text-ember">
+                  {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
+                </span>
+              </div>
+              <p className="text-[0.6875rem] leading-relaxed text-silver/60">
+                {recoverySummary.reason}
+              </p>
+              {recoverySummary.policyLines.map((line) => (
+                <p key={line} className="text-[0.6875rem] leading-relaxed text-gold/70">
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {retentionLine && (
+            <div className="glass-card-inset px-2 py-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+                  Retention Pressure
+                </span>
+                <span className="text-[0.625rem] text-ember">
+                  {getPolicyOptionLabel("rosterFlow", policies.rosterFlow)}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-silver/60">
+                {retentionLine}
+              </p>
             </div>
           )}
 
@@ -392,12 +446,16 @@ function VisitorRow({
   canAccept,
   onAccept,
   onReject,
+  rejectReputationDelta,
 }: {
   visitor: VisitorViewModel;
   canAccept: boolean;
   onAccept: () => void;
   onReject: () => void;
+  rejectReputationDelta: number;
 }) {
+  const patienceHours = Math.max(0, Math.ceil(visitor.patience / 60));
+
   return (
     <div
       className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
@@ -409,6 +467,13 @@ function VisitorRow({
         <span className="ml-1.5 text-[0.6875rem] text-gold/60">
           {getRoleMeta(visitor.desiredRoleTag).label}
         </span>
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-silver/45">
+          <span>Quality {Math.round(visitor.quality)}</span>
+          <span className="opacity-30">&middot;</span>
+          <span>{patienceHours}h patience</span>
+          <span className="opacity-30">&middot;</span>
+          <span>Loyalty {Math.round(visitor.projectedLoyalty)}</span>
+        </div>
       </div>
       <Tooltip
         content={canAccept ? `Recruit ${visitor.name} as an operator` : "Operator roster is full"}
@@ -427,7 +492,7 @@ function VisitorRow({
           {canAccept ? "Recruit" : "Full"}
         </button>
       </Tooltip>
-      <Tooltip content="Dismiss this visitor" side="top">
+      <Tooltip content={`Dismiss this visitor (${rejectReputationDelta} rep)`} side="top">
         <button
           type="button"
           data-testid="visitor-pass"
@@ -503,22 +568,33 @@ export function RosterPanel({
   rooms,
   callbacks,
   rosterPressure,
+  policies,
   focusedOperatorId = null,
   roomCultures = [],
   teams = [],
+  onInspectOperator,
 }: RosterPanelProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(focusedOperatorId ?? null);
 
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
   const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
   const canRecruit = rosterPressure.vacancyCount > 0;
+  const staffingSummary = getStaffingPrioritySurfaceSummary(policies.staffingPriority);
+  const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
 
   useEffect(() => {
     if (!focusedOperatorId) return;
     setExpandedId(focusedOperatorId);
   }, [focusedOperatorId]);
 
-  const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
+  const toggle = (id: string) =>
+    setExpandedId((prev) => {
+      const nextId = prev === id ? null : id;
+      if (nextId === id) {
+        onInspectOperator?.(id);
+      }
+      return nextId;
+    });
 
   return (
     <div className="animate-enter space-y-3" data-testid="roster-panel">
@@ -565,6 +641,23 @@ export function RosterPanel({
           </Tooltip>
         </div>
 
+        <div className="glass-card-inset mb-2 px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+              Daily Routine
+            </span>
+            <span className="text-[0.6875rem] text-gold">{staffingSummary.label}</span>
+          </div>
+          <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+            {staffingSummary.summary}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+            {staffingSummary.details.map((detail) => (
+              <span key={detail}>{detail}</span>
+            ))}
+          </div>
+        </div>
+
         {livingOperators.length > 0 ? (
           <div className="space-y-0.5">
             {livingOperators.map((op) => (
@@ -578,6 +671,7 @@ export function RosterPanel({
                 )}
                 roomCultures={roomCultures}
                 teams={teams}
+                policies={policies}
               />
             ))}
           </div>
@@ -652,6 +746,22 @@ export function RosterPanel({
             <span className="text-[0.6875rem] text-silver/35">Roster full</span>
           ) : null}
         </div>
+        <div className="glass-card-inset mb-2 px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+              Recruitment Policy
+            </span>
+            <span className="text-[0.6875rem] text-gold">{rosterFlowSummary.label}</span>
+          </div>
+          <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+            {rosterFlowSummary.summary}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+            {rosterFlowSummary.details.map((detail) => (
+              <span key={detail}>{detail}</span>
+            ))}
+          </div>
+        </div>
         {visitors.length > 0 ? (
           <div className="space-y-0.5">
             {visitors.map((v) => (
@@ -661,6 +771,7 @@ export function RosterPanel({
                 canAccept={canRecruit}
                 onAccept={() => callbacks.acceptRecruit(v.id)}
                 onReject={() => callbacks.rejectRecruit(v.id)}
+                rejectReputationDelta={rosterFlowSummary.rejectReputationDelta}
               />
             ))}
           </div>

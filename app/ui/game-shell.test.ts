@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { RuntimeSession } from "app/features/runtime";
 
 import {
+  buildGameCallbacks,
   getDefaultShellNavigation,
   isTutorialSuppressibleGuidanceBeat,
   resolveInterruptionAction,
@@ -114,6 +115,39 @@ describe("getDefaultShellNavigation", () => {
       activeTab: "operations",
       hqCategory: "rooms",
       opsCategory: "contract",
+    });
+  });
+});
+
+describe("buildGameCallbacks", () => {
+  it("routes policy changes through the runtime command surface", () => {
+    const setPolicy = vi.fn();
+    const callbacks = buildGameCallbacks({
+      commands: {
+        tick: vi.fn(),
+        setRoomActive: vi.fn(),
+        setPolicy,
+        purchaseBuildingUpgrade: vi.fn(),
+        purchaseRoomUpgrade: vi.fn(),
+        acceptRecruit: vi.fn(),
+        rejectRecruit: vi.fn(),
+        hireStaff: vi.fn(),
+        assignStaff: vi.fn(),
+        placeRoom: vi.fn(),
+        setActiveFloor: vi.fn(),
+        buyItem: vi.fn(),
+        sellItem: vi.fn(),
+        autoAssignAccessory: vi.fn(),
+        unequipItem: vi.fn(),
+        dispatch: vi.fn(),
+      },
+    } as unknown as Pick<RuntimeSession, "commands">);
+
+    callbacks?.setPolicy("objectiveBias", "boss_rush");
+
+    expect(setPolicy).toHaveBeenCalledWith({
+      policyId: "objectiveBias",
+      value: "boss_rush",
     });
   });
 });
