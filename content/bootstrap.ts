@@ -771,6 +771,7 @@ export const canonicalNewGameScenario = {
     {
       ...bootstrapScenario.visitors[0],
       id: "visitor/nika",
+      patience: 540,
     },
   ],
   raidOpportunities: [],

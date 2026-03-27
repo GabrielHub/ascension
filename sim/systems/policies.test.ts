@@ -451,6 +451,7 @@ describe("management policy systems", () => {
     const fullRecoveryResult = runRecoveryScenario("full_recovery");
 
     expect(fullRecoveryResult.recoveryScore).toBeGreaterThan(fieldFirstResult.recoveryScore);
+    expect(fieldFirstResult.currentBlock).not.toBe("recovery");
     expect(fullRecoveryResult.currentBlock).toBe("recovery");
     expect(fullRecoveryResult.recoveryHoursRemaining).toBeLessThan(
       fieldFirstResult.recoveryHoursRemaining,
@@ -508,14 +509,14 @@ describe("management policy systems", () => {
       };
     };
 
-    expect(getVisitorMetrics("open_doors", 180)).toEqual({
+    expect(getVisitorMetrics("open_doors", 300)).toEqual({
       quality: 50,
-      patience: 120,
+      patience: 360,
     });
-    expect(getVisitorMetrics("selective_intake", 180)).toBeNull();
-    expect(getVisitorMetrics("selective_intake", 270)).toEqual({
+    expect(getVisitorMetrics("selective_intake", 300)).toBeNull();
+    expect(getVisitorMetrics("selective_intake", 450)).toEqual({
       quality: 60,
-      patience: 90,
+      patience: 270,
     });
   });
 

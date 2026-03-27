@@ -36,6 +36,8 @@ const VISITOR_NAMES = [
 ] as const;
 
 const VISITOR_ROLE_CYCLE = ["role:field_lead", "role:scout", "role:medic"] as const;
+const BASE_VISITOR_SPAWN_INTERVAL_MINUTES = 300;
+const BASE_VISITOR_PATIENCE_MINUTES = 360;
 
 function describeArrivalPolicy(
   rosterFlow: "selective_intake" | "open_doors" | "retention_focus",
@@ -97,8 +99,8 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   const currentMinute = getCurrentAbsoluteMinute(context);
   const lastSpawnTick = BuildingAuthority.lastVisitorSpawnTick[buildingEntity] ?? 0;
   const spawnIntervalMinutes = Math.max(
-    60,
-    Math.round(180 * rosterFlow.visitorSpawnIntervalMultiplier),
+    120,
+    Math.round(BASE_VISITOR_SPAWN_INTERVAL_MINUTES * rosterFlow.visitorSpawnIntervalMultiplier),
   );
   if (currentMinute - lastSpawnTick < spawnIntervalMinutes) {
     return;
@@ -112,7 +114,10 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   spawnVisitorEntity(context, {
     name: VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length],
     desiredRoleTag,
-    patience: Math.max(30, Math.round(120 * rosterFlow.visitorPatienceMultiplier)),
+    patience: Math.max(
+      180,
+      Math.round(BASE_VISITOR_PATIENCE_MINUTES * rosterFlow.visitorPatienceMultiplier),
+    ),
     quality: 50 + rosterFlow.visitorBaseQualityBonus + attractionBonus * 6,
     expectedLoyalty: 45 + attractionBonus * 4,
   });

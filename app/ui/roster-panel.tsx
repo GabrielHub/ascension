@@ -455,6 +455,9 @@ function VisitorRow({
   rejectReputationDelta: number;
 }) {
   const patienceHours = Math.max(0, Math.ceil(visitor.patience / 60));
+  const recruitTooltip = canAccept
+    ? `Recruit ${visitor.name} as an operator`
+    : visitor.lockedReason || "Operator roster is full";
 
   return (
     <div
@@ -475,10 +478,7 @@ function VisitorRow({
           <span>Loyalty {Math.round(visitor.projectedLoyalty)}</span>
         </div>
       </div>
-      <Tooltip
-        content={canAccept ? `Recruit ${visitor.name} as an operator` : "Operator roster is full"}
-        side="top"
-      >
+      <Tooltip content={recruitTooltip} side="top">
         <button
           type="button"
           data-testid="visitor-recruit"
@@ -768,7 +768,7 @@ export function RosterPanel({
               <VisitorRow
                 key={v.id}
                 visitor={v}
-                canAccept={canRecruit}
+                canAccept={canRecruit && v.canAccept}
                 onAccept={() => callbacks.acceptRecruit(v.id)}
                 onReject={() => callbacks.rejectRecruit(v.id)}
                 rejectReputationDelta={rosterFlowSummary.rejectReputationDelta}

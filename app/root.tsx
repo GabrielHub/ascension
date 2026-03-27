@@ -8,9 +8,11 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { registerBrowserTestDriver } from "./features/browser/test-driver";
 import { registerDesktopTestDriver } from "./features/desktop/test-driver";
 import "./app.css";
 
+registerBrowserTestDriver();
 registerDesktopTestDriver();
 
 export const links: Route.LinksFunction = () => [

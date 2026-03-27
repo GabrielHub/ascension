@@ -138,15 +138,25 @@ function advanceEntityNeeds(
   );
 
   if (InjuryState.recoveryHoursRemaining[entity] > 0) {
+    const recoveredHours = recoveryRate * elapsedHours;
     InjuryState.recoveryHoursRemaining[entity] = Math.max(
       0,
-      InjuryState.recoveryHoursRemaining[entity] - recoveryRate * elapsedHours,
+      InjuryState.recoveryHoursRemaining[entity] - recoveredHours,
+    );
+    InjuryState.severity[entity] = Math.max(
+      0,
+      InjuryState.severity[entity] - Math.max(1, Math.round(recoveredHours * 2)),
     );
 
     if (InjuryState.recoveryHoursRemaining[entity] === 0) {
-      InjuryState.severity[entity] = Math.max(0, InjuryState.severity[entity] - 20);
+      InjuryState.severity[entity] = Math.max(0, Math.round(InjuryState.severity[entity] * 0.5));
       InjuryState.treated[entity] = 1;
     }
+  } else if (InjuryState.severity[entity] > 0) {
+    InjuryState.severity[entity] = Math.max(
+      0,
+      InjuryState.severity[entity] - Math.max(1, Math.round(recoveryRate * elapsedHours)),
+    );
   }
 }
 

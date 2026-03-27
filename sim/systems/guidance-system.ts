@@ -38,12 +38,14 @@ import {
   recordAnchorFailure,
   recordGuidanceInteraction,
   resetOpeningPath,
+  syncOpeningContractTracking,
   type GuidanceBeat,
   type GuidanceCompletionContext,
   type GuidanceEvaluationContext,
 } from "./guidance";
 import { forceSeedOpeningIncident, queueIncident } from "./incidents";
 import {
+  FIRST_RAID_RETURN_BEAT_ID,
   OPENING_BEATS,
   OPENING_BEAT_BY_ID,
   OPENING_BEAT_IDS,
@@ -51,7 +53,6 @@ import {
 } from "./guidance-beats";
 
 const EVALUATION_INTERVAL_MINUTES = 5;
-const FIRST_RAID_RETURN_BEAT_ID = "guidance/opening/first-raid-return";
 const FIRST_INCIDENT_BEAT_ID = "guidance/opening/first-incident";
 const FIRST_INCIDENT_FORCE_SEED_DELAY_MINUTES = 60;
 
@@ -120,10 +121,57 @@ function hasAffordableUpgrade(context: SimSystemContext): boolean {
     BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? [],
   );
 
+  if (!activeBuilding) {
+    return false;
+  }
+
   const canAffordCosts = (costs: Map<string, number>) =>
     Array.from(costs.entries()).every(([resourceId, amount]) => {
       return readResourceBalance(context, resourceId) >= amount;
     });
+  const isUpgradeAffordable = (upgradeId: string) => {
+    const upgrade = context.registry.upgradeById.get(upgradeId);
+    if (!upgrade || !meetsRequirements(context, upgrade.requirements)) {
+      return false;
+    }
+
+    if (upgrade.target === "building") {
+      return (
+        upgrade.targetId === activeBuilding?.id &&
+        !buildingAppliedUpgradeIds.has(upgrade.id) &&
+        canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements))
+      );
+    }
+
+    const roomEntity = context.runtimeState.roomEntities.find((entity) => {
+      const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[entity]];
+      return roomTemplate?.id === upgrade.targetId;
+    });
+    if (roomEntity === undefined) {
+      return false;
+    }
+
+    const appliedUpgradeIds = RoomInstance.appliedUpgradeIds[roomEntity] ?? [];
+    const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[roomEntity]];
+    const nextPendingIds = new Set(
+      getNextPendingRoomUpgradeIds(roomTemplate.id, appliedUpgradeIds),
+    );
+    if (appliedUpgradeIds.includes(upgrade.id)) {
+      return false;
+    }
+    if (nextPendingIds.size > 0 && !nextPendingIds.has(upgrade.id)) {
+      return false;
+    }
+
+    return canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements));
+  };
+
+  if (
+    context.runtimeState.guidanceState.openingPathState === "active" &&
+    !hasAnyUpgradePurchased(context)
+  ) {
+    return isUpgradeAffordable("upgrade/room/register:records_wall");
+  }
 
   const buildingUpgradeAffordable = context.registry.upgrades.some((upgrade) => {
     if (upgrade.target !== "building" || upgrade.targetId !== activeBuilding?.id) {
@@ -144,6 +192,9 @@ function hasAffordableUpgrade(context: SimSystemContext): boolean {
 
   return context.runtimeState.roomEntities.some((roomEntity) => {
     const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[roomEntity]];
+    if (!roomTemplate) {
+      return false;
+    }
     const appliedUpgradeIds = RoomInstance.appliedUpgradeIds[roomEntity] ?? [];
     const nextPendingIds = new Set(
       getNextPendingRoomUpgradeIds(roomTemplate.id, appliedUpgradeIds),
@@ -215,19 +266,14 @@ function hasSetbackRecoveryFallbackCondition(context: SimSystemContext): boolean
 
 function updateOpeningContractTracking(context: SimSystemContext): number {
   const { guidanceState } = context.runtimeState;
-  const openingTiming = ensureOpeningTimingState(guidanceState);
   const buildingEntity = context.singletonEntities.building;
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
   const contractLifecycle = BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding";
-
-  if (
-    contractLifecycle === "active" &&
-    contractSite?.contractSiteId &&
-    openingTiming.lastTrackedContractSiteId !== contractSite.contractSiteId
-  ) {
-    openingTiming.lastTrackedContractSiteId = contractSite.contractSiteId;
-    openingTiming.securedContractCount = (openingTiming.securedContractCount ?? 0) + 1;
-  }
+  const openingTiming = syncOpeningContractTracking(
+    guidanceState,
+    contractLifecycle,
+    contractSite?.contractSiteId,
+  );
 
   return openingTiming.securedContractCount ?? 0;
 }
@@ -302,6 +348,7 @@ function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationCo
   return {
     currentMinute: getCurrentAbsoluteMinute(context),
     contractLifecycle,
+    securedContractCount: contractsSecuredCount,
     hasSecuredContract: contractSite !== null && contractSite !== undefined,
     hasActiveIncident: incidentState.pendingIncident !== null,
     hasCompletedRaid: raidSummaries.length > 0,

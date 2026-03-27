@@ -6,6 +6,7 @@ import {
   isCompletionMet,
   restoreGuidanceState,
   snapshotGuidanceState,
+  syncOpeningContractTracking,
   type GuidanceBeat,
 } from "./guidance";
 
@@ -212,6 +213,27 @@ describe("guidance save restore", () => {
       firstIncidentSeededAtMinute: 660,
       securedContractCount: 4,
       lastTrackedContractSiteId: "contract/test-4",
+    });
+  });
+
+  it("normalizes the active opening contract without double-counting the tracked site", () => {
+    const state = createGuidanceState("active");
+    state.openingTiming = {
+      firstRaidReturnCompletedAtMinute: 480,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 0,
+      lastTrackedContractSiteId: null,
+    };
+
+    syncOpeningContractTracking(state, "active", "contract/480");
+    syncOpeningContractTracking(state, "active", "contract/480");
+    syncOpeningContractTracking(state, "active", "contract/481");
+
+    expect(state.openingTiming).toEqual({
+      firstRaidReturnCompletedAtMinute: 480,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 2,
+      lastTrackedContractSiteId: "contract/481",
     });
   });
 });

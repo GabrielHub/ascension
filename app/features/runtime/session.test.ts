@@ -837,6 +837,11 @@ describe("runtime session lifecycle", () => {
       mode: "preview",
     });
     const initialExpansionSlotCount = session.state.hqWorldSnapshot?.expansionSlots.length ?? 0;
+    await session.commands.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
 
     await session.commands.purchaseBuildingUpgrade({
       upgradeId: "upgrade/building/bodega:frontage",
@@ -1400,6 +1405,11 @@ describe("runtime session lifecycle", () => {
 
     const visitor = session.state.phase1View.visitors[0];
     if (visitor) {
+      await session.commands.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/reputation",
+        amount: 6,
+      });
       await session.commands.purchaseBuildingUpgrade({
         upgradeId: "upgrade/building/bodega:frontage",
       });

@@ -91,6 +91,7 @@ import type {
   SimSystemContext,
 } from "./types";
 import { seedFromSimulationKey } from "./seed-utils";
+import { FIRST_RAID_RETURN_BEAT_ID } from "./guidance-beats";
 
 export type { RaidTeamGoal } from "lib/raid-team-goal";
 
@@ -131,9 +132,16 @@ const FORMATION_DELAY_MINUTES = 60;
 const DEFAULT_OPPORTUNITY_LIFETIME_MINUTES = 300;
 const FOG_GRID_WIDTH = 16;
 const FOG_GRID_HEIGHT = 16;
-const FIRST_CONTRACT_SHIELD_END_BEAT_ID = "guidance/opening/first-raid-return";
-const FIRST_CONTRACT_SHIELDED_INJURY_TOTAL = 85;
+// Re-use the canonical constant from guidance-beats.ts
+const FIRST_CONTRACT_SHIELD_END_BEAT_ID = FIRST_RAID_RETURN_BEAT_ID;
+const FIRST_CONTRACT_SHIELDED_INJURY_TOTAL = 58;
 const FIRST_CONTRACT_FATAL_INJURY_THRESHOLD = 95;
+const INJURY_RECOVERY_HOURS_PER_POINT = 0.3;
+const FIRST_CONTRACT_INJURY_CAP_BY_RESULT = {
+  success: 6,
+  mixed: 10,
+  failure: 14,
+} as const;
 
 export interface RaidReadinessSignal {
   availabilityScore: number;
@@ -733,6 +741,18 @@ function isFirstContractDeathShieldActive(context: SimSystemContext): boolean {
   );
 }
 
+function isFirstOpeningContractActive(context: SimSystemContext): boolean {
+  const guidanceState = context.runtimeState.guidanceState;
+  const openingTiming = guidanceState.openingTiming;
+  const buildingEntity = context.singletonEntities.building;
+
+  return (
+    guidanceState.openingPathState === "active" &&
+    (openingTiming?.securedContractCount ?? 0) <= 3 &&
+    BuildingAuthority.contractLifecycle[buildingEntity] === "active"
+  );
+}
+
 function applyFirstContractDeathShield(
   context: SimSystemContext,
   resolutionPacket: ActiveRaidResolutionPacket,
@@ -744,16 +764,33 @@ function applyFirstContractDeathShield(
 
   let shieldApplied = false;
   resolutionPacket.operatorOutcomes = resolutionPacket.operatorOutcomes.map((outcome) => {
-    if (!outcome.died) {
-      return outcome;
-    }
-
     const operatorEntity =
       operatorEntityById?.get(outcome.operatorId) ??
       context.runtimeState.operatorEntities.find(
         (entity) => OperatorIdentity.id[entity] === outcome.operatorId,
       );
     const currentSeverity = operatorEntity === undefined ? 0 : InjuryState.severity[operatorEntity];
+
+    if (!outcome.died) {
+      if (!isFirstOpeningContractActive(context)) {
+        return outcome;
+      }
+
+      const injuryCap = FIRST_CONTRACT_INJURY_CAP_BY_RESULT[resolutionPacket.result];
+      const cappedTotalInjury = Math.min(currentSeverity + outcome.injuryDelta, injuryCap);
+      const cappedInjuryDelta = Math.max(0, cappedTotalInjury - currentSeverity);
+
+      if (cappedInjuryDelta === outcome.injuryDelta) {
+        return outcome;
+      }
+
+      shieldApplied = true;
+      return {
+        ...outcome,
+        injuryDelta: cappedInjuryDelta,
+      };
+    }
+
     const shieldedTotalInjury = clamp(
       Math.max(currentSeverity + outcome.injuryDelta, FIRST_CONTRACT_SHIELDED_INJURY_TOTAL),
       0,
@@ -1468,6 +1505,9 @@ function deriveResolutionFromRun(
 ): ActiveRaidResolutionPacket {
   const summary = run.summaryDraft;
   const result = summary?.result ?? "mixed";
+  const teamWiped = run.teamOperatorIds.every(
+    (operatorId) => (run.derivedState.operatorHp[operatorId] ?? 1) <= 0,
+  );
 
   return {
     result,
@@ -1477,7 +1517,7 @@ function deriveResolutionFromRun(
       const injuryDelta = run.derivedState.operatorInjury[operatorId] ?? 0;
       const hp = run.derivedState.operatorHp[operatorId] ?? 1;
       const down = hp <= 0;
-      const died = down && result === "failure" && injuryDelta >= 30;
+      const died = down && result === "failure" && teamWiped && injuryDelta >= 45;
 
       return {
         operatorId,
@@ -1671,6 +1711,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     teamCohesion,
     contractExplorationProgress: contractSite?.explorationProgress ?? 0,
     contractBossIntelProgress: contractSite?.bossIntelProgress ?? 0,
+    contractBossAvailable: contractSite?.bossAvailable ?? false,
     contractPosture: objectiveBiasState.contractPosture,
     objectiveBias: objectiveBiasState.objectiveBias,
     recoveryTriage: objectiveBiasState.recoveryTriage,
@@ -1816,7 +1857,7 @@ function finalizeRaidPacket(
     );
     InjuryState.recoveryHoursRemaining[operatorEntity] = Math.max(
       InjuryState.recoveryHoursRemaining[operatorEntity],
-      outcome.injuryDelta * 0.75,
+      outcome.injuryDelta * INJURY_RECOVERY_HOURS_PER_POINT,
     );
     RaidParticipationState.activeRaidId[operatorEntity] = "";
     RaidParticipationState.missionId[operatorEntity] = "";
@@ -3334,23 +3375,31 @@ function updateSummaryDerivedProgress(context: SimSystemContext): void {
   );
   let successCount = 0;
   let intelContribution = 0;
+  let pressureContribution = 0;
   for (const s of summaries) {
     if (s.result === "success") {
       successCount++;
       intelContribution += 15 * objectiveBias.intelMultiplier;
+      pressureContribution += 32;
     } else if (s.result === "mixed") {
       intelContribution += 5 * objectiveBias.intelMultiplier;
+      pressureContribution += 18;
+    } else {
+      pressureContribution += 8;
     }
   }
   contractSite.bossIntelProgress = clamp(intelContribution, 0, 100);
   contractSite.bossPressureProgress = clamp(
-    successCount * 18 + contractSite.explorationProgress * 0.3,
+    pressureContribution + contractSite.explorationProgress * 0.4,
     0,
     100,
   );
+  const forcedBossWindow =
+    summaries.length >= 2 && summaries.some((summary) => summary.result !== "failure");
   contractSite.bossAvailable =
-    contractSite.explorationProgress >= objectiveBias.contractExplorationThreshold &&
-    contractSite.bossPressureProgress >= objectiveBias.contractPressureThreshold &&
+    (forcedBossWindow ||
+      (contractSite.explorationProgress >= objectiveBias.contractExplorationThreshold &&
+        contractSite.bossPressureProgress >= objectiveBias.contractPressureThreshold)) &&
     !contractSite.bossDefeated;
 }
 

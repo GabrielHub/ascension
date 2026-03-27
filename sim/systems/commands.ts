@@ -49,6 +49,7 @@ import {
   WorldTimeState,
 } from "../components";
 import { ensureOperatorDispositionEntity, ensureRoomCultureEntity } from "./social";
+import { getRecruitmentGateState } from "./opening-envelope";
 import type { RuntimeEvent, SimSystemContext } from "./types";
 
 // Late-bound encounter/interruption/incident command handler.
@@ -1031,10 +1032,12 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       const livingOperatorCount = context.runtimeState.operatorEntities.filter(
         (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
       ).length;
+      const recruitmentGate = getRecruitmentGateState(context);
       if (
         visitorEntity === undefined ||
         livingOperatorCount >= BuildingAuthority.operatorSlotCount[buildingEntity] ||
-        !hasOperationalRecruitmentRoom(context)
+        !hasOperationalRecruitmentRoom(context) ||
+        !recruitmentGate.unlocked
       ) {
         return;
       }

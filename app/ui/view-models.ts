@@ -301,6 +301,8 @@ export interface VisitorViewModel {
   projectedLoyalty: number;
   presetId: string;
   rank: string;
+  canAccept: boolean;
+  lockedReason: string | null;
 }
 
 export interface RelationshipViewModel {
@@ -1210,6 +1212,8 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       ),
       presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
       rank: visitorQualityToRank(quality),
+      canAccept: bool(raw, "canAccept", true),
+      lockedReason: optionalStr(raw, "lockedReason"),
     };
   });
 
@@ -1438,6 +1442,16 @@ function str(rec: Record<string, unknown> | undefined, key: string, fallback: st
 function num(rec: Record<string, unknown> | undefined, key: string, fallback: number): number {
   const v = rec?.[key];
   return typeof v === "number" ? v : fallback;
+}
+
+function bool(rec: Record<string, unknown> | undefined, key: string, fallback: boolean): boolean {
+  const v = rec?.[key];
+  return typeof v === "boolean" ? v : fallback;
+}
+
+function optionalStr(rec: Record<string, unknown> | undefined, key: string): string | null {
+  const v = rec?.[key];
+  return typeof v === "string" ? v : null;
 }
 
 function rec(

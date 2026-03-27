@@ -288,7 +288,8 @@ const OPENING_BEATS_MUTABLE = [
       replayPolicy: "manual_replay",
     },
     gating: {
-      requiredCompletedBeatIds: ["guidance/opening/loot-and-market"],
+      requiredCompletedBeatIds: ["guidance/opening/staffing-and-rooms"],
+      minimumSecuredContractCount: 3,
       requireUpgradeAffordable: true,
     },
     bindings: {},
@@ -366,3 +367,5 @@ export const OPENING_BEAT_BY_ID: ReadonlyMap<string, GuidanceBeat> = new Map(
 );
 
 export const OPENING_BEAT_COUNT: number = OPENING_BEATS.length;
+
+export const FIRST_RAID_RETURN_BEAT_ID = "guidance/opening/first-raid-return";

@@ -524,7 +524,7 @@ function resolveGoalCheck(
         for (const op of living) {
           const damage = rng.int(2, 6);
           dmg[op.operatorId] = -damage;
-          injury[op.operatorId] = Math.max(1, Math.round(damage * 0.3));
+          injury[op.operatorId] = Math.max(1, Math.round(damage * 0.2));
         }
         consequences.hpDelta = dmg;
         consequences.injuryDelta = injury;
@@ -558,7 +558,7 @@ function resolveGoalCheck(
         for (const op of living) {
           const damage = rng.int(4, 10);
           dmg[op.operatorId] = -damage;
-          injury[op.operatorId] = Math.max(1, Math.round(damage * 0.35));
+          injury[op.operatorId] = Math.max(1, Math.round(damage * 0.2));
         }
         consequences.hpDelta = dmg;
         consequences.injuryDelta = injury;
@@ -627,6 +627,7 @@ export interface RaidSimulationInput {
   teamCohesion: number;
   contractExplorationProgress: number;
   contractBossIntelProgress: number;
+  contractBossAvailable?: boolean;
   objectiveBias: ObjectiveBiasOption;
   contractPosture?: ContractPostureOption;
   recoveryTriage?: RecoveryTriageOption;
@@ -806,7 +807,7 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
         if (op) {
           derivedState.operatorHp[opId] = Math.max(0, op.currentHp);
           derivedState.operatorInjury[opId] =
-            (derivedState.operatorInjury[opId] ?? 0) + Math.round(dmg * 0.3);
+            (derivedState.operatorInjury[opId] ?? 0) + Math.round(dmg * 0.2);
         }
       }
 
@@ -846,7 +847,7 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
         op.currentHp -= dmg;
         derivedState.operatorHp[op.operatorId] = Math.max(0, op.currentHp);
         derivedState.operatorInjury[op.operatorId] =
-          (derivedState.operatorInjury[op.operatorId] ?? 0) + Math.round(dmg * 0.2);
+          (derivedState.operatorInjury[op.operatorId] ?? 0) + Math.round(dmg * 0.12);
         if (op.currentHp <= 0) op.down = true;
       }
       tickOffset += 1;
@@ -945,6 +946,8 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
     if (node.kind === "boss_approach" && input.hasBoss && !retreating && aliveOps().length > 0) {
       // Check if contract progress is sufficient for boss contact
       const progressSufficient =
+        input.contractBossAvailable === true ||
+        input.contractBossIntelProgress >= objectiveBias.contractPressureThreshold ||
         input.contractExplorationProgress >= objectiveBias.contractExplorationThreshold;
       const runProgressSufficient =
         visitOrder.length <= 1 ||
@@ -1035,6 +1038,7 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
       retreating,
       result,
     );
+    const teamWiped = aliveOps().length === 0;
 
     steps.push({
       kind: "resolve",
@@ -1053,7 +1057,8 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
           died:
             op.down &&
             result === "failure" &&
-            (derivedState.operatorInjury[op.operatorId] ?? 0) >= 30,
+            teamWiped &&
+            (derivedState.operatorInjury[op.operatorId] ?? 0) >= 45,
         })),
       },
     });

@@ -16,6 +16,11 @@ export const upgradeTemplates = [
         resourceId: "resource/cash",
         minimum: 150,
       },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 140,
+      },
     ],
     effects: [
       {
@@ -42,6 +47,11 @@ export const upgradeTemplates = [
         type: "resource_min",
         resourceId: "resource/cash",
         minimum: 90,
+      },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 80,
       },
       {
         type: "room_count_min",
@@ -78,6 +88,11 @@ export const upgradeTemplates = [
         minimum: 110,
       },
       {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 110,
+      },
+      {
         type: "room_count_min",
         roomId: "room/counter:tier_1",
         minimum: 1,
@@ -110,6 +125,11 @@ export const upgradeTemplates = [
         type: "resource_min",
         resourceId: "resource/cash",
         minimum: 130,
+      },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 4,
       },
       {
         type: "room_count_min",
@@ -173,6 +193,11 @@ export const upgradeTemplates = [
         type: "resource_min",
         resourceId: "resource/cash",
         minimum: 100,
+      },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 5,
       },
       {
         type: "room_count_min",

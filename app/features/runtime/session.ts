@@ -47,6 +47,7 @@ import type { AudioCueId } from "app/features/audio";
 const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
 const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
 const PRESENTATION_FRAME_INTERVAL_MS = 50;
+const FIRST_INCIDENT_OPENING_BEAT_ID = "guidance/opening/first-incident";
 
 /** Duration for an actor to travel between rooms (ms). */
 const ACTOR_MOVE_DURATION_MS = 800;
@@ -237,6 +238,67 @@ function createPersistedSessionSave(session: RuntimeSession): PersistedSaveGame 
     },
     world: session.worldSnapshot,
   };
+}
+
+function getStructuredRecordSlice(
+  snapshot: WorldSnapshot,
+  key: "guidanceState" | "incidentState" | "interruptionQueue",
+): Record<string, unknown> | null {
+  const value = snapshot[key];
+  return value && typeof value === "object" ? value : null;
+}
+
+function buildOpeningFirstIncidentPersistenceSignature(snapshot: WorldSnapshot): string | null {
+  const guidanceState = getStructuredRecordSlice(snapshot, "guidanceState");
+  const incidentState = getStructuredRecordSlice(snapshot, "incidentState");
+  const interruptionQueue = getStructuredRecordSlice(snapshot, "interruptionQueue");
+  const activeBeatId =
+    typeof guidanceState?.activeBeatId === "string" ? guidanceState.activeBeatId : null;
+  const completedBeatIds = Array.isArray(guidanceState?.completedBeatIds)
+    ? guidanceState.completedBeatIds.filter((value): value is string => typeof value === "string")
+    : [];
+  const openingPathState =
+    typeof guidanceState?.openingPathState === "string" ? guidanceState.openingPathState : null;
+  const pendingIncident =
+    incidentState?.pendingIncident && typeof incidentState.pendingIncident === "object"
+      ? (incidentState.pendingIncident as Record<string, unknown>)
+      : null;
+  const interruptionSnapshot = {
+    active:
+      interruptionQueue?.active && typeof interruptionQueue.active === "object"
+        ? interruptionQueue.active
+        : null,
+    queue: Array.isArray(interruptionQueue?.queue) ? interruptionQueue.queue : [],
+  };
+  const firstIncidentSequenceActive =
+    openingPathState === "active" &&
+    !completedBeatIds.includes(FIRST_INCIDENT_OPENING_BEAT_ID) &&
+    (activeBeatId === FIRST_INCIDENT_OPENING_BEAT_ID || pendingIncident !== null);
+
+  if (!firstIncidentSequenceActive) {
+    return null;
+  }
+
+  return JSON.stringify({
+    activeBeatId,
+    activeBeatView:
+      guidanceState?.activeBeatView && typeof guidanceState.activeBeatView === "object"
+        ? guidanceState.activeBeatView
+        : null,
+    interruptionQueue: interruptionSnapshot,
+    pendingIncident,
+  });
+}
+
+export function shouldImmediatelyPersistTickMutation(
+  beforeWorldSnapshot: WorldSnapshot,
+  afterWorldSnapshot: WorldSnapshot,
+): boolean {
+  const beforeSignature = buildOpeningFirstIncidentPersistenceSignature(beforeWorldSnapshot);
+  const afterSignature = buildOpeningFirstIncidentPersistenceSignature(afterWorldSnapshot);
+  return (
+    (beforeSignature !== null || afterSignature !== null) && beforeSignature !== afterSignature
+  );
 }
 
 function resolveCuesForCommand(
@@ -1313,26 +1375,37 @@ function createRuntimeSession(
     startPersistWorker();
   };
 
-  const schedulePersist = (command: SimCommand) => {
+  const schedulePersist = (
+    command: SimCommand,
+    beforeWorldSnapshot: WorldSnapshot,
+    afterWorldSnapshot: WorldSnapshot,
+  ): Promise<void> | undefined => {
     if (!session.isSaveBacked || !session.save) {
-      return;
+      return undefined;
     }
 
     persistDirty = true;
 
     if (closed || command.type !== "sim/tick") {
       queuePersistNow();
-      return;
+      return undefined;
+    }
+
+    if (shouldImmediatelyPersistTickMutation(beforeWorldSnapshot, afterWorldSnapshot)) {
+      queuePersistNow();
+      return persistPromise;
     }
 
     if (autosaveTimeout) {
-      return;
+      return undefined;
     }
 
     autosaveTimeout = setTimeout(() => {
       autosaveTimeout = undefined;
       queuePersistNow();
     }, AUTOSAVE_INTERVAL_MS);
+
+    return undefined;
   };
 
   const queueSimulationMutation = (command: SimCommand): Promise<void> => {
@@ -1359,7 +1432,7 @@ function createRuntimeSession(
         );
         appendSimulationCues();
         notifyListeners();
-        schedulePersist(command);
+        return schedulePersist(command, beforeWorldSnapshot, session.worldSnapshot);
       });
 
     mutationQueue = nextMutation.catch(() => undefined);

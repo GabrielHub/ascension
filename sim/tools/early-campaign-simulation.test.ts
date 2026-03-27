@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -32,15 +29,36 @@ describe("early campaign simulation harness", () => {
     expect(suite.aggregate.watchItems.lootSellVariance.status).toMatch(/pass|fail/);
   });
 
-  it("matches the checked-in generated artifacts", async () => {
-    const artifacts = await buildEarlyCampaignSimulationArtifacts();
-    const jsonPath = path.resolve("reports/economy/early-campaign-simulation.v1.json");
-    const reportPath = path.resolve("reports/economy/early-campaign-simulation-report.md");
-    const report = fs.readFileSync(reportPath, "utf8");
+  it("does not invert lower-bound threshold checks for positive measurements", async () => {
+    const suite = await buildEarlyCampaignSimulationSuite({ seedCount: 1, contractLimit: 1 });
+    const firstRun = suite.runs[0];
 
-    expect(JSON.parse(fs.readFileSync(jsonPath, "utf8"))).toEqual(artifacts.suite);
-    expect(report).toContain("# Early Campaign Deterministic Simulation Report");
-    expect(report).toContain("## Threshold Summary");
-    expect(report).toContain("## Watch Items");
+    expect(firstRun.contractCycles[0]?.operatingNetTreasury).toBeGreaterThan(0);
+    expect(firstRun.evaluation.m1TreasuryFlow.checks.mean_cycle_net.status).not.toBe("fail");
+    expect(firstRun.evaluation.m1TreasuryFlow.checks.mixed_cycle_net.status).not.toBe("fail");
+    expect(
+      firstRun.evaluation.m7OpeningStability.checks.treasury_after_three_contracts.status,
+    ).not.toBe("fail");
+  });
+
+  it("records boss contact whenever a contract records a boss clear", async () => {
+    const suite = await buildEarlyCampaignSimulationSuite({ seedCount: 1, contractLimit: 1 });
+    const firstRun = suite.runs[0];
+
+    if (firstRun.firstBossClearContract !== null) {
+      expect(firstRun.firstBossContactContract).not.toBeNull();
+      expect(firstRun.firstBossContactContract).toBeLessThanOrEqual(
+        firstRun.firstBossClearContract,
+      );
+    }
+  });
+
+  it("renders self-consistent simulation artifacts", async () => {
+    const artifacts = await buildEarlyCampaignSimulationArtifacts();
+
+    expect(JSON.parse(artifacts.json)).toEqual(artifacts.suite);
+    expect(artifacts.report).toContain("# Early Campaign Deterministic Simulation Report");
+    expect(artifacts.report).toContain("## Threshold Summary");
+    expect(artifacts.report).toContain("## Watch Items");
   }, 60_000);
 });

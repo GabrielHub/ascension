@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { createAudioEngine, type AudioEngine, type AudioEngineState } from "app/features/audio";
+import { updateBrowserTestSnapshot } from "app/features/browser/test-driver";
 import { useGameSettings } from "app/features/settings";
 import {
   parseRuntimeRouteRequest,
@@ -1141,6 +1142,24 @@ export function GameShell() {
   const { entries: eventLog, handleEntryClick: handleEventLogEntryClick } = useEventLog(
     session ?? null,
   );
+
+  useEffect(() => {
+    if (!session || !hq || !operations) {
+      updateBrowserTestSnapshot(null);
+      return;
+    }
+
+    updateBrowserTestSnapshot({
+      activeTab,
+      eventLog,
+      focus,
+      hq,
+      hqCategory,
+      opsCategory,
+      operations,
+      session,
+    });
+  }, [activeTab, eventLog, focus, hq, hqCategory, operations, opsCategory, session]);
 
   const rawHqWorld: HqWorldSnapshot | null = session?.state.hqWorldSnapshot ?? null;
   const rawRaidWorld: RaidWorldSnapshot | null = session?.state.raidWorldSnapshot ?? null;

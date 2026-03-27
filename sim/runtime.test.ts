@@ -4,6 +4,7 @@ import { DEFAULT_POLICY_STATE } from "lib/policies";
 import {
   createAscensionSimulation,
   createBootstrapSimulation,
+  createNewGameWorldSnapshot,
   createPreviewWorldSnapshot,
   createBootstrapWorldSnapshot,
 } from "./index";
@@ -246,6 +247,11 @@ describe("phase 1 runtime", () => {
 
   it("applies building and room upgrades through the locked commands", () => {
     const roomUpgradeSimulation = createBootstrapSimulation(templateRegistry);
+    roomUpgradeSimulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
 
     roomUpgradeSimulation.dispatch({
       type: "sim/purchase-room-upgrade",
@@ -259,6 +265,11 @@ describe("phase 1 runtime", () => {
     ).toBe(3);
 
     const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
     simulation.dispatch({
       type: "sim/purchase-building-upgrade",
       upgradeId: "upgrade/building/bodega:frontage",
@@ -303,6 +314,11 @@ describe("phase 1 runtime", () => {
       type: "sim/dev-set-resource",
       resourceId: "resource/cash",
       amount: 5000,
+    });
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
     });
 
     const diningRoomId = "room-instance/dining_area";
@@ -350,6 +366,11 @@ describe("phase 1 runtime", () => {
       type: "sim/dev-set-resource",
       resourceId: "resource/cash",
       amount: 5000,
+    });
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
     });
 
     // Try to purchase the second upgrade directly (should be blocked)
@@ -452,6 +473,65 @@ describe("phase 1 runtime", () => {
     expect(phase1View.relationshipSignals.length).toBeGreaterThanOrEqual(3);
   });
 
+  it("keeps opening-path recruitment available in a fresh new-game snapshot", () => {
+    const simulation = createAscensionSimulation(
+      createNewGameWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
+    simulation.tick(0);
+
+    const before = simulation.getPhase1View();
+    const visitor = before.visitors.find((entry) => entry.id === "visitor/nika");
+    if (!visitor) {
+      throw new Error("expected canonical opening visitor to be present");
+    }
+
+    expect(visitor.canAccept).toBe(true);
+    expect(visitor.lockedReason).toBeNull();
+
+    simulation.dispatch({
+      type: "sim/accept-recruit",
+      visitorId: visitor.id,
+    });
+
+    const after = simulation.getPhase1View();
+    expect(after.operators).toHaveLength(before.operators.length + 1);
+    expect(after.visitors.find((entry) => entry.id === visitor.id)).toBeUndefined();
+  });
+
+  it("keeps runtime deployability aligned with recovery-triage fatigue gates", () => {
+    const fatiguedOperatorId = "operator/rose-vega";
+    const getReadiness = (
+      recoveryTriage: "field_first" | "balanced_rotation" | "full_recovery",
+    ) => {
+      const snapshot = createPolicyRaidSnapshot();
+      snapshot.policies = {
+        ...DEFAULT_POLICY_STATE,
+        recoveryTriage,
+      };
+      snapshot.operators = snapshot.operators?.map((operator) =>
+        operator.id === fatiguedOperatorId
+          ? {
+              ...operator,
+              needs: {
+                ...operator.needs,
+                fatigue: 75,
+              },
+            }
+          : operator,
+      );
+
+      const simulation = createAscensionSimulation(snapshot, templateRegistry);
+      return simulation
+        .getPhase1View()
+        .operatorIntentReadiness.find((entry) => entry.operatorId === fatiguedOperatorId);
+    };
+
+    expect(getReadiness("field_first")?.availableForRaid).toBe(true);
+    expect(getReadiness("balanced_rotation")?.availableForRaid).toBe(true);
+    expect(getReadiness("full_recovery")?.availableForRaid).toBe(false);
+  });
+
   it("round-trips staff mutable state through runtime snapshots", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
     snapshot.staff = snapshot.staff?.map((staff) => ({
@@ -491,9 +571,9 @@ describe("phase 1 runtime", () => {
     const restoredStaff = roundTripped.getWorldSnapshot().staff?.[0];
 
     expect(restoredStaff).toMatchObject({
-      status: "recovering",
+      status: "off_shift",
       schedule: {
-        currentBlock: "recovery",
+        currentBlock: "rest",
         workStartMinute: 540,
         workEndMinute: 1020,
       },
@@ -674,6 +754,11 @@ describe("phase 1 runtime", () => {
 
   it("round-trips contract site, fog, and room upgrades through runtime snapshots", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
 
     simulation.dispatch({
       type: "sim/purchase-room-upgrade",
@@ -1280,6 +1365,33 @@ describe("phase 1 runtime", () => {
     expect(moraleEvents).toEqual([]);
   });
 
+  it("continues clearing residual injuries after the formal recovery window ends", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    snapshot.operators = snapshot.operators?.map((operator) =>
+      operator.id === "operator/rose-vega"
+        ? {
+            ...operator,
+            injury: {
+              severity: 4,
+              recoveryHoursRemaining: 0,
+              treated: true,
+            },
+          }
+        : operator,
+    );
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(4 * 60 * 60 * 1000);
+
+    const operator = simulation
+      .getPhase1View()
+      .operators.find((entry) => entry.id === "operator/rose-vega");
+
+    expect(operator?.injury.severity).toBe(0);
+  });
+
   it("batches simultaneous operator morale threshold warnings into one named event", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 
@@ -1831,7 +1943,93 @@ describe("phase 1 runtime", () => {
     expect(summary?.operatorOutcomes[0].died).toBeUndefined();
     expect(summary?.narrativeTags).toContain("opening:first-contract-shield");
     expect(operator?.lifecycle.status).toBe("active");
-    expect(operator?.injury.severity).toBeGreaterThanOrEqual(85);
+    expect(operator?.injury.severity).toBeGreaterThanOrEqual(58);
+  });
+
+  it("caps first-contract non-lethal injuries before the first raid-return beat", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    const targetOperatorId = "operator/rose-vega";
+    (snapshot as Record<string, unknown>).guidanceState = {
+      seenBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+      completedBeatIds: OPENING_BEAT_IDS.slice(0, 5),
+      dismissedBeatIds: [],
+      activeBeatId: null,
+      activeBeatView: null,
+      queuedBeatIds: [],
+      lastEvaluationMinute: 0,
+      openingPathState: "active",
+      anchorResolutionFailures: [],
+      activeBeatProgressBaseline: null,
+      interactionCounts: {
+        staffingActions: 0,
+        upgradesPurchased: 0,
+      },
+      openingTiming: {
+        firstRaidReturnCompletedAtMinute: null,
+        firstIncidentSeededAtMinute: null,
+        securedContractCount: 0,
+        lastTrackedContractSiteId: null,
+      },
+    };
+
+    snapshot.operators = snapshot.operators?.map((operator) =>
+      operator.id === targetOperatorId
+        ? {
+            ...operator,
+            assignment: { kind: "raid", targetId: "raid/first-contract-injury-cap" },
+            schedule: { currentBlock: "raid", workStartMinute: 480, workEndMinute: 1080 },
+          }
+        : operator,
+    );
+    snapshot.activeRaidPackets = [
+      {
+        id: "raid/first-contract-injury-cap",
+        opportunityId: "opportunity/first-contract-injury-cap",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "day-1 08:00",
+        startedTick: 480,
+        revealProgress: 100,
+        operatorIds: [targetOperatorId],
+        returnTick: 481,
+        durationHours: 1,
+        threat: 80,
+        intel: 25,
+        reward: 55,
+        cohesion: 50,
+        resolutionPacket: {
+          result: "failure",
+          reputationDelta: -2,
+          cashDelta: -20,
+          operatorOutcomes: [
+            {
+              operatorId: targetOperatorId,
+              injuryDelta: 40,
+              moraleDelta: -8,
+              loyaltyDelta: -4,
+              status: "hurt",
+            },
+          ],
+          narrativeTags: ["result:failure"],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.tick(60000);
+
+    const phase1View = simulation.getPhase1View();
+    const operator = phase1View.operators.find((entry) => entry.id === targetOperatorId);
+    const summary = phase1View.raidSummaries.find(
+      (entry) => entry.id === "raid/first-contract-injury-cap",
+    );
+
+    expect(summary).toBeTruthy();
+    expect(summary?.operatorOutcomes[0].injuryDelta).toBe(14);
+    expect(summary?.narrativeTags).toContain("opening:first-contract-shield");
+    expect(operator?.injury.severity).toBe(14);
   });
 
   it("preserves the forced first-incident deadline through snapshot restore", () => {

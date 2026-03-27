@@ -39,6 +39,7 @@ export interface GuidanceCompletionRule {
 export interface GuidanceBeatGating {
   requiredCompletedBeatIds: string[];
   requiredContractLifecycle?: "idle" | "bidding" | "active" | "resolved";
+  minimumSecuredContractCount?: number;
   requireFirstContractSecured?: boolean;
   requireFirstIncidentEligible?: boolean;
   requireFirstRaidReturn?: boolean;
@@ -266,11 +267,32 @@ export function ensureOpeningTimingState(state: GuidanceState): GuidanceOpeningT
   return state.openingTiming;
 }
 
+export function syncOpeningContractTracking(
+  state: { openingTiming?: GuidanceOpeningTimingState },
+  contractLifecycle: string,
+  contractSiteId: string | null | undefined,
+): GuidanceOpeningTimingState {
+  const openingTiming = state.openingTiming ?? createOpeningTimingState();
+  state.openingTiming = openingTiming;
+
+  if (
+    contractLifecycle === "active" &&
+    contractSiteId &&
+    openingTiming.lastTrackedContractSiteId !== contractSiteId
+  ) {
+    openingTiming.lastTrackedContractSiteId = contractSiteId;
+    openingTiming.securedContractCount = (openingTiming.securedContractCount ?? 0) + 1;
+  }
+
+  return openingTiming;
+}
+
 // ── Eligibility ──────────────────────────────────────────────────────
 
 export interface GuidanceEvaluationContext {
   currentMinute: number;
   contractLifecycle: string;
+  securedContractCount: number;
   hasSecuredContract: boolean;
   hasActiveIncident: boolean;
   hasCompletedRaid: boolean;
@@ -310,6 +332,12 @@ export function isBeatEligible(
   if (
     beat.gating.requiredContractLifecycle &&
     evalContext.contractLifecycle !== beat.gating.requiredContractLifecycle
+  ) {
+    return false;
+  }
+  if (
+    beat.gating.minimumSecuredContractCount !== undefined &&
+    evalContext.securedContractCount < beat.gating.minimumSecuredContractCount
   ) {
     return false;
   }

@@ -5,10 +5,13 @@
 import { GuildState, MoraleState, OperatorIdentity } from "../components";
 import { getCurrentAbsoluteMinute } from "./commands";
 import type { SimSystem, SimSystemContext } from "./types";
-import { shouldEvaluateIncidents, selectIncidentCandidate, queueIncident } from "./incidents";
+import {
+  isOpeningFirstIncidentSequenceActive,
+  shouldEvaluateIncidents,
+  selectIncidentCandidate,
+  queueIncident,
+} from "./incidents";
 import { hasBlockingInterruption } from "./interruptions";
-
-const OPENING_INCIDENT_GATE_BEAT_ID = "guidance/opening/first-team-departure";
 
 export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   // Skip incident evaluation during zero-delta initialization ticks
@@ -20,10 +23,7 @@ export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
   // Don't evaluate if there's already a blocking interruption or the world is frozen
   if (hasBlockingInterruption(interruptionQueue)) return;
   if (context.runtimeState.worldTimeFrozen) return;
-  if (
-    context.runtimeState.guidanceState.openingPathState === "active" &&
-    !context.runtimeState.guidanceState.completedBeatIds.includes(OPENING_INCIDENT_GATE_BEAT_ID)
-  ) {
+  if (isOpeningFirstIncidentSequenceActive(context)) {
     return;
   }
   if (!shouldEvaluateIncidents(incidentState, currentMinute)) return;

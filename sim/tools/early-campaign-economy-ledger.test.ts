@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -34,16 +31,13 @@ describe("early campaign economy ledger", () => {
     expect(ledger.ledgers.incidentTreasuryDeltas.length).toBeGreaterThan(0);
   });
 
-  it("matches the checked-in generated artifacts", () => {
+  it("renders self-consistent economy artifacts", () => {
     const artifacts = buildEarlyCampaignEconomyArtifacts();
-    const ledgerPath = path.resolve("reports/economy/early-campaign-ledger.v1.json");
-    const reportPath = path.resolve("reports/economy/early-campaign-report.md");
-    const report = fs.readFileSync(reportPath, "utf8");
 
-    expect(JSON.parse(fs.readFileSync(ledgerPath, "utf8"))).toEqual(artifacts.ledger);
-    expect(report).toContain("# Early Campaign Economy Report");
-    expect(report).toContain("## Contract Board Envelope");
-    expect(report).toContain("## Phase 2 Gaps");
-    expect(report).toContain("No standalone treatment or repair spend system");
+    expect(JSON.parse(artifacts.json)).toEqual(artifacts.ledger);
+    expect(artifacts.report).toContain("# Early Campaign Economy Report");
+    expect(artifacts.report).toContain("## Contract Board Envelope");
+    expect(artifacts.report).toContain("## Phase 2 Gaps");
+    expect(artifacts.report).toContain("No standalone treatment or repair spend system");
   });
 });

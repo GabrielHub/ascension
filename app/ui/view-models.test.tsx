@@ -13,6 +13,11 @@ import { buildHqViewFromPhase1, buildHqViewModel, buildOpsViewFromPhase1 } from 
 describe("phase 1 view models", () => {
   it("keeps applied room upgrades visible in the HQ panel model", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
 
     simulation.dispatch({
       type: "sim/purchase-room-upgrade",

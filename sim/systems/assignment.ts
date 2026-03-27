@@ -35,6 +35,13 @@ function hasOperationalRoomForFunction(
  */
 const SCHEDULE_STABILITY_BONUS = 10;
 
+function shouldForceRecovery(context: Parameters<SimSystem>[0], entity: number): boolean {
+  const recoveryTriage = getRecoveryTriageConfig(
+    BuildingAuthority.policies[context.singletonEntities.building],
+  );
+  return computeNeedReadinessFlags(entity, recoveryTriage).injuryPreventsRaid;
+}
+
 export interface OperatorBlockScores {
   recovery: number;
   social: number;
@@ -185,7 +192,7 @@ export const reconcileAssignmentsSystem: SimSystem = (context) => {
     const workStartMinute = ScheduleState.workStartMinute[entity] || 480;
     const workEndMinute = ScheduleState.workEndMinute[entity] || 1080;
 
-    if (InjuryState.recoveryHoursRemaining[entity] > 0) {
+    if (shouldForceRecovery(context, entity)) {
       ScheduleState.currentBlock[entity] = "recovery";
       StaffState.status[entity] = "recovering";
       return;
@@ -214,7 +221,7 @@ export const reconcileAssignmentsSystem: SimSystem = (context) => {
       return;
     }
 
-    if (InjuryState.recoveryHoursRemaining[entity] > 0) {
+    if (shouldForceRecovery(context, entity)) {
       ScheduleState.currentBlock[entity] = "recovery";
       AssignmentState.kind[entity] = "recovery";
       return;

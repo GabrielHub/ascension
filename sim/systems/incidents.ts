@@ -589,6 +589,14 @@ export function shouldEvaluateIncidents(state: IncidentState, currentMinute: num
   return currentMinute - state.lastEvaluationMinute >= EVALUATION_INTERVAL_MINUTES;
 }
 
+export function isOpeningFirstIncidentSequenceActive(context: SimSystemContext): boolean {
+  const guidanceState = context.runtimeState.guidanceState;
+  return (
+    guidanceState.openingPathState === "active" &&
+    !guidanceState.completedBeatIds.includes(OPENING_INCIDENT_LEARNED_BEAT_ID)
+  );
+}
+
 export function isOpeningIncidentMercyWindowActive(context: SimSystemContext): boolean {
   const guidanceState = context.runtimeState.guidanceState;
 
@@ -599,10 +607,7 @@ export function isOpeningIncidentMercyWindowActive(context: SimSystemContext): b
     return true;
   }
 
-  return (
-    guidanceState.openingPathState === "active" &&
-    !guidanceState.completedBeatIds.includes(OPENING_INCIDENT_LEARNED_BEAT_ID)
-  );
+  return isOpeningFirstIncidentSequenceActive(context);
 }
 
 function buildEligibleIncidentTemplates(

@@ -13,7 +13,13 @@ import {
   resolveKnownRoomSlotPlacement,
 } from "lib/hq-room-state";
 import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
-import { DEFAULT_POLICY_STATE, normalizePolicyState, type PolicyState } from "lib/policies";
+import {
+  DEFAULT_POLICY_STATE,
+  getContractPostureConfig,
+  getRecoveryTriageConfig,
+  normalizePolicyState,
+  type PolicyState,
+} from "lib/policies";
 import {
   buildKitTemplateRegistry,
   REGULAR_ATTACKS,
@@ -22,6 +28,7 @@ import {
   PASSIVES,
 } from "content/templates/kits";
 import { OPENING_BEAT_COUNT } from "./systems/guidance-beats";
+import { syncOpeningContractTracking } from "./systems/guidance";
 // Type-only re-declarations to avoid importing from systems/ modules.
 // Those modules have init-time circular dependencies through the systems barrel.
 type InterruptionQueueState = { active: unknown; queue: unknown[]; nextInstanceId: number };
@@ -230,6 +237,8 @@ import {
 } from "./systems";
 import { type MarketItemView, getMarketItems } from "./systems/market";
 import { computeAutonomyFlags } from "./systems/morale";
+import { computeNeedReadinessFlags } from "./systems/needs";
+import { getRecruitmentGateState } from "./systems/opening-envelope";
 
 export type Phase1OperatorPreferenceSnapshot = PreferenceProfileRecord;
 
@@ -362,6 +371,8 @@ export interface Phase1VisitorSnapshot {
   expectedLoyalty: number;
   projectedMorale?: number;
   projectedLoyalty?: number;
+  canAccept?: boolean;
+  lockedReason?: string | null;
 }
 
 export interface Phase1RaidOpportunitySnapshot {
@@ -1444,11 +1455,11 @@ function getAvailabilityWithoutOpportunity(snapshot: Phase1OperatorSnapshot) {
   const clampValue = (value: number) => Math.max(0, Math.min(100, value));
   const availabilityScore = clampValue(
     100 -
-      snapshot.injury.severity * 0.85 -
-      snapshot.needs.fatigue * 0.55 -
-      snapshot.needs.stress * 0.35 -
-      snapshot.needs.hunger * 0.18 -
-      schedulePressure * 0.45 +
+      snapshot.injury.severity * 0.75 -
+      snapshot.needs.fatigue * 0.32 -
+      snapshot.needs.stress * 0.18 -
+      snapshot.needs.hunger * 0.08 -
+      schedulePressure * 0.1 +
       snapshot.loyalty.current * 0.08,
   );
 
@@ -1978,6 +1989,12 @@ function applyWorldSnapshot(
     runtimeState,
   };
 
+  syncOpeningContractTracking(
+    runtimeState.guidanceState,
+    BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding",
+    BuildingAuthority.contractSite[buildingEntity]?.contractSiteId,
+  );
+
   runSimSystemSchedule(context, 0);
 
   function buildRoomCultureSignals(entity: number): string[] {
@@ -2079,6 +2096,7 @@ function applyWorldSnapshot(
           ...summary,
         }),
       );
+      const recruitmentGate = getRecruitmentGateState(context);
 
       return {
         guild: {
@@ -2233,6 +2251,8 @@ function applyWorldSnapshot(
           expectedLoyalty: VisitorState.expectedLoyalty[entity],
           projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
           projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),
+          canAccept: recruitmentGate.unlocked,
+          lockedReason: recruitmentGate.reason,
         })),
         raidOpportunities: runtimeState.raidOpportunityEntities.map((entity) => ({
           id: RaidOpportunityState.id[entity],
@@ -2441,6 +2461,9 @@ function applyWorldSnapshot(
       const livingOperatorEntities = runtimeState.operatorEntities.filter(
         (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
       );
+      const policies = BuildingAuthority.policies[buildingEntity] ?? DEFAULT_POLICY_STATE;
+      const recoveryTriage = getRecoveryTriageConfig(policies);
+      const contractPosture = getContractPostureConfig(policies);
       const operatorIntentReadiness = livingOperatorEntities.map((entity) => {
         const operatorSnapshot = operatorSnapshotById.get(OperatorIdentity.id[entity]);
         if (!operatorSnapshot) {
@@ -2473,6 +2496,7 @@ function applyWorldSnapshot(
           (availabilityScore + willingnessScore) / 2;
         const schedulePressure =
           selectedOpportunity?.readiness.schedulePressure ?? fallbackReadiness.schedulePressure;
+        const readinessFlags = computeNeedReadinessFlags(entity, recoveryTriage);
 
         return {
           operatorId: OperatorIdentity.id[entity],
@@ -2482,9 +2506,9 @@ function applyWorldSnapshot(
           dominantNeed: getDominantNeed(operatorSnapshot),
           availableForRaid:
             AssignmentState.kind[entity] !== "raid" &&
-            InjuryState.severity[entity] < 70 &&
-            availabilityScore >= 45 &&
-            willingnessScore >= 55,
+            !readinessFlags.injuryPreventsRaid &&
+            !readinessFlags.exhaustionPenalty &&
+            willingnessScore >= contractPosture.minimumWillingnessThreshold,
           preferredOpportunityId: selectedOpportunity
             ? RaidOpportunityState.id[selectedOpportunity.opportunityEntity]
             : undefined,
@@ -2500,7 +2524,6 @@ function applyWorldSnapshot(
       const raidPresentationById = new Map(
         runtimeState.raidPresentation.teams.map((team) => [team.raidId, team]),
       );
-
       return {
         stableCommandTypes: STABLE_SIM_COMMAND_TYPES,
         clock: {
