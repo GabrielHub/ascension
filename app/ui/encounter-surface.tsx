@@ -21,6 +21,7 @@ import {
   getStatusMeta,
   getWeaknessTargetMeta,
 } from "./_glossary";
+import { Tooltip } from "./_tooltip";
 
 // ── Props ─────────────────────────────────────────────────────────────────
 
@@ -73,6 +74,11 @@ function formatRank(rank: string): string {
 /** Build a map of actorId → label for log formatting. */
 function buildActorLabelMap(actors: readonly EncounterActorView[]): Map<string, string> {
   return new Map(actors.map((a) => [a.actorId, a.label]));
+}
+
+function getEncounterLogEntryKey(entry: EncounterActionRecord | undefined): string {
+  if (!entry) return "";
+  return `${entry.timestamp}:${entry.round}:${entry.actorId}:${entry.actionKind}:${entry.abilityId}`;
 }
 
 // ── Feed entry formatting ─────────────────────────────────────────────────
@@ -233,7 +239,7 @@ function BossHpBar({
   return (
     <div className="relative">
       <div
-        className={`relative h-3 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.7)] shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] ${isCritical ? "enc-hp-critical" : ""}`}
+        className={`relative h-3.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.7)] shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] ${isCritical ? "enc-hp-critical" : ""}`}
       >
         <div
           className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
@@ -253,7 +259,6 @@ function BossHpBar({
             animation: "shimmer 3s ease infinite",
           }}
         />
-        {/* Phase threshold markers */}
         {thresholdFractions.map((thresholdFraction, i) => {
           const thresholdPct = thresholdFraction * 100;
           return (
@@ -295,7 +300,7 @@ function ActorHpBar({
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`relative h-1.5 flex-1 overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)] ${isCritical ? "enc-hp-critical" : ""}`}
+        className={`relative h-2 flex-1 overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)] ${isCritical ? "enc-hp-critical" : ""}`}
       >
         <div
           className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ${barBg}`}
@@ -311,60 +316,59 @@ function ActorHpBar({
           />
         )}
       </div>
-      <span className="min-w-[3.5rem] text-right text-[0.625rem] tabular-nums text-silver/50">
+      <span className="min-w-[3.5rem] text-right text-xs tabular-nums text-silver/50">
         {current}/{max}
       </span>
     </div>
   );
 }
 
-// ── Squad member card (with portrait) ─────────────────────────────────────
+// ── Operator detail panel (shown when a card is selected) ────────────────
 
-function SquadMemberCard({
+function OperatorDetailPanel({
   actor,
-  isNextTurn,
+  onClose,
 }: {
   actor: EncounterActorView;
-  isNextTurn: boolean;
+  onClose: () => void;
 }) {
-  const isDown = actor.condition === "incapacitated" || actor.condition === "retreated";
   const roleMeta = actor.roleTag ? getRoleMeta(actor.roleTag) : null;
 
   return (
-    <div
-      className={`glass-card-inset relative flex gap-3 rounded-lg px-3 py-2.5 transition-opacity ${
-        isDown ? "opacity-35" : ""
-      } ${isNextTurn ? "enc-initiative-active border-[rgba(200,168,76,0.2)]" : ""}`}
-    >
-      {/* Initiative marker */}
-      {isNextTurn && (
-        <div className="absolute -left-1 top-1/2 -translate-y-1/2 h-5 w-1 rounded-full bg-gold" />
-      )}
-
-      {/* Portrait */}
-      {actor.presetId && actor.operatorId && (
-        <div className="shrink-0">
-          <OperatorPortrait
-            name={actor.label}
-            roleTag={actor.roleTag ?? "role:field_lead"}
-            presetId={actor.presetId}
-            size="roster"
-          />
-        </div>
-      )}
-
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-sm font-medium text-silver-bright">{actor.label}</span>
-          {roleMeta && (
-            <span className="shrink-0 text-[0.5625rem] uppercase tracking-[0.1em] text-gold-dim">
-              {roleMeta.label}
-            </span>
+    <div className="enc-detail-panel glass-card-inset flex w-72 shrink-0 flex-col rounded-xl border border-[rgba(200,168,76,0.12)] bg-[rgba(10,10,14,0.85)]">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.08)] px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          {actor.presetId && actor.operatorId && (
+            <OperatorPortrait
+              name={actor.label}
+              roleTag={actor.roleTag ?? "role:field_lead"}
+              presetId={actor.presetId}
+              size="roster"
+            />
           )}
+          <div>
+            <h3 className="text-sm font-medium text-silver-bright">{actor.label}</h3>
+            {roleMeta && (
+              <span className="text-xs uppercase tracking-[0.1em] text-gold-dim">
+                {roleMeta.label}
+              </span>
+            )}
+          </div>
         </div>
+        <button
+          type="button"
+          aria-label={`Close ${actor.label} details`}
+          className="flex h-6 w-6 items-center justify-center rounded-full text-silver/40 transition-colors hover:bg-[rgba(200,168,76,0.1)] hover:text-silver/70"
+          onClick={onClose}
+        >
+          {"\u2715"}
+        </button>
+      </div>
 
-        <div className="mt-1">
+      {/* Stats section */}
+      <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+        <div className="mb-2">
           <ActorHpBar
             current={actor.currentHp}
             max={actor.maxHp}
@@ -373,29 +377,213 @@ function SquadMemberCard({
           />
         </div>
 
-        {/* Condition badge */}
+        {/* Condition */}
         {actor.condition !== "alive" && (
-          <span className="mt-1 inline-block text-[0.5625rem] uppercase tracking-[0.1em] text-magma">
-            {getEncounterConditionMeta(actor.condition).label}
-          </span>
+          <Tooltip content={getEncounterConditionMeta(actor.condition).tip}>
+            <span className="inline-block rounded bg-[rgba(180,44,26,0.12)] px-2 py-0.5 text-xs uppercase tracking-[0.08em] text-magma">
+              {getEncounterConditionMeta(actor.condition).label}
+            </span>
+          </Tooltip>
         )}
 
-        {/* Status effects */}
-        {actor.activeStatuses.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {actor.activeStatuses.map((s, i) => (
-              <span
-                key={`${s.statusId}-${i}`}
-                className="rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.05)] px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-gold-dim"
-              >
-                {getStatusMeta(s.statusId).label}
-                <span className="ml-0.5 text-silver/30">({s.remainingDuration})</span>
-              </span>
-            ))}
+        {/* Base combat stats */}
+        {(actor.baseAttack != null || actor.baseDefense != null || actor.baseSpeed != null) && (
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {actor.baseAttack != null && (
+              <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
+                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">ATK</div>
+                <div className="text-sm tabular-nums text-silver-bright">{actor.baseAttack}</div>
+              </div>
+            )}
+            {actor.baseDefense != null && (
+              <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
+                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">DEF</div>
+                <div className="text-sm tabular-nums text-silver-bright">{actor.baseDefense}</div>
+              </div>
+            )}
+            {actor.baseSpeed != null && (
+              <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
+                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">SPD</div>
+                <div className="text-sm tabular-nums text-silver-bright">{actor.baseSpeed}</div>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Abilities section */}
+      {(actor.skillId || actor.ultimateId || actor.regularAttackId) && (
+        <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
+            Abilities
+          </h4>
+          <div className="space-y-1.5">
+            {actor.regularAttackId && (
+              <AbilityRow id={actor.regularAttackId} kind="Attack" icon="\u2694" />
+            )}
+            {actor.skillId && <AbilityRow id={actor.skillId} kind="Skill" icon="\u2726" />}
+            {actor.ultimateId && <AbilityRow id={actor.ultimateId} kind="Ultimate" icon="\u2605" />}
+          </div>
+        </div>
+      )}
+
+      {/* Passives section */}
+      {actor.passiveIds && actor.passiveIds.length > 0 && (
+        <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
+            Passives
+          </h4>
+          <div className="space-y-1.5">
+            {actor.passiveIds.map((pid) => (
+              <AbilityRow key={pid} id={pid} kind="Passive" icon="\u2727" />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active status effects */}
+      {actor.activeStatuses.length > 0 && (
+        <div className="px-4 py-3">
+          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
+            Status Effects
+          </h4>
+          <div className="space-y-1">
+            {actor.activeStatuses.map((s, i) => {
+              const meta = getStatusMeta(s.statusId);
+              return (
+                <Tooltip key={`${s.statusId}-${i}`} content={meta.tip}>
+                  <div className="flex items-center justify-between rounded bg-[rgba(200,168,76,0.04)] px-2 py-1">
+                    <span className="text-xs text-gold-dim">{meta.label}</span>
+                    <span className="text-xs tabular-nums text-silver/30">
+                      {s.remainingDuration} rounds
+                    </span>
+                  </div>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function AbilityRow({ id, kind, icon }: { id: string; kind: string; icon: string }) {
+  const meta = getAbilityMeta(id);
+  return (
+    <div className="flex items-center gap-2 rounded bg-[rgba(6,6,8,0.4)] px-2.5 py-1.5">
+      <span className="text-sm leading-none text-silver/50">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <span className="text-xs font-medium text-silver-bright">{meta.label}</span>
+        <span className="ml-1.5 text-[0.625rem] text-silver/30">{kind}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Squad member card — card-game style ──────────────────────────────────
+
+function SquadMemberCard({
+  actor,
+  isNextTurn,
+  isSelected,
+  dealDelay,
+  reaction,
+  onClick,
+}: {
+  actor: EncounterActorView;
+  isNextTurn: boolean;
+  isSelected: boolean;
+  dealDelay: number;
+  reaction?: "act" | "hit";
+  onClick: () => void;
+}) {
+  const isDown = actor.condition === "incapacitated" || actor.condition === "retreated";
+  const roleMeta = actor.roleTag ? getRoleMeta(actor.roleTag) : null;
+
+  const reactionClass =
+    reaction === "act" ? "enc-card-act" : reaction === "hit" ? "enc-card-hit" : "";
+
+  return (
+    <button
+      type="button"
+      aria-label={`View details for ${actor.label}`}
+      aria-pressed={isSelected}
+      className={`enc-squad-card enc-card-deal flex w-36 shrink-0 flex-col text-left ${
+        isDown ? "enc-squad-card--down" : ""
+      } ${isNextTurn ? "enc-squad-card--active" : ""} ${isSelected ? "enc-squad-card--selected" : ""} ${reactionClass}`}
+      style={{ animationDelay: `${dealDelay}ms` }}
+      onClick={onClick}
+    >
+      {/* Top bevel highlight */}
+      <div className="enc-squad-card__bevel" />
+
+      {/* Portrait area */}
+      <div className="relative flex items-center justify-center px-2 pt-2.5 pb-1.5">
+        {actor.presetId && actor.operatorId ? (
+          <OperatorPortrait
+            name={actor.label}
+            roleTag={actor.roleTag ?? "role:field_lead"}
+            presetId={actor.presetId}
+            size="card"
+          />
+        ) : (
+          <div className="flex h-24 w-[calc(120*6rem/160)] items-center justify-center rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.5)]">
+            <span className="text-2xl text-silver/20">{actor.label[0]}</span>
+          </div>
+        )}
+
+        {/* Role tag — top right corner of portrait */}
+        {roleMeta && (
+          <span className="absolute top-1.5 right-1.5 rounded bg-[rgba(6,6,8,0.7)] px-1 py-0.5 text-[0.5625rem] uppercase tracking-[0.1em] text-gold-dim">
+            {roleMeta.label}
+          </span>
+        )}
+      </div>
+
+      {/* Name */}
+      <div className="px-2 text-center">
+        <span className="block truncate text-sm font-medium text-silver-bright">{actor.label}</span>
+      </div>
+
+      {/* HP bar */}
+      <div className="mt-1 px-2 pb-2">
+        <ActorHpBar
+          current={actor.currentHp}
+          max={actor.maxHp}
+          shield={actor.shield}
+          variant="ally"
+        />
+      </div>
+
+      {/* Condition badge */}
+      {actor.condition !== "alive" && (
+        <div className="border-t border-[rgba(200,168,76,0.06)] px-2 py-1 text-center">
+          <Tooltip content={getEncounterConditionMeta(actor.condition).tip} side="top">
+            <span className="text-[0.5625rem] uppercase tracking-[0.1em] text-magma">
+              {getEncounterConditionMeta(actor.condition).label}
+            </span>
+          </Tooltip>
+        </div>
+      )}
+
+      {/* Status effects */}
+      {actor.activeStatuses.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-0.5 border-t border-[rgba(200,168,76,0.06)] px-1.5 py-1">
+          {actor.activeStatuses.map((s, i) => {
+            const meta = getStatusMeta(s.statusId);
+            return (
+              <Tooltip key={`${s.statusId}-${i}`} content={meta.tip} side="top">
+                <span className="rounded bg-[rgba(200,168,76,0.06)] px-1 py-0.5 text-[0.5625rem] uppercase tracking-[0.04em] text-gold-dim">
+                  {meta.label}
+                  <span className="ml-0.5 text-silver/25">({s.remainingDuration})</span>
+                </span>
+              </Tooltip>
+            );
+          })}
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -409,12 +597,21 @@ function EnemyCard({ actor }: { actor: EncounterActorView }) {
       className={`glass-card-inset rounded-lg px-3 py-2 transition-opacity ${isDown ? "opacity-35" : ""}`}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[0.75rem] font-medium text-[#e08060]">{actor.label}</span>
-        <span className="text-[0.5625rem] uppercase tracking-[0.08em] text-silver/35">
-          {actor.condition !== "alive"
-            ? getEncounterConditionMeta(actor.condition).label
-            : getEncounterActorKindMeta(actor.kind).label}
-        </span>
+        <span className="text-sm font-medium text-[#e08060]">{actor.label}</span>
+        <Tooltip
+          content={
+            actor.condition !== "alive"
+              ? getEncounterConditionMeta(actor.condition).tip
+              : getEncounterActorKindMeta(actor.kind).tip
+          }
+          side="top"
+        >
+          <span className="text-xs uppercase tracking-[0.08em] text-silver/35">
+            {actor.condition !== "alive"
+              ? getEncounterConditionMeta(actor.condition).label
+              : getEncounterActorKindMeta(actor.kind).label}
+          </span>
+        </Tooltip>
       </div>
       <div className="mt-1">
         <ActorHpBar
@@ -455,7 +652,7 @@ function InterventionCard({
   return (
     <button
       type="button"
-      className="enc-intervention-card flex flex-col items-start gap-1.5 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.5)] px-3 py-2.5 text-left"
+      className="enc-intervention-card flex flex-col items-start gap-1.5 px-3 py-2.5 text-left"
       disabled={disabled || noUses}
       onClick={onUse}
     >
@@ -464,7 +661,7 @@ function InterventionCard({
           <span className="text-base leading-none">
             {INTERVENTION_ICONS[intervention.interventionId] ?? "\u2726"}
           </span>
-          <span className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-silver-bright">
+          <span className="text-xs font-medium uppercase tracking-[0.08em] text-silver-bright">
             {def?.name ?? getAbilityMeta(intervention.interventionId).label}
           </span>
         </div>
@@ -481,7 +678,7 @@ function InterventionCard({
         </div>
       </div>
       {def?.summary && (
-        <p className="text-[0.625rem] leading-relaxed text-silver/45">{def.summary}</p>
+        <p className="text-[0.6875rem] leading-relaxed text-silver/45">{def.summary}</p>
       )}
     </button>
   );
@@ -498,6 +695,7 @@ function EncounterFeed({
 }) {
   const feedRef = useRef<HTMLDivElement>(null);
   const actorLabels = useMemo(() => buildActorLabelMap(actors), [actors]);
+  const latestEntryKey = getEncounterLogEntryKey(entries[entries.length - 1]);
   const feedEntries = useMemo(
     () => entries.map((e, i) => formatFeedEntry(e, i, actorLabels)).reverse(),
     [entries, actorLabels],
@@ -507,12 +705,12 @@ function EncounterFeed({
     if (feedRef.current) {
       feedRef.current.scrollTop = 0;
     }
-  }, [entries.length]);
+  }, [latestEntryKey]);
 
   if (feedEntries.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[0.6875rem] text-silver/30">Awaiting first action...</p>
+        <p className="text-sm text-silver/30">Awaiting first action...</p>
       </div>
     );
   }
@@ -522,26 +720,18 @@ function EncounterFeed({
       {feedEntries.map((entry, i) => (
         <div
           key={entry.key}
-          className={`enc-feed-entry border-b border-[rgba(200,168,76,0.03)] px-3 py-1.5 ${
-            i === 0 ? "" : ""
-          }`}
+          className="enc-feed-entry border-b border-[rgba(200,168,76,0.03)] px-3 py-2"
           style={{ animationDelay: i === 0 ? "0ms" : undefined }}
         >
-          <div className="flex items-start gap-2">
-            <span className="mt-px shrink-0 text-[0.625rem] leading-none opacity-60">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-sm leading-none opacity-60">
               {entry.icon}
             </span>
             <div className="min-w-0 flex-1">
-              <span className={`text-[0.6875rem] leading-tight ${entry.colorClass}`}>
-                {entry.text}
-              </span>
-              {entry.detail && (
-                <span className="ml-1.5 text-[0.625rem] text-silver/35">{entry.detail}</span>
-              )}
+              <span className={`text-sm leading-tight ${entry.colorClass}`}>{entry.text}</span>
+              {entry.detail && <span className="ml-2 text-xs text-silver/35">{entry.detail}</span>}
             </div>
-            <span className="shrink-0 text-[0.5625rem] tabular-nums text-silver/20">
-              R{entry.round}
-            </span>
+            <span className="shrink-0 text-xs tabular-nums text-silver/20">R{entry.round}</span>
           </div>
         </div>
       ))}
@@ -558,7 +748,7 @@ function TraceLog({ entries }: { entries: readonly EncounterActionRecord[] }) {
     <div className="glass-card-inset mt-2 rounded-lg">
       <button
         type="button"
-        className="flex w-full items-center justify-between px-3 py-1.5 text-left text-[0.625rem] uppercase tracking-[0.12em] text-gold-dim"
+        className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs uppercase tracking-[0.12em] text-gold-dim"
         onClick={() => setExpanded((v) => !v)}
       >
         <span>Trace Log ({entries.length})</span>
@@ -567,13 +757,11 @@ function TraceLog({ entries }: { entries: readonly EncounterActionRecord[] }) {
 
       {expanded && (
         <div className="max-h-40 overflow-y-auto border-t border-[rgba(200,168,76,0.06)] px-3 py-2">
-          {entries.length === 0 && (
-            <p className="text-[0.625rem] text-silver/40">No log entries yet.</p>
-          )}
+          {entries.length === 0 && <p className="text-xs text-silver/40">No log entries yet.</p>}
           {entries.map((entry, i) => (
             <div
               key={i}
-              className="border-b border-[rgba(200,168,76,0.03)] py-0.5 text-[0.5625rem] leading-relaxed text-silver/60"
+              className="border-b border-[rgba(200,168,76,0.03)] py-0.5 text-[0.6875rem] leading-relaxed text-silver/60"
             >
               <span className="mr-2 tabular-nums text-silver/30">R{entry.round}</span>
               <span className="mr-1 text-silver/50">[{entry.actionKind}]</span>
@@ -621,7 +809,7 @@ function TerminalOverlay({ status }: { status: EncounterStatus }) {
       {/* Terminal label */}
       <div className="relative z-10 text-center">
         <h2
-          className={`font-[family-name:var(--font-display)] text-3xl font-light tracking-[0.25em] uppercase ${
+          className={`font-[family-name:var(--font-display)] text-4xl font-light tracking-[0.25em] uppercase ${
             isVictory ? "text-gold" : isWipe ? "text-magma" : "text-silver/60"
           }`}
           style={{
@@ -634,7 +822,7 @@ function TerminalOverlay({ status }: { status: EncounterStatus }) {
         >
           {statusLabel(status)}
         </h2>
-        <p className="mt-3 text-[0.75rem] uppercase tracking-[0.16em] text-silver/40">
+        <p className="mt-3 text-sm uppercase tracking-[0.16em] text-silver/40">
           {isVictory
             ? "The boss has been defeated"
             : isWipe
@@ -720,14 +908,14 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
             <img
               src={bossArtPath}
               alt={encounter.bossName}
-              className="h-40 w-auto drop-shadow-[0_0_20px_rgba(212,84,30,0.2)]"
+              className="h-36 w-auto drop-shadow-[0_0_20px_rgba(212,84,30,0.2)]"
               style={{ imageRendering: "auto" }}
             />
           </div>
         ) : (
           /* Fallback: abstract threat sigil */
-          <div className="enc-boss-menace flex h-32 w-32 items-center justify-center rounded-full border border-[rgba(212,84,30,0.15)] bg-[rgba(212,84,30,0.04)]">
-            <svg viewBox="0 0 48 48" className="h-16 w-16 text-ember opacity-40">
+          <div className="enc-boss-menace flex h-28 w-28 items-center justify-center rounded-full border border-[rgba(212,84,30,0.15)] bg-[rgba(212,84,30,0.04)]">
+            <svg viewBox="0 0 48 48" className="h-14 w-14 text-ember opacity-40">
               <circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" strokeWidth="1" />
               <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" strokeWidth="0.5" />
               <circle cx="24" cy="24" r="3" fill="currentColor" opacity="0.4" />
@@ -744,10 +932,8 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
           {encounter.bossName}
         </h2>
         <div className="mt-1.5 flex items-center justify-center gap-3">
-          <span className="badge badge-ember text-[0.625rem]">
-            Rank {formatRank(encounter.bossRank)}
-          </span>
-          <span className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/45">
+          <span className="badge badge-ember text-xs">Rank {formatRank(encounter.bossRank)}</span>
+          <span className="text-xs uppercase tracking-[0.1em] text-silver/45">
             Phase {encounter.currentPhaseIndex + 1}/{encounter.phaseCount}
           </span>
         </div>
@@ -759,12 +945,11 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
           {encounter.bossTags.map((tag) => {
             const meta = getNarrativeTagMeta(tag);
             return (
-              <span
-                key={tag}
-                className="rounded border border-[rgba(212,84,30,0.12)] bg-[rgba(212,84,30,0.04)] px-2 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-ember/70"
-              >
-                {meta.label}
-              </span>
+              <Tooltip key={tag} content={meta.tip} side="bottom">
+                <span className="rounded border border-[rgba(212,84,30,0.12)] bg-[rgba(212,84,30,0.04)] px-2 py-0.5 text-xs uppercase tracking-[0.06em] text-ember/70">
+                  {meta.label}
+                </span>
+              </Tooltip>
             );
           })}
         </div>
@@ -777,7 +962,7 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
           phaseThresholdFractions={encounter.phaseThresholdFractions}
         />
         {bossActor && (
-          <div className="mt-1 flex justify-between text-[0.625rem] tabular-nums text-silver/40">
+          <div className="mt-1 flex justify-between text-xs tabular-nums text-silver/40">
             <span>
               {bossActor.currentHp} / {bossActor.maxHp}
             </span>
@@ -791,16 +976,81 @@ function BossPresence({ encounter }: { encounter: EncounterView }) {
       {/* Boss statuses */}
       {bossActor && bossActor.activeStatuses.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1">
-          {bossActor.activeStatuses.map((s, i) => (
-            <span
-              key={`${s.statusId}-${i}`}
-              className="rounded border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.06em] text-gold-dim"
-            >
-              {getStatusMeta(s.statusId).label} ({s.remainingDuration})
-            </span>
-          ))}
+          {bossActor.activeStatuses.map((s, i) => {
+            const meta = getStatusMeta(s.statusId);
+            return (
+              <Tooltip key={`${s.statusId}-${i}`} content={meta.tip} side="bottom">
+                <span className="rounded border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-xs uppercase tracking-[0.06em] text-gold-dim">
+                  {meta.label} ({s.remainingDuration})
+                </span>
+              </Tooltip>
+            );
+          })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Encounter controls (prominent play/pause/step) ──────────────────────
+
+function EncounterControls({
+  encounter,
+  onPause,
+  onResume,
+  onStep,
+  terminal,
+  isDevMode,
+}: {
+  encounter: EncounterView;
+  onPause: () => void;
+  onResume: () => void;
+  onStep: () => void;
+  terminal: boolean;
+  isDevMode: boolean;
+}) {
+  if (terminal || !isDevMode) return null;
+
+  const isRunning = encounter.status === "active" || encounter.autoplayEnabled;
+
+  return (
+    <div className="flex items-center gap-2">
+      {isRunning ? (
+        <button
+          type="button"
+          className="enc-control-btn group flex items-center gap-2 rounded-lg border border-[rgba(200,168,76,0.2)] bg-[rgba(200,168,76,0.06)] px-4 py-2 text-sm font-medium uppercase tracking-[0.1em] text-gold transition-all hover:border-[rgba(200,168,76,0.4)] hover:bg-[rgba(200,168,76,0.12)] hover:shadow-[0_0_20px_rgba(200,168,76,0.1)]"
+          onClick={onPause}
+        >
+          <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+            <rect x="3" y="2" width="4" height="12" rx="1" />
+            <rect x="9" y="2" width="4" height="12" rx="1" />
+          </svg>
+          Pause
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="enc-control-btn group flex items-center gap-2 rounded-lg border border-[rgba(46,168,122,0.25)] bg-[rgba(46,168,122,0.08)] px-4 py-2 text-sm font-medium uppercase tracking-[0.1em] text-[#2ea87a] transition-all hover:border-[rgba(46,168,122,0.45)] hover:bg-[rgba(46,168,122,0.15)] hover:shadow-[0_0_20px_rgba(46,168,122,0.1)]"
+          onClick={onResume}
+        >
+          <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+            <path d="M4 2l10 6-10 6z" />
+          </svg>
+          Resume
+        </button>
+      )}
+      <button
+        type="button"
+        className="enc-control-btn flex items-center gap-1.5 rounded-lg border border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] px-3 py-2 text-sm uppercase tracking-[0.1em] text-silver/60 transition-all hover:border-[rgba(200,168,76,0.25)] hover:text-silver/80"
+        onClick={onStep}
+        disabled={isRunning}
+      >
+        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="currentColor">
+          <path d="M4 2l6 6-6 6z" />
+          <rect x="11" y="2" width="2" height="12" rx="0.5" />
+        </svg>
+        Step
+      </button>
     </div>
   );
 }
@@ -817,6 +1067,8 @@ export function EncounterSurface({
   onUseIntervention,
   isDevMode,
 }: EncounterSurfaceProps) {
+  const [selectedActorId, setSelectedActorId] = useState<string | null>(null);
+
   const allies = useMemo(
     () => encounter.actors.filter((a) => a.side === "ally"),
     [encounter.actors],
@@ -827,6 +1079,54 @@ export function EncounterSurface({
   );
   const terminal = isTerminal(encounter.status);
   const nextActorId = encounter.initiativeQueue[0] ?? null;
+  const latestLogEntryKey = getEncounterLogEntryKey(
+    encounter.recentLog[encounter.recentLog.length - 1],
+  );
+
+  // Track card reaction animations from the latest log entry
+  const EMPTY_REACTIONS = useMemo(() => new Map<string, "act" | "hit">(), []);
+  const [cardReactions, setCardReactions] = useState(EMPTY_REACTIONS);
+  const lastAnimatedLogKey = useRef(latestLogEntryKey);
+  const reactionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!latestLogEntryKey || latestLogEntryKey === lastAnimatedLogKey.current) {
+      return;
+    }
+    lastAnimatedLogKey.current = latestLogEntryKey;
+
+    const latest = encounter.recentLog[encounter.recentLog.length - 1];
+    if (!latest) return;
+
+    const allyIds = new Set(
+      encounter.actors.filter((a) => a.side === "ally").map((a) => a.actorId),
+    );
+    const next = new Map<string, "act" | "hit">();
+
+    if (allyIds.has(latest.actorId)) {
+      next.set(latest.actorId, "act");
+    }
+
+    for (const eff of latest.effects) {
+      if (eff.effectKind === "damage" && !eff.blocked && allyIds.has(eff.targetId)) {
+        next.set(eff.targetId, "hit");
+      }
+    }
+
+    if (next.size > 0) {
+      if (reactionTimer.current) clearTimeout(reactionTimer.current);
+      setCardReactions(next);
+      reactionTimer.current = setTimeout(() => setCardReactions(EMPTY_REACTIONS), 600);
+    }
+
+    return () => {
+      if (reactionTimer.current) clearTimeout(reactionTimer.current);
+    };
+  }, [EMPTY_REACTIONS, encounter.actors, encounter.recentLog, latestLogEntryKey]);
+
+  const selectedActor = selectedActorId
+    ? (encounter.actors.find((a) => a.actorId === selectedActorId) ?? null)
+    : null;
 
   return (
     <div
@@ -843,7 +1143,7 @@ export function EncounterSurface({
         className={`relative z-10 flex flex-1 flex-col ${terminal ? "pointer-events-none opacity-50" : ""}`}
       >
         {/* ── Top chrome: status bar ──────────────────────────────────── */}
-        <header className="glass-panel-subtle flex items-center gap-4 border-b border-[rgba(200,168,76,0.08)] px-5 py-2">
+        <header className="glass-panel-subtle flex items-center gap-4 border-b border-[rgba(200,168,76,0.08)] px-5 py-2.5">
           <span
             className={`badge ${
               encounter.status === "victory"
@@ -857,11 +1157,11 @@ export function EncounterSurface({
           </span>
 
           <div className="flex items-center gap-3">
-            <span className="text-[0.6875rem] uppercase tracking-[0.1em] text-silver/50">
+            <span className="text-sm uppercase tracking-[0.1em] text-silver/50">
               Round{" "}
               <span className="tabular-nums text-silver-bright">{encounter.currentRound}</span>
             </span>
-            <span className="text-[0.625rem] tabular-nums text-silver/30">
+            <span className="text-xs tabular-nums text-silver/30">
               {encounter.elapsedMinutes}m elapsed
             </span>
           </div>
@@ -871,75 +1171,49 @@ export function EncounterSurface({
           {/* Weakness hints */}
           {encounter.bossWeaknesses.length > 0 && (
             <div className="hidden items-center gap-1.5 sm:flex">
-              <span className="text-[0.5625rem] uppercase tracking-[0.1em] text-silver/30">
-                Weak to
-              </span>
-              {encounter.bossWeaknesses.map((w, i) => (
-                <span key={i} className="text-[0.5625rem] text-[#6eb8e0]/70">
-                  {getWeaknessTargetMeta(w.target).label}
-                </span>
-              ))}
+              <span className="text-xs uppercase tracking-[0.1em] text-silver/30">Weak to</span>
+              {encounter.bossWeaknesses.map((w, i) => {
+                const meta = getWeaknessTargetMeta(w.target);
+                return (
+                  <Tooltip key={i} content={meta.tip} side="bottom">
+                    <span className="text-xs text-[#6eb8e0]/70">{meta.label}</span>
+                  </Tooltip>
+                );
+              })}
             </div>
           )}
 
-          {/* Dev controls */}
-          {isDevMode && !terminal && (
-            <div className="flex items-center gap-1.5 border-l border-[rgba(200,168,76,0.08)] pl-3">
-              {encounter.status === "active" || encounter.autoplayEnabled ? (
-                <button type="button" className="btn-ghost text-[0.625rem]" onClick={onPause}>
-                  pause
-                </button>
-              ) : (
-                <button type="button" className="btn-ghost text-[0.625rem]" onClick={onResume}>
-                  resume
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn-ghost text-[0.625rem]"
-                onClick={onStep}
-                disabled={encounter.status === "active" && encounter.autoplayEnabled}
-              >
-                step
-              </button>
-            </div>
-          )}
+          {/* Prominent encounter controls */}
+          <EncounterControls
+            encounter={encounter}
+            onPause={onPause}
+            onResume={onResume}
+            onStep={onStep}
+            terminal={terminal}
+            isDevMode={isDevMode}
+          />
         </header>
 
-        {/* ── Center: boss + squad + feed ──────────────────────────────── */}
+        {/* ── Center area: boss + feed + detail panel ──────────────────── */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Boss presence — top center */}
-          <div className="shrink-0 px-5 py-4">
+          <div className="shrink-0 px-5 pt-3 pb-2">
             <BossPresence encounter={encounter} />
           </div>
 
-          {/* Squad + Feed + Adds row */}
-          <div className="flex min-h-0 flex-1 gap-4 px-5 pb-3">
-            {/* Left: Squad panel */}
-            <div className="enc-squad-in flex w-64 shrink-0 flex-col">
-              <h3 className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-[#2ea87a]/70">
-                Squad
-              </h3>
-              <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-                {allies.map((actor) => (
-                  <SquadMemberCard
-                    key={actor.actorId}
-                    actor={actor}
-                    isNextTurn={actor.actorId === nextActorId}
-                  />
-                ))}
-                {allies.length === 0 && (
-                  <p className="text-[0.6875rem] text-silver/35">No allied operators.</p>
-                )}
-              </div>
-            </div>
+          {/* Feed + Detail panel + Hostiles row — no flex-grow so it hugs content */}
+          <div className="enc-feed-slide flex shrink-0 gap-3 px-5 pb-2">
+            {/* Operator detail panel — left side when selected */}
+            {selectedActor && (
+              <OperatorDetailPanel actor={selectedActor} onClose={() => setSelectedActorId(null)} />
+            )}
 
-            {/* Center: Encounter feed */}
-            <div className="flex min-w-0 flex-1 flex-col">
-              <h3 className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-silver/40">
+            {/* Center: Encounter feed (compact, capped height) */}
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1.5 text-xs font-medium uppercase tracking-[0.16em] text-silver/40">
                 Encounter Log
               </h3>
-              <div className="glass-card-inset min-h-0 flex-1 overflow-hidden rounded-lg">
+              <div className="glass-card-inset max-h-48 overflow-hidden rounded-lg">
                 <EncounterFeed entries={encounter.recentLog} actors={encounter.actors} />
               </div>
             </div>
@@ -947,10 +1221,10 @@ export function EncounterSurface({
             {/* Right: Non-boss enemies (adds/summons) if present */}
             {nonBossEnemies.length > 0 && (
               <div className="w-48 shrink-0">
-                <h3 className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-[#e08060]/60">
+                <h3 className="mb-1.5 text-xs font-medium uppercase tracking-[0.16em] text-[#e08060]/60">
                   Hostiles
                 </h3>
-                <div className="space-y-1.5 overflow-y-auto">
+                <div className="max-h-48 space-y-1.5 overflow-y-auto">
                   {nonBossEnemies.map((actor) => (
                     <EnemyCard key={actor.actorId} actor={actor} />
                   ))}
@@ -960,40 +1234,64 @@ export function EncounterSurface({
           </div>
         </div>
 
-        {/* ── Bottom: Command deck ────────────────────────────────────── */}
-        <footer className="enc-deck-in glass-panel-subtle border-t border-[rgba(200,168,76,0.08)] px-5 py-3">
-          {/* Interventions grid */}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {encounter.interventions.map((iv) => (
-              <InterventionCard
-                key={iv.interventionId}
-                intervention={iv}
-                onUse={() => onUseIntervention(iv.interventionId)}
-                disabled={terminal || encounter.status === "paused"}
-              />
-            ))}
-          </div>
-
-          {/* Retreat button + dev trace */}
-          <div className="mt-2 flex items-center justify-between">
-            <div>
-              {!terminal && (
-                <button
-                  type="button"
-                  className="btn-ghost text-[0.6875rem] text-ember"
-                  onClick={onRetreat}
-                >
-                  Order Retreat
-                </button>
+        {/* ── Bottom: Squad hand + Command deck ───────────────────────── */}
+        <footer className="enc-deck-in glass-panel-subtle border-t border-[rgba(200,168,76,0.08)]">
+          {/* Squad card hand */}
+          <div className="border-b border-[rgba(200,168,76,0.06)] px-5 py-3">
+            <div className="flex items-end justify-center gap-3">
+              {allies.map((actor, i) => (
+                <SquadMemberCard
+                  key={actor.actorId}
+                  actor={actor}
+                  isNextTurn={actor.actorId === nextActorId}
+                  isSelected={actor.actorId === selectedActorId}
+                  dealDelay={350 + i * 100}
+                  reaction={cardReactions.get(actor.actorId)}
+                  onClick={() =>
+                    setSelectedActorId((prev) => (prev === actor.actorId ? null : actor.actorId))
+                  }
+                />
+              ))}
+              {allies.length === 0 && (
+                <p className="py-4 text-sm text-silver/35">No allied operators.</p>
               )}
             </div>
+          </div>
 
-            {/* Dev trace */}
-            {isDevMode && (
-              <div className="flex-1 pl-4">
-                <TraceLog entries={encounter.recentLog} />
+          {/* Interventions row */}
+          <div className="px-5 py-2.5">
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {encounter.interventions.map((iv) => (
+                <InterventionCard
+                  key={iv.interventionId}
+                  intervention={iv}
+                  onUse={() => onUseIntervention(iv.interventionId)}
+                  disabled={terminal || encounter.status === "paused"}
+                />
+              ))}
+            </div>
+
+            {/* Retreat button + dev trace */}
+            <div className="mt-2 flex items-center justify-between">
+              <div>
+                {!terminal && (
+                  <button
+                    type="button"
+                    className="btn-ghost text-sm text-ember"
+                    onClick={onRetreat}
+                  >
+                    Order Retreat
+                  </button>
+                )}
               </div>
-            )}
+
+              {/* Dev trace */}
+              {isDevMode && (
+                <div className="flex-1 pl-4">
+                  <TraceLog entries={encounter.recentLog} />
+                </div>
+              )}
+            </div>
           </div>
         </footer>
       </div>
@@ -1002,7 +1300,7 @@ export function EncounterSurface({
       {terminal && (
         <div className="absolute inset-x-0 bottom-0 z-40 pb-8 text-center">
           <div className="pointer-events-auto flex flex-col items-center gap-3">
-            <p className="text-[0.6875rem] uppercase tracking-[0.14em] text-silver/30">
+            <p className="text-sm uppercase tracking-[0.14em] text-silver/30">
               Outcome recorded. Review the log, then close the encounter.
             </p>
             <button type="button" className="btn-primary" onClick={onDismiss}>

@@ -1035,6 +1035,13 @@ export function buildEncounterView(encounter: BossEncounterInstance): EncounterV
     attunementTag: actor.attunementTag,
     presetId: actor.presetId,
     bossDefinitionId: actor.bossDefinitionId,
+    regularAttackId: actor.regularAttackId,
+    skillId: actor.skillId,
+    ultimateId: actor.ultimateId,
+    passiveIds: actor.passiveIds,
+    baseAttack: actor.baseAttack,
+    baseDefense: actor.baseDefense,
+    baseSpeed: actor.baseSpeed,
   }));
 
   return {

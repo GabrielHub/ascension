@@ -314,6 +314,15 @@ export interface EncounterActorView {
   attunementTag?: string;
   presetId?: string;
   bossDefinitionId?: string;
+  // Operator ability IDs (for detail display)
+  regularAttackId?: string;
+  skillId?: string;
+  ultimateId?: string;
+  passiveIds?: readonly string[];
+  // Base combat stats
+  baseAttack?: number;
+  baseDefense?: number;
+  baseSpeed?: number;
 }
 
 export interface EncounterView {

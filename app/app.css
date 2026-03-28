@@ -611,17 +611,6 @@ a {
   }
 }
 
-@keyframes encounter-squad-in {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 @keyframes encounter-deck-in {
   from {
     opacity: 0;
@@ -633,6 +622,46 @@ a {
   }
 }
 
+/* --- Card hand deal-in — cards fan up from below staggered ----------------- */
+@keyframes card-deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(80px) rotate(8deg) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+/* --- Card hover lift — used on squad cards --------------------------------- */
+@keyframes card-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(200, 168, 76, 0.15),
+      0 8px 32px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(200, 168, 76, 0.3),
+      0 8px 32px rgba(0, 0, 0, 0.6),
+      0 0 20px rgba(200, 168, 76, 0.08);
+  }
+}
+
+/* --- Feed slide-in from right side ---------------------------------------- */
+@keyframes feed-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .enc-backdrop-in {
   animation: encounter-backdrop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -641,12 +670,200 @@ a {
   animation: encounter-boss-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
 }
 
-.enc-squad-in {
-  animation: encounter-squad-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
-}
-
 .enc-deck-in {
   animation: encounter-deck-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 450ms both;
+}
+
+.enc-card-deal {
+  animation: card-deal-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enc-feed-slide {
+  animation: feed-slide-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+}
+
+/* --- Squad card — card-game look ------------------------------------------ */
+.enc-squad-card {
+  position: relative;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(200, 168, 76, 0.1);
+  background: linear-gradient(180deg, rgba(15, 14, 18, 0.7) 0%, rgba(6, 6, 8, 0.85) 100%);
+  box-shadow:
+    0 0 0 1px rgba(200, 168, 76, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition:
+    transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease,
+    box-shadow 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+}
+
+.enc-squad-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, transparent 40%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.enc-squad-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  border-color: rgba(200, 168, 76, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(200, 168, 76, 0.2),
+    0 16px 48px rgba(0, 0, 0, 0.7),
+    0 0 24px rgba(200, 168, 76, 0.06);
+  z-index: 10;
+}
+
+.enc-squad-card:hover::before {
+  opacity: 1;
+}
+
+.enc-squad-card:focus-visible {
+  outline: 2px solid rgba(200, 168, 76, 0.45);
+  outline-offset: 3px;
+}
+
+/* Active turn card — elevated and glowing */
+.enc-squad-card--active {
+  transform: translateY(-6px);
+  border-color: rgba(200, 168, 76, 0.3);
+  animation: card-glow-pulse 2.5s ease-in-out infinite;
+}
+
+.enc-squad-card--active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+}
+
+/* Selected card — bright gold border */
+.enc-squad-card--selected {
+  transform: translateY(-10px) scale(1.04);
+  border-color: rgba(200, 168, 76, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(200, 168, 76, 0.3),
+    0 16px 48px rgba(0, 0, 0, 0.7),
+    0 0 28px rgba(200, 168, 76, 0.1);
+  z-index: 10;
+}
+
+.enc-squad-card--selected::before {
+  opacity: 1;
+}
+
+/* Card inner bevel line at top */
+.enc-squad-card__bevel {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(200, 168, 76, 0.15) 30%,
+    rgba(200, 168, 76, 0.2) 50%,
+    rgba(200, 168, 76, 0.15) 70%,
+    transparent 100%
+  );
+}
+
+/* Downed card */
+.enc-squad-card--down {
+  opacity: 0.35;
+  filter: grayscale(0.5);
+}
+
+/* --- Card action reaction — rise up toward boss ---------------------------- */
+@keyframes card-act {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-14px) scale(1.04);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.enc-card-act {
+  animation: card-act 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- Card hit reaction — shake + red border flash ------------------------- */
+@keyframes card-hit {
+  0%,
+  100% {
+    transform: translateX(0);
+    border-color: rgba(200, 168, 76, 0.1);
+  }
+  10% {
+    transform: translateX(-4px);
+    border-color: rgba(212, 84, 30, 0.5);
+  }
+  20% {
+    transform: translateX(4px);
+    border-color: rgba(212, 84, 30, 0.6);
+  }
+  30% {
+    transform: translateX(-3px);
+    border-color: rgba(212, 84, 30, 0.45);
+  }
+  40% {
+    transform: translateX(3px);
+    border-color: rgba(212, 84, 30, 0.3);
+  }
+  50% {
+    transform: translateX(-1px);
+    border-color: rgba(212, 84, 30, 0.2);
+  }
+  60% {
+    transform: translateX(0);
+    border-color: rgba(200, 168, 76, 0.1);
+  }
+}
+
+.enc-card-hit {
+  animation: card-hit 500ms ease-out;
+  box-shadow:
+    0 0 0 1px rgba(212, 84, 30, 0.2),
+    0 0 16px rgba(212, 84, 30, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Operator detail panel slide-in ---------------------------------------- */
+@keyframes detail-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.enc-detail-panel {
+  animation: detail-panel-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Encounter control button hover --------------------------------------- */
+.enc-control-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* --- Boss menace / breathing ---------------------------------------------- */
@@ -778,21 +995,6 @@ a {
   pointer-events: none;
 }
 
-/* --- Initiative marker pulse ---------------------------------------------- */
-@keyframes initiative-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(200, 168, 76, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(200, 168, 76, 0);
-  }
-}
-
-.enc-initiative-active {
-  animation: initiative-pulse 2s ease-in-out infinite;
-}
-
 /* --- HP bar critical pulse ------------------------------------------------ */
 @keyframes hp-critical {
   0%,
@@ -824,18 +1026,28 @@ a {
   animation: feed-entry-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* --- Intervention card hover glow ----------------------------------------- */
+/* --- Intervention card — card-game style ---------------------------------- */
 .enc-intervention-card {
+  position: relative;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(200, 168, 76, 0.08);
+  background: linear-gradient(180deg, rgba(15, 14, 18, 0.5) 0%, rgba(6, 6, 8, 0.7) 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   transition:
     border-color 300ms ease,
     box-shadow 300ms ease,
-    background 300ms ease;
+    background 300ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .enc-intervention-card:hover:not(:disabled) {
-  border-color: rgba(200, 168, 76, 0.25);
-  box-shadow: 0 0 16px rgba(200, 168, 76, 0.1);
-  background: rgba(200, 168, 76, 0.06);
+  border-color: rgba(200, 168, 76, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(200, 168, 76, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(200, 168, 76, 0.08);
+  background: linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, rgba(6, 6, 8, 0.7) 100%);
+  transform: translateY(-2px);
 }
 
 .enc-intervention-card:disabled {
