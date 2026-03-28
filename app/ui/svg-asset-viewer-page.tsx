@@ -29,6 +29,7 @@ import {
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
 } from "./environment-parts";
+import { emptyStateClass, tabButtonClass } from "./styles";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Asset class selector
@@ -1338,7 +1339,7 @@ export function SvgAssetViewerPage() {
           {/* Asset class tabs */}
           <button
             type="button"
-            className="tab-button"
+            className={tabButtonClass}
             data-active={assetClass === "operators"}
             onClick={() => setAssetClass("operators")}
           >
@@ -1346,7 +1347,7 @@ export function SvgAssetViewerPage() {
           </button>
           <button
             type="button"
-            className="tab-button"
+            className={tabButtonClass}
             data-active={assetClass === "hq-environment"}
             onClick={() => setAssetClass("hq-environment")}
           >
@@ -1361,7 +1362,7 @@ export function SvgAssetViewerPage() {
               <button
                 key={tab}
                 type="button"
-                className="tab-button"
+                className={tabButtonClass}
                 data-active={opTab === tab}
                 onClick={() => setOpTab(tab)}
               >
@@ -1372,7 +1373,7 @@ export function SvgAssetViewerPage() {
           {/* Context info for environment */}
           {assetClass === "hq-environment" && (
             <>
-              <span className="tab-button cursor-default" data-active="true">
+              <span className={`${tabButtonClass} cursor-default`} data-active="true">
                 Assets ({envParts.length})
               </span>
               <div className="mx-2 my-auto h-4 w-px bg-[rgba(200,168,76,0.08)]" />
@@ -1479,7 +1480,7 @@ export function SvgAssetViewerPage() {
               </div>
               <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
                 {filteredOpParts.length === 0 ? (
-                  <div className="empty-state py-10">
+                  <div className={`${emptyStateClass} py-10`}>
                     <p className="text-xs text-silver/60">No parts match your filters</p>
                   </div>
                 ) : (
@@ -1594,7 +1595,7 @@ export function SvgAssetViewerPage() {
             </div>
             <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
               {filteredEnvParts.length === 0 ? (
-                <div className="empty-state py-10">
+                <div className={`${emptyStateClass} py-10`}>
                   <p className="text-xs text-silver/60">No assets match your filters</p>
                 </div>
               ) : (

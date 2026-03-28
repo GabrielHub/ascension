@@ -3,6 +3,7 @@ import { getPolicyFactorMetadata } from "lib/policies";
 import type { RaidOperatorOutcomeViewModel, RaidSummaryViewModel } from "./view-models";
 import { getNarrativeTagMeta } from "./_glossary";
 import { Tooltip } from "./_tooltip";
+import { emptyStateClass } from "./styles";
 
 interface RaidLogProps {
   history: readonly RaidSummaryViewModel[];
@@ -148,7 +149,7 @@ export function RaidLog({ history }: RaidLogProps) {
 
   if (history.length === 0) {
     return (
-      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
+      <div className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}>
         <p className="text-xs text-silver/60">No raid history yet</p>
       </div>
     );

@@ -5,6 +5,7 @@ import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
 import { Tooltip } from "./_tooltip";
+import { emptyStateClass, emptyStateIconClass, progressBarFillClass } from "./styles";
 import type { FocusPayload } from "render";
 import {
   rankBadgeClass,
@@ -260,8 +261,8 @@ function ContractBoard({
 }) {
   if (postings.length === 0) {
     return (
-      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
-        <div className="empty-state-icon">&#9876;</div>
+      <div className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}>
+        <div className={emptyStateIconClass}>&#9876;</div>
         <p className="text-[0.7rem] font-medium text-gold/70">No contracts available</p>
       </div>
     );
@@ -383,7 +384,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
             </div>
             <div className="mt-1 h-1 overflow-hidden rounded-full bg-void/80">
               <div
-                className="progress-bar-fill"
+                className={progressBarFillClass}
                 style={{ width: `${Math.min(100, contract.explorationProgress)}%` }}
               />
             </div>
@@ -495,8 +496,10 @@ export function OperationsPanel({
           )}
 
           {lifecycle === "idle" && !operations.contractSite && (
-            <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
-              <div className="empty-state-icon">&#9876;</div>
+            <div
+              className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}
+            >
+              <div className={emptyStateIconClass}>&#9876;</div>
               <p className="text-[0.7rem] font-medium text-gold/70">No secured contract</p>
               <p className="mt-1 text-xs text-silver/60">
                 Waiting for the contract board to refresh

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { OPERATOR_TIPS, RAID_TIPS, getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
+import { emptyStateClass, emptyStateIconClass } from "./styles";
 import { TranscriptEventLine } from "./transcript-event-display";
 import type { ActiveRaidViewModel, OperatorViewModel, RaidTranscriptEvent } from "./view-models";
 
@@ -336,8 +337,10 @@ export function RaidWatch({
 
   if (activeRaids.length === 0) {
     return (
-      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
-        <div className="empty-state-icon">&mdash;</div>
+      <div
+        className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
+      >
+        <div className={emptyStateIconClass}>&mdash;</div>
         <p className="text-xs font-medium text-gold/70">No active raids</p>
         <p className="mt-1 text-xs text-silver/60">Operators are currently between operations</p>
       </div>

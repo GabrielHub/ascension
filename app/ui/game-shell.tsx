@@ -43,6 +43,13 @@ import { GuidanceHost } from "./guidance-host";
 import { AnchorRegistryProvider, useAnchorRegistry, useGuidanceAnchor } from "./guidance-anchor";
 import { getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import {
+  emptyStateClass,
+  emptyStateIconClass,
+  glassPanelClass,
+  progressBarFillClass,
+  tabButtonClass,
+} from "./styles";
+import {
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
   buildInventoryViewModels,
@@ -365,7 +372,7 @@ function LoadingShell() {
           Initializing
         </p>
         <div className="mx-auto mt-6 h-0.5 w-32 overflow-hidden rounded-full bg-void">
-          <div className="progress-bar-fill h-full w-2/3" />
+          <div className={`${progressBarFillClass} w-2/3`} />
         </div>
       </div>
     </div>
@@ -772,8 +779,8 @@ function FocusedVisitorOverlay({
 function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
   if (teams.length === 0) {
     return (
-      <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-8">
-        <div className="empty-state-icon">&#9881;</div>
+      <div className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}>
+        <div className={emptyStateIconClass}>&#9881;</div>
         <p className="text-[0.7rem] font-medium text-gold/70">No recurring teams</p>
         <p className="mt-1 text-xs text-silver/60">Teams form through repeated raid pairings</p>
       </div>
@@ -1757,7 +1764,7 @@ export function GameShell() {
                 <button
                   key={tab}
                   type="button"
-                  className="tab-button"
+                  className={tabButtonClass}
                   data-testid={`shell-tab-${tab}`}
                   data-active={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
@@ -1918,7 +1925,9 @@ export function GameShell() {
                   focusedDetail={focusedRaidDetail}
                   onDismiss={() => setFocus(null)}
                 />
-                <div className="glass-panel pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl">
+                <div
+                  className={`${glassPanelClass} pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl`}
+                >
                   <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
                 </div>
               </>
@@ -1928,7 +1937,9 @@ export function GameShell() {
           {/* ── Bottom panel (slides up when category selected) ── */}
           {((activeTab === "hq" && hqCategory !== null) ||
             (activeTab === "operations" && opsCategory !== null)) && (
-            <div className="glass-panel pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]">
+            <div
+              className={`${glassPanelClass} pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto rounded-xl p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]`}
+            >
               <div
                 className="flex items-start gap-3"
                 data-testid="shell-bottom-panel"

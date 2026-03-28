@@ -22,6 +22,7 @@ import {
   resolveShellAssetUrl,
 } from "./environment-parts";
 import { SceneContractSummary } from "./svg-asset-viewer-page";
+import { glassCardNavyClass, tabButtonClass } from "./styles";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SVG Playground — Multi-Asset Experimentation Surface
@@ -253,7 +254,7 @@ function OperatorPlayground() {
         </div>
       </section>
 
-      <section className="glass-card-navy p-6">
+      <section className={`${glassCardNavyClass} p-6`}>
         <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
           Assessment
         </h2>
@@ -393,7 +394,7 @@ function OperatorPlayground() {
       </section>
 
       {/* Recipe review guidance */}
-      <section className="glass-card-navy p-6">
+      <section className={`${glassCardNavyClass} p-6`}>
         <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
           Recipe Review
         </h2>
@@ -1088,7 +1089,7 @@ function HqEnvironmentPlayground() {
       <ActorMarkerGrid />
 
       {/* Review guidance */}
-      <section className="glass-card-navy p-6">
+      <section className={`${glassCardNavyClass} p-6`}>
         <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
           Review Status
         </h2>
@@ -1165,7 +1166,7 @@ export function SvgPlaygroundPage() {
             <button
               key={cls}
               type="button"
-              className="tab-button"
+              className={tabButtonClass}
               data-active={assetClass === cls}
               onClick={() => setAssetClass(cls)}
             >

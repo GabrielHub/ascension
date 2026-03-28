@@ -1,4 +1,5 @@
 import { RAID_TIPS, getIntelMeta } from "./_glossary";
+import { emptyStateClass, emptyStateIconClass } from "./styles";
 import type {
   OperatorViewModel,
   RaidOpportunityViewModel,
@@ -111,8 +112,10 @@ export function OpportunityBoard({
           Raid Opportunities
         </h3>
         {rosterThin && <RosterThinWarning rosterPressure={rosterPressure} />}
-        <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
-          <div className="empty-state-icon">&#9672;</div>
+        <div
+          className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
+        >
+          <div className={emptyStateIconClass}>&#9672;</div>
           <p className="text-[0.7rem] font-medium text-gold/70">No opportunities posted</p>
           <p className="mt-1 text-xs text-silver/60">
             Opportunities appear as the guild gains reputation

@@ -22,6 +22,7 @@ import {
   getWeaknessTargetMeta,
 } from "./_glossary";
 import { Tooltip } from "./_tooltip";
+import { glassPanelSubtleClass } from "./styles";
 
 // ── Props ─────────────────────────────────────────────────────────────────
 
@@ -1143,7 +1144,9 @@ export function EncounterSurface({
         className={`relative z-10 flex flex-1 flex-col ${terminal ? "pointer-events-none opacity-50" : ""}`}
       >
         {/* ── Top chrome: status bar ──────────────────────────────────── */}
-        <header className="glass-panel-subtle flex items-center gap-4 border-b border-[rgba(200,168,76,0.08)] px-5 py-2.5">
+        <header
+          className={`${glassPanelSubtleClass} flex items-center gap-4 border-b border-[rgba(200,168,76,0.08)] px-5 py-2.5`}
+        >
           <span
             className={`badge ${
               encounter.status === "victory"
@@ -1235,7 +1238,9 @@ export function EncounterSurface({
         </div>
 
         {/* ── Bottom: Squad hand + Command deck ───────────────────────── */}
-        <footer className="enc-deck-in glass-panel-subtle border-t border-[rgba(200,168,76,0.08)]">
+        <footer
+          className={`enc-deck-in ${glassPanelSubtleClass} border-t border-[rgba(200,168,76,0.08)]`}
+        >
           {/* Squad card hand */}
           <div className="border-b border-[rgba(200,168,76,0.06)] px-5 py-3">
             <div className="flex items-end justify-center gap-3">

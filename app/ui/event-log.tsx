@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { EventLogEntry, EventLogKind } from "./view-models";
+import { glassPanelClass, glassPanelSubtleClass } from "./styles";
 
 // ── Icon mapping ────────────────────────────────────────────────────────
 
@@ -69,7 +70,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="glass-panel flex items-center gap-2 rounded-lg px-3 py-2 shadow-lg transition-all duration-200 hover:bg-[rgba(200,168,76,0.06)]"
+          className={`${glassPanelClass} flex items-center gap-2 rounded-lg px-3 py-2 shadow-lg transition-all duration-200 hover:bg-[rgba(200,168,76,0.06)]`}
         >
           <span className="text-[0.6875rem] text-gold/50">{"\u25C6"}</span>
           <span className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-silver/50">
@@ -90,7 +91,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
       <button
         type="button"
         onClick={() => setExpanded(false)}
-        className="glass-panel flex shrink-0 items-center gap-2 rounded-t-xl border-b border-[rgba(200,168,76,0.08)] px-3 py-2 text-left transition-colors duration-150 hover:bg-[rgba(200,168,76,0.04)]"
+        className={`${glassPanelClass} flex shrink-0 items-center gap-2 rounded-t-xl border-b border-[rgba(200,168,76,0.08)] px-3 py-2 text-left transition-colors duration-150 hover:bg-[rgba(200,168,76,0.04)]`}
       >
         <span className="text-[0.6875rem] text-gold/50">{"\u25C6"}</span>
         <h2 className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-gold/60">
@@ -105,7 +106,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
       {/* Scrolling body */}
       <div
         ref={scrollRef}
-        className="glass-panel-subtle max-h-72 flex-1 overflow-y-auto overflow-x-hidden rounded-b-xl px-1 py-1 lg:max-h-80"
+        className={`${glassPanelSubtleClass} max-h-72 flex-1 overflow-y-auto overflow-x-hidden rounded-b-xl px-1 py-1 lg:max-h-80`}
       >
         {entries.length === 0 ? (
           <div className="flex h-20 items-center justify-center">

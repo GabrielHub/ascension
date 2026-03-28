@@ -14,6 +14,7 @@ import {
   getToneMeta,
 } from "./_glossary";
 import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
+import { progressBarFillClass } from "./styles";
 
 interface RoomDetailPanelProps {
   room: RoomViewModel | null;
@@ -194,7 +195,7 @@ export function RoomDetailPanel({
           </div>
 
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
-            <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }} />
+            <div className={progressBarFillClass} style={{ width: `${occupancyPct}%` }} />
           </div>
 
           {room.requiredStaffTag && (

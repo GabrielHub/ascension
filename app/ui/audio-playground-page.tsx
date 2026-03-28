@@ -10,6 +10,7 @@ import {
   type AudioEngine,
   type AudioEngineState,
 } from "app/features/audio";
+import { glassCardNavyClass } from "./styles";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Audio Playground — Phase 1 SFX & Ambience Review Surface
@@ -424,7 +425,7 @@ export function AudioPlaygroundPage() {
         })}
 
         {/* Cue namespace reference */}
-        <section className="glass-card-navy p-6">
+        <section className={`${glassCardNavyClass} p-6`}>
           <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
             Cue Namespace
           </h2>

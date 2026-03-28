@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
+import { glassPanelClass } from "./styles";
+
 export interface GameModalProps {
   title: string;
   subtitle?: string;
@@ -62,7 +64,8 @@ export function GameModal({
           aria-modal="true"
           aria-labelledby={titleId}
           aria-describedby={subtitle ? subtitleId : undefined}
-          className={`glass-panel pointer-events-auto flex max-h-[min(88dvh,820px)] w-full flex-col overflow-hidden rounded-2xl border-[rgba(200,168,76,0.12)] shadow-[0_28px_96px_rgba(0,0,0,0.68)] outline-none ${widthClassName}`}
+          className={`${glassPanelClass} pointer-events-auto flex max-h-[min(88dvh,820px)] w-full flex-col overflow-hidden rounded-2xl shadow-[0_28px_96px_rgba(0,0,0,0.68)] outline-none ${widthClassName}`}
+          style={{ borderColor: "rgba(200,168,76,0.12)" }}
         >
           <div className="flex items-start justify-between gap-4 border-b border-[rgba(200,168,76,0.08)] px-5 py-4 sm:px-6">
             <div className="min-w-0">

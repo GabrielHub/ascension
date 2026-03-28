@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { GuidanceActiveBeatView } from "sim/systems/guidance";
+import { glassPanelClass } from "./styles";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -311,7 +312,10 @@ function CenteredFallbackShell({
           aria-label={beat.copy.title}
           className="guidance-coachmark-enter pointer-events-auto w-full max-w-md outline-none"
         >
-          <div className="glass-panel overflow-hidden rounded-2xl border-[rgba(200,168,76,0.12)] shadow-[0_28px_96px_rgba(0,0,0,0.68)]">
+          <div
+            className={`${glassPanelClass} overflow-hidden rounded-2xl shadow-[0_28px_96px_rgba(0,0,0,0.68)]`}
+            style={{ borderColor: "rgba(200,168,76,0.12)" }}
+          >
             {/* Top accent — double-line like a classified document */}
             <div className="h-px bg-gradient-to-r from-transparent via-[rgba(200,168,76,0.3)] to-transparent" />
             <div className="mt-px h-px bg-gradient-to-r from-transparent via-[rgba(200,168,76,0.12)] to-transparent" />

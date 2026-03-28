@@ -4,6 +4,7 @@ import type {
   InventoryItemViewModel,
   MarketItemViewModel,
 } from "./view-models";
+import { emptyStateClass, emptyStateIconClass } from "./styles";
 
 interface InventoryPanelProps {
   inventory: readonly InventoryItemViewModel[];
@@ -41,8 +42,10 @@ export function InventoryPanel({
     return (
       <div className="animate-enter space-y-3">
         <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Inventory</h3>
-        <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
-          <div className="empty-state-icon">&#9744;</div>
+        <div
+          className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
+        >
+          <div className={emptyStateIconClass}>&#9744;</div>
           <p className="text-[0.7rem] font-medium text-gold/70">No items</p>
           <p className="mt-1 text-xs text-silver/60">
             Items are acquired from raids and the market
@@ -119,8 +122,10 @@ export function InventoryPanel({
       )}
 
       {inventory.length === 0 && (
-        <div className="empty-state rounded-lg border border-dashed border-gold-dim/15 py-10">
-          <div className="empty-state-icon">&#9744;</div>
+        <div
+          className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
+        >
+          <div className={emptyStateIconClass}>&#9744;</div>
           <p className="text-[0.7rem] font-medium text-gold/70">No stored items</p>
           <p className="mt-1 text-xs text-silver/60">
             The market and raid loot will replenish inventory over time
