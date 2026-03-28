@@ -14,6 +14,7 @@ import { OperatorIdentity } from "./components";
 import { computeDerivedStats } from "./systems/derived-stats";
 import { OPENING_BEAT_IDS } from "./systems/guidance-beats";
 import { markRaidBossCommitment } from "./systems/raids";
+import { deferredSimulationSystemsReady } from "./systems";
 
 function createPolicyRaidSnapshot() {
   const snapshot = createPreviewWorldSnapshot(templateRegistry);
@@ -267,6 +268,11 @@ describe("phase 1 runtime", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
     simulation.dispatch({
       type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
       resourceId: "resource/reputation",
       amount: 300,
     });
@@ -277,7 +283,7 @@ describe("phase 1 runtime", () => {
 
     let phase1View = simulation.getPhase1View();
     expect(phase1View.building.appliedUpgradeIds).toContain("upgrade/building/bodega:frontage");
-    expect(phase1View.building.tier).toBe(1);
+    expect(phase1View.building.tier).toBe(2);
     expect(phase1View.building.unlockedRoomTemplateIds).toEqual([
       "room/register:tier_1",
       "room/counter:tier_1",
@@ -287,7 +293,7 @@ describe("phase 1 runtime", () => {
     expect(phase1View.building.roomSlotCount).toBe(4);
     expect(phase1View.building.operatorSlotCount).toBe(7);
 
-    // After purchasing frontage (150), the records_wall upgrade (90) should still be affordable
+    // After purchasing frontage (200), the records wall upgrade should still be affordable.
     phase1View = simulation.getPhase1View();
     expect(
       phase1View.rooms
@@ -303,6 +309,321 @@ describe("phase 1 runtime", () => {
       simulation
         .getPhase1View()
         .rooms.some((room) => room.templateId === "room/supply_closet:tier_1"),
+    ).toBe(true);
+  });
+
+  it("progresses through the full bodega building arc and unlocks the back office safely", () => {
+    const simulation = createPreviewWorldSnapshot(templateRegistry);
+    const runtime = createAscensionSimulation(simulation, templateRegistry);
+
+    runtime.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+    runtime.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
+
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:frontage",
+    });
+    expect(runtime.getPhase1View().building).toMatchObject({
+      tier: 2,
+      roomSlotCount: 4,
+      operatorSlotCount: 7,
+    });
+
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+    expect(runtime.getPhase1View().building).toMatchObject({
+      tier: 3,
+      roomSlotCount: 6,
+      operatorSlotCount: 9,
+      unlockedRoomTemplateIds: expect.arrayContaining([
+        "room/back_office:tier_1",
+        "room/backstock:tier_1",
+      ]),
+    });
+
+    runtime.dispatch({
+      type: "sim/place-room",
+      templateId: "room/back_office:tier_1",
+      floorIndex: 0,
+      slotId: "slot/back-room-right",
+    });
+    const backOfficeId =
+      runtime.getPhase1View().rooms.find((room) => room.templateId === "room/back_office:tier_1")
+        ?.id ?? "missing";
+    runtime.dispatch({
+      type: "sim/set-room-active",
+      roomId: backOfficeId,
+      isActive: true,
+    });
+    runtime.dispatch({
+      type: "sim/hire-staff",
+      roleTag: "staff:admin",
+    });
+    const adminStaffId = runtime
+      .getPhase1View()
+      .staff.find((staff) => staff.roleTag === "staff:admin")?.id;
+    expect(adminStaffId).toBeTruthy();
+    runtime.dispatch({
+      type: "sim/assign-staff",
+      staffId: adminStaffId ?? "missing",
+      roomId: backOfficeId,
+    });
+    expect(
+      runtime.getPhase1View().rooms.find((room) => room.templateId === "room/back_office:tier_1"),
+    ).toMatchObject({
+      slotId: "slot/back-room-right",
+      isOperational: true,
+      assignedStaffCount: 1,
+    });
+
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:extension",
+    });
+    expect(runtime.getPhase1View().building).toMatchObject({
+      tier: 4,
+      roomSlotCount: 7,
+      operatorSlotCount: 10,
+      unlockedRoomTemplateIds: expect.arrayContaining([
+        "room/back_office:tier_1",
+        "room/backstock:tier_1",
+        "room/alley_staging:tier_1",
+      ]),
+    });
+
+    const worldSnapshot = runtime.getWorldSnapshot();
+    const restored = createAscensionSimulation(worldSnapshot, templateRegistry);
+    expect(restored.getPhase1View().building).toMatchObject({
+      tier: 4,
+      roomSlotCount: 7,
+      operatorSlotCount: 10,
+      unlockedRoomTemplateIds: expect.arrayContaining([
+        "room/back_office:tier_1",
+        "room/backstock:tier_1",
+        "room/alley_staging:tier_1",
+      ]),
+    });
+    expect(
+      restored.getPhase1View().rooms.find((room) => room.templateId === "room/back_office:tier_1"),
+    ).toMatchObject({
+      slotId: "slot/back-room-right",
+      templateId: "room/back_office:tier_1",
+    });
+  });
+
+  it("places and operates the backstock after the annex upgrade", () => {
+    const simulation = createPreviewWorldSnapshot(templateRegistry);
+    const runtime = createAscensionSimulation(simulation, templateRegistry);
+
+    runtime.dispatch({ type: "sim/dev-set-resource", resourceId: "resource/cash", amount: 5000 });
+    runtime.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:frontage",
+    });
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+
+    runtime.dispatch({
+      type: "sim/place-room",
+      templateId: "room/backstock:tier_1",
+      floorIndex: 0,
+      slotId: "slot/storage-left",
+    });
+    const backstockRoom = runtime
+      .getPhase1View()
+      .rooms.find((room) => room.templateId === "room/backstock:tier_1");
+    expect(backstockRoom).toBeTruthy();
+    expect(backstockRoom!.slotId).toBe("slot/storage-left");
+
+    // Activate and staff the backstock
+    runtime.dispatch({
+      type: "sim/set-room-active",
+      roomId: backstockRoom!.id,
+      isActive: true,
+    });
+    runtime.dispatch({ type: "sim/hire-staff", roleTag: "staff:logistics" });
+    // Grab the most-recently-created logistics staff (the hired one)
+    const logisticsStaff = runtime
+      .getPhase1View()
+      .staff.filter((s) => s.roleTag === "staff:logistics");
+    const hiredStaff = logisticsStaff[logisticsStaff.length - 1];
+    // Clear any auto-assignment, then assign to backstock
+    runtime.dispatch({ type: "sim/assign-staff", staffId: hiredStaff.id, roomId: "" });
+    runtime.dispatch({
+      type: "sim/assign-staff",
+      staffId: hiredStaff.id,
+      roomId: backstockRoom!.id,
+    });
+    expect(
+      runtime.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
+    ).toMatchObject({
+      isOperational: true,
+      assignedStaffCount: 1,
+    });
+  });
+
+  it("places and operates the alley staging after the extension upgrade", () => {
+    const simulation = createPreviewWorldSnapshot(templateRegistry);
+    const runtime = createAscensionSimulation(simulation, templateRegistry);
+
+    runtime.dispatch({ type: "sim/dev-set-resource", resourceId: "resource/cash", amount: 5000 });
+    runtime.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:frontage",
+    });
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+    runtime.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:extension",
+    });
+
+    runtime.dispatch({
+      type: "sim/place-room",
+      templateId: "room/alley_staging:tier_1",
+      floorIndex: 0,
+      slotId: "slot/storage-right",
+    });
+    const alleyRoom = runtime
+      .getPhase1View()
+      .rooms.find((room) => room.templateId === "room/alley_staging:tier_1");
+    expect(alleyRoom).toBeTruthy();
+    expect(alleyRoom!.slotId).toBe("slot/storage-right");
+
+    // Alley has no staff tag, so it should be operational without staff
+    runtime.dispatch({
+      type: "sim/set-room-active",
+      roomId: alleyRoom!.id,
+      isActive: true,
+    });
+    expect(
+      runtime.getPhase1View().rooms.find((room) => room.templateId === "room/alley_staging:tier_1"),
+    ).toMatchObject({
+      isOperational: true,
+      capacity: 3,
+    });
+
+    // Verify save/load round-trip
+    const snapshot = runtime.getWorldSnapshot();
+    const restored = createAscensionSimulation(snapshot, templateRegistry);
+    expect(
+      restored
+        .getPhase1View()
+        .rooms.find((room) => room.templateId === "room/alley_staging:tier_1"),
+    ).toMatchObject({
+      slotId: "slot/storage-right",
+      templateId: "room/alley_staging:tier_1",
+      isOperational: true,
+    });
+  });
+
+  it("improves posted-contract intel when the back office is active and staffed", async () => {
+    await deferredSimulationSystemsReady;
+
+    const createBoard = (withBackOffice: boolean) => {
+      const snapshot = createPreviewWorldSnapshot(templateRegistry);
+      const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+      simulation.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/cash",
+        amount: 5000,
+      });
+      simulation.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/reputation",
+        amount: 300,
+      });
+      simulation.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/intel",
+        amount: 0,
+      });
+      simulation.dispatch({
+        type: "sim/purchase-building-upgrade",
+        upgradeId: "upgrade/building/bodega:frontage",
+      });
+      simulation.dispatch({
+        type: "sim/purchase-building-upgrade",
+        upgradeId: "upgrade/building/bodega:annex",
+      });
+
+      if (withBackOffice) {
+        simulation.dispatch({
+          type: "sim/place-room",
+          templateId: "room/back_office:tier_1",
+          floorIndex: 0,
+          slotId: "slot/back-room-right",
+        });
+        const backOfficeId =
+          simulation
+            .getPhase1View()
+            .rooms.find((room) => room.templateId === "room/back_office:tier_1")?.id ?? "missing";
+        simulation.dispatch({
+          type: "sim/set-room-active",
+          roomId: backOfficeId,
+          isActive: true,
+        });
+        simulation.dispatch({
+          type: "sim/hire-staff",
+          roleTag: "staff:admin",
+        });
+        const adminStaffId = simulation
+          .getPhase1View()
+          .staff.find((staff) => staff.roleTag === "staff:admin")?.id;
+        simulation.dispatch({
+          type: "sim/assign-staff",
+          staffId: adminStaffId ?? "missing",
+          roomId: backOfficeId,
+        });
+      }
+
+      simulation.dispatch({
+        type: "sim/dev-force-contract-end",
+        outcome: "boss_defeated",
+      });
+      simulation.tick(60_000);
+      simulation.dispatch({
+        type: "sim/advance-contract",
+      });
+
+      return simulation.getPhase1View().postedContracts[0];
+    };
+
+    const baseline = createBoard(false);
+    const supported = createBoard(true);
+
+    expect(baseline).toBeTruthy();
+    expect(supported).toBeTruthy();
+    expect((supported?.intel ?? 0) >= (baseline?.intel ?? 0)).toBe(true);
+    expect((supported?.hiddenTraitCount ?? 99) <= (baseline?.hiddenTraitCount ?? 99)).toBe(true);
+    expect((supported?.enemyHints.length ?? 0) >= (baseline?.enemyHints.length ?? 0)).toBe(true);
+    expect(
+      (supported?.lootFamilyHints.length ?? 0) >= (baseline?.lootFamilyHints.length ?? 0),
     ).toBe(true);
   });
 
@@ -497,6 +818,164 @@ describe("phase 1 runtime", () => {
     const after = simulation.getPhase1View();
     expect(after.operators).toHaveLength(before.operators.length + 1);
     expect(after.visitors.find((entry) => entry.id === visitor.id)).toBeUndefined();
+  });
+
+  it("defers visitors into reserve and preserves that state through snapshot restore", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/defer-recruit",
+      visitorId: "visitor/preview-1",
+    });
+
+    const deferredView = simulation.getPhase1View();
+    const deferredVisitor = deferredView.visitors.find(
+      (visitor) => visitor.id === "visitor/preview-1",
+    );
+    expect(deferredVisitor).toEqual(
+      expect.objectContaining({
+        queueState: "deferred",
+        canDefer: false,
+        deferLockedReason: "Already deferred.",
+      }),
+    );
+    expect(deferredView.visitors.filter((visitor) => visitor.queueState === "active")).toHaveLength(
+      2,
+    );
+    expect(simulation.drainRuntimeEvents()).toEqual([
+      expect.objectContaining({
+        kind: "staffing_change",
+        message: expect.stringContaining("was deferred to reserve"),
+      }),
+    ]);
+
+    const restored = createAscensionSimulation(simulation.getWorldSnapshot(), templateRegistry);
+    expect(
+      restored.getPhase1View().visitors.find((visitor) => visitor.id === "visitor/preview-1"),
+    ).toEqual(
+      expect.objectContaining({
+        queueState: "deferred",
+      }),
+    );
+  });
+
+  it("surfaces replace and defer affordances once the roster cap is full", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/accept-recruit",
+      visitorId: "visitor/preview-1",
+    });
+
+    const phase1View = simulation.getPhase1View();
+    const overflowVisitor = phase1View.visitors.find(
+      (visitor) => visitor.id === "visitor/preview-2",
+    );
+    if (!overflowVisitor) {
+      throw new Error("expected a second bootstrap visitor after filling the roster");
+    }
+
+    expect(phase1View.rosterPressure.livingOperatorCount).toBe(7);
+    expect(overflowVisitor).toEqual(
+      expect.objectContaining({
+        canAccept: false,
+        lockedReason: "Operator roster is full.",
+        canDefer: true,
+        canReplace: true,
+        replaceLockedReason: null,
+      }),
+    );
+  });
+
+  it("replaces an active operator when a recruit arrives at the hard cap", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const firstView = simulation.getPhase1View();
+    const replacementCandidate = firstView.visitors.find(
+      (visitor) => visitor.id === "visitor/preview-2",
+    );
+    if (!replacementCandidate) {
+      throw new Error("expected bootstrap visitor for replacement test");
+    }
+    simulation.dispatch({
+      type: "sim/accept-recruit",
+      visitorId: "visitor/preview-1",
+    });
+    const operatorIdsBeforeReplace = new Set(
+      simulation.getPhase1View().operators.map((operator) => operator.id),
+    );
+    simulation.dispatch({
+      type: "sim/replace-recruit",
+      visitorId: "visitor/preview-2",
+      operatorId: "operator/rose-vega",
+    });
+
+    const phase1View = simulation.getPhase1View();
+    const replacedOperator = phase1View.operators.find(
+      (operator) => operator.id === "operator/rose-vega",
+    );
+    const replacement = phase1View.operators.find(
+      (operator) => !operatorIdsBeforeReplace.has(operator.id),
+    );
+
+    expect(phase1View.rosterPressure.livingOperatorCount).toBe(7);
+    expect(
+      phase1View.visitors.find((visitor) => visitor.id === "visitor/preview-2"),
+    ).toBeUndefined();
+    expect(replacedOperator?.lifecycle).toEqual(
+      expect.objectContaining({
+        status: "departed",
+        departureReason: expect.stringContaining("make room for"),
+      }),
+    );
+    expect(replacement).toEqual(
+      expect.objectContaining({
+        identity: expect.objectContaining({
+          name: replacementCandidate.name,
+        }),
+        lifecycle: expect.objectContaining({ status: "active" }),
+      }),
+    );
+    expect(simulation.drainRuntimeEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "staffing_change",
+          message: "Rose Vega was dismissed to free a roster slot.",
+        }),
+        expect.objectContaining({
+          kind: "staffing_change",
+          message: `${replacementCandidate.name} joined the roster, replacing Rose Vega.`,
+        }),
+      ]),
+    );
+  });
+
+  it("dismisses deferred recruits without touching active roster state", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const deferredName =
+      simulation.getPhase1View().visitors.find((visitor) => visitor.id === "visitor/preview-1")
+        ?.name ?? "Deferred Recruit";
+
+    simulation.dispatch({
+      type: "sim/defer-recruit",
+      visitorId: "visitor/preview-1",
+    });
+    simulation.dispatch({
+      type: "sim/dismiss-recruit",
+      visitorId: "visitor/preview-1",
+    });
+
+    const phase1View = simulation.getPhase1View();
+    expect(
+      phase1View.visitors.find((visitor) => visitor.id === "visitor/preview-1"),
+    ).toBeUndefined();
+    expect(phase1View.rosterPressure.livingOperatorCount).toBe(6);
+    expect(simulation.drainRuntimeEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: `${deferredName} was dismissed from reserve.`,
+        }),
+      ]),
+    );
   });
 
   it("keeps runtime deployability aligned with recovery-triage fatigue gates", () => {

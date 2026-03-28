@@ -688,6 +688,106 @@ describe("Phase 2 market system", () => {
     expect(fang!.available).toBe(false);
   });
 
+  it("applies the backstock discount to market prices and purchases", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
+    simulation.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:frontage",
+    });
+    simulation.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:annex",
+    });
+    simulation.dispatch({
+      type: "sim/place-room",
+      templateId: "room/backstock:tier_1",
+      floorIndex: 0,
+      slotId: "slot/storage-left",
+    });
+
+    const backstockRoomId =
+      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1")
+        ?.id ?? "missing";
+    simulation.dispatch({
+      type: "sim/set-room-active",
+      roomId: backstockRoomId,
+      isActive: true,
+    });
+
+    expect(
+      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
+    ).toMatchObject({
+      isOperational: false,
+    });
+
+    const pipeWrench = simulation
+      .getPhase2View()
+      .marketItems.find((item) => item.itemId === "weapon/pipe-wrench");
+    expect(pipeWrench?.buyPrice).toBe(30);
+
+    simulation.dispatch({
+      type: "sim/hire-staff",
+      roleTag: "staff:logistics",
+    });
+    const logisticsStaff = simulation
+      .getPhase1View()
+      .staff.filter((staff) => staff.roleTag === "staff:logistics");
+    const hiredStaff = logisticsStaff[logisticsStaff.length - 1];
+    if (!hiredStaff) {
+      throw new Error("expected hired logistics staff for backstock test");
+    }
+    simulation.dispatch({
+      type: "sim/assign-staff",
+      staffId: hiredStaff.id,
+      roomId: backstockRoomId,
+    });
+    expect(
+      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
+    ).toMatchObject({
+      isOperational: true,
+      assignedStaffCount: 1,
+    });
+
+    const discountedPipeWrench = simulation
+      .getPhase2View()
+      .marketItems.find((item) => item.itemId === "weapon/pipe-wrench");
+    expect(discountedPipeWrench?.buyPrice).toBe(28);
+
+    const treasuryBefore = simulation.getPhase1View().resources.cash;
+    const quantityBefore =
+      simulation.getPhase2View().inventory.find((stack) => stack.itemId === "weapon/pipe-wrench")
+        ?.quantity ?? 0;
+    simulation.dispatch({
+      type: "sim/buy-item",
+      itemId: "weapon/pipe-wrench",
+    });
+
+    expect(simulation.getPhase1View().resources.cash).toBe(treasuryBefore - 28);
+    expect(
+      simulation.getPhase2View().inventory.find((stack) => stack.itemId === "weapon/pipe-wrench"),
+    ).toEqual(expect.objectContaining({ quantity: quantityBefore + 1 }));
+    expect(simulation.drainRuntimeEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "resource_swing",
+          message: "Bought Pipe Wrench for $28",
+        }),
+      ]),
+    );
+  });
+
   it("rejects selling non-positive quantities through the runtime command surface", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
     const beforePhase1 = simulation.getPhase1View();

@@ -34,72 +34,103 @@ This is an exterior presentation layer, not a room rewrite. The bodega's interio
 
 ### Bodega Rooms
 
-The bodega is small. It has four usable spaces, and calling them "rooms" is generous. There is no gym, no lounge, no dedicated infirmary, no training facility. Operators get better by surviving actual work, not by working out in a storage room. Dedicated training, recovery, and social spaces belong to the larger headquarters that come after the bodega.
+The bodega is small. It has four usable spaces, and calling them "rooms" is generous. There is no gym, no private break room, no dedicated infirmary, no training facility. Operators get better by surviving actual work, not by working out in a storage room. Dedicated training, recovery, and specialized prep spaces belong to the larger headquarters that come after the bodega.
 
 At bodega scale, everything doubles as something else. The counter where Boss sells food is also where recruitment happens. The dining area where people eat is also where they recover, sleep it off, and argue. Separation of function is a luxury the bodega does not have.
 
-**The Register.** The checkout area. A register, a phone, and a stack of clearance contract paperwork held down by a jar of pickled eggs. This is where Aina sits, where walk-in visitors land, where contracts come in, and where Boss handles the guild's daily intake between selling loose cigarettes and lottery tickets. There is a guild license taped to the wall behind the register. It is the most official-looking thing in the building.
+**The Register.** The checkout area. A register, a phone, and a stack of clearance contract paperwork held down by a jar of pickled eggs. This is where Aina sits, where walk-in visitors land, where contracts come in, and where Boss handles the guild's daily intake.
 
-**The Counter.** The deli counter. This is recruitment. Boss makes sandwiches, pours coffee, and talks to whoever walks in. Some of those people are attuned and looking for work, or at least willing to hear a pitch between bites of a chopped cheese. The counter is where recruitment happens because it is where people are. The food is the foot traffic. The foot traffic is the pipeline. At its lowest state, the counter is rundown: scratched deli glass, a coffee machine that takes three tries, a menu board with half the letters missing. The sandwich is decent, though. It has to be. It is the only marketing budget Boss has.
+**The Counter.** The deli counter. This is recruitment. Boss makes sandwiches, pours coffee, and talks to whoever walks in. The food is the foot traffic. The foot traffic is the pipeline.
 
-**The Dining Area.** A couple of chairs and a folding table in the back of the store. This is recovery, social, and medical all in one, because the bodega does not have room to separate those things. Operators eat here, decompress here, and get patched up here. Someone put a first-aid kit on the wall. The medic keeps a cot behind the curtain for the bad days. There is a microwave that everyone shares and nobody cleans. This is where the guild's social life happens, because it is the only place to sit down that is not the register.
+**The Dining Area.** A couple of chairs and a folding table in the back of the store. This is recovery, social, and medical all in one because the bodega does not have room to separate those things.
 
 **Supply Closet.** Behind the register, next to the mops. This is where the gear lives. It is organized by someone who cares, and reorganized every week by someone who does not. It is literally a closet.
 
 ### Bodega Room Constraints
 
-- **No training rooms.** The bodega does not have the space or equipment for structured operator training. Operators improve through field experience, not gym sessions.
-- **No dedicated recovery.** Recovery happens in the dining area alongside everything else. There is no quiet, private medical space. Operators get patched up at the same table where someone is eating lunch.
-- **No dedicated social space.** The dining area is the social space. There is no lounge, no rec room, no comfortable corner. Operators hang out where they eat.
-- **Rooms are bodega-specific.** Each building has its own room identity. The bodega's rooms are named and described as parts of a bodega. When the guild relocates, the new building gets its own rooms with their own names — a union hall's front desk is not "The Register," and its recruitment office is not a deli counter.
-- **Room functions split later.** The combined dining area breaks into dedicated infirmary, break room, lounge, and other specialized spaces once the guild moves to a building large enough to support them.
+- **No training rooms.** The bodega does not have the space or equipment for structured operator training.
+- **No dedicated recovery.** Recovery happens in the dining area alongside everything else.
+- **No dedicated private social space.** The dining area is the social space.
+- **Rooms are bodega-specific.** Each building has its own room identity. Porter's bar is not "The Counter," and Porter's prep room is not a supply closet with better lighting.
+- **Room functions split later.** The combined dining area eventually breaks into dedicated infirmary, break room, and other specialized spaces once the guild moves to a building large enough to support them.
 
 ### Bodega Upgrade Path
 
 Bodega upgrades are physical improvements to the building. Each one should feel like a small milestone: Boss scraping together enough to make the place slightly less terrible. The bodega does not become something it is not. It becomes a better version of what it already is: a corner store that also runs a guild.
 
-**Frontage.** Boss finally puts up a real sign. The exterior gets cleaned up. The awning stops dripping. The bodega starts looking like a place that does something on purpose, not a place that is happening by accident. Inside, the counter gets better lighting and the deli case stops fogging up.
+**Frontage.** Boss finally puts up a real sign. The exterior gets cleaned up. The awning stops dripping.
 
-**Annex.** The empty unit next door gets absorbed. More physical space for rooms that were previously crammed into corners. There is construction dust everywhere for a while. Operators complain about the noise, then complain that their new room is too small, then complain about the noise again.
+**Annex.** The empty unit next door gets absorbed. More physical space for rooms that were previously crammed into corners.
 
-**Backyard Extension.** The back alley or yard becomes usable space. Not glamorous. Concrete, maybe a canopy, definitely a drainage problem somebody will eventually fix. But it is new square footage and Boss is not paying Manhattan rent for it.
+**Backyard Extension.** The back alley or yard becomes usable space. Not glamorous. Concrete, maybe a canopy, definitely a drainage problem somebody will eventually fix.
 
-By the time the bodega is fully upgraded, it is a respected neighborhood deli. The food is good. People come on purpose. The regulars know not to ask what happens in the back rooms. The counter is clean, the menu is legible, and the recruitment pipeline runs on reputation as much as sandwich quality. It is still a bodega. But it is a good one.
+By the time the bodega is fully upgraded, it is a respected neighborhood deli. It is still a bodega. But it is a good one.
+
+## Porter's
+
+The guild's second headquarters is Porter's: a neighborhood bar and restaurant on the Red Hook waterfront in Brooklyn. The ground floor is public-facing. The upper floor is converted apartments and service rooms adapted into operational space. The building is bigger than the bodega, but it is not polished. It is still a business somebody is trying to keep running while also operating a guild out of it.
+
+### Porter's Atmosphere
+
+- A neon sign that works on the third try.
+- A dining room that feels lived in, not curated.
+- A bar that is loud, public, and useful as a recruitment funnel.
+- Upstairs rooms that still remember they used to be apartments.
+- Harbor air, industrial skyline, and the feeling that the city is broader here than on the bodega block.
+
+### Porter's Room Direction
+
+Porter's is the first headquarters tier where functions meaningfully separate.
+
+- The public-facing downstairs stays public. Customers, regulars, prospects, and operators all pass through it.
+- The upstairs becomes operational and semi-private. This is where the guild starts looking like a real institution.
+- Training unlocks here for the first time.
+- Dedicated recovery unlocks here for the first time.
+- Lightweight consumable prep and proper staging can live in a dedicated room here without turning the building into a full workshop tier.
+
+### Porter's Exterior By Time Of Day
+
+Porter's should feel visually tied to the harbor.
+
+- **Sunrise.** Fog and pale light off the water. The sign is off. The kitchen is already awake.
+- **Day.** Open sky, wider streets, brick, cobblestones, and working waterfront motion in the distance.
+- **Sunset.** Warm brick, gold water, interior glow beginning to matter.
+- **Night.** Harbor lights, neon reflections, industrial quiet instead of dead silence.
 
 ## Room Flavor And Tier Progression
 
-Rooms evolve as the guild relocates to larger buildings. Each building has its own room catalog with its own names and atmosphere. A bodega dining area and a union-hall break room serve overlapping functions, but they do not look, smell, or feel the same — and they should not share a name.
+Rooms evolve as the guild relocates to larger buildings. Each building has its own room catalog with its own names and atmosphere. A bodega dining area and a Porter's break room serve overlapping functions, but they do not look, smell, or feel the same — and they should not share a name.
 
 ### Progression Principles
 
-- **Bodega scale:** Everything shares space. Four rooms, each pulling double duty. No specialization. The charm is in the scrappiness and the absurdity of running a guild out of a corner store.
-- **Union hall scale:** Functions start to separate. Recovery, social, and medical get their own rooms. Training becomes possible. Rooms are actual rooms with doors. Equipment is functional. The charm is in the growing competence.
-- **Higher tiers (future):** Rooms reflect the guild's identity and reputation. Staff and operators shape the space. Room culture becomes visible in the environment. Specialized rooms emerge for specific field roles.
+- **Bodega scale:** Everything shares space. Four rooms, each pulling double duty. No specialization.
+- **Porter's scale:** Public and operational space separate. Recovery gets a real room. Training unlocks. Staging and light consumable prep can be given a dedicated home. The charm is in the guild becoming more competent without becoming sleek.
+- **Higher tiers (future):** Rooms reflect the guild's identity and reputation more strongly. Specialized rooms and real workshop spaces emerge.
 
 ### Recruitment Space Progression
 
 The recruitment space is the guild's front door for new talent. Its evolution tracks the guild's growth more visibly than almost any other room.
 
-**Bodega tier — The Counter.** A rundown deli counter. Boss sells street food and makes conversation. Recruitment is informal, opportunistic, and depends on foot traffic. The space upgrades alongside the bodega: better food, cleaner counter, a menu that does not look like a ransom note. By full bodega upgrade, it is a proper neighborhood deli where people come because the food is good and stay because Boss is persuasive.
+**Bodega tier — The Counter.** A rundown deli counter. Boss sells street food and makes conversation. Recruitment is informal, opportunistic, and depends on foot traffic.
 
-**Union hall tier — The Office.** A real recruitment space with a desk, chairs that match, and a filing system. Walk-ins still happen, but Boss can also run scheduled interviews. The room has a waiting area. There are forms. It looks like a place that hires people, which is an improvement over a place that sells sandwiches.
+**Porter's tier — The Bar.** Recruitment becomes social. Prospects come for drinks and atmosphere, stay for the pitch, and get read in public instead of across a deli case. The bar is louder, more communal, and more reputation-sensitive than the counter ever was.
 
 **Future directions:**
 
-- **Bar.** Recruitment becomes social. A bar attached to the guild where operators and prospects drink together, swap stories, and size each other up. Recruitment happens over drinks instead of over a counter. The atmosphere is casual, loud, and competitive. Operators bring friends. Prospects show up because they heard this is where the work is.
-- **Club.** Flashier, louder, reputation-driven. People want to get in. The guild's name carries weight and the recruitment space reflects it. Prospects come because being associated with this guild means something. The room has a bouncer, which is not a metaphor.
-- **Lounge.** Exclusive, quiet, high-end. S-rank operators visit because it is worth their time. Recruitment at this tier is not about finding warm bodies. It is about convincing the best people in the industry that this guild deserves them. The lounge is the guild's answer to the question "why should I work here instead of literally anywhere else."
+- **Club.** Flashier, louder, reputation-driven. People want to get in.
+- **Lounge.** Exclusive, quieter, and high-end. Recruitment at this tier is about convincing prestigious people the guild deserves them.
 
 ### Room Family Flavor By Building Tier
 
-Detailed flavor for each room should be authored when that room becomes an active part of the headquarters fiction. The following notes anchor the general direction for when functions split from the bodega's combined spaces into dedicated rooms:
+Detailed flavor for each room should be authored when that room becomes active. These notes anchor the direction.
 
-- **Operations rooms** should feel increasingly organized. Bodega: phone and paperwork at the register. Later: mission boards, briefing tables, intel surfaces. The mess decreases. The stakes on the wall increase.
-- **Recovery rooms** do not exist in the bodega — recovery happens in the dining area. When recovery gets its own room (union hall infirmary and beyond), it should feel increasingly safe. Proper beds, medical equipment, quiet. Recovery spaces are where the comedy pauses. Operators come here hurt.
-- **Training rooms** do not exist in the bodega. Training unlocks at union hall scale. The first training room should still feel scrappy — a gym with secondhand equipment, not a professional facility. The progression from there is toward mirrors, proper mats, designated sparring areas.
-- **Social rooms** do not exist separately in the bodega — social happens in the dining area. When social gets its own room, it should feel like relief. Actual furniture, entertainment, a space people want to be in. Social rooms are where operators become people again.
-- **Staffing rooms** should feel increasingly competent. Bodega: a closet and a clipboard. Later: inventory systems, organized storage, a logistics desk. These rooms reflect whether the guild is run well.
-- **Recruitment rooms** follow their own progression path documented above (counter → office → bar → club → lounge).
+- **Operations rooms** should feel increasingly organized. Bodega: phone and paperwork at the register. Porter's: office, briefing board, planning surfaces.
+- **Recovery rooms** do not exist in the bodega. Porter's is where the infirmary first appears and where the comedy starts to pause in medical spaces.
+- **Training rooms** do not exist in the bodega. Porter's is where the first scrappy but real gym appears.
+- **Social rooms** are public in the bodega and partly public at Porter's. The dining room and bar are not the same thing as a private break room.
+- **Staffing rooms** should feel increasingly competent. Bodega: closet and clipboard. Porter's: stockroom, prep room, real checklists.
+- **Prep rooms** should begin narrow. Porter's prep room supports staging and temporary raid consumables. Full gear workshop identity belongs later.
+- **Recruitment rooms** follow their own progression path documented above (counter -> bar -> club -> lounge).
 
 ## Building Relocation
 
@@ -115,45 +146,45 @@ Relocation should feel like a milestone that the player earned by surviving the 
 
 ### Future Building Directions
 
-The world model supports multiple building tiers beyond the bodega. Each should feel like a different phase of the guild's life, not just a size increase. Specific building identities, atmospheres, and room catalogs should be authored when those buildings enter production.
-
-General direction:
+The world model supports multiple building tiers beyond the bodega. Each should feel like a different phase of the guild's life, not just a size increase.
 
 - Later buildings are larger, better-equipped, and come with higher expectations from the city, from operators, and from Boss.
-- Each building should have a distinct physical identity tied to a real type of New York space: bodega, union hall, office floor, converted warehouse, proper tower floor.
-- The building's identity shapes what rooms feel like inside it. A union-hall gym and a tower-floor gym serve the same function but have completely different atmospheres.
+- Each building should have a distinct physical identity tied to a real type of New York space: bodega, Porter's-style bar and restaurant, office floor, converted warehouse, proper tower floor.
+- The building's identity shapes what rooms feel like inside it.
 - Relocation between buildings is always a narrative event, never a silent upgrade.
-- Every building should also have a distinct exterior backdrop family tied to its location and identity. That exterior family must support the four canonical HQ time-of-day states: sunrise, day, sunset, and night.
-- A new building should not inherit the bodega's skyline or street dressing. Its surrounding backdrop, neighboring architecture, signage language, and exterior decorative details should read as native to that building's place in the city.
+- Every building should have a distinct exterior backdrop family tied to its location and identity.
 
 ### Room Catalog By Building Tier
 
-The bodega combines most functions into one dining area. As the guild moves to larger buildings, those combined functions split into dedicated rooms. The following rooms belong to the union hall and later headquarters tiers, not to the bodega:
+The bodega combines most functions into one dining area. As the guild moves to larger buildings, those combined functions split into dedicated rooms.
 
-**Union hall:**
+**Porter's:**
 
-- **Infirmary.** Dedicated medical and recovery space, separate from where people eat. Proper cots, medical supplies, and enough privacy that recovering operators are not staring at someone microwaving leftovers.
-- **Break Room.** A real break room with a table, a fridge, and a microwave that does not share counter space with clearance paperwork. Operators decompress here without being on display.
-- **Lounge.** Comfortable social space. Actual furniture. A place operators go to feel like people. Distinct from the break room — the break room is where you eat, the lounge is where you relax.
-- **Gym.** The first training room. Secondhand equipment, but real equipment — not a mat thrown over a storage room floor. Training becomes available for the first time.
-- **Sparring Room.** Combat training space for advanced drills. Higher-intensity than the gym.
-- **Recruitment Office.** A proper recruitment space with a desk, chairs that match, and forms. The deli counter evolves into a professional operation.
+- **The Floor.** Public dining room. Meals, decompression, and customer-facing social life.
+- **The Bar.** Public-facing recruitment and neighborhood pressure surface.
+- **The Office.** Admin, paperwork, intel, and operational leadership.
+- **The Stockroom.** Gear storage, logistics, and loadout handling.
+- **The Infirmary.** The first real recovery room.
+- **The Gym.** The first real training room.
+- **The Prep Room.** Dedicated staging and lightweight consumable prep.
+- **The Break Room.** A private upstairs space for staff and operators away from customers.
+- **The Briefing Room.** Dedicated planning and review space.
+- **The Dock.** Waterfront staging and departure surface.
+- **The Deck.** Waterfront downtime and morale space.
 
 **Later buildings:**
 
-- **Role-specific training rooms.** Field Lead Drill Floor, Scout Recon Course, Medic Clinic — each tailored to a specific field role for more efficient training.
-- **Dedicated social tiers.** The recruitment space progression (bar → club → lounge) expands social and recruitment identity as the guild's reputation grows.
-- **Specialized operations rooms.** Intel rooms, briefing rooms, mission planning spaces — operations scales with the guild's ambition.
-- **Crafting and workshop spaces.** Dedicated rooms for gear production, requiring staff and materials.
-
-Room families and their specific names, descriptions, and atmospheres should be authored as each building enters production. Every building's rooms should feel native to that building's identity.
+- **Role-specific training rooms.** Field Lead Drill Floor, Scout Recon Course, Medic Clinic.
+- **Dedicated social tiers.** Club and lounge recruitment spaces emerge later.
+- **Specialized operations rooms.** Bigger briefing, intel, and mission-planning spaces.
+- **Crafting and workshop spaces.** Dedicated rooms for real gear production, requiring staff and materials.
 
 ## Content Rules For Buildings And Rooms
 
-- Room names should be plain and functional. "Break Room," not "Sanctuary of Respite."
+- Room names should be plain and functional.
 - Room descriptions should ground the player in what the space looks and feels like before explaining what it does.
-- Upgrade descriptions should read like small wins, not power-ups. "Boss finally fixed the leak in the ceiling" conveys more than "+10% recovery speed."
-- Building and room copy should match the current tone: workplace comedy under supernatural pressure. The bodega is funny because it is a real bodega pretending to be a professional operation. The humor fades as the guild grows, replaced by pride and higher stakes.
-- Room culture should emerge through copy, events, and staff behavior, not through explicit stat labels. Players should understand what a room feels like by reading what happens in it.
-- Death and serious injury in recovery rooms should not be played for laughs. These are the spaces where the comedy stops.
-- Environmental art direction for rooms should reflect wear, personality, and history. A room that has been in use looks different from a room that was just placed. Operators leave marks.
+- Upgrade descriptions should read like small wins, not abstract power-ups.
+- Building and room copy should match the current tone: workplace comedy under supernatural pressure.
+- Room culture should emerge through copy, events, and staff behavior, not through explicit stat labels.
+- Death and serious injury in recovery rooms should not be played for laughs.
+- Environmental art direction for rooms should reflect wear, personality, and history.

@@ -7,4 +7,5 @@ export const VisitorState = soa({
   patience: [] as number[],
   quality: [] as number[],
   expectedLoyalty: [] as number[],
+  queueState: [] as string[],
 });

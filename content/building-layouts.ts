@@ -73,6 +73,16 @@ const BODEGA_FLOOR_0: BuildingFloorLayout = {
   ],
 };
 
+const BODEGA_ANNEX_FLOOR_0: BuildingFloorLayout = {
+  ...BODEGA_FLOOR_0,
+  shell: { col: 0, row: 0, cols: 12, rows: 18 },
+};
+
+const BODEGA_EXTENSION_FLOOR_0: BuildingFloorLayout = {
+  ...BODEGA_FLOOR_0,
+  shell: { col: 0, row: -2, cols: 12, rows: 20 },
+};
+
 export const BODEGA_LAYOUT: BuildingLayoutDefinition = {
   buildingId: "building/bodega",
   stages: [
@@ -80,6 +90,16 @@ export const BODEGA_LAYOUT: BuildingLayoutDefinition = {
       stageId: "bodega/starter",
       minimumTier: 1,
       floors: [BODEGA_FLOOR_0],
+    },
+    {
+      stageId: "bodega/annex",
+      minimumTier: 3,
+      floors: [BODEGA_ANNEX_FLOOR_0],
+    },
+    {
+      stageId: "bodega/extension",
+      minimumTier: 4,
+      floors: [BODEGA_EXTENSION_FLOOR_0],
     },
   ],
 };

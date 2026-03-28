@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="tb-aura" cx="50%" cy="58%" r="52%">
+      <stop offset="0%" stop-color="#8b6914" stop-opacity="0.10"/>
+      <stop offset="60%" stop-color="#2a1e0c" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#0a0804" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tb-chitin" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#5c3d1e"/>
+      <stop offset="50%" stop-color="#4a3018"/>
+      <stop offset="100%" stop-color="#362210"/>
+    </linearGradient>
+    <linearGradient id="tb-under" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7a5c30"/>
+      <stop offset="100%" stop-color="#5c3d1e"/>
+    </linearGradient>
+    <radialGradient id="tb-egg" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#d4a030" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#b88a28" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#8b6b3a" stop-opacity="0.08"/>
+    </radialGradient>
+    <filter id="tb-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura backdrop -->
+  <ellipse cx="100" cy="165" rx="98" ry="110" fill="url(#tb-aura)"/>
+
+  <!-- Floor integration — organic tendrils reaching into chamber ground -->
+  <path d="M 28 258 Q 35 240 50 228" fill="none" stroke="#4a3018" stroke-width="1.5" opacity="0.25"/>
+  <path d="M 12 272 Q 25 250 42 236" fill="none" stroke="#362210" stroke-width="1" opacity="0.18"/>
+  <path d="M 172 258 Q 165 240 150 228" fill="none" stroke="#4a3018" stroke-width="1.5" opacity="0.25"/>
+  <path d="M 188 272 Q 175 250 158 236" fill="none" stroke="#362210" stroke-width="1" opacity="0.18"/>
+  <path d="M 80 268 Q 84 255 90 248" fill="none" stroke="#362210" stroke-width="1" opacity="0.2"/>
+  <path d="M 120 268 Q 116 255 110 248" fill="none" stroke="#362210" stroke-width="1" opacity="0.2"/>
+
+  <!-- Main body — massive, low-slung, segmented, wider than tall -->
+  <path d="
+    M 100 78
+    Q 128 76 152 90 Q 172 106 180 130
+    Q 188 158 184 185 Q 178 210 162 228
+    Q 145 240 125 248 L 100 252
+    L 75 248 Q 55 240 38 228
+    Q 22 210 16 185 Q 12 158 20 130
+    Q 28 106 48 90 Q 72 76 100 78 Z
+  " fill="url(#tb-chitin)" stroke="rgba(90,62,30,0.4)" stroke-width="1"/>
+
+  <!-- Segment ridges — chitin plate boundaries -->
+  <path d="M 32 138 Q 65 128 100 126 Q 135 128 168 138" fill="none" stroke="#6b4a28" stroke-width="1" opacity="0.4"/>
+  <path d="M 24 168 Q 60 156 100 154 Q 140 156 176 168" fill="none" stroke="#6b4a28" stroke-width="1.2" opacity="0.45"/>
+  <path d="M 28 198 Q 62 186 100 184 Q 138 186 172 198" fill="none" stroke="#6b4a28" stroke-width="1" opacity="0.4"/>
+  <path d="M 38 222 Q 68 212 100 210 Q 132 212 162 222" fill="none" stroke="#6b4a28" stroke-width="0.8" opacity="0.35"/>
+
+  <!-- Chitin cracks — damage showing biological underlayer -->
+  <path d="M 52 118 L 56 126 L 53 135" fill="none" stroke="#7a5c30" stroke-width="0.6" opacity="0.45"/>
+  <path d="M 145 122 L 148 130 L 144 137" fill="none" stroke="#7a5c30" stroke-width="0.5" opacity="0.4"/>
+  <path d="M 85 170 L 82 178 L 86 184" fill="none" stroke="#7a5c30" stroke-width="0.5" opacity="0.38"/>
+  <path d="M 128 174 L 132 180 L 129 187" fill="none" stroke="#7a5c30" stroke-width="0.5" opacity="0.38"/>
+  <!-- Calloused reinforcement patches -->
+  <ellipse cx="68" cy="155" rx="12" ry="8" fill="#5c3d1e" stroke="#6b4a28" stroke-width="0.4" opacity="0.45"/>
+  <ellipse cx="138" cy="152" rx="10" ry="7" fill="#5c3d1e" stroke="#6b4a28" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Armored head plate — no face, no eyes -->
+  <path d="
+    M 100 78 Q 118 74 128 82 Q 136 90 134 102
+    Q 132 112 122 118 L 100 122
+    L 78 118 Q 68 112 66 102
+    Q 64 90 72 82 Q 82 74 100 78 Z
+  " fill="#4a3018" stroke="#5c3d1e" stroke-width="0.8"/>
+  <!-- Mandible ridges -->
+  <path d="M 76 112 L 66 122 L 62 130" fill="none" stroke="#5c3d1e" stroke-width="1.2" opacity="0.45"/>
+  <path d="M 124 112 L 134 122 L 138 130" fill="none" stroke="#5c3d1e" stroke-width="1.2" opacity="0.45"/>
+  <!-- Sensory pits — dark recesses, not eyes -->
+  <circle cx="86" cy="94" r="2.5" fill="#362210" stroke="#4a3018" stroke-width="0.5" opacity="0.5"/>
+  <circle cx="114" cy="94" r="2.5" fill="#362210" stroke="#4a3018" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Vestigial limbs — short, thick, retracted into body mass -->
+  <path d="M 22 148 L 8 155 L 5 164 L 10 168 L 22 160 Z" fill="#4a3018" stroke="#5c3d1e" stroke-width="0.5" opacity="0.5"/>
+  <path d="M 18 178 L 5 184 L 3 192 L 7 196 L 20 188 Z" fill="#4a3018" stroke="#5c3d1e" stroke-width="0.5" opacity="0.45"/>
+  <path d="M 178 148 L 192 155 L 195 164 L 190 168 L 178 160 Z" fill="#4a3018" stroke="#5c3d1e" stroke-width="0.5" opacity="0.5"/>
+  <path d="M 182 178 L 195 184 L 197 192 L 193 196 L 180 188 Z" fill="#4a3018" stroke="#5c3d1e" stroke-width="0.5" opacity="0.45"/>
+
+  <!-- Primary egg cluster — dorsal surface, anchors summon-pressure -->
+  <ellipse cx="110" cy="205" rx="16" ry="11" fill="url(#tb-egg)" filter="url(#tb-glow)"/>
+  <ellipse cx="94" cy="210" rx="11" ry="8" fill="url(#tb-egg)" filter="url(#tb-glow)"/>
+  <ellipse cx="122" cy="212" rx="9" ry="7" fill="url(#tb-egg)" filter="url(#tb-glow)"/>
+  <!-- Individual egg forms -->
+  <ellipse cx="106" cy="202" rx="3.5" ry="5" fill="#d4a030" opacity="0.22"/>
+  <ellipse cx="114" cy="204" rx="3" ry="4.5" fill="#d4a030" opacity="0.18"/>
+  <ellipse cx="98" cy="208" rx="3" ry="4" fill="#d4a030" opacity="0.2"/>
+  <ellipse cx="120" cy="210" rx="2.5" ry="3.5" fill="#d4a030" opacity="0.16"/>
+  <ellipse cx="88" cy="212" rx="2.5" ry="3.5" fill="#d4a030" opacity="0.16"/>
+  <ellipse cx="126" cy="215" rx="2" ry="3" fill="#d4a030" opacity="0.12"/>
+
+  <!-- Flank egg cluster -->
+  <ellipse cx="55" cy="202" rx="8" ry="6" fill="url(#tb-egg)" opacity="0.55" filter="url(#tb-glow)"/>
+  <ellipse cx="53" cy="200" rx="2.5" ry="3.5" fill="#d4a030" opacity="0.15"/>
+  <ellipse cx="58" cy="204" rx="2" ry="3" fill="#d4a030" opacity="0.12"/>
+
+  <!-- Broodling emergence hints near clusters -->
+  <path d="M 130 220 Q 133 228 136 232 Q 134 234 131 232 Q 128 226 130 220 Z" fill="#5c3d1e" opacity="0.3"/>
+  <path d="M 82 224 Q 79 230 77 234 Q 79 236 82 234 Q 84 228 82 224 Z" fill="#5c3d1e" opacity="0.25"/>
+
+  <!-- Amber seepage at segment joints -->
+  <ellipse cx="75" cy="156" rx="3" ry="1.5" fill="#d4a030" opacity="0.12"/>
+  <ellipse cx="130" cy="154" rx="2.5" ry="1.5" fill="#d4a030" opacity="0.10"/>
+  <ellipse cx="100" cy="184" rx="4" ry="1.5" fill="#d4a030" opacity="0.08"/>
+</svg>

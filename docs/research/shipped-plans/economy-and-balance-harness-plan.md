@@ -1,6 +1,8 @@
 # Economy And Balance Harness Plan
 
-This is the third active implementation plan. It makes the early campaign economy inspectable, tunable, and cheap to verify before content expansion accelerates.
+This was the third implementation plan. It made the early campaign economy inspectable, tunable, and cheap to verify before content expansion accelerated.
+
+Status: first-pass harness implemented. This file remains as a reference input for the shipped balance tooling and reports; it is not an active execution plan.
 
 ## Start In Parallel, Finish After The Opening Path Locks
 

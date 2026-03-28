@@ -21,7 +21,12 @@ import {
   OperatorIdentity,
   WorldTimeState,
 } from "../components";
-import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
+import {
+  BODEGA_BACK_OFFICE_TEMPLATE_ID,
+  getCurrentAbsoluteMinute,
+  hasStaffedOperationalRoomTemplate,
+  pushRuntimeEvent,
+} from "./commands";
 import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
 import { seedFromSimulationKey } from "./seed-utils";
 
@@ -813,9 +818,10 @@ export function resolveIncident(
   const incident = state.pendingIncident;
   const choice = incident.choices.find((c) => c.choiceId === choiceId);
   if (!choice) return false;
+  const adjustedEffects = getAdjustedIncidentEffects(context, incident, choice.effects);
 
   // Apply consequence effects
-  for (const effect of choice.effects) {
+  for (const effect of adjustedEffects) {
     applyConsequenceEffect(context, incident, effect);
   }
 
@@ -840,9 +846,43 @@ export function resolveIncident(
     timestamp: `Day ${WorldTimeState.day[context.singletonEntities.time]}`,
     accent: "info",
   });
+  if (adjustedEffects !== choice.effects) {
+    pushRuntimeEvent(context, {
+      kind: "event_change",
+      message: "The Back Office softened the compliance hit.",
+      accent: "gold",
+    });
+  }
 
   state.pendingIncident = null;
   return true;
+}
+
+function getAdjustedIncidentEffects(
+  context: SimSystemContext,
+  incident: PendingIncident,
+  effects: readonly ConsequenceEffect[],
+): readonly ConsequenceEffect[] {
+  if (
+    incident.templateId !== "incident/compliance-audit" ||
+    !hasStaffedOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID)
+  ) {
+    return effects;
+  }
+
+  return effects.map((effect) => {
+    if (
+      (effect.kind === "treasury_delta" || effect.kind === "reputation_delta") &&
+      effect.value < 0
+    ) {
+      return {
+        ...effect,
+        value: Math.ceil(effect.value * 0.6),
+      };
+    }
+
+    return effect;
+  });
 }
 
 function applyConsequenceEffect(

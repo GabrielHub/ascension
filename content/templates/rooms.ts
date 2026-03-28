@@ -44,4 +44,37 @@ export const roomTemplates = [
     baseCapacity: 2,
     availableInBuildings: ["building/bodega"],
   },
+  {
+    id: "room/back_office:tier_1",
+    kind: "room",
+    name: "The Back Office",
+    tags: ["room:operations", "ops:intel", "staff:admin"],
+    description:
+      "A cramped annex office where contract research, permits, payroll, and the paperwork panic finally get a real door.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/bodega"],
+  },
+  {
+    id: "room/backstock:tier_1",
+    kind: "room",
+    name: "The Backstock",
+    tags: ["room:staffing", "staff:logistics"],
+    description:
+      "The annexed unit's storage space, finally organized into something that is not a literal closet. Heavy inventory and staging work happens here.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/bodega"],
+  },
+  {
+    id: "room/alley_staging:tier_1",
+    kind: "room",
+    name: "The Alley",
+    tags: ["room:operations", "ops:staging"],
+    description:
+      "The back alley, paved over, half-covered by a corrugated canopy. Enough space to stage a team before they leave through the back.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/bodega"],
+  },
 ] satisfies readonly RoomTemplate[];

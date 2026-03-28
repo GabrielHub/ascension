@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="ps-aura" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#8a7d6a" stop-opacity="0.06"/>
+      <stop offset="60%" stop-color="#2a2620" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#080806" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ps-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#6a6050"/>
+      <stop offset="50%" stop-color="#5a5445"/>
+      <stop offset="100%" stop-color="#4a4538"/>
+    </linearGradient>
+    <linearGradient id="ps-limb" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a5445"/>
+      <stop offset="100%" stop-color="#4a4538"/>
+    </linearGradient>
+    <filter id="ps-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ps-phase">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura backdrop -->
+  <ellipse cx="100" cy="135" rx="88" ry="128" fill="url(#ps-aura)"/>
+
+  <!-- Phase-shift afterimage — red-shifted ghost, offset left -->
+  <path d="
+    M 97 38
+    L 112 46 L 118 60 L 120 78 L 118 95
+    L 116 115 L 114 135 L 112 155
+    L 110 175 L 108 195 L 106 210
+    L 104 225 L 102 240 L 100 252
+    L 97 258 L 94 252 L 92 240
+    L 90 225 L 88 210 L 86 195
+    L 84 175 L 82 155 L 80 135
+    L 78 115 L 80 95 L 82 78
+    L 84 60 L 90 46 Z
+  " fill="#7a6050" opacity="0.08" transform="translate(-3,-1)"/>
+
+  <!-- Phase-shift afterimage — blue-shifted ghost, offset right -->
+  <path d="
+    M 97 38
+    L 112 46 L 118 60 L 120 78 L 118 95
+    L 116 115 L 114 135 L 112 155
+    L 110 175 L 108 195 L 106 210
+    L 104 225 L 102 240 L 100 252
+    L 97 258 L 94 252 L 92 240
+    L 90 225 L 88 210 L 86 195
+    L 84 175 L 82 155 L 80 135
+    L 78 115 L 80 95 L 82 78
+    L 84 60 L 90 46 Z
+  " fill="#5a6878" opacity="0.07" transform="translate(3,1)"/>
+
+  <!-- Main body — elongated, angular, narrow torso -->
+  <path d="
+    M 97 38
+    L 112 46 L 118 60 L 120 78 L 118 95
+    L 116 115 L 114 135 L 112 155
+    L 110 175 L 108 195 L 106 210
+    L 104 225 L 102 240 L 100 252
+    L 97 258 L 94 252 L 92 240
+    L 90 225 L 88 210 L 86 195
+    L 84 175 L 82 155 L 80 135
+    L 78 115 L 80 95 L 82 78
+    L 84 60 L 90 46 Z
+  " fill="url(#ps-body)" stroke="rgba(106,96,80,0.35)" stroke-width="0.8"/>
+
+  <!-- Architectural surface textures — wallpaper/plaster patterns -->
+  <line x1="86" y1="80" x2="86" y2="150" stroke="#7a7060" stroke-width="0.3" opacity="0.2"/>
+  <line x1="92" y1="75" x2="92" y2="155" stroke="#7a7060" stroke-width="0.3" opacity="0.18"/>
+  <line x1="102" y1="75" x2="102" y2="155" stroke="#7a7060" stroke-width="0.3" opacity="0.18"/>
+  <line x1="108" y1="80" x2="108" y2="150" stroke="#7a7060" stroke-width="0.3" opacity="0.2"/>
+  <!-- Horizontal texture bands — baseboard/molding suggestion -->
+  <line x1="82" y1="110" x2="116" y2="110" stroke="#7a7060" stroke-width="0.4" opacity="0.15"/>
+  <line x1="84" y1="145" x2="114" y2="145" stroke="#7a7060" stroke-width="0.4" opacity="0.12"/>
+  <line x1="86" y1="180" x2="112" y2="180" stroke="#7a7060" stroke-width="0.3" opacity="0.10"/>
+
+  <!-- Head — architectural, no face; door-viewer lens and window mullion cross -->
+  <path d="
+    M 97 32
+    L 112 38 L 118 50 L 116 64 L 110 72
+    L 97 76 L 84 72 L 78 64
+    L 76 50 L 82 38 Z
+  " fill="#5a5445" stroke="#6a6050" stroke-width="0.7"/>
+  <!-- Door-viewer lens — circular architectural feature, not an eye -->
+  <circle cx="97" cy="52" r="6" fill="#3a3830" stroke="#6a6050" stroke-width="0.6"/>
+  <circle cx="97" cy="52" r="3.5" fill="#2a2820" stroke="#5a5445" stroke-width="0.4"/>
+  <circle cx="97" cy="52" r="1.5" fill="#1a1815" opacity="0.8"/>
+  <!-- Window mullion cross on head -->
+  <line x1="85" y1="52" x2="109" y2="52" stroke="#6a6050" stroke-width="0.4" opacity="0.3"/>
+  <line x1="97" y1="40" x2="97" y2="64" stroke="#6a6050" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Arms — long, angular, sharp, mantis-geometry -->
+  <!-- Left arm with afterimage trail -->
+  <path d="M 80 82 L 55 95 L 32 115 L 18 140 L 10 158" fill="none" stroke="#5a5445" stroke-width="0.5" opacity="0.12" filter="url(#ps-phase)"/>
+  <path d="M 80 82 L 52 98 L 28 120 L 14 148 L 8 165" fill="none" stroke="url(#ps-limb)" stroke-width="2.5"/>
+  <path d="M 8 165 L 4 175 L 8 180 L 14 176 L 10 168 Z" fill="#5a5445" stroke="#6a6050" stroke-width="0.4"/>
+  <!-- Right arm with afterimage trail -->
+  <path d="M 114 82 L 139 95 L 162 115 L 176 140 L 184 158" fill="none" stroke="#5a5445" stroke-width="0.5" opacity="0.12" filter="url(#ps-phase)"/>
+  <path d="M 114 82 L 142 98 L 166 120 L 180 148 L 186 165" fill="none" stroke="url(#ps-limb)" stroke-width="2.5"/>
+  <path d="M 186 165 L 190 175 L 186 180 L 180 176 L 184 168 Z" fill="#5a5445" stroke="#6a6050" stroke-width="0.4"/>
+
+  <!-- Secondary arm segments — folded, angular -->
+  <path d="M 82 105 L 60 118 L 42 135" fill="none" stroke="url(#ps-limb)" stroke-width="1.8" opacity="0.6"/>
+  <path d="M 112 105 L 134 118 L 152 135" fill="none" stroke="url(#ps-limb)" stroke-width="1.8" opacity="0.6"/>
+
+  <!-- Legs — long, angular, mantis-like stance -->
+  <!-- Left leg with afterimage -->
+  <path d="M 90 230 L 68 248 L 50 264 L 38 272" fill="none" stroke="#5a5445" stroke-width="0.5" opacity="0.1" filter="url(#ps-phase)"/>
+  <path d="M 92 228 L 70 245 L 52 260 L 40 268" fill="none" stroke="url(#ps-limb)" stroke-width="2.5"/>
+  <!-- Right leg with afterimage -->
+  <path d="M 104 230 L 126 248 L 144 264 L 156 272" fill="none" stroke="#5a5445" stroke-width="0.5" opacity="0.1" filter="url(#ps-phase)"/>
+  <path d="M 102 228 L 124 245 L 142 260 L 154 268" fill="none" stroke="url(#ps-limb)" stroke-width="2.5"/>
+
+  <!-- Phase-shift edge distortion — semi-transparent edge fragments -->
+  <path d="M 76 95 L 72 100 L 74 108" fill="none" stroke="#8a7d6a" stroke-width="0.6" opacity="0.15"/>
+  <path d="M 118 98 L 122 104 L 120 112" fill="none" stroke="#8a7d6a" stroke-width="0.6" opacity="0.15"/>
+  <path d="M 84 175 L 80 182 L 82 190" fill="none" stroke="#8a7d6a" stroke-width="0.5" opacity="0.12"/>
+  <path d="M 110 178 L 114 185 L 112 192" fill="none" stroke="#8a7d6a" stroke-width="0.5" opacity="0.12"/>
+
+  <!-- Spatial distortion accents — double-edge flicker at extremities -->
+  <circle cx="8" cy="165" r="2" fill="#7a7060" opacity="0.1" filter="url(#ps-phase)"/>
+  <circle cx="186" cy="165" r="2" fill="#7a7060" opacity="0.1" filter="url(#ps-phase)"/>
+  <circle cx="40" cy="268" r="1.5" fill="#7a7060" opacity="0.08" filter="url(#ps-phase)"/>
+  <circle cx="154" cy="268" r="1.5" fill="#7a7060" opacity="0.08" filter="url(#ps-phase)"/>
+
+  <!-- Chromatic aberration fragments at limb tips -->
+  <circle cx="6" cy="166" r="1.5" fill="#8a6050" opacity="0.08"/>
+  <circle cx="10" cy="164" r="1.5" fill="#506878" opacity="0.07"/>
+  <circle cx="188" cy="166" r="1.5" fill="#8a6050" opacity="0.08"/>
+  <circle cx="184" cy="164" r="1.5" fill="#506878" opacity="0.07"/>
+</svg>

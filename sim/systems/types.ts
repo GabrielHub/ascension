@@ -150,6 +150,8 @@ export interface SimRuntimeState {
   worldTimeFrozen: boolean;
 }
 
+export type VisitorQueueState = "active" | "deferred";
+
 export interface SimSingletonEntities {
   guild: number;
   time: number;

@@ -11,6 +11,10 @@ export const buildingTemplates = [
     baseTier: 1,
     baseRoomSlots: 4,
     baseOperatorSlots: 7,
-    upgradeIds: ["upgrade/building/bodega:frontage"],
+    upgradeIds: [
+      "upgrade/building/bodega:frontage",
+      "upgrade/building/bodega:annex",
+      "upgrade/building/bodega:extension",
+    ],
   },
 ] satisfies readonly BuildingTemplate[];

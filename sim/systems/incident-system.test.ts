@@ -4,13 +4,14 @@ import { describe, expect, it } from "vitest";
 import { templateRegistry } from "content/templates";
 
 import {
+  RoomInstance,
   BuildingAuthority,
   GuildState,
   MoraleState,
   OperatorIdentity,
   WorldTimeState,
 } from "../components";
-import { createIncidentState } from "./incidents";
+import { createIncidentState, INCIDENT_TEMPLATES, resolveIncident } from "./incidents";
 import { advanceIncidentSystem } from "./incident-system";
 import type { SimSystemContext } from "./types";
 
@@ -171,5 +172,65 @@ describe("incident system", () => {
 
     expect(context.runtimeState.incidentState.pendingIncident).toBeNull();
     expect(context.runtimeState.interruptionQueue.active).toBeNull();
+  });
+
+  it("reduces compliance fallout when a staffed back office is operating", () => {
+    const createComplianceContext = (withBackOffice: boolean) => {
+      const context = createIncidentSystemContext();
+      const template = INCIDENT_TEMPLATES.find((entry) => entry.id === "incident/compliance-audit");
+      if (!template) {
+        throw new Error("expected compliance incident template");
+      }
+
+      if (withBackOffice) {
+        const roomEntity = addEntity(context.world);
+        addComponent(context.world, roomEntity, RoomInstance);
+        RoomInstance.id[roomEntity] = "room-instance/back_office-tier-1-1";
+        RoomInstance.templateIndex[roomEntity] =
+          templateRegistry.roomIndexById.get("room/back_office:tier_1") ?? 0;
+        RoomInstance.slotId[roomEntity] = "slot/back-room-right";
+        RoomInstance.floorIndex[roomEntity] = 0;
+        RoomInstance.capacity[roomEntity] = 2;
+        RoomInstance.occupancy[roomEntity] = 1;
+        RoomInstance.isRequestedActive[roomEntity] = 1;
+        RoomInstance.isOperational[roomEntity] = 1;
+        RoomInstance.assignedStaffCount[roomEntity] = 1;
+        context.runtimeState.roomEntities.push(roomEntity);
+      }
+
+      GuildState.reputation[context.singletonEntities.guild] = 10;
+
+      context.runtimeState.incidentState.pendingIncident = {
+        instanceId: "incident-1",
+        templateId: template.id,
+        triggerFamily: template.triggerFamily,
+        boundContext: {
+          operatorIds: [],
+          roomId: undefined,
+          teamId: undefined,
+          contractSiteId: undefined,
+          bossId: undefined,
+        },
+        choices: template.choices,
+        createdAtMinute: 600,
+      };
+
+      return context;
+    };
+
+    const baseline = createComplianceContext(false);
+    resolveIncident(baseline, baseline.runtimeState.incidentState, "minimal_effort");
+    const baselineTreasury = GuildState.treasury[baseline.singletonEntities.guild];
+    const baselineReputation = GuildState.reputation[baseline.singletonEntities.guild];
+
+    const buffered = createComplianceContext(true);
+    resolveIncident(buffered, buffered.runtimeState.incidentState, "minimal_effort");
+    const bufferedTreasury = GuildState.treasury[buffered.singletonEntities.guild];
+    const bufferedReputation = GuildState.reputation[buffered.singletonEntities.guild];
+
+    expect(baselineTreasury).toBe(-25);
+    expect(baselineReputation).toBe(8);
+    expect(bufferedTreasury).toBe(-15);
+    expect(bufferedReputation).toBe(9);
   });
 });

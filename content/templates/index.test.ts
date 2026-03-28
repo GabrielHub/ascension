@@ -13,8 +13,8 @@ describe("template registry", () => {
 
     expect(registry.resources).toHaveLength(3);
     expect(registry.buildings).toHaveLength(1);
-    expect(registry.rooms).toHaveLength(4);
-    expect(registry.upgrades).toHaveLength(6);
+    expect(registry.rooms).toHaveLength(7);
+    expect(registry.upgrades).toHaveLength(8);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(13);
     expect(registry.items).toHaveLength(31);
@@ -34,6 +34,9 @@ describe("template registry", () => {
       "room/counter:tier_1",
       "room/dining_area:tier_1",
       "room/supply_closet:tier_1",
+      "room/back_office:tier_1",
+      "room/backstock:tier_1",
+      "room/alley_staging:tier_1",
     ];
 
     expectedRoomIds.forEach((id) => {
@@ -46,6 +49,8 @@ describe("template registry", () => {
 
     const expectedUpgradeIds = [
       "upgrade/building/bodega:frontage",
+      "upgrade/building/bodega:annex",
+      "upgrade/building/bodega:extension",
       "upgrade/room/register:records_wall",
       "upgrade/room/counter:hot_coffee",
       "upgrade/room/dining_area:first_aid_station",

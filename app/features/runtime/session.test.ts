@@ -851,7 +851,7 @@ describe("runtime session lifecycle", () => {
       upgradeId: "upgrade/room/register:records_wall",
     });
 
-    expect(session.state.phase1View.building.tier).toBe(1);
+    expect(session.state.phase1View.building.tier).toBe(2);
     expect(session.state.hqWorldSnapshot?.expansionSlots.length).toBe(initialExpansionSlotCount);
     expect(session.worldSnapshot.appliedUpgradeIds).toContain("upgrade/building/bodega:frontage");
     expect(
@@ -1408,7 +1408,7 @@ describe("runtime session lifecycle", () => {
       await session.commands.dispatch({
         type: "sim/dev-set-resource",
         resourceId: "resource/reputation",
-        amount: 6,
+        amount: 12,
       });
       await session.commands.purchaseBuildingUpgrade({
         upgradeId: "upgrade/building/bodega:frontage",

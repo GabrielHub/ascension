@@ -14,12 +14,12 @@ export const upgradeTemplates = [
       {
         type: "resource_min",
         resourceId: "resource/cash",
-        minimum: 150,
+        minimum: 200,
       },
       {
         type: "resource_min",
         resourceId: "resource/reputation",
-        minimum: 140,
+        minimum: 12,
       },
     ],
     effects: [
@@ -27,6 +27,116 @@ export const upgradeTemplates = [
         type: "modify_resource_income",
         resourceId: "resource/cash",
         amount: 6,
+      },
+      {
+        type: "modify_morale",
+        amount: 1,
+      },
+      {
+        type: "modify_attraction_weight",
+        tag: "role:medic",
+        amount: 1,
+      },
+      {
+        type: "modify_attraction_weight",
+        tag: "role:scout",
+        amount: 1,
+      },
+      {
+        type: "modify_attraction_weight",
+        tag: "role:field_lead",
+        amount: 1,
+      },
+    ],
+  },
+  {
+    id: "upgrade/building/bodega:annex",
+    kind: "upgrade",
+    name: "The Annex",
+    tags: ["upgrade:building", "progression:space"],
+    description:
+      "Absorbs the unit next door into guild space, opening room for a real back office and a larger roster.",
+    target: "building",
+    targetId: "building/bodega",
+    requirements: [
+      {
+        type: "resource_min",
+        resourceId: "resource/cash",
+        minimum: 350,
+      },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 25,
+      },
+      {
+        type: "building_tier_min",
+        buildingId: "building/bodega",
+        minimum: 2,
+      },
+    ],
+    effects: [
+      {
+        type: "add_room_slot",
+        amount: 2,
+      },
+      {
+        type: "grant_operator_slot",
+        amount: 2,
+      },
+      {
+        type: "unlock_room_template",
+        roomId: "room/back_office:tier_1",
+      },
+      {
+        type: "unlock_room_template",
+        roomId: "room/backstock:tier_1",
+      },
+      {
+        type: "modify_resource_income",
+        resourceId: "resource/cash",
+        amount: 4,
+      },
+    ],
+  },
+  {
+    id: "upgrade/building/bodega:extension",
+    kind: "upgrade",
+    name: "Backyard Extension",
+    tags: ["upgrade:building", "progression:space"],
+    description:
+      "Turns the back yard into usable guild space so the bodega can stage work without spilling into the storefront.",
+    target: "building",
+    targetId: "building/bodega",
+    requirements: [
+      {
+        type: "resource_min",
+        resourceId: "resource/cash",
+        minimum: 500,
+      },
+      {
+        type: "resource_min",
+        resourceId: "resource/reputation",
+        minimum: 35,
+      },
+      {
+        type: "building_tier_min",
+        buildingId: "building/bodega",
+        minimum: 3,
+      },
+    ],
+    effects: [
+      {
+        type: "add_room_slot",
+        amount: 1,
+      },
+      {
+        type: "grant_operator_slot",
+        amount: 1,
+      },
+      {
+        type: "unlock_room_template",
+        roomId: "room/alley_staging:tier_1",
       },
       {
         type: "modify_morale",

@@ -20,6 +20,7 @@ import {
   OperatorIdentity,
   RoomCulture,
   RoomInstance,
+  StaffState,
 } from "../components";
 import { clamp, pushRuntimeEvent } from "./commands";
 import type { SimSystem } from "./types";
@@ -172,19 +173,15 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
   const lowMoraleSubjects: ThresholdEventSubject[] = [];
   const lowLoyaltySubjects: ThresholdEventSubject[] = [];
 
-  [...livingOperatorEntities, ...context.runtimeState.staffEntities].forEach((entity) => {
-    const operatorId = OperatorIdentity.id[entity] ?? "";
-    const operatorName = OperatorIdentity.name[entity] ?? humanizeEntityId(operatorId);
-    const griefPenalty =
-      operatorId.length > 0 ? getGriefPenaltyForOperator(context, operatorId) : 0;
-    const isOperator = operatorId.length > 0;
-    const passiveMoraleDrift = isOperator
-      ? contractPosture.moraleDriftPerHour + staffingPriority.moraleDriftPerHour
-      : 0;
-    const passiveLoyaltyDrift = isOperator
-      ? staffingPriority.loyaltyDriftPerHour + rosterFlow.loyaltyDriftPerHour
-      : 0;
-
+  const advanceEntityMorale = (
+    entity: number,
+    options: {
+      subject?: ThresholdEventSubject;
+      griefPenalty: number;
+      passiveMoraleDriftPerHour: number;
+      passiveLoyaltyDriftPerHour: number;
+    },
+  ) => {
     const prevFlags = computeAutonomyFlags(entity, autonomyThresholds);
 
     const moraleTarget =
@@ -197,7 +194,7 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
       activeEventPenalty * 1.6 +
       roomCulture.comfortContribution +
       roomCulture.tensionContribution +
-      griefPenalty;
+      options.griefPenalty;
     const loyaltyTarget =
       LoyaltyState.baseline[entity] +
       loyaltyModifier +
@@ -208,32 +205,54 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
     MoraleState.current[entity] = clamp(
       MoraleState.current[entity] +
         (moraleTarget - MoraleState.current[entity]) * 0.18 +
-        passiveMoraleDrift * elapsedHours,
+        options.passiveMoraleDriftPerHour * elapsedHours,
       0,
       100,
     );
     LoyaltyState.current[entity] = clamp(
       LoyaltyState.current[entity] +
         (loyaltyTarget - LoyaltyState.current[entity]) * 0.1 +
-        passiveLoyaltyDrift * elapsedHours,
+        options.passiveLoyaltyDriftPerHour * elapsedHours,
       0,
       100,
     );
 
-    const nextFlags = computeAutonomyFlags(entity, autonomyThresholds);
-    if (operatorId.length > 0) {
-      const subject = { operatorId, operatorName };
-
-      if (nextFlags.quitRisk && !prevFlags.quitRisk) {
-        criticalMoraleSubjects.push(subject);
-      } else if (nextFlags.refusalRisk && !prevFlags.refusalRisk) {
-        lowMoraleSubjects.push(subject);
-      }
-
-      if (nextFlags.retentionRisk && !prevFlags.retentionRisk) {
-        lowLoyaltySubjects.push(subject);
-      }
+    if (!options.subject) {
+      return;
     }
+
+    const nextFlags = computeAutonomyFlags(entity, autonomyThresholds);
+    if (nextFlags.quitRisk && !prevFlags.quitRisk) {
+      criticalMoraleSubjects.push(options.subject);
+    } else if (nextFlags.refusalRisk && !prevFlags.refusalRisk) {
+      lowMoraleSubjects.push(options.subject);
+    }
+
+    if (nextFlags.retentionRisk && !prevFlags.retentionRisk) {
+      lowLoyaltySubjects.push(options.subject);
+    }
+  };
+
+  livingOperatorEntities.forEach((entity) => {
+    const operatorId = OperatorIdentity.id[entity] ?? "";
+    const operatorName = OperatorIdentity.name[entity] ?? humanizeEntityId(operatorId);
+    advanceEntityMorale(entity, {
+      subject: { operatorId, operatorName },
+      griefPenalty: operatorId.length > 0 ? getGriefPenaltyForOperator(context, operatorId) : 0,
+      passiveMoraleDriftPerHour:
+        contractPosture.moraleDriftPerHour + staffingPriority.moraleDriftPerHour,
+      passiveLoyaltyDriftPerHour:
+        staffingPriority.loyaltyDriftPerHour + rosterFlow.loyaltyDriftPerHour,
+    });
+  });
+
+  context.runtimeState.staffEntities.forEach((entity) => {
+    const staffId = StaffState.id[entity] ?? "";
+    advanceEntityMorale(entity, {
+      griefPenalty: staffId.length > 0 ? getGriefPenaltyForOperator(context, staffId) : 0,
+      passiveMoraleDriftPerHour: 0,
+      passiveLoyaltyDriftPerHour: 0,
+    });
   });
 
   pushThresholdEvent(context, criticalMoraleSubjects, {

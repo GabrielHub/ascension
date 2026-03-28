@@ -14,26 +14,24 @@ Before working any plan:
 
 ## Active Plans In Implementation Order
 
-1. [Opening Campaign Remediation Plan](./opening-campaign-remediation-plan.md)
-   Lock the canonical new-campaign path, seed envelope, and runtime-owned opening beats.
-   - Phase 1 spec: [Opening Campaign Spec](./opening-campaign-spec.md) — starter envelope, 8-contract arc, 13 beats, acceptance criteria, gap analysis.
-2. [Management Policy Surfaces Plan](./management-policy-surfaces-plan.md)
-   Add the first standing management decisions on top of the locked opening path.
-   - Phase 1 spec: [Management Policy Contract](./management-policy-contract.md) — 5 policy families, runtime shapes, defaults, effects, tradeoffs, owner systems.
-3. [Economy And Balance Harness Plan](./economy-and-balance-harness-plan.md)
-   Build the ledgers, direct simulation, and browser verification needed to tune the early campaign.
-   - Phase 2 spec: [Economy Target Envelope](./economy-target-envelope.md) — 8 metrics with pass/fail thresholds, trajectory projections, out-of-band observations.
-4. [Bodega Closure Plan](./bodega-closure-plan.md)
-   Finish the bodega building arc, support rooms, roster pressure, relocation gate, and content breadth.
-5. [Audio Remediation Plan](./audio-remediation-plan.md)
+Completed execution passes are folded back into the roadmap and product docs instead of staying checked in here as active plan work. Some completed reference docs may remain in this folder because shipped tools or later specs still point at them, but they are not active implementation plans.
+
+1. [Bodega Closure Plan](./bodega-closure-plan.md)
+   Finish the remaining bodega end-state work, relocation runtime, and second-building handoff.
+   - Active spec: [Bodega Closure Phases 4-5 Spec](./bodega-closure-phases-4-5-spec.md) — remaining content-breadth targets, relocation trigger, and handoff contract into the next headquarters tier.
+2. [Narrative Character System Plan](./narrative-character-system-plan.md)
+   Add authored presenter characters to interruption-backed guidance, incidents, and briefings, starting with the bodega assistant and then Porter's-specific presenters.
+3. [Porter's Entry Plan](./porters-entry-plan.md)
+   Implement the locked second-headquarters target: Porter's in Red Hook, with its starter rooms, upgrades, prep-room consumables, and relocation landing slice.
+4. [Audio Remediation Plan](./audio-remediation-plan.md)
    Expand audio once the player-facing state model is stable enough to score cleanly.
-6. [AI Content Layer Plan](./ai-content-layer-plan.md)
+5. [AI Content Layer Plan](./ai-content-layer-plan.md)
    Add optional generative variety only after the deterministic base game is accepted.
 
 ## Sequencing Notes
 
-- `opening-campaign-remediation` is the root dependency for the current stack.
-- `management-policy-surfaces` and the static ledger portion of `economy-and-balance-harness` can overlap.
-- `bodega-closure` is an integration milestone, not a substitute for the earlier plans.
+- `bodega-closure` now starts from a shipped opening path, shipped policy surfaces, and a shipped first-pass balance harness.
+- `narrative-character-system` is the finishing-touch narrative pass for the bodega and the prerequisite for Porter's-specific presenters.
+- `porters-entry` depends on the locked Porter's concept and the bodega handoff contract; it should reuse the presenter system where building-specific incidents benefit from named faces.
 - `audio-remediation` depends on stable state naming and stable boss-flow hooks.
 - `ai-content-layer` is intentionally last.

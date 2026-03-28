@@ -2,6 +2,8 @@
 
 Phase 1 deliverable for `opening-campaign-remediation-plan.md`. This document defines the complete player-facing opening path for a real new-game campaign. It replaces implicit preview-mode assumptions with an explicit authored arc.
 
+Status: implemented. This spec remains as a reference input for the shipped opening path and early-economy tooling.
+
 Read before implementing: `docs/world/premise-and-tone.md`, `docs/world/headquarters-and-rooms.md`, `docs/product/gameplay-systems.md`, `docs/product/presentation.md`.
 
 ## Starter State Envelope

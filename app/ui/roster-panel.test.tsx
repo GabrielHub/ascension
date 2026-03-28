@@ -36,6 +36,8 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     quitRisk: false,
     retentionRisk: false,
     autonomyReasons: [],
+    canBeReplaced: true,
+    replaceLockedReason: null,
     ...overrides,
   };
 }
@@ -47,7 +49,10 @@ const callbacks: GameCallbacks = {
   purchaseBuildingUpgrade: () => {},
   purchaseRoomUpgrade: () => {},
   acceptRecruit: () => {},
+  deferRecruit: () => {},
   rejectRecruit: () => {},
+  replaceRecruit: () => {},
+  dismissRecruit: () => {},
   hireStaff: () => {},
   assignStaff: () => {},
   placeRoom: () => {},
@@ -85,6 +90,7 @@ describe("roster panel", () => {
           operatorCapacity: 2,
           livingOperatorCount: 1,
           vacancyCount: 1,
+          deferredVisitorCapacity: 1,
           unavailableOperatorIds: [],
           recentDeathOperatorIds: ["operator/fallen"],
           replacementPressureLevel: "critical",
@@ -114,6 +120,17 @@ describe("roster panel", () => {
             patience: 18,
             quality: 61,
             expectedLoyalty: 53,
+            projectedMorale: 61,
+            projectedLoyalty: 77,
+            presetId: "kael-001",
+            rank: "b",
+            queueState: "active",
+            canAccept: false,
+            lockedReason: "Operator roster is full.",
+            canDefer: true,
+            deferLockedReason: null,
+            canReplace: false,
+            replaceLockedReason: null,
           },
         ]}
         relationships={[]}
@@ -123,6 +140,7 @@ describe("roster panel", () => {
           operatorCapacity: 1,
           livingOperatorCount: 1,
           vacancyCount: 0,
+          deferredVisitorCapacity: 1,
           unavailableOperatorIds: [],
           recentDeathOperatorIds: [],
           replacementPressureLevel: "stable",
@@ -162,6 +180,13 @@ describe("roster panel", () => {
             projectedLoyalty: 77,
             presetId: "kael-001",
             rank: "b",
+            queueState: "active",
+            canAccept: true,
+            lockedReason: null,
+            canDefer: true,
+            deferLockedReason: null,
+            canReplace: false,
+            replaceLockedReason: null,
           },
         ]}
         relationships={[]}
@@ -171,6 +196,7 @@ describe("roster panel", () => {
           operatorCapacity: 2,
           livingOperatorCount: 1,
           vacancyCount: 1,
+          deferredVisitorCapacity: 1,
           unavailableOperatorIds: ["operator/recovering"],
           recentDeathOperatorIds: [],
           replacementPressureLevel: "stable",
@@ -195,5 +221,53 @@ describe("roster panel", () => {
     expect(html).toContain("Recovering");
     expect(html).toContain("Recovery Standards: Full Recovery.");
     expect(html).toContain("injury severity 42");
+  });
+
+  it("renders deferred reserve actions when overflow is being curated", () => {
+    const html = renderToStaticMarkup(
+      <RosterPanel
+        operators={[makeOperator({ id: "operator/active", name: "Active" })]}
+        staff={[]}
+        visitors={[
+          {
+            id: "visitor/deferred",
+            name: "Deferred Recruit",
+            desiredRoleTag: "role:medic",
+            patience: 120,
+            quality: 68,
+            expectedLoyalty: 58,
+            projectedMorale: 66,
+            projectedLoyalty: 80,
+            presetId: "kael-001",
+            rank: "c",
+            queueState: "deferred",
+            canAccept: false,
+            lockedReason: "Operator roster is full.",
+            canDefer: false,
+            deferLockedReason: "Already deferred.",
+            canReplace: true,
+            replaceLockedReason: null,
+          },
+        ]}
+        relationships={[]}
+        rooms={[]}
+        callbacks={callbacks}
+        rosterPressure={{
+          operatorCapacity: 1,
+          livingOperatorCount: 1,
+          vacancyCount: 0,
+          deferredVisitorCapacity: 1,
+          unavailableOperatorIds: [],
+          recentDeathOperatorIds: [],
+          replacementPressureLevel: "stable",
+        }}
+        policies={DEFAULT_POLICY_STATE}
+      />,
+    );
+
+    expect(html).toContain("Deferred (1)");
+    expect(html).toContain("Deferred Recruit");
+    expect(html).toContain(">dismiss<");
+    expect(html).toContain(">Replace<");
   });
 });

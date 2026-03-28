@@ -49,7 +49,7 @@ export const updateRoomOperationsSystem: SimSystem = (context) => {
     RoomInstance.occupancy[roomEntity] = assignedStaffCount;
     RoomInstance.isOperational[roomEntity] =
       RoomInstance.isRequestedActive[roomEntity] === 1 &&
-      (requiredStaffTag ? assignedStaffCount >= 1 : true)
+      (requiredStaffTag !== "" ? assignedStaffCount >= 1 : true)
         ? 1
         : 0;
   });

@@ -7,6 +7,7 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 ## File Map
 
 - [Asset Production Contract](./asset-production.md)
+- [Image Generation Prompting Guide](./image-generation-prompting-guide.md)
 - [Presentation Direction](./presentation.md)
 - [Gameplay Systems](./gameplay-systems.md)
 - [Content Taxonomy](./content-taxonomy.md)
@@ -36,9 +37,9 @@ The game should make the player feel all of the following:
 
 ## Future Product Priorities
 
-- Finish the visual vertical slice before broadening systems further: the bodega, its rooms, and the first raid spaces should exist as real authored environments.
-- Finish expanding the reusable HQ exterior day-night pipeline so every building theme can ship sunrise, day, sunset, and night backdrop variants off the existing simulation clock without relying on bodega-specific renderer fallbacks.
-- Deepen the bodega loop until multiple early strategies are viable and failure states are legible.
+- Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
+- Broaden the late-bodega content pool so repeated campaigns do not collapse into the same few recruits, sites, loadouts, and pressure patterns.
+- Define the first post-bodega headquarters tier as a real management step up, not just a capacity increase.
 - Expand from one headquarters tier into larger buildings that change spatial and staffing decisions, not just numbers.
 - Expand the HQ model from a single-plane bodega into floor-indexed multi-floor buildings, with presentation contracts that can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
 - Grow external pressure through reputation, regulation, competition, and factional response.

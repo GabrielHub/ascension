@@ -44,7 +44,10 @@ export interface GameCallbacks {
   purchaseBuildingUpgrade: (upgradeId: string) => void;
   purchaseRoomUpgrade: (roomId: string, upgradeId: string) => void;
   acceptRecruit: (visitorId: string) => void;
+  deferRecruit: (visitorId: string) => void;
   rejectRecruit: (visitorId: string) => void;
+  replaceRecruit: (visitorId: string, operatorId: string) => void;
+  dismissRecruit: (visitorId: string) => void;
   hireStaff: (roleTag: string) => void;
   assignStaff: (staffId: string, roomId?: string) => void;
   placeRoom: (templateId: string, floorIndex: number, slotId: string) => void;
@@ -241,6 +244,7 @@ export interface RosterPressureViewModel {
   operatorCapacity: number;
   livingOperatorCount: number;
   vacancyCount: number;
+  deferredVisitorCapacity: number;
   unavailableOperatorIds: readonly string[];
   recentDeathOperatorIds: readonly string[];
   replacementPressureLevel: "stable" | "strained" | "critical";
@@ -278,6 +282,8 @@ export interface OperatorViewModel {
   /** Phase 2: operator may leave due to low loyalty. */
   retentionRisk: boolean;
   autonomyReasons: readonly string[];
+  canBeReplaced: boolean;
+  replaceLockedReason: string | null;
 }
 
 export interface StaffViewModel {
@@ -301,8 +307,13 @@ export interface VisitorViewModel {
   projectedLoyalty: number;
   presetId: string;
   rank: string;
+  queueState: "active" | "deferred";
   canAccept: boolean;
   lockedReason: string | null;
+  canDefer: boolean;
+  deferLockedReason: string | null;
+  canReplace: boolean;
+  replaceLockedReason: string | null;
 }
 
 export interface RelationshipViewModel {
@@ -747,6 +758,8 @@ export function buildHqViewFromPhase1(
     quitRisk: false,
     retentionRisk: false,
     autonomyReasons: [],
+    canBeReplaced: op.canBeReplaced ?? false,
+    replaceLockedReason: op.replaceLockedReason ?? null,
   }));
 
   const operatorNameById = new Map(operators.map((op) => [op.id, op.name]));
@@ -774,6 +787,13 @@ export function buildHqViewFromPhase1(
     ),
     presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
     rank: visitorQualityToRank(v.quality),
+    queueState: v.queueState ?? "active",
+    canAccept: v.canAccept ?? false,
+    lockedReason: v.lockedReason ?? null,
+    canDefer: v.canDefer ?? false,
+    deferLockedReason: v.deferLockedReason ?? null,
+    canReplace: v.canReplace ?? false,
+    replaceLockedReason: v.replaceLockedReason ?? null,
   }));
 
   const relationships: RelationshipViewModel[] = view.relationshipSignals.map((rel) => ({
@@ -1142,6 +1162,9 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     const prefs = rec(op as Record<string, unknown>, "preferences");
     const assignment = op.assignment;
     const appearance = rec(op as Record<string, unknown>, "appearance");
+    const lifecycle = extractLifecycle(rec(op as Record<string, unknown>, "lifecycle"));
+    const canBeReplaced =
+      lifecycle.status === "active" && str(assignment, "kind", "idle") !== "raid";
 
     return {
       id: op.id,
@@ -1170,11 +1193,17 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
         appearance ? extractVisibleGear(appearance) : undefined,
         getLoadedParts(),
       ),
-      lifecycle: extractLifecycle(rec(op as Record<string, unknown>, "lifecycle")),
+      lifecycle,
       refusalRisk: false,
       quitRisk: false,
       retentionRisk: false,
       autonomyReasons: [],
+      canBeReplaced,
+      replaceLockedReason: canBeReplaced
+        ? null
+        : lifecycle.status !== "active"
+          ? "Only active operators can be replaced."
+          : "Cannot replace someone who is already on a contract.",
     };
   });
 
@@ -1212,8 +1241,13 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       ),
       presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
       rank: visitorQualityToRank(quality),
+      queueState: str(raw, "queueState", "active") === "deferred" ? "deferred" : "active",
       canAccept: bool(raw, "canAccept", true),
       lockedReason: optionalStr(raw, "lockedReason"),
+      canDefer: bool(raw, "canDefer", str(raw, "queueState", "active") !== "deferred"),
+      deferLockedReason: optionalStr(raw, "deferLockedReason"),
+      canReplace: bool(raw, "canReplace", false),
+      replaceLockedReason: optionalStr(raw, "replaceLockedReason"),
     };
   });
 
@@ -1392,6 +1426,7 @@ function mapRuntimeRosterPressure(
     operatorCapacity: rawPressure.operatorCapacity,
     livingOperatorCount: rawPressure.livingOperatorCount,
     vacancyCount: rawPressure.vacancyCount,
+    deferredVisitorCapacity: rawPressure.deferredVisitorCapacity,
     unavailableOperatorIds: rawPressure.unavailableOperatorIds,
     recentDeathOperatorIds: rawPressure.recentDeathOperatorIds,
     replacementPressureLevel: rawPressure.replacementPressureLevel,
@@ -1406,6 +1441,7 @@ function buildSafeRosterPressure(
     operatorCapacity,
     livingOperatorCount,
     vacancyCount: Math.max(0, operatorCapacity - livingOperatorCount),
+    deferredVisitorCapacity: 1,
     unavailableOperatorIds: [],
     recentDeathOperatorIds: [],
     replacementPressureLevel: "stable",

@@ -48,6 +48,20 @@ describe("phase 1 view models", () => {
   it("exposes explicit floor-aware slots instead of dead empty slots", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
     simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 5000,
+    });
+    simulation.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/reputation",
+      amount: 300,
+    });
+    simulation.dispatch({
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/bodega:frontage",
+    });
+    simulation.dispatch({
       type: "sim/purchase-building-upgrade",
       upgradeId: "upgrade/building/bodega:annex",
     });
@@ -56,13 +70,32 @@ describe("phase 1 view models", () => {
 
     expect(hq.expansionSlots).toContainEqual(
       expect.objectContaining({
-        kind: "locked",
+        kind: "available",
         slotId: "slot/back-room-right",
+        floorIndex: 0,
+      }),
+    );
+    expect(hq.expansionSlots).toContainEqual(
+      expect.objectContaining({
+        kind: "locked",
+        slotId: "slot/storage-right",
         floorIndex: 0,
       }),
     );
     expect(hq.expansionSlots.every((slot) => slot.floorIndex === 0)).toBe(true);
     expect(hq.expansionSlots).toHaveLength(3);
+    expect(hq.placeableRoomTemplates).toContainEqual(
+      expect.objectContaining({
+        id: "room/back_office:tier_1",
+        name: "The Back Office",
+      }),
+    );
+    expect(hq.placeableRoomTemplates).toContainEqual(
+      expect.objectContaining({
+        id: "room/backstock:tier_1",
+        name: "The Backstock",
+      }),
+    );
   });
 
   it("maps forming opportunities to the claimed operations state", () => {
@@ -107,6 +140,7 @@ describe("phase 1 view models", () => {
           operatorCapacity: 6,
           livingOperatorCount: 1,
           vacancyCount: 5,
+          deferredVisitorCapacity: 1,
           unavailableOperatorIds: ["operator/unavailable"],
           recentDeathOperatorIds: ["operator/dead"],
           replacementPressureLevel: "critical",
@@ -119,6 +153,7 @@ describe("phase 1 view models", () => {
       operatorCapacity: 6,
       livingOperatorCount: 1,
       vacancyCount: 5,
+      deferredVisitorCapacity: 1,
       unavailableOperatorIds: ["operator/unavailable"],
       recentDeathOperatorIds: ["operator/dead"],
       replacementPressureLevel: "critical",
@@ -151,8 +186,11 @@ describe("phase 1 view models", () => {
 
     expect(hq.visitors[0]).toEqual(
       expect.objectContaining({
+        queueState: firstVisitor.queueState,
         projectedMorale: 61,
         projectedLoyalty: 77,
+        canAccept: firstVisitor.canAccept,
+        canReplace: firstVisitor.canReplace,
       }),
     );
   });
@@ -252,6 +290,7 @@ describe("phase 1 view models", () => {
       operatorCapacity: 3,
       livingOperatorCount: 1,
       vacancyCount: 2,
+      deferredVisitorCapacity: 1,
       unavailableOperatorIds: [],
       recentDeathOperatorIds: [],
       replacementPressureLevel: "stable",

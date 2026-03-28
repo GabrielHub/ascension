@@ -37,6 +37,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - Posted contracts, the active contract site, and the previous contract result now persist as separate save-safe state instead of collapsing into one implicit contract handoff.
 - New game now boots into a generated posted-contract bidding state, while preview/dev mode intentionally seeds an active contract so raid-map tooling and runtime verification can start in-media-res.
 - A first-pass gameplay-owned onboarding layer is shipped: save-safe opening guidance state, authored opening beats, focused coachmarks/spotlights, blocking narrative briefings, and interruption-backed delivery that is suppressed in preview mode.
+- The canonical opening path is now remediated enough to be a real player-facing baseline instead of a bootstrap/dev slice: new game uses a lighter controlled seed, opening guidance beats teach the intended loop, and direct/browser verification exists for the opening run.
 - HQ and raid overlays use glass-card presentation, focused bottom-card inspection, compact category switching, and a persistent right-side event log.
 - The event log is the always-on notice surface for departures, returns, injuries, deaths, morale and loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
@@ -56,83 +57,65 @@ This section is intentionally summary-level. The implementation itself is the so
 - Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty, while boss weaknesses reward matching team composition.
 - Loot distribution is now driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
 - Boss commitment now escalates into a blocking interruption beat, and committed confrontations can hand off into a save-safe runtime-owned encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
+- First standing management policy surfaces are shipped through the runtime policy contract and the HQ management panel.
+- The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
+- The bodega now ships the full three-step building arc (Frontage, Annex, Backyard Extension), bodega-native support rooms (Back Office, Backstock, Alley), hard roster-cap overflow handling, and authored encounter portraits for the three shipped bodega-era bosses.
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
-## Pre-Expansion: Tutorial And Narrative Remediation
+## Completed: Opening Campaign Remediation
 
-Goal: finish and tune the shipped player-facing onboarding layer so the opening game is legible and tonally coherent before wider content and scope expansion.
+Status: shipped.
 
-The first-pass framework already exists in runtime and UI. This phase is not "invent onboarding from scratch." It is "close the opening path so the shipped framework teaches the real game cleanly."
+The opening-campaign remediation pass is no longer an active roadmap milestone. The important result is that a canonical player-facing new-game path now exists: runtime-owned opening guidance beats, controlled new-game seed data separated from preview/dev bootstrap data, interruption-backed narrative delivery, and verification for the opening run.
 
-Deliverables:
+Future onboarding work can still deepen later as new systems and headquarters tiers land, but the "close the opening path" milestone itself is complete.
 
-- audit and remediate the shipped gameplay-owned onboarding framework so tutorials, contextual hints, focused tours, and interruption-backed narrative beats behave as one coherent layer
-- keep onboarding progression save-safe and deterministic for the player-facing new game path
-- expand the canonical opening sequence so it teaches contract flow, staffing, roster state, raids, incidents, the first upgrade decision, and early failure recovery through authored in-world framing
-- a canonical new-campaign starting state that is lighter and more controlled than the dense bootstrap/dev slice
-- reuse of the existing interruption layer for high-salience narrative beats instead of adding a parallel modal authority path
-- keep the shipped spotlight, coachmark, and hint primitives as the delivery surface rather than replacing them with a dependency
-- explicit authoring guidance that requires world-foundation grounding for tutorial copy, narrative briefings, and future AI-assisted content workflows
-- a later extension point for AI-authored flavor, recap, or candidate content that stays above deterministic simulation authority
+## Current Milestone: Bodega Endgame, Narrative Presenter Pass, And Porter's Handoff
 
-Exit criteria:
+Goal: finish the remaining bodega end-state work, land the presenter-system finishing pass for the bodega, and implement the handoff into a locked Porter's target from a stable baseline.
 
-- new players can learn the opening slice without relying on prior dev knowledge or scattered tooltip hunting
-- tutorials, hints, and narrative beats read as one coherent authored layer instead of separate systems
-- onboarding state survives refresh and save/load when it is gameplay-relevant
-- new game no longer starts from the same crowded state used for preview/dev verification
-- the framework is ready to scale with new rooms, systems, contracts, and buildings without rewriting the authority model
-- AI remains optional and non-authoritative
+Current shipped baseline:
 
-## Pre-Union Hall: Bodega Closure And Balance Harness
+- the full bodega building arc is implemented
+- bodega-native support rooms are implemented
+- hard roster-cap overflow handling is implemented
+- the early balance harness exists through ledgers, simulation, and reports
+- the shipped bodega-era bosses now have authored encounter portraits
+- the relocation trigger and handoff contract are specified from the bodega side
+- Porter's is now the locked source concept for the first post-bodega headquarters tier
 
-Goal: finish the bodega as a management game and make balance iteration cheap before the building-scale jump.
+Remaining work:
 
-Deliverables:
-
-- finish the full bodega upgrade arc, including Frontage, Annex, and Backyard Extension
-- define a canonical bodega campaign arc from first day to relocation trigger instead of treating the current bootstrap slice as the opening game
-- use the bodega's remaining footprint for bodega-native hybrid rooms instead of prematurely importing union-hall specialization
-- prioritize an intel/admin room first so contract prep, compliance buffering, and staffing pressure gain a real facility surface
-- optionally add a narrow consumable-prep layer later in the bodega as a lightweight precursor to crafting, without turning the bodega into a workshop tier
-- expand early-game content breadth across F, E, and D recruits, gear, sites, enemies, and bosses
-- define weighted recruit-rank distributions by progression band so low-rank outcomes never fully disappear and higher-rank outcomes enter through explicit probability shifts
-- define contract and loot-rank ceilings so site rank constrains direct gear quality, with rare higher-band drops limited to the intended cap and mainly sourced from elites or bosses
-- add authored balance ledgers for recruit weights, item budgets, contract budgets, and unlock pacing
-- define starter roster, room, staff, visitor, inventory, and slot-count envelopes so the bodega feels cramped and readable at the beginning instead of front-loaded and crowded
-- split canonical `new game` seed data from the denser `preview/dev` seed used for verification and sandboxing
-- enforce hard early-bodega roster-cap rules, including recruit overflow handling when the intake surface is active but the active roster is full
-- define the first contract-board envelope and early failure-recovery floor so the campaign cannot softlock from a bad opening result
-- define the relocation gate and transition event so a full bodega playthrough has a real ending point before union hall
-- add deterministic browser-driven autoplay and regression harness coverage so seeded campaign runs can generate usable balance metrics for human review and AI-assisted analysis
+- broaden authored F/E/D content where repeated campaigns still feel too narrow
+- finish the relocation runtime, save-safe interruption flow, and building swap
+- add the narrative presenter system as a bodega finishing-touch pass, starting with the assistant and retrofitting existing interruption-backed beats
+- implement the Porter's entry slice against the locked concept and handoff contract
+- run the promotion review against the closed early-game campaign
 
 Exit criteria:
 
-- the bodega consistently asks the player to make recruitment, staffing, gear, and upgrade decisions between contracts
-- new rooms deepen existing management loops instead of diluting the bodega's identity
-- early campaigns expose meaningful F/E/D variation without making D feel common or trivial
-- the opening campaign starts sparse, readable, and intentionally constrained rather than feeling like a pre-populated sandbox
-- the first several contracts teach risk, recovery, and recruitment pressure without producing frequent unwinnable starts
-- the bodega has a complete beginning, middle, and end, including a credible relocation handoff into union hall
-- balance iteration no longer depends on pure manual play or intuition alone
-- union hall expansion can begin from a closed early-game baseline instead of a still-moving target
+- the bodega has a clean and credible end state instead of feeling like an open-ended sandbox
+- relocation has a concrete runtime target and a save-safe handoff
+- the second headquarters tier starts from a closed early-game baseline and a locked Porter's target
 
-## Phase 3: Union Hall Expansion
+## Phase 3: Porter's Expansion
 
 Goal: prove that scale changes gameplay, not just numbers.
 
 Deliverables:
 
-- second building definition and upgrade path
+- second headquarters definition and upgrade path
+- Porter's as the concrete second-headquarters identity: Red Hook bar and restaurant below, converted operational rooms above, waterfront expansion later
 - relocation event framed as a systemic milestone, not just a map swap
 - prebuilt initial layouts for new building phases
 - multi-floor support
 - floor-indexed HQ presentation state so the active floor is explicit in the runtime view rather than implied by one flat map
 - a first floor-navigation/view contract that supports moving between floors without rewriting the entire HQ interaction model
 - floor-aware exterior/background selection that can reuse shared elevation bands across similar floors
-- room families that were combined in the bodega split into dedicated union-hall rooms as documented in the world foundation, including infirmary, break room, lounge, gym, sparring room, and a proper recruitment office
+- room families that were combined in the bodega split into dedicated Porter's rooms as documented in the world foundation, including infirmary, break room, gym, briefing room, stockroom, prep room, and a bar-driven recruitment surface
 - training rooms unlock for the first time — no training exists in the bodega phase
+- Porter's introduces lightweight consumable prep from monster drops through a dedicated prep room; full gear crafting remains a later-tier system
 - office-tier rooms and role-specific room variants for later progression
 - recurring teams deepen into stronger lock-in, more persistent identity, and explicit player-visible naming once a team's identity has proven stable
 - established teams and rooms develop recognizable culture that affects new-hire integration and staffing choices
@@ -146,7 +129,7 @@ Exit criteria:
 - moving to the next building changes how the player allocates space, labor, and money
 - moving between floors is a real part of understanding and managing the headquarters, not just a cosmetic label
 - the second building does not require bespoke exterior art for every single floor when adjacent floors share the same outside read
-- the second building tier mostly feels like added content, not rewritten infrastructure
+- the second headquarters tier mostly feels like added content, not rewritten infrastructure
 
 ## Cross-Building HQ Day-Night Presentation Pass
 
@@ -232,8 +215,8 @@ Exit criteria:
 2. Completed: get the bodega playable on top of that infrastructure.
 3. Completed: finish the bodega visually.
 4. Completed: make the first bodega slice good.
-5. Complete the bodega as an early-game management game and lock the balance harness.
-6. Expand the building scale.
+5. Finish the remaining bodega end-state work, land the presenter pass, and complete the Porter's handoff target.
+6. Expand into Porter's.
 7. Add systemic competitors.
 8. Add prestige content.
 

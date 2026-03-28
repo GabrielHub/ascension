@@ -12,6 +12,7 @@ describe("opportunity board", () => {
           operatorCapacity: 4,
           livingOperatorCount: 3,
           vacancyCount: 1,
+          deferredVisitorCapacity: 1,
           unavailableOperatorIds: [],
           recentDeathOperatorIds: [],
           replacementPressureLevel: "strained",

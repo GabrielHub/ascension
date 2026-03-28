@@ -27,7 +27,7 @@ import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
 import type { SimCommand } from "../commands";
 import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "../recruitment";
-import { buyItem, sellItem, getMarketPriceForItem } from "./market";
+import { buyItem, sellItem, getMarketPriceForItem, type MarketItemView } from "./market";
 import { autoSelectAccessory, unequipItem } from "./inventory";
 import { recordGuidanceInteraction } from "./guidance";
 import {
@@ -50,7 +50,7 @@ import {
 } from "../components";
 import { ensureOperatorDispositionEntity, ensureRoomCultureEntity } from "./social";
 import { getRecruitmentGateState } from "./opening-envelope";
-import type { RuntimeEvent, SimSystemContext } from "./types";
+import type { RuntimeEvent, SimSystemContext, VisitorQueueState } from "./types";
 
 // Late-bound encounter/interruption/incident command handler.
 // Registered at system init time by encounter-commands.ts to break circular imports.
@@ -107,6 +107,10 @@ const STAFF_ROLE_TAG_ALIASES: Record<string, CanonicalStaffRoleTag> = {
 const DEFAULT_SHIFT_START = 480;
 const DEFAULT_SHIFT_END = 1080;
 const DEFAULT_HISTORY_TAG_LIMIT = 6;
+export const BODEGA_BACK_OFFICE_TEMPLATE_ID = "room/back_office:tier_1";
+export const BODEGA_BACKSTOCK_TEMPLATE_ID = "room/backstock:tier_1";
+export const BODEGA_ALLEY_STAGING_TEMPLATE_ID = "room/alley_staging:tier_1";
+export const BODEGA_DEFERRED_VISITOR_CAPACITY = 1;
 const PREFERRED_MISSION_TAGS = [
   ["mission:combat", "objective:clear"],
   ["mission:stability", "objective:hold"],
@@ -185,6 +189,29 @@ export function buildDefaultPreferenceProfile(source: {
     comfortBias: clamp(20 + ((identityScore >> 5) % 50), 10, 88),
     preferredMissionTags: [...missionPreference],
     preferredPartnerIds: [],
+  };
+}
+
+/** Build the seed data needed to create an operator from a visitor recruit. */
+function buildOperatorSeedFromVisitor(
+  visitorEntity: number,
+): Parameters<typeof createOperatorEntity>[1] {
+  const name = VisitorState.name[visitorEntity];
+  const roleTag = VisitorState.desiredRoleTag[visitorEntity];
+  const specialtyTag = `focus:${roleTag.slice(ROLE_TAG_PREFIX.length)}`;
+  return {
+    name,
+    roleTag,
+    specialtyTag,
+    appearancePresetId: selectOperatorAppearanceRecipeId({
+      stableKey: [VisitorState.id[visitorEntity], name, roleTag, specialtyTag].join(":"),
+    }),
+    preferences: buildDefaultPreferenceProfile({ name, roleTag, specialtyTag }),
+    morale: projectVisitorRecruitMorale(VisitorState.quality[visitorEntity]),
+    loyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[visitorEntity]),
+    hunger: 10,
+    fatigue: 12,
+    stress: 18,
   };
 }
 
@@ -445,13 +472,46 @@ export function getAdjustedUpgradeCosts(
       return;
     }
 
-    costs.set(
-      requirement.resourceId,
-      Math.ceil(requirement.minimum * (costMultipliers[requirement.resourceId] ?? 1)),
-    );
+    const multiplier = costMultipliers[requirement.resourceId] ?? 1;
+    costs.set(requirement.resourceId, Math.ceil(requirement.minimum * multiplier));
   });
 
   return costs;
+}
+
+export function getAdjustedMarketPriceForItem(
+  context: SimSystemContext,
+  itemId: string,
+): { buyPrice: number; sellPrice: number } | null {
+  const price = getMarketPriceForItem(context.registry, itemId);
+  if (!price) {
+    return null;
+  }
+
+  if (
+    !hasStaffedOperationalRoomTemplate(context, BODEGA_BACKSTOCK_TEMPLATE_ID) ||
+    price.buyPrice <= 0
+  ) {
+    return price;
+  }
+
+  return {
+    buyPrice: Math.ceil(price.buyPrice * 0.92),
+    sellPrice: price.sellPrice,
+  };
+}
+
+export function getAdjustedMarketItems(context: SimSystemContext): MarketItemView[] {
+  return context.registry.items.map((item) => {
+    const price = getAdjustedMarketPriceForItem(context, item.id);
+
+    return {
+      itemId: item.id,
+      buyPrice: price?.buyPrice ?? 0,
+      sellPrice: price?.sellPrice ?? 0,
+      available: item.buyPrice > 0,
+    };
+  });
 }
 
 export function meetsRequirements(
@@ -808,13 +868,45 @@ export function spawnVisitorEntity(context: SimSystemContext, seed: VisitorSeed)
   VisitorState.patience[entity] = seed.patience;
   VisitorState.quality[entity] = seed.quality;
   VisitorState.expectedLoyalty[entity] = seed.expectedLoyalty;
+  VisitorState.queueState[entity] = "active";
 
   context.runtimeState.visitorEntities.push(entity);
   context.runtimeState.nextVisitorSequence += 1;
 }
 
+export function getVisitorQueueState(entity: number): VisitorQueueState {
+  return VisitorState.queueState[entity] === "deferred" ? "deferred" : "active";
+}
+
+export function getActiveVisitorEntities(context: SimSystemContext): number[] {
+  return context.runtimeState.visitorEntities.filter(
+    (entity) => getVisitorQueueState(entity) === "active",
+  );
+}
+
+export function getDeferredVisitorEntities(context: SimSystemContext): number[] {
+  return context.runtimeState.visitorEntities.filter(
+    (entity) => getVisitorQueueState(entity) === "deferred",
+  );
+}
+
+function removeVisitorEntity(context: SimSystemContext, visitorEntity: number): void {
+  removeEntity(context.world, visitorEntity);
+  removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
+}
+
+function setVisitorQueueState(entity: number, queueState: VisitorQueueState): void {
+  VisitorState.queueState[entity] = queueState;
+}
+
 function findRoomEntityById(context: SimSystemContext, roomId: string): number | undefined {
   return context.runtimeState.roomEntities.find((entity) => RoomInstance.id[entity] === roomId);
+}
+
+function findOperatorEntityById(context: SimSystemContext, operatorId: string): number | undefined {
+  return context.runtimeState.operatorEntities.find(
+    (entity) => OperatorIdentity.id[entity] === operatorId,
+  );
 }
 
 function findVisitorEntityById(context: SimSystemContext, visitorId: string): number | undefined {
@@ -853,6 +945,80 @@ export function getRecruitmentRoomId(context: SimSystemContext): string | undefi
     }
   }
   return undefined;
+}
+
+function canReplaceOperatorFromRoster(entity: number): boolean {
+  return (
+    OperatorIdentity.lifecycleStatus[entity] === "active" && AssignmentState.kind[entity] !== "raid"
+  );
+}
+
+function dismissOperatorForRoster(
+  context: SimSystemContext,
+  entity: number,
+  reason: string,
+  eventMessage: string,
+): void {
+  const operatorId = OperatorIdentity.id[entity];
+  const currentMinute = getCurrentAbsoluteMinute(context);
+
+  unequipItem(context, operatorId, "weapon");
+  unequipItem(context, operatorId, "outfitOverlay");
+  unequipItem(context, operatorId, "accessory");
+
+  OperatorIdentity.lifecycleStatus[entity] = "departed";
+  OperatorIdentity.deathTick[entity] = 0;
+  OperatorIdentity.deathRaidSummaryId[entity] = "";
+  OperatorIdentity.departureTick[entity] = currentMinute;
+  OperatorIdentity.departureReason[entity] = reason;
+  AssignmentState.kind[entity] = "idle";
+  AssignmentState.targetId[entity] = "";
+  ScheduleState.currentBlock[entity] = "idle";
+  RaidParticipationState.activeRaidId[entity] = "";
+  RaidParticipationState.missionId[entity] = "";
+  RaidParticipationState.returnTick[entity] = 0;
+
+  pushRuntimeEvent(context, {
+    kind: "staffing_change",
+    message: eventMessage,
+    accent: "ember",
+    targetKind: "operator",
+    targetId: operatorId,
+  });
+}
+
+export function hasOperationalRoomTemplate(context: SimSystemContext, templateId: string): boolean {
+  return context.runtimeState.roomEntities.some((entity) => {
+    const template = getRoomTemplateForEntity(context, entity);
+    return template.id === templateId && RoomInstance.isOperational[entity] === 1;
+  });
+}
+
+export function hasStaffedOperationalRoomTemplate(
+  context: SimSystemContext,
+  templateId: string,
+): boolean {
+  return context.runtimeState.roomEntities.some((entity) => {
+    const template = getRoomTemplateForEntity(context, entity);
+    return (
+      template.id === templateId &&
+      RoomInstance.isOperational[entity] === 1 &&
+      RoomInstance.assignedStaffCount[entity] >= 1
+    );
+  });
+}
+
+function getBuildingUpgradeEventMessage(upgradeId: string): string | null {
+  switch (upgradeId) {
+    case "upgrade/building/bodega:frontage":
+      return "Street-Facing Frontage finished. The storefront finally looks intentional.";
+    case "upgrade/building/bodega:annex":
+      return "The Annex is open. The bodega has room for real back-office work now.";
+    case "upgrade/building/bodega:extension":
+      return "Backyard Extension finished. The bodega finally has breathing room out back.";
+    default:
+      return null;
+  }
 }
 
 export function applySimCommand(context: SimSystemContext, command: SimCommand): void {
@@ -902,6 +1068,31 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
 
       createRoomInstanceEntity(context, template.id, placement, command.footprint);
+      if (template.id === BODEGA_BACK_OFFICE_TEMPLATE_ID) {
+        pushRuntimeEvent(context, {
+          kind: "event_change",
+          message: "The Back Office is ready for contract research and permit work.",
+          accent: "gold",
+          targetKind: "room",
+          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+        });
+      } else if (template.id === BODEGA_BACKSTOCK_TEMPLATE_ID) {
+        pushRuntimeEvent(context, {
+          kind: "event_change",
+          message: "The Backstock is open. Gear and supplies finally have a real staging area.",
+          accent: "gold",
+          targetKind: "room",
+          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+        });
+      } else if (template.id === BODEGA_ALLEY_STAGING_TEMPLATE_ID) {
+        pushRuntimeEvent(context, {
+          kind: "event_change",
+          message: "The Alley is ready. Teams can stage out back instead of filing past customers.",
+          accent: "gold",
+          targetKind: "room",
+          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+        });
+      }
       return;
     }
     case "sim/set-active-floor": {
@@ -977,6 +1168,14 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       applyCosts(context, costs);
       BuildingAuthority.appliedUpgradeIds[buildingEntity] = [...appliedUpgradeIds, upgrade.id];
       recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
+      const eventMessage = getBuildingUpgradeEventMessage(upgrade.id);
+      if (eventMessage) {
+        pushRuntimeEvent(context, {
+          kind: "event_change",
+          message: eventMessage,
+          accent: "gold",
+        });
+      }
       return;
     }
     case "sim/purchase-room-upgrade": {
@@ -1041,39 +1240,18 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       ) {
         return;
       }
+      const visitorQueueState = getVisitorQueueState(visitorEntity);
 
-      const preferences = buildDefaultPreferenceProfile({
-        name: VisitorState.name[visitorEntity],
-        roleTag: VisitorState.desiredRoleTag[visitorEntity],
-        specialtyTag: `focus:${VisitorState.desiredRoleTag[visitorEntity].slice(ROLE_TAG_PREFIX.length)}`,
-      });
-      const recruitSpecialtyTag = `focus:${VisitorState.desiredRoleTag[visitorEntity].slice(ROLE_TAG_PREFIX.length)}`;
-      createOperatorEntity(context, {
-        name: VisitorState.name[visitorEntity],
-        roleTag: VisitorState.desiredRoleTag[visitorEntity],
-        specialtyTag: recruitSpecialtyTag,
-        appearancePresetId: selectOperatorAppearanceRecipeId({
-          stableKey: [
-            VisitorState.id[visitorEntity],
-            VisitorState.name[visitorEntity],
-            VisitorState.desiredRoleTag[visitorEntity],
-            recruitSpecialtyTag,
-          ].join(":"),
-        }),
-        preferences,
-        morale: projectVisitorRecruitMorale(VisitorState.quality[visitorEntity]),
-        loyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[visitorEntity]),
-        hunger: 10,
-        fatigue: 12,
-        stress: 18,
-      });
+      createOperatorEntity(context, buildOperatorSeedFromVisitor(visitorEntity));
 
       const recruitName = VisitorState.name[visitorEntity];
-      removeEntity(context.world, visitorEntity);
-      removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
+      removeVisitorEntity(context, visitorEntity);
       pushRuntimeEvent(context, {
         kind: "staffing_change",
-        message: `${recruitName} joined the roster`,
+        message:
+          visitorQueueState === "deferred"
+            ? `${recruitName} joined the roster from reserve`
+            : `${recruitName} joined the roster`,
         accent: "gold",
         targetKind: "operator",
         targetId:
@@ -1083,15 +1261,34 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       });
       return;
     }
+    case "sim/defer-recruit": {
+      const visitorEntity = findVisitorEntityById(context, command.visitorId);
+      if (
+        visitorEntity === undefined ||
+        getVisitorQueueState(visitorEntity) !== "active" ||
+        getDeferredVisitorEntities(context).length >= BODEGA_DEFERRED_VISITOR_CAPACITY
+      ) {
+        return;
+      }
+
+      setVisitorQueueState(visitorEntity, "deferred");
+      pushRuntimeEvent(context, {
+        kind: "staffing_change",
+        message: `${VisitorState.name[visitorEntity]} was deferred to reserve while the roster stays capped.`,
+        accent: "silver",
+        targetKind: "visitor",
+        targetId: VisitorState.id[visitorEntity],
+      });
+      return;
+    }
     case "sim/reject-recruit": {
       const visitorEntity = findVisitorEntityById(context, command.visitorId);
-      if (visitorEntity === undefined) {
+      if (visitorEntity === undefined || getVisitorQueueState(visitorEntity) !== "active") {
         return;
       }
 
       const rejectName = VisitorState.name[visitorEntity];
-      removeEntity(context.world, visitorEntity);
-      removeTrackedEntity(context.runtimeState.visitorEntities, visitorEntity);
+      removeVisitorEntity(context, visitorEntity);
       const rejectPolicies = getBuildingPolicies(context);
       const reputationDelta = getRosterFlowConfig(rejectPolicies).rejectReputationDelta;
       const rosterFlow = rejectPolicies.rosterFlow;
@@ -1100,6 +1297,66 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         kind: "staffing_change",
         message: `${rejectName} was turned away (${reputationDelta} rep under ${getPolicyOptionLabel("rosterFlow", rosterFlow)})`,
         accent: "ember",
+      });
+      return;
+    }
+    case "sim/replace-recruit": {
+      const visitorEntity = findVisitorEntityById(context, command.visitorId);
+      const operatorEntity = findOperatorEntityById(context, command.operatorId);
+      const livingOperatorCount = context.runtimeState.operatorEntities.filter(
+        (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
+      ).length;
+      const recruitmentGate = getRecruitmentGateState(context);
+      if (
+        visitorEntity === undefined ||
+        operatorEntity === undefined ||
+        livingOperatorCount < BuildingAuthority.operatorSlotCount[buildingEntity] ||
+        !hasOperationalRecruitmentRoom(context) ||
+        !recruitmentGate.unlocked ||
+        !canReplaceOperatorFromRoster(operatorEntity)
+      ) {
+        return;
+      }
+
+      const recruitName = VisitorState.name[visitorEntity];
+      const visitorQueueState = getVisitorQueueState(visitorEntity);
+      const replacedOperatorName = OperatorIdentity.name[operatorEntity] ?? command.operatorId;
+      dismissOperatorForRoster(
+        context,
+        operatorEntity,
+        `dismissed to make room for ${recruitName}`,
+        `${replacedOperatorName} was dismissed to free a roster slot.`,
+      );
+
+      createOperatorEntity(context, buildOperatorSeedFromVisitor(visitorEntity));
+      removeVisitorEntity(context, visitorEntity);
+      pushRuntimeEvent(context, {
+        kind: "staffing_change",
+        message:
+          visitorQueueState === "deferred"
+            ? `${recruitName} joined from reserve, replacing ${replacedOperatorName}.`
+            : `${recruitName} joined the roster, replacing ${replacedOperatorName}.`,
+        accent: "gold",
+        targetKind: "operator",
+        targetId:
+          OperatorIdentity.id[
+            context.runtimeState.operatorEntities[context.runtimeState.operatorEntities.length - 1]
+          ],
+      });
+      return;
+    }
+    case "sim/dismiss-recruit": {
+      const visitorEntity = findVisitorEntityById(context, command.visitorId);
+      if (visitorEntity === undefined || getVisitorQueueState(visitorEntity) !== "deferred") {
+        return;
+      }
+
+      const visitorName = VisitorState.name[visitorEntity];
+      removeVisitorEntity(context, visitorEntity);
+      pushRuntimeEvent(context, {
+        kind: "staffing_change",
+        message: `${visitorName} was dismissed from reserve.`,
+        accent: "silver",
       });
       return;
     }
@@ -1156,12 +1413,29 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         previousAssignment.targetId !== AssignmentState.targetId[staffEntity]
       ) {
         recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+        if (template.id === BODEGA_BACK_OFFICE_TEMPLATE_ID) {
+          pushRuntimeEvent(context, {
+            kind: "event_change",
+            message: "The Back Office started reviewing contract intel and compliance paperwork.",
+            accent: "gold",
+            targetKind: "room",
+            targetId: command.roomId,
+          });
+        } else if (template.id === BODEGA_BACKSTOCK_TEMPLATE_ID) {
+          pushRuntimeEvent(context, {
+            kind: "event_change",
+            message: "Backstock logistics are staffed. Loadout prep should run cleaner now.",
+            accent: "gold",
+            targetKind: "room",
+            targetId: command.roomId,
+          });
+        }
       }
       return;
     }
 
     case "sim/buy-item": {
-      const price = getMarketPriceForItem(context.registry, command.itemId);
+      const price = getAdjustedMarketPriceForItem(context, command.itemId);
       if (!price || price.buyPrice <= 0) return;
       if (!buyItem(context, command.itemId, price.buyPrice)) {
         return;

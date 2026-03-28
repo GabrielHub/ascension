@@ -1,6 +1,8 @@
 # Opening Campaign Remediation Plan
 
-This is the first active implementation plan. It turns the shipped guidance framework into the canonical player-facing first campaign instead of a thin tutorial layer beside the real game.
+This was the first implementation plan. It turned the shipped guidance framework into the canonical player-facing first campaign instead of a thin tutorial layer beside the real game.
+
+Status: implemented. This file remains only as a reference input for shipped opening and economy tooling; it is not an active execution plan.
 
 ## Run This Plan First
 

@@ -1,6 +1,8 @@
 # Management Policy Surfaces Plan
 
-This is the second active implementation plan. It adds standing management decisions that shape autonomous behavior without turning the game into direct tactics control.
+This was the second implementation plan. It added standing management decisions that shape autonomous behavior without turning the game into direct tactics control.
+
+Status: implemented. This file remains only as a reference for the shipped policy surface; it is not an active execution plan.
 
 ## Run This After Opening Campaign Remediation
 

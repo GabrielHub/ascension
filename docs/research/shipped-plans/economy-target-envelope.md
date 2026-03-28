@@ -2,6 +2,8 @@
 
 Phase 2 deliverable for `economy-and-balance-harness-plan.md`. Defines the target economy shape, metric definitions, and explicit pass/fail thresholds for the canonical opening campaign.
 
+Status: active reference. The first-pass harness is shipped, and this envelope remains the checked-in target for further balance tuning.
+
 These envelopes are promotion gates for Phase 3 deterministic simulation. A seeded run that falls outside the defined bands is a balance regression.
 
 ## Canon Inputs

@@ -26,11 +26,10 @@ export function applyContractCommand(
       const contractSite = BuildingAuthority.contractSite[buildingEntity];
       if (!contractSite) return false;
       const outcome = payload.outcome === "boss_defeated" ? "boss_defeated" : "contract_lost";
-      if (outcome === "boss_defeated") {
-        contractSite.bossDefeated = true;
-      } else {
-        contractSite.contractLost = true;
-      }
+      BuildingAuthority.contractSite[buildingEntity] =
+        outcome === "boss_defeated"
+          ? { ...contractSite, bossDefeated: true }
+          : { ...contractSite, contractLost: true };
       return true;
     }
     default:

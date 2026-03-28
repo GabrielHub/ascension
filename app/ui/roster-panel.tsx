@@ -443,66 +443,162 @@ function StaffRow({
 
 function VisitorRow({
   visitor,
-  canAccept,
+  replaceableOperators,
+  showReplacePicker,
+  onToggleReplacePicker,
   onAccept,
+  onDefer,
   onReject,
+  onReplace,
+  onDismiss,
   rejectReputationDelta,
 }: {
   visitor: VisitorViewModel;
-  canAccept: boolean;
+  replaceableOperators: readonly OperatorViewModel[];
+  showReplacePicker: boolean;
+  onToggleReplacePicker: () => void;
   onAccept: () => void;
+  onDefer: () => void;
   onReject: () => void;
+  onReplace: (operatorId: string) => void;
+  onDismiss: () => void;
   rejectReputationDelta: number;
 }) {
   const patienceHours = Math.max(0, Math.ceil(visitor.patience / 60));
-  const recruitTooltip = canAccept
-    ? `Recruit ${visitor.name} as an operator`
-    : visitor.lockedReason || "Operator roster is full";
+  const recruitTooltip = visitor.canAccept
+    ? visitor.queueState === "deferred"
+      ? `Recruit ${visitor.name} from reserve`
+      : `Recruit ${visitor.name} as an operator`
+    : visitor.canReplace
+      ? `Replace an active operator with ${visitor.name}`
+      : visitor.lockedReason || "Operator roster is full";
+  const primaryLabel = visitor.canAccept
+    ? "Recruit"
+    : visitor.canReplace
+      ? "Replace"
+      : visitor.queueState === "deferred"
+        ? "Hold"
+        : "Full";
+  const showDeferAction = visitor.queueState === "active";
+  const metaLine =
+    visitor.queueState === "deferred" ? "Deferred reserve" : `${patienceHours}h patience`;
 
   return (
-    <div
-      className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
-      data-testid="visitor-row"
-      data-visitor-id={visitor.id}
-    >
-      <div className="min-w-0 flex-1">
-        <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
-        <span className="ml-1.5 text-[0.6875rem] text-gold/60">
-          {getRoleMeta(visitor.desiredRoleTag).label}
-        </span>
-        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-silver/45">
-          <span>Quality {Math.round(visitor.quality)}</span>
-          <span className="opacity-30">&middot;</span>
-          <span>{patienceHours}h patience</span>
-          <span className="opacity-30">&middot;</span>
-          <span>Loyalty {Math.round(visitor.projectedLoyalty)}</span>
+    <div data-testid="visitor-row" data-visitor-id={visitor.id}>
+      <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5">
+        <div className="min-w-0 flex-1">
+          <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
+          <span className="ml-1.5 text-[0.6875rem] text-gold/60">
+            {getRoleMeta(visitor.desiredRoleTag).label}
+          </span>
+          {visitor.queueState === "deferred" && (
+            <span className="ml-1.5 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[0.625rem] uppercase tracking-[0.12em] text-gold/70">
+              Deferred
+            </span>
+          )}
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-silver/45">
+            <span>Quality {Math.round(visitor.quality)}</span>
+            <span className="opacity-30">&middot;</span>
+            <span>{metaLine}</span>
+            <span className="opacity-30">&middot;</span>
+            <span>Loyalty {Math.round(visitor.projectedLoyalty)}</span>
+          </div>
         </div>
+        <Tooltip content={recruitTooltip} side="top">
+          <button
+            type="button"
+            data-testid="visitor-recruit"
+            data-visitor-id={visitor.id}
+            className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
+              visitor.canAccept || visitor.canReplace
+                ? "btn-primary"
+                : "btn-ghost cursor-not-allowed text-silver/30"
+            }`}
+            onClick={
+              visitor.canAccept ? onAccept : visitor.canReplace ? onToggleReplacePicker : undefined
+            }
+            disabled={!visitor.canAccept && !visitor.canReplace}
+          >
+            {primaryLabel}
+          </button>
+        </Tooltip>
+        {showDeferAction ? (
+          <Tooltip
+            content={
+              visitor.canDefer
+                ? "Move this visitor into reserve"
+                : visitor.deferLockedReason || "Deferred reserve is full"
+            }
+            side="top"
+          >
+            <button
+              type="button"
+              className={`btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem] ${
+                visitor.canDefer ? "" : "cursor-not-allowed text-silver/30"
+              }`}
+              onClick={onDefer}
+              disabled={!visitor.canDefer}
+            >
+              defer
+            </button>
+          </Tooltip>
+        ) : (
+          <Tooltip content="Remove this deferred recruit from reserve" side="top">
+            <button
+              type="button"
+              className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+              onClick={onDismiss}
+            >
+              dismiss
+            </button>
+          </Tooltip>
+        )}
+        {showDeferAction && (
+          <Tooltip content={`Dismiss this visitor (${rejectReputationDelta} rep)`} side="top">
+            <button
+              type="button"
+              data-testid="visitor-pass"
+              data-visitor-id={visitor.id}
+              className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+              onClick={onReject}
+            >
+              pass
+            </button>
+          </Tooltip>
+        )}
       </div>
-      <Tooltip content={recruitTooltip} side="top">
-        <button
-          type="button"
-          data-testid="visitor-recruit"
-          data-visitor-id={visitor.id}
-          className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
-            canAccept ? "btn-primary" : "btn-ghost cursor-not-allowed text-silver/30"
-          }`}
-          onClick={onAccept}
-          disabled={!canAccept}
-        >
-          {canAccept ? "Recruit" : "Full"}
-        </button>
-      </Tooltip>
-      <Tooltip content={`Dismiss this visitor (${rejectReputationDelta} rep)`} side="top">
-        <button
-          type="button"
-          data-testid="visitor-pass"
-          data-visitor-id={visitor.id}
-          className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
-          onClick={onReject}
-        >
-          pass
-        </button>
-      </Tooltip>
+
+      {showReplacePicker && visitor.canReplace && replaceableOperators.length > 0 && (
+        <div className="animate-enter ml-4 mt-1.5 space-y-1.5 border-l border-gold/10 pl-3 pb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+            Replace Operator
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {replaceableOperators.map((operator) => (
+              <Tooltip
+                key={operator.id}
+                content={
+                  operator.canBeReplaced
+                    ? `Dismiss ${operator.name} and recruit ${visitor.name}`
+                    : operator.replaceLockedReason || "Unavailable"
+                }
+                side="top"
+              >
+                <button
+                  type="button"
+                  className={`btn-ghost px-2 py-0.5 text-[0.6875rem] ${
+                    operator.canBeReplaced ? "" : "cursor-not-allowed text-silver/30"
+                  }`}
+                  disabled={!operator.canBeReplaced}
+                  onClick={() => onReplace(operator.id)}
+                >
+                  {operator.name}
+                </button>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -575,10 +671,13 @@ export function RosterPanel({
   onInspectOperator,
 }: RosterPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(focusedOperatorId ?? null);
+  const [replacementVisitorId, setReplacementVisitorId] = useState<string | null>(null);
 
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
   const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
-  const canRecruit = rosterPressure.vacancyCount > 0;
+  const activeVisitors = visitors.filter((visitor) => visitor.queueState === "active");
+  const deferredVisitors = visitors.filter((visitor) => visitor.queueState === "deferred");
+  const replaceableOperators = livingOperators.filter((operator) => operator.canBeReplaced);
   const staffingSummary = getStaffingPrioritySurfaceSummary(policies.staffingPriority);
   const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
 
@@ -595,6 +694,13 @@ export function RosterPanel({
       }
       return nextId;
     });
+
+  useEffect(() => {
+    if (!replacementVisitorId) return;
+    if (!visitors.some((visitor) => visitor.id === replacementVisitorId)) {
+      setReplacementVisitorId(null);
+    }
+  }, [replacementVisitorId, visitors]);
 
   return (
     <div className="animate-enter space-y-3" data-testid="roster-panel">
@@ -733,7 +839,7 @@ export function RosterPanel({
         <div className="mb-1 flex items-center justify-between px-1">
           <Tooltip content="Potential recruits passing through. Accept to add as operators">
             <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
-              Visitors ({visitors.length})
+              Visitors ({activeVisitors.length})
             </span>
           </Tooltip>
           {rosterPressure.vacancyCount > 0 ? (
@@ -742,7 +848,7 @@ export function RosterPanel({
                 {rosterPressure.vacancyCount} to fill
               </span>
             </Tooltip>
-          ) : visitors.length > 0 ? (
+          ) : activeVisitors.length > 0 ? (
             <span className="text-[0.6875rem] text-silver/35">Roster full</span>
           ) : null}
         </div>
@@ -762,15 +868,25 @@ export function RosterPanel({
             ))}
           </div>
         </div>
-        {visitors.length > 0 ? (
+        {activeVisitors.length > 0 ? (
           <div className="space-y-0.5">
-            {visitors.map((v) => (
+            {activeVisitors.map((v) => (
               <VisitorRow
                 key={v.id}
                 visitor={v}
-                canAccept={canRecruit && v.canAccept}
+                replaceableOperators={replaceableOperators}
+                showReplacePicker={replacementVisitorId === v.id}
+                onToggleReplacePicker={() =>
+                  setReplacementVisitorId((current) => (current === v.id ? null : v.id))
+                }
                 onAccept={() => callbacks.acceptRecruit(v.id)}
+                onDefer={() => callbacks.deferRecruit(v.id)}
                 onReject={() => callbacks.rejectRecruit(v.id)}
+                onReplace={(operatorId) => {
+                  callbacks.replaceRecruit(v.id, operatorId);
+                  setReplacementVisitorId(null);
+                }}
+                onDismiss={() => callbacks.dismissRecruit(v.id)}
                 rejectReputationDelta={rosterFlowSummary.rejectReputationDelta}
               />
             ))}
@@ -779,6 +895,43 @@ export function RosterPanel({
           <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">
             {rosterPressure.vacancyCount > 0 ? "Waiting for visitors..." : "No visitors right now"}
           </p>
+        )}
+
+        {deferredVisitors.length > 0 && (
+          <div className="mt-3">
+            <div className="mb-1 flex items-center justify-between px-1">
+              <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+                Deferred ({deferredVisitors.length})
+              </span>
+              <span className="text-[0.6875rem] text-silver/35">
+                Reserve {deferredVisitors.length}/{rosterPressure.deferredVisitorCapacity}
+              </span>
+            </div>
+            <div className="space-y-0.5">
+              {deferredVisitors.map((visitor) => (
+                <VisitorRow
+                  key={visitor.id}
+                  visitor={visitor}
+                  replaceableOperators={replaceableOperators}
+                  showReplacePicker={replacementVisitorId === visitor.id}
+                  onToggleReplacePicker={() =>
+                    setReplacementVisitorId((current) =>
+                      current === visitor.id ? null : visitor.id,
+                    )
+                  }
+                  onAccept={() => callbacks.acceptRecruit(visitor.id)}
+                  onDefer={() => callbacks.deferRecruit(visitor.id)}
+                  onReject={() => callbacks.rejectRecruit(visitor.id)}
+                  onReplace={(operatorId) => {
+                    callbacks.replaceRecruit(visitor.id, operatorId);
+                    setReplacementVisitorId(null);
+                  }}
+                  onDismiss={() => callbacks.dismissRecruit(visitor.id)}
+                  rejectReputationDelta={rosterFlowSummary.rejectReputationDelta}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

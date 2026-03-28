@@ -2,13 +2,28 @@
 
 This is the fourth active implementation plan. It closes the bodega as a complete early-game campaign after the opening path, standing management surfaces, and balance harness are in place.
 
+## Status
+
+Implemented already:
+
+- Phase 1: the full bodega building arc
+- Phase 2: the first bodega-native support rooms
+- Phase 3: hard roster-cap overflow handling
+- Phase 4 boss-presentation slice: authored runtime boss portraits for the shipped bodega-era bosses
+
+Still active:
+
+- remaining breadth expansion where repeated bodega campaigns are still too narrow
+- relocation runtime and save-safe building handoff
+- promotion review against the closed bodega baseline
+
 ## Prerequisites
 
 Do not start this plan until these plans have working first passes:
 
-1. `opening-campaign-remediation-plan.md`
-2. `management-policy-surfaces-plan.md`
-3. `economy-and-balance-harness-plan.md`
+1. the canonical opening campaign path
+2. the first standing management policy surfaces
+3. the first-pass economy harness
 
 ## Canon Inputs
 
@@ -24,7 +39,7 @@ Read these before making changes:
 
 - The bodega stays a bodega.
 - No training rooms in the bodega.
-- No dedicated infirmary, lounge, or union-hall room identities in the bodega.
+- No dedicated infirmary, lounge, or second-headquarters room identities in the bodega.
 - Progression is about recruitment, curation, room support, staff support, and contract choice, not grinding rank-ups.
 - Relocation is a narrative and systemic milestone, not a silent capacity upgrade.
 
@@ -115,7 +130,7 @@ Tasks:
    - visible roster and staffing strain
    - sufficient treasury and reputation
    - proof that the player has already experienced the intended management loop
-3. Implement the relocation event and handoff contract for the next building tier.
+3. Implement the relocation event and handoff contract for the next headquarters tier once that tier is actually locked.
 
 Done when:
 
@@ -137,13 +152,13 @@ Tasks:
 
 Done when:
 
-- Union hall work can start from a closed early-game baseline instead of a moving target.
+- second-headquarters work can start from a closed early-game baseline instead of a moving target.
 
 ## Parallel Rules
 
 - Phase 1 and Phase 3 can overlap once prerequisites are met.
 - Phase 4 may run in parallel with late Phase 2, but content must consume locked balance tables.
-- Do not solve missing management depth by importing union-hall room identities into the bodega.
+- Do not solve missing management depth by importing second-headquarters room identities into the bodega.
 
 ## Verification
 

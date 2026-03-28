@@ -185,8 +185,17 @@ export function buildGameCallbacks(
     acceptRecruit: (visitorId: string) => {
       void session.commands.acceptRecruit({ visitorId });
     },
+    deferRecruit: (visitorId: string) => {
+      void session.commands.deferRecruit({ visitorId });
+    },
     rejectRecruit: (visitorId: string) => {
       void session.commands.rejectRecruit({ visitorId });
+    },
+    replaceRecruit: (visitorId: string, operatorId: string) => {
+      void session.commands.replaceRecruit({ visitorId, operatorId });
+    },
+    dismissRecruit: (visitorId: string) => {
+      void session.commands.dismissRecruit({ visitorId });
     },
     hireStaff: (roleTag: string) => {
       void session.commands.hireStaff({ roleTag });
@@ -521,17 +530,26 @@ function FocusedVisitorOverlay({
   visitor,
   policies,
   rosterFull,
+  replaceableOperators,
   onRecruit,
+  onDeferVisitor,
   onDismissVisitor,
+  onReplaceRecruit,
+  onDismissRecruit,
   onClose,
 }: {
   visitor: VisitorViewModel;
   policies: PolicyState;
   rosterFull: boolean;
+  replaceableOperators: readonly OperatorViewModel[];
   onRecruit: () => void;
+  onDeferVisitor: () => void;
   onDismissVisitor: () => void;
+  onReplaceRecruit: (operatorId: string) => void;
+  onDismissRecruit: () => void;
   onClose: () => void;
 }) {
+  const [showReplacementPicker, setShowReplacementPicker] = useState(false);
   const patienceMinutes = Math.max(0, Math.ceil(visitor.patience));
   const patienceHours = Math.floor(patienceMinutes / 60);
   const patienceRemainder = patienceMinutes % 60;
@@ -643,33 +661,108 @@ function FocusedVisitorOverlay({
       </div>
 
       {/* Actions */}
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Tooltip
           content={
-            rosterFull ? "Roster is full — no open operator slots" : "Add to your operator roster"
+            visitor.canAccept
+              ? visitor.queueState === "deferred"
+                ? "Recruit this deferred candidate from reserve"
+                : "Add to your operator roster"
+              : visitor.canReplace
+                ? "Replace an active operator with this recruit"
+                : rosterFull
+                  ? "Roster is full — no open operator slots"
+                  : visitor.lockedReason || "Recruitment is locked right now"
           }
         >
           <button
             type="button"
             className="btn-primary flex-1"
-            disabled={rosterFull}
-            onClick={onRecruit}
+            disabled={!visitor.canAccept && !visitor.canReplace}
+            onClick={
+              visitor.canAccept
+                ? onRecruit
+                : visitor.canReplace
+                  ? () => setShowReplacementPicker((current) => !current)
+                  : undefined
+            }
           >
-            Recruit
+            {visitor.canAccept ? "Recruit" : visitor.canReplace ? "Replace" : "Full"}
           </button>
         </Tooltip>
-        <Tooltip
-          content={`Turn away this visitor (${rosterFlowSummary.rejectReputationDelta} rep)`}
-        >
-          <button
-            type="button"
-            className="btn-ghost text-silver/50 hover:text-ember"
-            onClick={onDismissVisitor}
-          >
-            Pass
-          </button>
-        </Tooltip>
+        {visitor.queueState === "active" ? (
+          <>
+            <Tooltip
+              content={
+                visitor.canDefer
+                  ? "Move this visitor into reserve"
+                  : visitor.deferLockedReason || "Deferred reserve is full"
+              }
+            >
+              <button
+                type="button"
+                className="btn-ghost text-silver/50 hover:text-gold"
+                disabled={!visitor.canDefer}
+                onClick={onDeferVisitor}
+              >
+                Defer
+              </button>
+            </Tooltip>
+            <Tooltip
+              content={`Turn away this visitor (${rosterFlowSummary.rejectReputationDelta} rep)`}
+            >
+              <button
+                type="button"
+                className="btn-ghost text-silver/50 hover:text-ember"
+                onClick={onDismissVisitor}
+              >
+                Pass
+              </button>
+            </Tooltip>
+          </>
+        ) : (
+          <Tooltip content="Remove this deferred candidate from reserve">
+            <button
+              type="button"
+              className="btn-ghost text-silver/50 hover:text-ember"
+              onClick={onDismissRecruit}
+            >
+              Dismiss
+            </button>
+          </Tooltip>
+        )}
       </div>
+
+      {showReplacementPicker && visitor.canReplace && replaceableOperators.length > 0 && (
+        <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.04)] px-3 py-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
+            Replace Operator
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {replaceableOperators.map((operator) => (
+              <Tooltip
+                key={operator.id}
+                content={
+                  operator.canBeReplaced
+                    ? `Dismiss ${operator.name} and recruit ${visitor.name}`
+                    : operator.replaceLockedReason || "Unavailable"
+                }
+              >
+                <button
+                  type="button"
+                  className={`btn-ghost px-2 py-0.5 text-[0.6875rem] ${
+                    operator.canBeReplaced ? "" : "cursor-not-allowed text-silver/30"
+                  }`}
+                  disabled={!operator.canBeReplaced}
+                  onClick={() => onReplaceRecruit(operator.id)}
+                >
+                  {operator.name}
+                </button>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1786,12 +1879,27 @@ export function GameShell() {
                 visitor={focusedVisitor}
                 policies={hq.policies}
                 rosterFull={hq.rosterPressure.vacancyCount <= 0}
+                replaceableOperators={
+                  focusedVisitor ? hq.operators.filter((operator) => operator.canBeReplaced) : []
+                }
                 onRecruit={() => {
                   callbacks.acceptRecruit(focusedVisitor.id);
                   setFocus(null);
                 }}
+                onDeferVisitor={() => {
+                  callbacks.deferRecruit(focusedVisitor.id);
+                  setFocus(null);
+                }}
                 onDismissVisitor={() => {
                   callbacks.rejectRecruit(focusedVisitor.id);
+                  setFocus(null);
+                }}
+                onReplaceRecruit={(operatorId) => {
+                  callbacks.replaceRecruit(focusedVisitor.id, operatorId);
+                  setFocus(null);
+                }}
+                onDismissRecruit={() => {
+                  callbacks.dismissRecruit(focusedVisitor.id);
                   setFocus(null);
                 }}
                 onClose={() => setFocus(null)}

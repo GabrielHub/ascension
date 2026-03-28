@@ -9,9 +9,11 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Rank advancement is possible but rare, dramatic, and not a standard progression path.
 - The real early-game progression band should span F, E, and D content, but with strongly weighted rarity rather than even availability.
 - Lower-rank content should never disappear completely. Progression should shift weighted pools upward instead of hard-deleting F or E outcomes from the game.
+- The first post-bodega building is Porter's, a dual-use bar and restaurant with converted upstairs operational rooms and a later waterfront expansion.
 - The first post-bodega building should unlock systems and room families that do not fit in a bodega, not just increase capacity.
 - Early external pressure should come primarily from the dungeon economy and the operator labor market, with city institutions layered in later.
-- The next bodega management expansion should prioritize intel and administrative control before introducing broader new subloops.
+- The shipped bodega expansion now centers intel, logistics, and staging support. The next headquarters tier should build on those surfaces instead of re-solving them as bodega problems.
+- Porter's starter state should not regress room count or staging compared with the fully upgraded bodega.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
 
 ## Shared Uncertainty Resolution
@@ -43,6 +45,9 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - The opening player-facing path should be deterministic and authored. New players should learn contracts, staffing, roster health, raids, and interruptions through fixed early beats before the game leans on broader systemic discovery.
 - Guidance should explain systems in-world. The same authored beat should teach the mechanic and establish why Boss cares about it in the setting.
 - React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
+- Guidance beats, incidents, and other interruption-backed narrative surfaces may optionally bind an authored presenter character id.
+- Presenter binding is content data layered on the existing runtime-owned interruption and guidance systems, not a parallel authority path.
+- The first presenter should be the assistant retrofitted into the bodega path. Porter's later adds domain presenters such as the cook and bartender.
 - Future AI support may help draft or vary non-authoritative copy only after the deterministic framework exists. It must not choose triggers, hidden weights, available choices, or outcome logic.
 - Any AI-assisted authoring workflow for tutorials or narrative events must include the world foundation as canonical tone and content input so generated material stays consistent with the setting.
 
@@ -252,6 +257,7 @@ Gear, inventory, and market defaults:
 - Accessories should auto-select from eligible inventory stacks using operator role, rank, preferences, and current needs.
 - Phase 2 only requires auto-selection for accessories. Broader automated weapon or outfit policy can land later if it proves necessary.
 - The bodega may introduce lightweight consumable preparation as a precursor system, but that should stay deliberately narrow: short recipe lists, temporary raid aids, and no full workshop identity.
+- Porter's should make that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
 
@@ -270,7 +276,7 @@ Building progression should not assume that every headquarters remains a single-
 | Staffing    | Staff assignment and effectiveness    | Office space, supply closet, server room                   |
 | Specialized | Field-role or rank-specific           | Medic clinic, scout briefing room, field lead command room |
 
-Recruitment is a capability, not a separate room family. Public-facing recruitment can live inside different room families at different building tiers as long as the runtime-facing tags and staffing rules stay explicit.
+Recruitment is a capability, not a separate room family. Public-facing recruitment can live inside different room families at different building tiers as long as the runtime-facing tags and staffing rules stay explicit. The bodega uses the counter; Porter's uses the bar.
 
 Training room direction:
 
@@ -291,7 +297,7 @@ Later role-specific room variants should include:
 
 Staff assigned to rooms improve the room's effectiveness. This should remain a core management loop.
 
-Low-tier headquarters should be allowed to introduce bodega-native hybrid operations rooms that cover missing management surfaces without pretending the guild already has a union-hall facility stack. Valid early additions include intel/admin support, deployment staging, and lightweight consumable prep. Those are extensions of management, not proof that the bodega secretly contains a full workshop, infirmary, or training wing.
+Low-tier headquarters should be allowed to introduce bodega-native hybrid operations rooms that cover missing management surfaces without pretending the guild already has a full later-tier facility stack. Valid early additions include intel/admin support, deployment staging, and lightweight consumable prep. Those are extensions of management, not proof that the bodega secretly contains a full workshop, infirmary, or training wing.
 
 Multi-floor headquarters direction:
 

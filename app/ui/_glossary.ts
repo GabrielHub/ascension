@@ -56,6 +56,11 @@ const TAG_META = {
   "staff:admin": { label: "Admin", tip: "Handles paperwork and administrative tasks" },
   "staff:maintenance": { label: "Maintenance", tip: "Keeps facilities in working condition" },
   "ops:recruitment": { label: "Recruitment", tip: "Attracts potential operators to the team" },
+  "ops:intel": { label: "Intel", tip: "Supports contract research and compliance work" },
+  "ops:staging": {
+    label: "Staging",
+    tip: "Provides space for pre-raid team staging and departure",
+  },
 } satisfies DisplayRegistry;
 
 const TONE_META = {

@@ -155,6 +155,30 @@
       "scale": "detail",
       "concept": null,
       "status": "exploration"
+    },
+    {
+      "id": "enemy/boss-tunneler-brood-mother",
+      "category": "enemy",
+      "tags": ["boss", "encounter", "portrait"],
+      "scale": "detail",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/boss-sewer-warden",
+      "category": "enemy",
+      "tags": ["boss", "encounter", "portrait"],
+      "scale": "detail",
+      "concept": null,
+      "status": "exploration"
+    },
+    {
+      "id": "enemy/boss-phantom-stalker",
+      "category": "enemy",
+      "tags": ["boss", "encounter", "portrait"],
+      "scale": "detail",
+      "concept": null,
+      "status": "exploration"
     }
   ]
 }

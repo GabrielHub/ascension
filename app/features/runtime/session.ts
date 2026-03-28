@@ -121,8 +121,17 @@ export interface RuntimeSessionCommands {
   acceptRecruit(
     input: Omit<Extract<SimCommand, { type: "sim/accept-recruit" }>, "type">,
   ): Promise<void>;
+  deferRecruit(
+    input: Omit<Extract<SimCommand, { type: "sim/defer-recruit" }>, "type">,
+  ): Promise<void>;
   rejectRecruit(
     input: Omit<Extract<SimCommand, { type: "sim/reject-recruit" }>, "type">,
+  ): Promise<void>;
+  replaceRecruit(
+    input: Omit<Extract<SimCommand, { type: "sim/replace-recruit" }>, "type">,
+  ): Promise<void>;
+  dismissRecruit(
+    input: Omit<Extract<SimCommand, { type: "sim/dismiss-recruit" }>, "type">,
   ): Promise<void>;
   hireStaff(input: Omit<Extract<SimCommand, { type: "sim/hire-staff" }>, "type">): Promise<void>;
   assignStaff(
@@ -330,6 +339,17 @@ function resolveCuesForCommand(
       ).length;
       return nextOperatorCount > previousOperatorCount ? ["operator.recruit"] : [];
     }
+    case "sim/defer-recruit": {
+      const previousVisitor = beforePhase1View.visitors.find(
+        (visitor) => visitor.id === command.visitorId,
+      );
+      const nextVisitor = afterPhase1View.visitors.find(
+        (visitor) => visitor.id === command.visitorId,
+      );
+      return previousVisitor?.queueState === "active" && nextVisitor?.queueState === "deferred"
+        ? ["hq.dismiss"]
+        : [];
+    }
     case "sim/hire-staff": {
       return afterWorldSnapshot.staff.length > beforeWorldSnapshot.staff.length
         ? ["staff.hire"]
@@ -364,6 +384,16 @@ function resolveCuesForCommand(
       return nextCount > prevCount ? ["hq.upgrade"] : [];
     }
     case "sim/reject-recruit": {
+      return afterPhase1View.visitors.length < beforePhase1View.visitors.length
+        ? ["hq.dismiss"]
+        : [];
+    }
+    case "sim/replace-recruit": {
+      return afterPhase1View.visitors.length < beforePhase1View.visitors.length
+        ? ["hq.dismiss", "operator.recruit"]
+        : [];
+    }
+    case "sim/dismiss-recruit": {
       return afterPhase1View.visitors.length < beforePhase1View.visitors.length
         ? ["hq.dismiss"]
         : [];
@@ -1061,7 +1091,9 @@ function createRuntimeSession(
           assignment !== null,
       );
     const visitorAssignments = recruitmentRoom
-      ? view.visitors.map((visitor) => ({ visitor, roomId: recruitmentRoom.id }))
+      ? view.visitors
+          .filter((visitor) => visitor.queueState === "active")
+          .map((visitor) => ({ visitor, roomId: recruitmentRoom.id }))
       : [];
 
     operatorAssignments.forEach(({ operator, roomId }) => {
@@ -1501,9 +1533,30 @@ function createRuntimeSession(
       });
     },
 
+    deferRecruit(input) {
+      return commands.dispatch({
+        type: "sim/defer-recruit",
+        ...input,
+      });
+    },
+
     rejectRecruit(input) {
       return commands.dispatch({
         type: "sim/reject-recruit",
+        ...input,
+      });
+    },
+
+    replaceRecruit(input) {
+      return commands.dispatch({
+        type: "sim/replace-recruit",
+        ...input,
+      });
+    },
+
+    dismissRecruit(input) {
+      return commands.dispatch({
+        type: "sim/dismiss-recruit",
         ...input,
       });
     },

@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="sw-aura" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#4a7a68" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#1a2420" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#060808" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sw-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#3a3a38"/>
+      <stop offset="50%" stop-color="#2a2a28"/>
+      <stop offset="100%" stop-color="#1e1e1c"/>
+    </linearGradient>
+    <linearGradient id="sw-pipe" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4a4038"/>
+      <stop offset="50%" stop-color="#5a4e42"/>
+      <stop offset="100%" stop-color="#4a4038"/>
+    </linearGradient>
+    <filter id="sw-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sw-rift">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="90" ry="130" fill="url(#sw-aura)"/>
+
+  <!-- Floor integration — pipes emerging from ground -->
+  <path d="M 62 268 L 60 250 Q 62 240 68 235" fill="none" stroke="#4a4038" stroke-width="3" opacity="0.3"/>
+  <path d="M 140 270 L 138 252 Q 136 242 132 238" fill="none" stroke="#4a4038" stroke-width="2.5" opacity="0.28"/>
+  <path d="M 85 275 Q 88 260 92 252" fill="none" stroke="#3a3a38" stroke-width="2" opacity="0.22"/>
+  <path d="M 115 275 Q 112 260 108 252" fill="none" stroke="#3a3a38" stroke-width="2" opacity="0.22"/>
+
+  <!-- Main body — tall, rigid, columnar pipe cluster -->
+  <path d="
+    M 100 30
+    L 122 38 L 135 56 L 140 80
+    L 142 110 L 144 145 L 142 180
+    L 140 210 L 138 235 L 132 255
+    L 120 265 L 100 268 L 80 265
+    L 68 255 L 62 235 L 60 210
+    L 58 180 L 56 145 L 58 110
+    L 60 80 L 65 56 L 78 38 Z
+  " fill="url(#sw-body)" stroke="rgba(74,64,56,0.45)" stroke-width="1"/>
+
+  <!-- Pipe segments running through body -->
+  <path d="M 75 50 L 75 255" fill="none" stroke="url(#sw-pipe)" stroke-width="4" opacity="0.5"/>
+  <path d="M 125 50 L 125 255" fill="none" stroke="url(#sw-pipe)" stroke-width="4" opacity="0.5"/>
+  <path d="M 100 38 L 100 260" fill="none" stroke="url(#sw-pipe)" stroke-width="5" opacity="0.35"/>
+  <!-- Cross-pipes -->
+  <path d="M 68 100 L 132 100" fill="none" stroke="#4a4038" stroke-width="3" opacity="0.3"/>
+  <path d="M 66 145 L 134 145" fill="none" stroke="#4a4038" stroke-width="3.5" opacity="0.35"/>
+  <path d="M 68 190 L 132 190" fill="none" stroke="#4a4038" stroke-width="3" opacity="0.3"/>
+  <!-- Pipe joints -->
+  <circle cx="75" cy="100" r="4" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+  <circle cx="125" cy="100" r="4" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+  <circle cx="75" cy="145" r="4.5" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+  <circle cx="125" cy="145" r="4.5" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+  <circle cx="75" cy="190" r="4" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+  <circle cx="125" cy="190" r="4" fill="#2a2a28" stroke="#4a4038" stroke-width="0.8"/>
+
+  <!-- Primary valve wheel — maintenance-seal anchor -->
+  <circle cx="100" cy="120" r="10" fill="none" stroke="#8a7a50" stroke-width="1.5" opacity="0.5"/>
+  <circle cx="100" cy="120" r="6" fill="none" stroke="#8a7a50" stroke-width="0.8" opacity="0.4"/>
+  <line x1="100" y1="110" x2="100" y2="130" stroke="#8a7a50" stroke-width="0.6" opacity="0.35"/>
+  <line x1="90" y1="120" x2="110" y2="120" stroke="#8a7a50" stroke-width="0.6" opacity="0.35"/>
+  <!-- Secondary valve -->
+  <circle cx="100" cy="170" r="8" fill="none" stroke="#6a5a38" stroke-width="1.2" opacity="0.4"/>
+  <circle cx="100" cy="170" r="5" fill="none" stroke="#6a5a38" stroke-width="0.6" opacity="0.3"/>
+  <line x1="100" y1="162" x2="100" y2="178" stroke="#6a5a38" stroke-width="0.5" opacity="0.3"/>
+  <line x1="92" y1="170" x2="108" y2="170" stroke="#6a5a38" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Head — angular industrial, no face -->
+  <path d="
+    M 100 25
+    L 120 32 L 128 48 L 126 64 L 118 72
+    L 100 76 L 82 72 L 74 64
+    L 72 48 L 80 32 Z
+  " fill="#2a2a28" stroke="#3a3a38" stroke-width="0.8"/>
+  <!-- Grating visor — ventilation slats, not eyes -->
+  <rect x="78" y="48" width="44" height="8" rx="1" fill="#1e1e1c" stroke="#4a4038" stroke-width="0.5"/>
+  <line x1="84" y1="48" x2="84" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="90" y1="48" x2="90" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="96" y1="48" x2="96" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="102" y1="48" x2="102" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="108" y1="48" x2="108" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="114" y1="48" x2="114" y2="56" stroke="#3a3a38" stroke-width="0.4" opacity="0.5"/>
+  <!-- Head cap — industrial pipe fitting -->
+  <path d="M 86 28 L 100 22 L 114 28" fill="none" stroke="#4a4038" stroke-width="1.5"/>
+
+  <!-- Verdigris corrosion patches -->
+  <ellipse cx="82" cy="135" rx="8" ry="12" fill="#4a7a68" opacity="0.12"/>
+  <ellipse cx="120" cy="160" rx="6" ry="10" fill="#4a7a68" opacity="0.10"/>
+  <ellipse cx="90" cy="210" rx="10" ry="8" fill="#3d6858" opacity="0.08"/>
+  <!-- Rust patches -->
+  <ellipse cx="118" cy="108" rx="7" ry="5" fill="#8b5833" opacity="0.10"/>
+  <ellipse cx="80" cy="180" rx="6" ry="8" fill="#8b5833" opacity="0.08"/>
+
+  <!-- Water stain streaks -->
+  <path d="M 72 80 L 70 100 L 72 115" fill="none" stroke="#4a7a68" stroke-width="0.5" opacity="0.15"/>
+  <path d="M 128 85 L 130 105 L 128 118" fill="none" stroke="#4a7a68" stroke-width="0.5" opacity="0.15"/>
+
+  <!-- Left arm — pipe lash, bending where pipes should not bend -->
+  <path d="M 58 90 L 40 110 Q 30 130 25 155 Q 22 170 28 178 L 35 175 Q 38 160 42 140 L 55 115 Z" fill="#2a2a28" stroke="#3a3a38" stroke-width="0.6"/>
+  <path d="M 28 178 Q 20 192 18 208 Q 16 218 22 222" fill="none" stroke="#4a4038" stroke-width="2.5" opacity="0.5"/>
+  <circle cx="22" cy="222" r="3" fill="#3a3a38" stroke="#4a4038" stroke-width="0.5"/>
+
+  <!-- Right arm — pipe lash -->
+  <path d="M 142 90 L 160 110 Q 170 130 175 155 Q 178 170 172 178 L 165 175 Q 162 160 158 140 L 145 115 Z" fill="#2a2a28" stroke="#3a3a38" stroke-width="0.6"/>
+  <path d="M 172 178 Q 180 192 182 208 Q 184 218 178 222" fill="none" stroke="#4a4038" stroke-width="2.5" opacity="0.5"/>
+  <circle cx="178" cy="222" r="3" fill="#3a3a38" stroke="#4a4038" stroke-width="0.5"/>
+
+  <!-- Rift energy in structural cracks — subtle teal -->
+  <path d="M 92 85 L 90 95 L 93 108" fill="none" stroke="#6aaa90" stroke-width="0.5" opacity="0.2" filter="url(#sw-rift)"/>
+  <path d="M 108 88 L 110 98 L 107 110" fill="none" stroke="#6aaa90" stroke-width="0.5" opacity="0.18" filter="url(#sw-rift)"/>
+  <circle cx="100" cy="145" r="2" fill="#6aaa90" opacity="0.15" filter="url(#sw-rift)"/>
+
+  <!-- Mineral deposit accretions at joints -->
+  <path d="M 71 98 Q 75 95 79 98" fill="none" stroke="#8a7a50" stroke-width="0.6" opacity="0.2"/>
+  <path d="M 121 98 Q 125 95 129 98" fill="none" stroke="#8a7a50" stroke-width="0.6" opacity="0.2"/>
+  <path d="M 71 143 Q 75 140 79 143" fill="none" stroke="#8a7a50" stroke-width="0.5" opacity="0.18"/>
+  <path d="M 121 143 Q 125 140 129 143" fill="none" stroke="#8a7a50" stroke-width="0.5" opacity="0.18"/>
+</svg>

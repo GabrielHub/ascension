@@ -34,10 +34,14 @@ import {
   WorldTimeState,
 } from "../components";
 import {
+  BODEGA_ALLEY_STAGING_TEMPLATE_ID,
+  BODEGA_BACK_OFFICE_TEMPLATE_ID,
   clamp,
   formatWorldTimestamp,
   getBuildingPolicies,
   getCurrentAbsoluteMinute,
+  hasOperationalRoomTemplate,
+  hasStaffedOperationalRoomTemplate,
   pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
@@ -1684,7 +1688,14 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     autoSelectAccessory(context, operatorId, OperatorIdentity.roleTag[operatorEntity]);
   });
 
-  const teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
+  let teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
+
+  // Alley Staging bonus: teams that stage out back depart with better coordination
+  const alleyOperational = hasOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID);
+  const alleyStaffed = hasStaffedOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID);
+  if (alleyOperational) {
+    teamCohesion = clamp(teamCohesion + (alleyStaffed ? 8 : 4), 0, 100);
+  }
 
   // ── Run deterministic raid simulation ──
   const siteSeed = seedFromSimulationKey(
@@ -3081,6 +3092,11 @@ function generateContractBoard(context: SimSystemContext): void {
   const currentMinute = getCurrentAbsoluteMinute(context);
   const reputation = GuildState.reputation[guildEntity];
   const rng = new SeededRng(seedFromSimulationKey(context, `board:${currentMinute}:${reputation}`));
+  const backOfficeOperational = hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID);
+  const backOfficeStaffed = hasStaffedOperationalRoomTemplate(
+    context,
+    BODEGA_BACK_OFFICE_TEMPLATE_ID,
+  );
 
   // Determine available ranks based on reputation
   const availableRanks = getAvailableContractRanksForReputation(reputation);
@@ -3130,26 +3146,31 @@ function generateContractBoard(context: SimSystemContext): void {
         POSTED_CONTRACT_VARIANCE.reward.max,
       ),
     });
+    const contractIntel = Math.min(
+      100,
+      Math.max(budget.intel, backOfficeOperational ? 30 : budget.intel) +
+        (backOfficeStaffed ? 15 : 0),
+    );
 
     // Intel controls what the player knows before bidding
     const allTraits = [...concept.threatProfileTags, ...concept.hazardTags];
     const knownTraitCount =
-      budget.intel >= 60
+      contractIntel >= 60
         ? allTraits.length
-        : budget.intel >= 30
+        : contractIntel >= 30
           ? Math.ceil(allTraits.length * 0.6)
           : Math.ceil(allTraits.length * 0.3);
     const knownTraits = allTraits.slice(0, knownTraitCount);
     const hiddenTraitCount = allTraits.length - knownTraitCount;
 
     // Enemy hints based on intel
-    const enemyHints = budget.intel >= 40 ? [...concept.enemyFamilyIds] : [];
+    const enemyHints = contractIntel >= 40 ? [...concept.enemyFamilyIds] : [];
 
     // Loot family hints
-    const lootFamilyHints = budget.intel >= 30 ? [...concept.lootFamilyIds] : [];
+    const lootFamilyHints = contractIntel >= 30 ? [...concept.lootFamilyIds] : [];
 
     // Boss hint
-    const bossHint = budget.intel >= 50 ? concept.bossFamilyId : null;
+    const bossHint = contractIntel >= 50 ? concept.bossFamilyId : null;
 
     return {
       postingId: `posting/${currentMinute}/${index}`,
@@ -3158,7 +3179,7 @@ function generateContractBoard(context: SimSystemContext): void {
       location,
       rank,
       threat: budget.threat,
-      intel: budget.intel,
+      intel: contractIntel,
       reward: budget.reward,
       risk: budget.risk,
       bidCost: budget.bidCost,
@@ -3546,7 +3567,10 @@ function checkDungeonClosure(context: SimSystemContext): void {
   // Boss defeat requires an actual boss encounter victory (bossDefeated flag on a summary)
   const bossVictorySummary = raidSummaries.find((s) => s.bossDefeated === true);
   if (bossVictorySummary) {
-    contractSite.bossDefeated = true;
+    BuildingAuthority.contractSite[buildingEntity] = {
+      ...contractSite,
+      bossDefeated: true,
+    };
     GuildState.reputation[context.singletonEntities.guild] +=
       computeBossCompletionReputationBonus();
     GuildState.treasury[context.singletonEntities.guild] += computeBossCompletionCashBonus(
@@ -3583,7 +3607,10 @@ function checkDungeonClosure(context: SimSystemContext): void {
     );
 
     if (lossCheck.outcome) {
-      contractSite.contractLost = true;
+      BuildingAuthority.contractSite[buildingEntity] = {
+        ...contractSite,
+        contractLost: true,
+      };
       GuildState.reputation[context.singletonEntities.guild] -= 8;
       pushRuntimeEvent(context, {
         kind: "event_change",

@@ -2,6 +2,8 @@
 
 Phase 1 deliverable for `management-policy-surfaces-plan.md`. This document defines the five required policy families, their runtime data shapes, gameplay effects, tradeoffs, and integration rules. It is the implementation spec for Phase 2 (wiring into runtime systems) and Phase 3 (HQ management surfaces).
 
+Status: implemented. This contract remains as a reference input for the shipped management-policy surface.
+
 Read before implementing: `docs/roadmap.md`, `docs/product/gameplay-systems.md`, `docs/product/presentation.md`, `docs/world/headquarters-and-rooms.md`.
 
 ---

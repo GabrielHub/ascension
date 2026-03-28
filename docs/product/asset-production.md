@@ -4,6 +4,8 @@ This file owns the future-facing asset-production contract for authored content.
 
 Use the world foundation for lore, tone, naming, and thematic rules. Use the product plan for gameplay-facing structure. Use this file for the workflow that turns those inputs into repeatable asset and content production.
 
+When an approved asset family uses raster image generation, also read `image-generation-prompting-guide.md` for prompt structure, consistency rules, and repo-specific style defaults.
+
 ## Core Rule
 
 - Asset work does not start from "make the SVG" or "make the room."

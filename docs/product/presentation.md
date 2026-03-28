@@ -39,6 +39,7 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - The event log is the passive notice rail, not the only event surface. Major incidents should be allowed to take over the screen with a blocking modal when the player must make a decision before simulation continues.
 - Blocking modals should freeze the simulation through one shared runtime pause contract rather than relying on visual overlays alone. That contract now supports settings, incidents, boss-commitment beats, and future top-priority interruption states.
 - Incident modals should render structured runtime payloads and choice buttons, not bespoke one-off copy blocks. They sit above ordinary HQ and raid management overlays, with the world dimmed beneath them.
+- Interruption-backed narrative surfaces may optionally render an authored presenter portrait and name beside the existing text-and-choice payload. When no presenter is bound, the layout must fall back cleanly to the current text-only presentation.
 - Raid boss commitment is a shipped use case for this interruption layer. When a team commits to the boss, the presentation can stop the game, foreground that team and site, and pull the player into the moment instead of burying it in the right-rail log.
 - The layout target is modern and minimal, but not empty: the world stays readable behind the glass UI while the player still has a stable place to look for what just changed.
 - Category selection is toggle-dismissible: clicking the already-active category pill collapses the bottom panel and returns to the full world view.
@@ -68,7 +69,7 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Operators and their attachments already have a satisfactory style direction. This HQ environment-language correction applies to rooms, room props, environmental fixtures, and shells.
 - Exterior backdrop packages are part of the building-theme contract. Every headquarters building or setting must ship one approved exterior set for each canonical time-of-day state: `sunrise`, `day`, `sunset`, and `night`.
 - Those exterior sets should own the sky treatment, neighboring-building read, exterior emissives, and street-level decorative dressing around the HQ shell. They should not duplicate the engine-rendered room structure or interior scene SVG responsibilities.
-- Exterior packages should attach to abstract shell-relative zones such as `fore`, `left-flank`, `right-flank`, `rear`, `above-shell`, and `below-shell`, so the same composition model works for a bodega, a two-floor union hall, and a late-game tower.
+- Exterior packages should attach to abstract shell-relative zones such as `fore`, `left-flank`, `right-flank`, `rear`, `above-shell`, and `below-shell`, so the same composition model works for a bodega, Porter's, and a late-game tower.
 - Taller buildings should also support reusable elevation bands rather than exact one-off floor numbers. The preferred future contract is floor-aware but reusable: several nearby floors can share the same surrounding package when their outside read is materially similar.
 
 ## Raid Presentation Direction

@@ -35,6 +35,8 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
     quitRisk: false,
     retentionRisk: false,
     autonomyReasons: [],
+    canBeReplaced: false,
+    replaceLockedReason: "Cannot replace someone who is already on a contract.",
     ...overrides,
   };
 }

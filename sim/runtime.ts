@@ -200,11 +200,14 @@ import {
 } from "./components";
 import { STABLE_SIM_COMMAND_TYPES, type SimCommand } from "./commands";
 import {
+  BODEGA_DEFERRED_VISITOR_CAPACITY,
   buildDefaultPreferenceProfile,
+  getAdjustedMarketItems,
   buildInitialRelationshipRecord,
   buildRequirementContext,
   getAdjustedUpgradeCosts,
   getCurrentAbsoluteMinute,
+  getVisitorQueueState,
   getStaffRoleTag,
   isCanonicalStaffRoleTag,
   meetsRequirements,
@@ -234,8 +237,9 @@ import {
   simSystemSchedule,
   type SimRuntimeState,
   type SimSingletonEntities,
+  type VisitorQueueState,
 } from "./systems";
-import { type MarketItemView, getMarketItems } from "./systems/market";
+import type { MarketItemView } from "./systems/market";
 import { computeAutonomyFlags } from "./systems/morale";
 import { computeNeedReadinessFlags } from "./systems/needs";
 import { getRecruitmentGateState } from "./systems/opening-envelope";
@@ -369,10 +373,15 @@ export interface Phase1VisitorSnapshot {
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  queueState: VisitorQueueState;
   projectedMorale?: number;
   projectedLoyalty?: number;
   canAccept?: boolean;
   lockedReason?: string | null;
+  canDefer?: boolean;
+  deferLockedReason?: string | null;
+  canReplace?: boolean;
+  replaceLockedReason?: string | null;
 }
 
 export interface Phase1RaidOpportunitySnapshot {
@@ -499,6 +508,7 @@ export interface Phase1RosterPressureView {
   operatorCapacity: number;
   livingOperatorCount: number;
   vacancyCount: number;
+  deferredVisitorCapacity: number;
   unavailableOperatorIds: string[];
   recentDeathOperatorIds: string[];
   replacementPressureLevel: "stable" | "strained" | "critical";
@@ -573,6 +583,8 @@ export interface Phase1RuntimeView {
       willingnessScore: number;
       schedulePressure: number;
       preferredOpportunityId?: string;
+      canBeReplaced: boolean;
+      replaceLockedReason: string | null;
     }
   >;
   operatorIntentReadiness: Phase1OperatorIntentReadinessView[];
@@ -996,6 +1008,78 @@ function buildLifecycleSnapshot(entity: number): Phase1OperatorSnapshot["lifecyc
   return { status: "active" };
 }
 
+function normalizeVisitorQueueState(value: unknown): VisitorQueueState {
+  return value === "deferred" ? "deferred" : "active";
+}
+
+function getVisitorAcceptLockReason(input: {
+  recruitmentUnlocked: boolean;
+  recruitmentLockReason: string | null;
+  livingOperatorCount: number;
+  operatorCapacity: number;
+}): string | null {
+  if (!input.recruitmentUnlocked) {
+    return input.recruitmentLockReason;
+  }
+
+  if (input.livingOperatorCount >= input.operatorCapacity) {
+    return "Operator roster is full.";
+  }
+
+  return null;
+}
+
+function getVisitorReplaceLockReason(input: {
+  recruitmentUnlocked: boolean;
+  recruitmentLockReason: string | null;
+  livingOperatorCount: number;
+  operatorCapacity: number;
+  replaceableOperatorCount: number;
+}): string | null {
+  if (!input.recruitmentUnlocked) {
+    return input.recruitmentLockReason;
+  }
+
+  if (input.livingOperatorCount < input.operatorCapacity) {
+    return "Open operator slots are still available.";
+  }
+
+  if (input.replaceableOperatorCount <= 0) {
+    return "Everyone active is already out on contract.";
+  }
+
+  return null;
+}
+
+function getVisitorDeferLockReason(
+  queueState: VisitorQueueState,
+  deferredVisitorCount: number,
+): string | null {
+  if (queueState === "deferred") {
+    return "Already deferred.";
+  }
+
+  if (deferredVisitorCount >= BODEGA_DEFERRED_VISITOR_CAPACITY) {
+    return "Deferred reserve is full.";
+  }
+
+  return null;
+}
+
+function getOperatorReplaceLockReason(
+  operator: Pick<Phase1OperatorSnapshot, "assignment" | "lifecycle">,
+): string | null {
+  if (operator.lifecycle.status !== "active") {
+    return "Only active operators can be replaced.";
+  }
+
+  if (operator.assignment.kind === "raid") {
+    return "Cannot replace someone who is already on a contract.";
+  }
+
+  return null;
+}
+
 function buildCombatSnapshot(entity: number): Phase1OperatorSnapshot["combat"] {
   return {
     rank: OperatorIdentity.rank[entity],
@@ -1161,6 +1245,7 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     })),
     visitors: (extendedSnapshot.visitors ?? []).map((visitor) => ({
       ...visitor,
+      queueState: normalizeVisitorQueueState(visitor.queueState),
       projectedMorale:
         visitor.projectedMorale ?? projectVisitorRecruitMorale(visitor.quality ?? 50),
       projectedLoyalty:
@@ -1517,6 +1602,7 @@ function computeRosterPressure(
     operatorCapacity,
     livingOperatorCount,
     vacancyCount,
+    deferredVisitorCapacity: BODEGA_DEFERRED_VISITOR_CAPACITY,
     unavailableOperatorIds,
     recentDeathOperatorIds,
     replacementPressureLevel,
@@ -1677,6 +1763,12 @@ function applyWorldSnapshot(
     if (templateIndex === undefined) {
       throw new Error(`Runtime snapshot references unknown room "${room.templateId}".`);
     }
+    const template = registry.rooms[templateIndex];
+    if (!template) {
+      throw new Error(`Runtime snapshot references unknown room template index for "${room.id}".`);
+    }
+    const requiredStaffTag = getStaffRoleTag(template.tags);
+    const isRequestedActive = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
 
     addComponent(world, entity, RoomInstance);
     addComponent(world, entity, Renderable);
@@ -1689,8 +1781,9 @@ function applyWorldSnapshot(
     RoomInstance.roomStateId[entity] = room.roomStateId;
     RoomInstance.capacity[entity] = room.capacity;
     RoomInstance.occupancy[entity] = room.occupancy;
-    RoomInstance.isRequestedActive[entity] = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
-    RoomInstance.isOperational[entity] = (room.isActive ?? room.occupancy > 0) ? 1 : 0;
+    RoomInstance.isRequestedActive[entity] = isRequestedActive;
+    RoomInstance.isOperational[entity] =
+      isRequestedActive === 1 && (requiredStaffTag !== "" ? room.occupancy >= 1 : true) ? 1 : 0;
     RoomInstance.assignedStaffCount[entity] = room.occupancy;
     RoomInstance.appliedUpgradeIds[entity] = [...(room.appliedUpgradeIds ?? [])];
     RoomInstance.slotIndex[entity] = index;
@@ -1839,6 +1932,7 @@ function applyWorldSnapshot(
     VisitorState.patience[entity] = visitor.patience;
     VisitorState.quality[entity] = visitor.quality;
     VisitorState.expectedLoyalty[entity] = visitor.expectedLoyalty;
+    VisitorState.queueState[entity] = visitor.queueState;
 
     runtimeState.visitorEntities.push(entity);
   });
@@ -2097,6 +2191,19 @@ function applyWorldSnapshot(
         }),
       );
       const recruitmentGate = getRecruitmentGateState(context);
+      const operatorCapacity = BuildingAuthority.operatorSlotCount[buildingEntity];
+      const livingOperatorCount = runtimeState.operatorEntities.filter(
+        (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
+      ).length;
+      const replaceableOperatorCount = runtimeState.operatorEntities.filter((entity) => {
+        return (
+          OperatorIdentity.lifecycleStatus[entity] === "active" &&
+          AssignmentState.kind[entity] !== "raid"
+        );
+      }).length;
+      const deferredVisitorCount = runtimeState.visitorEntities.filter(
+        (entity) => getVisitorQueueState(entity) === "deferred",
+      ).length;
 
       return {
         guild: {
@@ -2242,18 +2349,40 @@ function applyWorldSnapshot(
             targetId: AssignmentState.targetId[entity],
           },
         })),
-        visitors: runtimeState.visitorEntities.map((entity) => ({
-          id: VisitorState.id[entity],
-          name: VisitorState.name[entity],
-          desiredRoleTag: VisitorState.desiredRoleTag[entity],
-          patience: VisitorState.patience[entity],
-          quality: VisitorState.quality[entity],
-          expectedLoyalty: VisitorState.expectedLoyalty[entity],
-          projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
-          projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),
-          canAccept: recruitmentGate.unlocked,
-          lockedReason: recruitmentGate.reason,
-        })),
+        visitors: runtimeState.visitorEntities.map((entity) => {
+          const queueState = getVisitorQueueState(entity);
+          const acceptLockReason = getVisitorAcceptLockReason({
+            recruitmentUnlocked: recruitmentGate.unlocked,
+            recruitmentLockReason: recruitmentGate.reason,
+            livingOperatorCount,
+            operatorCapacity,
+          });
+          const deferLockReason = getVisitorDeferLockReason(queueState, deferredVisitorCount);
+          const replaceLockReason = getVisitorReplaceLockReason({
+            recruitmentUnlocked: recruitmentGate.unlocked,
+            recruitmentLockReason: recruitmentGate.reason,
+            livingOperatorCount,
+            operatorCapacity,
+            replaceableOperatorCount,
+          });
+          return {
+            id: VisitorState.id[entity],
+            name: VisitorState.name[entity],
+            desiredRoleTag: VisitorState.desiredRoleTag[entity],
+            patience: VisitorState.patience[entity],
+            quality: VisitorState.quality[entity],
+            expectedLoyalty: VisitorState.expectedLoyalty[entity],
+            queueState,
+            projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
+            projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),
+            canAccept: acceptLockReason === null,
+            lockedReason: acceptLockReason,
+            canDefer: deferLockReason === null,
+            deferLockedReason: deferLockReason,
+            canReplace: replaceLockReason === null,
+            replaceLockedReason: replaceLockReason,
+          };
+        }),
         raidOpportunities: runtimeState.raidOpportunityEntities.map((entity) => ({
           id: RaidOpportunityState.id[entity],
           missionId: RaidOpportunityState.missionId[entity],
@@ -2620,6 +2749,7 @@ function applyWorldSnapshot(
         operators:
           snapshot.operators?.map((operator) => {
             const readiness = operatorReadinessById.get(operator.id);
+            const replaceLockedReason = getOperatorReplaceLockReason(operator);
 
             return {
               ...operator,
@@ -2631,6 +2761,8 @@ function applyWorldSnapshot(
               willingnessScore: readiness?.willingnessScore ?? 0,
               schedulePressure: readiness?.schedulePressure ?? 0,
               preferredOpportunityId: readiness?.preferredOpportunityId,
+              canBeReplaced: replaceLockedReason === null,
+              replaceLockedReason,
             };
           }) ?? [],
         operatorIntentReadiness,
@@ -2955,7 +3087,7 @@ function applyWorldSnapshot(
             explanationReasons,
           };
         }),
-        marketItems: getMarketItems(registry),
+        marketItems: getAdjustedMarketItems(context),
         dispositions: runtimeState.dispositionEntities.map((entity) => ({
           operatorId: OperatorDisposition.operatorId[entity],
           sociability: OperatorDisposition.sociability[entity],

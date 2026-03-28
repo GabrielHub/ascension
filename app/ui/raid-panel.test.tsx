@@ -18,6 +18,7 @@ const rosterPressure: RosterPressureViewModel = {
   operatorCapacity: 7,
   livingOperatorCount: 4,
   vacancyCount: 3,
+  deferredVisitorCapacity: 1,
   unavailableOperatorIds: [],
   recentDeathOperatorIds: [],
   replacementPressureLevel: "stable",

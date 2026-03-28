@@ -3,6 +3,7 @@ import { removeEntity } from "bitecs";
 import { getRosterFlowConfig } from "lib/policies";
 import { BuildingAuthority, VisitorState } from "../components";
 import {
+  getActiveVisitorEntities,
   getCurrentAbsoluteMinute,
   getRecruitmentRoomCapacity,
   hasOperationalRecruitmentRoom,
@@ -69,7 +70,8 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   const buildingEntity = context.singletonEntities.building;
   const rosterFlow = getRosterFlowConfig(BuildingAuthority.policies[buildingEntity]);
 
-  context.runtimeState.visitorEntities.slice().forEach((entity) => {
+  const activeVisitors = getActiveVisitorEntities(context);
+  activeVisitors.forEach((entity) => {
     if (deltaMs > 0) {
       VisitorState.patience[entity] -= deltaMs / 60000;
     }
@@ -92,7 +94,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   }
 
   const maxVisitors = Math.max(1, getRecruitmentRoomCapacity(context));
-  if (context.runtimeState.visitorEntities.length >= maxVisitors) {
+  if (getActiveVisitorEntities(context).length >= maxVisitors) {
     return;
   }
 

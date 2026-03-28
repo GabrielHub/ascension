@@ -9,7 +9,10 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/purchase-building-upgrade",
   "sim/purchase-room-upgrade",
   "sim/accept-recruit",
+  "sim/defer-recruit",
   "sim/reject-recruit",
+  "sim/replace-recruit",
+  "sim/dismiss-recruit",
   "sim/hire-staff",
   "sim/assign-staff",
   "sim/buy-item",
@@ -80,7 +83,20 @@ export type SimCommand =
       visitorId: string;
     }
   | {
+      type: "sim/defer-recruit";
+      visitorId: string;
+    }
+  | {
       type: "sim/reject-recruit";
+      visitorId: string;
+    }
+  | {
+      type: "sim/replace-recruit";
+      visitorId: string;
+      operatorId: string;
+    }
+  | {
+      type: "sim/dismiss-recruit";
       visitorId: string;
     }
   | {
