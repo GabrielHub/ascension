@@ -79,7 +79,7 @@ export function useRuntimeSession(request: RuntimeRouteRequest): RuntimeSessionS
       disposed = true;
       cleanupSession?.();
     };
-  }, [request.mode, request.slotId]);
+  }, [request.mode, request.slotId, request.guildName, request.playerName]);
 
   return state;
 }

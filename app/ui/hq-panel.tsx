@@ -95,6 +95,7 @@ export function HqPanel({
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <RoomDetailPanel
+                guildName={hq.guild.guildName}
                 room={selectedRoom}
                 buildingUpgrades={hq.upgrades}
                 roomUpgrades={selectedRoomUpgrades}

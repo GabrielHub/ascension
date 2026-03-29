@@ -3,6 +3,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { templateRegistry } from "content/templates";
 import type { TemplateRegistry } from "content/templates";
 import { DEFAULT_POLICY_STATE, type PolicyState } from "lib/policies";
+import { createBaseSimRuntimeState } from "../runtime";
 import {
   AssignmentState,
   BuildingAuthority,
@@ -20,11 +21,13 @@ import type {
   PostedContract,
   RaidSummaryRecord,
 } from "../components/building-authority";
-import type { SimRuntimeState, SimSystemContext } from "./types";
+import type { SimSystemContext } from "./types";
 
 interface CreateSimTestContextOptions {
   registry?: TemplateRegistry;
   guild?: {
+    guildName?: string;
+    playerName?: string;
     reputation?: number;
     treasury?: number;
     intel?: number;
@@ -70,75 +73,6 @@ interface InitializeBuildingAuthorityOptions {
   policies?: Partial<PolicyState>;
 }
 
-function createBaseRuntimeState(): SimRuntimeState {
-  return {
-    roomEntities: [],
-    operatorEntities: [],
-    raidOpportunityEntities: [],
-    staffEntities: [],
-    visitorEntities: [],
-    eventEntities: [],
-    dispositionEntities: [],
-    notableTieEntities: [],
-    recurringTeamEntities: [],
-    roomCultureEntities: [],
-    inventoryEntities: [],
-    equipmentEntities: [],
-    nextRoomSequence: 1,
-    nextOperatorSequence: 1,
-    nextOpportunitySequence: 1,
-    nextStaffSequence: 1,
-    nextVisitorSequence: 1,
-    nextRaidSequence: 1,
-    nextEventSequence: 1,
-    nextTeamSequence: 1,
-    pendingCueIds: [],
-    pendingEvents: [],
-    raidPresentation: {
-      contractSiteId: null,
-      teams: [],
-      enemies: [],
-      features: [],
-    },
-    activeEncounter: null,
-    interruptionQueue: { active: null, queue: [], nextInstanceId: 1 },
-    incidentState: {
-      pendingIncident: null,
-      history: [],
-      cooldowns: {},
-      nextInstanceId: 1,
-      lastEvaluationMinute: 0,
-    },
-    guidanceState: {
-      seenBeatIds: [],
-      completedBeatIds: [],
-      dismissedBeatIds: [],
-      activeBeatId: null,
-      activeBeatView: null,
-      queuedBeatIds: [],
-      lastEvaluationMinute: 0,
-      openingPathState: "completed",
-      anchorResolutionFailures: [],
-      activeBeatProgressBaseline: null,
-      interactionCounts: {
-        staffingActions: 0,
-        upgradesPurchased: 0,
-      },
-    },
-    kitRegistry: {
-      regularAttacks: [],
-      skills: [],
-      ultimates: [],
-      passives: [],
-      regularAttackById: new Map(),
-      skillById: new Map(),
-      ultimateById: new Map(),
-      passiveById: new Map(),
-    },
-    worldTimeFrozen: false,
-  };
-}
-
 export function createSimTestContext(options: CreateSimTestContextOptions = {}): SimSystemContext {
   const world = createWorld();
   const guildEntity = addEntity(world);
@@ -149,6 +83,8 @@ export function createSimTestContext(options: CreateSimTestContextOptions = {}):
   addComponent(world, timeEntity, WorldTimeState);
   addComponent(world, buildingEntity, BuildingAuthority);
 
+  GuildState.guildName[guildEntity] = options.guild?.guildName ?? "Test Guild";
+  GuildState.playerName[guildEntity] = options.guild?.playerName ?? "Boss";
   GuildState.reputation[guildEntity] = options.guild?.reputation ?? 0;
   GuildState.treasury[guildEntity] = options.guild?.treasury ?? 0;
   GuildState.intel[guildEntity] = options.guild?.intel ?? 0;
@@ -165,7 +101,7 @@ export function createSimTestContext(options: CreateSimTestContextOptions = {}):
       time: timeEntity,
       building: buildingEntity,
     },
-    runtimeState: createBaseRuntimeState(),
+    runtimeState: createBaseSimRuntimeState(),
   };
 
   initializeBuildingAuthority(context, options.building);

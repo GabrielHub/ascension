@@ -19,10 +19,10 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Posted Contracts",
       subtitle: "Operations Briefing",
-      body: "Boss does not pick fights. Boss picks regulated clearance work off a city board. Every listing comes with filing cost, threat, reward, and whatever intel the paperwork coughs up. This is a business, not a quest log.",
+      body: "{playerName} does not pick fights. {playerName} picks regulated clearance work off a city board. Every listing comes with filing cost, threat, reward, and whatever intel the paperwork coughs up. This is a business, not a quest log.",
       ctaLabel: "Understood",
       fallbackBody:
-        "The contract board is where Boss chooses government-cleared work for the guild.",
+        "The contract board is where {playerName} chooses government-cleared work for {guildName}.",
       eventLogSummary: "Operations briefing: posted contracts explained",
     },
     completion: { kind: "acknowledged" },
@@ -47,7 +47,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Secure Your First Contract",
       subtitle: "One job at a time",
-      body: "The guild handles one active clearance contract at a time. Filing the bid costs cash. Review the posted sites, weigh the risk, and secure the job that this roster can actually survive.",
+      body: "{guildName} handles one active clearance contract at a time. Filing the bid costs cash. Review the posted sites, weigh the risk, and secure the job that this roster can actually survive.",
       ctaLabel: "Select a contract",
       fallbackBody: "Open Operations and file a bid on one posted contract.",
       eventLogSummary: "Guidance: choose your first contract from the board",
@@ -74,7 +74,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "The Bodega",
       subtitle: "Headquarters, technically",
-      body: "Four rooms, all doing too much. The Register handles contracts and walk-ins. The Counter is recruitment by way of sandwiches. The Dining Area is recovery, social life, and patch-up care. The Supply Closet is gear storage, and it starts dark until Boss turns it on.",
+      body: "Four rooms, all doing too much. The Register handles contracts and walk-ins. The Counter is recruitment by way of sandwiches. The Dining Area is recovery, social life, and patch-up care. The Supply Closet is gear storage, and it starts dark until {playerName} turns it on.",
       ctaLabel: "Inspect a room",
       fallbackBody:
         "Open Rooms and inspect one room card to review what this bodega actually does.",
@@ -129,8 +129,8 @@ const OPENING_BEATS_MUTABLE = [
     bindings: {},
     copy: {
       title: "Raid Operations",
-      subtitle: "They go in. Boss manages what comes back.",
-      body: "Once a team deploys, they operate on their own. They scout, fight, loot, and decide when to push or peel out. Boss does not run tactics inside the rift. Boss owns preparation, staffing, equipment, and the consequences waiting at home.",
+      subtitle: "They go in. {playerName} manages what comes back.",
+      body: "Once a team deploys, they operate on their own. They scout, fight, loot, and decide when to push or peel out. {playerName} does not run tactics inside the rift. {playerName} owns preparation, staffing, equipment, and the consequences waiting at home.",
       ctaLabel: "Understood",
       fallbackBody: "Watch the raid map. Teams move and act without direct tactical control.",
       eventLogSummary: "Guidance: autonomous raid behavior explained",
@@ -158,7 +158,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Raid Debrief",
       subtitle: "They came back. Here is the bill.",
-      body: "Every return carries a cost report: loot, injuries, morale changes, and whatever the team had to do to get back out. This is where Boss learns what the field actually extracted from the roster.",
+      body: "Every return carries a cost report: loot, injuries, morale changes, and whatever the team had to do to get back out. This is where {playerName} learns what the field actually extracted from the roster.",
       ctaLabel: "Review summary",
       fallbackBody: "Raid returns change inventory, injuries, and operator condition all at once.",
       eventLogSummary: "Guidance: first raid return explained",
@@ -186,7 +186,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Morning-After Condition",
       subtitle: "Rest is management",
-      body: "Fatigue, injuries, and morale drops are not flavor. They change who can deploy and how badly the next contract can go. The Dining Area is where people recover because this guild cannot afford a proper infirmary yet.",
+      body: "Fatigue, injuries, and morale drops are not flavor. They change who can deploy and how badly the next contract can go. The Dining Area is where people recover because {guildName} cannot afford a proper infirmary yet.",
       ctaLabel: "Understood",
       fallbackBody: "Open Roster to review which operators came back worn down.",
       eventLogSummary: "Guidance: post-raid roster wear explained",
@@ -212,9 +212,10 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Incident Report",
       subtitle: "Management decision required",
-      body: "Incidents stop the clock because Boss has to choose. Morale, loyalty, cash, and relationships can all move here. There is no undo, and the paperwork will still be waiting after the shouting stops.",
+      body: "Incidents stop the clock because {playerName} has to choose. Morale, loyalty, cash, and relationships can all move here. There is no undo, and the paperwork will still be waiting after the shouting stops.",
       ctaLabel: "Handle it",
-      fallbackBody: "An incident has landed and the simulation is paused until Boss responds.",
+      fallbackBody:
+        "An incident has landed and the simulation is paused until {playerName} responds.",
       eventLogSummary: "Guidance: incident handling introduced",
     },
     completion: { kind: "incident_resolved" },
@@ -239,7 +240,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Loot and Market",
       subtitle: "The bodega is still a business",
-      body: "Monster parts are not trophies. They are cash once Boss sells them. The same market also buys the guild better weapons, outfits, and accessories. Better prep makes better raids. Better raids bring back more to sell.",
+      body: "Monster parts are not trophies. They are cash once {playerName} sells them. The same market also buys {guildName} better weapons, outfits, and accessories. Better prep makes better raids. Better raids bring back more to sell.",
       ctaLabel: "Open market",
       fallbackBody: "Open Market to review what loot can be sold and what gear can be bought.",
       eventLogSummary: "Guidance: loot and market loop explained",
@@ -267,7 +268,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Staffing and Rooms",
       subtitle: "Payroll should buy labor",
-      body: "Idle staff and dark rooms are management failures. Assign staff where they actually help, and bring dormant space online when the guild needs it. Boris is on the clock either way.",
+      body: "Idle staff and dark rooms are management failures. Assign staff where they actually help, and bring dormant space online when {guildName} needs it. Boris is on the clock either way.",
       ctaLabel: "Make one management change",
       fallbackBody: "Assign staff or activate a room to keep the bodega functioning.",
       eventLogSummary: "Guidance: staffing and room activation explained",
@@ -299,7 +300,7 @@ const OPENING_BEATS_MUTABLE = [
       body: "Upgrades are physical fixes to a cramped workplace: better records, better coffee, better recovery tools, a less embarrassing storefront. They cost real cash because making the bodega less terrible is still capital work.",
       ctaLabel: "Buy an upgrade",
       fallbackBody:
-        "Open room management and purchase the first upgrade the guild can actually afford.",
+        "Open room management and purchase the first upgrade {guildName} can actually afford.",
       eventLogSummary: "Guidance: first upgrade decision explained",
     },
     completion: { kind: "upgrade_purchased" },
@@ -323,9 +324,10 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Setback Recovery",
       subtitle: "Bad runs are part of the job",
-      body: "A failed push, a serious injury, a death warning, a lost contract. None of that means the campaign is over. It means Boss has to rest people, recruit replacements, and keep the lights on long enough to take the next job.",
+      body: "A failed push, a serious injury, a death warning, a lost contract. None of that means the campaign is over. It means {playerName} has to rest people, recruit replacements, and keep the lights on long enough to take the next job.",
       ctaLabel: "Understood",
-      fallbackBody: "Setbacks are recoverable if Boss manages the roster and keeps work flowing.",
+      fallbackBody:
+        "Setbacks are recoverable if {playerName} manages the roster and keeps work flowing.",
       eventLogSummary: "Guidance: setback recovery explained",
     },
     completion: { kind: "acknowledged" },
@@ -349,7 +351,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Boss Commitment",
       subtitle: "This one can kill the whole team",
-      body: "Reaching the floor boss is not a passive update. Committing sends the team into a live encounter with real stakes. Retreat keeps them breathing, but the contract stays unfinished. Either choice belongs to Boss.",
+      body: "Reaching the floor boss is not a passive update. Committing sends the team into a live encounter with real stakes. Retreat keeps them breathing, but the contract stays unfinished. Either choice belongs to {playerName}.",
       ctaLabel: "Decide",
       fallbackBody: "A team has reached the boss. The game is paused for a commitment decision.",
       eventLogSummary: "Guidance: boss commitment explained",

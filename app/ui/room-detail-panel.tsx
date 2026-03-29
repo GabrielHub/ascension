@@ -19,11 +19,30 @@ import { getRoomProgressRatio, getRoomStatusTip } from "./bodega-floor";
 import { progressBarFillClass } from "./styles";
 
 interface RoomDetailPanelProps {
+  guildName?: string;
   room: RoomViewModel | null;
   buildingUpgrades: readonly UpgradeViewModel[];
   roomUpgrades: readonly UpgradeViewModel[];
   callbacks: GameCallbacks;
   roomCulture?: RoomCultureViewModel | null;
+}
+
+const ROOM_REASON_TAG = {
+  recruitment: "ops:recruitment",
+  intel: "ops:intel",
+  staging: "ops:staging",
+  recovery: "room:recovery",
+  social: "room:social",
+  training: "room:training",
+  staffing: "room:staffing",
+  operations: "room:operations",
+} as const;
+
+function hasRoomReasonTag(
+  room: RoomViewModel,
+  tag: (typeof ROOM_REASON_TAG)[keyof typeof ROOM_REASON_TAG],
+): boolean {
+  return room.tags.includes(tag);
 }
 
 function UpgradeCard({
@@ -108,43 +127,42 @@ function formatFootprintLabel(footprint: {
   return `${footprint.cols}x${footprint.rows} @ ${footprint.col},${footprint.row}`;
 }
 
-/** Reuse the shared 0–1 ratio and scale to percentage for the detail bar. */
 function getRoomStaffingPercent(room: RoomViewModel): number {
   return getRoomProgressRatio(room) * 100;
 }
 
-function getRoomWhyItMatters(room: RoomViewModel): readonly string[] {
+function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly string[] {
   const reasons: string[] = [];
 
-  if (room.tags.includes("ops:recruitment")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.recruitment)) {
     reasons.push(
       "Keeps the recruit pipeline visible by turning walk-in traffic into operator prospects.",
     );
   }
-  if (room.tags.includes("ops:intel")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.intel)) {
     reasons.push("Improves contract reading and administrative control around available work.");
   }
-  if (room.tags.includes("ops:staging")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.staging)) {
     reasons.push("Supports raid prep so deployed teams leave ready instead of improvised.");
   }
-  if (room.tags.includes("room:recovery")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.recovery)) {
     reasons.push(
       "Creates space for recovery pressure, morale resets, and post-raid decompression.",
     );
   }
-  if (room.tags.includes("room:social")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.social)) {
     reasons.push("Supports morale and relationship stability between raids.");
   }
-  if (room.tags.includes("room:training")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.training)) {
     reasons.push("Improves combat readiness once training comes online.");
   }
-  if (room.tags.includes("room:staffing")) {
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.staffing)) {
     reasons.push(
       "Protects inventory and staffing throughput so logistics does not bottleneck growth.",
     );
   }
-  if (room.tags.includes("room:operations")) {
-    reasons.push("Handles the business side of the guild so the rest of the loop stays open.");
+  if (hasRoomReasonTag(room, ROOM_REASON_TAG.operations)) {
+    reasons.push(`Handles the business side of ${guildName} so the rest of the loop stays open.`);
   }
 
   return reasons.slice(0, 2);
@@ -221,6 +239,7 @@ function PrepRecipeCard({
 }
 
 export function RoomDetailPanel({
+  guildName = "the guild",
   room,
   buildingUpgrades,
   roomUpgrades,
@@ -231,7 +250,7 @@ export function RoomDetailPanel({
 
   const occupancyPct = getRoomStaffingPercent(room);
   const hasUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
-  const whyItMatters = getRoomWhyItMatters(room);
+  const whyItMatters = getRoomWhyItMatters(room, guildName);
   const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
 
   return (

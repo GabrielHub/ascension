@@ -54,6 +54,7 @@ function isSameMetadataRecord(
     left.schemaVersion === right.schemaVersion &&
     left.compatibilityVersion === right.compatibilityVersion &&
     left.metadata.guildName === right.metadata.guildName &&
+    left.metadata.playerName === right.metadata.playerName &&
     left.metadata.createdAt === right.metadata.createdAt &&
     left.metadata.lastPlayedAt === right.metadata.lastPlayedAt
   );

@@ -3,6 +3,7 @@ import { removeEntity } from "bitecs";
 import { getRosterFlowConfig } from "lib/policies";
 import { BuildingAuthority, VisitorState } from "../components";
 import {
+  formatIdentityRuntimeText,
   getActiveBuildingTemplate,
   getActiveVisitorEntities,
   getCurrentAbsoluteMinute,
@@ -54,19 +55,24 @@ const BASE_VISITOR_SPAWN_INTERVAL_MINUTES = 300;
 const BASE_VISITOR_PATIENCE_MINUTES = 360;
 
 function describeArrivalPolicy(
+  context: Parameters<SimSystem>[0],
   rosterFlow: "selective_intake" | "open_doors" | "retention_focus",
 ): string {
   switch (rosterFlow) {
     case "selective_intake":
       return "Selective Intake slows walk-ins, but better prospects do not wait long.";
     case "retention_focus":
-      return "Retention Focus slows walk-ins while the guild spends more effort keeping current operators.";
+      return formatIdentityRuntimeText(
+        context,
+        "Retention Focus slows walk-ins while {guildName} spends more effort keeping current operators.",
+      );
     default:
       return "Open Doors keeps the visitor queue moving at a steady pace.";
   }
 }
 
 function describePatiencePolicy(
+  _context: Parameters<SimSystem>[0],
   rosterFlow: "selective_intake" | "open_doors" | "retention_focus",
 ): string {
   switch (rosterFlow) {
@@ -96,7 +102,10 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
       context.runtimeState.pendingCueIds.push("hq.dismiss");
       pushRuntimeEvent(context, {
         kind: "staffing_change",
-        message: `${name} left — no one made an offer. ${describePatiencePolicy(BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors")}`,
+        message: `${name} left — no one made an offer. ${describePatiencePolicy(
+          context,
+          BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors",
+        )}`,
         accent: "silver",
       });
     }
@@ -143,7 +152,10 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   context.runtimeState.pendingCueIds.push("hq.visitor");
   pushRuntimeEvent(context, {
     kind: "staffing_change",
-    message: `${VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length]} arrived looking for work. ${describeArrivalPolicy(BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors")}`,
+    message: `${VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length]} arrived looking for work. ${describeArrivalPolicy(
+      context,
+      BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors",
+    )}`,
     accent: "silver",
   });
 };

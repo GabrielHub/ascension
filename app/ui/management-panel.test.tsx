@@ -54,6 +54,7 @@ describe("management panel", () => {
 
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guildName={hq.guild.guildName}
         policies={hq.policies}
         contractLifecycle={hq.contractLifecycle}
         building={hq.building}
@@ -83,6 +84,7 @@ describe("management panel", () => {
   it("disables field objectives during active contracts and explains why", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guildName="Guild Slot 1"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="active"
         building={{
@@ -120,6 +122,7 @@ describe("management panel", () => {
   it("shows relocation as completed once the guild has moved to Porter's", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="idle"
         building={{
@@ -142,6 +145,6 @@ describe("management panel", () => {
     );
 
     expect(html).toContain("Completed");
-    expect(html).toContain("Porter&#x27;s is now the guild headquarters.");
+    expect(html).toContain("Porter&#x27;s is now Red Hook Guild&#x27;s headquarters.");
   });
 });

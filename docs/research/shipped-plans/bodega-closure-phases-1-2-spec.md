@@ -71,7 +71,7 @@ Each building upgrade advances the building tier by 1. The effects array capture
 
 **What changes:**
 
-Boss cleans up the exterior. A real sign goes up. The awning stops dripping. The deli case stops fogging up. The bodega starts looking like a place that does something on purpose instead of a place that is happening by accident.
+The player cleans up the exterior. A real sign goes up. The awning stops dripping. The deli case stops fogging up. The bodega starts looking like a place that does something on purpose instead of a place that is happening by accident.
 
 **What does NOT change:**
 
@@ -106,7 +106,7 @@ No new room slots. No new operator slots. The bodega is the same size. It just l
 
 **What changes:**
 
-Boss absorbs the empty unit next door. Construction dust everywhere. Operators complain about the noise. When it clears, the bodega has two new usable spaces and room for a larger roster. The annexed space is not glamorous — bare walls, patchy wiring, a radiator that clanks — but it is new square footage that the guild did not have before.
+The player absorbs the empty unit next door. Construction dust everywhere. Operators complain about the noise. When it clears, the bodega has two new usable spaces and room for a larger roster. The annexed space is not glamorous — bare walls, patchy wiring, a radiator that clanks — but it is new square footage that the guild did not have before.
 
 **What changes (gameplay):**
 
@@ -116,11 +116,11 @@ Boss absorbs the empty unit next door. Construction dust everywhere. Operators c
 
 **Requirements:**
 
-| Requirement   | Value | Rationale                                                                                 |
-| ------------- | ----- | ----------------------------------------------------------------------------------------- |
-| Cash          | $350  | A real investment. Requires sustained contract success, not a single windfall.            |
-| Reputation    | 25    | The guild has proven itself across multiple contracts. The landlord takes Boss seriously. |
-| Building tier | ≥ 2   | Frontage must be purchased first. The guild must look legitimate before expanding.        |
+| Requirement   | Value | Rationale                                                                                       |
+| ------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| Cash          | $350  | A real investment. Requires sustained contract success, not a single windfall.                  |
+| Reputation    | 25    | The guild has proven itself across multiple contracts. The landlord takes the player seriously. |
+| Building tier | ≥ 2   | Frontage must be purchased first. The guild must look legitimate before expanding.              |
 
 **Effects:**
 
@@ -144,7 +144,7 @@ Boss absorbs the empty unit next door. Construction dust everywhere. Operators c
 
 **What changes:**
 
-The back alley or yard becomes usable space. Concrete, a corrugated canopy, a drainage problem that somebody will eventually fix. Not glamorous. But it is new square footage, and Boss is not paying Manhattan rent for it. By the time this upgrade lands, the bodega is fully expanded: a proper neighborhood deli with a respected guild operation running out of the back.
+The back alley or yard becomes usable space. Concrete, a corrugated canopy, a drainage problem that somebody will eventually fix. Not glamorous. But it is new square footage, and the player is not paying Manhattan rent for it. By the time this upgrade lands, the bodega is fully expanded: a proper neighborhood deli with a respected guild operation running out of the back.
 
 **What changes (gameplay):**
 
@@ -231,7 +231,7 @@ The roadmap mentions "optionally add a narrow consumable-prep layer later in the
 
 **Canon:**
 
-A windowless room in the annexed space, separated from the main store by a door that actually closes. A desk, a lamp, a filing cabinet that predates the building, and a corkboard where Boss tracks contract paperwork, pending permits, and whatever the city just asked for this week. It smells like instant coffee and administrative anxiety. This is where the guild stops pretending the register is a functional operations center.
+A windowless room in the annexed space, separated from the main store by a door that actually closes. A desk, a lamp, a filing cabinet that predates the building, and a corkboard where the player tracks contract paperwork, pending permits, and whatever the city just asked for this week. It smells like instant coffee and administrative anxiety. This is where the guild stops pretending the register is a functional operations center.
 
 The register still handles intake and walk-ins. The Back Office handles everything that needs a closed door and a flat surface that is not also a deli counter.
 

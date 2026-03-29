@@ -14,6 +14,7 @@ import type { GameCallbacks, HqViewModel } from "./view-models";
 import { getTagMeta } from "./_glossary";
 
 interface ManagementPanelProps {
+  guildName: HqViewModel["guild"]["guildName"];
   policies: HqViewModel["policies"];
   contractLifecycle: HqViewModel["contractLifecycle"];
   building: HqViewModel["building"];
@@ -136,10 +137,12 @@ function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
 
 function RelocationCard({
   building,
+  guildName,
   relocationGate,
   callbacks,
 }: {
   building: HqViewModel["building"];
+  guildName: HqViewModel["guild"]["guildName"];
   relocationGate: HqViewModel["relocationGate"];
   callbacks: GameCallbacks;
 }) {
@@ -150,7 +153,7 @@ function RelocationCard({
           <div>
             <h4 className="text-sm font-medium text-silver-bright">Relocation</h4>
             <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
-              The bodega handoff is complete. {building.name} is now the guild headquarters.
+              The bodega handoff is complete. {building.name} is now {guildName}'s headquarters.
             </p>
           </div>
           <span className="badge badge-gold">Completed</span>
@@ -266,6 +269,7 @@ function RelocationCard({
 }
 
 export function ManagementPanel({
+  guildName,
   policies,
   contractLifecycle,
   building,
@@ -281,14 +285,19 @@ export function ManagementPanel({
             Management
           </h3>
           <p className="mt-1 text-[0.6875rem] text-silver/55">
-            Standing policies shape how the guild behaves between incidents.
+            Standing policies shape how {guildName} behaves between incidents.
           </p>
         </div>
         <span className="badge badge-slate">{formatContractLifecycle(contractLifecycle)}</span>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-2">
-        <RelocationCard building={building} relocationGate={relocationGate} callbacks={callbacks} />
+        <RelocationCard
+          building={building}
+          guildName={guildName}
+          relocationGate={relocationGate}
+          callbacks={callbacks}
+        />
         <StaffingPressureCard rooms={rooms} />
       </div>
 

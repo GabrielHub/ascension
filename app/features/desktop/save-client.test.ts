@@ -26,6 +26,7 @@ function createSave(slotId: (typeof SAVE_SLOT_IDS)[number]) {
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
       guildName: `Guild ${slotId}`,
+      playerName: "Boss",
       createdAt: "2026-03-24T00:00:00.000Z",
       lastPlayedAt: "2026-03-24T00:00:00.000Z",
     },

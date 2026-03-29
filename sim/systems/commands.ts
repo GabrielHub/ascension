@@ -22,6 +22,7 @@ import {
   getSlotKey,
 } from "lib/hq-room-state";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { formatIdentityText, type GameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 
@@ -282,6 +283,18 @@ export function removeTrackedEntity(entities: number[], entity: number): void {
 export function getCurrentAbsoluteMinute(context: SimSystemContext): number {
   const timeEntity = context.singletonEntities.time;
   return (WorldTimeState.day[timeEntity] - 1) * 1440 + WorldTimeState.minuteOfDay[timeEntity];
+}
+
+export function getGuildIdentity(context: SimSystemContext): GameIdentity {
+  const guildEntity = context.singletonEntities.guild;
+  return {
+    guildName: GuildState.guildName[guildEntity],
+    playerName: GuildState.playerName[guildEntity],
+  };
+}
+
+export function formatIdentityRuntimeText(context: SimSystemContext, text: string): string {
+  return formatIdentityText(text, getGuildIdentity(context));
 }
 
 export function formatWorldTimestamp(context: SimSystemContext): string {
@@ -618,7 +631,7 @@ function resolveAvailableRoomPlacement(
   );
 }
 
-function createRoomInstanceEntity(
+export function createRoomInstanceEntity(
   context: SimSystemContext,
   templateId: string,
   placement: {
@@ -637,10 +650,13 @@ function createRoomInstanceEntity(
     cols?: number;
     rows?: number;
   },
-): void {
+  options?: {
+    isRequestedActive?: boolean;
+  },
+): string | null {
   const template = context.registry.roomById.get(templateId);
   if (!template) {
-    return;
+    return null;
   }
 
   const entity = addEntity(context.world);
@@ -652,17 +668,16 @@ function createRoomInstanceEntity(
     rows: footprint?.rows ?? placement.reservedFootprint.rows,
   };
   const activeFootprint = getRoomActiveFootprint(template.id, reservedFootprint, []);
-
-  addComponent(context.world, entity, RoomInstance);
-  addComponent(context.world, entity, Renderable);
-
-  RoomInstance.id[entity] =
-    `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence}`;
   const templateIndex = context.registry.roomIndexById.get(template.id);
   if (templateIndex === undefined) {
     throw new Error(`Simulation cannot place room with unknown template "${template.id}".`);
   }
+  const roomId = `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence}`;
 
+  addComponent(context.world, entity, RoomInstance);
+  addComponent(context.world, entity, Renderable);
+
+  RoomInstance.id[entity] = roomId;
   RoomInstance.templateIndex[entity] = templateIndex;
   RoomInstance.tier[entity] = template.tier;
   RoomInstance.floorIndex[entity] = placement.floorIndex;
@@ -670,7 +685,7 @@ function createRoomInstanceEntity(
   RoomInstance.roomStateId[entity] = getRoomStateId(template.id, []);
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
-  RoomInstance.isRequestedActive[entity] = 0;
+  RoomInstance.isRequestedActive[entity] = options?.isRequestedActive ? 1 : 0;
   RoomInstance.isOperational[entity] = 0;
   RoomInstance.assignedStaffCount[entity] = 0;
   RoomInstance.appliedUpgradeIds[entity] = [];
@@ -687,8 +702,9 @@ function createRoomInstanceEntity(
   Renderable.layer[entity] = 1;
 
   context.runtimeState.roomEntities.push(entity);
-  ensureRoomCultureEntity(context, RoomInstance.id[entity], template.tags);
+  ensureRoomCultureEntity(context, roomId, template.tags);
   context.runtimeState.nextRoomSequence += 1;
+  return roomId;
 }
 
 function createOperatorEntity(
@@ -1101,14 +1117,17 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      createRoomInstanceEntity(context, template.id, placement, command.footprint);
+      const roomId = createRoomInstanceEntity(context, template.id, placement, command.footprint);
+      if (!roomId) {
+        return;
+      }
       if (template.id === BODEGA_BACK_OFFICE_TEMPLATE_ID) {
         pushRuntimeEvent(context, {
           kind: "event_change",
           message: "The Back Office is ready for contract research and permit work.",
           accent: "gold",
           targetKind: "room",
-          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+          targetId: roomId,
         });
       } else if (template.id === BODEGA_BACKSTOCK_TEMPLATE_ID) {
         pushRuntimeEvent(context, {
@@ -1116,7 +1135,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
           message: "The Backstock is open. Gear and supplies finally have a real staging area.",
           accent: "gold",
           targetKind: "room",
-          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+          targetId: roomId,
         });
       } else if (template.id === BODEGA_ALLEY_STAGING_TEMPLATE_ID) {
         pushRuntimeEvent(context, {
@@ -1124,7 +1143,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
           message: "The Alley is ready. Teams can stage out back instead of filing past customers.",
           accent: "gold",
           targetKind: "room",
-          targetId: `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${context.runtimeState.nextRoomSequence - 1}`,
+          targetId: roomId,
         });
       }
       return;
@@ -1171,7 +1190,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       BuildingAuthority.policies[buildingEntity] = nextPolicies;
       pushRuntimeEvent(context, {
         kind: "event_change",
-        message: `Boss changed ${getPolicyLabel(command.policyId)} to ${getPolicyOptionLabel(command.policyId, command.value)}.`,
+        message: `${GuildState.playerName[context.singletonEntities.guild]} changed ${getPolicyLabel(command.policyId)} to ${getPolicyOptionLabel(command.policyId, command.value)}.`,
         accent: "gold",
       });
       return;

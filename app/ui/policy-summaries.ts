@@ -75,8 +75,7 @@ export function getRosterFlowSurfaceSummary(
     case "retention_focus":
       return {
         label: getPolicyOptionLabel("rosterFlow", rosterFlow),
-        summary:
-          "Recruitment slows down so the guild can spend more effort keeping current operators.",
+        summary: "Recruitment slows down so more effort stays on keeping current operators.",
         details: [
           "Visitor volume is lower than usual.",
           "Visitor quality stays near the default.",

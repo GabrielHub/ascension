@@ -96,7 +96,8 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 - Write in present tense for descriptions. Past tense for event logs and history.
 - Avoid heavy fantasy jargon. No "mana," "aether," "quest," or "dungeon master." Use workplace and operational language with a comedic edge.
 - Operators are "operators." Not "heroes," "warriors," or "adventurers."
-- The player is "Boss." Not "commander," "summoner," or "guild master." Just Boss.
+- The player uses a chosen personal name. NPCs, UI copy, and authored text should address them by that name, not by a fixed title like "Boss."
+- The player's organization uses a chosen guild name. When copy refers to the player's guild specifically, use that name.
 - Dungeons are "rifts," "sites," or "incursions" in formal copy. "Dungeon" is the operational shorthand everyone actually uses.
 - Enemies are "hostiles," "threats," or "entities" in reports. Operators probably have ruder names for them.
 - Raids are "operations," "runs," or "deployments" in formal copy. "Raid" is what everyone says.

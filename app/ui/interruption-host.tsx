@@ -14,6 +14,8 @@ import { getIncidentCategoryMeta } from "./_glossary";
 
 export interface InterruptionHostProps {
   activeInterruption: InterruptionInstance | null;
+  guildName?: string;
+  playerName?: string;
   onResolve: (instanceId: string, choiceId?: string) => void;
   onDismiss: () => void;
 }
@@ -254,12 +256,19 @@ function GuidanceModal({
 function RelocationModal({
   instance,
   payload,
+  guildName,
+  playerName,
   onResolve,
 }: {
   instance: InterruptionInstance;
   payload: RelocationPayload;
+  guildName?: string;
+  playerName?: string;
   onResolve: (instanceId: string, choiceId?: string) => void;
 }) {
+  const resolvedGuildName = guildName ?? "your guild";
+  const resolvedPlayerName = playerName ?? "Boss";
+
   if (payload.beat === "offer") {
     return (
       <GameModal
@@ -280,8 +289,8 @@ function RelocationModal({
       >
         <div className="space-y-4">
           <p className="text-sm leading-relaxed text-silver/80">
-            Your guild's performance record, facility condition, and reputation score qualify it for
-            a facility upgrade under the city's guild infrastructure program.
+            {resolvedGuildName}'s performance record, facility condition, and reputation score
+            qualify it for a facility upgrade under the city's guild infrastructure program.
           </p>
           <p className="text-sm leading-relaxed text-silver/80">
             A lease for a larger licensed headquarters in Red Hook, Brooklyn is available. Moving
@@ -368,7 +377,7 @@ function RelocationModal({
         <p className="text-sm leading-relaxed text-silver/80">
           The new building is bigger, emptier, and unfamiliar. Harbor air comes through the open
           windows. The operators spread out across two floors, looking for places to sit. Nobody
-          knows where anything is yet.
+          knows where anything is yet, least of all {resolvedPlayerName}.
         </p>
         <p className="text-sm leading-relaxed text-silver/60 italic">
           It is not home yet. But it will be.
@@ -382,6 +391,8 @@ function RelocationModal({
 
 export function InterruptionHost({
   activeInterruption,
+  guildName,
+  playerName,
   onResolve,
   onDismiss: _onDismiss,
 }: InterruptionHostProps) {
@@ -415,7 +426,9 @@ export function InterruptionHost({
       return (
         <RelocationModal
           instance={activeInterruption}
-          payload={payload as RelocationPayload}
+          payload={payload}
+          guildName={guildName}
+          playerName={playerName}
           onResolve={onResolve}
         />
       );
@@ -430,11 +443,7 @@ export function InterruptionHost({
 
     case "guidance":
       return (
-        <GuidanceModal
-          instance={activeInterruption}
-          payload={payload as GuidancePayload}
-          onResolve={onResolve}
-        />
+        <GuidanceModal instance={activeInterruption} payload={payload} onResolve={onResolve} />
       );
 
     default:

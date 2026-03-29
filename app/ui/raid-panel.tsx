@@ -522,6 +522,7 @@ function getTimeOfDayStyle(minuteOfDay: number): Record<string, string> {
 // ── Main Panel ───────────────────────────────────────────────────────────
 
 interface OperationsPanelProps {
+  guildName?: string;
   operations: OperationsViewModel;
   operators: readonly OperatorViewModel[];
   rosterPressure: RosterPressureViewModel;
@@ -531,6 +532,7 @@ interface OperationsPanelProps {
 }
 
 export function OperationsPanel({
+  guildName = "the guild",
   operations,
   operators,
   rosterPressure,
@@ -595,6 +597,7 @@ export function OperationsPanel({
 
       {activeCategory === "opportunities" && (
         <OpportunityBoard
+          guildName={guildName}
           opportunities={operations.opportunities}
           rosterPressure={rosterPressure}
           operators={operators}

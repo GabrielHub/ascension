@@ -316,15 +316,15 @@ The relocation event is a multi-beat blocking sequence, not a single confirmatio
 
 **Beat 1 — The Offer**
 
-The city's guild licensing office contacts Boss. The guild's performance record, building condition, and reputation score qualify it for a facility upgrade under the city's guild infrastructure program. Translation: Boss has outgrown the bodega and someone official noticed.
+The city's guild licensing office contacts the player. The guild's performance record, building condition, and reputation score qualify it for a facility upgrade under the city's guild infrastructure program. Translation: the player has outgrown the bodega and someone official noticed.
 
 The offer includes: a lease for a larger licensed headquarters in a better neighborhood, moving assistance from the licensing office, and a transitional operating budget. The cost is the treasury gate ($600), which is framed as the deposit and first-month lease on the new space.
 
-**Framing tone:** Professional but slightly bureaucratic. The licensing officer is doing their job. This is not a dramatic reveal. It is a government program that Boss finally qualifies for. The comedy is in the contrast between the official language and the reality of what the guild has been doing out of a bodega.
+**Framing tone:** Professional but slightly bureaucratic. The licensing officer is doing their job. This is not a dramatic reveal. It is a government program that the player finally qualifies for. The comedy is in the contrast between the official language and the reality of what the guild has been doing out of a bodega.
 
 **Beat 2 — The Decision**
 
-Boss can accept or defer. Deferral is free — the offer stays open indefinitely once the gate is met. Acceptance spends the treasury gate, triggers the move, and begins the handoff.
+The player can accept or defer. Deferral is free — the offer stays open indefinitely once the gate is met. Acceptance spends the treasury gate, triggers the move, and begins the handoff.
 
 **Player choices:**
 

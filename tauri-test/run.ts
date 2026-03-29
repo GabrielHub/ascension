@@ -21,6 +21,7 @@ function createFixtureSave(slotId: SaveSlotId) {
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
       guildName: `Desktop Fixture ${slotId}`,
+      playerName: "Boss",
       createdAt: "2026-03-24T00:00:00.000Z",
       lastPlayedAt: "2026-03-24T00:00:00.000Z",
     },

@@ -7,6 +7,7 @@
  */
 
 import { getNextPendingRoomUpgradeIds } from "lib/hq-room-state";
+import { formatIdentityText } from "lib/game-identity";
 
 import {
   AssignmentState,
@@ -24,6 +25,7 @@ import {
   meetsRequirements,
   pushRuntimeEvent,
   readResourceBalance,
+  getGuildIdentity,
 } from "./commands";
 import { hasBlockingInterruption, enqueueInterruption } from "./interruptions";
 import type { InterruptionInstance } from "./interruptions";
@@ -55,6 +57,26 @@ import {
 const EVALUATION_INTERVAL_MINUTES = 5;
 const FIRST_INCIDENT_BEAT_ID = "guidance/opening/first-incident";
 const FIRST_INCIDENT_FORCE_SEED_DELAY_MINUTES = 60;
+
+function formatBeatCopy(context: SimSystemContext, beat: GuidanceBeat): GuidanceBeat["copy"] {
+  const identity = getGuildIdentity(context);
+  return {
+    ...beat.copy,
+    title: formatIdentityText(beat.copy.title, identity),
+    subtitle: beat.copy.subtitle ? formatIdentityText(beat.copy.subtitle, identity) : undefined,
+    body: formatIdentityText(beat.copy.body, identity),
+    ctaLabel: formatIdentityText(beat.copy.ctaLabel, identity),
+    ctaDismissLabel: beat.copy.ctaDismissLabel
+      ? formatIdentityText(beat.copy.ctaDismissLabel, identity)
+      : undefined,
+    fallbackBody: beat.copy.fallbackBody
+      ? formatIdentityText(beat.copy.fallbackBody, identity)
+      : undefined,
+    eventLogSummary: beat.copy.eventLogSummary
+      ? formatIdentityText(beat.copy.eventLogSummary, identity)
+      : undefined,
+  };
+}
 
 function canLayerGuidanceOverInterruption(
   activeInterruption: InterruptionInstance | null,
@@ -523,6 +545,10 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
       }
 
       activateBeat(guidanceState, beat, OPENING_BEAT_COUNT);
+      const formattedCopy = formatBeatCopy(context, beat);
+      if (guidanceState.activeBeatView) {
+        guidanceState.activeBeatView.copy = formattedCopy;
+      }
 
       // Blocking beats go through the interruption queue
       if (beat.delivery.mode === "blocking") {
@@ -537,7 +563,7 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
       if (beat.copy.eventLogSummary) {
         pushRuntimeEvent(context, {
           kind: "guidance",
-          message: beat.copy.eventLogSummary,
+          message: formattedCopy.eventLogSummary ?? beat.copy.eventLogSummary,
         });
       }
 

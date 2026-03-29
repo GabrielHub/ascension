@@ -517,6 +517,10 @@ export interface Phase1RosterPressureView {
 
 export interface Phase1RuntimeView {
   stableCommandTypes: readonly string[];
+  identity: {
+    guildName: string;
+    playerName: string;
+  };
   clock: {
     tick: number;
     day: number;
@@ -1290,6 +1294,69 @@ function nextSequenceFromIds(ids: string[]): number {
   return Math.max(maxParsed, ids.length) + 1;
 }
 
+export function createBaseSimRuntimeState(
+  overrides: Partial<
+    Pick<
+      SimRuntimeState,
+      | "simulationSeed"
+      | "nextRoomSequence"
+      | "nextOperatorSequence"
+      | "nextOpportunitySequence"
+      | "nextStaffSequence"
+      | "nextVisitorSequence"
+      | "nextRaidSequence"
+      | "nextEventSequence"
+      | "nextTeamSequence"
+      | "activeEncounter"
+      | "interruptionQueue"
+      | "incidentState"
+      | "guidanceState"
+    >
+  > = {},
+): SimRuntimeState {
+  return {
+    simulationSeed: overrides.simulationSeed ?? 0,
+    roomEntities: [],
+    operatorEntities: [],
+    raidOpportunityEntities: [],
+    staffEntities: [],
+    visitorEntities: [],
+    eventEntities: [],
+    dispositionEntities: [],
+    notableTieEntities: [],
+    recurringTeamEntities: [],
+    roomCultureEntities: [],
+    inventoryEntities: [],
+    equipmentEntities: [],
+    nextRoomSequence: overrides.nextRoomSequence ?? 1,
+    nextOperatorSequence: overrides.nextOperatorSequence ?? 1,
+    nextOpportunitySequence: overrides.nextOpportunitySequence ?? 1,
+    nextStaffSequence: overrides.nextStaffSequence ?? 1,
+    nextVisitorSequence: overrides.nextVisitorSequence ?? 1,
+    nextRaidSequence: overrides.nextRaidSequence ?? 1,
+    nextEventSequence: overrides.nextEventSequence ?? 1,
+    nextTeamSequence: overrides.nextTeamSequence ?? 1,
+    pendingCueIds: [],
+    pendingEvents: [],
+    raidPresentation: {
+      contractSiteId: null,
+      teams: [],
+      enemies: [],
+      features: [],
+    },
+    activeEncounter: overrides.activeEncounter ?? null,
+    interruptionQueue:
+      overrides.interruptionQueue ??
+      (lazyCreateInterruptionQueueState() as SimRuntimeState["interruptionQueue"]),
+    incidentState:
+      overrides.incidentState ?? (lazyCreateIncidentState() as SimRuntimeState["incidentState"]),
+    guidanceState:
+      overrides.guidanceState ?? (lazyCreateGuidanceState() as SimRuntimeState["guidanceState"]),
+    kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
+    worldTimeFrozen: false,
+  };
+}
+
 function createRuntimeState(
   snapshot: Phase1RuntimeWorldSnapshot,
   options?: { simulationSeed?: number },
@@ -1307,20 +1374,8 @@ function createRuntimeState(
 
   const teamIds = (snapshot.recurringTeams ?? []).map((t) => t.id);
 
-  return {
+  return createBaseSimRuntimeState({
     simulationSeed: options?.simulationSeed ?? 0,
-    roomEntities: [],
-    operatorEntities: [],
-    raidOpportunityEntities: [],
-    staffEntities: [],
-    visitorEntities: [],
-    eventEntities: [],
-    dispositionEntities: [],
-    notableTieEntities: [],
-    recurringTeamEntities: [],
-    roomCultureEntities: [],
-    inventoryEntities: [],
-    equipmentEntities: [],
     nextRoomSequence: nextSequenceFromIds(roomIds),
     nextOperatorSequence: nextSequenceFromIds(operatorIds),
     nextOpportunitySequence: nextSequenceFromIds(opportunityIds),
@@ -1329,23 +1384,13 @@ function createRuntimeState(
     nextRaidSequence: nextSequenceFromIds(raidIds),
     nextEventSequence: nextSequenceFromIds(eventIds),
     nextTeamSequence: nextSequenceFromIds(teamIds),
-    pendingCueIds: [],
-    pendingEvents: [],
-    raidPresentation: {
-      contractSiteId: null,
-      teams: [],
-      enemies: [],
-      features: [],
-    },
     activeEncounter: restoreEncounterFromSnapshot(snapshot),
     interruptionQueue: restoreInterruptionQueueFromSnapshot(
       snapshot,
     ) as SimRuntimeState["interruptionQueue"],
     incidentState: restoreIncidentStateFromSnapshot(snapshot) as SimRuntimeState["incidentState"],
     guidanceState: restoreGuidanceStateFromSnapshot(snapshot) as SimRuntimeState["guidanceState"],
-    kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
-    worldTimeFrozen: false,
-  };
+  });
 }
 
 function restoreEncounterFromSnapshot(
@@ -1648,6 +1693,8 @@ function applyWorldSnapshot(
   GuildState.reputation[guildEntity] = runtimeSnapshot.guild.reputation;
   GuildState.treasury[guildEntity] = runtimeSnapshot.guild.treasury;
   GuildState.intel[guildEntity] = runtimeSnapshot.guild.intel;
+  GuildState.guildName[guildEntity] = runtimeSnapshot.guild.guildName;
+  GuildState.playerName[guildEntity] = runtimeSnapshot.guild.playerName;
 
   WorldTimeState.tick[timeEntity] = runtimeSnapshot.time.tick;
   WorldTimeState.day[timeEntity] = runtimeSnapshot.time.day;
@@ -2220,6 +2267,8 @@ function applyWorldSnapshot(
 
       return {
         guild: {
+          guildName: GuildState.guildName[guildEntity],
+          playerName: GuildState.playerName[guildEntity],
           reputation: GuildState.reputation[guildEntity],
           treasury: GuildState.treasury[guildEntity],
           intel: GuildState.intel[guildEntity],
@@ -2668,6 +2717,10 @@ function applyWorldSnapshot(
       );
       return {
         stableCommandTypes: STABLE_SIM_COMMAND_TYPES,
+        identity: {
+          guildName: GuildState.guildName[guildEntity],
+          playerName: GuildState.playerName[guildEntity],
+        },
         clock: {
           tick: snapshot.time.tick,
           day: snapshot.time.day,

@@ -38,6 +38,7 @@ import {
   getLocationLabel,
   getRequirementLabel,
 } from "./_glossary";
+import { formatIdentityText } from "lib/game-identity";
 
 // ── Callbacks ────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ export interface GameCallbacks {
 // ── View model types ─────────────────────────────────────────────────────
 
 export interface GuildViewModel {
+  guildName: string;
+  playerName: string;
   treasury: number;
   reputation: number;
   intel: number;
@@ -914,6 +917,7 @@ export function buildHqViewFromPhase1(
   registry: TemplateRegistry,
   inventory?: readonly Phase2InventoryView[],
 ): HqViewModel {
+  const identity = view.identity;
   const buildingTemplate =
     registry.buildingById.get(view.building.activeBuildingId) ?? registry.buildings[0];
   const activeFloorIndex = view.building.activeFloorIndex;
@@ -930,7 +934,7 @@ export function buildHqViewFromPhase1(
       id: room.id,
       templateId: room.templateId,
       name: room.name,
-      description: template.description ?? "",
+      description: formatIdentityText(template.description ?? "", identity),
       tier: room.tier,
       floorIndex: room.floorIndex,
       slotId: room.slotId,
@@ -1071,9 +1075,7 @@ export function buildHqViewFromPhase1(
   const activeEvents: ActiveEventViewModel[] = view.activeEvents.map((evt) => ({
     id: evt.id,
     templateId: evt.templateId,
-    name:
-      registry.events.find((e) => e.id === evt.templateId)?.name ??
-      getIdentifierLabel(evt.templateId),
+    name: registry.eventById.get(evt.templateId)?.name ?? getIdentifierLabel(evt.templateId),
     severity: evt.severity,
     remainingHours: evt.remainingHours,
   }));
@@ -1096,6 +1098,8 @@ export function buildHqViewFromPhase1(
 
   return {
     guild: {
+      guildName: view.identity.guildName,
+      playerName: view.identity.playerName,
       treasury: view.resources.cash,
       reputation: view.resources.reputation,
       intel: view.resources.intel,
@@ -1111,7 +1115,7 @@ export function buildHqViewFromPhase1(
     building: {
       id: buildingTemplate.id,
       name: buildingTemplate.name,
-      description: buildingTemplate.description ?? "",
+      description: formatIdentityText(buildingTemplate.description ?? "", identity),
       tier: view.building.tier,
       activeFloorIndex,
       floorCount,
@@ -1373,6 +1377,10 @@ export function buildOpsViewFromPhase1(
 // ── Legacy WorldSnapshot builders (retained for render-layer compat) ─────
 
 export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegistry): HqViewModel {
+  const identity = {
+    guildName: snapshot.guild.guildName,
+    playerName: snapshot.guild.playerName,
+  };
   const buildingTemplate =
     registry.buildingById.get(snapshot.building.activeBuildingId) ?? registry.buildings[0];
   const activeFloorIndex = snapshot.building.activeFloorIndex ?? 0;
@@ -1389,7 +1397,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       id: room.id,
       templateId: room.templateId,
       name: template.name,
-      description: template.description ?? "",
+      description: formatIdentityText(template.description ?? "", identity),
       tier: room.tier,
       floorIndex: room.floorIndex,
       slotId: room.slotId,
@@ -1562,6 +1570,8 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
 
   return {
     guild: {
+      guildName: snapshot.guild.guildName,
+      playerName: snapshot.guild.playerName,
       treasury: snapshot.guild.treasury,
       reputation: snapshot.guild.reputation,
       intel: snapshot.guild.intel,
@@ -1577,7 +1587,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     building: {
       id: buildingTemplate.id,
       name: buildingTemplate.name,
-      description: buildingTemplate.description ?? "",
+      description: formatIdentityText(buildingTemplate.description ?? "", identity),
       tier: snapshot.building.activeBuildingTier,
       activeFloorIndex,
       floorCount,

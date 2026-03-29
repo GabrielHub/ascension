@@ -5,16 +5,16 @@
 Guilds are privately owned, government-licensed organizations that bid for dungeon clearance contracts and employ attuned operators. They are, legally speaking, small businesses.
 
 - A guild license is expensive and conditional. Operating without one is illegal. The paperwork is incredible.
-- Guilds range in size from tiny startup operations (Boss's bodega) to established multi-floor institutions with dozens of operators, corporate sponsors, and an actual HR department.
+- Guilds range in size from tiny startup operations like the player's bodega to established multi-floor institutions with dozens of operators, corporate sponsors, and an actual HR department.
 - Guild income comes from clearance contracts, loot recovery, intel sales, and reputation-based contract priority.
 - Guilds are responsible for operator welfare: working conditions, medical treatment, scheduling, compensation, and not sending people to die in obviously suicidal missions. At least on paper.
 - Guild reputation is tracked by a public-facing system. Higher reputation means better contracts, better recruits, and more political leverage. Scandals, deaths, and PR disasters reduce it.
 
 ## The Player's Guild
 
-Boss starts at the bottom. The bodega. No reputation, barely any cash, and operators who are here because nobody else would take them, or because Boss is weirdly convincing for someone with no superpowers.
+The player starts at the bottom. The bodega. No reputation, barely any cash, and operators who are here because nobody else would take them, or because the player is weirdly convincing for someone with no superpowers.
 
-At Boss's scale, the guild works one secured clearance contract at a time. Until that site is cleared or the contract is lost, that is the job.
+At the player's starting scale, the guild works one secured clearance contract at a time. Until that site is cleared or the contract is lost, that is the job.
 
 For the physical space, room flavor, upgrade progression, and building relocation of the guild headquarters, see [Headquarters And Rooms](./headquarters-and-rooms.md).
 
@@ -22,7 +22,7 @@ For the physical space, room flavor, upgrade progression, and building relocatio
 
 New York's real boroughs and neighborhoods are used. Manhattan, Brooklyn, Queens, the Bronx, Staten Island - real names, real geography.
 
-The city is larger than what Boss can immediately touch. Borough politics, neighborhood reputation, local institutions, and district-specific pressures all exist around the guild even when Boss is still operating at bodega scale.
+The city is larger than what the player can immediately touch. Borough politics, neighborhood reputation, local institutions, and district-specific pressures all exist around the guild even when the player is still operating at bodega scale.
 
 ## Dungeons
 

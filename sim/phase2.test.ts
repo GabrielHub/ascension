@@ -54,11 +54,18 @@ function createMinimalSave(): PersistedSaveGame {
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
       guildName: "Phase 2 Test Guild",
+      playerName: "Boss",
       createdAt: "2026-03-22T12:00:00.000Z",
       lastPlayedAt: "2026-03-22T12:00:00.000Z",
     },
     world: {
-      guild: { reputation: 3, treasury: 1250, intel: 7 },
+      guild: {
+        guildName: "Phase 2 Test Guild",
+        playerName: "Boss",
+        reputation: 3,
+        treasury: 1250,
+        intel: 7,
+      },
       time: { tick: 42, day: 3, minuteOfDay: 720 },
       building: {
         activeBuildingId: "building/bodega",
@@ -1172,7 +1179,7 @@ describe("Phase 2 runtime view", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "staffing_change",
-          message: expect.stringContaining("Rose Vega left the guild"),
+          message: expect.stringContaining("Rose Vega left Bodega Guild"),
         }),
       ]),
     );

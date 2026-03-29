@@ -1,16 +1,16 @@
 # Headquarters And Rooms
 
-The guild headquarters is the physical space Boss owns, operates out of, and is constantly trying to make less embarrassing. It is a workplace, a shelter, a social hub, and a statement about what the guild is. Every room inside it has a mood, a history, and an opinion about the people who use it.
+The guild headquarters is the physical space the player owns, operates out of, and is constantly trying to make less embarrassing. It is a workplace, a shelter, a social hub, and a statement about what the chosen guild is. Every room inside it has a mood, a history, and an opinion about the people who use it.
 
 This file owns the content-design anchor for guild buildings, rooms, upgrades, and relocation events. Use it when authoring room flavor, building atmosphere, upgrade narratives, environmental art direction, or any copy that describes what the guild's physical space looks and feels like.
 
 ## The Bodega
 
-Boss starts in a repurposed bodega on a forgettable block in New York City. The sign out front still says whatever the previous owner called it. The shelves are half-stocked. The coffee is bad but cheap. It is, by any reasonable measure, a corner store that someone is pretending is a professional operation.
+The player starts in a repurposed bodega on a forgettable block in New York City. The sign out front still says whatever the previous owner called it. The shelves are half-stocked. The coffee is bad but cheap. It is, by any reasonable measure, a corner store that someone is pretending is a professional operation.
 
 This is the guild headquarters.
 
-The bodega is not a metaphor. It is a real bodega that Boss is running as a dual-purpose business: street food and snacks out front, dungeon-clearance logistics in the back. The food pays rent. The guild work pays everything else, eventually. Visitors come in for coffee and leave having signed a clearance waiver.
+The bodega is not a metaphor. It is a real bodega that the player is running as a dual-purpose business: street food and snacks out front, dungeon-clearance logistics in the back. The food pays rent. Guild work pays everything else, eventually. Visitors come in for coffee and leave having signed a clearance waiver.
 
 ### Bodega Atmosphere
 
@@ -36,11 +36,11 @@ This is an exterior presentation layer, not a room rewrite. The bodega's interio
 
 The bodega is small. It has four usable spaces, and calling them "rooms" is generous. There is no gym, no private break room, no dedicated infirmary, no training facility. Operators get better by surviving actual work, not by working out in a storage room. Dedicated training, recovery, and specialized prep spaces belong to the larger headquarters that come after the bodega.
 
-At bodega scale, everything doubles as something else. The counter where Boss sells food is also where recruitment happens. The dining area where people eat is also where they recover, sleep it off, and argue. Separation of function is a luxury the bodega does not have.
+At bodega scale, everything doubles as something else. The counter where the player sells food is also where recruitment happens. The dining area where people eat is also where they recover, sleep it off, and argue. Separation of function is a luxury the bodega does not have.
 
-**The Register.** The checkout area. A register, a phone, and a stack of clearance contract paperwork held down by a jar of pickled eggs. This is where Aina sits, where walk-in visitors land, where contracts come in, and where Boss handles the guild's daily intake.
+**The Register.** The checkout area. A register, a phone, and a stack of clearance contract paperwork held down by a jar of pickled eggs. This is where Aina sits, where walk-in visitors land, where contracts come in, and where the player handles the guild's daily intake.
 
-**The Counter.** The deli counter. This is recruitment. Boss makes sandwiches, pours coffee, and talks to whoever walks in. The food is the foot traffic. The foot traffic is the pipeline.
+**The Counter.** The deli counter. This is recruitment. The player makes sandwiches, pours coffee, and talks to whoever walks in. The food is the foot traffic. The foot traffic is the pipeline.
 
 **The Dining Area.** A couple of chairs and a folding table in the back of the store. This is recovery, social, and medical all in one because the bodega does not have room to separate those things.
 
@@ -56,9 +56,9 @@ At bodega scale, everything doubles as something else. The counter where Boss se
 
 ### Bodega Upgrade Path
 
-Bodega upgrades are physical improvements to the building. Each one should feel like a small milestone: Boss scraping together enough to make the place slightly less terrible. The bodega does not become something it is not. It becomes a better version of what it already is: a corner store that also runs a guild.
+Bodega upgrades are physical improvements to the building. Each one should feel like a small milestone: the player scraping together enough to make the place slightly less terrible. The bodega does not become something it is not. It becomes a better version of what it already is: a corner store that also runs a guild.
 
-**Frontage.** Boss finally puts up a real sign. The exterior gets cleaned up. The awning stops dripping.
+**Frontage.** The player finally puts up a real sign for the chosen guild. The exterior gets cleaned up. The awning stops dripping.
 
 **Annex.** The empty unit next door gets absorbed. More physical space for rooms that were previously crammed into corners.
 
@@ -111,7 +111,7 @@ Rooms evolve as the guild relocates to larger buildings. Each building has its o
 
 The recruitment space is the guild's front door for new talent. Its evolution tracks the guild's growth more visibly than almost any other room.
 
-**Bodega tier — The Counter.** A rundown deli counter. Boss sells street food and makes conversation. Recruitment is informal, opportunistic, and depends on foot traffic.
+**Bodega tier — The Counter.** A rundown deli counter. The player sells street food and makes conversation. Recruitment is informal, opportunistic, and depends on foot traffic.
 
 **Porter's tier — The Bar.** Recruitment becomes social. Prospects come for drinks and atmosphere, stay for the pitch, and get read in public instead of across a deli case. The bar is louder, more communal, and more reputation-sensitive than the counter ever was.
 
@@ -148,7 +148,7 @@ Relocation should feel like a milestone that the player earned by surviving the 
 
 The world model supports multiple building tiers beyond the bodega. Each should feel like a different phase of the guild's life, not just a size increase.
 
-- Later buildings are larger, better-equipped, and come with higher expectations from the city, from operators, and from Boss.
+- Later buildings are larger, better-equipped, and come with higher expectations from the city, from operators, and from the player.
 - Each building should have a distinct physical identity tied to a real type of New York space: bodega, Porter's-style bar and restaurant, office floor, converted warehouse, proper tower floor.
 - The building's identity shapes what rooms feel like inside it.
 - Relocation between buildings is always a narrative event, never a silent upgrade.

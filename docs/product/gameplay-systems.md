@@ -43,7 +43,7 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - ECS should own onboarding progression, first-seen state, gating rules, and save-safe completion flags for any beat that materially changes what the player can or must do next.
 - The guidance stack should support three presentation levels: passive hints/tooltips, focused contextual coachmarks or tours, and blocking interruption-backed narrative beats.
 - The opening player-facing path should be deterministic and authored. New players should learn contracts, staffing, roster health, raids, and interruptions through fixed early beats before the game leans on broader systemic discovery.
-- Guidance should explain systems in-world. The same authored beat should teach the mechanic and establish why Boss cares about it in the setting.
+- Guidance should explain systems in-world. The same authored beat should teach the mechanic and establish why the player cares about it in the setting.
 - React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
 - Guidance beats, incidents, and other interruption-backed narrative surfaces may optionally bind an authored presenter character id.
 - Presenter binding is content data layered on the existing runtime-owned interruption and guidance systems, not a parallel authority path.
@@ -72,7 +72,7 @@ Every operator has a fixed, permanent combat kit defined by their attunement:
 | Ultimate       | 1     | High-impact ability. Long cooldown or conditional trigger. Raid-defining when it lands. |
 | Passives       | 0+    | Always-on effects. Modify stats, team dynamics, or situational behavior.                |
 
-These never change. The kit an operator has when Boss recruits them is the kit they will always have.
+These never change. The kit an operator has when the player recruits them is the kit they will always have.
 
 Kits should be first-class structured combat content, not only stored ids. Their effects should execute through deterministic simulation rules that support real encounters, save/load safety, and later content breadth without requiring a schema rewrite.
 

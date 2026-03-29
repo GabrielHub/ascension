@@ -6,24 +6,25 @@
  * executes the building swap from bodega to Porter's.
  */
 
-import { addComponent, addEntity, removeEntity } from "bitecs";
+import { removeEntity } from "bitecs";
 
 import { getBuildingFloors } from "content/building-layouts";
-import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 import {
   AssignmentState,
   BuildingAuthority,
   GuildState,
   OperatorIdentity,
   RaidParticipationState,
-  Renderable,
-  RoomInstance,
 } from "../components";
 import type { SimSystemContext } from "./types";
 import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
 import type { RelocationPayload } from "./interruptions";
-import { ensureRoomCultureEntity } from "./social";
-import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
+import {
+  createRoomInstanceEntity,
+  formatIdentityRuntimeText,
+  getCurrentAbsoluteMinute,
+  pushRuntimeEvent,
+} from "./commands";
 import { BODEGA_SPECIFIC_BEAT_IDS } from "./guidance-beats";
 
 // ── Constants ───────────────────────────────────────────────────────────
@@ -84,13 +85,14 @@ export function evaluateRelocationGate(context: SimSystemContext): RelocationGat
   ).length;
 
   const raidSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
-  const contractSiteIds = new Set(
-    raidSummaries.map((s) => (s as { contractSiteId?: string }).contractSiteId).filter(Boolean),
-  );
+  const contractSiteIds = new Set<string>();
+  let bossEncountersCompleted = 0;
+  for (const s of raidSummaries) {
+    const summary = s as { contractSiteId?: string; bossDefeated?: boolean };
+    if (summary.contractSiteId) contractSiteIds.add(summary.contractSiteId);
+    if (summary.bossDefeated === true) bossEncountersCompleted++;
+  }
   const contractsCompleted = contractSiteIds.size;
-  const bossEncountersCompleted = raidSummaries.filter(
-    (s) => (s as { bossDefeated?: boolean }).bossDefeated === true,
-  ).length;
 
   const prerequisites: RelocationPrerequisite[] = [
     {
@@ -218,7 +220,10 @@ export function initiateRelocation(context: SimSystemContext): boolean {
 
   pushRuntimeEvent(context, {
     kind: "event_change",
-    message: "The city's guild licensing office has contacted you about a facility upgrade.",
+    message: formatIdentityRuntimeText(
+      context,
+      "The city's guild licensing office has contacted {guildName} about a facility upgrade.",
+    ),
     accent: "gold",
   });
 
@@ -402,45 +407,18 @@ function executeRelocationHandoff(context: SimSystemContext): void {
       const template = registry.roomById.get(slot.startingTemplateId);
       if (!template) continue;
 
-      const templateIndex = registry.roomIndexById.get(template.id);
-      if (templateIndex === undefined) continue;
-
-      const entity = addEntity(world);
-      const slotIndex = runtimeState.roomEntities.length;
       const reservedFootprint = { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows };
-      const activeFootprint = getRoomActiveFootprint(template.id, reservedFootprint, []);
-
-      addComponent(world, entity, RoomInstance);
-      addComponent(world, entity, Renderable);
-
-      RoomInstance.id[entity] =
-        `room-instance/${template.id.slice("room/".length).replace(":tier_", "-tier-")}-${runtimeState.nextRoomSequence}`;
-      RoomInstance.templateIndex[entity] = templateIndex;
-      RoomInstance.tier[entity] = template.tier;
-      RoomInstance.floorIndex[entity] = floor.floorIndex;
-      RoomInstance.slotId[entity] = slot.slotId;
-      RoomInstance.roomStateId[entity] = getRoomStateId(template.id, []);
-      RoomInstance.capacity[entity] = template.baseCapacity;
-      RoomInstance.occupancy[entity] = 0;
-      RoomInstance.isRequestedActive[entity] = 1;
-      RoomInstance.isOperational[entity] = 0;
-      RoomInstance.assignedStaffCount[entity] = 0;
-      RoomInstance.appliedUpgradeIds[entity] = [];
-      RoomInstance.slotIndex[entity] = slotIndex;
-      RoomInstance.reservedCol[entity] = reservedFootprint.col;
-      RoomInstance.reservedRow[entity] = reservedFootprint.row;
-      RoomInstance.reservedCols[entity] = reservedFootprint.cols;
-      RoomInstance.reservedRows[entity] = reservedFootprint.rows;
-
-      Renderable.col[entity] = activeFootprint.col;
-      Renderable.row[entity] = activeFootprint.row;
-      Renderable.cols[entity] = activeFootprint.cols;
-      Renderable.rows[entity] = activeFootprint.rows;
-      Renderable.layer[entity] = 1;
-
-      runtimeState.roomEntities.push(entity);
-      ensureRoomCultureEntity(context, RoomInstance.id[entity], template.tags);
-      runtimeState.nextRoomSequence += 1;
+      createRoomInstanceEntity(
+        context,
+        template.id,
+        {
+          floorIndex: floor.floorIndex,
+          slotId: slot.slotId,
+          reservedFootprint,
+        },
+        undefined,
+        { isRequestedActive: true },
+      );
     }
   }
 
@@ -462,8 +440,10 @@ function executeRelocationHandoff(context: SimSystemContext): void {
   // ── 8. Push relocation event ───────────────────────────────────────
   pushRuntimeEvent(context, {
     kind: "relocation",
-    message:
-      "The guild has relocated to Porter's in Red Hook. The bodega is behind you. Welcome to the waterfront.",
+    message: formatIdentityRuntimeText(
+      context,
+      "{guildName} has relocated to Porter's in Red Hook. The bodega is behind you. Welcome to the waterfront.",
+    ),
     accent: "gold",
   });
 }

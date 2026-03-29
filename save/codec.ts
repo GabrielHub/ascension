@@ -56,6 +56,7 @@ import {
   STAFFING_PRIORITY_OPTIONS,
   type PolicyState,
 } from "lib/policies";
+import { DEFAULT_PLAYER_NAME } from "lib/game-identity";
 import {
   getApplicableRoomUpgradeIds,
   getKnownBuildingSlotPlacements,
@@ -227,23 +228,54 @@ function parseCompatibilityVersion(value: unknown, path: string): string {
   return compatibilityVersion;
 }
 
-function parseSaveMetadata(value: unknown, path: string): SaveSlotMetadata {
+function parseSaveMetadata(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): { metadata: SaveSlotMetadata; changed: boolean } {
   const record = expectRecord(value, path);
+  const rawPlayerName = record.playerName;
+  const playerName =
+    typeof rawPlayerName === "string" && rawPlayerName.length > 0
+      ? rawPlayerName
+      : DEFAULT_PLAYER_NAME;
 
   return {
-    guildName: expectString(record.guildName, `${path}.guildName`),
-    createdAt: expectString(record.createdAt, `${path}.createdAt`),
-    lastPlayedAt: expectString(record.lastPlayedAt, `${path}.lastPlayedAt`),
+    metadata: {
+      guildName: expectString(record.guildName, `${path}.guildName`),
+      playerName,
+      createdAt: expectString(record.createdAt, `${path}.createdAt`),
+      lastPlayedAt: expectString(record.lastPlayedAt, `${path}.lastPlayedAt`),
+    },
+    changed: schemaVersion < 16 || rawPlayerName === undefined,
   };
 }
 
-function parseGuildSnapshot(value: unknown, path: string): GuildSnapshot {
+function parseGuildSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+  metadata: SaveSlotMetadata,
+): { guild: GuildSnapshot; changed: boolean } {
   const record = expectRecord(value, path);
+  const rawGuildName = record.guildName;
+  const rawPlayerName = record.playerName;
 
   return {
-    reputation: expectNumber(record.reputation, `${path}.reputation`),
-    treasury: expectNumber(record.treasury, `${path}.treasury`),
-    intel: expectNumber(record.intel, `${path}.intel`),
+    guild: {
+      guildName:
+        typeof rawGuildName === "string" && rawGuildName.length > 0
+          ? rawGuildName
+          : metadata.guildName,
+      playerName:
+        typeof rawPlayerName === "string" && rawPlayerName.length > 0
+          ? rawPlayerName
+          : metadata.playerName,
+      reputation: expectNumber(record.reputation, `${path}.reputation`),
+      treasury: expectNumber(record.treasury, `${path}.treasury`),
+      intel: expectNumber(record.intel, `${path}.intel`),
+    },
+    changed: schemaVersion < 16 || rawGuildName === undefined || rawPlayerName === undefined,
   };
 }
 
@@ -1656,6 +1688,7 @@ function parseWorldSnapshot(
   path: string,
   schemaVersion: number,
   options: SaveCodecOptions,
+  metadata: SaveSlotMetadata,
 ): { world: WorldSnapshot; changed: boolean } {
   const originalRecord = expectRecord(value, path);
   const legacyContent = sanitizeLegacyContentReferences(originalRecord);
@@ -1982,9 +2015,11 @@ function parseWorldSnapshot(
     (opportunity) => opportunity._changed,
   );
 
+  const guild = parseGuildSnapshot(record.guild, `${path}.guild`, schemaVersion, metadata);
+
   return {
     world: {
-      guild: parseGuildSnapshot(record.guild, `${path}.guild`),
+      guild: guild.guild,
       time: parseWorldTimeSnapshot(record.time, `${path}.time`),
       building: building.building,
       rooms: rooms.map(({ room }) => room),
@@ -2069,6 +2104,7 @@ function parseWorldSnapshot(
       fogOfWar.changed ||
       scheduler.changed ||
       policies.changed ||
+      guild.changed ||
       raidSummaryChanged ||
       phase2Changed ||
       legacyContent.changed,
@@ -2090,7 +2126,14 @@ export function hydratePersistedSaveGame(
     fail("save.schemaVersion", `is newer than supported schema ${CURRENT_SAVE_SCHEMA_VERSION}.`);
   }
 
-  const world = parseWorldSnapshot(record.world, "save.world", schemaVersion, options);
+  const metadata = parseSaveMetadata(record.metadata, "save.metadata", schemaVersion);
+  const world = parseWorldSnapshot(
+    record.world,
+    "save.world",
+    schemaVersion,
+    options,
+    metadata.metadata,
+  );
 
   return {
     save: {
@@ -2100,10 +2143,10 @@ export function hydratePersistedSaveGame(
         record.compatibilityVersion,
         "save.compatibilityVersion",
       ),
-      metadata: parseSaveMetadata(record.metadata, "save.metadata"),
+      metadata: metadata.metadata,
       world: world.world,
     },
-    changed: schemaVersion !== CURRENT_SAVE_SCHEMA_VERSION || world.changed,
+    changed: schemaVersion !== CURRENT_SAVE_SCHEMA_VERSION || metadata.changed || world.changed,
   };
 }
 

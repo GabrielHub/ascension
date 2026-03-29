@@ -7,6 +7,7 @@ import type {
 } from "./view-models";
 
 interface OpportunityBoardProps {
+  guildName?: string;
   opportunities: readonly RaidOpportunityViewModel[];
   rosterPressure: RosterPressureViewModel;
   operators?: readonly OperatorViewModel[];
@@ -92,6 +93,7 @@ function OpportunityCard({ opportunity }: { opportunity: RaidOpportunityViewMode
 }
 
 export function OpportunityBoard({
+  guildName = "the guild",
   opportunities,
   rosterPressure,
   operators = [],
@@ -118,7 +120,7 @@ export function OpportunityBoard({
           <div className={emptyStateIconClass}>&#9672;</div>
           <p className="text-[0.7rem] font-medium text-gold/70">No opportunities posted</p>
           <p className="mt-1 text-xs text-silver/60">
-            Opportunities appear as the guild gains reputation
+            Opportunities appear as {guildName} gains reputation
           </p>
         </div>
       </div>

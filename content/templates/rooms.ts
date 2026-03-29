@@ -17,7 +17,7 @@ export const roomTemplates = [
     name: "The Counter",
     tags: ["room:social", "ops:recruitment"],
     description:
-      "The deli counter where Boss sells food, talks people up, and recruits whoever lingers.",
+      "The deli counter where {playerName} sells food, talks people up, and recruits whoever lingers.",
     tier: 1,
     baseCapacity: 2,
     availableInBuildings: ["building/bodega"],

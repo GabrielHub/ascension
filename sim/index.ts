@@ -1,5 +1,6 @@
 import { bootstrapScenario, canonicalNewGameScenario } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
+import { DEFAULT_GUILD_NAME, normalizeGameIdentity, type GameIdentity } from "lib/game-identity";
 import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 
 import type { WorldSnapshot } from "save";
@@ -38,7 +39,11 @@ export * from "./uncertainty";
 function buildScenarioWorldSnapshot(
   scenario: typeof bootstrapScenario,
   registry: TemplateRegistry,
+  identityInput?: Partial<GameIdentity>,
 ): WorldSnapshot {
+  const identity = normalizeGameIdentity(identityInput, {
+    guildNameFallback: DEFAULT_GUILD_NAME,
+  });
   const startingBuilding = registry.buildingById.get(scenario.building.activeBuildingId);
 
   if (!startingBuilding) {
@@ -48,7 +53,11 @@ function buildScenarioWorldSnapshot(
   }
 
   const snapshot = {
-    guild: { ...scenario.guild },
+    guild: {
+      guildName: identity.guildName,
+      playerName: identity.playerName,
+      ...scenario.guild,
+    },
     time: { ...scenario.time },
     building: {
       activeBuildingId: startingBuilding.id,
@@ -184,8 +193,11 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
   return simulation.getWorldSnapshot();
 }
 
-export function createNewGameWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const bootstrap = buildScenarioWorldSnapshot(canonicalNewGameScenario, registry);
+export function createNewGameWorldSnapshot(
+  registry: TemplateRegistry,
+  identity?: Partial<GameIdentity>,
+): WorldSnapshot {
+  const bootstrap = buildScenarioWorldSnapshot(canonicalNewGameScenario, registry, identity);
   const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
   const snapshot = simulation.getWorldSnapshot();
@@ -218,7 +230,9 @@ export function createNewGameWorldSnapshot(registry: TemplateRegistry): WorldSna
 }
 
 export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry);
+  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry, {
+    guildName: "Sandbox Guild",
+  });
   const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
   const world = simulation.getWorldSnapshot();

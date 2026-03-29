@@ -334,6 +334,8 @@ function createPortersBehaviorContext(buildingIndex = 0): SimSystemContext {
   return createSimTestContext({
     registry,
     guild: {
+      guildName: "Porters Test Guild",
+      playerName: "Boss",
       reputation: 20,
       treasury: 1000,
       intel: 5,

@@ -37,9 +37,11 @@ import {
   BODEGA_ALLEY_STAGING_TEMPLATE_ID,
   BODEGA_BACK_OFFICE_TEMPLATE_ID,
   clamp,
+  formatIdentityRuntimeText,
   formatWorldTimestamp,
   getBuildingPolicies,
   getCurrentAbsoluteMinute,
+  getGuildIdentity,
   hasOperationalRoomTemplate,
   hasOperationalRoomWithTag,
   hasStaffedOperationalRoomTemplate,
@@ -2785,8 +2787,8 @@ export function getDepartureCheck(
   const damagedTeamPenalty = getDamagedTeamPenalty(context, operatorId);
   const rosterFlow = getRosterFlowConfig(getPolicyState(context));
 
-  const reason =
-    flags.quitRisk || morale <= loyalty ? "morale collapse" : "loss of faith in the guild";
+  const retentionBreakReason = formatIdentityRuntimeText(context, "loss of faith in {guildName}");
+  const reason = flags.quitRisk || morale <= loyalty ? "morale collapse" : retentionBreakReason;
   const roll = boundedRoll(
     rng,
     (flags.quitRisk ? 28 : 12) + rosterFlow.departurePressureModifier,
@@ -2813,6 +2815,7 @@ function departOperator(context: SimSystemContext, entity: number, reason: strin
   const operatorId = OperatorIdentity.id[entity];
   const operatorName = OperatorIdentity.name[entity] ?? operatorId;
   const currentMinute = getCurrentAbsoluteMinute(context);
+  const retentionBreakReason = formatIdentityRuntimeText(context, "loss of faith in {guildName}");
 
   unequipItem(context, operatorId, "weapon");
   unequipItem(context, operatorId, "outfitOverlay");
@@ -2833,11 +2836,12 @@ function departOperator(context: SimSystemContext, entity: number, reason: strin
   markTeamDamaged(
     context,
     [operatorId],
-    reason === "loss of faith in the guild" ? "retention_break" : "morale_collapse",
+    reason === retentionBreakReason ? "retention_break" : "morale_collapse",
   );
+  const { guildName } = getGuildIdentity(context);
   pushRuntimeEvent(context, {
     kind: "staffing_change",
-    message: `${operatorName} left the guild after ${reason}`,
+    message: `${operatorName} left ${guildName} after ${reason}`,
     accent: "magma",
     targetKind: "operator",
     targetId: operatorId,

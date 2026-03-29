@@ -301,7 +301,7 @@ Each policy renders as a card in the bottom panel:
 - Contract Objective Bias card shows a disabled state with explanation when a contract is active
 - Changing a policy is a typed intent command (`sim/set-policy`) that writes to `BuildingAuthority.policies`
 
-The event log should record policy changes: "Boss changed the guild's recovery standards to Full Recovery."
+The event log should record policy changes using the chosen player and guild identity, for example: "{playerName} changed {guildName}'s recovery standards to Full Recovery."
 
 ## Command Shape
 

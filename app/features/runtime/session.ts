@@ -40,6 +40,7 @@ import {
 } from "sim";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import { getSlotKey } from "lib/hq-room-state";
+import { normalizeGameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
 import { visitorQualityToRank } from "lib/visitor-rank";
 import type { AudioCueId } from "app/features/audio";
@@ -72,6 +73,8 @@ export type RuntimeRouteMode = "preview" | "new" | "load";
 export interface RuntimeRouteRequest {
   mode: RuntimeRouteMode;
   slotId?: SaveSlotId;
+  guildName?: string;
+  playerName?: string;
 }
 
 export interface RuntimeSessionPersistenceState {
@@ -186,19 +189,26 @@ function getPersistenceErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unable to persist the runtime session.";
 }
 
-function createNewSaveGame(slotId: SaveSlotId): PersistedSaveGame {
+function createNewSaveGame(
+  slotId: SaveSlotId,
+  identityInput: Pick<RuntimeRouteRequest, "guildName" | "playerName">,
+): PersistedSaveGame {
   const timestamp = getTimestamp();
+  const identity = normalizeGameIdentity(identityInput, {
+    guildNameFallback: `Guild Slot ${getSlotNumber(slotId)}`,
+  });
 
   return {
     slotId,
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
-      guildName: `Guild Slot ${getSlotNumber(slotId)}`,
+      guildName: identity.guildName,
+      playerName: identity.playerName,
       createdAt: timestamp,
       lastPlayedAt: timestamp,
     },
-    world: createNewGameWorldSnapshot(templateRegistry),
+    world: createNewGameWorldSnapshot(templateRegistry, identity),
   };
 }
 
@@ -247,6 +257,8 @@ function createPersistedSessionSave(session: RuntimeSession): PersistedSaveGame 
     ...session.save,
     metadata: {
       ...session.save.metadata,
+      guildName: session.worldSnapshot.guild.guildName,
+      playerName: session.worldSnapshot.guild.playerName,
       lastPlayedAt: getTimestamp(),
     },
     world: session.worldSnapshot,
@@ -645,6 +657,22 @@ function createRuntimeSession(
     activeFootprint: RuntimePhase1View["rooms"][number]["activeFootprint"];
   };
 
+  type HqWorldStaticContext = {
+    view: RuntimePhase1View;
+    activeBuildingId: string;
+    buildingName: string;
+    allRooms: RoomEntry[];
+    rooms: RoomEntry[];
+    visibleRoomIds: Set<string>;
+    geometry: ReturnType<typeof composeHqWorldGeometry>;
+    anchorsByRoomId: Map<string, NavAnchor[]>;
+    fallbackAnchor: NavAnchor | undefined;
+    roomsById: Map<string, RoomEntry>;
+    roomNodesById: Map<string, RoomGeometryNode>;
+  };
+
+  let cachedHqWorldStaticContext: HqWorldStaticContext | null = null;
+
   function getRoomArea(room: RoomEntry): number {
     return room.activeFootprint.cols * room.activeFootprint.rows;
   }
@@ -913,7 +941,11 @@ function createRuntimeSession(
     return pickByTagPreference(rooms, stableStringHash(staff.id), preferredRoomTags);
   }
 
-  function deriveHqWorldSnapshot(view: RuntimePhase1View, nowMs = Date.now()): HqWorldSnapshot {
+  function getHqWorldStaticContext(view: RuntimePhase1View): HqWorldStaticContext {
+    if (cachedHqWorldStaticContext?.view === view) {
+      return cachedHqWorldStaticContext;
+    }
+
     const activeBuildingId = view.building.activeBuildingId;
     const activeFloorIndex = view.building.activeFloorIndex;
     const allRooms = view.rooms.map((room) => {
@@ -978,7 +1010,6 @@ function createRuntimeSession(
           footprint: { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows },
         };
       });
-
     const buildingName = templateRegistry.buildingById.get(activeBuildingId)?.name ?? "Bodega HQ";
     const geometry = composeHqWorldGeometry(rooms, {
       reservedSlots,
@@ -986,9 +1017,8 @@ function createRuntimeSession(
       buildingTier: view.building.tier,
       floorIndex: activeFloorIndex,
     });
-    const navGraph = geometry.navGraph;
     const anchorsByRoomId = new Map<string, NavAnchor[]>();
-    for (const anchor of navGraph.anchors) {
+    for (const anchor of geometry.navGraph.anchors) {
       let list = anchorsByRoomId.get(anchor.roomId);
       if (!list) {
         list = [];
@@ -996,9 +1026,38 @@ function createRuntimeSession(
       }
       list.push(anchor);
     }
-    const fallbackAnchor = navGraph.anchors[0] as NavAnchor | undefined;
-    const roomsById = new Map(rooms.map((room) => [room.id, room]));
-    const roomNodesById = new Map(geometry.rooms.map((room) => [room.id, room]));
+
+    cachedHqWorldStaticContext = {
+      view,
+      activeBuildingId,
+      buildingName,
+      allRooms,
+      rooms,
+      visibleRoomIds,
+      geometry,
+      anchorsByRoomId,
+      fallbackAnchor: geometry.navGraph.anchors[0] as NavAnchor | undefined,
+      roomsById: new Map(rooms.map((room) => [room.id, room])),
+      roomNodesById: new Map(geometry.rooms.map((room) => [room.id, room])),
+    };
+
+    return cachedHqWorldStaticContext;
+  }
+
+  function deriveHqWorldSnapshot(view: RuntimePhase1View, nowMs = Date.now()): HqWorldSnapshot {
+    const {
+      activeBuildingId,
+      allRooms,
+      rooms,
+      visibleRoomIds,
+      geometry,
+      anchorsByRoomId,
+      fallbackAnchor,
+      roomsById,
+      roomNodesById,
+      buildingName,
+    } = getHqWorldStaticContext(view);
+    const navGraph = geometry.navGraph;
     const roomOccupants = new Map<string, RoomOccupants>();
     const ensureRoomOccupants = (roomId: string): RoomOccupants => {
       const existing = roomOccupants.get(roomId);
@@ -1797,7 +1856,10 @@ async function restoreSaveSession(
   });
 }
 
-async function createNewSaveSession(slotId: SaveSlotId): Promise<RuntimeSession> {
+async function createNewSaveSession(
+  slotId: SaveSlotId,
+  identityInput: Pick<RuntimeRouteRequest, "guildName" | "playerName">,
+): Promise<RuntimeSession> {
   const existingSave = await saveStorage.readSaveGame(slotId);
   if (existingSave) {
     // Refreshing a freshly-started game keeps the original route, so resume the slot instead
@@ -1808,7 +1870,7 @@ async function createNewSaveSession(slotId: SaveSlotId): Promise<RuntimeSession>
     });
   }
 
-  const save = createNewSaveGame(slotId);
+  const save = createNewSaveGame(slotId, identityInput);
   await saveStorage.writeSaveGame(save);
 
   return createRuntimeSession(save.world, {
@@ -1826,6 +1888,14 @@ export function buildGameShellHref(request: RuntimeRouteRequest): string {
     params.set("slot", request.slotId);
   }
 
+  if (request.guildName) {
+    params.set("guildName", request.guildName);
+  }
+
+  if (request.playerName) {
+    params.set("playerName", request.playerName);
+  }
+
   return `/game?${params.toString()}`;
 }
 
@@ -1833,12 +1903,19 @@ export function parseRuntimeRouteRequest(search: string): RuntimeRouteRequest {
   const params = new URLSearchParams(search);
   const rawMode = params.get("mode");
   const rawSlotId = params.get("slot");
+  const rawGuildName = params.get("guildName") ?? undefined;
+  const rawPlayerName = params.get("playerName") ?? undefined;
 
   const mode: RuntimeRouteMode =
     rawMode === "new" || rawMode === "load" || rawMode === "preview" ? rawMode : "new";
   const slotId = SAVE_SLOT_IDS.find((candidate) => candidate === rawSlotId);
 
-  return { mode, slotId };
+  return {
+    mode,
+    slotId,
+    ...(rawGuildName ? { guildName: rawGuildName } : {}),
+    ...(rawPlayerName ? { playerName: rawPlayerName } : {}),
+  };
 }
 
 export async function resolveRuntimeSession(request: RuntimeRouteRequest): Promise<RuntimeSession> {
@@ -1851,7 +1928,7 @@ export async function resolveRuntimeSession(request: RuntimeRouteRequest): Promi
       return session;
     }
     case "new":
-      return createNewSaveSession(assertSlotId(request.slotId));
+      return createNewSaveSession(assertSlotId(request.slotId), request);
     case "load":
       return loadSaveGameIntoSession(assertSlotId(request.slotId));
   }

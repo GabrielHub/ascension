@@ -1635,11 +1635,17 @@ export function GameShell() {
                   className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.12em] text-silver-bright"
                   data-testid="guild-name"
                 >
-                  {hq.building.name}
+                  {hq.guild.guildName}
                 </h1>
+                <span className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
+                  {hq.guild.playerName}
+                </span>
                 <Tooltip content="Building tier - determines room slots and upgrade access">
                   <span className="badge badge-gold">T{hq.building.tier}</span>
                 </Tooltip>
+                <span className="hidden text-[0.6875rem] text-silver/48 sm:inline">
+                  {hq.building.name}
+                </span>
                 {hq.building.floorCount > 1 && (
                   <div className="flex items-center gap-1">
                     <span className="text-[0.625rem] uppercase tracking-[0.15em] text-gold/60">
@@ -1999,6 +2005,7 @@ export function GameShell() {
                   )}
                   {activeTab === "hq" && hqCategory === "management" && (
                     <ManagementPanel
+                      guildName={hq.guild.guildName}
                       policies={hq.policies}
                       contractLifecycle={hq.contractLifecycle}
                       building={hq.building}
@@ -2042,6 +2049,7 @@ export function GameShell() {
                       }
                     >
                       <OperationsPanel
+                        guildName={hq.guild.guildName}
                         operations={operations}
                         operators={hq.operators}
                         rosterPressure={hq.rosterPressure}
@@ -2154,6 +2162,8 @@ export function GameShell() {
           !(phase1View.activeInterruption.type === "guidance" && suppressTutorialInterruption) && (
             <InterruptionHost
               activeInterruption={phase1View.activeInterruption}
+              guildName={hq.guild.guildName}
+              playerName={hq.guild.playerName}
               onResolve={handleInterruptionResolve}
               onDismiss={handleInterruptionDismiss}
             />

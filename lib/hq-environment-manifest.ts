@@ -136,9 +136,11 @@ function getManifestForBuilding(buildingId: string): RawHqEnvironmentManifest | 
   return index.buildings?.[buildingId];
 }
 
-export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
-  const manifest = getLoadedHqEnvironmentManifest();
-  const building = manifest.building?.trim() || DEFAULT_BUILDING;
+function parseHqEnvironmentRenderConfig(
+  manifest: RawHqEnvironmentManifest,
+  fallbackBuilding: string,
+): HqEnvironmentRenderConfig {
+  const building = manifest.building?.trim() || fallbackBuilding;
   const defaultRoots = getDefaultRoots(building);
   const sceneSystem = manifest.composition?.sceneSystem;
   const canonicalOrigin = sceneSystem?.canonicalOrigin;
@@ -167,6 +169,10 @@ export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
       },
     },
   };
+}
+
+export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
+  return parseHqEnvironmentRenderConfig(getLoadedHqEnvironmentManifest(), DEFAULT_BUILDING);
 }
 
 // ── Backdrop profile types ──────────────────────────────────────────────
@@ -310,47 +316,7 @@ export function getHqEnvironmentRenderConfigForBuilding(
 ): HqEnvironmentRenderConfig {
   const buildingManifest = getManifestForBuilding(buildingId);
   if (buildingManifest) {
-    const buildingSlug = buildingId.replace("building/", "");
-    const defaultRoots = getDefaultRoots(buildingSlug);
-    const sceneSystem = buildingManifest.composition?.sceneSystem;
-    const canonicalOrigin = sceneSystem?.canonicalOrigin;
-
-    return {
-      building: buildingSlug,
-      paths: {
-        partsRoot: buildingManifest.paths?.partsRoot?.trim() || defaultRoots.partsRoot,
-        referenceRoot: buildingManifest.paths?.referenceRoot?.trim() || defaultRoots.referenceRoot,
-        recipesRoot: buildingManifest.paths?.recipesRoot?.trim() || defaultRoots.recipesRoot,
-      },
-      composition: {
-        tileWidth: parsePositiveNumber(buildingManifest.composition?.tileWidth, DEFAULT_TILE_WIDTH),
-        tileHeight: parsePositiveNumber(
-          buildingManifest.composition?.tileHeight,
-          DEFAULT_TILE_HEIGHT,
-        ),
-        wallHeight: parsePositiveNumber(
-          buildingManifest.composition?.wallHeight,
-          DEFAULT_WALL_HEIGHT,
-        ),
-        sceneSystem: {
-          canonicalOrigin: [
-            parseCoordinateNumber(canonicalOrigin?.[0], DEFAULT_CANONICAL_ORIGIN[0]),
-            parseCoordinateNumber(canonicalOrigin?.[1], DEFAULT_CANONICAL_ORIGIN[1]),
-          ] as const,
-          canonicalViewBox: parseCanonicalViewBox(sceneSystem?.canonicalViewBox),
-          roomFootprint: {
-            cols: parsePositiveNumber(
-              sceneSystem?.roomFootprint?.cols,
-              DEFAULT_ROOM_FOOTPRINT.cols,
-            ),
-            rows: parsePositiveNumber(
-              sceneSystem?.roomFootprint?.rows,
-              DEFAULT_ROOM_FOOTPRINT.rows,
-            ),
-          },
-        },
-      },
-    };
+    return parseHqEnvironmentRenderConfig(buildingManifest, buildingId.replace("building/", ""));
   }
   return getHqEnvironmentRenderConfig();
 }

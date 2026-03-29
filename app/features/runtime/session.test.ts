@@ -176,6 +176,7 @@ function createPersistedSave(
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
       guildName: `Guild ${slotId}`,
+      playerName: "Boss",
       createdAt: "2026-03-21T00:00:00.000Z",
       lastPlayedAt: "2026-03-21T00:00:00.000Z",
     },
@@ -214,6 +215,7 @@ describe("legacy save hydration", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -793,6 +795,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-22T00:00:00.000Z",
       },
@@ -911,6 +914,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -954,6 +958,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -997,6 +1002,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1054,6 +1060,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1106,6 +1113,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1142,6 +1150,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1202,6 +1211,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1235,6 +1245,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1320,6 +1331,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1465,6 +1477,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1525,6 +1538,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1594,6 +1608,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },
@@ -1642,6 +1657,7 @@ describe("runtime session lifecycle", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Guild Slot 1",
+        playerName: "Boss",
         createdAt: "2026-03-21T00:00:00.000Z",
         lastPlayedAt: "2026-03-21T00:00:00.000Z",
       },

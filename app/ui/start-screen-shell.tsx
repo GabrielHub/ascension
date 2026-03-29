@@ -1,9 +1,10 @@
 import { type CSSProperties, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { buildGameShellHref } from "app/features/runtime";
 import { formatSaveSlotTimestamp, type StartScreenSaveSlot } from "app/features/save-slots";
 import { useSaveSlots } from "app/features/save-slots/use-save-slots";
+import { DEFAULT_PLAYER_NAME, normalizeGameIdentity } from "lib/game-identity";
 import type { SaveSlotId } from "save";
 
 const P = {
@@ -502,11 +503,13 @@ function EmptyCard({
   canImport,
   busyAction,
   onImport,
+  onStartNewGame,
 }: {
   slot: StartScreenSaveSlot;
   canImport: boolean;
   busyAction?: BusyAction;
   onImport: (slot: StartScreenSaveSlot) => void;
+  onStartNewGame: (slot: StartScreenSaveSlot) => void;
 }) {
   const isBusy = busyAction !== undefined;
   const [hovered, setHovered] = useState(false);
@@ -533,16 +536,19 @@ function EmptyCard({
           minHeight: "14rem",
         }}
       >
-        <Link
-          to={buildGameShellHref({ mode: "new", slotId: slot.slotId })}
+        <button
+          type="button"
           data-testid="slot-new"
           data-slot-id={slot.slotId}
-          className="block text-left"
+          className="block w-full cursor-pointer text-left"
           style={{
             outline: focused ? `2px solid ${P.starGold}` : "none",
             outlineOffset: focused ? "2px" : "0",
             textDecoration: "none",
+            border: "none",
+            background: "transparent",
           }}
+          onClick={() => onStartNewGame(slot)}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           onFocus={() => setFocused(true)}
@@ -598,7 +604,7 @@ function EmptyCard({
               Slot {slot.slotNumber}
             </span>
           </div>
-        </Link>
+        </button>
 
         {canImport && (
           <div className="relative mt-2 flex justify-center">
@@ -667,6 +673,7 @@ function FooterLink({ label, to }: { label: string; to?: string }) {
 }
 
 export function StartScreenShell() {
+  const navigate = useNavigate();
   const {
     slots,
     status,
@@ -681,8 +688,41 @@ export function StartScreenShell() {
 
   const topRowSlots = slots.slice(0, 2);
   const bottomRowSlots = slots.slice(2);
+  const [pendingNewSlot, setPendingNewSlot] = useState<StartScreenSaveSlot | null>(null);
+  const [playerName, setPlayerName] = useState(DEFAULT_PLAYER_NAME);
+  const [guildName, setGuildName] = useState("Guild Slot 1");
   const statusLabel =
     status === "loading" ? "Syncing local save slots" : (errorMessage ?? "Local save slots ready");
+
+  const openNewGameModal = (slot: StartScreenSaveSlot) => {
+    setPendingNewSlot(slot);
+    setPlayerName(DEFAULT_PLAYER_NAME);
+    setGuildName(`Guild Slot ${slot.slotNumber}`);
+  };
+
+  const closeNewGameModal = () => {
+    setPendingNewSlot(null);
+  };
+
+  const submitNewGame = () => {
+    if (!pendingNewSlot) {
+      return;
+    }
+
+    const identity = normalizeGameIdentity(
+      { playerName, guildName },
+      { guildNameFallback: `Guild Slot ${pendingNewSlot.slotNumber}` },
+    );
+
+    navigate(
+      buildGameShellHref({
+        mode: "new",
+        slotId: pendingNewSlot.slotId,
+        guildName: identity.guildName,
+        playerName: identity.playerName,
+      }),
+    );
+  };
 
   const handleDelete = async (slot: OccupiedSaveSlotCard | UnreadableSaveSlotCard) => {
     const slotLabel =
@@ -863,6 +903,7 @@ export function StartScreenShell() {
                     canImport={canImport}
                     busyAction={busySlotId === slot.slotId ? busyAction : undefined}
                     onImport={handleImport}
+                    onStartNewGame={openNewGameModal}
                   />
                 ),
               )}
@@ -897,6 +938,7 @@ export function StartScreenShell() {
                       canImport={canImport}
                       busyAction={busySlotId === slot.slotId ? busyAction : undefined}
                       onImport={handleImport}
+                      onStartNewGame={openNewGameModal}
                     />
                   ),
                 )}
@@ -953,6 +995,156 @@ export function StartScreenShell() {
             </div>
           </footer>
         </div>
+
+        {pendingNewSlot && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center px-6">
+            <div
+              className="absolute inset-0 bg-[rgba(6,6,8,0.78)] backdrop-blur-md"
+              onClick={closeNewGameModal}
+            />
+            <div
+              className="relative w-full max-w-md rounded-2xl border p-6"
+              style={{
+                borderColor: "rgba(200,168,76,0.18)",
+                background: "rgba(15,14,18,0.92)",
+                boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+              }}
+            >
+              <h2
+                style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 300,
+                  fontSize: "1.5rem",
+                  letterSpacing: "0.08em",
+                  color: P.starGold,
+                }}
+              >
+                New Game
+              </h2>
+              <p
+                className="mt-2"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "0.82rem",
+                  lineHeight: 1.6,
+                  color: P.silverBody,
+                  opacity: 0.8,
+                }}
+              >
+                Choose how the city addresses you and what the paperwork calls your guild.
+              </p>
+
+              <div className="mt-5 space-y-4">
+                <label className="block">
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "0.72rem",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: P.dimGold,
+                      marginBottom: "0.6rem",
+                    }}
+                  >
+                    Your Name
+                  </span>
+                  <input
+                    autoFocus
+                    value={playerName}
+                    maxLength={32}
+                    onChange={(event) => setPlayerName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        submitNewGame();
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      borderRadius: "0.8rem",
+                      border: "1px solid rgba(200,168,76,0.16)",
+                      background: "rgba(6,6,8,0.55)",
+                      padding: "0.9rem 1rem",
+                      color: P.silverBright,
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  />
+                </label>
+
+                <label className="block">
+                  <span
+                    style={{
+                      display: "block",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "0.72rem",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: P.dimGold,
+                      marginBottom: "0.6rem",
+                    }}
+                  >
+                    Guild Name
+                  </span>
+                  <input
+                    value={guildName}
+                    maxLength={40}
+                    onChange={(event) => setGuildName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        submitNewGame();
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      borderRadius: "0.8rem",
+                      border: "1px solid rgba(200,168,76,0.16)",
+                      background: "rgba(6,6,8,0.55)",
+                      padding: "0.9rem 1rem",
+                      color: P.silverBright,
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={closeNewGameModal}
+                  className="cursor-pointer rounded-lg px-4 py-2"
+                  style={{
+                    border: "1px solid rgba(200,168,76,0.12)",
+                    color: P.dimGold,
+                    background: "transparent",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "0.78rem",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitNewGame}
+                  className="cursor-pointer rounded-lg px-5 py-2"
+                  style={{
+                    border: `1px solid ${P.starGold}`,
+                    color: P.void,
+                    background: P.starGold,
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Enter Slot {pendingNewSlot.slotNumber}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

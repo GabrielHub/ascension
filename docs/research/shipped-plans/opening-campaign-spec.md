@@ -114,7 +114,7 @@ Rationale: 3 weapons for 4 operators (enough for a 3-person raid team, not enoug
 - **Remove 1x Padded Jacket** (2 → 1).
 - **Remove 1x Comm Earpiece** (2 → 1).
 - **Remove 1x Tactical Scarf** entirely.
-- **Remove 3x Monster Fang** — Boss has not cleared any dungeons yet, so pre-raid loot makes no narrative sense.
+- **Remove 3x Monster Fang** — the player has not cleared any dungeons yet, so pre-raid loot makes no narrative sense.
 - Net: 11 item copies → 5.
 
 ### Contract Board
@@ -191,7 +191,7 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Satisfies:** supporting (frames required beat #1)
 - **Mode:** Blocking (interruption, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** None — fires on first tick when `openingPathState === "active"`
-- **Teaches:** Boss picks contracts from a government-cleared board. Contracts cost a filing fee. The board shows rank, threat, reward, intel, and risk. This is a guild that bids on regulated clearance work, not a hero choosing adventures.
+- **Teaches:** The player picks contracts from a government-cleared board. Contracts cost a filing fee. The board shows rank, threat, reward, intel, and risk. This is a guild that bids on regulated clearance work, not a hero choosing adventures.
 - **Completion kind:** `acknowledged` (player clicks CTA)
 - **Fires during:** Contract 1 start
 - **Copy tone:** Workplace briefing. Aina's paperwork energy. The board is bureaucracy, not a quest log.
@@ -226,7 +226,7 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Teaches:** Every operator has morale, loyalty, fatigue, injury, and readiness state. These stats affect willingness to deploy and field performance. Gear can be equipped from guild inventory to improve combat stats. Not everyone has gear — decide who gets what before sending anyone into a rift.
 - **Completion kind:** `target_opened` with follow-up requirement — roster category opened AND at least one operator detail inspected. (Same implementation note as beat 3.)
 - **Fires during:** Contract 1
-- **Copy tone:** Pre-flight checklist. Boss reviewing the roster before the first job.
+- **Copy tone:** Pre-flight checklist. The player reviewing the roster before the first job.
 
 ### Beat 5: First Team Departure
 
@@ -234,10 +234,10 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Satisfies:** **Required #4 — first autonomous raid explanation**
 - **Mode:** Focused (target: `ui/raid/map`, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 4 complete, `contractLifecycle === "active"`, first team has departed (`hasTeamDeparted`)
-- **Teaches:** Operators form teams and deploy autonomously. They explore, fight, loot, and decide when to push deeper or pull out on their own. Boss does not control tactics inside the rift. Boss controls preparation, conditions, and consequences. Watch the raid map for team movement and the event log for updates.
+- **Teaches:** Operators form teams and deploy autonomously. They explore, fight, loot, and decide when to push deeper or pull out on their own. The player does not control tactics inside the rift. The player controls preparation, conditions, and consequences. Watch the raid map for team movement and the event log for updates.
 - **Completion kind:** `team_departed` (first raid packet created)
 - **Fires during:** Contract 1
-- **Copy tone:** Letting go. The team is in the field and Boss can only watch.
+- **Copy tone:** Letting go. The team is in the field and the player can only watch.
 
 ### Beat 6: First Raid Return
 
@@ -246,7 +246,7 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Mode:** Focused (target: result summary or operations view, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 5 complete, first raid summary available (`raidSummaries.length > 0`)
 - **Gating kind:** `requireFirstRaidReturn: true` (new gating flag — extends the existing `GuidanceBeatGating` interface)
-- **Teaches:** Teams return with results: loot, injuries, morale changes, and a summary of what happened. The result review is where Boss learns what the field cost. Loot goes into guild inventory. Injuries and fatigue accumulate on the operators who went in.
+- **Teaches:** Teams return with results: loot, injuries, morale changes, and a summary of what happened. The result review is where the player learns what the field cost. Loot goes into guild inventory. Injuries and fatigue accumulate on the operators who went in.
 - **Completion kind:** `acknowledged` (player reviews result summary and clicks CTA)
 - **Fires during:** Contract 1–2 transition (after first team returns)
 - **Copy tone:** Debriefing. "They came back. Here's what it cost."
@@ -269,11 +269,11 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Satisfies:** **Required #5 — first incident**
 - **Mode:** Blocking (interruption, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 6 complete (not beat 7 — incident can fire before or alongside roster-condition), incident system has triggered a pending incident (`hasActiveIncident`)
-- **Teaches:** Incidents freeze the simulation clock and demand a decision from Boss. Every choice has real consequences — morale shifts, loyalty changes, treasury hits, relationship fallout. There is no undo. The game will keep generating these from operational pressure. Read the briefing, weigh the options, decide.
+- **Teaches:** Incidents freeze the simulation clock and demand a decision from the player. Every choice has real consequences — morale shifts, loyalty changes, treasury hits, relationship fallout. There is no undo. The game will keep generating these from operational pressure. Read the briefing, weigh the options, decide.
 - **Completion kind:** `incident_resolved` (player makes an incident choice)
 - **Fires during:** Contract 2
 - **Incident timing guarantee:** If the incident system has not naturally triggered an incident by 60 game-minutes after beat 6 completes, the guidance system must force-seed one from a low-stakes authored template. Valid seed templates: `personnel_conflict`, `team_friction`, `supply_shortage`, `morale_surge`. The seeded incident must follow the standard incident pipeline (pending → interruption → choice → resolve) so the teaching moment is genuine.
-- **Copy tone:** Alarm bell. Something just landed on Boss's desk.
+- **Copy tone:** Alarm bell. Something just landed on the player's desk.
 
 ### Beat 9: Loot and Market
 
@@ -281,7 +281,7 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Satisfies:** supporting (teaches the raid-to-cash economy loop)
 - **Mode:** Focused (target: `ui/hq/category/market`, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 8 complete, at least one raid return with loot (`hasRaidReturnWithLoot`)
-- **Teaches:** Operators bring back monster parts and sometimes salvageable gear. Monster parts are stackable trade goods — sell them for cash on the market. The market is also where Boss buys weapons, outfits, and accessories. Better gear means better raid outcomes means more loot. That is the loop.
+- **Teaches:** Operators bring back monster parts and sometimes salvageable gear. Monster parts are stackable trade goods — sell them for cash on the market. The market is also where the player buys weapons, outfits, and accessories. Better gear means better raid outcomes means more loot. That is the loop.
 - **Completion kind:** `market_opened` (market UI opened)
 - **Fires during:** Contract 2–3
 - **Copy tone:** Shopkeeper energy. The bodega is a business.
@@ -306,11 +306,11 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Mode:** Focused (target: upgrade panel / room detail upgrade section, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 9 complete (market teaching first, so the player understands the cash loop), treasury >= cost of cheapest available upgrade
 - **Gating kind:** `requireUpgradeAffordable: true` (new gating flag — checks treasury against cheapest available upgrade cost in the building + room upgrade pool)
-- **Teaches:** Upgrades are physical improvements to the bodega. They cost cash but provide tangible benefits — better room capacity, income, morale, recovery rate. Each upgrade is a small milestone: Boss scraping together enough to make the place slightly less terrible. The bodega does not become something it is not. It becomes a better version of what it already is.
+- **Teaches:** Upgrades are physical improvements to the bodega. They cost cash but provide tangible benefits — better room capacity, income, morale, recovery rate. Each upgrade is a small milestone: the player scraping together enough to make the place slightly less terrible. The bodega does not become something it is not. It becomes a better version of what it already is.
 - **Completion kind:** `upgrade_purchased` (new completion kind — at least one building or room upgrade has been applied)
 - **Fires during:** Contract 3
 - **Fallback:** If the player has already purchased an upgrade before this beat would fire, the beat is auto-completed and skipped.
-- **Copy tone:** Small win. "Boss finally fixed the leak in the ceiling."
+- **Copy tone:** Small win. "The player finally fixed the leak in the ceiling."
 
 ### Beat 12: Setback Recovery
 
@@ -530,7 +530,7 @@ During the opening arc (contracts 1–3), the incident system should draw from l
 | 2   | **Too many pre-existing bonds** | 3 field_pair/medic_pair bonds            | 1 bond (Rose ↔ Milo). Learn relationships from one example.                 |
 | 3   | **Three visitors at start**     | 3 immediate recruitment options          | 1 visitor (Nika Voss, medic). Scarcity drives the labor market lesson.      |
 | 4   | **Inventory too generous**      | 11 item copies, near-full equip coverage | 5 item copies. Scarce gear forces equip decisions.                          |
-| 5   | **Monster fangs at start**      | 3 fangs in inventory                     | 0. No pre-raid loot — Boss hasn't cleared anything yet.                     |
+| 5   | **Monster fangs at start**      | 3 fangs in inventory                     | 0. No pre-raid loot — the player hasn't cleared anything yet.               |
 | 6   | **Treasury too comfortable**    | 500 cash                                 | 400. Makes the first upgrade a real commitment.                             |
 | 7   | **Staff oversupplied**          | 3 staff (one assigned, two idle)         | 2 staff (one assigned, one idle). One idle staff is a lesson; two is noise. |
 
@@ -571,7 +571,7 @@ Per the remediation plan:
 - **Onboarding authority stays in ECS/runtime.** React and UI code provide anchors and typed intents; they do not own whether a beat is active.
 - **Interruption-backed narrative beats stay in the existing interruption layer.** No parallel modal authority path.
 - **Preview/sandbox stays separate.** Preview mode continues to skip guidance and use its own denser seed data.
-- **Copy stays grounded in world docs.** Every beat's framing should sound like the world: workplace comedy under supernatural pressure, Boss as a regular person managing superhumans, the bodega as a real bodega.
+- **Copy stays grounded in world docs.** Every beat's framing should sound like the world: workplace comedy under supernatural pressure, the player as a regular person managing superhumans, the bodega as a real bodega.
 
 ## New Completion Kinds Required
 

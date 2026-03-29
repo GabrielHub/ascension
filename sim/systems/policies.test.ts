@@ -40,6 +40,8 @@ function createPolicyContext(): SimSystemContext {
   return createSimTestContext({
     registry: templateRegistry,
     guild: {
+      guildName: "Policy Test Guild",
+      playerName: "Boss",
       reputation: 12,
       treasury: 500,
       intel: 8,

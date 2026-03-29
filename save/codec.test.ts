@@ -20,11 +20,14 @@ function createBaseSave(): PersistedSaveGame {
     compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
     metadata: {
       guildName: "Bodega Guild",
+      playerName: "Boss",
       createdAt: "2026-03-20T12:00:00.000Z",
       lastPlayedAt: "2026-03-20T12:00:00.000Z",
     },
     world: {
       guild: {
+        guildName: "Bodega Guild",
+        playerName: "Boss",
         reputation: 3,
         treasury: 1250,
         intel: 7,
@@ -379,11 +382,14 @@ describe("save codec", () => {
       compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
       metadata: {
         guildName: "Legacy Guild",
+        playerName: "Boss",
         createdAt: "2026-03-19T08:00:00.000Z",
         lastPlayedAt: "2026-03-19T09:00:00.000Z",
       },
       world: {
         guild: {
+          guildName: "Legacy Guild",
+          playerName: "Boss",
           reputation: 1,
           treasury: 300,
           intel: 2,
@@ -1107,6 +1113,7 @@ describe("save codec", () => {
         compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
         metadata: {
           guildName: "Broken Guild",
+          playerName: "Boss",
           createdAt: "2026-03-20T12:00:00.000Z",
           lastPlayedAt: "2026-03-20T12:00:00.000Z",
         },

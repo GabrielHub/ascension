@@ -44,6 +44,8 @@ function createTestContext(overrides?: {
   const context = createSimTestContext({
     registry: templateRegistry,
     guild: {
+      guildName: "Relocation Test Guild",
+      playerName: "Boss",
       reputation: overrides?.reputation ?? 0,
       treasury: overrides?.treasury ?? 0,
       intel: 0,

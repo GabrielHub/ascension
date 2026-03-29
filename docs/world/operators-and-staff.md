@@ -4,7 +4,7 @@ The guild employs two fundamentally different kinds of people: **operators** (su
 
 ## Operators
 
-Operators are attuned individuals who do the dangerous work. They are the core asset Boss manages and the primary recruitment target.
+Operators are attuned individuals who do the dangerous work. They are the core asset the player manages and the primary recruitment target.
 
 ### Identity
 
@@ -50,7 +50,7 @@ Staff roles are organizational, not combat:
 | Medical        | Non-field medical care, recovery support, injury treatment  |
 | Administrative | Paperwork, compliance, scheduling                           |
 
-Staff are the infrastructure that lets operators focus on the dangerous work. Think of them as the guild's support team - the receptionist who handles walk-ins, the logistics person who makes sure the gear is maintained, the admin who files the paperwork so the city does not shut you down. They have traits, preferences, and opinions about everything, and they will let Boss know.
+Staff are the infrastructure that lets operators focus on the dangerous work. Think of them as the guild's support team - the receptionist who handles walk-ins, the logistics person who makes sure the gear is maintained, the admin who files the paperwork so the city does not shut you down. They have traits, preferences, and opinions about everything, and they will let the player know.
 
 ### Narrative Presenters
 

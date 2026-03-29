@@ -3,16 +3,19 @@ import type { PolicyState } from "lib/policies";
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 15;
+export const CURRENT_SAVE_SCHEMA_VERSION = 16;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
   guildName: string;
+  playerName: string;
   createdAt: string;
   lastPlayedAt: string;
 }
 
 export interface GuildSnapshot {
+  guildName: string;
+  playerName: string;
   reputation: number;
   treasury: number;
   intel: number;
