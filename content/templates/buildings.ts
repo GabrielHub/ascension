@@ -16,6 +16,8 @@ export const buildingTemplates = [
       "upgrade/building/bodega:annex",
       "upgrade/building/bodega:extension",
     ],
+    contractRankCeiling: "f",
+    baseIncome: 20,
   },
   {
     id: "building/porters",
@@ -33,5 +35,8 @@ export const buildingTemplates = [
       "upgrade/building/porters:remodel",
       "upgrade/building/porters:waterfront",
     ],
+    contractRankCeiling: "d",
+    baseIncome: 35,
+    recruitmentQualityBonus: 1,
   },
 ] satisfies readonly BuildingTemplate[];

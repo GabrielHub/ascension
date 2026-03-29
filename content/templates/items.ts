@@ -1,4 +1,4 @@
-import type { DropTable, ItemTemplate } from "./shared";
+import type { DropTable, ItemTemplate, PrepRecipeTemplate } from "./shared";
 
 export const itemTemplates = [
   // --- Weapons ---
@@ -808,7 +808,115 @@ export const itemTemplates = [
     sellPrice: 12,
     statEffects: [],
   },
+  // ── Consumables (Prep Room products) ─────────────────────────────────
+  {
+    id: "consumable/rift-tonic",
+    kind: "item",
+    name: "Rift Tonic",
+    tags: ["consumable:raid_aid", "buff:strength"],
+    description:
+      "A crude stimulant brewed from monster parts. Sharpens aggression for a few hours.",
+    category: "consumable",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 5,
+    statEffects: [],
+    consumableBuff: { stat: "strength", value: 3, durationMinutes: 120 },
+  },
+  {
+    id: "consumable/recovery-salve",
+    kind: "item",
+    name: "Recovery Salve",
+    tags: ["consumable:raid_aid", "buff:resilience"],
+    description:
+      "A thick ointment that numbs pain and accelerates clotting. Apply before deployment.",
+    category: "consumable",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 5,
+    statEffects: [],
+    consumableBuff: { stat: "resilience", value: 3, durationMinutes: 120 },
+  },
+  {
+    id: "consumable/phase-ward",
+    kind: "item",
+    name: "Phase Ward",
+    tags: ["consumable:raid_aid", "buff:speed"],
+    description:
+      "A treated bandage wrap that reacts to spatial distortion. Keeps the wearer grounded.",
+    category: "consumable",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 5,
+    statEffects: [],
+    consumableBuff: { stat: "speed", value: 3, durationMinutes: 120 },
+  },
+  {
+    id: "consumable/endurance-draught",
+    kind: "item",
+    name: "Endurance Draught",
+    tags: ["consumable:raid_aid", "buff:endurance"],
+    description: "A bitter drink that delays fatigue. Tastes like wet copper and works anyway.",
+    category: "consumable",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 5,
+    statEffects: [],
+    consumableBuff: { stat: "endurance", value: 3, durationMinutes: 120 },
+  },
 ] satisfies readonly ItemTemplate[];
+
+// ── Prep Recipes ──────────────────────────────────────────────────────
+export const prepRecipeTemplates: readonly PrepRecipeTemplate[] = [
+  {
+    id: "prep-recipe/rift-tonic",
+    name: "Rift Tonic",
+    description: "Combine fangs and ichor into a crude stimulant.",
+    inputs: [
+      { itemId: "loot/monster-part/fang", quantity: 2 },
+      { itemId: "loot/monster-part/ichor", quantity: 1 },
+    ],
+    outputItemId: "consumable/rift-tonic",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+  {
+    id: "prep-recipe/recovery-salve",
+    name: "Recovery Salve",
+    description: "Grind carapace fragments into a protective ointment.",
+    inputs: [
+      { itemId: "loot/monster-part/carapace", quantity: 2 },
+      { itemId: "loot/monster-part/sinew", quantity: 1 },
+    ],
+    outputItemId: "consumable/recovery-salve",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+  {
+    id: "prep-recipe/phase-ward",
+    name: "Phase Ward",
+    description: "Treat bandages with crystal-eye extract for spatial stability.",
+    inputs: [
+      { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", quantity: 2 },
+    ],
+    outputItemId: "consumable/phase-ward",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+  {
+    id: "prep-recipe/endurance-draught",
+    name: "Endurance Draught",
+    description: "Boil sinew and ichor into a fatigue-delaying drink.",
+    inputs: [
+      { itemId: "loot/monster-part/sinew", quantity: 2 },
+      { itemId: "loot/monster-part/ichor", quantity: 2 },
+    ],
+    outputItemId: "consumable/endurance-draught",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+];
 
 export const dropTables = [
   {

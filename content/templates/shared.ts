@@ -1,6 +1,7 @@
 import type { EffectDefinition } from "../effects";
 import type { RequirementDefinition } from "../requirements";
 import type { AbilityEffect, TargetingRule } from "./kits";
+import type { ContractRank } from "./site-concepts";
 
 export interface TemplateBase {
   id: string;
@@ -20,6 +21,12 @@ export interface BuildingTemplate extends TemplateBase {
   baseRoomSlots: number;
   baseOperatorSlots: number;
   upgradeIds: readonly string[];
+  /** Highest contract rank available in this building. Defaults to "f" if omitted. */
+  contractRankCeiling?: ContractRank;
+  /** Base cash income per tick for this building's economy. */
+  baseIncome?: number;
+  /** Recruitment quality modifier relative to the bodega baseline. */
+  recruitmentQualityBonus?: number;
 }
 
 export interface RoomTemplate extends TemplateBase {
@@ -205,12 +212,20 @@ export interface EventTemplate extends TemplateBase {
   weight: number;
 }
 
-export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot";
+export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot" | "consumable";
 export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
 
 export interface StatEffect {
   stat: string;
   value: number;
+}
+
+/** Temporary buff applied by a consumable before a raid. */
+export interface ConsumableBuff {
+  stat: string;
+  value: number;
+  /** Duration in raid minutes. */
+  durationMinutes: number;
 }
 
 export interface ItemTemplate extends TemplateBase {
@@ -220,6 +235,23 @@ export interface ItemTemplate extends TemplateBase {
   buyPrice: number;
   sellPrice: number;
   statEffects: readonly StatEffect[];
+  /** For consumables: the buff applied when used. */
+  consumableBuff?: ConsumableBuff;
+}
+
+/** A prep recipe: consumes monster drops to produce a consumable. */
+export interface PrepRecipeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  /** Item IDs and quantities consumed. */
+  inputs: readonly { itemId: string; quantity: number }[];
+  /** Item ID produced. */
+  outputItemId: string;
+  /** Quantity produced per craft. */
+  outputQuantity: number;
+  /** Room tag required (e.g. "ops:staging" for the Prep Room). */
+  requiredRoomTag: string;
 }
 
 export interface DropTableEntry {
@@ -243,6 +275,7 @@ export interface TemplateRegistryValidationIssue {
     | "missions"
     | "events"
     | "items"
+    | "prepRecipes"
     | "dropTables"
     | "enemyFamilies";
   templateId: string;
@@ -270,6 +303,8 @@ export interface TemplateRegistry {
   enemyFamilyById: ReadonlyMap<string, EnemyFamilyTemplate>;
   enemyTemplateById: ReadonlyMap<string, OrdinaryEnemyTemplate>;
   bossById: ReadonlyMap<string, BossProfile>;
+  prepRecipes: readonly PrepRecipeTemplate[];
+  prepRecipeById: ReadonlyMap<string, PrepRecipeTemplate>;
   resourceIndexById: ReadonlyMap<string, number>;
   buildingIndexById: ReadonlyMap<string, number>;
   roomIndexById: ReadonlyMap<string, number>;

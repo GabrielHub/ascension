@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "report:economy": "tsx scripts/generate-early-campaign-economy-ledger.ts",
+    "report:simulation": "tsx scripts/generate-early-campaign-simulation.ts",
     "build": "vp build",
     "check": "vp check",
     "dev": "vp dev",

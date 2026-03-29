@@ -953,6 +953,7 @@ function checkEncounterTermination(encounter: BossEncounterInstance): EncounterS
 export function useIntervention(
   encounter: BossEncounterInstance,
   interventionId: InterventionId,
+  effectOverrides?: readonly AbilityEffect[],
 ): boolean {
   if (encounter.status !== "active") return false;
 
@@ -975,9 +976,10 @@ export function useIntervention(
     return false;
   }
 
+  const effects = effectOverrides ?? def.effects;
   const allEffects: EncounterEffectResult[] = [];
   for (const target of targets) {
-    const results = resolveEffects(encounter, target, target, def.effects, rng);
+    const results = resolveEffects(encounter, target, target, effects, rng);
     allEffects.push(...results);
   }
 

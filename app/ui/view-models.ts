@@ -19,9 +19,11 @@ import type {
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
 import {
+  buildPrepRecipeAvailabilityForRoom,
   projectVisitorRecruitLoyalty,
   projectVisitorRecruitMorale,
   type Phase1RuntimeView,
+  type Phase2InventoryView,
   type Phase2View,
 } from "sim";
 import { getBuildingFloors } from "content/building-layouts";
@@ -61,6 +63,7 @@ export interface GameCallbacks {
   unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => void;
   bidContract: (postingId: string) => void;
   advanceContract: () => void;
+  prepConsumable: (recipeId: string) => void;
 }
 
 // ── View model types ─────────────────────────────────────────────────────
@@ -119,6 +122,7 @@ export interface RoomViewModel {
   tags: readonly string[];
   reservedFootprint: RoomFootprintViewModel;
   activeFootprint: RoomFootprintViewModel;
+  prepRecipes: readonly PrepRecipeViewModel[];
 }
 
 export interface ExpansionSlotViewModel {
@@ -392,6 +396,29 @@ export interface InventoryItemViewModel {
   rank: string;
   statEffects: readonly StatEffectViewModel[];
   tags: readonly string[];
+}
+
+export interface PrepRecipeInputViewModel {
+  itemId: string;
+  itemName: string;
+  quantityRequired: number;
+  quantityOwned: number;
+  isSatisfied: boolean;
+}
+
+export interface PrepRecipeViewModel {
+  recipeId: string;
+  name: string;
+  description: string;
+  inputs: readonly PrepRecipeInputViewModel[];
+  outputItemId: string;
+  outputName: string;
+  outputQuantity: number;
+  outputBuffStat: string;
+  outputBuffValue: number;
+  canProduce: boolean;
+  /** False when the room is not staffed — blocks production. */
+  isRoomStaffed: boolean;
 }
 
 export interface EquipmentViewModel {
@@ -838,9 +865,54 @@ function mapStatEffects(
   }));
 }
 
+function buildPrepRecipesForRoom(
+  roomTags: readonly string[],
+  isOperational: boolean,
+  assignedStaffCount: number,
+  inventory: readonly Phase2InventoryView[],
+  registry: TemplateRegistry,
+): PrepRecipeViewModel[] {
+  return buildPrepRecipeAvailabilityForRoom(
+    roomTags,
+    isOperational,
+    assignedStaffCount,
+    inventory,
+    registry,
+  ).map((recipeAvailability) => {
+    const recipe = registry.prepRecipeById.get(recipeAvailability.recipeId);
+    if (!recipe) {
+      throw new Error(`Missing prep recipe "${recipeAvailability.recipeId}" in registry.`);
+    }
+
+    const outputTemplate = registry.itemById.get(recipe.outputItemId);
+    const inputs: PrepRecipeInputViewModel[] = recipeAvailability.inputs.map((input) => ({
+      itemId: input.itemId,
+      itemName: registry.itemById.get(input.itemId)?.name ?? input.itemId,
+      quantityRequired: input.quantityRequired,
+      quantityOwned: input.quantityOwned,
+      isSatisfied: input.isSatisfied,
+    }));
+
+    return {
+      recipeId: recipe.id,
+      name: recipe.name,
+      description: recipe.description,
+      inputs,
+      outputItemId: recipe.outputItemId,
+      outputName: outputTemplate?.name ?? recipe.name,
+      outputQuantity: recipeAvailability.outputQuantity,
+      outputBuffStat: outputTemplate?.consumableBuff?.stat ?? "",
+      outputBuffValue: outputTemplate?.consumableBuff?.value ?? 0,
+      canProduce: recipeAvailability.canProduce,
+      isRoomStaffed: recipeAvailability.isRoomStaffed,
+    };
+  });
+}
+
 export function buildHqViewFromPhase1(
   view: Phase1RuntimeView,
   registry: TemplateRegistry,
+  inventory?: readonly Phase2InventoryView[],
 ): HqViewModel {
   const buildingTemplate =
     registry.buildingById.get(view.building.activeBuildingId) ?? registry.buildings[0];
@@ -874,6 +946,13 @@ export function buildHqViewFromPhase1(
       tags: template.tags,
       reservedFootprint,
       activeFootprint,
+      prepRecipes: buildPrepRecipesForRoom(
+        template.tags,
+        room.isOperational,
+        room.assignedStaffCount,
+        inventory ?? [],
+        registry,
+      ),
     };
   });
 
@@ -1326,6 +1405,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       tags: template.tags,
       reservedFootprint,
       activeFootprint,
+      prepRecipes: [],
     };
   });
 

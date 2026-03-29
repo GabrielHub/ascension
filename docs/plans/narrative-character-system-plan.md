@@ -2,6 +2,22 @@
 
 Add authored presenter characters to interruption-backed guidance, incidents, and briefings without changing gameplay authority.
 
+## Status
+
+This is now the next active implementation plan.
+
+Prerequisites that were previously open are now satisfied:
+
+- the relocation contract is shipped
+- Porter's core entry slice is shipped
+- the remaining dependency for Porter's-specific presenters is the presenter system itself, not unresolved headquarters work
+
+Execution order from here:
+
+1. land the presenter contract and UI foundation
+2. retrofit the assistant into the bodega guidance / interruption path
+3. extend the same system into Porter's-specific presenters for the cook and bartender
+
 ## Canon Inputs
 
 Read before implementing:

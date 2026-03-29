@@ -47,7 +47,12 @@ export const RAID_OPPORTUNITY_VARIANCE = {
   reward: { min: -8, max: 12 },
 } satisfies Record<"threat" | "intel" | "reward", EconomyVarianceRange>;
 
-export function getAvailableContractRanksForReputation(reputation: number): ContractRank[] {
+const CONTRACT_RANK_ORDER: readonly ContractRank[] = ["f", "e", "d", "c", "b", "a", "s"];
+
+export function getAvailableContractRanksForReputation(
+  reputation: number,
+  rankCeiling?: ContractRank,
+): ContractRank[] {
   const availableRanks: ContractRank[] = ["f"];
   if (reputation >= 5) availableRanks.push("e");
   if (reputation >= 20) availableRanks.push("d");
@@ -55,6 +60,14 @@ export function getAvailableContractRanksForReputation(reputation: number): Cont
   if (reputation >= 60) availableRanks.push("b");
   if (reputation >= 80) availableRanks.push("a");
   if (reputation >= 95) availableRanks.push("s");
+
+  if (rankCeiling) {
+    const ceilingIdx = CONTRACT_RANK_ORDER.indexOf(rankCeiling);
+    if (ceilingIdx >= 0) {
+      return availableRanks.filter((rank) => CONTRACT_RANK_ORDER.indexOf(rank) <= ceilingIdx);
+    }
+  }
+
   return availableRanks;
 }
 

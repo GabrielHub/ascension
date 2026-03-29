@@ -1,5 +1,6 @@
 import type {
   GameCallbacks,
+  PrepRecipeViewModel,
   RoomCultureViewModel,
   RoomViewModel,
   UpgradeViewModel,
@@ -112,10 +113,6 @@ function getRoomStaffingPercent(room: RoomViewModel): number {
   return getRoomProgressRatio(room) * 100;
 }
 
-function getOperationalStatusTip(room: RoomViewModel): string {
-  return getRoomStatusTip(room);
-}
-
 function getRoomWhyItMatters(room: RoomViewModel): readonly string[] {
   const reasons: string[] = [];
 
@@ -153,6 +150,76 @@ function getRoomWhyItMatters(room: RoomViewModel): readonly string[] {
   return reasons.slice(0, 2);
 }
 
+function PrepRecipeCard({
+  recipe,
+  onProduce,
+}: {
+  recipe: PrepRecipeViewModel;
+  onProduce: () => void;
+}) {
+  return (
+    <div className="glass-card-inset p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h4 className="text-xs font-medium text-silver-bright">{recipe.name}</h4>
+          <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-silver/60">
+            {recipe.description}
+          </p>
+        </div>
+        <Tooltip content={`+${recipe.outputBuffValue} ${recipe.outputBuffStat} for deployed team`}>
+          <span className="badge badge-gold shrink-0">
+            +{recipe.outputBuffValue} {recipe.outputBuffStat}
+          </span>
+        </Tooltip>
+      </div>
+
+      <div className="mt-2">
+        <span className="text-[0.625rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+          Inputs
+        </span>
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          {recipe.inputs.map((input) => (
+            <Tooltip
+              key={input.itemId}
+              content={`${input.quantityOwned} owned / ${input.quantityRequired} needed`}
+            >
+              <span
+                className={`rounded px-1.5 py-0.5 text-xs ${
+                  input.isSatisfied
+                    ? "bg-[rgba(200,168,76,0.06)] text-gold"
+                    : "bg-[rgba(180,60,60,0.08)] text-ember"
+                }`}
+              >
+                {input.quantityRequired}x {input.itemName}
+                <span className="ml-1 opacity-60">({input.quantityOwned})</span>
+              </span>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+
+      {!recipe.isRoomStaffed && (
+        <p className="mt-2 text-[0.6875rem] text-ember/80">
+          Requires assigned logistics staff to produce.
+        </p>
+      )}
+
+      <button
+        type="button"
+        disabled={!recipe.canProduce}
+        className="btn-primary mt-2 w-full text-xs"
+        onClick={onProduce}
+      >
+        {!recipe.isRoomStaffed
+          ? "Needs staff"
+          : recipe.canProduce
+            ? `Produce ${recipe.outputQuantity}x ${recipe.outputName}`
+            : "Missing inputs"}
+      </button>
+    </div>
+  );
+}
+
 export function RoomDetailPanel({
   room,
   buildingUpgrades,
@@ -177,7 +244,7 @@ export function RoomDetailPanel({
               {room.name}
             </h3>
             {room.isOperational ? (
-              <Tooltip content={getOperationalStatusTip(room)}>
+              <Tooltip content={getRoomStatusTip(room)}>
                 <span className="badge badge-gold">Operational</span>
               </Tooltip>
             ) : room.isActive ? (
@@ -384,6 +451,24 @@ export function RoomDetailPanel({
           </div>
         )}
       </div>
+
+      {/* Prep Recipes — shown for staging rooms */}
+      {room.prepRecipes.length > 0 && (
+        <div className="mt-4 border-t border-[rgba(200,168,76,0.06)] pt-4">
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Consumable Prep
+          </h4>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {room.prepRecipes.map((recipe) => (
+              <PrepRecipeCard
+                key={recipe.recipeId}
+                recipe={recipe}
+                onProduce={() => callbacks.prepConsumable(recipe.recipeId)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

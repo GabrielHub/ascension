@@ -12,7 +12,12 @@ import {
 } from "app/features/runtime";
 import { useScreenWakeLock } from "app/features/runtime/use-screen-wake-lock";
 import { HqWorldCanvas } from "render";
-import type { EncounterActionRecord, EncounterStatus, InterventionId } from "sim";
+import {
+  hasConsumableInventory,
+  type EncounterActionRecord,
+  type EncounterStatus,
+  type InterventionId,
+} from "sim";
 import { getPolicyOptionLabel, type PolicyState } from "lib/policies";
 import type {
   FocusPayload,
@@ -237,6 +242,9 @@ export function buildGameCallbacks(
     },
     advanceContract: () => {
       void session.commands.dispatch({ type: "sim/advance-contract" });
+    },
+    prepConsumable: (recipeId: string) => {
+      void session.commands.prepConsumable({ recipeId });
     },
   };
 }
@@ -1190,18 +1198,21 @@ export function GameShell() {
   const phase1View = session?.state.phase1View ?? null;
   const registry = session?.registry ?? null;
 
+  const phase2 = useMemo(
+    () => (session ? session.simulation.getPhase2View() : null),
+    [phase1View, session],
+  );
+
   const hqBase = useMemo(
-    () => (session && phase1View && registry ? buildHqViewFromPhase1(phase1View, registry) : null),
-    [phase1View, registry, session],
+    () =>
+      session && phase1View && registry
+        ? buildHqViewFromPhase1(phase1View, registry, phase2?.inventory)
+        : null,
+    [phase1View, registry, session, phase2],
   );
   const operations = useMemo(
     () => (session && phase1View && registry ? buildOpsViewFromPhase1(phase1View, registry) : null),
     [phase1View, registry, session],
-  );
-
-  const phase2 = useMemo(
-    () => (session ? session.simulation.getPhase2View() : null),
-    [phase1View, session],
   );
 
   const hq = useMemo(() => {
@@ -1221,6 +1232,11 @@ export function GameShell() {
     if (!hq) return new Map<string, string>();
     return new Map(hq.rooms.map((r) => [r.id, r.name]));
   }, [hq]);
+
+  const hasConsumables = useMemo(
+    () => (phase2 && registry ? hasConsumableInventory(phase2.inventory, registry) : false),
+    [phase2, registry],
+  );
 
   const teams: TeamViewModel[] = useMemo(
     () => (phase2 ? buildTeamViewModels(phase2, operatorNameById) : []),
@@ -2118,6 +2134,7 @@ export function GameShell() {
             onDismiss={handleEncounterDismiss}
             onUseIntervention={handleEncounterIntervention}
             isDevMode={import.meta.env.DEV}
+            hasConsumables={hasConsumables}
           />
         )}
 

@@ -28,7 +28,13 @@ import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { SimCommand } from "../commands";
 import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "../recruitment";
 import { buyItem, sellItem, getMarketPriceForItem, type MarketItemView } from "./market";
-import { autoSelectAccessory, unequipItem } from "./inventory";
+import {
+  addToInventory,
+  autoSelectAccessory,
+  getInventoryCount,
+  removeFromInventory,
+  unequipItem,
+} from "./inventory";
 import { recordGuidanceInteraction } from "./guidance";
 import {
   AssignmentState,
@@ -1008,6 +1014,26 @@ export function hasStaffedOperationalRoomTemplate(
   });
 }
 
+/** Check if any operational room has the given tag. Building-agnostic. */
+export function hasOperationalRoomWithTag(context: SimSystemContext, tag: string): boolean {
+  return context.runtimeState.roomEntities.some((entity) => {
+    const template = getRoomTemplateForEntity(context, entity);
+    return template.tags.includes(tag) && RoomInstance.isOperational[entity] === 1;
+  });
+}
+
+/** Check if any operational + staffed room has the given tag. Building-agnostic. */
+export function hasStaffedOperationalRoomWithTag(context: SimSystemContext, tag: string): boolean {
+  return context.runtimeState.roomEntities.some((entity) => {
+    const template = getRoomTemplateForEntity(context, entity);
+    return (
+      template.tags.includes(tag) &&
+      RoomInstance.isOperational[entity] === 1 &&
+      RoomInstance.assignedStaffCount[entity] >= 1
+    );
+  });
+}
+
 function getBuildingUpgradeEventMessage(upgradeId: string): string | null {
   switch (upgradeId) {
     case "upgrade/building/bodega:frontage":
@@ -1016,6 +1042,14 @@ function getBuildingUpgradeEventMessage(upgradeId: string): string | null {
       return "The Annex is open. The bodega has room for real back-office work now.";
     case "upgrade/building/bodega:extension":
       return "Backyard Extension finished. The bodega finally has breathing room out back.";
+    case "upgrade/building/porters:kitchen_overhaul":
+      return "Kitchen Overhaul complete. The food is real now and the health inspector might survive a visit.";
+    case "upgrade/building/porters:upstairs_conversion":
+      return "Upstairs Conversion finished. The old apartments are operational rooms now.";
+    case "upgrade/building/porters:remodel":
+      return "The Remodel is done. New fixtures, better lighting, and the kind of space people want to stay in.";
+    case "upgrade/building/porters:waterfront":
+      return "The Waterfront is open. Harbor-side staging and downtime with a view.";
     default:
       return null;
   }
@@ -1507,6 +1541,33 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       if (contractCommandHandler) {
         contractCommandHandler(context, command.type, { ...command });
       }
+      return;
+    }
+    case "sim/prep-consumable": {
+      const recipe = context.registry.prepRecipeById.get(command.recipeId);
+      if (!recipe) return;
+
+      // Check that the required room is operational and staffed
+      if (!hasStaffedOperationalRoomWithTag(context, recipe.requiredRoomTag)) return;
+
+      // Check that the player has all required inputs
+      for (const input of recipe.inputs) {
+        if (getInventoryCount(context, input.itemId) < input.quantity) return;
+      }
+
+      // Consume inputs
+      for (const input of recipe.inputs) {
+        removeFromInventory(context, input.itemId, input.quantity);
+      }
+
+      // Produce output
+      addToInventory(context, recipe.outputItemId, recipe.outputQuantity);
+
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: `Prep Room produced ${recipe.outputQuantity}x ${recipe.name}.`,
+        accent: "gold",
+      });
       return;
     }
     default: {

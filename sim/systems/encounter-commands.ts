@@ -32,6 +32,7 @@ import {
   queueIncident,
 } from "./incidents";
 import type { InterventionId } from "./encounter-types";
+import { getInventoryCount, removeFromInventory } from "./inventory";
 import { advanceRelocationBeat, initiateRelocation } from "./relocation";
 import type { RelocationPayload } from "./interruptions";
 
@@ -214,10 +215,37 @@ export function applyEncounterCommand(
     }
     case "sim/encounter-use-intervention": {
       if (context.runtimeState.activeEncounter) {
-        useIntervention(
-          context.runtimeState.activeEncounter,
-          payload.interventionId as InterventionId,
-        );
+        const interventionId = payload.interventionId as InterventionId;
+
+        // consumable_boost requires an actual consumable in inventory
+        if (interventionId === "consumable_boost") {
+          const consumableItem = context.registry.items.find(
+            (item) => item.category === "consumable" && getInventoryCount(context, item.id) > 0,
+          );
+          if (!consumableItem) return true;
+
+          // Build item-specific effects from the consumed item's buff
+          const buff = consumableItem.consumableBuff;
+          const itemEffects = buff
+            ? [{ kind: "modify_stat" as const, stat: buff.stat, delta: buff.value, duration: 3 }]
+            : undefined;
+
+          const used = useIntervention(
+            context.runtimeState.activeEncounter,
+            interventionId,
+            itemEffects,
+          );
+          if (used) {
+            removeFromInventory(context, consumableItem.id, 1);
+            pushRuntimeEvent(context, {
+              kind: "event_change",
+              message: `Used ${consumableItem.name} to boost the team.`,
+              accent: "gold",
+            });
+          }
+        } else {
+          useIntervention(context.runtimeState.activeEncounter, interventionId);
+        }
       }
       return true;
     }

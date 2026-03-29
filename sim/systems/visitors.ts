@@ -3,6 +3,7 @@ import { removeEntity } from "bitecs";
 import { getRosterFlowConfig } from "lib/policies";
 import { BuildingAuthority, VisitorState } from "../components";
 import {
+  getActiveBuildingTemplate,
   getActiveVisitorEntities,
   getCurrentAbsoluteMinute,
   getRecruitmentRoomCapacity,
@@ -106,7 +107,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   }
 
   const maxVisitors = Math.max(1, getRecruitmentRoomCapacity(context));
-  if (getActiveVisitorEntities(context).length >= maxVisitors) {
+  if (activeVisitors.length >= maxVisitors) {
     return;
   }
 
@@ -124,6 +125,7 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
   const desiredRoleTag = VISITOR_ROLE_CYCLE[(sequence - 1) % VISITOR_ROLE_CYCLE.length];
   const attractionBonus =
     BuildingAuthority.attractionWeightByTag[buildingEntity]?.[desiredRoleTag] ?? 0;
+  const buildingQualityBonus = getActiveBuildingTemplate(context).recruitmentQualityBonus ?? 0;
 
   spawnVisitorEntity(context, {
     name: VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length],
@@ -132,8 +134,9 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
       180,
       Math.round(BASE_VISITOR_PATIENCE_MINUTES * rosterFlow.visitorPatienceMultiplier),
     ),
-    quality: 50 + rosterFlow.visitorBaseQualityBonus + attractionBonus * 6,
-    expectedLoyalty: 45 + attractionBonus * 4,
+    quality:
+      50 + rosterFlow.visitorBaseQualityBonus + attractionBonus * 6 + buildingQualityBonus * 5,
+    expectedLoyalty: 45 + attractionBonus * 4 + buildingQualityBonus * 3,
   });
 
   BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = currentMinute;

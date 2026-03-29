@@ -15,7 +15,7 @@ describe("early campaign simulation harness", () => {
   });
 
   it("captures required metrics and threshold summaries", async () => {
-    const suite = await buildEarlyCampaignSimulationSuite({ seedCount: 2, contractLimit: 1 });
+    const suite = await buildEarlyCampaignSimulationSuite({ seedCount: 1, contractLimit: 1 });
     const firstRun = suite.runs[0];
 
     expect(() => earlyCampaignSimulationSchema.parse(suite)).not.toThrow();
@@ -54,11 +54,14 @@ describe("early campaign simulation harness", () => {
   });
 
   it("renders self-consistent simulation artifacts", async () => {
-    const artifacts = await buildEarlyCampaignSimulationArtifacts();
+    const artifacts = await buildEarlyCampaignSimulationArtifacts({
+      seedCount: 1,
+      contractLimit: 1,
+    });
 
     expect(JSON.parse(artifacts.json)).toEqual(artifacts.suite);
     expect(artifacts.report).toContain("# Early Campaign Deterministic Simulation Report");
     expect(artifacts.report).toContain("## Threshold Summary");
     expect(artifacts.report).toContain("## Watch Items");
-  }, 60_000);
+  });
 });

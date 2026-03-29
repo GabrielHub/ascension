@@ -41,7 +41,9 @@ import {
   getBuildingPolicies,
   getCurrentAbsoluteMinute,
   hasOperationalRoomTemplate,
+  hasOperationalRoomWithTag,
   hasStaffedOperationalRoomTemplate,
+  hasStaffedOperationalRoomWithTag,
   pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
@@ -1699,11 +1701,15 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
 
   let teamCohesion = computeTeamCohesion(context, claimedOperatorIds);
 
-  // Alley Staging bonus: teams that stage out back depart with better coordination
-  const alleyOperational = hasOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID);
-  const alleyStaffed = hasStaffedOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID);
-  if (alleyOperational) {
-    teamCohesion = clamp(teamCohesion + (alleyStaffed ? 8 : 4), 0, 100);
+  // Staging bonus: operational staging rooms improve departure coordination
+  const stagingOperational =
+    hasOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID) ||
+    hasOperationalRoomWithTag(context, "ops:staging");
+  const stagingStaffed =
+    hasStaffedOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID) ||
+    hasStaffedOperationalRoomWithTag(context, "ops:staging");
+  if (stagingOperational) {
+    teamCohesion = clamp(teamCohesion + (stagingStaffed ? 8 : 4), 0, 100);
   }
 
   // ── Run deterministic raid simulation ──
@@ -3160,14 +3166,20 @@ function generateContractBoard(context: SimSystemContext): void {
   const currentMinute = getCurrentAbsoluteMinute(context);
   const reputation = GuildState.reputation[guildEntity];
   const rng = new SeededRng(seedFromSimulationKey(context, `board:${currentMinute}:${reputation}`));
-  const backOfficeOperational = hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID);
-  const backOfficeStaffed = hasStaffedOperationalRoomTemplate(
-    context,
-    BODEGA_BACK_OFFICE_TEMPLATE_ID,
-  );
+  const backOfficeOperational =
+    hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID) ||
+    hasOperationalRoomWithTag(context, "ops:intel");
+  const backOfficeStaffed =
+    hasStaffedOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID) ||
+    hasStaffedOperationalRoomWithTag(context, "ops:intel");
 
-  // Determine available ranks based on reputation
-  const availableRanks = getAvailableContractRanksForReputation(reputation);
+  // Determine available ranks based on reputation, capped by building ceiling
+  const buildingTemplateIndex = BuildingAuthority.activeBuildingTemplateIndex[buildingEntity];
+  const buildingTemplate = context.registry.buildings[buildingTemplateIndex];
+  const availableRanks = getAvailableContractRanksForReputation(
+    reputation,
+    buildingTemplate?.contractRankCeiling,
+  );
 
   // Filter site concepts by available ranks
   const eligibleConcepts = siteConceptTemplates.filter((sc) =>

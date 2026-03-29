@@ -74,7 +74,7 @@ Future onboarding work can still deepen later as new systems and headquarters ti
 
 ## Current Milestone: Bodega Endgame, Narrative Presenter Pass, And Porter's Handoff
 
-Goal: finish the remaining bodega end-state work, land the presenter-system finishing pass for the bodega, and implement the handoff into a locked Porter's target from a stable baseline.
+Goal: close the remaining early-game milestone work now that the relocation contract and Porter's core entry slice are landed. The remaining milestone focus is presenter-system work, promotion-grade verification, and any residual breadth or closeout fixes exposed by that verification.
 
 Current shipped baseline:
 
@@ -83,27 +83,34 @@ Current shipped baseline:
 - hard roster-cap overflow handling is implemented
 - the early balance harness exists through ledgers, simulation, and reports
 - the shipped bodega-era bosses now have authored encounter portraits
-- the relocation trigger and handoff contract are specified from the bodega side
-- relocation readiness, blockers, carryover/reset rules, and the relocation interruption entry flow are now surfaced in the player-facing management/UI layer
-- Porter's is now the locked source concept for the first post-bodega headquarters tier
+- the relocation trigger, blockers, carryover/reset rules, and save-safe handoff contract are implemented
+- relocation readiness, blockers, and the relocation interruption entry flow are surfaced in the player-facing management/UI layer
+- Porter's is implemented as the first post-bodega headquarters tier, including:
+  - multi-floor HQ support
+  - starter landing state and upgrade path
+  - building-aware HQ environment data
+  - prep-room consumables
+  - Porter's-specific recruitment, income, and contract-rank tuning
 
 Remaining work:
 
-- broaden authored F/E/D content where repeated campaigns still feel too narrow
-- finish promotion-grade end-to-end relocation landing verification on a relocation-ready late-bodega path, and close any remaining handoff gaps that surface there
 - add the narrative presenter system as a bodega finishing-touch pass, starting with the assistant and retrofitting existing interruption-backed beats
-- implement the Porter's entry slice against the locked concept and handoff contract
-- run the promotion review against the closed early-game campaign
+- extend that presenter system into Porter's-specific bindings for the cook and bartender
+- finish promotion-grade end-to-end verification for relocation and the full Porter's arrival path on a relocation-ready late-bodega run, and close any defects exposed there
+- finish the promotion review against the closed early-game campaign
+- broaden authored F/E/D content only if the promotion review still shows that repeated bodega campaigns are too narrow
 
 Exit criteria:
 
 - the bodega has a clean and credible end state instead of feeling like an open-ended sandbox
 - relocation has a concrete runtime target and a save-safe handoff
-- the second headquarters tier starts from a closed early-game baseline and a locked Porter's target
+- the second headquarters tier starts from a closed early-game baseline and a shipped Porter's target
 
 ## Phase 3: Porter's Expansion
 
 Goal: prove that scale changes gameplay, not just numbers.
+
+Status: the Porter's entry slice is now shipped through relocation landing, starter rooms, multi-floor support, upgrades, prep-room consumables, and first-pass tuning. This section remains future-facing for deeper second-headquarters and later-building work beyond the shipped entry slice.
 
 Deliverables:
 
@@ -217,7 +224,7 @@ Exit criteria:
 2. Completed: get the bodega playable on top of that infrastructure.
 3. Completed: finish the bodega visually.
 4. Completed: make the first bodega slice good.
-5. Finish the remaining bodega end-state work, land the presenter pass, and complete the Porter's handoff target.
+5. Finish the remaining presenter pass and promotion-grade review work from the shipped Porter's baseline.
 6. Expand into Porter's.
 7. Add systemic competitors.
 8. Add prestige content.

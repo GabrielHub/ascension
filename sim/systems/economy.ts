@@ -6,11 +6,13 @@ import {
   StaffState,
   WorldTimeState,
 } from "../components";
-import { getRoomTemplateForEntity, getStaffRoleTag, pushRuntimeEvent } from "./commands";
 import {
-  DAILY_ACTIVE_OPERATOR_PAYROLL,
-  DAILY_ACTIVE_RECEPTION_STOREFRONT_INCOME,
-} from "./economy-constants";
+  getActiveBuildingTemplate,
+  getRoomTemplateForEntity,
+  getStaffRoleTag,
+  pushRuntimeEvent,
+} from "./commands";
+import { DAILY_ACTIVE_OPERATOR_PAYROLL } from "./economy-constants";
 import type { SimSystem } from "./types";
 
 export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
@@ -43,10 +45,11 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
       RoomInstance.isOperational[entity] === 1
     );
   }).length;
+  const buildingTemplate = getActiveBuildingTemplate(context);
+  const storefrontIncome = buildingTemplate.baseIncome ?? 50;
   const resourceIncomeModifiers = BuildingAuthority.resourceIncomeModifiers[buildingEntity] ?? {};
   const dailyIncome =
-    activeReceptionRooms * DAILY_ACTIVE_RECEPTION_STOREFRONT_INCOME +
-    (resourceIncomeModifiers["resource/cash"] ?? 0);
+    activeReceptionRooms * storefrontIncome + (resourceIncomeModifiers["resource/cash"] ?? 0);
 
   const netCash = (dailyIncome - payroll) * daysElapsed;
   GuildState.treasury[context.singletonEntities.guild] += netCash;

@@ -4,7 +4,7 @@ import { bossById } from "./bosses";
 import { buildingTemplates } from "./buildings";
 import { enemyFamilyTemplates } from "./enemies";
 import { eventTemplates } from "./events";
-import { dropTables as dropTableData, itemTemplates } from "./items";
+import { dropTables as dropTableData, itemTemplates, prepRecipeTemplates } from "./items";
 import { missionTemplates } from "./missions";
 import { resourceTemplates } from "./resources";
 import { roomTemplates } from "./rooms";
@@ -16,6 +16,7 @@ import {
   type ItemTemplate,
   type MissionTemplate,
   type OrdinaryEnemyTemplate,
+  type PrepRecipeTemplate,
   type ResourceTemplate,
   type RoomTemplate,
   type TemplateBase,
@@ -35,14 +36,16 @@ const TEMPLATE_CATEGORY_ORDER: readonly TemplateCategory[] = [
   "missions",
   "events",
   "items",
+  "prepRecipes",
   "dropTables",
   "enemyFamilies",
 ] as const;
 
-function makeLookup<T extends TemplateBase>(
+function makeLookup<T extends { id: string }>(
   category: TemplateCategory,
   templates: readonly T[],
   issues: TemplateRegistryValidationIssue[],
+  duplicateMessage: string = "Duplicate template id.",
 ): {
   byId: ReadonlyMap<string, T>;
   indexById: ReadonlyMap<string, number>;
@@ -55,7 +58,7 @@ function makeLookup<T extends TemplateBase>(
       issues.push({
         category,
         templateId: template.id,
-        message: "Duplicate template id.",
+        message: duplicateMessage,
       });
       return;
     }
@@ -341,8 +344,6 @@ function validateDropTables(
   items: ReadonlyMap<string, ItemTemplate>,
   issues: TemplateRegistryValidationIssue[],
 ): void {
-  const seenIds = new Set<string>();
-
   tables.forEach((table) => {
     if (table.id.trim().length === 0) {
       issues.push({
@@ -351,15 +352,6 @@ function validateDropTables(
         message: "Drop table id must be a non-empty string.",
       });
     }
-
-    if (seenIds.has(table.id)) {
-      issues.push({
-        category: "dropTables",
-        templateId: table.id,
-        message: "Duplicate drop table id.",
-      });
-    }
-    seenIds.add(table.id);
 
     if (table.entries.length === 0) {
       issues.push({
@@ -402,6 +394,119 @@ function validateDropTables(
         });
       }
     });
+  });
+}
+
+function validatePrepRecipes(
+  recipes: readonly PrepRecipeTemplate[],
+  items: ReadonlyMap<string, ItemTemplate>,
+  rooms: ReadonlyMap<string, RoomTemplate>,
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenRecipeIds = new Set<string>();
+
+  recipes.forEach((recipe) => {
+    if (recipe.id.trim().length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "Prep recipe id must be a non-empty string.",
+      });
+    }
+
+    if (seenRecipeIds.has(recipe.id)) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "Duplicate prep recipe id.",
+      });
+    }
+    seenRecipeIds.add(recipe.id);
+
+    if (recipe.name.trim().length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "Prep recipe name must be a non-empty string.",
+      });
+    }
+
+    if (recipe.description.trim().length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "Prep recipe description must be a non-empty string.",
+      });
+    }
+
+    if (recipe.inputs.length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "Prep recipe must have at least one input.",
+      });
+    }
+
+    recipe.inputs.forEach((input, index) => {
+      if (!items.has(input.itemId)) {
+        issues.push({
+          category: "prepRecipes",
+          templateId: recipe.id,
+          message: `Input ${index + 1}: unknown item "${input.itemId}".`,
+        });
+      }
+
+      if (input.quantity < 1) {
+        issues.push({
+          category: "prepRecipes",
+          templateId: recipe.id,
+          message: `Input ${index + 1}: quantity must be at least 1.`,
+        });
+      }
+    });
+
+    const outputItem = items.get(recipe.outputItemId);
+    if (!outputItem) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: `Unknown output item "${recipe.outputItemId}".`,
+      });
+    } else if (outputItem.category !== "consumable") {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: `Output item "${recipe.outputItemId}" must be a consumable.`,
+      });
+    }
+
+    if (recipe.outputQuantity < 1) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "outputQuantity must be at least 1.",
+      });
+    }
+
+    if (recipe.requiredRoomTag.trim().length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: "requiredRoomTag must be a non-empty string.",
+      });
+      return;
+    }
+
+    const matchingRooms = Array.from(rooms.values()).filter((room) =>
+      room.tags.includes(recipe.requiredRoomTag),
+    );
+    if (matchingRooms.length === 0) {
+      issues.push({
+        category: "prepRecipes",
+        templateId: recipe.id,
+        message: `No room template provides required tag "${recipe.requiredRoomTag}".`,
+      });
+    }
   });
 }
 
@@ -530,14 +635,6 @@ function makeEnemyTemplateLookup(
   return byId;
 }
 
-function makeDropTableLookup(tables: readonly DropTable[]): ReadonlyMap<string, DropTable> {
-  const byId = new Map<string, DropTable>();
-  tables.forEach((table) => {
-    byId.set(table.id, table);
-  });
-  return byId;
-}
-
 function formatIssues(issues: readonly TemplateRegistryValidationIssue[]): string {
   const ordered = [...issues].sort((left, right) => {
     const categoryOrder =
@@ -572,6 +669,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   const items = [...itemTemplates];
   const dropTables = [...dropTableData];
   const enemyFamilies = [...enemyFamilyTemplates];
+  const prepRecipes = [...prepRecipeTemplates];
 
   const resourceLookup = makeLookup("resources", resources, issues);
   const buildingLookup = makeLookup("buildings", buildings, issues);
@@ -580,7 +678,12 @@ export function createTemplateRegistry(): TemplateRegistry {
   const missionLookup = makeLookup("missions", missions, issues);
   const eventLookup = makeLookup("events", events, issues);
   const itemLookup = makeLookup("items", items, issues);
-  const dropTableLookup = makeDropTableLookup(dropTables);
+  const dropTableLookup = makeLookup(
+    "dropTables",
+    dropTables,
+    issues,
+    "Duplicate drop table id.",
+  ).byId;
   const enemyFamilyLookup = makeEnemyFamilyLookup(enemyFamilies);
   const enemyTemplateLookup = makeEnemyTemplateLookup(enemyFamilies);
 
@@ -597,6 +700,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   validateMissionTemplates(missions, issues);
   validateEventTemplates(events, issues);
   validateItemTemplates(items, issues);
+  validatePrepRecipes(prepRecipes, itemLookup.byId, roomLookup.byId, issues);
   validateDropTables(dropTables, itemLookup.byId, issues);
   validateEnemyFamilies(enemyFamilies, dropTableLookup, issues);
 
@@ -625,6 +729,8 @@ export function createTemplateRegistry(): TemplateRegistry {
     enemyFamilyById: enemyFamilyLookup,
     enemyTemplateById: enemyTemplateLookup,
     bossById,
+    prepRecipes,
+    prepRecipeById: new Map(prepRecipes.map((r) => [r.id, r])),
     resourceIndexById: resourceLookup.indexById,
     buildingIndexById: buildingLookup.indexById,
     roomIndexById: roomLookup.indexById,

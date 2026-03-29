@@ -1,381 +1,489 @@
 {
-  "description": "HQ environment asset index — modular tile-based bodega composition system. Canvas-rendered floor tiles, wall segments, and perimeter tiles snap to a 96x48 isometric grid. SVG sprites used for props, scenery, and reference assets.",
-  "locked": null,
-  "style": "bodega-angled-isometric",
-  "building": "bodega",
-  "paths": {
-    "partsRoot": "/data/svg-environments/hq/bodega/parts",
-    "referenceRoot": "/data/svg-environments/hq/bodega/reference",
-    "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
-  },
-  "composition": {
-    "tileWidth": 96,
-    "tileHeight": 48,
-    "wallHeight": 84,
-    "rendering": "canvas-modular",
-    "roomRecipes": [
-      "room:operations",
-      "room:recovery",
-      "room:social",
-      "room:staffing",
-      "room:training"
-    ],
-    "sceneSystem": {
-      "description": "Room interiors use pre-composed scene SVGs containing props only (no walls, floors, or structure). The engine renders structure programmatically and overlays the scene SVG.",
-      "canonicalOrigin": [200, 100],
-      "canonicalViewBox": "20 0 420 310",
-      "roomFootprint": { "cols": 4, "rows": 3 },
-      "fallback": "per-prop sprite placement for rooms without scene SVGs"
-    }
-  },
-  "parts": [
-    {
-      "id": "shell/iso-bodega-shell",
-      "category": "shell",
-      "tags": ["interior", "isometric", "building", "cutaway", "room-box", "reference-only"],
-      "scale": "building",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "structure/iso-wall-corner",
-      "category": "structure",
-      "tags": ["wall", "corner", "isometric", "reusable"],
-      "scale": "structure",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "structure/iso-floor-concrete",
-      "category": "structure",
-      "tags": ["floor", "concrete", "isometric", "reusable"],
-      "scale": "structure",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "structure/iso-door-interior",
-      "category": "structure",
-      "tags": ["door", "interior", "isometric", "passage"],
-      "scale": "structure",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "structure/iso-window-barred",
-      "category": "structure",
-      "tags": ["window", "barred", "isometric", "security"],
-      "scale": "structure",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-desk-reception",
-      "category": "prop",
-      "tags": ["desk", "counter", "reception", "furniture", "isometric"],
-      "scale": "prop",
-      "roomFamily": "front-desk",
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-chair-office",
-      "category": "prop",
-      "tags": ["chair", "seating", "office", "furniture", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-cabinet-filing",
-      "category": "prop",
-      "tags": ["cabinet", "storage", "filing", "furniture", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-bed-medical",
-      "category": "prop",
-      "tags": ["bed", "medical", "cot", "recovery", "isometric"],
-      "scale": "prop",
-      "roomFamily": "infirmary",
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-cabinet-medical",
-      "category": "prop",
-      "tags": ["cabinet", "medical", "supplies", "storage", "isometric"],
-      "scale": "prop",
-      "roomFamily": "infirmary",
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-light-pendant",
-      "category": "prop",
-      "tags": ["light", "pendant", "fixture", "lighting", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-plant-potted",
-      "category": "prop",
-      "tags": ["plant", "potted", "decor", "foliage", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "props/iso-sign-neon",
-      "category": "prop",
-      "tags": ["sign", "signage", "neon", "bodega", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-sky",
-      "category": "background",
-      "tags": ["sky", "atmosphere", "skyline", "isometric", "backdrop"],
-      "scale": "backdrop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-tenement-left",
-      "category": "background",
-      "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
-      "scale": "backdrop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-tenement-right",
-      "category": "background",
-      "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
-      "scale": "backdrop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-sidewalk",
-      "category": "background",
-      "tags": ["sidewalk", "ground", "concrete", "curb", "isometric", "backdrop"],
-      "scale": "backdrop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-street",
-      "category": "background",
-      "tags": ["street", "asphalt", "road", "isometric", "backdrop"],
-      "scale": "backdrop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-hydrant",
-      "category": "background",
-      "tags": ["hydrant", "prop", "street-furniture", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-lamppost",
-      "category": "background",
-      "tags": ["lamppost", "light", "street-furniture", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-trash-bags",
-      "category": "background",
-      "tags": ["trash", "garbage", "bags", "street-detail", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-awning",
-      "category": "background",
-      "tags": ["awning", "canopy", "storefront", "bodega", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-dumpster",
-      "category": "background",
-      "tags": ["dumpster", "alley", "trash", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "background/iso-bg-steam-vent",
-      "category": "background",
-      "tags": ["steam", "vent", "atmosphere", "street-detail", "isometric"],
-      "scale": "prop",
-      "roomFamily": null,
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-register",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "register", "operations"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-register-2",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "register", "operations", "upgraded"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-counter",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "counter", "operations"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-counter-2",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "counter", "operations", "upgraded"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-dining-area",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "dining", "social"],
-      "scale": "room",
-      "roomFamily": "social",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-dining-area-2",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "dining", "social", "upgraded"],
-      "scale": "room",
-      "roomFamily": "social",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-the-dining-area-3",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "dining", "social", "upgraded", "max"],
-      "scale": "room",
-      "roomFamily": "social",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-supply-closet",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "storage", "operations"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "recipes/scene-supply-closet-2",
-      "category": "scene",
-      "tags": ["room", "interior", "props-only", "bodega", "storage", "operations", "upgraded"],
-      "scale": "room",
-      "roomFamily": "operations",
-      "status": "approved"
-    },
-    {
-      "id": "actor-markers/marker-chibi-broad",
-      "category": "actor-marker",
-      "tags": ["chibi", "token", "operator", "broad", "in-world"],
-      "scale": "marker",
-      "roomFamily": null,
-      "status": "exploration"
-    },
-    {
-      "id": "actor-markers/marker-chibi-medium",
-      "category": "actor-marker",
-      "tags": ["chibi", "token", "operator", "medium", "in-world"],
-      "scale": "marker",
-      "roomFamily": null,
-      "status": "exploration"
-    },
-    {
-      "id": "actor-markers/marker-chibi-lean",
-      "category": "actor-marker",
-      "tags": ["chibi", "token", "operator", "lean", "in-world"],
-      "scale": "marker",
-      "roomFamily": null,
-      "status": "exploration"
-    }
-  ],
-  "backdrop": {
-    "profileId": "bodega-ground",
-    "elevationBandId": null,
-    "phases": {
-      "sunrise": {
-        "ambientTint": "rgba(255, 180, 120, 0.12)",
-        "fogColor": "rgba(255, 200, 150, 0.08)",
-        "shadowIntensity": 0.3,
-        "zones": {
-          "belowShell": [],
-          "rear": [],
-          "leftFlank": [],
-          "rightFlank": [],
-          "fore": [],
-          "aboveShell": [],
-          "fxOverlay": []
+  "description": "HQ environment asset index — per-building environment packages. Each building entry owns its composition config and backdrop profiles.",
+  "buildings": {
+    "building/bodega": {
+      "style": "bodega-angled-isometric",
+      "paths": {
+        "partsRoot": "/data/svg-environments/hq/bodega/parts",
+        "referenceRoot": "/data/svg-environments/hq/bodega/reference",
+        "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
+      },
+      "composition": {
+        "tileWidth": 96,
+        "tileHeight": 48,
+        "wallHeight": 84,
+        "rendering": "canvas-modular",
+        "roomRecipes": [
+          "room:operations",
+          "room:recovery",
+          "room:social",
+          "room:staffing",
+          "room:training"
+        ],
+        "sceneSystem": {
+          "description": "Room interiors use pre-composed scene SVGs containing props only (no walls, floors, or structure). The engine renders structure programmatically and overlays the scene SVG.",
+          "canonicalOrigin": [200, 100],
+          "canonicalViewBox": "20 0 420 310",
+          "roomFootprint": { "cols": 4, "rows": 3 },
+          "fallback": "per-prop sprite placement for rooms without scene SVGs"
         }
       },
-      "day": {
-        "ambientTint": "rgba(255, 255, 240, 0.05)",
-        "fogColor": "rgba(200, 210, 220, 0.04)",
-        "shadowIntensity": 0.5,
-        "zones": {
-          "belowShell": [],
-          "rear": [],
-          "leftFlank": [],
-          "rightFlank": [],
-          "fore": [],
-          "aboveShell": [],
-          "fxOverlay": []
+      "parts": [
+        {
+          "id": "shell/iso-bodega-shell",
+          "category": "shell",
+          "tags": ["interior", "isometric", "building", "cutaway", "room-box", "reference-only"],
+          "scale": "building",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "structure/iso-wall-corner",
+          "category": "structure",
+          "tags": ["wall", "corner", "isometric", "reusable"],
+          "scale": "structure",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "structure/iso-floor-concrete",
+          "category": "structure",
+          "tags": ["floor", "concrete", "isometric", "reusable"],
+          "scale": "structure",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "structure/iso-door-interior",
+          "category": "structure",
+          "tags": ["door", "interior", "isometric", "passage"],
+          "scale": "structure",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "structure/iso-window-barred",
+          "category": "structure",
+          "tags": ["window", "barred", "isometric", "security"],
+          "scale": "structure",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-desk-reception",
+          "category": "prop",
+          "tags": ["desk", "counter", "reception", "furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": "front-desk",
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-chair-office",
+          "category": "prop",
+          "tags": ["chair", "seating", "office", "furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-cabinet-filing",
+          "category": "prop",
+          "tags": ["cabinet", "storage", "filing", "furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-bed-medical",
+          "category": "prop",
+          "tags": ["bed", "medical", "cot", "recovery", "isometric"],
+          "scale": "prop",
+          "roomFamily": "infirmary",
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-cabinet-medical",
+          "category": "prop",
+          "tags": ["cabinet", "medical", "supplies", "storage", "isometric"],
+          "scale": "prop",
+          "roomFamily": "infirmary",
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-light-pendant",
+          "category": "prop",
+          "tags": ["light", "pendant", "fixture", "lighting", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-plant-potted",
+          "category": "prop",
+          "tags": ["plant", "potted", "decor", "foliage", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "props/iso-sign-neon",
+          "category": "prop",
+          "tags": ["sign", "signage", "neon", "bodega", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-sky",
+          "category": "background",
+          "tags": ["sky", "atmosphere", "skyline", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-tenement-left",
+          "category": "background",
+          "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-tenement-right",
+          "category": "background",
+          "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-sidewalk",
+          "category": "background",
+          "tags": ["sidewalk", "ground", "concrete", "curb", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-street",
+          "category": "background",
+          "tags": ["street", "asphalt", "road", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-hydrant",
+          "category": "background",
+          "tags": ["hydrant", "prop", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-lamppost",
+          "category": "background",
+          "tags": ["lamppost", "light", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-trash-bags",
+          "category": "background",
+          "tags": ["trash", "garbage", "bags", "street-detail", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-awning",
+          "category": "background",
+          "tags": ["awning", "canopy", "storefront", "bodega", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-dumpster",
+          "category": "background",
+          "tags": ["dumpster", "alley", "trash", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-steam-vent",
+          "category": "background",
+          "tags": ["steam", "vent", "atmosphere", "street-detail", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-register",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "register", "operations"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-register-2",
+          "category": "scene",
+          "tags": [
+            "room",
+            "interior",
+            "props-only",
+            "bodega",
+            "register",
+            "operations",
+            "upgraded"
+          ],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-counter",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "counter", "operations"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-counter-2",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "counter", "operations", "upgraded"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-dining-area",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "dining", "social"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-dining-area-2",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "dining", "social", "upgraded"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-dining-area-3",
+          "category": "scene",
+          "tags": [
+            "room",
+            "interior",
+            "props-only",
+            "bodega",
+            "dining",
+            "social",
+            "upgraded",
+            "max"
+          ],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-supply-closet",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "storage", "operations"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-supply-closet-2",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "storage", "operations", "upgraded"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "actor-markers/marker-chibi-broad",
+          "category": "actor-marker",
+          "tags": ["chibi", "token", "operator", "broad", "in-world"],
+          "scale": "marker",
+          "roomFamily": null,
+          "status": "exploration"
+        },
+        {
+          "id": "actor-markers/marker-chibi-medium",
+          "category": "actor-marker",
+          "tags": ["chibi", "token", "operator", "medium", "in-world"],
+          "scale": "marker",
+          "roomFamily": null,
+          "status": "exploration"
+        },
+        {
+          "id": "actor-markers/marker-chibi-lean",
+          "category": "actor-marker",
+          "tags": ["chibi", "token", "operator", "lean", "in-world"],
+          "scale": "marker",
+          "roomFamily": null,
+          "status": "exploration"
+        }
+      ],
+      "backdrop": {
+        "profileId": "bodega-ground",
+        "elevationBandId": null,
+        "phases": {
+          "sunrise": {
+            "ambientTint": "rgba(255, 180, 120, 0.12)",
+            "fogColor": "rgba(255, 200, 150, 0.08)",
+            "shadowIntensity": 0.3,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "day": {
+            "ambientTint": "rgba(255, 255, 240, 0.05)",
+            "fogColor": "rgba(200, 210, 220, 0.04)",
+            "shadowIntensity": 0.5,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "sunset": {
+            "ambientTint": "rgba(255, 140, 80, 0.15)",
+            "fogColor": "rgba(255, 160, 100, 0.10)",
+            "shadowIntensity": 0.6,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "night": {
+            "ambientTint": "rgba(40, 60, 120, 0.20)",
+            "fogColor": "rgba(20, 30, 60, 0.15)",
+            "shadowIntensity": 0.8,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          }
+        }
+      }
+    },
+    "building/porters": {
+      "style": "porters-waterfront-isometric",
+      "paths": {
+        "partsRoot": "/data/svg-environments/hq/porters/parts",
+        "referenceRoot": "/data/svg-environments/hq/porters/reference",
+        "recipesRoot": "/data/svg-environments/hq/porters/recipes"
+      },
+      "composition": {
+        "tileWidth": 96,
+        "tileHeight": 48,
+        "wallHeight": 84,
+        "rendering": "canvas-modular",
+        "roomRecipes": [
+          "room:operations",
+          "room:recovery",
+          "room:social",
+          "room:staffing",
+          "room:training"
+        ],
+        "sceneSystem": {
+          "canonicalOrigin": [200, 100],
+          "canonicalViewBox": "20 0 420 310",
+          "roomFootprint": { "cols": 4, "rows": 3 },
+          "fallback": "per-prop sprite placement for rooms without scene SVGs"
         }
       },
-      "sunset": {
-        "ambientTint": "rgba(255, 140, 80, 0.15)",
-        "fogColor": "rgba(255, 160, 100, 0.10)",
-        "shadowIntensity": 0.6,
-        "zones": {
-          "belowShell": [],
-          "rear": [],
-          "leftFlank": [],
-          "rightFlank": [],
-          "fore": [],
-          "aboveShell": [],
-          "fxOverlay": []
-        }
-      },
-      "night": {
-        "ambientTint": "rgba(40, 60, 120, 0.20)",
-        "fogColor": "rgba(20, 30, 60, 0.15)",
-        "shadowIntensity": 0.8,
-        "zones": {
-          "belowShell": [],
-          "rear": [],
-          "leftFlank": [],
-          "rightFlank": [],
-          "fore": [],
-          "aboveShell": [],
-          "fxOverlay": []
+      "backdrop": {
+        "profileId": "porters-waterfront",
+        "elevationBandId": "ground-floor",
+        "phases": {
+          "sunrise": {
+            "ambientTint": "rgba(180, 160, 130, 0.12)",
+            "fogColor": "rgba(200, 190, 170, 0.18)",
+            "shadowIntensity": 0.1,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "day": {
+            "ambientTint": "rgba(0, 0, 0, 0)",
+            "fogColor": "rgba(0, 0, 0, 0)",
+            "shadowIntensity": 0.18,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "sunset": {
+            "ambientTint": "rgba(200, 140, 60, 0.15)",
+            "fogColor": "rgba(180, 120, 60, 0.08)",
+            "shadowIntensity": 0.22,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "night": {
+            "ambientTint": "rgba(20, 30, 50, 0.2)",
+            "fogColor": "rgba(10, 15, 30, 0.12)",
+            "shadowIntensity": 0.28,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          }
         }
       }
     }

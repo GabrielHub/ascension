@@ -115,8 +115,25 @@ function getDefaultRoots(building: string): HqEnvironmentAssetRoots {
   };
 }
 
+interface RawBuildingsIndex {
+  buildings?: Record<string, RawHqEnvironmentManifest>;
+}
+
+function getLoadedBuildingsIndex(): RawBuildingsIndex {
+  return hqEnvironmentIndexData as unknown as RawBuildingsIndex;
+}
+
 export function getLoadedHqEnvironmentManifest(): RawHqEnvironmentManifest {
-  return hqEnvironmentIndexData as unknown as RawHqEnvironmentManifest;
+  const index = getLoadedBuildingsIndex();
+  return (
+    index.buildings?.["building/bodega"] ??
+    (hqEnvironmentIndexData as unknown as RawHqEnvironmentManifest)
+  );
+}
+
+function getManifestForBuilding(buildingId: string): RawHqEnvironmentManifest | undefined {
+  const index = getLoadedBuildingsIndex();
+  return index.buildings?.[buildingId];
 }
 
 export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
@@ -232,28 +249,27 @@ let _cachedBackdropManifest: HqBackdropManifest | null | undefined;
 
 export function getHqBackdropManifest(): HqBackdropManifest | null {
   if (_cachedBackdropManifest !== undefined) return _cachedBackdropManifest;
+  _cachedBackdropManifest = parseBackdropManifestFromRaw(getLoadedHqEnvironmentManifest().backdrop);
+  return _cachedBackdropManifest;
+}
 
-  const manifest = getLoadedHqEnvironmentManifest();
-  const raw = manifest.backdrop;
-  if (!raw || typeof raw !== "object") {
-    _cachedBackdropManifest = null;
-    return null;
-  }
+// ── Per-building backdrop resolution ──────────────────────────────────
+
+const _backdropByBuilding = new Map<string, HqBackdropManifest | null>();
+
+function parseBackdropManifestFromRaw(
+  raw: RawBackdropManifest | undefined,
+): HqBackdropManifest | null {
+  if (!raw || typeof raw !== "object") return null;
 
   const profileId = typeof raw.profileId === "string" ? raw.profileId : "unknown";
   const elevationBandId = typeof raw.elevationBandId === "string" ? raw.elevationBandId : null;
 
   const rawPhases = raw.phases;
-  if (!rawPhases || typeof rawPhases !== "object") {
-    _cachedBackdropManifest = null;
-    return null;
-  }
+  if (!rawPhases || typeof rawPhases !== "object") return null;
 
   for (const phase of ALL_PHASES) {
-    if (!(phase in rawPhases)) {
-      _cachedBackdropManifest = null;
-      return null;
-    }
+    if (!(phase in rawPhases)) return null;
   }
 
   const phases = {} as Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>;
@@ -261,6 +277,80 @@ export function getHqBackdropManifest(): HqBackdropManifest | null {
     phases[phase] = parseBackdropPhaseProfile(rawPhases[phase]);
   }
 
-  _cachedBackdropManifest = { profileId, elevationBandId, phases };
-  return _cachedBackdropManifest;
+  return { profileId, elevationBandId, phases };
+}
+
+/**
+ * Return the backdrop manifest for a specific building.
+ * Reads from the data-driven hq-environment-index.json buildings map.
+ * Falls back to the bodega manifest for unknown buildings.
+ */
+export function getHqBackdropManifestForBuilding(buildingId: string): HqBackdropManifest | null {
+  if (_backdropByBuilding.has(buildingId)) return _backdropByBuilding.get(buildingId)!;
+
+  const buildingManifest = getManifestForBuilding(buildingId);
+  let result: HqBackdropManifest | null;
+  if (buildingManifest?.backdrop) {
+    result = parseBackdropManifestFromRaw(buildingManifest.backdrop);
+  } else {
+    result = getHqBackdropManifest();
+  }
+
+  _backdropByBuilding.set(buildingId, result);
+  return result;
+}
+
+/**
+ * Return the render config for a specific building.
+ * Reads from the data-driven hq-environment-index.json buildings map.
+ * Falls back to the bodega config for unknown buildings.
+ */
+export function getHqEnvironmentRenderConfigForBuilding(
+  buildingId: string,
+): HqEnvironmentRenderConfig {
+  const buildingManifest = getManifestForBuilding(buildingId);
+  if (buildingManifest) {
+    const buildingSlug = buildingId.replace("building/", "");
+    const defaultRoots = getDefaultRoots(buildingSlug);
+    const sceneSystem = buildingManifest.composition?.sceneSystem;
+    const canonicalOrigin = sceneSystem?.canonicalOrigin;
+
+    return {
+      building: buildingSlug,
+      paths: {
+        partsRoot: buildingManifest.paths?.partsRoot?.trim() || defaultRoots.partsRoot,
+        referenceRoot: buildingManifest.paths?.referenceRoot?.trim() || defaultRoots.referenceRoot,
+        recipesRoot: buildingManifest.paths?.recipesRoot?.trim() || defaultRoots.recipesRoot,
+      },
+      composition: {
+        tileWidth: parsePositiveNumber(buildingManifest.composition?.tileWidth, DEFAULT_TILE_WIDTH),
+        tileHeight: parsePositiveNumber(
+          buildingManifest.composition?.tileHeight,
+          DEFAULT_TILE_HEIGHT,
+        ),
+        wallHeight: parsePositiveNumber(
+          buildingManifest.composition?.wallHeight,
+          DEFAULT_WALL_HEIGHT,
+        ),
+        sceneSystem: {
+          canonicalOrigin: [
+            parseCoordinateNumber(canonicalOrigin?.[0], DEFAULT_CANONICAL_ORIGIN[0]),
+            parseCoordinateNumber(canonicalOrigin?.[1], DEFAULT_CANONICAL_ORIGIN[1]),
+          ] as const,
+          canonicalViewBox: parseCanonicalViewBox(sceneSystem?.canonicalViewBox),
+          roomFootprint: {
+            cols: parsePositiveNumber(
+              sceneSystem?.roomFootprint?.cols,
+              DEFAULT_ROOM_FOOTPRINT.cols,
+            ),
+            rows: parsePositiveNumber(
+              sceneSystem?.roomFootprint?.rows,
+              DEFAULT_ROOM_FOOTPRINT.rows,
+            ),
+          },
+        },
+      },
+    };
+  }
+  return getHqEnvironmentRenderConfig();
 }

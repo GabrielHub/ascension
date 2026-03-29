@@ -146,6 +146,9 @@ export interface RuntimeSessionCommands {
   unequipItem(
     input: Omit<Extract<SimCommand, { type: "sim/unequip-item" }>, "type">,
   ): Promise<void>;
+  prepConsumable(
+    input: Omit<Extract<SimCommand, { type: "sim/prep-consumable" }>, "type">,
+  ): Promise<void>;
 }
 
 export interface RuntimeSession {
@@ -1285,7 +1288,13 @@ function createRuntimeSession(
 
     const actors: ActorMarker[] = [...operatorActors, ...staffActors, ...visitorActors];
 
-    return createHqWorldSnapshot(buildingName, geometry, actors, view.clock.minuteOfDay);
+    return createHqWorldSnapshot(
+      buildingName,
+      geometry,
+      actors,
+      view.clock.minuteOfDay,
+      activeBuildingId,
+    );
   }
 
   function deriveRaidWorldSnapshot(view: RuntimePhase1View): RaidWorldSnapshot | null {
@@ -1606,6 +1615,13 @@ function createRuntimeSession(
     unequipItem(input) {
       return commands.dispatch({
         type: "sim/unequip-item",
+        ...input,
+      });
+    },
+
+    prepConsumable(input) {
+      return commands.dispatch({
+        type: "sim/prep-consumable",
         ...input,
       });
     },

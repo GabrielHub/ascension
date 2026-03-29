@@ -17,7 +17,8 @@ describe("template registry", () => {
     expect(registry.upgrades).toHaveLength(12);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(13);
-    expect(registry.items).toHaveLength(58);
+    expect(registry.items).toHaveLength(62);
+    expect(registry.prepRecipes).toHaveLength(4);
     expect(registry.dropTables).toHaveLength(27);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
@@ -217,6 +218,19 @@ describe("template registry", () => {
       .forEach((item) => {
         expect(item.sellPrice).toBeLessThan(item.buyPrice);
       });
+  });
+
+  it("validates prep recipes reference valid staging rooms and consumable outputs", () => {
+    const registry = createTemplateRegistry();
+
+    registry.prepRecipes.forEach((recipe) => {
+      expect(recipe.requiredRoomTag).toBeTruthy();
+      expect(registry.rooms.some((room) => room.tags.includes(recipe.requiredRoomTag))).toBe(true);
+
+      const outputItem = registry.itemById.get(recipe.outputItemId);
+      expect(outputItem).toBeTruthy();
+      expect(outputItem?.category).toBe("consumable");
+    });
   });
 
   it("validates drop table entries reference existing items", () => {

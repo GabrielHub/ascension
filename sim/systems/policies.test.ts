@@ -1,4 +1,4 @@
-import { addComponent, addEntity, createWorld } from "bitecs";
+import { addComponent, addEntity } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
@@ -31,119 +31,34 @@ import { reconcileAssignmentsSystem, scoreOperatorBlocks } from "./assignment";
 import { computeAutonomyFlags } from "./morale";
 import { advanceNeedsSystem, computeNeedReadinessFlags } from "./needs";
 import { computeOperatorRaidReadiness, getDepartureCheck } from "./raids";
+import { createSimTestContext } from "./test-context";
 import type { SimSystemContext } from "./types";
 import { SeededRng, seedFromKey } from "../uncertainty";
 import { advanceVisitorPoolSystem } from "./visitors";
 
 function createPolicyContext(): SimSystemContext {
-  const world = createWorld();
-  const guildEntity = addEntity(world);
-  const timeEntity = addEntity(world);
-  const buildingEntity = addEntity(world);
-
-  addComponent(world, guildEntity, GuildState);
-  addComponent(world, timeEntity, WorldTimeState);
-  addComponent(world, buildingEntity, BuildingAuthority);
-
-  GuildState.reputation[guildEntity] = 12;
-  GuildState.treasury[guildEntity] = 500;
-  GuildState.intel[guildEntity] = 8;
-
-  WorldTimeState.tick[timeEntity] = 0;
-  WorldTimeState.day[timeEntity] = 2;
-  WorldTimeState.minuteOfDay[timeEntity] = 600;
-
-  BuildingAuthority.policies[buildingEntity] = { ...DEFAULT_POLICY_STATE };
-  BuildingAuthority.contractLifecycle[buildingEntity] = "bidding";
-  BuildingAuthority.contractSite[buildingEntity] = null;
-  BuildingAuthority.activeRaidPackets[buildingEntity] = [];
-  BuildingAuthority.raidSummaries[buildingEntity] = [];
-  BuildingAuthority.postedContracts[buildingEntity] = [];
-  BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = 0;
-  BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = 0;
-  BuildingAuthority.pressure[buildingEntity] = 0;
-  BuildingAuthority.recoveryRateModifier[buildingEntity] = 0;
-  BuildingAuthority.attractionWeightByTag[buildingEntity] = {
-    "role:field_lead": 0,
-    "role:scout": 0,
-    "role:medic": 0,
-  };
-
-  return {
-    world,
+  return createSimTestContext({
     registry: templateRegistry,
-    singletonEntities: {
-      guild: guildEntity,
-      time: timeEntity,
-      building: buildingEntity,
+    guild: {
+      reputation: 12,
+      treasury: 500,
+      intel: 8,
     },
-    runtimeState: {
-      roomEntities: [],
-      operatorEntities: [],
-      raidOpportunityEntities: [],
-      staffEntities: [],
-      visitorEntities: [],
-      eventEntities: [],
-      dispositionEntities: [],
-      notableTieEntities: [],
-      recurringTeamEntities: [],
-      roomCultureEntities: [],
-      inventoryEntities: [],
-      equipmentEntities: [],
-      nextRoomSequence: 1,
-      nextOperatorSequence: 1,
-      nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
-      nextVisitorSequence: 1,
-      nextRaidSequence: 1,
-      nextEventSequence: 1,
-      nextTeamSequence: 1,
-      pendingCueIds: [],
-      pendingEvents: [],
-      raidPresentation: {
-        contractSiteId: null,
-        teams: [],
-        enemies: [],
-        features: [],
-      },
-      activeEncounter: null,
-      interruptionQueue: { active: null, queue: [], nextInstanceId: 1 },
-      incidentState: {
-        pendingIncident: null,
-        history: [],
-        cooldowns: {},
-        nextInstanceId: 1,
-        lastEvaluationMinute: 0,
-      },
-      guidanceState: {
-        seenBeatIds: [],
-        completedBeatIds: [],
-        dismissedBeatIds: [],
-        activeBeatId: null,
-        activeBeatView: null,
-        queuedBeatIds: [],
-        lastEvaluationMinute: 0,
-        openingPathState: "completed",
-        anchorResolutionFailures: [],
-        activeBeatProgressBaseline: null,
-        interactionCounts: {
-          staffingActions: 0,
-          upgradesPurchased: 0,
-        },
-      },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
-      worldTimeFrozen: false,
+    time: {
+      tick: 0,
+      day: 2,
+      minuteOfDay: 600,
     },
-  };
+    building: {
+      activeBuildingTemplateIndex: 0,
+      policies: DEFAULT_POLICY_STATE,
+      attractionWeightByTag: {
+        "role:field_lead": 0,
+        "role:scout": 0,
+        "role:medic": 0,
+      },
+    },
+  });
 }
 
 function addOperator(

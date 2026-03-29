@@ -148,7 +148,7 @@ export const roomTemplates = [
     id: "room/prep_room:tier_1",
     kind: "room",
     name: "The Prep Room",
-    tags: ["room:operations", "ops:staging"],
+    tags: ["room:operations", "ops:staging", "staff:logistics"],
     description:
       "Staging and lightweight consumable prep from monster drops. Not a workshop, but enough to send teams out ready.",
     tier: 1,

@@ -1,5 +1,9 @@
 import { getBuildingLayout, type BuildingFloorLayout } from "content/building-layouts";
-import { getHqBackdropManifest, getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import {
+  getHqBackdropManifest,
+  getHqBackdropManifestForBuilding,
+  getHqEnvironmentRenderConfig,
+} from "lib/hq-environment-manifest";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
 import { buildNavigationGraph } from "./navigation";
@@ -456,6 +460,264 @@ const TRAINING_RECIPE: RoomRecipe = {
   ],
 };
 
+// ── PORTER'S: THE FLOOR (Public Dining) ─────────────────────────────────
+// Public dining room. Warm brick, wooden tables, bar-restaurant atmosphere.
+const PORTERS_FLOOR_RECIPE: RoomRecipe = {
+  palette: { floor: "#3a2a1a", wallLeft: "#30221a", wallRight: "#362818" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [
+    { side: "right", cellOffset: 1 },
+    { side: "right", cellOffset: 5 },
+  ],
+  props: [
+    { assetKey: "table", relCol: 0.2, relRow: 0.35, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.24, relRow: 0.2, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.16, relRow: 0.5, width: 30, height: 40, zIndex: 40 },
+    { assetKey: "table", relCol: 0.5, relRow: 0.55, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.54, relRow: 0.4, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.46, relRow: 0.7, width: 30, height: 40, zIndex: 40 },
+    { assetKey: "table", relCol: 0.8, relRow: 0.35, width: 72, height: 64, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.84, relRow: 0.2, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.76, relRow: 0.5, width: 30, height: 40, zIndex: 40 },
+    { assetKey: "plant", relCol: 0.1, relRow: 0.8, width: 36, height: 58, zIndex: 41 },
+    {
+      assetKey: "light",
+      relCol: 0.35,
+      relRow: 0.3,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+    {
+      assetKey: "light",
+      relCol: 0.65,
+      relRow: 0.3,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+  ],
+};
+
+// ── PORTER'S: THE BAR (Recruitment) ─────────────────────────────────────
+// Recruitment over drinks. Counter hero, stools, louder than the bodega counter.
+const PORTERS_BAR_RECIPE: RoomRecipe = {
+  palette: { floor: "#38261a", wallLeft: "#2e2018", wallRight: "#342416" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 1 }],
+  props: [
+    { assetKey: "counter", relCol: 0.5, relRow: 0.45, width: 130, height: 83, zIndex: 40 },
+    { assetKey: "stool", relCol: 0.25, relRow: 0.72, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.42, relRow: 0.76, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.58, relRow: 0.78, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.75, relRow: 0.74, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "bottles", relCol: 0.3, relRow: 0.15, width: 60, height: 68, zIndex: 34 },
+    { assetKey: "bottles", relCol: 0.7, relRow: 0.15, width: 60, height: 68, zIndex: 34 },
+    {
+      assetKey: "sign",
+      relCol: 0.5,
+      relRow: 0.06,
+      width: 50,
+      height: 28,
+      zIndex: 33,
+      offsetY: -44,
+    },
+    {
+      assetKey: "light",
+      relCol: 0.5,
+      relRow: 0.3,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+  ],
+};
+
+// ── PORTER'S: THE OFFICE (Operations / Intel / Admin) ───────────────────
+// Upstairs room with a real desk. Filing cabinets, a door that closes.
+const PORTERS_OFFICE_RECIPE: RoomRecipe = {
+  palette: { floor: "#2e2a24", wallLeft: "#262220", wallRight: "#2a2822" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "desk", relCol: 0.5, relRow: 0.4, width: 100, height: 72, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.5, relRow: 0.22, width: 36, height: 48, zIndex: 36 },
+    { assetKey: "cabinet", relCol: 0.82, relRow: 0.2, width: 44, height: 60, zIndex: 34 },
+    { assetKey: "cabinet", relCol: 0.18, relRow: 0.25, width: 44, height: 60, zIndex: 34 },
+    {
+      assetKey: "corkboard",
+      relCol: 0.5,
+      relRow: 0.06,
+      width: 36,
+      height: 28,
+      zIndex: 33,
+      offsetY: -42,
+    },
+    { assetKey: "clipboard", relCol: 0.55, relRow: 0.38, width: 24, height: 20, zIndex: 39 },
+    {
+      assetKey: "phone",
+      relCol: 0.3,
+      relRow: 0.1,
+      width: 18,
+      height: 22,
+      zIndex: 33,
+      offsetY: -38,
+    },
+    { assetKey: "plant", relCol: 0.8, relRow: 0.7, width: 32, height: 50, zIndex: 40 },
+  ],
+};
+
+// ── PORTER'S: THE STOCKROOM (Logistics) ─────────────────────────────────
+// Proper shelving, labeled crates, enough floor space to stage a loadout.
+const PORTERS_STOCKROOM_RECIPE: RoomRecipe = {
+  palette: { floor: "#2c2820", wallLeft: "#24201c", wallRight: "#282620" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "shelf", relCol: 0.75, relRow: 0.15, width: 52, height: 70, zIndex: 34 },
+    { assetKey: "shelf", relCol: 0.35, relRow: 0.15, width: 52, height: 70, zIndex: 34 },
+    { assetKey: "gearCrate", relCol: 0.5, relRow: 0.55, width: 34, height: 30, zIndex: 38 },
+    { assetKey: "gearCrate", relCol: 0.3, relRow: 0.65, width: 30, height: 28, zIndex: 38 },
+    { assetKey: "box", relCol: 0.7, relRow: 0.6, width: 28, height: 38, zIndex: 37 },
+    { assetKey: "clipboard", relCol: 0.2, relRow: 0.4, width: 24, height: 20, zIndex: 36 },
+    { assetKey: "bucket", relCol: 0.85, relRow: 0.7, width: 22, height: 26, zIndex: 36 },
+  ],
+};
+
+// ── PORTER'S: THE INFIRMARY (Recovery) ──────────────────────────────────
+// First real recovery room. A cot, a cabinet, someone who knows what they're doing.
+const PORTERS_INFIRMARY_RECIPE: RoomRecipe = {
+  palette: { floor: "#263040", wallLeft: "#202838", wallRight: "#242e42" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "bed", relCol: 0.55, relRow: 0.48, width: 108, height: 86, zIndex: 36 },
+    { assetKey: "ivStand", relCol: 0.28, relRow: 0.28, width: 26, height: 78, zIndex: 37 },
+    { assetKey: "medCabinet", relCol: 0.18, relRow: 0.18, width: 52, height: 68, zIndex: 34 },
+    { assetKey: "trayMedical", relCol: 0.62, relRow: 0.78, width: 40, height: 46, zIndex: 40 },
+    { assetKey: "bandages", relCol: 0.32, relRow: 0.62, width: 30, height: 24, zIndex: 34 },
+    { assetKey: "curtain", relCol: 0.8, relRow: 0.35, width: 40, height: 70, zIndex: 35 },
+    { assetKey: "mat", relCol: 0.5, relRow: 0.82, width: 72, height: 44, zIndex: 28 },
+    {
+      assetKey: "firstAid",
+      relCol: 0.78,
+      relRow: 0.1,
+      width: 24,
+      height: 26,
+      zIndex: 33,
+      offsetY: -40,
+    },
+  ],
+};
+
+// ── PORTER'S: THE GYM (Training) ────────────────────────────────────────
+// Scrappy but real. Heavy bag, weight bench, enough room to swing.
+const PORTERS_GYM_RECIPE: RoomRecipe = {
+  palette: { floor: "#282a2e", wallLeft: "#202228", wallRight: "#24262c" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "punchBag", relCol: 0.45, relRow: 0.38, width: 28, height: 68, zIndex: 38 },
+    { assetKey: "mat", relCol: 0.42, relRow: 0.68, width: 72, height: 44, zIndex: 28 },
+    { assetKey: "mat", relCol: 0.58, relRow: 0.82, width: 62, height: 38, zIndex: 29 },
+    { assetKey: "cabinet", relCol: 0.82, relRow: 0.22, width: 44, height: 60, zIndex: 34 },
+    { assetKey: "waterCooler", relCol: 0.18, relRow: 0.52, width: 30, height: 48, zIndex: 36 },
+    { assetKey: "bucket", relCol: 0.8, relRow: 0.68, width: 24, height: 28, zIndex: 35 },
+    { assetKey: "radio", relCol: 0.2, relRow: 0.8, width: 36, height: 24, zIndex: 35 },
+  ],
+};
+
+// ── PORTER'S: THE PREP ROOM (Staging + Consumable Prep) ─────────────────
+// Staging and lightweight consumable prep. Not a workshop, but functional.
+const PORTERS_PREP_ROOM_RECIPE: RoomRecipe = {
+  palette: { floor: "#2a2820", wallLeft: "#22201c", wallRight: "#26261e" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "table", relCol: 0.5, relRow: 0.48, width: 84, height: 72, zIndex: 38 },
+    { assetKey: "shelf", relCol: 0.78, relRow: 0.16, width: 48, height: 66, zIndex: 34 },
+    { assetKey: "shelf", relCol: 0.22, relRow: 0.16, width: 48, height: 66, zIndex: 34 },
+    { assetKey: "gearCrate", relCol: 0.3, relRow: 0.7, width: 30, height: 28, zIndex: 38 },
+    { assetKey: "gearCrate", relCol: 0.7, relRow: 0.72, width: 30, height: 28, zIndex: 38 },
+    { assetKey: "clipboard", relCol: 0.48, relRow: 0.44, width: 24, height: 20, zIndex: 39 },
+    { assetKey: "bottles", relCol: 0.5, relRow: 0.12, width: 50, height: 60, zIndex: 34 },
+  ],
+};
+
+// ── PORTER'S: THE BREAK ROOM (Private Recovery / Social) ────────────────
+// Private upstairs space. Couch, table, away from customers.
+const PORTERS_BREAK_ROOM_RECIPE: RoomRecipe = {
+  palette: { floor: "#302a22", wallLeft: "#282220", wallRight: "#2e281e" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "couch", relCol: 0.48, relRow: 0.38, width: 90, height: 66, zIndex: 36 },
+    { assetKey: "table", relCol: 0.48, relRow: 0.68, width: 68, height: 60, zIndex: 40 },
+    { assetKey: "rug", relCol: 0.48, relRow: 0.58, width: 72, height: 36, zIndex: 28 },
+    { assetKey: "waterCooler", relCol: 0.82, relRow: 0.22, width: 30, height: 48, zIndex: 35 },
+    { assetKey: "plant", relCol: 0.18, relRow: 0.28, width: 34, height: 54, zIndex: 34 },
+    { assetKey: "radio", relCol: 0.78, relRow: 0.65, width: 36, height: 24, zIndex: 35 },
+    { assetKey: "microwave", relCol: 0.2, relRow: 0.7, width: 28, height: 24, zIndex: 36 },
+  ],
+};
+
+// ── PORTER'S: THE BRIEFING ROOM (Operations / Intel) ────────────────────
+// Dedicated planning space. Board, map, chairs for the whole team.
+const PORTERS_BRIEFING_ROOM_RECIPE: RoomRecipe = {
+  palette: { floor: "#2c2a26", wallLeft: "#242220", wallRight: "#282824" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "left", cellOffset: 0 }],
+  props: [
+    { assetKey: "table", relCol: 0.5, relRow: 0.52, width: 92, height: 78, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.3, relRow: 0.35, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.7, relRow: 0.35, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.5, relRow: 0.78, width: 30, height: 40, zIndex: 42 },
+    {
+      assetKey: "corkboard",
+      relCol: 0.5,
+      relRow: 0.06,
+      width: 44,
+      height: 30,
+      zIndex: 33,
+      offsetY: -42,
+    },
+    { assetKey: "monitor", relCol: 0.2, relRow: 0.2, width: 32, height: 38, zIndex: 35 },
+    { assetKey: "clipboard", relCol: 0.55, relRow: 0.5, width: 24, height: 20, zIndex: 39 },
+  ],
+};
+
+// ── PORTER'S: THE DOCK (Waterfront Staging) ─────────────────────────────
+// Harbor-side staging. Open, industrial, functional.
+const PORTERS_DOCK_RECIPE: RoomRecipe = {
+  palette: { floor: "#2a3034", wallLeft: "#222830", wallRight: "#262e32" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "right", cellOffset: 0 }],
+  props: [
+    { assetKey: "gearCrate", relCol: 0.3, relRow: 0.4, width: 36, height: 32, zIndex: 38 },
+    { assetKey: "gearCrate", relCol: 0.5, relRow: 0.5, width: 34, height: 30, zIndex: 38 },
+    { assetKey: "box", relCol: 0.7, relRow: 0.45, width: 30, height: 40, zIndex: 37 },
+    { assetKey: "clipboard", relCol: 0.2, relRow: 0.3, width: 24, height: 20, zIndex: 36 },
+    { assetKey: "bucket", relCol: 0.8, relRow: 0.6, width: 24, height: 28, zIndex: 36 },
+  ],
+};
+
+// ── PORTER'S: THE DECK (Waterfront Social) ──────────────────────────────
+// Open waterfront platform. Harbor air and industrial skyline.
+const PORTERS_DECK_RECIPE: RoomRecipe = {
+  palette: { floor: "#2e3238", wallLeft: "#242a30", wallRight: "#283036" },
+  inactivePalette: INACTIVE_PALETTE,
+  openings: [{ side: "right", cellOffset: 0 }],
+  props: [
+    { assetKey: "bench", relCol: 0.3, relRow: 0.4, width: 72, height: 48, zIndex: 38 },
+    { assetKey: "bench", relCol: 0.7, relRow: 0.5, width: 72, height: 48, zIndex: 38 },
+    { assetKey: "plant", relCol: 0.15, relRow: 0.6, width: 34, height: 54, zIndex: 36 },
+    { assetKey: "plant", relCol: 0.85, relRow: 0.35, width: 34, height: 54, zIndex: 36 },
+  ],
+};
+
 // Default: generic storage room
 const DEFAULT_RECIPE: RoomRecipe = {
   palette: { floor: "#2f2b24", wallLeft: "#26231d", wallRight: "#2c2921" },
@@ -471,10 +733,23 @@ const DEFAULT_RECIPE: RoomRecipe = {
 // Template-specific recipes: keyed by room templateId.
 // Bodega rooms get their own canon-accurate dressing.
 const TEMPLATE_RECIPES: Record<string, RoomRecipe> = {
+  // Bodega rooms
   "room/register:tier_1": REGISTER_RECIPE,
   "room/counter:tier_1": COUNTER_RECIPE,
   "room/dining_area:tier_1": DINING_AREA_RECIPE,
   "room/supply_closet:tier_1": SUPPLY_CLOSET_RECIPE,
+  // Porter's rooms
+  "room/floor:tier_1": PORTERS_FLOOR_RECIPE,
+  "room/bar:tier_1": PORTERS_BAR_RECIPE,
+  "room/office:tier_1": PORTERS_OFFICE_RECIPE,
+  "room/stockroom:tier_1": PORTERS_STOCKROOM_RECIPE,
+  "room/infirmary:tier_1": PORTERS_INFIRMARY_RECIPE,
+  "room/gym:tier_1": PORTERS_GYM_RECIPE,
+  "room/prep_room:tier_1": PORTERS_PREP_ROOM_RECIPE,
+  "room/break_room:tier_1": PORTERS_BREAK_ROOM_RECIPE,
+  "room/briefing_room:tier_1": PORTERS_BRIEFING_ROOM_RECIPE,
+  "room/dock:tier_1": PORTERS_DOCK_RECIPE,
+  "room/deck:tier_1": PORTERS_DECK_RECIPE,
 };
 
 // Room-state scene overrides: maps roomStateId to a scene SVG filename.
@@ -1390,8 +1665,13 @@ export function composeHqWorldGeometry(
 
 // ── Backdrop snapshot ────────────────────────────────────────────────────
 
-function buildBackdropSnapshot(minuteOfDay: number): HqBackdropSnapshot | null {
-  const manifest = getHqBackdropManifest();
+function buildBackdropSnapshot(
+  minuteOfDay: number,
+  buildingId?: string,
+): HqBackdropSnapshot | null {
+  const manifest = buildingId
+    ? getHqBackdropManifestForBuilding(buildingId)
+    : getHqBackdropManifest();
   if (!manifest) return null;
 
   const phase = resolveTimeOfDayPhase(minuteOfDay);
@@ -1415,8 +1695,10 @@ export function createHqWorldSnapshot(
   geometry: HqWorldGeometry,
   actors: readonly ActorMarker[],
   minuteOfDay?: number,
+  buildingId?: string,
 ): HqWorldSnapshot {
-  const backdrop = minuteOfDay !== undefined ? buildBackdropSnapshot(minuteOfDay) : null;
+  const backdrop =
+    minuteOfDay !== undefined ? buildBackdropSnapshot(minuteOfDay, buildingId) : null;
   const phase = backdrop?.phase;
 
   return {

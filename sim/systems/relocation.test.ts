@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createWorld, addEntity, addComponent } from "bitecs";
+import { addEntity, addComponent } from "bitecs";
 
 import { templateRegistry } from "content/templates";
 import {
@@ -9,11 +9,9 @@ import {
   InventoryStack,
   NotableTie,
   OperatorDisposition,
-  OperatorIdentity,
   RaidParticipationState,
   RecurringTeam,
   RoomInstance,
-  WorldTimeState,
   AssignmentState,
   StaffState,
   VisitorState,
@@ -29,6 +27,7 @@ import {
 import type { RelocationPayload } from "./interruptions";
 import { resolveActiveInterruption } from "./interruptions";
 import { BODEGA_SPECIFIC_BEAT_IDS, OPENING_BEAT_IDS } from "./guidance-beats";
+import { addActiveTestOperators, createSimTestContext } from "./test-context";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
 
@@ -40,147 +39,45 @@ function createTestContext(overrides?: {
   activeRoster?: number;
   raidSummaries?: Array<{ id: string; contractSiteId?: string; bossDefeated?: boolean }>;
 }): SimSystemContext {
-  const world = createWorld();
-  const guildEntity = addEntity(world);
-  const timeEntity = addEntity(world);
-  const buildingEntity = addEntity(world);
-
-  addComponent(world, guildEntity, GuildState);
-  addComponent(world, timeEntity, WorldTimeState);
-  addComponent(world, buildingEntity, BuildingAuthority);
-
-  GuildState.reputation[guildEntity] = overrides?.reputation ?? 0;
-  GuildState.treasury[guildEntity] = overrides?.treasury ?? 0;
-  GuildState.intel[guildEntity] = 0;
-
-  WorldTimeState.tick[timeEntity] = 1440;
-  WorldTimeState.day[timeEntity] = 1;
-  WorldTimeState.minuteOfDay[timeEntity] = 0;
-
   const bodegaIndex = templateRegistry.buildingIndexById.get("building/bodega") ?? 0;
-  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = bodegaIndex;
-  BuildingAuthority.activeBuildingTier[buildingEntity] = overrides?.buildingTier ?? 1;
-  BuildingAuthority.activeFloorIndex[buildingEntity] = 0;
-  BuildingAuthority.roomSlotCount[buildingEntity] = 7;
-  BuildingAuthority.operatorSlotCount[buildingEntity] = 10;
-  BuildingAuthority.appliedUpgradeIds[buildingEntity] = [];
-  BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] = [];
-  BuildingAuthority.unlockedRoomTierByTemplateId[buildingEntity] = {};
-  BuildingAuthority.roomCapacityModifiers[buildingEntity] = {};
-  BuildingAuthority.needRateMultipliers[buildingEntity] = {};
-  BuildingAuthority.attractionWeightByTag[buildingEntity] = {};
-  BuildingAuthority.recoveryRateModifier[buildingEntity] = 0;
-  BuildingAuthority.trainingRateModifier[buildingEntity] = 0;
-  BuildingAuthority.moraleModifier[buildingEntity] = 0;
-  BuildingAuthority.loyaltyModifier[buildingEntity] = 0;
-  BuildingAuthority.resourceIncomeModifiers[buildingEntity] = {};
-  BuildingAuthority.resourceCostMultipliers[buildingEntity] = {};
-  BuildingAuthority.contractSite[buildingEntity] = null;
-  BuildingAuthority.fogOfWar[buildingEntity] = null;
-  BuildingAuthority.contractLifecycle[buildingEntity] =
-    (overrides?.contractLifecycle as "idle" | "bidding" | "active" | "resolved") ?? "bidding";
-  BuildingAuthority.postedContracts[buildingEntity] = [];
-  BuildingAuthority.contractResult[buildingEntity] = null;
-  BuildingAuthority.raidSummaries[buildingEntity] = (overrides?.raidSummaries ?? []).map((s) => ({
-    id: s.id,
-    missionId: "mission/clearance",
-    startedAt: "2026-01-01",
-    endedAt: "2026-01-01",
-    result: "success" as const,
-    reputationDelta: 2,
-    cashDelta: 50,
-    contractSiteId: s.contractSiteId,
-    bossDefeated: s.bossDefeated,
-  }));
-  BuildingAuthority.activeRaidPackets[buildingEntity] = [];
-  BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = 0;
-  BuildingAuthority.pressure[buildingEntity] = 0;
-  BuildingAuthority.lastPayrollDay[buildingEntity] = 0;
-  BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = 0;
-  BuildingAuthority.lastEventTick[buildingEntity] = 0;
-  BuildingAuthority.policies[buildingEntity] = {} as never;
-
-  // Create operator entities
-  const operatorEntities: number[] = [];
   const rosterSize = overrides?.activeRoster ?? 0;
-  for (let i = 0; i < rosterSize; i++) {
-    const entity = addEntity(world);
-    addComponent(world, entity, OperatorIdentity);
-    addComponent(world, entity, RaidParticipationState);
-    addComponent(world, entity, AssignmentState);
-    OperatorIdentity.id[entity] = `operator-${i}`;
-    OperatorIdentity.name[entity] = `Operator ${i}`;
-    OperatorIdentity.roleTag[entity] = "role:field_lead";
-    OperatorIdentity.lifecycleStatus[entity] = "active";
-    RaidParticipationState.activeRaidId[entity] = "";
-    AssignmentState.kind[entity] = "idle";
-    AssignmentState.targetId[entity] = "";
-    operatorEntities.push(entity);
-  }
-
-  return {
-    world,
+  const context = createSimTestContext({
     registry: templateRegistry,
-    singletonEntities: { guild: guildEntity, time: timeEntity, building: buildingEntity },
-    runtimeState: {
-      roomEntities: [],
-      operatorEntities,
-      raidOpportunityEntities: [],
-      staffEntities: [],
-      visitorEntities: [],
-      eventEntities: [],
-      dispositionEntities: [],
-      notableTieEntities: [],
-      recurringTeamEntities: [],
-      roomCultureEntities: [],
-      inventoryEntities: [],
-      equipmentEntities: [],
-      nextRoomSequence: 1,
-      nextOperatorSequence: rosterSize + 1,
-      nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
-      nextVisitorSequence: 1,
-      nextRaidSequence: 1,
-      nextEventSequence: 1,
-      nextTeamSequence: 1,
-      pendingCueIds: [],
-      pendingEvents: [],
-      raidPresentation: { contractSiteId: null, teams: [], enemies: [], features: [] },
-      activeEncounter: null,
-      interruptionQueue: { active: null, queue: [], nextInstanceId: 1 },
-      incidentState: {
-        pendingIncident: null,
-        history: [],
-        cooldowns: {},
-        nextInstanceId: 1,
-        lastEvaluationMinute: 0,
-      },
-      guidanceState: {
-        seenBeatIds: [],
-        completedBeatIds: [],
-        dismissedBeatIds: [],
-        activeBeatId: null,
-        activeBeatView: null,
-        queuedBeatIds: [],
-        lastEvaluationMinute: 0,
-        openingPathState: "completed",
-        anchorResolutionFailures: [],
-        activeBeatProgressBaseline: null,
-        interactionCounts: { staffingActions: 0, upgradesPurchased: 0 },
-      },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
-      worldTimeFrozen: false,
+    guild: {
+      reputation: overrides?.reputation ?? 0,
+      treasury: overrides?.treasury ?? 0,
+      intel: 0,
     },
-  };
+    time: {
+      tick: 1440,
+      day: 1,
+      minuteOfDay: 0,
+    },
+    building: {
+      activeBuildingTemplateIndex: bodegaIndex,
+      activeBuildingTier: overrides?.buildingTier ?? 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 7,
+      operatorSlotCount: 10,
+      contractLifecycle:
+        (overrides?.contractLifecycle as "idle" | "bidding" | "active" | "resolved") ?? "bidding",
+      raidSummaries: (overrides?.raidSummaries ?? []).map((summary) => ({
+        id: summary.id,
+        missionId: "mission/clearance",
+        startedAt: "2026-01-01",
+        endedAt: "2026-01-01",
+        result: "success" as const,
+        reputationDelta: 2,
+        cashDelta: 50,
+        contractSiteId: summary.contractSiteId,
+        bossDefeated: summary.bossDefeated,
+      })),
+      policies: {},
+    },
+  });
+
+  addActiveTestOperators(context, rosterSize);
+  return context;
 }
 
 function generateRaidSummaries(count: number, bossCount: number) {
@@ -193,6 +90,41 @@ function generateRaidSummaries(count: number, bossCount: number) {
     });
   }
   return summaries;
+}
+
+function createReadyRelocationContext() {
+  const context = createTestContext({
+    buildingTier: 4,
+    reputation: 50,
+    treasury: 800,
+    activeRoster: 8,
+    raidSummaries: generateRaidSummaries(20, 3),
+  });
+
+  const staffEntity = addEntity(context.world);
+  addComponent(context.world, staffEntity, StaffState);
+  addComponent(context.world, staffEntity, AssignmentState);
+  StaffState.id[staffEntity] = "staff-1";
+  StaffState.name[staffEntity] = "Test Staff";
+  StaffState.roleTag[staffEntity] = "staff:logistics";
+  AssignmentState.kind[staffEntity] = "room";
+  AssignmentState.targetId[staffEntity] = "room-instance/test";
+  context.runtimeState.staffEntities.push(staffEntity);
+
+  return context;
+}
+
+function runFullAcceptance(context: SimSystemContext) {
+  initiateRelocation(context);
+
+  const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, offerResolved!.payload as RelocationPayload, "continue");
+
+  const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
+
+  const movingResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, movingResolved!.payload as RelocationPayload, "acknowledge");
 }
 
 // ── Gate visibility tests ────────────────────────────────────────────────
@@ -361,47 +293,8 @@ describe("relocation defer", () => {
 // ── Accept and handoff tests ─────────────────────────────────────────────
 
 describe("relocation accept and handoff", () => {
-  function createReadyContext() {
-    const context = createTestContext({
-      buildingTier: 4,
-      reputation: 50,
-      treasury: 800,
-      activeRoster: 8,
-      raidSummaries: generateRaidSummaries(20, 3),
-    });
-
-    // Add a staff entity to verify assignment clearing
-    const staffEntity = addEntity(context.world);
-    addComponent(context.world, staffEntity, StaffState);
-    addComponent(context.world, staffEntity, AssignmentState);
-    StaffState.id[staffEntity] = "staff-1";
-    StaffState.name[staffEntity] = "Test Staff";
-    StaffState.roleTag[staffEntity] = "staff:logistics";
-    AssignmentState.kind[staffEntity] = "room";
-    AssignmentState.targetId[staffEntity] = "room-instance/test";
-    context.runtimeState.staffEntities.push(staffEntity);
-
-    return context;
-  }
-
-  function runFullAcceptance(context: SimSystemContext) {
-    initiateRelocation(context);
-
-    // Beat 1: offer → continue
-    const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, offerResolved!.payload as RelocationPayload, "continue");
-
-    // Beat 2: decision → accept
-    const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
-
-    // Beat 3: moving → acknowledge
-    const movingResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, movingResolved!.payload as RelocationPayload, "acknowledge");
-  }
-
   it("swaps bodega to Porter's", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
 
     const portersIndex = templateRegistry.buildingIndexById.get("building/porters");
@@ -411,47 +304,47 @@ describe("relocation accept and handoff", () => {
   });
 
   it("resets building tier to 1", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(BuildingAuthority.activeBuildingTier[context.singletonEntities.building]).toBe(1);
   });
 
   it("sets Porter's starter room and operator slots", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(BuildingAuthority.roomSlotCount[context.singletonEntities.building]).toBe(7);
     expect(BuildingAuthority.operatorSlotCount[context.singletonEntities.building]).toBe(12);
   });
 
   it("places 7 starter rooms", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(context.runtimeState.roomEntities.length).toBe(7);
   });
 
   it("debits treasury by relocation cost", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const treasuryBefore = GuildState.treasury[context.singletonEntities.guild];
     runFullAcceptance(context);
     expect(GuildState.treasury[context.singletonEntities.guild]).toBe(treasuryBefore - 600);
   });
 
   it("preserves operators", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const operatorCountBefore = context.runtimeState.operatorEntities.length;
     runFullAcceptance(context);
     expect(context.runtimeState.operatorEntities.length).toBe(operatorCountBefore);
   });
 
   it("preserves reputation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const repBefore = GuildState.reputation[context.singletonEntities.guild];
     runFullAcceptance(context);
     expect(GuildState.reputation[context.singletonEntities.guild]).toBe(repBefore);
   });
 
   it("clears staff assignments", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     for (const staffEntity of context.runtimeState.staffEntities) {
       expect(AssignmentState.kind[staffEntity]).toBe("idle");
@@ -460,7 +353,7 @@ describe("relocation accept and handoff", () => {
   });
 
   it("clears active operator assignments during the handoff", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const operatorEntity = context.runtimeState.operatorEntities[0];
     AssignmentState.kind[operatorEntity] = "room";
     AssignmentState.targetId[operatorEntity] = "room-instance/register";
@@ -475,19 +368,19 @@ describe("relocation accept and handoff", () => {
   });
 
   it("clears applied upgrade ids", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building]).toEqual([]);
   });
 
   it("sets active floor to 0", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(BuildingAuthority.activeFloorIndex[context.singletonEntities.building]).toBe(0);
   });
 
   it("places rooms with the expected Porter's starter template IDs", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
 
     const templateIds = context.runtimeState.roomEntities
@@ -506,7 +399,7 @@ describe("relocation accept and handoff", () => {
   });
 
   it("places ground-floor rooms on floor 0 and upper-floor rooms on floor 1", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
 
     const roomsByFloor = new Map<number, string[]>();
@@ -528,7 +421,7 @@ describe("relocation accept and handoff", () => {
   });
 
   it("clears visitors on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     // Add a visitor entity
     const visitorEntity = addEntity(context.world);
@@ -542,7 +435,7 @@ describe("relocation accept and handoff", () => {
   });
 
   it("creates room culture entities for new rooms", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     runFullAcceptance(context);
     expect(context.runtimeState.roomCultureEntities.length).toBe(7);
   });
@@ -681,43 +574,10 @@ describe("relocation save/load stability", () => {
 // ── Carryover / reset contract tests ────────────────────────────────────
 
 describe("relocation carryover/reset contract", () => {
-  function createReadyContext() {
-    const context = createTestContext({
-      buildingTier: 4,
-      reputation: 50,
-      treasury: 800,
-      activeRoster: 8,
-      raidSummaries: generateRaidSummaries(20, 3),
-    });
-
-    // Add a staff entity
-    const staffEntity = addEntity(context.world);
-    addComponent(context.world, staffEntity, StaffState);
-    addComponent(context.world, staffEntity, AssignmentState);
-    StaffState.id[staffEntity] = "staff-1";
-    StaffState.name[staffEntity] = "Test Staff";
-    StaffState.roleTag[staffEntity] = "staff:logistics";
-    AssignmentState.kind[staffEntity] = "room";
-    AssignmentState.targetId[staffEntity] = "room-instance/test";
-    context.runtimeState.staffEntities.push(staffEntity);
-
-    return context;
-  }
-
-  function runFullAcceptance(context: SimSystemContext) {
-    initiateRelocation(context);
-    const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, offerResolved!.payload as RelocationPayload, "continue");
-    const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
-    const movingResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
-    advanceRelocationBeat(context, movingResolved!.payload as RelocationPayload, "acknowledge");
-  }
-
   // ── Treasury debit timing ───────────────────────────────────────────
 
   it("debits treasury at the decision beat, not the moving beat", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const treasuryBefore = GuildState.treasury[context.singletonEntities.guild];
 
     initiateRelocation(context);
@@ -739,7 +599,7 @@ describe("relocation carryover/reset contract", () => {
   });
 
   it("refuses the accept step if the treasury drops below the deposit", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     initiateRelocation(context);
     const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
@@ -763,7 +623,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: inventory ────────────────────────────────────────────
 
   it("preserves inventory through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const itemEntity = addEntity(context.world);
     addComponent(context.world, itemEntity, InventoryStack);
@@ -789,7 +649,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: equipment ────────────────────────────────────────────
 
   it("preserves equipment assignments through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const equipEntity = addEntity(context.world);
     addComponent(context.world, equipEntity, EquipmentAssignment);
@@ -811,7 +671,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: policies ─────────────────────────────────────────────
 
   it("preserves policies through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const buildingEntity = context.singletonEntities.building;
 
     BuildingAuthority.policies[buildingEntity] = {
@@ -835,7 +695,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: raid summaries / contract history ────────────────────
 
   it("preserves raid summaries through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const buildingEntity = context.singletonEntities.building;
 
     const summaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
@@ -851,7 +711,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: recurring teams ──────────────────────────────────────
 
   it("preserves recurring teams through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const teamEntity = addEntity(context.world);
     addComponent(context.world, teamEntity, RecurringTeam);
@@ -871,7 +731,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: social state ─────────────────────────────────────────
 
   it("preserves operator dispositions through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const dispEntity = addEntity(context.world);
     addComponent(context.world, dispEntity, OperatorDisposition);
@@ -890,7 +750,7 @@ describe("relocation carryover/reset contract", () => {
   });
 
   it("preserves notable ties through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const tieEntity = addEntity(context.world);
     addComponent(context.world, tieEntity, NotableTie);
@@ -910,7 +770,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Carryover: staff entities survive (only assignments clear) ──────
 
   it("preserves staff entities through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     expect(context.runtimeState.staffEntities.length).toBe(1);
 
     runFullAcceptance(context);
@@ -922,7 +782,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Reset: building modifiers ───────────────────────────────────────
 
   it("resets building modifiers to zero on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const buildingEntity = context.singletonEntities.building;
 
     // Set non-zero modifiers on the bodega
@@ -942,7 +802,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Reset: contract state ──────────────────────────────────────────
 
   it("resets contract state on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const buildingEntity = context.singletonEntities.building;
 
     // Simulate residual contract-board state (bidding, with posted contracts)
@@ -961,7 +821,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Reset: pressure ────────────────────────────────────────────────
 
   it("resets pressure to zero on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
     const buildingEntity = context.singletonEntities.building;
 
     BuildingAuthority.pressure[buildingEntity] = 25;
@@ -974,7 +834,7 @@ describe("relocation carryover/reset contract", () => {
   // ── Guidance state: carryover and retirement ──────────────────────
 
   it("preserves completed opening guidance beats through relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     // Simulate completed opening path with several beats done
     const nonBodegaBeats = OPENING_BEAT_IDS.filter(
@@ -995,7 +855,7 @@ describe("relocation carryover/reset contract", () => {
   });
 
   it("retires bodega-specific guidance beats on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     // Bodega-specific beats are not yet completed
     context.runtimeState.guidanceState.completedBeatIds = [];
@@ -1011,7 +871,7 @@ describe("relocation carryover/reset contract", () => {
   });
 
   it("clears an active bodega-specific guidance beat on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const bodegaBeat = BODEGA_SPECIFIC_BEAT_IDS[0];
     expect(bodegaBeat).toBeDefined();
@@ -1041,7 +901,7 @@ describe("relocation carryover/reset contract", () => {
   });
 
   it("removes queued bodega-specific guidance beats on relocation", () => {
-    const context = createReadyContext();
+    const context = createReadyRelocationContext();
 
     const bodegaBeat = BODEGA_SPECIFIC_BEAT_IDS[0];
     expect(bodegaBeat).toBeDefined();

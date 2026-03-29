@@ -1,6 +1,6 @@
 # Bodega Closure Plan
 
-This is the fourth active implementation plan. It closes the bodega as a complete early-game campaign after the opening path, standing management surfaces, and balance harness are in place.
+This plan now serves as the early-game closeout and promotion pass. It starts from a shipped opening path, shipped standing management surfaces, a shipped balance harness, and a shipped Porter's handoff target.
 
 ## Status
 
@@ -11,12 +11,19 @@ Implemented already:
 - Phase 3: hard roster-cap overflow handling
 - Phase 4 boss-presentation slice: authored runtime boss portraits for the shipped bodega-era bosses
 - Phase 5 relocation surfacing slice: management-panel relocation readiness plus player-facing interruption entry and decision copy
+- relocation runtime, carryover/reset contract, guidance retirement, and save-safe handoff into Porter's
+- Porter's core destination slice: multi-floor landing, starter rooms, upgrade path, prep-room consumables, and first-pass tuning
 
-Still active:
+Still active closeout work:
 
-- remaining breadth expansion where repeated bodega campaigns are still too narrow
-- promotion-grade relocation landing verification and any remaining save-safe building handoff fixes exposed by that pass
+- promotion-grade relocation and Porter's landing verification on a real late-bodega path, plus any defects exposed by that pass
 - promotion review against the closed bodega baseline
+- remaining breadth expansion only where the promotion review still shows that repeated bodega campaigns are too narrow
+
+No longer tracked here as active implementation:
+
+- the relocation runtime itself
+- the Porter's core entry slice
 
 ## Prerequisites
 
@@ -137,6 +144,11 @@ Tasks:
 Done when:
 
 - The bodega has a clean end state and no longer feels like an open-ended sandbox.
+
+Status:
+
+- Implemented. The relocation trigger, blockers, handoff sequence, Porter's landing state, and save-safe carryover/reset contract are shipped.
+- Remaining work for this area is browser-grade verification and any defects found there, not new relocation design.
 
 ## Phase 6: Promotion Review
 

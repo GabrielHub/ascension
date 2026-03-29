@@ -2,6 +2,25 @@
 
 Implement the locked second-headquarters target: Porter's in Red Hook, with a no-regression handoff from the bodega, multi-floor HQ support, lightweight prep-room consumables, and the first playable Porter's slice.
 
+## Status
+
+Core implementation is shipped. This plan now serves as the locked reference for what Porter's entry was supposed to deliver.
+
+Shipped from this plan:
+
+- Porter's relocation landing and save-safe handoff target
+- multi-floor HQ support for ground floor, upper floor, and waterfront expansion
+- Porter's starter rooms, upgrade path, and slot/cap progression
+- Porter's HQ environment data and floor-aware exterior selection
+- prep-room consumable production and raid-aid integration
+- Porter's-specific recruitment, income, and contract-rank tuning
+
+Still intentionally outside this plan's shipped slice:
+
+- named presenter bindings for the cook and bartender, which now belong to `narrative-character-system-plan.md`
+- browser-grade end-to-end verification and promotion review, which now belong to the bodega closeout pass
+- final room-scene SVG art production, which follows the normal asset workflow rather than reopening gameplay scope here
+
 ## Canon Inputs
 
 Read before implementing:

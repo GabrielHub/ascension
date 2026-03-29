@@ -35,6 +35,8 @@ export interface EncounterSurfaceProps {
   onDismiss: () => void;
   onUseIntervention: (interventionId: string) => void;
   isDevMode: boolean;
+  /** Whether the guild has any consumable items available for the consumable_boost intervention. */
+  hasConsumables?: boolean;
 }
 
 // ── Intervention definition lookup ────────────────────────────────────────
@@ -1067,6 +1069,7 @@ export function EncounterSurface({
   onDismiss,
   onUseIntervention,
   isDevMode,
+  hasConsumables = false,
 }: EncounterSurfaceProps) {
   const [selectedActorId, setSelectedActorId] = useState<string | null>(null);
 
@@ -1099,9 +1102,7 @@ export function EncounterSurface({
     const latest = encounter.recentLog[encounter.recentLog.length - 1];
     if (!latest) return;
 
-    const allyIds = new Set(
-      encounter.actors.filter((a) => a.side === "ally").map((a) => a.actorId),
-    );
+    const allyIds = new Set(allies.map((a) => a.actorId));
     const next = new Map<string, "act" | "hit">();
 
     if (allyIds.has(latest.actorId)) {
@@ -1123,7 +1124,7 @@ export function EncounterSurface({
     return () => {
       if (reactionTimer.current) clearTimeout(reactionTimer.current);
     };
-  }, [EMPTY_REACTIONS, encounter.actors, encounter.recentLog, latestLogEntryKey]);
+  }, [EMPTY_REACTIONS, allies, encounter.recentLog, latestLogEntryKey]);
 
   const selectedActor = selectedActorId
     ? (encounter.actors.find((a) => a.actorId === selectedActorId) ?? null)
@@ -1271,7 +1272,11 @@ export function EncounterSurface({
                   key={iv.interventionId}
                   intervention={iv}
                   onUse={() => onUseIntervention(iv.interventionId)}
-                  disabled={terminal || encounter.status === "paused"}
+                  disabled={
+                    terminal ||
+                    encounter.status === "paused" ||
+                    (iv.interventionId === "consumable_boost" && !hasConsumables)
+                  }
                 />
               ))}
             </div>
