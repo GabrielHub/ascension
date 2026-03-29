@@ -368,4 +368,8 @@ export const OPENING_BEAT_BY_ID: ReadonlyMap<string, GuidanceBeat> = new Map(
 
 export const OPENING_BEAT_COUNT: number = OPENING_BEATS.length;
 
+export const BODEGA_SPECIFIC_BEAT_IDS: readonly string[] = OPENING_BEATS.filter((b) =>
+  b.featureIds.includes("bodega"),
+).map((b) => b.id);
+
 export const FIRST_RAID_RETURN_BEAT_ID = "guidance/opening/first-raid-return";

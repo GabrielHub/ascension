@@ -12,6 +12,7 @@ export type InterruptionType =
   | "settings"
   | "incident"
   | "raid_boss_commitment"
+  | "relocation"
   | "announcement"
   | "warning"
   | "guidance";
@@ -40,6 +41,7 @@ export type InterruptionPayload =
   | SettingsPayload
   | IncidentPayload
   | RaidBossCommitmentPayload
+  | RelocationPayload
   | AnnouncementPayload
   | WarningPayload
   | GuidancePayload;
@@ -103,6 +105,17 @@ export interface WarningPayload {
   severity: "high" | "critical";
 }
 
+export type RelocationBeat = "offer" | "decision" | "moving";
+
+export interface RelocationPayload {
+  kind: "relocation";
+  eventId: string;
+  beat: RelocationBeat;
+  buildingFromId: string;
+  buildingToId: string;
+  treasuryCost: number;
+}
+
 export interface GuidancePayload {
   kind: "guidance";
   beatId: string;
@@ -139,6 +152,7 @@ export function createInterruptionQueueState(): InterruptionQueueState {
 const INTERRUPTION_PRIORITY: Record<InterruptionType, number> = {
   warning: 100,
   raid_boss_commitment: 90,
+  relocation: 85,
   incident: 70,
   guidance: 60,
   announcement: 50,

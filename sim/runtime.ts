@@ -29,6 +29,7 @@ import {
 } from "content/templates/kits";
 import { OPENING_BEAT_COUNT } from "./systems/guidance-beats";
 import { syncOpeningContractTracking } from "./systems/guidance";
+import { evaluateRelocationGate, getRelocationBlockers } from "./systems/relocation";
 // Type-only re-declarations to avoid importing from systems/ modules.
 // Those modules have init-time circular dependencies through the systems barrel.
 type InterruptionQueueState = { active: unknown; queue: unknown[]; nextInstanceId: number };
@@ -698,6 +699,18 @@ export interface Phase1RuntimeView {
     openingPathState: string;
     completedOpeningBeats: number;
     totalOpeningBeats: number;
+  };
+  relocationGate: {
+    visible: boolean;
+    allPrerequisitesMet: boolean;
+    prerequisites: readonly {
+      key: string;
+      label: string;
+      current: number;
+      target: number;
+      met: boolean;
+    }[];
+    blockers: readonly { key: string; reason: string }[];
   };
 }
 
@@ -2973,6 +2986,11 @@ function applyWorldSnapshot(
           ).length,
           totalOpeningBeats: OPENING_BEAT_COUNT,
         },
+        relocationGate: (() => {
+          const gate = evaluateRelocationGate(context);
+          const blockers = gate.allPrerequisitesMet ? getRelocationBlockers(context) : [];
+          return { ...gate, blockers };
+        })(),
       };
     },
     getPhase2View(): Phase2View {

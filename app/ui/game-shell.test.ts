@@ -125,6 +125,7 @@ describe("buildGameCallbacks", () => {
     const callbacks = buildGameCallbacks({
       commands: {
         tick: vi.fn(),
+        initiateRelocation: vi.fn(),
         setRoomActive: vi.fn(),
         setPolicy,
         purchaseBuildingUpgrade: vi.fn(),

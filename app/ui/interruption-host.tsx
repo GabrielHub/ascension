@@ -5,7 +5,7 @@ import type {
   AnnouncementPayload,
   WarningPayload,
 } from "sim";
-import type { GuidancePayload } from "sim/systems/interruptions";
+import type { GuidancePayload, RelocationPayload } from "sim/systems/interruptions";
 
 import { GameModal } from "./game-modal";
 import { getIncidentCategoryMeta } from "./_glossary";
@@ -249,6 +249,135 @@ function GuidanceModal({
   );
 }
 
+// ── Relocation modal ─────────────────────────────────────────────────────
+
+function RelocationModal({
+  instance,
+  payload,
+  onResolve,
+}: {
+  instance: InterruptionInstance;
+  payload: RelocationPayload;
+  onResolve: (instanceId: string, choiceId?: string) => void;
+}) {
+  if (payload.beat === "offer") {
+    return (
+      <GameModal
+        title="Facility Upgrade Notice"
+        subtitle="City of New York — Guild Licensing Office"
+        dismissible={false}
+        footer={
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => onResolve(instance.instanceId, "continue")}
+            >
+              Review Offer
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-silver/80">
+            Your guild's performance record, facility condition, and reputation score qualify it for
+            a facility upgrade under the city's guild infrastructure program.
+          </p>
+          <p className="text-sm leading-relaxed text-silver/80">
+            A lease for a larger licensed headquarters in Red Hook, Brooklyn is available. Moving
+            assistance and a transitional operating budget are included.
+          </p>
+          <div className="glass-card-inset rounded-lg p-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-gold/80">
+              Relocation deposit: ${payload.treasuryCost}
+            </p>
+            <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+              Review the offer now. Final confirmation happens in the next step.
+            </p>
+          </div>
+        </div>
+      </GameModal>
+    );
+  }
+
+  if (payload.beat === "decision") {
+    return (
+      <GameModal
+        title="Relocate to Porter's?"
+        subtitle="This decision is irreversible"
+        dismissible={false}
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-relaxed text-silver/80">
+            Accepting spends ${payload.treasuryCost} from the treasury. The bodega lease terminates.
+            All operators, staff, gear, cash, and reputation carry over. Room assignments reset in
+            the new building.
+          </p>
+          <div className="glass-card-inset rounded-lg p-3">
+            <p className="text-xs leading-relaxed text-silver/60">
+              Porter's starts with 7 rooms across two floors and a 12-operator cap. Training and
+              dedicated recovery unlock for the first time. You cannot reverse this decision, and
+              relocation is only valid when no contract, raid, or blocking interruption is still in
+              progress.
+            </p>
+          </div>
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              className="btn-ghost text-xs"
+              onClick={() => onResolve(instance.instanceId, "defer")}
+            >
+              Not yet
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => onResolve(instance.instanceId, "accept")}
+            >
+              Accept and Relocate
+            </button>
+          </div>
+        </div>
+      </GameModal>
+    );
+  }
+
+  // beat === "moving"
+  return (
+    <GameModal
+      title="Welcome to Porter's"
+      subtitle="Red Hook, Brooklyn"
+      dismissible={false}
+      footer={
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => onResolve(instance.instanceId, "acknowledge")}
+          >
+            Begin
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm leading-relaxed text-silver/80">
+          The register closed for the last time. Aina counted out the drawer, put the keys on the
+          counter, and turned off the lights. The bodega is behind you now.
+        </p>
+        <p className="text-sm leading-relaxed text-silver/80">
+          The new building is bigger, emptier, and unfamiliar. Harbor air comes through the open
+          windows. The operators spread out across two floors, looking for places to sit. Nobody
+          knows where anything is yet.
+        </p>
+        <p className="text-sm leading-relaxed text-silver/60 italic">
+          It is not home yet. But it will be.
+        </p>
+      </div>
+    </GameModal>
+  );
+}
+
 // ── Host component ────────────────────────────────────────────────────────
 
 export function InterruptionHost({
@@ -278,6 +407,15 @@ export function InterruptionHost({
         <BossCommitmentModal
           instance={activeInterruption}
           payload={payload}
+          onResolve={onResolve}
+        />
+      );
+
+    case "relocation":
+      return (
+        <RelocationModal
+          instance={activeInterruption}
+          payload={payload as RelocationPayload}
           onResolve={onResolve}
         />
       );

@@ -104,6 +104,7 @@ export interface RuntimeSessionLifecycle {
 export interface RuntimeSessionCommands {
   dispatch(command: SimCommand): Promise<void>;
   tick(deltaMs?: number): Promise<void>;
+  initiateRelocation(): Promise<void>;
   placeRoom(input: Omit<Extract<SimCommand, { type: "sim/place-room" }>, "type">): Promise<void>;
   setActiveFloor(
     input: Omit<Extract<SimCommand, { type: "sim/set-active-floor" }>, "type">,
@@ -1481,6 +1482,12 @@ function createRuntimeSession(
       return queueSimulationMutation({
         type: "sim/tick",
         deltaMs,
+      });
+    },
+
+    initiateRelocation() {
+      return commands.dispatch({
+        type: "sim/initiate-relocation",
       });
     },
 

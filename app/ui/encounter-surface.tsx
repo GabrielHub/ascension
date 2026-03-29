@@ -136,7 +136,7 @@ function formatFeedEntry(
     case "skill":
       text = `${actor} \u2014 ${abilityName}`;
       detail = formatEffects(entry, actorLabels);
-      colorClass = "text-[#6eb8e0]";
+      colorClass = "text-frost";
       break;
     case "ultimate":
       text = `${actor} \u2014 ${abilityName}`;
@@ -1179,7 +1179,7 @@ export function EncounterSurface({
                 const meta = getWeaknessTargetMeta(w.target);
                 return (
                   <Tooltip key={i} content={meta.tip} side="bottom">
-                    <span className="text-xs text-[#6eb8e0]/70">{meta.label}</span>
+                    <span className="text-xs text-frost/70">{meta.label}</span>
                   </Tooltip>
                 );
               })}

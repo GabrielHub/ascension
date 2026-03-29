@@ -5,6 +5,7 @@ Phase 4 and Phase 5 deliverables for `bodega-closure-plan.md`. This document loc
 Status:
 
 - The boss-presentation slice from Phase 4 is now shipped.
+- The relocation gate surface and player-facing interruption entry flow from Phase 5 are now wired into the shipped runtime/UI.
 - The relocation and second-building handoff material in Phase 5 remains active.
 
 ## Canon Inputs
@@ -31,6 +32,7 @@ Inherited from `bodega-closure-plan.md`, the roadmap, and earlier specs:
 - All content stays within F, E, and D rank budgets. No C+ content in the bodega era.
 - Bosses are F-rank. Bodega-era contracts do not produce higher-rank bosses.
 - Content breadth is authored, not procedurally generated. Every boss, recruit identity, site concept, and gear alternative ships as an explicit template or data entry.
+- Site concepts and bosses ship as paired content. A raid site is not valid shipped content until it has an attached `bossId` and a matching boss template.
 - Boss encounter art follows the asset production contract: canon grounding, brief, production, review, promotion.
 - Relocation is a narrative and systemic milestone, not a silent capacity upgrade.
 - The bodega stays a bodega until the moment it is left behind.
@@ -230,6 +232,7 @@ Phase 4 also expands recruit identities, site concepts, gear alternatives, and e
 - All site concepts must be grounded in real New York locations that a rift consumed. The dungeon is the warped version of a real place.
 - Site concepts must stay within F-rank scale. These are basement-level, utility-level, or single-building incursions. Not subway networks or skyscraper interiors — those belong to higher tiers.
 - Each new site concept should suggest a distinct visual read for the raid map, even if the shipped tile set is shared in the first pass.
+- Each new site concept must ship with one concrete attached `bossId`, and that boss must already exist as a matching boss template and encounter definition before the site is considered complete.
 
 **Gear breadth:**
 

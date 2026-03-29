@@ -34,6 +34,7 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/guidance-dismiss",
   "sim/guidance-record-anchor-failure",
   "sim/guidance-reset-opening",
+  "sim/initiate-relocation",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -190,6 +191,9 @@ export type SimCommand =
     }
   | {
       type: "sim/guidance-reset-opening";
+    }
+  | {
+      type: "sim/initiate-relocation";
     }
   | {
       type: "sim/dev-set-resource";

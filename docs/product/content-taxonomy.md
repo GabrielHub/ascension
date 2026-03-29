@@ -18,6 +18,7 @@ All content should continue using slash-delimited IDs with lowercase kebab-case 
 ```
 operator/{name}
 mission/{type}
+site/{name}
 event/{type}
 building/{name}
 room/{name}:tier_{n}
@@ -33,6 +34,19 @@ boss/{dungeon-theme}/{name}
 faction/{name}
 district/{name}
 ```
+
+Site concepts and bosses are paired content families:
+
+- Every `site/{name}` entry must resolve to exactly one attached `boss/{dungeon-theme}/{name}` via authored data.
+- A raid site is not a valid generated or authored content unit until that boss attachment exists.
+- Content generation and review should treat "site concept + attached boss + enemy family + themed loot + drop tables" as one content packet, even when they live in separate template files.
+
+Drop table ID conventions:
+
+- Per-family regular: `drop-table/{family-slug}-regular` (e.g. `drop-table/tunnel-crawlers-regular`)
+- Per-family elite: `drop-table/{family-slug}-elite` (e.g. `drop-table/tunnel-crawlers-elite`)
+- Per-boss: `drop-table/{boss-slug}` (e.g. `drop-table/tunneler-brood-mother`)
+- Generic fallbacks: `drop-table/dungeon-{rank}-regular`, `drop-table/dungeon-{rank}-elite`, `drop-table/dungeon-{rank}-boss`
 
 Tags use a `prefix:value` format. Current prefixes:
 

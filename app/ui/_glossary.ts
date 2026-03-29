@@ -285,38 +285,38 @@ const CONTRACT_HINT_META = {
     label: "Conduit Crawlers",
     tip: "Electrical parasites that channel current.",
   },
-  // Boss family display names
-  "boss-family/tunnel-brood": {
-    label: "Tunnel Brood",
-    tip: "Boss. A massive burrowing hive-mother.",
+  // Boss display names (keyed by real boss IDs from boss registry)
+  "boss/tunneler-brood-mother": {
+    label: "Tunneler Brood-Mother",
+    tip: "Boss. A massive burrowing hive-mother anchoring an infested site.",
   },
-  "boss-family/garage-warden": {
-    label: "The Garage Warden",
-    tip: "Boss. A territorial heavy guarding the lower levels.",
+  "boss/sewer-warden": {
+    label: "Sewer Warden",
+    tip: "Boss. Fused utility infrastructure that defends its territory.",
   },
-  "boss-family/the-principal": {
-    label: "The Principal",
-    tip: "Boss. An authoritarian figure enforcing twisted order.",
+  "boss/phantom-stalker": {
+    label: "Phantom Stalker",
+    tip: "Boss. A spatial anomaly that hunts between rooms.",
   },
-  "boss-family/the-curator": {
+  "boss/the-curator": {
     label: "The Curator",
-    tip: "Boss. An obsessive collector of lost things.",
+    tip: "Boss. Overgrown botanical specimens with a distributed root intelligence.",
   },
-  "boss-family/the-exhibit": {
-    label: "The Exhibit",
-    tip: "Boss. A living display piece that refuses to be ignored.",
+  "boss/the-attendant": {
+    label: "The Attendant",
+    tip: "Boss. Laundromat machinery fused into a scalding, steam-venting guardian.",
   },
-  "boss-family/the-floor-manager": {
-    label: "The Floor Manager",
-    tip: "Boss. An overseer who demands ruthless efficiency.",
+  "boss/the-super": {
+    label: "The Super",
+    tip: "Boss. A building superintendent's tools animated into a territorial enforcer.",
   },
-  "boss-family/the-foreman": {
-    label: "The Foreman",
-    tip: "Boss. A relentless taskmaster of rebar and concrete.",
+  "boss/the-referee": {
+    label: "The Referee",
+    tip: "Boss. Gymnasium authority made manifest. Enforces rules that do not exist.",
   },
-  "boss-family/the-transformer": {
-    label: "The Transformer",
-    tip: "Boss. A volatile entity channeling raw electrical power.",
+  "boss/the-stockkeeper": {
+    label: "The Stockkeeper",
+    tip: "Boss. Cold storage preservation gone wrong. Does not let anything leave.",
   },
 } satisfies DisplayRegistry;
 

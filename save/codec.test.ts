@@ -870,8 +870,8 @@ describe("save codec", () => {
             knownTraits: ["threat:clustered"],
             hiddenTraitCount: 1,
             enemyHints: ["enemy-family/tunnel-crawlers"],
-            lootFamilyHints: ["loot-family/tunnel-salvage"],
-            bossHint: "boss-family/tunnel-brood",
+            lootFamilyHints: ["Tunnel Salvage"],
+            bossHint: "boss/tunneler-brood-mother",
             neighborhoodLabel: "lower east side",
           },
         ],
@@ -958,8 +958,8 @@ describe("save codec", () => {
         knownTraits: ["threat:clustered"],
         hiddenTraitCount: 1,
         enemyHints: ["enemy-family/tunnel-crawlers"],
-        lootFamilyHints: ["loot-family/tunnel-salvage"],
-        bossHint: "boss-family/tunnel-brood",
+        lootFamilyHints: ["Tunnel Salvage"],
+        bossHint: "boss/tunneler-brood-mother",
         neighborhoodLabel: "lower east side",
       },
     ]);
@@ -1416,6 +1416,156 @@ describe("save codec", () => {
     expect(dead?.lifecycle.status).toBe("dead");
     expect(dead?.lifecycle.deathTick).toBe(250);
     expect(dead?.lifecycle.deathRaidSummaryId).toBe("raid/0");
+  });
+
+  it("does not remap legitimate Porter's rooms during storage normalization", () => {
+    const base = createBaseSave();
+    const portersRooms = [
+      {
+        id: "room-instance/floor",
+        templateId: "room/floor:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/floor",
+        roomStateId: getRoomStateId("room/floor:tier_1", []),
+        capacity: 8,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/floor:tier_1",
+          { col: 1, row: 12, cols: 10, rows: 6 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/bar",
+        templateId: "room/bar:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/bar",
+        roomStateId: getRoomStateId("room/bar:tier_1", []),
+        capacity: 4,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/bar:tier_1",
+          { col: 1, row: 6, cols: 10, rows: 4 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/office",
+        templateId: "room/office:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/office",
+        roomStateId: getRoomStateId("room/office:tier_1", []),
+        capacity: 2,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 0, row: 12, cols: 4, rows: 3 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/office:tier_1",
+          { col: 0, row: 12, cols: 4, rows: 3 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/stockroom",
+        templateId: "room/stockroom:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/stockroom",
+        roomStateId: getRoomStateId("room/stockroom:tier_1", []),
+        capacity: 2,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 6, row: 12, cols: 4, rows: 3 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/stockroom:tier_1",
+          { col: 6, row: 12, cols: 4, rows: 3 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/infirmary",
+        templateId: "room/infirmary:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/infirmary",
+        roomStateId: getRoomStateId("room/infirmary:tier_1", []),
+        capacity: 2,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 0, row: 8, cols: 4, rows: 3 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/infirmary:tier_1",
+          { col: 0, row: 8, cols: 4, rows: 3 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/gym",
+        templateId: "room/gym:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/gym",
+        roomStateId: getRoomStateId("room/gym:tier_1", []),
+        capacity: 2,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/gym:tier_1",
+          { col: 6, row: 8, cols: 4, rows: 3 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/prep-room",
+        templateId: "room/prep_room:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/prep-room",
+        roomStateId: getRoomStateId("room/prep_room:tier_1", []),
+        capacity: 2,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 0, row: 4, cols: 4, rows: 3 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/prep_room:tier_1",
+          { col: 0, row: 4, cols: 4, rows: 3 },
+          [],
+        ),
+      },
+    ] as const;
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        building: {
+          activeBuildingId: "building/porters",
+          activeBuildingTier: 1,
+          activeFloorIndex: 0,
+          roomSlotCount: 7,
+          operatorSlotCount: 12,
+        },
+        rooms: [...portersRooms],
+        appliedUpgradeIds: [],
+      },
+    });
+
+    expect(normalized.world.building.activeBuildingId).toBe("building/porters");
+    expect(normalized.world.rooms).toHaveLength(7);
+    expect(normalized.world.rooms.map((room) => room.templateId)).toEqual(
+      portersRooms.map((room) => room.templateId),
+    );
+    expect(normalized.world.rooms.map((room) => room.slotId)).toEqual(
+      portersRooms.map((room) => room.slotId),
+    );
   });
 
   it("preserves raid summary death outcome marker through round trips", () => {
@@ -1952,5 +2102,196 @@ describe("save codec", () => {
     });
 
     expect(normalized.world.policies).toEqual(policies);
+  });
+
+  // ── Relocation save/load through real codec path ────────────────────
+
+  it("preserves post-relocation guidance state through codec hydration", () => {
+    const base = createBaseSave();
+    const guidanceState = {
+      seenBeatIds: [
+        "guidance/opening/board-briefing",
+        "guidance/opening/first-contract-choice",
+        "guidance/opening/bodega-overview",
+      ],
+      completedBeatIds: [
+        "guidance/opening/board-briefing",
+        "guidance/opening/first-contract-choice",
+        "guidance/opening/bodega-overview",
+      ],
+      dismissedBeatIds: [],
+      activeBeatId: null,
+      activeBeatView: null,
+      queuedBeatIds: [],
+      lastEvaluationMinute: 2000,
+      openingPathState: "completed",
+      activeBeatProgressBaseline: null,
+      interactionCounts: { staffingActions: 4, upgradesPurchased: 2 },
+      anchorResolutionFailures: [],
+      openingTiming: {
+        firstRaidReturnCompletedAtMinute: 500,
+        firstIncidentSeededAtMinute: 600,
+        securedContractCount: 20,
+        lastTrackedContractSiteId: "contract/last",
+      },
+    };
+
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        building: {
+          activeBuildingId: "building/porters",
+          activeBuildingTier: 1,
+          activeFloorIndex: 0,
+          roomSlotCount: 7,
+          operatorSlotCount: 12,
+        },
+        guidanceState,
+      },
+    });
+
+    const world = hydrated.save.world as Record<string, unknown>;
+    const restoredGuidance = world.guidanceState as Record<string, unknown>;
+    expect(restoredGuidance).toBeDefined();
+    expect(restoredGuidance.openingPathState).toBe("completed");
+    expect(restoredGuidance.completedBeatIds).toEqual(guidanceState.completedBeatIds);
+    expect(restoredGuidance.seenBeatIds).toEqual(guidanceState.seenBeatIds);
+    expect((restoredGuidance.interactionCounts as Record<string, number>).staffingActions).toBe(4);
+    expect((restoredGuidance.interactionCounts as Record<string, number>).upgradesPurchased).toBe(
+      2,
+    );
+  });
+
+  it("preserves mid-relocation interruption queue through codec hydration", () => {
+    const base = createBaseSave();
+    const interruptionQueue = {
+      active: {
+        instanceId: "int-reloc-1",
+        type: "relocation",
+        payload: {
+          kind: "relocation",
+          eventId: "event/relocation/bodega-to-next-hq",
+          beat: "moving",
+          buildingFromId: "building/bodega",
+          buildingToId: "building/porters",
+          treasuryCost: 600,
+        },
+        sourceSystem: "relocation-system",
+        timestamp: 5000,
+        blockingMode: "blocking",
+        persistence: "persistent",
+        dismissible: false,
+        priority: 0,
+      },
+      queue: [],
+      nextInstanceId: 2,
+    };
+
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        guild: { ...base.world.guild, treasury: 200 },
+        interruptionQueue,
+      },
+    });
+
+    const world = hydrated.save.world as Record<string, unknown>;
+    const restoredQueue = world.interruptionQueue as Record<string, unknown>;
+    expect(restoredQueue).toBeDefined();
+    const active = restoredQueue.active as Record<string, unknown>;
+    expect(active).not.toBeNull();
+    expect(active.type).toBe("relocation");
+    const payload = active.payload as Record<string, unknown>;
+    expect(payload.kind).toBe("relocation");
+    expect(payload.beat).toBe("moving");
+    expect(payload.buildingToId).toBe("building/porters");
+    expect(payload.treasuryCost).toBe(600);
+  });
+
+  it("round-trips post-relocation Porter's state through storage normalization", () => {
+    const base = createBaseSave();
+    const portersRooms = [
+      {
+        id: "room-instance/floor-tier-1-1",
+        templateId: "room/floor:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/floor",
+        roomStateId: getRoomStateId("room/floor:tier_1", []),
+        capacity: 8,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/floor:tier_1",
+          { col: 1, row: 12, cols: 10, rows: 6 },
+          [],
+        ),
+      },
+      {
+        id: "room-instance/bar-tier-1-2",
+        templateId: "room/bar:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/bar",
+        roomStateId: getRoomStateId("room/bar:tier_1", []),
+        capacity: 4,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+        activeFootprint: getRoomActiveFootprint(
+          "room/bar:tier_1",
+          { col: 1, row: 6, cols: 10, rows: 4 },
+          [],
+        ),
+      },
+    ];
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        building: {
+          activeBuildingId: "building/porters",
+          activeBuildingTier: 1,
+          activeFloorIndex: 0,
+          roomSlotCount: 7,
+          operatorSlotCount: 12,
+        },
+        rooms: portersRooms,
+        appliedUpgradeIds: [],
+        contractLifecycle: "idle",
+        contractSite: null,
+        contractResult: null,
+        postedContracts: [],
+        activeRaidPackets: [],
+        guidanceState: {
+          seenBeatIds: ["guidance/opening/board-briefing"],
+          completedBeatIds: ["guidance/opening/board-briefing", "guidance/opening/bodega-overview"],
+          dismissedBeatIds: [],
+          activeBeatId: null,
+          activeBeatView: null,
+          queuedBeatIds: [],
+          lastEvaluationMinute: 3000,
+          openingPathState: "completed",
+          activeBeatProgressBaseline: null,
+          interactionCounts: { staffingActions: 0, upgradesPurchased: 0 },
+          anchorResolutionFailures: [],
+        },
+      },
+    });
+
+    expect(normalized.world.building.activeBuildingId).toBe("building/porters");
+    expect(normalized.world.rooms).toHaveLength(2);
+    expect(normalized.world.rooms.map((r) => r.templateId)).toEqual([
+      "room/floor:tier_1",
+      "room/bar:tier_1",
+    ]);
+    const worldRecord = normalized.world as Record<string, unknown>;
+    const guidance = worldRecord.guidanceState as Record<string, unknown>;
+    expect(guidance.openingPathState).toBe("completed");
+    expect(guidance.completedBeatIds).toContain("guidance/opening/bodega-overview");
   });
 });

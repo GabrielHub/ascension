@@ -1,5 +1,6 @@
 import { validateEffect } from "../effects";
 import { validateRequirement } from "../requirements";
+import { bossById } from "./bosses";
 import { buildingTemplates } from "./buildings";
 import { enemyFamilyTemplates } from "./enemies";
 import { eventTemplates } from "./events";
@@ -623,6 +624,7 @@ export function createTemplateRegistry(): TemplateRegistry {
     dropTableById: dropTableLookup,
     enemyFamilyById: enemyFamilyLookup,
     enemyTemplateById: enemyTemplateLookup,
+    bossById,
     resourceIndexById: resourceLookup.indexById,
     buildingIndexById: buildingLookup.indexById,
     roomIndexById: roomLookup.indexById,

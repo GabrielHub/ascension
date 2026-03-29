@@ -351,11 +351,18 @@ export function getBossEncounterDefinition(
   missionId: string,
   bossId: string,
 ): BossEncounterDefinition | undefined {
-  const mission = registry.missionById.get(missionId);
-  const boss = mission?.combatProfile?.boss;
+  // Check boss registry first, then fall back to mission template
+  const registryBoss = registry.bossById.get(bossId);
+  const missionBoss = registry.missionById.get(missionId)?.combatProfile?.boss;
+  const boss =
+    registryBoss?.bossId === bossId
+      ? registryBoss
+      : missionBoss?.bossId === bossId
+        ? missionBoss
+        : undefined;
   const encounter = boss?.encounter;
 
-  if (!boss || boss.bossId !== bossId || !encounter) {
+  if (!boss || !encounter) {
     return undefined;
   }
 

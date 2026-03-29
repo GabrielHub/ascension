@@ -271,6 +271,8 @@ Loot-item rule:
 
 - Stackable loot needs icon clarity at small sizes and must still read cleanly when paired with quantity text.
 - Early monster-part loot should be themed by dungeon concept and rank, but it should stay readable as trade goods rather than bespoke hero props.
+- New loot items must be authored as part of the enemy-family content packet: site concept + boss + enemy family + themed loot items + per-family and per-boss drop tables.
+- The minimum deliverable for a new dungeon enemy family is 2 themed monster parts (one common, one uncommon) with sell prices in the F-rank envelope (6-12 cash).
 
 #### Base Weapon SVG Recipe
 
@@ -333,11 +335,12 @@ Not all asset creation is visual. Content definitions also need a locked workflo
 
 1. Start from lore and gameplay role.
 2. Reserve the ID and tags using the canonical taxonomy.
-3. Define the gameplay purpose and progression slot.
-4. State whether the work is data-only or requires new engine support.
-5. If it needs visuals or audio, attach the relevant asset brief and recipe dependency.
-6. Add the template or data entry only after the concept is clear.
-7. Validate through content tests and runtime review.
+3. For raid-site content, reserve the paired site-and-boss packet together: a `site/*` id plus the attached `boss/*` id it will ship with.
+4. Define the gameplay purpose and progression slot.
+5. State whether the work is data-only or requires new engine support.
+6. If it needs visuals or audio, attach the relevant asset brief and recipe dependency.
+7. Add the template or data entry only after the concept is clear.
+8. Validate through content tests and runtime review.
 
 This is the workflow for new operators, new upgrades, new buildings, new rooms, and new events.
 
@@ -345,10 +348,12 @@ This is the workflow for new operators, new upgrades, new buildings, new rooms, 
 
 1. Start from the dungeon concept as defined by the world rules.
 2. Define the real-world location that has gone wrong.
-3. Produce a site brief covering map read, theme corruption, hazards, points of interest, and boss identity.
-4. Produce a top-down recipe preview for the base map, not an HQ-style isometric room scene.
-5. Break the work into map tiles, fog treatments, markers, icons, and encounter indicators.
-6. Review for exploration readability first.
+3. Attach the specific boss that anchors the site before production starts. A raid site without a concrete boss is incomplete and must not advance.
+4. Produce a site brief covering map read, theme corruption, hazards, points of interest, and that attached boss identity.
+5. Produce a top-down recipe preview for the base map, not an HQ-style isometric room scene.
+6. Break the work into map tiles, fog treatments, markers, icons, and encounter indicators.
+7. Review the site and attached boss as one content packet before promotion, even if their assets land in different files.
+8. Review for exploration readability first.
 
 The dungeon concept is the creative seed. The map assets exist to express that seed clearly.
 
@@ -418,7 +423,7 @@ Minimum required inputs before production can start, by asset family.
 | Outfit Overlay     | gameplay role, rank, archetype         | body coverage, layering order, body compatibility              | overlay SVG on all compatible body types                     | per-body-type validation                             | `operator-parts-index.json`   |
 | Accessory          | gameplay role, rank, attachment zone   | anchor region (head/neck/ear), occlusion rules                 | accessory SVG on all compatible body types                   | per-body-type validation                             | `operator-parts-index.json`   |
 | Loot Icon          | dungeon concept, rank, item type       | silhouette at 32-48px, source-concept visual cue               | icon family preview at inventory grid scale                  | stackable framing template per family                | (content templates)           |
-| Raid Site          | dungeon concept, world rules           | map read, theme corruption, hazards, boss identity             | top-down base map preview                                    | tiles, fog, markers, icons, encounter indicators     | `raid-environment-index.json` |
+| Raid Site          | dungeon concept, world rules           | map read, theme corruption, hazards, attached boss identity    | top-down base map preview                                    | tiles, fog, markers, icons, encounter indicators     | `raid-environment-index.json` |
 | UI Markers/Icons   | interaction role, world UI context     | glance readability, background contrast                        | marker family preview on actual backgrounds                  | (single-pass, no module split)                       | relevant environment index    |
 | Audio              | lore/theme brief, related visual asset | emotional function, location, tier, tone                       | layered audio sketch                                         | ambient, event, UI layers                            | (none)                        |
 | Content Definition | lore, gameplay role, progression slot  | ID reservation, tags, data-only vs engine support              | (none for data-only; attach visual brief if needed)          | template entry + content tests                       | (content templates)           |

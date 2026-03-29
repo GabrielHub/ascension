@@ -192,6 +192,9 @@ Boss confrontation direction:
 - Focused team views should be able to surface the underlying precomputed team event log, including attacks, damage, health changes, and non-combat check results.
 - Exploration, looting, intel gathering, regrouping, and withdrawal should all resolve through explicit simulation-owned pass, mixed, or fail checks.
 - Boss access should use a hybrid rule: contract progress determines whether boss contact is possible at all, and run-level progression determines whether a specific team reaches that threshold.
+- Site concepts own dungeon identity, enemy-family pools, and the attached boss anchor. Mission type changes the job being done at the site; it does not detach the site from its boss.
+- A raid site must never be authored or generated without an attached boss definition. If a `site/*` entry does not resolve to a concrete boss, that site is invalid content rather than a partial draft.
+- Content-generation workflow should treat new raid-site creation as a paired operation: reserve the `site/*` id, reserve or attach the `boss/*` id, and review both together before promotion.
 
 Raid contract-surface direction:
 
@@ -220,6 +223,15 @@ Loot and early raid-economy direction:
 - Site rank should hard-cap direct gear drop quality at roughly site rank plus one band. An E-rank site may rarely drop D-rank gear, but should not jump past that cap.
 - Upper-cap drops should skew toward elite and boss sources rather than ordinary fodder.
 - Defeated bosses close the dungeon and remove access to that dungeon's drop table.
+
+Site-specific loot resolution:
+
+- Each enemy family has dedicated regular and elite drop tables containing themed monster parts.
+- The active contract site resolves loot through the chain: site concept `enemyFamilyIds[0]` to family-slug to `drop-table/{family-slug}-regular` or `-elite`.
+- Each boss has a dedicated boss drop table containing family-themed loot plus thematic gear.
+- `lootThemeLabels` on site concepts are UI hints displayed on the contract board; actual drops come from family and boss drop tables.
+- Generic drop tables (`dungeon-f-regular`, `dungeon-f-elite`, `dungeon-f-boss`) remain as fallbacks when no site-specific table exists.
+- New enemy families must ship with at least 2 themed monster parts and per-family drop tables. See content-taxonomy for the naming convention.
 
 ## Gear, Resources, And Rooms
 

@@ -4,6 +4,7 @@ import type {
   InventoryItemViewModel,
   MarketItemViewModel,
 } from "./view-models";
+import { ItemRankBadge, ItemTagChips, StatEffectChips } from "./item-surface";
 import { emptyStateClass, emptyStateIconClass } from "./styles";
 
 interface InventoryPanelProps {
@@ -81,19 +82,34 @@ export function InventoryPanel({
                     {assignment.accessorySummary}
                   </span>
                 </div>
-                <div className="mt-1 grid gap-1 text-[0.6875rem] text-silver/55">
+                <div className="mt-1 grid gap-2 text-[0.6875rem] text-silver/55">
                   {assignment.weaponId ? (
-                    <span>Weapon: {assignment.weaponName}</span>
+                    <div>
+                      <span>Weapon: {assignment.weaponName}</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <StatEffectChips effects={assignment.weaponStatEffects} />
+                      </div>
+                    </div>
                   ) : (
                     <span className="text-silver/35">Weapon: empty</span>
                   )}
                   {assignment.outfitOverlayId ? (
-                    <span>Outfit: {assignment.outfitOverlayName}</span>
+                    <div>
+                      <span>Outfit: {assignment.outfitOverlayName}</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <StatEffectChips effects={assignment.outfitStatEffects} />
+                      </div>
+                    </div>
                   ) : (
                     <span className="text-silver/35">Outfit: empty</span>
                   )}
                   {assignment.accessoryId ? (
-                    <span>Accessory: {assignment.accessoryName}</span>
+                    <div>
+                      <span>Accessory: {assignment.accessoryName}</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <StatEffectChips effects={assignment.accessoryStatEffects} />
+                      </div>
+                    </div>
                   ) : (
                     <span className="text-silver/35">Accessory: none assigned</span>
                   )}
@@ -148,22 +164,40 @@ export function InventoryPanel({
                 return (
                   <div
                     key={item.itemId}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-[rgba(200,168,76,0.03)]"
+                    className="rounded-lg px-2.5 py-2 hover:bg-[rgba(200,168,76,0.03)]"
                   >
-                    <span className="min-w-0 truncate text-xs text-silver-bright">{item.name}</span>
-                    <span className="ml-auto shrink-0 text-[0.6875rem] tabular-nums text-gold/60">
-                      x{item.quantity}
-                    </span>
-                    {sellPrice > 0 && (
-                      <button
-                        type="button"
-                        className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
-                        onClick={() => callbacks.sellItem(item.itemId, 1)}
-                        title={`Sell 1 for ${sellPrice}`}
-                      >
-                        sell ${sellPrice}
-                      </button>
-                    )}
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="min-w-0 truncate text-xs text-silver-bright">
+                            {item.name}
+                          </span>
+                          <ItemRankBadge rank={item.rank} />
+                        </div>
+                        <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                          {item.description}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          <StatEffectChips effects={item.statEffects} />
+                          <ItemTagChips tags={item.tags} />
+                        </div>
+                      </div>
+                      <div className="ml-auto flex shrink-0 items-center gap-2">
+                        <span className="text-[0.6875rem] tabular-nums text-gold/60">
+                          x{item.quantity}
+                        </span>
+                        {sellPrice > 0 && (
+                          <button
+                            type="button"
+                            className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+                            onClick={() => callbacks.sellItem(item.itemId, 1)}
+                            title={`Sell 1 for ${sellPrice}`}
+                          >
+                            sell ${sellPrice}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}

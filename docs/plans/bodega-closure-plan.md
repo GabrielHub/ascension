@@ -10,11 +10,12 @@ Implemented already:
 - Phase 2: the first bodega-native support rooms
 - Phase 3: hard roster-cap overflow handling
 - Phase 4 boss-presentation slice: authored runtime boss portraits for the shipped bodega-era bosses
+- Phase 5 relocation surfacing slice: management-panel relocation readiness plus player-facing interruption entry and decision copy
 
 Still active:
 
 - remaining breadth expansion where repeated bodega campaigns are still too narrow
-- relocation runtime and save-safe building handoff
+- promotion-grade relocation landing verification and any remaining save-safe building handoff fixes exposed by that pass
 - promotion review against the closed bodega baseline
 
 ## Prerequisites
@@ -110,8 +111,9 @@ Tasks:
    - site concepts
    - bosses
    - viable gear alternatives
-3. Ship approved unique encounter portrait SVGs for each shipped bodega-era boss, and wire every shipped `bossId` to authored art so boss commitment and encounter surfaces do not fall back to generic threat sigils.
-4. Keep generated flavor inside the world foundation and keep gameplay budgets inside authored tables.
+3. Treat site concepts and bosses as paired content. Do not ship or generate a raid site unless its attached `bossId` and matching boss template are already defined.
+4. Ship approved unique encounter portrait SVGs for each shipped bodega-era boss, and wire every shipped `bossId` to authored art so boss commitment and encounter surfaces do not fall back to generic threat sigils.
+5. Keep generated flavor inside the world foundation and keep gameplay budgets inside authored tables.
 
 Done when:
 

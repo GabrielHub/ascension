@@ -30,6 +30,7 @@ import {
   getToneMeta,
 } from "./_glossary";
 import { OperatorPortrait } from "./operator-portrait";
+import { OperatorCombatSummary } from "./operator-combat-summary";
 
 interface RosterPanelProps {
   operators: readonly OperatorViewModel[];
@@ -160,6 +161,7 @@ function OperatorRow({
                     {getSpecialtyMeta(op.specialtyTag).label}
                   </span>
                 )}
+                <span className="badge badge-slate">Rank {op.combat.rank.toUpperCase()}</span>
               </div>
               {op.availableForRaid && (
                 <Tooltip content="Healthy and unassigned — can join a raid" side="top">
@@ -196,6 +198,10 @@ function OperatorRow({
             <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
               <span>Stress {Math.round(op.needStress)}</span>
             </Tooltip>
+          </div>
+
+          <div className="border-t border-gold/10 pt-2">
+            <OperatorCombatSummary combat={op.combat} />
           </div>
 
           {/* ── Phase 2: Explanation surfaces ──────────────────── */}
@@ -372,7 +378,7 @@ function StaffRow({
   onAssign: (roomId?: string) => void;
 }) {
   const assignableRooms = rooms.filter(
-    (r) => r.isActive && r.occupancy < r.capacity && r.requiredStaffTag === member.roleTag,
+    (r) => r.isActive && r.assignedStaffCount < r.capacity && r.requiredStaffTag === member.roleTag,
   );
   const isAssigned = member.assignmentKind === "room";
 
@@ -419,7 +425,7 @@ function StaffRow({
               {assignableRooms.map((room) => (
                 <Tooltip
                   key={room.id}
-                  content={`Assign to ${room.name} (${room.occupancy}/${room.capacity})`}
+                  content={`Assign to ${room.name} (${room.assignedStaffCount}/${room.capacity})`}
                   side="top"
                 >
                   <button

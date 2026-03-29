@@ -17,4 +17,21 @@ export const buildingTemplates = [
       "upgrade/building/bodega:extension",
     ],
   },
+  {
+    id: "building/porters",
+    kind: "building",
+    name: "Porter's",
+    tags: ["phase:porter", "site:waterfront", "tier:second"],
+    description:
+      "A neighborhood bar and restaurant on the Red Hook waterfront. Public downstairs, operations upstairs.",
+    baseTier: 1,
+    baseRoomSlots: 7,
+    baseOperatorSlots: 12,
+    upgradeIds: [
+      "upgrade/building/porters:kitchen_overhaul",
+      "upgrade/building/porters:upstairs_conversion",
+      "upgrade/building/porters:remodel",
+      "upgrade/building/porters:waterfront",
+    ],
+  },
 ] satisfies readonly BuildingTemplate[];

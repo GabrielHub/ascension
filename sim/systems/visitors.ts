@@ -34,6 +34,18 @@ const VISITOR_NAMES = [
   "Renzo Malik",
   "Sage Okonkwo",
   "Tova Lindgren",
+  "Kai Brennan",
+  "Suki Okafor",
+  "Dion Marchetti",
+  "Yara Petrov",
+  "Noel Baptiste",
+  "Maeve Aziz",
+  "Felix Ramos",
+  "Lila Nakamura",
+  "Tariq Byrne",
+  "Zoe Asante",
+  "Heath Sandoval",
+  "Priya Novak",
 ] as const;
 
 const VISITOR_ROLE_CYCLE = ["role:field_lead", "role:scout", "role:medic"] as const;

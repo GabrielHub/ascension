@@ -12,6 +12,7 @@ const callbacks: GameCallbacks = {
   tick: () => {},
   setRoomActive: () => {},
   setPolicy: vi.fn(),
+  initiateRelocation: () => {},
   purchaseBuildingUpgrade: () => {},
   purchaseRoomUpgrade: () => {},
   acceptRecruit: () => {},
@@ -55,6 +56,9 @@ describe("management panel", () => {
       <ManagementPanel
         policies={hq.policies}
         contractLifecycle={hq.contractLifecycle}
+        building={hq.building}
+        rooms={hq.rooms}
+        relocationGate={hq.relocationGate}
         callbacks={callbacks}
       />,
     );
@@ -81,6 +85,21 @@ describe("management panel", () => {
       <ManagementPanel
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="active"
+        building={{
+          id: "building/bodega",
+          name: "The Bodega",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 0,
+          floorCount: 1,
+          usedRoomSlots: 0,
+          totalRoomSlots: 4,
+          operatorSlots: 6,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[]}
+        relocationGate={null}
         callbacks={callbacks}
       />,
     );
@@ -96,5 +115,33 @@ describe("management panel", () => {
       /data-testid="management-policy-objectiveBias-standard_clearance"[^>]*disabled=""/,
     );
     expect(html).toMatch(/data-testid="management-policy-objectiveBias-boss_rush"[^>]*disabled=""/);
+  });
+
+  it("shows relocation as completed once the guild has moved to Porter's", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="idle"
+        building={{
+          id: "building/porters",
+          name: "Porter's",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 0,
+          floorCount: 2,
+          usedRoomSlots: 7,
+          totalRoomSlots: 7,
+          operatorSlots: 12,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+      />,
+    );
+
+    expect(html).toContain("Completed");
+    expect(html).toContain("Porter&#x27;s is now the guild headquarters.");
   });
 });

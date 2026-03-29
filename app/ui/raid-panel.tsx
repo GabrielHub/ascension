@@ -1,6 +1,6 @@
 import { getPolicyFactorMetadata } from "lib/policies";
 
-import { RAID_TIPS, getContractHintMeta } from "./_glossary";
+import { RAID_TIPS, getContractHintMeta, getWeaknessTargetMeta } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
@@ -159,11 +159,16 @@ function PostedContractCard({
           <p className="mt-0.5 text-xs text-silver/50">
             {posting.location} — {posting.missionName}
           </p>
+          {posting.neighborhoodLabel && (
+            <p className="mt-0.5 text-[0.6875rem] text-gold/60">{posting.neighborhoodLabel}</p>
+          )}
         </div>
         <span className={`badge ${rankBadgeClass(posting.rank)} shrink-0`}>
           Rank {posting.rank.toUpperCase()}
         </span>
       </div>
+
+      <p className="mt-3 text-[0.6875rem] leading-relaxed text-silver/60">{posting.siteSummary}</p>
 
       {/* Stats row */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
@@ -225,7 +230,7 @@ function PostedContractCard({
 
         {posting.bossHint && (
           <p className="text-[0.625rem] text-silver/45">
-            <span className="text-gold/50">Boss:</span>{" "}
+            <span className="text-gold/50">Boss risk:</span>{" "}
             {getContractHintMeta(posting.bossHint).label}
           </p>
         )}
@@ -333,6 +338,9 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
           <p className="mt-0.5 text-xs text-silver/50">
             {contract.missionName} — {contract.location}
           </p>
+          {contract.neighborhoodLabel && (
+            <p className="mt-0.5 text-[0.6875rem] text-gold/60">{contract.neighborhoodLabel}</p>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           <span className={`badge ${rankBadgeClass(contract.rank)}`}>
@@ -358,6 +366,13 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
       {!isEnded && (
         <>
+          <div className="glass-card-inset mt-3 rounded-lg px-3 py-3">
+            <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">Site read</p>
+            <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/65">
+              {contract.siteSummary}
+            </p>
+          </div>
+
           {/* Stats */}
           <div className="mt-3 flex items-center gap-4 text-xs">
             <div className="flex items-baseline gap-1" title={RAID_TIPS.threat}>
@@ -390,27 +405,88 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
             </div>
           </div>
 
-          {/* Boss available indicator */}
-          {contract.bossAvailable && (
-            <div
-              className="mt-2.5 flex items-center gap-1.5 rounded-md px-2 py-1"
-              style={{
-                background: "rgba(212, 84, 30, 0.08)",
-                border: "1px solid rgba(212, 84, 30, 0.15)",
-              }}
-            >
-              <span
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{
-                  background: "var(--color-ember)",
-                  boxShadow: "0 0 6px rgba(212, 84, 30, 0.5)",
-                }}
-              />
-              <span className="text-[0.625rem] font-medium uppercase tracking-wider text-ember/90">
-                Boss route unlocked
-              </span>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            {(contract.knownTraits.length > 0 ||
+              contract.enemyHints.length > 0 ||
+              contract.lootFamilyHints.length > 0) && (
+              <div className="glass-card-inset rounded-lg px-3 py-3">
+                <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
+                  Operational Read
+                </p>
+                {contract.knownTraits.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {contract.knownTraits.map((trait) => (
+                      <span key={trait} className="badge badge-slate">
+                        {getContractHintMeta(trait).label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {contract.enemyHints.length > 0 && (
+                  <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/60">
+                    Hostiles:{" "}
+                    {contract.enemyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
+                  </p>
+                )}
+                {contract.lootFamilyHints.length > 0 && (
+                  <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+                    Likely loot:{" "}
+                    {contract.lootFamilyHints
+                      .map((hint) => getContractHintMeta(hint).label)
+                      .join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="glass-card-inset rounded-lg px-3 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
+                  Boss Stakes
+                </p>
+                <span className={`badge ${contract.bossAvailable ? "badge-ember" : "badge-slate"}`}>
+                  {contract.bossAvailable ? "Route Open" : "Route Locked"}
+                </span>
+              </div>
+              <p className="mt-2 text-[0.6875rem] text-silver-bright">
+                {contract.bossName ?? "Boss identity unconfirmed"}
+              </p>
+              {contract.bossTags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {contract.bossTags.map((tag) => (
+                    <span key={tag} className="badge badge-slate">
+                      {getContractHintMeta(tag).label}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {contract.bossWeaknesses.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-[0.625rem] uppercase tracking-[0.12em] text-frost/75">
+                    Weaknesses
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {contract.bossWeaknesses.map((weakness) => {
+                      const meta = getWeaknessTargetMeta(weakness.target);
+                      return (
+                        <span
+                          key={`${weakness.kind}-${weakness.target}`}
+                          className="badge border border-frost/20 bg-frost/10 text-frost"
+                        >
+                          {meta.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/60">
+                {contract.bossAvailable
+                  ? "The boss route is open. Enter the site expecting a decisive fight."
+                  : "Explore further before expecting the boss route to appear."}
+              </p>
             </div>
-          )}
+          </div>
         </>
       )}
     </div>

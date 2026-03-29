@@ -444,6 +444,7 @@ function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
   let changed = false;
   const sanitized: Record<string, unknown> = { ...record };
   let canonicalizeBodegaSlice = false;
+  let sanitizedBuildingId: string | null = null;
 
   const buildingValue = record.building;
   if (buildingValue && typeof buildingValue === "object" && !Array.isArray(buildingValue)) {
@@ -458,6 +459,7 @@ function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
         changed = true;
         canonicalizeBodegaSlice = mappedBuildingId === "building/bodega";
       }
+      sanitizedBuildingId = buildingRecord.activeBuildingId;
     }
     sanitized.building = buildingRecord;
   }
@@ -469,7 +471,7 @@ function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
       }
 
       const roomRecord = { ...(room as Record<string, unknown>) };
-      if (typeof roomRecord.templateId === "string") {
+      if (sanitizedBuildingId === "building/bodega" && typeof roomRecord.templateId === "string") {
         const mappedRoomId = mapLegacyContentId(roomRecord.templateId, LEGACY_ROOM_TEMPLATE_ID_MAP);
         if (mappedRoomId !== roomRecord.templateId) {
           roomRecord.templateId = mappedRoomId;

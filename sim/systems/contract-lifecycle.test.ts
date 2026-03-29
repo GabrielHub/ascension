@@ -124,8 +124,8 @@ describe("site concept templates", () => {
       expect(concept.districtPool.length).toBeGreaterThan(0);
       expect(concept.rankPool.length).toBeGreaterThan(0);
       expect(concept.enemyFamilyIds.length).toBeGreaterThan(0);
-      expect(concept.bossFamilyId).toBeTruthy();
-      expect(concept.lootFamilyIds.length).toBeGreaterThan(0);
+      expect(concept.bossId).toBeTruthy();
+      expect(concept.lootThemeLabels.length).toBeGreaterThan(0);
       expect(concept.visualTheme.accentPalette).toBeTruthy();
     }
   });
@@ -138,7 +138,7 @@ describe("site concept templates", () => {
   });
 
   it("different concepts have different loot families", () => {
-    const lootSets = siteConceptTemplates.map((c) => c.lootFamilyIds.join(","));
+    const lootSets = siteConceptTemplates.map((c) => c.lootThemeLabels.join(","));
     const uniqueSets = new Set(lootSets);
     expect(uniqueSets.size).toBeGreaterThanOrEqual(4);
   });
@@ -175,7 +175,7 @@ describe("bidOnContract", () => {
         knownTraits: ["threat:clustered"],
         hiddenTraitCount: 1,
         enemyHints: ["enemy-family/tunnel-crawlers"],
-        lootFamilyHints: ["loot-family/tunnel-salvage"],
+        lootFamilyHints: ["Tunnel Salvage"],
         bossHint: null,
         neighborhoodLabel: "lower east side",
       },

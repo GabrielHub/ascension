@@ -22,8 +22,8 @@ export interface SiteConceptTemplate {
   threatProfileTags: readonly string[];
   hazardTags: readonly string[];
   enemyFamilyIds: readonly string[];
-  bossFamilyId: string;
-  lootFamilyIds: readonly string[];
+  bossId: string;
+  lootThemeLabels: readonly string[];
   visualTheme: SiteConceptTheme;
 }
 
@@ -40,8 +40,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:clustered", "threat:hazard"],
     hazardTags: ["hazard:flooding", "hazard:low-visibility"],
     enemyFamilyIds: ["enemy-family/tunnel-crawlers"],
-    bossFamilyId: "boss-family/tunnel-brood",
-    lootFamilyIds: ["loot-family/tunnel-salvage", "loot-family/subway-parts"],
+    bossId: "boss/tunneler-brood-mother",
+    lootThemeLabels: ["Tunnel Salvage", "Subway Parts"],
     visualTheme: {
       accentPalette: "sewer",
       fogTreatmentId: "fog/murky-water",
@@ -60,8 +60,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:mobile", "threat:ambush"],
     hazardTags: ["hazard:fumes", "hazard:poor-footing"],
     enemyFamilyIds: ["enemy-family/concrete-sentinels"],
-    bossFamilyId: "boss-family/garage-warden",
-    lootFamilyIds: ["loot-family/concrete-salvage", "loot-family/industrial-scrap"],
+    bossId: "boss/sewer-warden",
+    lootThemeLabels: ["Concrete Salvage", "Industrial Scrap"],
     visualTheme: {
       accentPalette: "concrete",
       fogTreatmentId: "fog/exhaust-haze",
@@ -80,8 +80,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:unstable", "threat:hostile"],
     hazardTags: ["hazard:spatial-distortion", "hazard:noise"],
     enemyFamilyIds: ["enemy-family/chalk-swarms"],
-    bossFamilyId: "boss-family/the-principal",
-    lootFamilyIds: ["loot-family/institutional-salvage", "loot-family/chalk-dust"],
+    bossId: "boss/phantom-stalker",
+    lootThemeLabels: ["Institutional Salvage", "Chalk Dust"],
     visualTheme: {
       accentPalette: "dust",
       fogTreatmentId: "fog/chalk-haze",
@@ -100,13 +100,94 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:clustered", "threat:hazard"],
     hazardTags: ["hazard:entanglement", "hazard:pollen"],
     enemyFamilyIds: ["enemy-family/vine-constructs"],
-    bossFamilyId: "boss-family/the-curator",
-    lootFamilyIds: ["loot-family/botanical-salvage", "loot-family/growth-essence"],
+    bossId: "boss/the-curator",
+    lootThemeLabels: ["Botanical Salvage", "Growth Essence"],
     visualTheme: {
       accentPalette: "garden",
       fogTreatmentId: "fog/pollen-drift",
       markerStyleId: "marker/organic",
       copyStyleTags: ["tone:overgrown", "tone:patient"],
+    },
+  },
+
+  {
+    siteConceptId: "site/flooded-laundromat-basement",
+    name: "Flooded Laundromat Basement",
+    districtPool: ["district/lower-east-side", "district/queens-railyard"],
+    worldSpaceLabel: "Laundromat Rift — Below Street Level",
+    conceptSummary:
+      "The basement washers never stopped running. The water down here is hot, sudsy, and moving against the current. The dryers spin at frequencies that loosen fillings.",
+    rankPool: ["f"],
+    threatProfileTags: ["threat:hazard", "threat:clustered"],
+    hazardTags: ["hazard:flooding", "hazard:chemical", "hazard:heat"],
+    enemyFamilyIds: ["enemy-family/suds-constructs"],
+    bossId: "boss/the-attendant",
+    lootThemeLabels: ["Laundry Salvage", "Chemical Residue"],
+    visualTheme: {
+      accentPalette: "sewer",
+      fogTreatmentId: "fog/steam-cloud",
+      markerStyleId: "marker/industrial",
+      copyStyleTags: ["tone:humid", "tone:mechanical"],
+    },
+  },
+  {
+    siteConceptId: "site/condemned-residential-basement",
+    name: "Condemned Residential Basement",
+    districtPool: ["district/harlem-substation", "district/bronx-overpass"],
+    worldSpaceLabel: "Residential Rift — Sub-Level Apartments",
+    conceptSummary:
+      "Somebody's basement apartment kept going down. The furniture rearranges itself. The radiator still works, which is the most frightening part.",
+    rankPool: ["f"],
+    threatProfileTags: ["threat:ambush", "threat:unstable"],
+    hazardTags: ["hazard:darkness", "hazard:structural-collapse"],
+    enemyFamilyIds: ["enemy-family/cellar-dwellers"],
+    bossId: "boss/the-super",
+    lootThemeLabels: ["Domestic Salvage", "Basement Scrap"],
+    visualTheme: {
+      accentPalette: "dust",
+      fogTreatmentId: "fog/dust-cloud",
+      markerStyleId: "marker/institutional",
+      copyStyleTags: ["tone:cramped", "tone:domestic"],
+    },
+  },
+  {
+    siteConceptId: "site/closed-community-center",
+    name: "Closed Community Center",
+    districtPool: ["district/bronx-overpass", "district/lower-east-side"],
+    worldSpaceLabel: "Rec Center Rift — Former Community Hub",
+    conceptSummary:
+      "The gym lights are on. The scoreboard counts something. The pool has been drained but the diving board still bounces when nobody is on it.",
+    rankPool: ["f"],
+    threatProfileTags: ["threat:mobile", "threat:hostile"],
+    hazardTags: ["hazard:noise", "hazard:spatial-distortion"],
+    enemyFamilyIds: ["enemy-family/court-echoes"],
+    bossId: "boss/the-referee",
+    lootThemeLabels: ["Athletic Salvage", "Rec Scrap"],
+    visualTheme: {
+      accentPalette: "dust",
+      fogTreatmentId: "fog/chalk-haze",
+      markerStyleId: "marker/institutional",
+      copyStyleTags: ["tone:echoing", "tone:competitive"],
+    },
+  },
+  {
+    siteConceptId: "site/corner-deli-cold-storage",
+    name: "Corner Deli Cold Storage",
+    districtPool: ["district/queens-railyard", "district/red-hook-waterfront"],
+    worldSpaceLabel: "Cold Storage Rift — Behind The Counter",
+    conceptSummary:
+      "The walk-in fridge behind the deli counter goes back further than the building. The cold is wrong — it preserves things that should not be preserved.",
+    rankPool: ["f"],
+    threatProfileTags: ["threat:hazard", "threat:ambush"],
+    hazardTags: ["hazard:cold", "hazard:low-visibility"],
+    enemyFamilyIds: ["enemy-family/freezer-fauna"],
+    bossId: "boss/the-stockkeeper",
+    lootThemeLabels: ["Cold Salvage", "Preserved Parts"],
+    visualTheme: {
+      accentPalette: "glass",
+      fogTreatmentId: "fog/frost-haze",
+      markerStyleId: "marker/industrial",
+      copyStyleTags: ["tone:frigid", "tone:preserved"],
     },
   },
 
@@ -122,8 +203,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:mobile", "threat:hostile"],
     hazardTags: ["hazard:flooding", "hazard:pressure"],
     enemyFamilyIds: ["enemy-family/aquatic-horrors"],
-    bossFamilyId: "boss-family/the-exhibit",
-    lootFamilyIds: ["loot-family/aquatic-salvage", "loot-family/deep-specimen"],
+    bossId: "boss/tunneler-brood-mother",
+    lootThemeLabels: ["Aquatic Salvage", "Deep Specimen"],
     visualTheme: {
       accentPalette: "aquatic",
       fogTreatmentId: "fog/deep-murk",
@@ -142,8 +223,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:ambush", "threat:hostile"],
     hazardTags: ["hazard:spatial-distortion", "hazard:entrapment"],
     enemyFamilyIds: ["enemy-family/mannequin-stalkers"],
-    bossFamilyId: "boss-family/the-floor-manager",
-    lootFamilyIds: ["loot-family/retail-salvage", "loot-family/display-parts"],
+    bossId: "boss/phantom-stalker",
+    lootThemeLabels: ["Retail Salvage", "Display Parts"],
     visualTheme: {
       accentPalette: "glass",
       fogTreatmentId: "fog/fluorescent-flicker",
@@ -162,8 +243,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:clustered", "threat:hostile"],
     hazardTags: ["hazard:falling-debris", "hazard:structural-collapse"],
     enemyFamilyIds: ["enemy-family/rebar-constructs"],
-    bossFamilyId: "boss-family/the-foreman",
-    lootFamilyIds: ["loot-family/construction-salvage", "loot-family/structural-alloy"],
+    bossId: "boss/sewer-warden",
+    lootThemeLabels: ["Construction Salvage", "Structural Alloy"],
     visualTheme: {
       accentPalette: "rust",
       fogTreatmentId: "fog/dust-cloud",
@@ -182,8 +263,8 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     threatProfileTags: ["threat:hazard", "threat:unstable"],
     hazardTags: ["hazard:electrical", "hazard:magnetic-interference"],
     enemyFamilyIds: ["enemy-family/conduit-crawlers"],
-    bossFamilyId: "boss-family/the-transformer",
-    lootFamilyIds: ["loot-family/electrical-salvage", "loot-family/charged-components"],
+    bossId: "boss/sewer-warden",
+    lootThemeLabels: ["Electrical Salvage", "Charged Components"],
     visualTheme: {
       accentPalette: "neon",
       fogTreatmentId: "fog/static-field",

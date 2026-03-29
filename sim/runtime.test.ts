@@ -2652,3 +2652,199 @@ describe("phase 1 runtime", () => {
     });
   });
 });
+
+// ── Relocation save/load through full pipeline ──────────────────────────
+
+describe("relocation save/load through full pipeline", () => {
+  it("loads a post-relocation Porter's snapshot into a working simulation", () => {
+    // Start from a bootstrap bodega snapshot with operators
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    // Transform into a post-relocation Porter's state
+    snapshot.building = {
+      activeBuildingId: "building/porters",
+      activeBuildingTier: 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 7,
+      operatorSlotCount: 12,
+    };
+
+    // Porter's starter rooms — use the Floor and Bar on floor 0 to verify
+    // multi-floor loading works. We only need a minimal room set for this test.
+    const portersBuilding = templateRegistry.buildingById.get("building/porters");
+    expect(portersBuilding).toBeDefined();
+
+    const floorRoom = templateRegistry.roomById.get("room/floor:tier_1");
+    const barRoom = templateRegistry.roomById.get("room/bar:tier_1");
+    expect(floorRoom).toBeDefined();
+    expect(barRoom).toBeDefined();
+
+    snapshot.rooms = [
+      {
+        id: "room-instance/floor-tier-1-1",
+        templateId: "room/floor:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/floor",
+        roomStateId: "floor:tier_1",
+        capacity: floorRoom!.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+        activeFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+      },
+      {
+        id: "room-instance/bar-tier-1-2",
+        templateId: "room/bar:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/bar",
+        roomStateId: "bar:tier_1",
+        capacity: barRoom!.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+        activeFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+      },
+    ];
+
+    // Post-relocation state: contracts reset, treasury debited
+    snapshot.guild.treasury = 200;
+    snapshot.guild.reputation = 50;
+    snapshot.activeRaidPackets = [];
+    snapshot.raidSummaries = [
+      {
+        id: "raid/legacy-1",
+        opportunityId: "opportunity/legacy-1",
+        contractSiteId: "contract/legacy-1",
+        missionId: "mission/clearance",
+        location: "district/test",
+        startedAt: "2026-01-01T00:00:00Z",
+        endedAt: "2026-01-01T01:00:00Z",
+        result: "success",
+        reputationDelta: 2,
+        cashDelta: 100,
+        threat: 50,
+        intel: 50,
+        reward: 100,
+        cohesion: 50,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+      },
+    ];
+    snapshot.appliedUpgradeIds = [];
+    snapshot.contractLifecycle = "idle";
+    snapshot.contractSite = null;
+    snapshot.contractResult = null;
+    snapshot.postedContracts = [];
+
+    // Completed opening guidance with bodega beat retired
+    (snapshot as Record<string, unknown>).guidanceState = {
+      seenBeatIds: OPENING_BEAT_IDS.slice(),
+      completedBeatIds: OPENING_BEAT_IDS.slice(),
+      dismissedBeatIds: [],
+      activeBeatId: null,
+      activeBeatView: null,
+      queuedBeatIds: [],
+      lastEvaluationMinute: 5000,
+      openingPathState: "completed",
+      activeBeatProgressBaseline: null,
+      interactionCounts: { staffingActions: 6, upgradesPurchased: 3 },
+      anchorResolutionFailures: [],
+      openingTiming: {
+        firstRaidReturnCompletedAtMinute: 300,
+        firstIncidentSeededAtMinute: 400,
+        securedContractCount: 22,
+        lastTrackedContractSiteId: "contract/legacy-20",
+      },
+    };
+
+    // Load into a real simulation
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const restoredSnapshot = simulation.getWorldSnapshot();
+
+    // Verify building identity
+    expect(restoredSnapshot.building.activeBuildingId).toBe("building/porters");
+    expect(restoredSnapshot.building.activeBuildingTier).toBe(1);
+    expect(restoredSnapshot.building.operatorSlotCount).toBe(12);
+
+    // Verify rooms loaded
+    expect(restoredSnapshot.rooms.length).toBe(2);
+    expect(restoredSnapshot.rooms.map((r) => r.templateId).sort()).toEqual([
+      "room/bar:tier_1",
+      "room/floor:tier_1",
+    ]);
+
+    // Verify operator carryover
+    expect(restoredSnapshot.operators?.length).toBeGreaterThan(0);
+
+    // Verify guild state carryover
+    expect(restoredSnapshot.guild.treasury).toBe(200);
+    expect(restoredSnapshot.guild.reputation).toBe(50);
+
+    // Verify raid summary carryover
+    expect(restoredSnapshot.raidSummaries.length).toBe(1);
+    expect(restoredSnapshot.raidSummaries[0].id).toBe("raid/legacy-1");
+
+    // Verify contract state is reset
+    expect(restoredSnapshot.activeRaidPackets.length).toBe(0);
+
+    // Verify guidance state survived the pipeline
+    const phase1View = simulation.getPhase1View();
+    expect(phase1View.guidance.openingPathState).toBe("completed");
+    expect(phase1View.guidance.completedOpeningBeats).toBeGreaterThan(0);
+
+    // Verify simulation can tick without errors
+    simulation.tick(1000);
+    const afterTick = simulation.getWorldSnapshot();
+    expect(afterTick.building.activeBuildingId).toBe("building/porters");
+  });
+
+  it("loads a mid-relocation save with moving-beat interruption into a working simulation", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    // Still bodega — handoff hasn't executed yet
+    snapshot.guild.treasury = 200; // Already debited 600 from 800
+
+    // Relocation moving beat in the interruption queue
+    (snapshot as Record<string, unknown>).interruptionQueue = {
+      active: {
+        instanceId: "int-reloc-1",
+        type: "relocation",
+        payload: {
+          kind: "relocation",
+          eventId: "event/relocation/bodega-to-next-hq",
+          beat: "moving",
+          buildingFromId: "building/bodega",
+          buildingToId: "building/porters",
+          treasuryCost: 600,
+        },
+        sourceSystem: "relocation-system",
+        timestamp: 5000,
+        blockingMode: "blocking",
+        persistence: "persistent",
+        dismissible: false,
+        priority: 0,
+      },
+      queue: [],
+      nextInstanceId: 2,
+    };
+
+    // Load into simulation — the interruption should be preserved
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const restoredSnapshot = simulation.getWorldSnapshot();
+
+    // Building is still bodega (handoff hasn't executed)
+    expect(restoredSnapshot.building.activeBuildingId).toBe("building/bodega");
+    expect(restoredSnapshot.guild.treasury).toBe(200);
+
+    // The phase1 view should report the blocking interruption
+    const phase1View = simulation.getPhase1View();
+    expect(phase1View.activeInterruption).not.toBeNull();
+    expect(phase1View.activeInterruption?.type).toBe("relocation");
+    expect(phase1View.activeInterruption?.payload.kind).toBe("relocation");
+    const payload = phase1View.activeInterruption!.payload as Record<string, unknown>;
+    expect(payload.beat).toBe("moving");
+  });
+});

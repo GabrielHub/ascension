@@ -1393,6 +1393,15 @@ function createResolutionPacket(
 ): ActiveRaidResolutionPacket {
   const mission = getMissionTemplate(context, RaidOpportunityState.missionId[opportunityEntity]);
   const combatProfile = mission.combatProfile ?? null;
+  // Resolve site-specific boss from boss registry, falling back to mission template
+  const resContractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+  const resSiteConcept = resContractSite?.siteConceptId
+    ? siteConceptById.get(resContractSite.siteConceptId)
+    : undefined;
+  const effectiveBoss =
+    (resSiteConcept?.bossId ? context.registry.bossById.get(resSiteConcept.bossId) : undefined) ??
+    combatProfile?.boss ??
+    null;
   const opportunityRisk = RaidOpportunityState.risk[opportunityEntity];
   const opportunityThreat = RaidOpportunityState.threat[opportunityEntity];
   const opportunityReward = RaidOpportunityState.reward[opportunityEntity];
@@ -1416,16 +1425,16 @@ function createResolutionPacket(
     mission.expectedThreatTags.length * 2;
 
   // ── Boss tag penalties raise the challenge ──────────────────────
-  if (combatProfile?.boss) {
-    challengeScore += computeBossTagPenalty(combatProfile.boss.tags);
-    challengeScore += combatProfile.boss.threat * 0.25;
+  if (effectiveBoss) {
+    challengeScore += computeBossTagPenalty(effectiveBoss.tags);
+    challengeScore += effectiveBoss.threat * 0.25;
   }
 
   // ── Boss weakness bonuses reward team composition ───────────────
   let exploitedWeaknesses: string[] = [];
-  if (combatProfile?.boss) {
+  if (effectiveBoss) {
     const weaknessResult = computeBossWeaknessBonus(
-      combatProfile.boss.weaknesses,
+      effectiveBoss.weaknesses,
       operatorEntities,
       context,
     );
@@ -1477,9 +1486,9 @@ function createResolutionPacket(
         `location:${RaidOpportunityState.location[opportunityEntity]}`,
         `result:${result}`,
       ];
-      if (combatProfile?.boss) {
-        tags.push(`boss:${combatProfile.boss.bossId}`);
-        for (const tag of combatProfile.boss.tags) {
+      if (effectiveBoss) {
+        tags.push(`boss:${effectiveBoss.bossId}`);
+        for (const tag of effectiveBoss.tags) {
           tags.push(tag);
         }
         if (result === "success") {
@@ -1716,8 +1725,10 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     enemyFamilies: context.registry.enemyFamilies,
     enemyFamilyIds: siteConcept?.enemyFamilyIds ?? [],
     hazardTags: siteConcept?.hazardTags ?? [],
-    hasBoss: (mission.combatProfile?.boss ?? null) !== null,
-    bossId: mission.combatProfile?.boss?.bossId,
+    hasBoss: siteConcept?.bossId
+      ? context.registry.bossById.has(siteConcept.bossId)
+      : (mission.combatProfile?.boss ?? null) !== null,
+    bossId: siteConcept?.bossId ?? mission.combatProfile?.boss?.bossId,
     intelLevel: RaidOpportunityState.intel[opportunityEntity],
     teamCohesion,
     contractExplorationProgress: contractSite?.explorationProgress ?? 0,
@@ -2007,7 +2018,15 @@ function resolveCompletedRaids(context: SimSystemContext, deltaMs: number): bool
       );
 
       const missionTemplate = context.registry.missionById.get(packet.missionId);
-      const bossProfile = missionTemplate?.combatProfile?.boss;
+      const packetContractSite = BuildingAuthority.contractSite[buildingEntity];
+      const packetSiteConcept =
+        packetContractSite?.contractSiteId === packet.contractSiteId
+          ? siteConceptById.get(packetContractSite.siteConceptId)
+          : undefined;
+      const bossProfile =
+        (packetSiteConcept?.bossId
+          ? context.registry.bossById.get(packetSiteConcept.bossId)
+          : undefined) ?? missionTemplate?.combatProfile?.boss;
       // Boss commitment should only surface once playback actually reaches the
       // transcript breakpoint. Precomputing a paused run is not enough.
       const transcriptBossThresholdReached =
@@ -2477,6 +2496,34 @@ function rollDropTable(
   return Array.from({ length: quantity }, () => rolledEntry.itemId);
 }
 
+/**
+ * Remap a generic drop table ID to a site-specific one when the active contract
+ * site has an enemy family with dedicated tables. Falls back to the original ID
+ * if no site-specific table exists in the registry.
+ */
+function resolveSiteDropTableId(
+  context: SimSystemContext,
+  siteConcept: { enemyFamilyIds: readonly string[] } | undefined,
+  genericTableId: string,
+): string {
+  if (!siteConcept || siteConcept.enemyFamilyIds.length === 0) return genericTableId;
+
+  // Derive the suffix from the generic table ID (e.g. "regular" or "elite")
+  const suffix = genericTableId.endsWith("-regular")
+    ? "-regular"
+    : genericTableId.endsWith("-elite")
+      ? "-elite"
+      : null;
+  if (!suffix) return genericTableId;
+
+  // Use the first enemy family to derive the candidate table ID
+  const familyId = siteConcept.enemyFamilyIds[0];
+  const familySlug = familyId.replace("enemy-family/", "");
+  const candidateId = `drop-table/${familySlug}${suffix}`;
+
+  return context.registry.dropTableById.has(candidateId) ? candidateId : genericTableId;
+}
+
 export function generateLootDrops(
   context: SimSystemContext,
   rng: SeededRng,
@@ -2489,10 +2536,17 @@ export function generateLootDrops(
   const mission = missionId ? context.registry.missionById.get(missionId) : undefined;
   const combatProfile = mission?.combatProfile ?? null;
 
+  // Resolve site concept for site-specific drop table remapping
+  const lootContractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+  const lootSiteConcept = lootContractSite?.siteConceptId
+    ? siteConceptById.get(lootContractSite.siteConceptId)
+    : undefined;
+
   // ── Enemy group loot (uses combat profile drop tables when available) ──
   if (combatProfile && combatProfile.enemyGroups.length > 0) {
     for (const group of combatProfile.enemyGroups) {
-      const groupEntries = getDropTableEntries(context, group.dropTableId);
+      const tableId = resolveSiteDropTableId(context, lootSiteConcept, group.dropTableId);
+      const groupEntries = getDropTableEntries(context, tableId);
       if (groupEntries.length === 0) continue;
       const rolls =
         result === "success" ? group.count : result === "mixed" ? Math.ceil(group.count / 2) : 0;
@@ -2502,8 +2556,18 @@ export function generateLootDrops(
     }
   } else {
     // Fallback to legacy loot tables when no combat profile exists
-    const regularEntries = getDropTableEntries(context, "drop-table/dungeon-f-regular");
-    const eliteEntries = getDropTableEntries(context, "drop-table/dungeon-f-elite");
+    const regularTableId = resolveSiteDropTableId(
+      context,
+      lootSiteConcept,
+      "drop-table/dungeon-f-regular",
+    );
+    const eliteTableId = resolveSiteDropTableId(
+      context,
+      lootSiteConcept,
+      "drop-table/dungeon-f-elite",
+    );
+    const regularEntries = getDropTableEntries(context, regularTableId);
+    const eliteEntries = getDropTableEntries(context, eliteTableId);
     const regularRolls =
       result === "success" ? 2 : result === "mixed" ? 1 : rng.chance(0.25) ? 1 : 0;
 
@@ -2520,9 +2584,13 @@ export function generateLootDrops(
     }
   }
 
-  // ── Boss loot (guaranteed roll on success when combat profile exists) ──
-  if (combatProfile?.boss) {
-    const bossDropEntries = getDropTableEntries(context, combatProfile.boss.dropTableId);
+  // ── Boss loot (guaranteed roll on success when boss profile exists) ──
+  const lootBoss =
+    (lootSiteConcept?.bossId ? context.registry.bossById.get(lootSiteConcept.bossId) : undefined) ??
+    combatProfile?.boss ??
+    null;
+  if (lootBoss) {
+    const bossDropEntries = getDropTableEntries(context, lootBoss.dropTableId);
     if (result === "success" && bossDropEntries.length > 0) {
       loot.push(...rollDropTable(rng, bossDropEntries));
     }
@@ -3167,10 +3235,10 @@ function generateContractBoard(context: SimSystemContext): void {
     const enemyHints = contractIntel >= 40 ? [...concept.enemyFamilyIds] : [];
 
     // Loot family hints
-    const lootFamilyHints = contractIntel >= 30 ? [...concept.lootFamilyIds] : [];
+    const lootFamilyHints = contractIntel >= 30 ? [...concept.lootThemeLabels] : [];
 
-    // Boss hint
-    const bossHint = contractIntel >= 50 ? concept.bossFamilyId : null;
+    // Boss hint — resolved from boss registry via site concept's real bossId
+    const bossHint = contractIntel >= 50 ? concept.bossId : null;
 
     return {
       postingId: `posting/${currentMinute}/${index}`,

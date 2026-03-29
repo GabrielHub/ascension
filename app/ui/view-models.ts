@@ -1,4 +1,5 @@
 import type { TemplateRegistry } from "content/templates";
+import { siteConceptById } from "content/templates/site-concepts";
 import {
   DEFAULT_POLICY_STATE,
   type PolicyContractLifecycle,
@@ -16,6 +17,7 @@ import type {
   WorldSnapshot,
 } from "save";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
+import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
 import {
   projectVisitorRecruitLoyalty,
   projectVisitorRecruitMorale,
@@ -41,6 +43,7 @@ export interface GameCallbacks {
   tick: (deltaMs: number) => void;
   setRoomActive: (roomId: string, isActive: boolean) => void;
   setPolicy: (policyId: PolicyId, value: PolicyValue) => void;
+  initiateRelocation: () => void;
   purchaseBuildingUpgrade: (upgradeId: string) => void;
   purchaseRoomUpgrade: (roomId: string, upgradeId: string) => void;
   acceptRecruit: (visitorId: string) => void;
@@ -240,6 +243,26 @@ export interface OperatorLifecycleViewModel {
   departureReason?: string;
 }
 
+export interface OperatorCombatStatsViewModel {
+  strength: number;
+  speed: number;
+  endurance: number;
+  resilience: number;
+  perception: number;
+  intelligence: number;
+}
+
+export interface OperatorCombatViewModel {
+  rank: string;
+  attunementTag: string;
+  traits: readonly string[];
+  regularAttackId: string;
+  skillId: string;
+  ultimateId: string;
+  passiveIds: readonly string[];
+  baseStats: OperatorCombatStatsViewModel;
+}
+
 export interface RosterPressureViewModel {
   operatorCapacity: number;
   livingOperatorCount: number;
@@ -275,6 +298,7 @@ export interface OperatorViewModel {
   appearancePresetId: string;
   visibleGear: VisibleGear;
   lifecycle: OperatorLifecycleViewModel;
+  combat: OperatorCombatViewModel;
   /** Phase 2: operator may refuse raid assignments due to low morale. */
   refusalRisk: boolean;
   /** Phase 2: operator may quit due to critically low morale. */
@@ -362,8 +386,12 @@ export interface RoomCultureViewModel {
 export interface InventoryItemViewModel {
   itemId: string;
   name: string;
+  description: string;
   quantity: number;
   category: string;
+  rank: string;
+  statEffects: readonly StatEffectViewModel[];
+  tags: readonly string[];
 }
 
 export interface EquipmentViewModel {
@@ -377,14 +405,26 @@ export interface EquipmentViewModel {
   accessoryName: string;
   accessoryReason: string;
   accessorySummary: string;
+  weaponStatEffects: readonly StatEffectViewModel[];
+  outfitStatEffects: readonly StatEffectViewModel[];
+  accessoryStatEffects: readonly StatEffectViewModel[];
 }
 
 export interface MarketItemViewModel {
   itemId: string;
   name: string;
+  description: string;
   buyPrice: number;
   sellPrice: number;
   available: boolean;
+  rank: string;
+  statEffects: readonly StatEffectViewModel[];
+  tags: readonly string[];
+}
+
+export interface StatEffectViewModel {
+  stat: string;
+  value: number;
 }
 
 export type EventLogKind =
@@ -437,12 +477,36 @@ export interface HqViewModel {
   activeEvents: readonly ActiveEventViewModel[];
   placeableRoomTemplates: readonly PlaceableRoomTemplate[];
   rosterPressure: RosterPressureViewModel;
+  relocationGate: RelocationGateViewModel | null;
+}
+
+export interface RelocationGatePrerequisite {
+  key: string;
+  label: string;
+  current: number;
+  target: number;
+  met: boolean;
+}
+
+export interface RelocationGateBlocker {
+  key: string;
+  reason: string;
+}
+
+export interface RelocationGateViewModel {
+  visible: boolean;
+  allPrerequisitesMet: boolean;
+  prerequisites: readonly RelocationGatePrerequisite[];
+  blockers: readonly RelocationGateBlocker[];
 }
 
 export interface ContractSiteViewModel {
   contractSiteId: string;
   missionName: string;
+  missionId: string;
   siteConceptName: string;
+  siteSummary: string;
+  neighborhoodLabel: string;
   location: string;
   rank: string;
   bossDefeated: boolean;
@@ -452,12 +516,20 @@ export interface ContractSiteViewModel {
   reward: number;
   explorationProgress: number;
   bossAvailable: boolean;
+  knownTraits: readonly string[];
+  enemyHints: readonly string[];
+  lootFamilyHints: readonly string[];
+  bossName: string | null;
+  bossTags: readonly string[];
+  bossWeaknesses: readonly ContractBossWeaknessViewModel[];
 }
 
 export interface PostedContractViewModel {
   postingId: string;
   missionName: string;
+  missionId: string;
   siteConceptName: string;
+  siteSummary: string;
   location: string;
   rank: string;
   threat: number;
@@ -472,6 +544,11 @@ export interface PostedContractViewModel {
   lootFamilyHints: readonly string[];
   bossHint: string | null;
   neighborhoodLabel: string;
+}
+
+export interface ContractBossWeaknessViewModel {
+  kind: string;
+  target: string;
 }
 
 export interface ContractResultViewModel {
@@ -659,6 +736,108 @@ function mapUpgradeTemplate(
   };
 }
 
+function mapCombatViewModel(combat: {
+  rank: string;
+  attunementTag: string;
+  traits: readonly string[];
+  kit: {
+    regularAttackId: string;
+    skillId: string;
+    ultimateId: string;
+    passiveIds: readonly string[];
+  };
+  baseStats: {
+    strength: number;
+    speed: number;
+    endurance: number;
+    resilience: number;
+    perception: number;
+    intelligence: number;
+  };
+}): OperatorCombatViewModel {
+  return {
+    rank: combat.rank,
+    attunementTag: combat.attunementTag,
+    traits: combat.traits,
+    regularAttackId: combat.kit.regularAttackId,
+    skillId: combat.kit.skillId,
+    ultimateId: combat.kit.ultimateId,
+    passiveIds: combat.kit.passiveIds,
+    baseStats: combat.baseStats,
+  };
+}
+
+function buildContractBossSurface(
+  missionId: string,
+  concept: { bossId?: string } | undefined,
+  registry: TemplateRegistry,
+): {
+  bossName: string | null;
+  bossTags: readonly string[];
+  bossWeaknesses: readonly ContractBossWeaknessViewModel[];
+} {
+  const missionBoss = registry.missionById.get(missionId)?.combatProfile?.boss ?? null;
+  const siteBossId = concept?.bossId ?? null;
+  const siteBoss = siteBossId ? (registry.bossById.get(siteBossId) ?? null) : null;
+  const boss = missionBoss ?? siteBoss;
+
+  if (!boss) {
+    return {
+      bossName: null,
+      bossTags: [],
+      bossWeaknesses: [],
+    };
+  }
+
+  return {
+    bossName: boss.name,
+    bossTags: [...boss.tags],
+    bossWeaknesses: boss.weaknesses.map((weakness) => ({
+      kind: weakness.kind,
+      target: weakness.target,
+    })),
+  };
+}
+
+function buildContractSiteSurface(
+  missionId: string,
+  siteConceptId: string,
+  registry: TemplateRegistry,
+): {
+  siteSummary: string;
+  neighborhoodLabel: string;
+  knownTraits: readonly string[];
+  enemyHints: readonly string[];
+  lootFamilyHints: readonly string[];
+  bossName: string | null;
+  bossTags: readonly string[];
+  bossWeaknesses: readonly ContractBossWeaknessViewModel[];
+} {
+  const concept = siteConceptById.get(siteConceptId);
+  const bossSurface = buildContractBossSurface(missionId, concept, registry);
+
+  return {
+    siteSummary: concept?.conceptSummary ?? "Operational read pending.",
+    neighborhoodLabel: concept?.worldSpaceLabel ?? "",
+    knownTraits: [...(concept?.threatProfileTags ?? []), ...(concept?.hazardTags ?? [])],
+    enemyHints: [...(concept?.enemyFamilyIds ?? [])],
+    lootFamilyHints: [...(concept?.lootThemeLabels ?? [])],
+    ...bossSurface,
+  };
+}
+
+function mapStatEffects(
+  effects: readonly {
+    stat: string;
+    value: number;
+  }[],
+): StatEffectViewModel[] {
+  return effects.map((effect) => ({
+    stat: effect.stat,
+    value: effect.value,
+  }));
+}
+
 export function buildHqViewFromPhase1(
   view: Phase1RuntimeView,
   registry: TemplateRegistry,
@@ -753,6 +932,7 @@ export function buildHqViewFromPhase1(
     appearancePresetId: op.appearance.presetId,
     visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
     lifecycle: extractLifecycle(op.lifecycle),
+    combat: mapCombatViewModel(op.combat),
     // Phase 2: defaults until enriched via enrichOperatorsWithAutonomy
     refusalRisk: false,
     quitRisk: false,
@@ -873,6 +1053,14 @@ export function buildHqViewFromPhase1(
     activeEvents,
     placeableRoomTemplates,
     rosterPressure,
+    relocationGate: view.relocationGate.visible
+      ? {
+          visible: view.relocationGate.visible,
+          allPrerequisitesMet: view.relocationGate.allPrerequisitesMet,
+          prerequisites: view.relocationGate.prerequisites,
+          blockers: view.relocationGate.blockers,
+        }
+      : null,
   };
 }
 
@@ -992,20 +1180,36 @@ export function buildOpsViewFromPhase1(
   }));
 
   const contractSite: ContractSiteViewModel | null = view.contractSite
-    ? {
-        contractSiteId: view.contractSite.contractSiteId,
-        missionName: resolveMissionName(view.contractSite.missionId, registry),
-        siteConceptName: view.contractSite.siteConceptName ?? "Unknown Site",
-        location: getLocationLabel(view.contractSite.location),
-        rank: (view.contractSite.rank ?? "f").toUpperCase(),
-        bossDefeated: view.contractSite.bossDefeated,
-        contractLost: view.contractSite.contractLost,
-        threat: view.contractSite.threat,
-        intel: view.contractSite.intel,
-        reward: view.contractSite.reward,
-        explorationProgress: view.contractSite.explorationProgress ?? 0,
-        bossAvailable: view.contractSite.bossAvailable ?? false,
-      }
+    ? (() => {
+        const siteSurface = buildContractSiteSurface(
+          view.contractSite.missionId,
+          view.contractSite.siteConceptId,
+          registry,
+        );
+        return {
+          contractSiteId: view.contractSite.contractSiteId,
+          missionName: resolveMissionName(view.contractSite.missionId, registry),
+          missionId: view.contractSite.missionId,
+          siteConceptName: view.contractSite.siteConceptName ?? "Unknown Site",
+          siteSummary: siteSurface.siteSummary,
+          neighborhoodLabel: siteSurface.neighborhoodLabel,
+          location: getLocationLabel(view.contractSite.location),
+          rank: (view.contractSite.rank ?? "f").toUpperCase(),
+          bossDefeated: view.contractSite.bossDefeated,
+          contractLost: view.contractSite.contractLost,
+          threat: view.contractSite.threat,
+          intel: view.contractSite.intel,
+          reward: view.contractSite.reward,
+          explorationProgress: view.contractSite.explorationProgress ?? 0,
+          bossAvailable: view.contractSite.bossAvailable ?? false,
+          knownTraits: siteSurface.knownTraits,
+          enemyHints: siteSurface.enemyHints,
+          lootFamilyHints: siteSurface.lootFamilyHints,
+          bossName: siteSurface.bossName,
+          bossTags: siteSurface.bossTags,
+          bossWeaknesses: siteSurface.bossWeaknesses,
+        };
+      })()
     : null;
 
   const contractResult: ContractResultViewModel | null = view.contractResult
@@ -1030,25 +1234,30 @@ export function buildOpsViewFromPhase1(
       }
     : null;
 
-  const postedContracts: PostedContractViewModel[] = (view.postedContracts ?? []).map((p) => ({
-    postingId: p.postingId,
-    missionName: resolveMissionName(p.missionId, registry),
-    siteConceptName: p.siteConceptName ?? "Unknown Site",
-    location: getLocationLabel(p.location),
-    rank: (p.rank ?? "f").toUpperCase(),
-    threat: p.threat,
-    intel: p.intel,
-    reward: p.reward,
-    risk: p.risk,
-    bidCost: p.bidCost,
-    canBid: p.canBid,
-    knownTraits: p.knownTraits ?? [],
-    hiddenTraitCount: p.hiddenTraitCount ?? 0,
-    enemyHints: p.enemyHints ?? [],
-    lootFamilyHints: p.lootFamilyHints ?? [],
-    bossHint: p.bossHint ?? null,
-    neighborhoodLabel: p.neighborhoodLabel ?? "",
-  }));
+  const postedContracts: PostedContractViewModel[] = (view.postedContracts ?? []).map((p) => {
+    const concept = siteConceptById.get(p.siteConceptId);
+    return {
+      postingId: p.postingId,
+      missionName: resolveMissionName(p.missionId, registry),
+      missionId: p.missionId,
+      siteConceptName: p.siteConceptName ?? "Unknown Site",
+      siteSummary: concept?.conceptSummary ?? "Operational read pending.",
+      location: getLocationLabel(p.location),
+      rank: (p.rank ?? "f").toUpperCase(),
+      threat: p.threat,
+      intel: p.intel,
+      reward: p.reward,
+      risk: p.risk,
+      bidCost: p.bidCost,
+      canBid: p.canBid,
+      knownTraits: p.knownTraits ?? [],
+      hiddenTraitCount: p.hiddenTraitCount ?? 0,
+      enemyHints: p.enemyHints ?? [],
+      lootFamilyHints: p.lootFamilyHints ?? [],
+      bossHint: p.bossHint ?? null,
+      neighborhoodLabel: p.neighborhoodLabel ?? concept?.worldSpaceLabel ?? "",
+    };
+  });
 
   const raidWorld: RaidWorldViewModel | null = view.raidWorld
     ? {
@@ -1163,6 +1372,10 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     const assignment = op.assignment;
     const appearance = rec(op as Record<string, unknown>, "appearance");
     const lifecycle = extractLifecycle(rec(op as Record<string, unknown>, "lifecycle"));
+    const combat = normalizeOperatorCombatSnapshot(
+      op.combat,
+      str(identity, "roleTag", "unassigned"),
+    );
     const canBeReplaced =
       lifecycle.status === "active" && str(assignment, "kind", "idle") !== "raid";
 
@@ -1194,6 +1407,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
         getLoadedParts(),
       ),
       lifecycle,
+      combat: mapCombatViewModel(combat),
       refusalRisk: false,
       quitRisk: false,
       retentionRisk: false,
@@ -1307,6 +1521,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       snapshot.building.operatorSlotCount,
       operators.filter((op) => op.lifecycle.status === "active").length,
     ),
+    relocationGate: null,
   };
 }
 
@@ -1502,13 +1717,6 @@ function rec(
 
 // ── Phase 2 view builders ────────────────────────────────────────────────
 
-/** Resolve human-readable item name from the registry, falling back to a slug. */
-function resolveItemName(itemId: string, registry: TemplateRegistry): string {
-  const item = registry.itemById.get(itemId);
-  if (item) return item.name;
-  return getIdentifierLabel(itemId);
-}
-
 /** Classify an item id into a display category. */
 function resolveItemCategory(itemId: string): string {
   if (itemId.startsWith("weapon/")) return "weapons";
@@ -1576,12 +1784,19 @@ export function buildInventoryViewModels(
 ): InventoryItemViewModel[] {
   return phase2.inventory
     .filter((stack) => stack.quantity > 0)
-    .map((stack) => ({
-      itemId: stack.itemId,
-      name: resolveItemName(stack.itemId, registry),
-      quantity: stack.quantity,
-      category: resolveItemCategory(stack.itemId),
-    }));
+    .map((stack) => {
+      const template = registry.itemById.get(stack.itemId);
+      return {
+        itemId: stack.itemId,
+        name: template?.name ?? getIdentifierLabel(stack.itemId),
+        description: template?.description ?? "",
+        quantity: stack.quantity,
+        category: resolveItemCategory(stack.itemId),
+        rank: (template?.rank ?? "f").toUpperCase(),
+        statEffects: mapStatEffects(template?.statEffects ?? []),
+        tags: [...(template?.tags ?? [])],
+      };
+    });
 }
 
 /** Build market item view models from Phase 2 data. */
@@ -1589,13 +1804,20 @@ export function buildMarketItemViewModels(
   phase2: Phase2View,
   registry: TemplateRegistry,
 ): MarketItemViewModel[] {
-  return phase2.marketItems.map((mi) => ({
-    itemId: mi.itemId,
-    name: resolveItemName(mi.itemId, registry),
-    buyPrice: mi.buyPrice,
-    sellPrice: mi.sellPrice,
-    available: mi.available,
-  }));
+  return phase2.marketItems.map((mi) => {
+    const template = registry.itemById.get(mi.itemId);
+    return {
+      itemId: mi.itemId,
+      name: template?.name ?? getIdentifierLabel(mi.itemId),
+      description: template?.description ?? "",
+      buyPrice: mi.buyPrice,
+      sellPrice: mi.sellPrice,
+      available: mi.available,
+      rank: (template?.rank ?? "f").toUpperCase(),
+      statEffects: mapStatEffects(template?.statEffects ?? []),
+      tags: [...(template?.tags ?? [])],
+    };
+  });
 }
 
 /** Build equipment view models from Phase 2 data. */
@@ -1604,16 +1826,24 @@ export function buildEquipmentViewModels(
   registry: TemplateRegistry,
   operatorNameById: ReadonlyMap<string, string>,
 ): EquipmentViewModel[] {
-  return phase2.equipment.map((eq) => ({
-    operatorId: eq.operatorId,
-    operatorName: operatorNameById.get(eq.operatorId) ?? getIdentifierLabel(eq.operatorId),
-    weaponId: eq.weaponId,
-    weaponName: resolveItemName(eq.weaponId, registry),
-    outfitOverlayId: eq.outfitOverlayId,
-    outfitOverlayName: resolveItemName(eq.outfitOverlayId, registry),
-    accessoryId: eq.accessoryId,
-    accessoryName: resolveItemName(eq.accessoryId, registry),
-    accessoryReason: eq.accessoryReason,
-    accessorySummary: eq.accessorySummary,
-  }));
+  return phase2.equipment.map((eq) => {
+    const weaponTemplate = registry.itemById.get(eq.weaponId);
+    const outfitTemplate = registry.itemById.get(eq.outfitOverlayId);
+    const accessoryTemplate = registry.itemById.get(eq.accessoryId);
+    return {
+      operatorId: eq.operatorId,
+      operatorName: operatorNameById.get(eq.operatorId) ?? getIdentifierLabel(eq.operatorId),
+      weaponId: eq.weaponId,
+      weaponName: weaponTemplate?.name ?? getIdentifierLabel(eq.weaponId),
+      outfitOverlayId: eq.outfitOverlayId,
+      outfitOverlayName: outfitTemplate?.name ?? getIdentifierLabel(eq.outfitOverlayId),
+      accessoryId: eq.accessoryId,
+      accessoryName: accessoryTemplate?.name ?? getIdentifierLabel(eq.accessoryId),
+      accessoryReason: eq.accessoryReason,
+      accessorySummary: eq.accessorySummary,
+      weaponStatEffects: mapStatEffects(weaponTemplate?.statEffects ?? []),
+      outfitStatEffects: mapStatEffects(outfitTemplate?.statEffects ?? []),
+      accessoryStatEffects: mapStatEffects(accessoryTemplate?.statEffects ?? []),
+    };
+  });
 }

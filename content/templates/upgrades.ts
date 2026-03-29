@@ -328,4 +328,91 @@ export const upgradeTemplates = [
       },
     ],
   },
+  // ── Porter's building upgrades ─────────────────────────────────────────
+  {
+    id: "upgrade/building/porters:kitchen_overhaul",
+    kind: "upgrade",
+    name: "Kitchen Overhaul",
+    tags: ["upgrade:building", "progression:quality"],
+    description:
+      "Rebuilds the kitchen into something a health inspector would survive. Better food means better reputation and steadier income.",
+    target: "building",
+    targetId: "building/porters",
+    requirements: [
+      { type: "resource_min", resourceId: "resource/cash", minimum: 400 },
+      { type: "resource_min", resourceId: "resource/reputation", minimum: 50 },
+    ],
+    effects: [
+      { type: "modify_resource_income", resourceId: "resource/cash", amount: 10 },
+      { type: "modify_morale", amount: 2 },
+      { type: "modify_attraction_weight", tag: "role:medic", amount: 1 },
+      { type: "modify_attraction_weight", tag: "role:scout", amount: 1 },
+      { type: "modify_attraction_weight", tag: "role:field_lead", amount: 1 },
+    ],
+  },
+  {
+    id: "upgrade/building/porters:upstairs_conversion",
+    kind: "upgrade",
+    name: "Upstairs Conversion",
+    tags: ["upgrade:building", "progression:space"],
+    description:
+      "Converts the remaining upstairs apartments into operational rooms. More space for planning and recovery.",
+    target: "building",
+    targetId: "building/porters",
+    requirements: [
+      { type: "resource_min", resourceId: "resource/cash", minimum: 600 },
+      { type: "resource_min", resourceId: "resource/reputation", minimum: 60 },
+      { type: "building_tier_min", buildingId: "building/porters", minimum: 2 },
+    ],
+    effects: [
+      { type: "add_room_slot", amount: 2 },
+      { type: "grant_operator_slot", amount: 2 },
+      { type: "unlock_room_template", roomId: "room/break_room:tier_1" },
+      { type: "unlock_room_template", roomId: "room/briefing_room:tier_1" },
+      { type: "modify_resource_income", resourceId: "resource/cash", amount: 6 },
+    ],
+  },
+  {
+    id: "upgrade/building/porters:remodel",
+    kind: "upgrade",
+    name: "The Remodel",
+    tags: ["upgrade:building", "progression:quality"],
+    description:
+      "A proper renovation. New fixtures, better lighting, and the kind of attention that makes people stay longer.",
+    target: "building",
+    targetId: "building/porters",
+    requirements: [
+      { type: "resource_min", resourceId: "resource/cash", minimum: 800 },
+      { type: "resource_min", resourceId: "resource/reputation", minimum: 75 },
+      { type: "building_tier_min", buildingId: "building/porters", minimum: 3 },
+    ],
+    effects: [
+      { type: "modify_resource_income", resourceId: "resource/cash", amount: 8 },
+      { type: "modify_morale", amount: 2 },
+      { type: "modify_loyalty", amount: 1 },
+      { type: "modify_recovery_rate", amount: 1 },
+    ],
+  },
+  {
+    id: "upgrade/building/porters:waterfront",
+    kind: "upgrade",
+    name: "The Waterfront",
+    tags: ["upgrade:building", "progression:space"],
+    description:
+      "Opens the harbor-side expansion. A dock for staging and a deck for downtime, both with water and sky.",
+    target: "building",
+    targetId: "building/porters",
+    requirements: [
+      { type: "resource_min", resourceId: "resource/cash", minimum: 1000 },
+      { type: "resource_min", resourceId: "resource/reputation", minimum: 90 },
+      { type: "building_tier_min", buildingId: "building/porters", minimum: 4 },
+    ],
+    effects: [
+      { type: "add_room_slot", amount: 2 },
+      { type: "grant_operator_slot", amount: 4 },
+      { type: "unlock_room_template", roomId: "room/dock:tier_1" },
+      { type: "unlock_room_template", roomId: "room/deck:tier_1" },
+      { type: "modify_morale", amount: 1 },
+    ],
+  },
 ] satisfies readonly UpgradeTemplate[];

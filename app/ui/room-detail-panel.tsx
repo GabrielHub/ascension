@@ -14,6 +14,7 @@ import {
   getToneMeta,
 } from "./_glossary";
 import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
+import { getRoomProgressRatio, getRoomStatusTip } from "./bodega-floor";
 import { progressBarFillClass } from "./styles";
 
 interface RoomDetailPanelProps {
@@ -106,6 +107,52 @@ function formatFootprintLabel(footprint: {
   return `${footprint.cols}x${footprint.rows} @ ${footprint.col},${footprint.row}`;
 }
 
+/** Reuse the shared 0–1 ratio and scale to percentage for the detail bar. */
+function getRoomStaffingPercent(room: RoomViewModel): number {
+  return getRoomProgressRatio(room) * 100;
+}
+
+function getOperationalStatusTip(room: RoomViewModel): string {
+  return getRoomStatusTip(room);
+}
+
+function getRoomWhyItMatters(room: RoomViewModel): readonly string[] {
+  const reasons: string[] = [];
+
+  if (room.tags.includes("ops:recruitment")) {
+    reasons.push(
+      "Keeps the recruit pipeline visible by turning walk-in traffic into operator prospects.",
+    );
+  }
+  if (room.tags.includes("ops:intel")) {
+    reasons.push("Improves contract reading and administrative control around available work.");
+  }
+  if (room.tags.includes("ops:staging")) {
+    reasons.push("Supports raid prep so deployed teams leave ready instead of improvised.");
+  }
+  if (room.tags.includes("room:recovery")) {
+    reasons.push(
+      "Creates space for recovery pressure, morale resets, and post-raid decompression.",
+    );
+  }
+  if (room.tags.includes("room:social")) {
+    reasons.push("Supports morale and relationship stability between raids.");
+  }
+  if (room.tags.includes("room:training")) {
+    reasons.push("Improves combat readiness once training comes online.");
+  }
+  if (room.tags.includes("room:staffing")) {
+    reasons.push(
+      "Protects inventory and staffing throughput so logistics does not bottleneck growth.",
+    );
+  }
+  if (room.tags.includes("room:operations")) {
+    reasons.push("Handles the business side of the guild so the rest of the loop stays open.");
+  }
+
+  return reasons.slice(0, 2);
+}
+
 export function RoomDetailPanel({
   room,
   buildingUpgrades,
@@ -115,8 +162,10 @@ export function RoomDetailPanel({
 }: RoomDetailPanelProps) {
   if (!room) return null;
 
-  const occupancyPct = room.capacity > 0 ? (room.occupancy / room.capacity) * 100 : 0;
+  const occupancyPct = getRoomStaffingPercent(room);
   const hasUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
+  const whyItMatters = getRoomWhyItMatters(room);
+  const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
 
   return (
     <div className="animate-enter">
@@ -128,11 +177,11 @@ export function RoomDetailPanel({
               {room.name}
             </h3>
             {room.isOperational ? (
-              <Tooltip content="Fully staffed and running at capacity">
+              <Tooltip content={getOperationalStatusTip(room)}>
                 <span className="badge badge-gold">Operational</span>
               </Tooltip>
             ) : room.isActive ? (
-              <Tooltip content="Active but needs more staff for full output">
+              <Tooltip content="Active, but not yet staffed enough to operate">
                 <span className="badge badge-slate">Understaffed</span>
               </Tooltip>
             ) : (
@@ -176,19 +225,43 @@ export function RoomDetailPanel({
                 <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
               </div>
             </Tooltip>
-            <Tooltip content="Staff currently assigned / maximum capacity">
+            <Tooltip
+              content={
+                room.requiredStaffTag
+                  ? "Assigned staff / staffing needed for full output"
+                  : "This room runs without dedicated staff"
+              }
+            >
               <div className="glass-card-inset p-2 text-center">
-                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Staff</div>
+                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">
+                  {room.requiredStaffTag ? "Staff" : "Type"}
+                </div>
                 <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
-                  {room.occupancy}/{room.capacity}
+                  {room.requiredStaffTag
+                    ? `${room.assignedStaffCount}/${room.capacity}`
+                    : "Passive"}
                 </div>
               </div>
             </Tooltip>
-            <Tooltip content="Staffing level — 100% means fully operational">
+            <Tooltip
+              content={
+                room.requiredStaffTag
+                  ? "Staffing level — 100% means fully operational"
+                  : "Whether the room is active and able to provide its room benefits"
+              }
+            >
               <div className="glass-card-inset p-2 text-center">
-                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Load</div>
+                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">
+                  {room.requiredStaffTag ? "Load" : "Status"}
+                </div>
                 <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                  {Math.round(occupancyPct)}%
+                  {room.requiredStaffTag
+                    ? `${Math.round(occupancyPct)}%`
+                    : room.isOperational
+                      ? "Online"
+                      : room.isActive
+                        ? "Opening"
+                        : "Offline"}
                 </div>
               </div>
             </Tooltip>
@@ -198,18 +271,33 @@ export function RoomDetailPanel({
             <div className={progressBarFillClass} style={{ width: `${occupancyPct}%` }} />
           </div>
 
-          {room.requiredStaffTag && (
-            <div className="text-xs text-gold/70">
-              Requires{" "}
-              <Tooltip
-                content={
-                  getTagMeta(room.requiredStaffTag).tip || "Staff role needed to operate this room"
-                }
-                side="top"
-              >
-                <span className="text-gold/80">{getTagMeta(room.requiredStaffTag).label}</span>
-              </Tooltip>{" "}
-              staff
+          <div className="text-xs text-gold/70">
+            {room.requiredStaffTag && requiredStaffMeta ? (
+              <>
+                Requires{" "}
+                <Tooltip
+                  content={requiredStaffMeta.tip || "Staff role needed to operate this room"}
+                  side="top"
+                >
+                  <span className="text-gold/80">{requiredStaffMeta.label}</span>
+                </Tooltip>{" "}
+                staff to reach full output.
+              </>
+            ) : (
+              "No dedicated staff required. Activate the room and its benefits become available."
+            )}
+          </div>
+
+          {whyItMatters.length > 0 && (
+            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
+              <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+                Why This Room Matters
+              </h4>
+              {whyItMatters.map((reason) => (
+                <p key={reason} className="text-[0.6875rem] leading-relaxed text-silver/60">
+                  {reason}
+                </p>
+              ))}
             </div>
           )}
 

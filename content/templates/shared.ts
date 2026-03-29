@@ -269,6 +269,7 @@ export interface TemplateRegistry {
   dropTableById: ReadonlyMap<string, DropTable>;
   enemyFamilyById: ReadonlyMap<string, EnemyFamilyTemplate>;
   enemyTemplateById: ReadonlyMap<string, OrdinaryEnemyTemplate>;
+  bossById: ReadonlyMap<string, BossProfile>;
   resourceIndexById: ReadonlyMap<string, number>;
   buildingIndexById: ReadonlyMap<string, number>;
   roomIndexById: ReadonlyMap<string, number>;

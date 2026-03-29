@@ -69,7 +69,7 @@ describe("ui glossary", () => {
         label: "Tunnel Crawlers",
       }),
     );
-    expect(getContractHintMeta("boss-family/the-curator")).toEqual(
+    expect(getContractHintMeta("boss/the-curator")).toEqual(
       expect.objectContaining({
         label: "The Curator",
       }),

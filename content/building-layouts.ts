@@ -104,8 +104,116 @@ export const BODEGA_LAYOUT: BuildingLayoutDefinition = {
   ],
 };
 
+// ── Porter's layouts ────────────────────────────────────────────────────
+
+const PORTERS_GROUND: BuildingFloorLayout = {
+  floorIndex: 0,
+  elevationBandId: "ground-floor",
+  shell: { col: 0, row: 0, cols: 12, rows: 18 },
+  slots: [
+    {
+      slotId: "slot/floor",
+      col: 1,
+      row: 12,
+      cols: 10,
+      rows: 6,
+      startingTemplateId: "room/floor:tier_1",
+    },
+    {
+      slotId: "slot/bar",
+      col: 1,
+      row: 6,
+      cols: 10,
+      rows: 4,
+      startingTemplateId: "room/bar:tier_1",
+    },
+  ],
+};
+
+const PORTERS_UPPER: BuildingFloorLayout = {
+  floorIndex: 1,
+  elevationBandId: "upper-floor",
+  shell: { col: 0, row: 0, cols: 12, rows: 18 },
+  slots: [
+    {
+      slotId: "slot/office",
+      col: 0,
+      row: 12,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/office:tier_1",
+    },
+    {
+      slotId: "slot/stockroom",
+      col: 6,
+      row: 12,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/stockroom:tier_1",
+    },
+    {
+      slotId: "slot/infirmary",
+      col: 0,
+      row: 8,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/infirmary:tier_1",
+    },
+    {
+      slotId: "slot/gym",
+      col: 6,
+      row: 8,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/gym:tier_1",
+    },
+    {
+      slotId: "slot/prep-room",
+      col: 0,
+      row: 4,
+      cols: 4,
+      rows: 3,
+      startingTemplateId: "room/prep_room:tier_1",
+    },
+    { slotId: "slot/break-room", col: 6, row: 4, cols: 4, rows: 3 },
+    { slotId: "slot/briefing-room", col: 0, row: 0, cols: 4, rows: 3 },
+  ],
+};
+
+const PORTERS_WATERFRONT: BuildingFloorLayout = {
+  floorIndex: 2,
+  elevationBandId: "waterfront",
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    { slotId: "slot/dock", col: 0, row: 0, cols: 6, rows: 4 },
+    { slotId: "slot/deck", col: 6, row: 0, cols: 6, rows: 4 },
+  ],
+};
+
+export const PORTERS_LAYOUT: BuildingLayoutDefinition = {
+  buildingId: "building/porters",
+  stages: [
+    {
+      stageId: "porters/starter",
+      minimumTier: 1,
+      floors: [PORTERS_GROUND, PORTERS_UPPER],
+    },
+    {
+      stageId: "porters/upstairs-conversion",
+      minimumTier: 3,
+      floors: [PORTERS_GROUND, PORTERS_UPPER],
+    },
+    {
+      stageId: "porters/waterfront",
+      minimumTier: 5,
+      floors: [PORTERS_GROUND, PORTERS_UPPER, PORTERS_WATERFRONT],
+    },
+  ],
+};
+
 const LAYOUTS_BY_BUILDING: Record<string, BuildingLayoutDefinition> = {
   [BODEGA_LAYOUT.buildingId]: BODEGA_LAYOUT,
+  [PORTERS_LAYOUT.buildingId]: PORTERS_LAYOUT,
 };
 
 const activeStageCache = new Map<string, BuildingLayoutStage | undefined>();

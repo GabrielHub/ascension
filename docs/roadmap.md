@@ -60,6 +60,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - First standing management policy surfaces are shipped through the runtime policy contract and the HQ management panel.
 - The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
 - The bodega now ships the full three-step building arc (Frontage, Annex, Backyard Extension), bodega-native support rooms (Back Office, Backstock, Alley), hard roster-cap overflow handling, and authored encounter portraits for the three shipped bodega-era bosses.
+- The management UI now surfaces relocation readiness, blockers, carryover and reset rules, and the runtime entry point into the relocation interruption flow.
 - The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
@@ -83,12 +84,13 @@ Current shipped baseline:
 - the early balance harness exists through ledgers, simulation, and reports
 - the shipped bodega-era bosses now have authored encounter portraits
 - the relocation trigger and handoff contract are specified from the bodega side
+- relocation readiness, blockers, carryover/reset rules, and the relocation interruption entry flow are now surfaced in the player-facing management/UI layer
 - Porter's is now the locked source concept for the first post-bodega headquarters tier
 
 Remaining work:
 
 - broaden authored F/E/D content where repeated campaigns still feel too narrow
-- finish the relocation runtime, save-safe interruption flow, and building swap
+- finish promotion-grade end-to-end relocation landing verification on a relocation-ready late-bodega path, and close any remaining handoff gaps that surface there
 - add the narrative presenter system as a bodega finishing-touch pass, starting with the assistant and retrofitting existing interruption-backed beats
 - implement the Porter's entry slice against the locked concept and handoff contract
 - run the promotion review against the closed early-game campaign

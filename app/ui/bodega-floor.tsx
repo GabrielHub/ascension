@@ -17,23 +17,57 @@ function formatFootprintLabel(room: RoomViewModel): string {
   return reserved === active ? reserved : `${reserved} -> ${active}`;
 }
 
+export function getRoomProgressRatio(room: RoomViewModel): number {
+  if (!room.requiredStaffTag) {
+    return room.isOperational ? 1 : room.isActive ? 0.5 : 0;
+  }
+
+  return room.capacity > 0 ? room.assignedStaffCount / room.capacity : 0;
+}
+
+export function getRoomStatusTip(room: RoomViewModel): string {
+  if (room.isOperational) {
+    if (!room.requiredStaffTag) {
+      return "Active and delivering its passive room benefits";
+    }
+
+    return room.assignedStaffCount >= room.capacity
+      ? "Fully staffed and operational"
+      : "Operational, with room for more staff to improve throughput";
+  }
+  if (room.isActive) {
+    return room.requiredStaffTag
+      ? "Active, but not yet staffed enough to operate"
+      : "Active and available for guild use";
+  }
+  return "Inactive - not generating benefits";
+}
+
+export function getRoomStaffingLabel(room: RoomViewModel): string {
+  if (!room.requiredStaffTag) {
+    return room.isActive ? "No staff needed" : "Passive room";
+  }
+
+  return `${room.assignedStaffCount}/${room.capacity}`;
+}
+
 function StatusDot({ room }: { room: RoomViewModel }) {
   if (room.isOperational) {
     return (
-      <Tooltip content="Fully staffed and operational">
+      <Tooltip content={getRoomStatusTip(room)}>
         <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-gold shadow-[0_0_6px_rgba(200,168,76,0.4)]" />
       </Tooltip>
     );
   }
   if (room.isActive) {
     return (
-      <Tooltip content="Active but understaffed">
+      <Tooltip content={getRoomStatusTip(room)}>
         <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-gold-dim/50" />
       </Tooltip>
     );
   }
   return (
-    <Tooltip content="Inactive - not generating benefits">
+    <Tooltip content={getRoomStatusTip(room)}>
       <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate" />
     </Tooltip>
   );
@@ -50,8 +84,9 @@ function RoomCard({
   onSelect: () => void;
   culture?: RoomCultureViewModel;
 }) {
-  const occupancyRatio = room.capacity > 0 ? room.occupancy / room.capacity : 0;
+  const occupancyRatio = getRoomProgressRatio(room);
   const upgradeCount = room.appliedUpgradeIds.length;
+  const staffTagMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
   const highlightTags = room.tags.filter(
     (tag) => tag.startsWith("room:") || tag.startsWith("staff:") || tag.startsWith("ops:"),
   );
@@ -76,11 +111,17 @@ function RoomCard({
           <Tooltip content="Room tier - higher tiers unlock upgrades">
             <span className="badge badge-gold">T{room.tier}</span>
           </Tooltip>
-          <Tooltip content="Staff assigned / max capacity">
+          <Tooltip
+            content={
+              room.requiredStaffTag
+                ? "Assigned staff / staffing needed for full output"
+                : "This room does not need dedicated staff to function"
+            }
+          >
             <span
               className={`text-xs tabular-nums ${room.isOperational ? "text-gold" : "text-gold/70"}`}
             >
-              {room.occupancy}/{room.capacity}
+              {getRoomStaffingLabel(room)}
             </span>
           </Tooltip>
         </div>
@@ -106,6 +147,13 @@ function RoomCard({
         <Tooltip content={`Reserved vs active footprint: ${formatFootprintLabel(room)}`}>
           <span className="badge badge-slate">{formatFootprintLabel(room)}</span>
         </Tooltip>
+        {staffTagMeta ? (
+          <Tooltip content={staffTagMeta.tip}>
+            <span className="badge badge-slate">{staffTagMeta.label}</span>
+          </Tooltip>
+        ) : (
+          <span className="badge badge-slate">No dedicated staff</span>
+        )}
       </div>
 
       {culture && (

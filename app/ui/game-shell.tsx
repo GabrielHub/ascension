@@ -29,6 +29,7 @@ import { InventoryPanel } from "./inventory-panel";
 import { ManagementPanel } from "./management-panel";
 import { MarketPanel } from "./market-panel";
 import { OperatorPortrait } from "./operator-portrait";
+import { OperatorCombatSummary } from "./operator-combat-summary";
 import { OperationsPanel } from "./raid-panel";
 import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
 import { RaidWorldView } from "./raid-world-view";
@@ -182,6 +183,9 @@ export function buildGameCallbacks(
     },
     setPolicy: (policyId, value) => {
       void session.commands.setPolicy({ policyId, value });
+    },
+    initiateRelocation: () => {
+      void session.commands.initiateRelocation();
     },
     purchaseBuildingUpgrade: (upgradeId: string) => {
       void session.commands.purchaseBuildingUpgrade({ upgradeId });
@@ -491,6 +495,10 @@ function FocusedOperatorOverlay({
             <span className="text-gold/70">Raid-ready</span>
           </Tooltip>
         )}
+      </div>
+
+      <div className="mt-3 border-t border-[rgba(200,168,76,0.06)] pt-3">
+        <OperatorCombatSummary combat={operator.combat} title="Field Kit" />
       </div>
 
       {/* Phase 2: Autonomy risk warnings */}
@@ -1977,6 +1985,9 @@ export function GameShell() {
                     <ManagementPanel
                       policies={hq.policies}
                       contractLifecycle={hq.contractLifecycle}
+                      building={hq.building}
+                      rooms={hq.rooms}
+                      relocationGate={hq.relocationGate}
                       callbacks={callbacks}
                     />
                   )}

@@ -3,7 +3,7 @@ import { createWorld, addEntity, addComponent } from "bitecs";
 
 import { templateRegistry } from "content/templates";
 import type { BossTag, BossWeakness } from "content/templates/shared";
-import { OperatorIdentity } from "../components";
+import { BuildingAuthority, OperatorIdentity } from "../components";
 import { SeededRng, seedFromKey } from "../uncertainty";
 import type { SimSystemContext } from "./types";
 import { computeBossTagPenalty, computeBossWeaknessBonus, generateLootDrops } from "./raids";
@@ -267,6 +267,42 @@ describe("generateLootDrops", () => {
     loot.forEach((itemId) => {
       expect(templateRegistry.itemById.has(itemId)).toBe(true);
     });
+  });
+
+  it("produces family-themed loot when a contract site is active", () => {
+    const context = createMinimalContext();
+    const buildingEntity = context.singletonEntities.building;
+    addComponent(context.world, buildingEntity, BuildingAuthority);
+
+    // Set up an active contract at the flooded subway tunnel
+    BuildingAuthority.contractSite[buildingEntity] = {
+      contractSiteId: "contract/test-themed",
+      missionId: "mission/clearance",
+      siteConceptId: "site/flooded-subway-tunnel",
+      location: "district/lower-east-side",
+      rank: "f",
+      bossDefeated: false,
+      contractLost: false,
+      threat: 40,
+      intel: 50,
+      reward: 80,
+      securedAtTick: 0,
+      explorationProgress: 0,
+      bossIntelProgress: 0,
+      bossPressureProgress: 0,
+      bossAvailable: false,
+    };
+
+    // Run enough trials to see themed loot from tunnel-crawlers
+    const tunnelItems = new Set(["loot/monster-part/drain-sludge", "loot/monster-part/pipe-scale"]);
+    const allLoot: string[] = [];
+    for (let i = 0; i < 50; i++) {
+      const rng = new SeededRng(seedFromKey(`themed-loot:${i}`));
+      allLoot.push(...generateLootDrops(context, rng, "success", "mission/clearance"));
+    }
+
+    const themedDrops = allLoot.filter((id) => tunnelItems.has(id));
+    expect(themedDrops.length).toBeGreaterThan(0);
   });
 });
 

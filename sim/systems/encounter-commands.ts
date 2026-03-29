@@ -32,6 +32,8 @@ import {
   queueIncident,
 } from "./incidents";
 import type { InterventionId } from "./encounter-types";
+import { advanceRelocationBeat, initiateRelocation } from "./relocation";
+import type { RelocationPayload } from "./interruptions";
 
 // Lazy-bound guidance command handlers (registered after module init).
 let lazyHandleGuidanceComplete:
@@ -243,6 +245,14 @@ export function applyEncounterCommand(
           lazyHandleGuidanceComplete?.(context, activeBeatId, "boss_commitment_resolved");
         }
       }
+      // Relocation interruptions: advance the multi-beat sequence
+      if (resolved?.payload?.kind === "relocation") {
+        advanceRelocationBeat(
+          context,
+          resolved.payload as RelocationPayload,
+          payload.choiceId as string | undefined,
+        );
+      }
       // Guidance interruptions: complete the beat on resolve
       if (resolved?.payload?.kind === "guidance") {
         const guidanceBeatId = (resolved.payload as { beatId?: string }).beatId;
@@ -326,6 +336,10 @@ export function applyEncounterCommand(
     }
     case "sim/guidance-reset-opening": {
       lazyHandleGuidanceResetOpening?.(context);
+      return true;
+    }
+    case "sim/initiate-relocation": {
+      initiateRelocation(context);
       return true;
     }
     default:

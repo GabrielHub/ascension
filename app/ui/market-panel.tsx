@@ -4,6 +4,7 @@ import type {
   InventoryItemViewModel,
   MarketItemViewModel,
 } from "./view-models";
+import { ItemRankBadge, ItemTagChips, StatEffectChips } from "./item-surface";
 
 interface MarketPanelProps {
   marketItems: readonly MarketItemViewModel[];
@@ -44,22 +45,40 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                   key={item.itemId}
                   data-testid="market-buy-row"
                   data-item-id={item.itemId}
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-[rgba(200,168,76,0.03)]"
+                  className="rounded-lg px-2.5 py-2 hover:bg-[rgba(200,168,76,0.03)]"
                 >
-                  <span className="min-w-0 truncate text-xs text-silver-bright">{item.name}</span>
-                  <span className="ml-auto shrink-0 text-[0.6875rem] tabular-nums text-gold/70">
-                    ${item.buyPrice}
-                  </span>
-                  <button
-                    type="button"
-                    data-testid="market-buy-button"
-                    data-item-id={item.itemId}
-                    className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
-                    disabled={!canAfford}
-                    onClick={() => callbacks.buyItem(item.itemId)}
-                  >
-                    buy
-                  </button>
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="min-w-0 truncate text-xs text-silver-bright">
+                          {item.name}
+                        </span>
+                        <ItemRankBadge rank={item.rank} />
+                      </div>
+                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                        {item.description}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <StatEffectChips effects={item.statEffects} />
+                        <ItemTagChips tags={item.tags} />
+                      </div>
+                    </div>
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
+                      <span className="text-[0.6875rem] tabular-nums text-gold/70">
+                        ${item.buyPrice}
+                      </span>
+                      <button
+                        type="button"
+                        data-testid="market-buy-button"
+                        data-item-id={item.itemId}
+                        className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
+                        disabled={!canAfford}
+                        onClick={() => callbacks.buyItem(item.itemId)}
+                      >
+                        buy
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -89,24 +108,42 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                   key={inv.itemId}
                   data-testid="market-sell-row"
                   data-item-id={inv.itemId}
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-[rgba(200,168,76,0.03)]"
+                  className="rounded-lg px-2.5 py-2 hover:bg-[rgba(200,168,76,0.03)]"
                 >
-                  <span className="min-w-0 truncate text-xs text-silver-bright">{inv.name}</span>
-                  <span className="shrink-0 text-[0.6875rem] tabular-nums text-silver/50">
-                    x{inv.quantity}
-                  </span>
-                  <span className="ml-auto shrink-0 text-[0.6875rem] tabular-nums text-gold/70">
-                    ${sellPrice}
-                  </span>
-                  <button
-                    type="button"
-                    data-testid="market-sell-button"
-                    data-item-id={inv.itemId}
-                    className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
-                    onClick={() => callbacks.sellItem(inv.itemId, 1)}
-                  >
-                    sell 1
-                  </button>
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="min-w-0 truncate text-xs text-silver-bright">
+                          {inv.name}
+                        </span>
+                        <ItemRankBadge rank={inv.rank} />
+                        <span className="text-[0.6875rem] tabular-nums text-silver/50">
+                          x{inv.quantity}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                        {inv.description}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <StatEffectChips effects={inv.statEffects} />
+                        <ItemTagChips tags={inv.tags} />
+                      </div>
+                    </div>
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
+                      <span className="text-[0.6875rem] tabular-nums text-gold/70">
+                        ${sellPrice}
+                      </span>
+                      <button
+                        type="button"
+                        data-testid="market-sell-button"
+                        data-item-id={inv.itemId}
+                        className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+                        onClick={() => callbacks.sellItem(inv.itemId, 1)}
+                      >
+                        sell 1
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}

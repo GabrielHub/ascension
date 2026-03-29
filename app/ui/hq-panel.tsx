@@ -38,6 +38,10 @@ export function HqPanel({
   const currentFloorRooms = hq.rooms.filter(
     (room) => room.floorIndex === hq.building.activeFloorIndex,
   );
+  const currentFloorExpansionSlots = hq.expansionSlots.filter(
+    (slot) => slot.floorIndex === hq.building.activeFloorIndex,
+  );
+  const currentFloorTotalSlots = currentFloorRooms.length + currentFloorExpansionSlots.length;
 
   const selectedRoomUpgrades = selectedRoom
     ? hq.roomUpgrades.filter((u) => u.targetId === selectedRoom.templateId)
@@ -71,7 +75,7 @@ export function HqPanel({
             </span>
           </div>
           <span className="text-xs tabular-nums text-silver/60">
-            {currentFloorRooms.length} rooms / {hq.expansionSlots.length} slots
+            {currentFloorRooms.length} rooms / {currentFloorTotalSlots} slots
           </span>
         </div>
         <BodegaFloor

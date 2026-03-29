@@ -12,13 +12,13 @@ describe("template registry", () => {
     const registry = createTemplateRegistry();
 
     expect(registry.resources).toHaveLength(3);
-    expect(registry.buildings).toHaveLength(1);
-    expect(registry.rooms).toHaveLength(7);
-    expect(registry.upgrades).toHaveLength(8);
+    expect(registry.buildings).toHaveLength(2);
+    expect(registry.rooms).toHaveLength(18);
+    expect(registry.upgrades).toHaveLength(12);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(13);
-    expect(registry.items).toHaveLength(31);
-    expect(registry.dropTables).toHaveLength(3);
+    expect(registry.items).toHaveLength(58);
+    expect(registry.dropTables).toHaveLength(27);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
       "mission/containment",
@@ -112,32 +112,43 @@ describe("template registry", () => {
       "weapon/pipe-wrench",
       "weapon/kitchen-knife",
       "weapon/baseball-bat",
+      "weapon/crowbar",
+      "weapon/box-cutter",
       "weapon/tactical-knife",
       "weapon/machete",
       "weapon/compact-crossbow",
+      "weapon/hand-axe",
       "weapon/reinforced-bat",
       "weapon/katana",
       "weapon/tactical-rifle",
       "weapon/dual-daggers",
+      "weapon/sidearm",
     ];
 
     const outfitIds = [
       "outfit-overlay/padded-jacket",
       "outfit-overlay/leather-vest",
+      "outfit-overlay/work-coveralls",
       "outfit-overlay/tactical-vest",
       "outfit-overlay/stealth-cloak",
+      "outfit-overlay/reinforced-hoodie",
       "outfit-overlay/heavy-plate",
       "outfit-overlay/field-medic-coat",
+      "outfit-overlay/ballistic-vest",
     ];
 
     const accessoryIds = [
       "accessory/comm-earpiece",
       "accessory/tactical-scarf",
+      "accessory/wrist-brace",
       "accessory/eye-visor",
       "accessory/medkit-pouch",
       "accessory/scout-binocs",
       "accessory/field-lead-badge",
+      "accessory/shoulder-lamp",
       "accessory/reinforced-gloves",
+      "accessory/utility-belt",
+      "accessory/trauma-kit",
     ];
 
     const lootIds = [
@@ -149,6 +160,22 @@ describe("template registry", () => {
       "loot/monster-part/crystal-eye",
       "loot/monster-part/void-residue",
       "loot/monster-part/threat-gland",
+      "loot/monster-part/drain-sludge",
+      "loot/monster-part/pipe-scale",
+      "loot/monster-part/ramp-gravel",
+      "loot/monster-part/bollard-core",
+      "loot/monster-part/chalk-filament",
+      "loot/monster-part/lesson-fragment",
+      "loot/monster-part/root-fiber",
+      "loot/monster-part/pollen-sac",
+      "loot/monster-part/lint-clump",
+      "loot/monster-part/detergent-crystal",
+      "loot/monster-part/radiator-ash",
+      "loot/monster-part/basement-mold",
+      "loot/monster-part/echo-resin",
+      "loot/monster-part/rubber-fragment",
+      "loot/monster-part/frost-shard",
+      "loot/monster-part/preserved-marrow",
     ];
 
     [...weaponIds, ...outfitIds, ...accessoryIds, ...lootIds].forEach((id) => {
@@ -237,11 +264,15 @@ describe("template registry", () => {
     });
   });
 
-  it("validates all room templates stay bodega-only", () => {
+  it("validates all room templates belong to a known building", () => {
     const registry = createTemplateRegistry();
+    const knownBuildingIds = new Set(registry.buildings.map((b) => b.id));
 
     registry.rooms.forEach((room) => {
-      expect(room.availableInBuildings).toEqual(["building/bodega"]);
+      expect(room.availableInBuildings.length).toBeGreaterThan(0);
+      room.availableInBuildings.forEach((buildingId) => {
+        expect(knownBuildingIds.has(buildingId)).toBe(true);
+      });
     });
   });
 
