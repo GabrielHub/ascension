@@ -8,18 +8,30 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Link, unstable_usePrompt as usePrompt, useBeforeUnload } from "react-router";
 
-import { getBuildingFloors, getBuildingLayout } from "content/building-layouts";
+import {
+  getBuildingFloors,
+  getBuildingLayout,
+  getBuildingLayoutDefinition,
+} from "content/building-layouts";
 import { getExteriorScene } from "render/hq-scene-data";
 
 import { getLoadedEnvParts } from "../environment-parts";
 import { glassPanelClass } from "../styles";
 
-import type { BuilderOverlays, SceneBuilderState } from "./builder-types";
+import type { BuilderMode, BuilderOverlays, SceneBuilderState } from "./builder-types";
 import { builderReducer, INITIAL_STATE } from "./builder-state";
-import { validatePlacements } from "./builder-validation";
-import { exportAsJson, exportAsTypeScript, downloadFile } from "./builder-export";
+import { validateLayout, validatePlacements } from "./builder-validation";
+import {
+  downloadFile,
+  exportAsJson,
+  exportAsTypeScript,
+  exportLayoutAsJson,
+  exportLayoutAsTypeScript,
+} from "./builder-export";
 import { BuilderCanvas } from "./builder-canvas";
 import { AssetBrowser } from "./asset-browser";
+import { LayoutSidebar } from "./layout-sidebar";
+import { LayoutToolsPanel } from "./layout-tools-panel";
 import { RightSidebar } from "./placement-inspector";
 
 const UNSAVED_CHANGES_MESSAGE = "Discard unsaved scene-builder changes?";
@@ -60,33 +72,75 @@ function OverlayToggle({
 
 function ExportDialog({
   state,
+  elevationBandId,
+  defaultKind,
   onClose,
   onMarkClean,
 }: {
   state: SceneBuilderState;
+  elevationBandId: string | null;
+  defaultKind: BuilderMode;
   onClose: () => void;
-  onMarkClean: () => void;
+  onMarkClean: (scope: "scene" | "layout") => void;
 }) {
-  const [format, setFormat] = useState<"json" | "typescript">("json");
+  const [kind, setKind] = useState<"scene" | "layout">(
+    defaultKind === "layout" ? "layout" : "scene",
+  );
+  const [format, setFormat] = useState<"json" | "typescript">("typescript");
   const sceneId = `${state.buildingId.split("/")[1]}-exterior`;
 
   const content = useMemo(() => {
+    if (kind === "layout") {
+      if (!state.shell) {
+        return "// No floor layout is loaded for the current selection.";
+      }
+
+      return format === "json"
+        ? exportLayoutAsJson(
+            state.buildingId,
+            state.floorIndex,
+            elevationBandId,
+            state.shell,
+            state.slots,
+          )
+        : exportLayoutAsTypeScript(
+            state.buildingId,
+            state.floorIndex,
+            elevationBandId,
+            state.shell,
+            state.slots,
+          );
+    }
+
     return format === "json"
       ? exportAsJson(state.buildingId, sceneId, state.placements)
       : exportAsTypeScript(state.buildingId, sceneId, state.placements);
-  }, [format, state.buildingId, sceneId, state.placements]);
+  }, [
+    elevationBandId,
+    format,
+    kind,
+    sceneId,
+    state.buildingId,
+    state.floorIndex,
+    state.placements,
+    state.shell,
+    state.slots,
+  ]);
 
   const handleDownload = () => {
     const ext = format === "json" ? "json" : "ts";
-    const filename = `${sceneId}-scene.${ext}`;
+    const filename =
+      kind === "layout"
+        ? `${state.buildingId.split("/")[1]}-floor-${state.floorIndex}-layout.${ext}`
+        : `${sceneId}-scene.${ext}`;
     const mimeType = format === "json" ? "application/json" : "text/typescript";
     downloadFile(content, filename, mimeType);
-    onMarkClean();
+    onMarkClean(kind);
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
-    onMarkClean();
+    onMarkClean(kind);
   };
 
   return (
@@ -104,6 +158,23 @@ function ExportDialog({
 
         {/* Format tabs */}
         <div className="flex gap-2 border-b border-gold/8 px-4 py-2">
+          <button
+            onClick={() => setKind("scene")}
+            className={`rounded px-3 py-1 text-xs ${
+              kind === "scene" ? "bg-gold/12 text-gold" : "text-gold/40 hover:text-gold/60"
+            }`}
+          >
+            Scene
+          </button>
+          <button
+            onClick={() => setKind("layout")}
+            className={`rounded px-3 py-1 text-xs ${
+              kind === "layout" ? "bg-gold/12 text-gold" : "text-gold/40 hover:text-gold/60"
+            }`}
+          >
+            Layout
+          </button>
+          <div className="mx-1 h-5 w-px bg-gold/10" />
           <button
             onClick={() => setFormat("json")}
             className={`rounded px-3 py-1 text-xs ${
@@ -185,18 +256,48 @@ export function SceneBuilderPage() {
     }
   }, [state.buildingId]);
 
-  // Run validation when placements change
-  const layout = useMemo(
+  const canonicalLayout = useMemo(
     () => getBuildingLayout(state.buildingId, state.floorIndex, state.buildingTier),
     [state.buildingId, state.floorIndex, state.buildingTier],
   );
 
+  useEffect(() => {
+    dispatch({ type: "LOAD_LAYOUT", layout: canonicalLayout ?? null });
+  }, [canonicalLayout]);
+
   const allParts = useMemo(() => getLoadedEnvParts(state.buildingId), [state.buildingId]);
+  const layoutDefinition = useMemo(
+    () => getBuildingLayoutDefinition(state.buildingId),
+    [state.buildingId],
+  );
+  const stageOptions = useMemo(
+    () =>
+      [...(layoutDefinition?.stages ?? [])].sort(
+        (left, right) => left.minimumTier - right.minimumTier,
+      ),
+    [layoutDefinition],
+  );
+
+  const workingLayout = useMemo(
+    () =>
+      state.shell
+        ? {
+            floorIndex: state.floorIndex,
+            elevationBandId: canonicalLayout?.elevationBandId ?? null,
+            shell: state.shell,
+            slots: state.slots,
+          }
+        : undefined,
+    [canonicalLayout?.elevationBandId, state.floorIndex, state.shell, state.slots],
+  );
 
   useEffect(() => {
-    const warnings = validatePlacements(state.placements, allParts, layout);
+    const warnings = [
+      ...validatePlacements(state.placements, allParts, workingLayout),
+      ...validateLayout(state.shell, state.slots),
+    ];
     dispatch({ type: "SET_WARNINGS", warnings });
-  }, [state.placements, allParts, layout]);
+  }, [allParts, state.placements, state.shell, state.slots, workingLayout]);
 
   // Floor options
   const floors = useMemo(
@@ -204,8 +305,8 @@ export function SceneBuilderPage() {
     [state.buildingId, state.buildingTier],
   );
 
-  const handleMarkClean = useCallback(() => {
-    dispatch({ type: "MARK_CLEAN" });
+  const handleMarkClean = useCallback((scope: "scene" | "layout") => {
+    dispatch({ type: "MARK_CLEAN", scope });
   }, []);
 
   const confirmDiscardChanges = useCallback(() => {
@@ -232,6 +333,17 @@ export function SceneBuilderPage() {
       dispatch({ type: "SET_FLOOR", floorIndex: nextFloorIndex });
     },
     [confirmDiscardChanges, state.floorIndex],
+  );
+
+  const handleTierChange = useCallback(
+    (nextTier: number) => {
+      if (nextTier === state.buildingTier || !confirmDiscardChanges()) {
+        return;
+      }
+
+      dispatch({ type: "SET_BUILDING_TIER", buildingTier: nextTier });
+    },
+    [confirmDiscardChanges, state.buildingTier],
   );
 
   return (
@@ -293,6 +405,27 @@ export function SceneBuilderPage() {
 
         <div className="h-4 w-px bg-gold/15" />
 
+        {stageOptions.length > 1 && (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs uppercase tracking-wider text-gold/35">Stage</span>
+              <select
+                value={state.buildingTier}
+                onChange={(e) => handleTierChange(Number(e.target.value))}
+                className="rounded border border-gold/15 bg-void/60 px-2 py-1 text-xs text-silver focus:border-gold/30 focus:outline-none"
+              >
+                {stageOptions.map((stage) => (
+                  <option key={stage.stageId} value={stage.minimumTier}>
+                    {stage.stageId.split("/").pop()?.replace(/-/g, " ") ?? stage.stageId} (tier{" "}
+                    {stage.minimumTier})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="h-4 w-px bg-gold/15" />
+          </>
+        )}
+
         {/* Overlay toggles */}
         <div className="flex items-center gap-1">
           {(Object.keys(state.overlays) as (keyof BuilderOverlays)[]).map((key) => (
@@ -319,6 +452,7 @@ export function SceneBuilderPage() {
         <span className="text-xs tabular-nums text-gold/25">
           {state.placements.length} placements
         </span>
+        <span className="text-xs tabular-nums text-gold/25">{state.slots.length} slots</span>
 
         {state.warnings.length > 0 && (
           <span className="text-xs text-ember/50">
@@ -333,6 +467,22 @@ export function SceneBuilderPage() {
         >
           Export
         </button>
+
+        <div className="flex gap-1">
+          {(["scene", "layout"] as BuilderMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode })}
+              className={`rounded px-2 py-1 text-xs uppercase tracking-[0.12em] ${
+                state.editorMode === mode
+                  ? "bg-gold/12 text-gold"
+                  : "text-gold/35 hover:bg-gold/5 hover:text-gold/55"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
 
         {/* Tool links */}
         <div className="flex gap-1">
@@ -357,12 +507,16 @@ export function SceneBuilderPage() {
         <aside
           className={`${glassPanelClass} w-64 flex-shrink-0 border-r border-gold/8 overflow-hidden`}
         >
-          <AssetBrowser buildingId={state.buildingId} dispatch={dispatch} />
+          {state.editorMode === "scene" ? (
+            <AssetBrowser buildingId={state.buildingId} shell={state.shell} dispatch={dispatch} />
+          ) : (
+            <LayoutToolsPanel state={state} dispatch={dispatch} />
+          )}
         </aside>
 
         {/* Center: Canvas */}
         <main className="relative flex-1 overflow-hidden">
-          <BuilderCanvas state={state} dispatch={dispatch} layout={layout} />
+          <BuilderCanvas state={state} dispatch={dispatch} />
 
           {/* Canvas HUD overlay */}
           <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
@@ -379,7 +533,11 @@ export function SceneBuilderPage() {
         <aside
           className={`${glassPanelClass} w-72 flex-shrink-0 border-l border-gold/8 overflow-hidden`}
         >
-          <RightSidebar state={state} dispatch={dispatch} />
+          {state.editorMode === "scene" ? (
+            <RightSidebar state={state} dispatch={dispatch} />
+          ) : (
+            <LayoutSidebar state={state} dispatch={dispatch} />
+          )}
         </aside>
       </div>
 
@@ -387,6 +545,8 @@ export function SceneBuilderPage() {
       {showExport && (
         <ExportDialog
           state={state}
+          elevationBandId={canonicalLayout?.elevationBandId ?? null}
+          defaultKind={state.editorMode}
           onClose={() => setShowExport(false)}
           onMarkClean={handleMarkClean}
         />

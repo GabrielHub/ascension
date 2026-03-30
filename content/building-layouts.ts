@@ -12,10 +12,17 @@ export interface BuildingRoomSlot {
   startingTemplateId?: string;
 }
 
+export interface BuildingShellFootprint {
+  col: number;
+  row: number;
+  cols: number;
+  rows: number;
+}
+
 export interface BuildingFloorLayout {
   floorIndex: number;
   elevationBandId: string | null;
-  shell: { col: number; row: number; cols: number; rows: number };
+  shell: BuildingShellFootprint;
   slots: readonly BuildingRoomSlot[];
 }
 

@@ -2,8 +2,9 @@
  * Scene builder export — produces canonical scene data as TypeScript or JSON.
  */
 
+import type { BuildingFloorLayout } from "content/building-layouts";
 import type { HqStaticPlacementDef } from "render/types";
-import type { BuilderPlacement } from "./builder-types";
+import type { BuilderPlacement, BuilderRoomSlotState, BuilderShell } from "./builder-types";
 
 function cleanPlacement(p: BuilderPlacement): HqStaticPlacementDef {
   const def: HqStaticPlacementDef = {
@@ -43,6 +44,48 @@ export function exportAsJson(
     placements: placements.map(cleanPlacement),
   };
   return JSON.stringify(composition, null, 2);
+}
+
+function cleanShell(shell: BuilderShell) {
+  return {
+    col: shell.col,
+    row: shell.row,
+    cols: shell.cols,
+    rows: shell.rows,
+  };
+}
+
+function cleanSlot(slot: BuilderRoomSlotState) {
+  return {
+    slotId: slot.slotId,
+    col: slot.col,
+    row: slot.row,
+    cols: slot.cols,
+    rows: slot.rows,
+    ...(slot.startingTemplateId ? { startingTemplateId: slot.startingTemplateId } : {}),
+  };
+}
+
+export function exportLayoutAsJson(
+  buildingId: string,
+  floorIndex: number,
+  elevationBandId: string | null,
+  shell: BuilderShell,
+  slots: readonly BuilderRoomSlotState[],
+): string {
+  return JSON.stringify(
+    {
+      buildingId,
+      floorLayout: {
+        floorIndex,
+        elevationBandId,
+        shell: cleanShell(shell),
+        slots: slots.map(cleanSlot),
+      },
+    },
+    null,
+    2,
+  );
 }
 
 function stringifyValue(value: unknown, indent: number): string {
@@ -93,6 +136,36 @@ export function exportAsTypeScript(
   ];
 
   return lines.join("\n");
+}
+
+function toLayoutConstName(buildingId: string, floorIndex: number): string {
+  return `${buildingId
+    .replace(/^building\//, "")
+    .replace(/[^a-z0-9]+/gi, "_")
+    .toUpperCase()}_FLOOR_${floorIndex}`;
+}
+
+export function exportLayoutAsTypeScript(
+  buildingId: string,
+  floorIndex: number,
+  elevationBandId: string | null,
+  shell: BuilderShell,
+  slots: readonly BuilderRoomSlotState[],
+): string {
+  const constName = toLayoutConstName(buildingId, floorIndex);
+  const layout: BuildingFloorLayout = {
+    floorIndex,
+    elevationBandId,
+    shell: cleanShell(shell),
+    slots: slots.map(cleanSlot),
+  };
+
+  return [
+    `import type { BuildingFloorLayout } from "content/building-layouts";`,
+    ``,
+    `export const ${constName}: BuildingFloorLayout = ${stringifyValue(layout, 0)};`,
+    ``,
+  ].join("\n");
 }
 
 export function downloadFile(content: string, filename: string, mimeType: string): void {

@@ -13,7 +13,12 @@ import {
   searchEnvParts,
 } from "../environment-parts";
 import { glassPanelSubtleClass } from "../styles";
-import type { AssetFilterCategory, AssetFilterStatus, BuilderAction } from "./builder-types";
+import type {
+  AssetFilterCategory,
+  AssetFilterStatus,
+  BuilderAction,
+  BuilderShell,
+} from "./builder-types";
 import { createPlacement } from "./builder-types";
 import {
   buildScenePlacementOrigin,
@@ -69,6 +74,7 @@ const STATUS_OPTIONS: { value: AssetFilterStatus; label: string }[] = [
 
 interface AssetBrowserProps {
   buildingId: string;
+  shell: BuilderShell | null;
   dispatch: React.Dispatch<BuilderAction>;
 }
 
@@ -94,7 +100,28 @@ function loadSvgPlacementMeta(
   return pending;
 }
 
-export function AssetBrowser({ buildingId, dispatch }: AssetBrowserProps) {
+function getDefaultPlacementCoords(
+  kind: ReturnType<typeof placementKindForAssetCategory>,
+  shell: BuilderShell | null,
+) {
+  if (!shell) {
+    return { col: 5, row: 9 };
+  }
+
+  if (kind === "decoration") {
+    return {
+      col: shell.col + shell.cols + 1,
+      row: shell.row + shell.rows + 1,
+    };
+  }
+
+  return {
+    col: shell.col + Math.floor(shell.cols / 2),
+    row: shell.row + Math.floor(shell.rows / 2),
+  };
+}
+
+export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<AssetFilterCategory>("all");
   const [statusFilter, setStatusFilter] = useState<AssetFilterStatus>("approved");
@@ -136,15 +163,16 @@ export function AssetBrowser({ buildingId, dispatch }: AssetBrowserProps) {
     const placementBuildingId = buildingId;
     const url = envPartSvgPath(part, partsIndex);
     const kind = placementKindForAssetCategory(part.category);
+    const { col, row } = getDefaultPlacementCoords(kind, shell);
 
     setPendingAssetId(part.id);
 
-    let placement = createPlacement(part.id, url, kind, 5, 9, {
+    let placement = createPlacement(part.id, url, kind, col, row, {
       zIndex: defaultZIndexForAssetCategory(part.category),
     });
 
     if (part.category === "scene") {
-      placement = createPlacement(part.id, url, kind, 5, 9, {
+      placement = createPlacement(part.id, url, kind, col, row, {
         anchorMode: "scene-origin",
         sceneOrigin: buildScenePlacementOrigin(sceneContract),
         width: sceneContract.canonicalViewBox.width,
@@ -154,7 +182,7 @@ export function AssetBrowser({ buildingId, dispatch }: AssetBrowserProps) {
     } else {
       const svgMeta = await loadSvgPlacementMeta(url);
       if (svgMeta) {
-        placement = createPlacement(part.id, url, kind, 5, 9, {
+        placement = createPlacement(part.id, url, kind, col, row, {
           svgMeta,
           width: svgMeta.viewBox[2],
           height: svgMeta.viewBox[3],

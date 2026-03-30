@@ -344,8 +344,12 @@ function WarningsPanel({
         <button
           key={w.id}
           onClick={() => {
-            if (w.placementId) {
-              dispatch({ type: "SELECT_PLACEMENT", id: w.placementId });
+            if (w.targetType === "placement" && w.targetId) {
+              dispatch({ type: "SELECT_PLACEMENT", id: w.targetId });
+            } else if (w.targetType === "slot" && w.targetId) {
+              dispatch({ type: "SELECT_SLOT", id: w.targetId });
+            } else if (w.targetType === "shell") {
+              dispatch({ type: "SELECT_SHELL" });
             }
           }}
           className={`w-full rounded border p-2 text-left text-xs leading-relaxed ${levelColors[w.level]}`}

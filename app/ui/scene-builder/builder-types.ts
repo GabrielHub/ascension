@@ -4,6 +4,11 @@
  */
 
 import type {
+  BuildingFloorLayout,
+  BuildingRoomSlot,
+  BuildingShellFootprint,
+} from "content/building-layouts";
+import type {
   HqPlacementAnchor,
   HqPlacementKind,
   HqScenePlacementOrigin,
@@ -53,23 +58,39 @@ export type AssetFilterStatus = "all" | "approved" | "exploration";
 // ── Builder warnings ────────────────────────────────────────────────────
 
 export type WarningLevel = "error" | "warning" | "info";
+export type BuilderMode = "scene" | "layout";
+export type BuilderWarningTarget = "placement" | "slot" | "shell" | null;
 
 export interface BuilderWarning {
   id: string;
-  placementId: string | null;
+  targetType: BuilderWarningTarget;
+  targetId: string | null;
   level: WarningLevel;
   message: string;
 }
 
 // ── Core builder state ──────────────────────────────────────────────────
 
+export interface BuilderShell extends BuildingShellFootprint {
+  dirty: boolean;
+}
+
+export interface BuilderRoomSlotState extends BuildingRoomSlot {
+  dirty: boolean;
+}
+
 export interface SceneBuilderState {
   buildingId: string;
   floorIndex: number;
   buildingTier: number;
+  editorMode: BuilderMode;
 
   placements: BuilderPlacement[];
   selectedPlacementId: string | null;
+  shell: BuilderShell | null;
+  slots: BuilderRoomSlotState[];
+  selectedSlotId: string | null;
+  isShellSelected: boolean;
 
   overlays: BuilderOverlays;
 
@@ -77,6 +98,8 @@ export interface SceneBuilderState {
 
   warnings: BuilderWarning[];
 
+  sceneDirty: boolean;
+  layoutDirty: boolean;
   isDirty: boolean;
 }
 
@@ -84,9 +107,14 @@ export interface SceneBuilderState {
 
 export type BuilderAction =
   | { type: "SET_BUILDING"; buildingId: string }
+  | { type: "SET_BUILDING_TIER"; buildingTier: number }
   | { type: "SET_FLOOR"; floorIndex: number }
+  | { type: "SET_EDITOR_MODE"; mode: BuilderMode }
   | { type: "LOAD_PLACEMENTS"; placements: HqStaticPlacementDef[] }
+  | { type: "LOAD_LAYOUT"; layout: BuildingFloorLayout | null }
   | { type: "SELECT_PLACEMENT"; id: string | null }
+  | { type: "SELECT_SLOT"; id: string | null }
+  | { type: "SELECT_SHELL" }
   | { type: "ADD_PLACEMENT"; placement: BuilderPlacement }
   | { type: "UPDATE_PLACEMENT"; id: string; changes: Partial<HqStaticPlacementDef> }
   | { type: "DELETE_PLACEMENT"; id: string }
@@ -94,14 +122,24 @@ export type BuilderAction =
   | { type: "REORDER_PLACEMENT"; id: string; direction: "up" | "down" }
   | { type: "MOVE_PLACEMENT"; id: string; col: number; row: number }
   | { type: "NUDGE_PLACEMENT"; id: string; dCol: number; dRow: number }
+  | { type: "ADD_SLOT"; slot: BuilderRoomSlotState }
+  | { type: "UPDATE_SLOT"; id: string; changes: Partial<BuildingRoomSlot> }
+  | { type: "DELETE_SLOT"; id: string }
+  | { type: "DUPLICATE_SLOT"; id: string }
+  | { type: "MOVE_SLOT"; id: string; col: number; row: number }
+  | { type: "NUDGE_SLOT"; id: string; dCol: number; dRow: number }
+  | { type: "UPDATE_SHELL"; changes: Partial<BuildingShellFootprint> }
+  | { type: "MOVE_SHELL"; col: number; row: number }
+  | { type: "NUDGE_SHELL"; dCol: number; dRow: number }
   | { type: "TOGGLE_OVERLAY"; overlay: keyof BuilderOverlays }
   | { type: "SET_CAMERA"; camera: Partial<SceneBuilderState["camera"]> }
   | { type: "SET_WARNINGS"; warnings: BuilderWarning[] }
-  | { type: "MARK_CLEAN" };
+  | { type: "MARK_CLEAN"; scope: "scene" | "layout" | "all" };
 
 // ── Default placement factory ───────────────────────────────────────────
 
 let nextPlacementCounter = 0;
+let nextSlotCounter = 0;
 
 interface CreatePlacementOptions {
   anchorMode?: HqPlacementAnchor;
@@ -153,6 +191,31 @@ export function createPlacement(
     footprintRows: options.footprintRows,
     sceneOrigin: options.sceneOrigin,
     tags: options.tags,
+    dirty: true,
+  };
+}
+
+interface CreateSlotOptions {
+  slotId?: string;
+  cols?: number;
+  rows?: number;
+  startingTemplateId?: string;
+}
+
+export function createSlot(
+  col: number,
+  row: number,
+  options: CreateSlotOptions = {},
+): BuilderRoomSlotState {
+  nextSlotCounter++;
+
+  return {
+    slotId: options.slotId ?? `slot/custom-${nextSlotCounter}`,
+    col,
+    row,
+    cols: options.cols ?? 4,
+    rows: options.rows ?? 3,
+    startingTemplateId: options.startingTemplateId,
     dirty: true,
   };
 }

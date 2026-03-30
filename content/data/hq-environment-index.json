@@ -147,7 +147,7 @@
           "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
-          "status": "exploration"
+          "status": "approved"
         },
         {
           "id": "background/iso-bg-tenement-right",
@@ -155,7 +155,7 @@
           "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
-          "status": "exploration"
+          "status": "approved"
         },
         {
           "id": "background/iso-bg-building-tall",
