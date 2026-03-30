@@ -7,7 +7,9 @@
 
 import {
   getHqEnvironmentRenderConfig,
+  getHqEnvironmentRenderConfigForBuilding,
   getLoadedHqEnvironmentManifest,
+  getLoadedHqEnvironmentManifestForBuilding,
   type HqEnvironmentAssetRoots,
 } from "lib/hq-environment-manifest";
 
@@ -312,8 +314,9 @@ function getSceneSeriesKey(part: EnvPartMeta): string {
   return part.id.split("/").pop() ?? part.id;
 }
 
-export function getSceneReviewContract(): EnvSceneReviewContract {
-  const renderConfig = getHqEnvironmentRenderConfig();
+export function getSceneReviewContract(buildingId = "building/bodega"): EnvSceneReviewContract {
+  const renderConfig =
+    getHqEnvironmentRenderConfigForBuilding(buildingId) ?? getHqEnvironmentRenderConfig();
 
   return {
     building: renderConfig.building,
@@ -391,13 +394,31 @@ export function envPartSvgPath(
 // ── Loaded index access ─────────────────────────────────────────────
 
 /** Returns the shipped HQ environment parts index, parsed and typed. */
-export function getLoadedEnvPartsIndex(): EnvPartsIndex {
-  return getLoadedHqEnvironmentManifest() as EnvPartsIndex;
+export function getLoadedEnvPartsIndex(buildingId = "building/bodega"): EnvPartsIndex {
+  const fallbackIndex = getLoadedHqEnvironmentManifest() as unknown as EnvPartsIndex;
+  const manifest = getLoadedHqEnvironmentManifestForBuilding(buildingId) as
+    | (Partial<EnvPartsIndex> & Pick<EnvPartsIndex, "paths">)
+    | undefined;
+  const renderConfig =
+    getHqEnvironmentRenderConfigForBuilding(buildingId) ?? getHqEnvironmentRenderConfig();
+
+  if (!manifest) {
+    return fallbackIndex;
+  }
+
+  return {
+    description: manifest.description ?? fallbackIndex.description,
+    locked: manifest.locked ?? null,
+    style: manifest.style ?? fallbackIndex.style,
+    building: manifest.building ?? renderConfig.building,
+    paths: manifest.paths,
+    parts: manifest.parts ?? [],
+  };
 }
 
 /** Returns the parts array from the shipped environment index. */
-export function getLoadedEnvParts(): readonly EnvPartMeta[] {
-  return getLoadedEnvPartsIndex().parts;
+export function getLoadedEnvParts(buildingId = "building/bodega"): readonly EnvPartMeta[] {
+  return getLoadedEnvPartsIndex(buildingId).parts;
 }
 
 /** Returns the default preset id. */
@@ -406,9 +427,12 @@ export function defaultPresetId(): string {
 }
 
 /** Resolve the retained building shell asset URL. */
-export function resolveShellAssetUrl(): string {
-  const parts = getLoadedEnvParts();
-  const { paths } = getHqEnvironmentRenderConfig();
+export function resolveShellAssetUrl(buildingId = "building/bodega"): string {
+  const parts = getLoadedEnvParts(buildingId);
+  const { paths } =
+    getHqEnvironmentRenderConfigForBuilding(buildingId) ?? getHqEnvironmentRenderConfig();
   const shell = findEnvPartById(parts, "shell/iso-bodega-shell");
-  return shell ? envPartSvgPath(shell) : `${paths.partsRoot}/shell/iso-bodega-shell.svg`;
+  return shell
+    ? envPartSvgPath(shell, getLoadedEnvPartsIndex(buildingId))
+    : `${paths.partsRoot}/shell/iso-bodega-shell.svg`;
 }

@@ -4,7 +4,7 @@ Create a dedicated engine/editor route for HQ scene authoring. The builder must 
 
 ## Status
 
-Not implemented. This is a new active execution plan.
+Phases 1–4 implemented. Route live at `/scene-builder`. Phase 5 (shell and room-layout authoring) not yet started.
 
 This plan depends on the shipped HQ unified static-scene contract in:
 

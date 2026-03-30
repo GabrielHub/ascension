@@ -41,4 +41,15 @@ describe("start screen dev entrypoint", () => {
     expect(html).toContain(">SVG Tools<");
     expect(html).toContain('href="/svg-assets"');
   });
+
+  it("renders the Scene Builder link", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <StartScreenShell />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">Scene Builder<");
+    expect(html).toContain('href="/scene-builder"');
+  });
 });

@@ -175,6 +175,12 @@ export function getHqEnvironmentRenderConfig(): HqEnvironmentRenderConfig {
   return parseHqEnvironmentRenderConfig(getLoadedHqEnvironmentManifest(), DEFAULT_BUILDING);
 }
 
+export function getLoadedHqEnvironmentManifestForBuilding(
+  buildingId: string,
+): RawHqEnvironmentManifest | undefined {
+  return getManifestForBuilding(buildingId);
+}
+
 // ── Backdrop profile types ──────────────────────────────────────────────
 
 export type HqBackdropZone =

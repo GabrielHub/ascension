@@ -299,6 +299,26 @@ describe("scene review helpers", () => {
     });
   });
 
+  it("supports per-building scene review contracts", () => {
+    expect(getSceneReviewContract("building/porters")).toEqual({
+      building: "porters",
+      tileWidth: 96,
+      tileHeight: 48,
+      wallHeight: 84,
+      canonicalOrigin: [200, 100],
+      canonicalViewBox: {
+        minX: 20,
+        minY: 0,
+        width: 420,
+        height: 310,
+      },
+      roomFootprint: {
+        cols: 4,
+        rows: 3,
+      },
+    });
+  });
+
   it("builds progression scaffolds per room-scene series", () => {
     const groups = buildSceneReviewGroups(getLoadedEnvParts());
 
@@ -336,6 +356,14 @@ describe("shipped index style", () => {
   it("uses angled-isometric style", () => {
     const index = getLoadedEnvPartsIndex();
     expect(index.style).toBe("bodega-angled-isometric");
+  });
+
+  it("returns empty parts for buildings without a shipped asset pack", () => {
+    const index = getLoadedEnvPartsIndex("building/porters");
+
+    expect(index.style).toBe("porters-waterfront-isometric");
+    expect(index.parts).toEqual([]);
+    expect(getLoadedEnvParts("building/porters")).toEqual([]);
   });
 
   it("contains no flat/cross-section or room-kit entries", () => {
