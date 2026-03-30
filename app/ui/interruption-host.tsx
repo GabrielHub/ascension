@@ -52,11 +52,9 @@ function IncidentModal({
               <span className="text-sm font-medium text-silver-bright transition-colors duration-200 group-hover:text-gold group-focus-visible:text-gold">
                 {choice.label}
               </span>
-              <span className="text-[0.75rem] leading-relaxed text-silver/60">
-                {choice.description}
-              </span>
+              <span className="text-sm leading-relaxed text-silver/60">{choice.description}</span>
               {choice.consequenceSummary && (
-                <span className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.1em] text-gold-dim">
+                <span className="mt-0.5 text-sm uppercase tracking-[0.1em] text-gold-dim">
                   {choice.consequenceSummary}
                 </span>
               )}
@@ -103,7 +101,7 @@ function BossCommitmentModal({
             Team Condition
           </h4>
           <p className="mt-1 text-sm text-silver/70">{payload.teamConditionSummary}</p>
-          <p className="mt-1 text-[0.75rem] text-silver/50">
+          <p className="mt-1 text-sm text-silver/50">
             {payload.operatorIds.length} operator{payload.operatorIds.length !== 1 ? "s" : ""}{" "}
             assigned
           </p>
@@ -230,7 +228,7 @@ function GuidanceModal({
       footer={
         <div className="flex items-center justify-between gap-3">
           {progressLabel && payload.subtitle && (
-            <span className="text-[0.6rem] uppercase tracking-[0.18em] text-gold-dim">
+            <span className="text-xs uppercase tracking-[0.18em] text-gold-dim">
               {progressLabel}
             </span>
           )}
@@ -300,7 +298,7 @@ function RelocationModal({
             <p className="text-xs uppercase tracking-[0.14em] text-gold/80">
               Relocation deposit: ${payload.treasuryCost}
             </p>
-            <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+            <p className="mt-1 text-sm leading-relaxed text-silver/60">
               Review the offer now. Final confirmation happens in the next step.
             </p>
           </div>

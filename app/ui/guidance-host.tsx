@@ -168,7 +168,7 @@ function GuidanceProgress({ current, total }: GuidanceProgress) {
           />
         ))}
       </div>
-      <span className="text-[0.6rem] uppercase tracking-[0.18em] text-gold-dim">
+      <span className="text-xs uppercase tracking-[0.18em] text-gold-dim">
         {current + 1}/{total}
       </span>
     </div>
@@ -218,7 +218,7 @@ function AnchoredCoachmark({
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               {beat.copy.subtitle && (
-                <p className="mb-0.5 text-[0.6rem] font-medium uppercase tracking-[0.2em] text-gold-dim">
+                <p className="mb-0.5 text-xs font-medium uppercase tracking-[0.2em] text-gold-dim">
                   {beat.copy.subtitle}
                 </p>
               )}
@@ -238,7 +238,7 @@ function AnchoredCoachmark({
               {beat.allowSkip && beat.copy.ctaDismissLabel && (
                 <button
                   type="button"
-                  className="btn-ghost text-[0.6875rem]"
+                  className="btn-ghost text-sm"
                   onClick={() => onDismiss(beat.beatId)}
                 >
                   {beat.copy.ctaDismissLabel}
@@ -248,14 +248,14 @@ function AnchoredCoachmark({
             {requiresManualCompletion && (
               <button
                 type="button"
-                className="btn-primary text-[0.6875rem]"
+                className="btn-primary text-sm"
                 onClick={() => onComplete(beat.beatId, beat.completionKind)}
               >
                 {beat.copy.ctaLabel}
               </button>
             )}
             {!requiresManualCompletion && (
-              <p className="text-[0.6875rem] italic text-gold-dim/70">{beat.copy.ctaLabel}</p>
+              <p className="text-sm italic text-gold-dim/70">{beat.copy.ctaLabel}</p>
             )}
           </div>
         </div>
@@ -325,7 +325,7 @@ function CenteredFallbackShell({
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   {beat.copy.subtitle && (
-                    <p className="mb-1 text-[0.6rem] font-medium uppercase tracking-[0.2em] text-gold-dim">
+                    <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-gold-dim">
                       {beat.copy.subtitle}
                     </p>
                   )}

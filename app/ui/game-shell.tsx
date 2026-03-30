@@ -276,14 +276,14 @@ function CategoryPill({
       type="button"
       data-testid={testId}
       data-active={isActive}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.6875rem] font-medium tracking-[0.06em] transition-all duration-200 ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium tracking-[0.06em] transition-all duration-200 ${
         isActive
           ? "bg-[rgba(200,168,76,0.12)] text-gold border border-[rgba(200,168,76,0.25)] shadow-[0_0_8px_rgba(200,168,76,0.1)]"
           : "bg-[rgba(6,6,8,0.4)] text-silver/60 border border-[rgba(200,168,76,0.06)] hover:text-silver/80 hover:border-[rgba(200,168,76,0.12)]"
       }`}
       onClick={onClick}
     >
-      <span className="text-[0.625rem]">{icon}</span>
+      <span className="text-xs">{icon}</span>
       {label}
     </button>
   );
@@ -433,11 +433,11 @@ function FocusedOperatorOverlay({
           />
           <div className="min-w-0">
             <h3 className="truncate text-sm font-medium text-silver-bright">{operator.name}</h3>
-            <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/70">
+            <p className="mt-0.5 text-sm uppercase tracking-[0.12em] text-gold/70">
               {getRoleMeta(operator.roleTag).label}
             </p>
             {operator.specialtyTag && (
-              <p className="mt-0.5 text-[0.6875rem] text-silver/60">
+              <p className="mt-0.5 text-sm text-silver/60">
                 {getSpecialtyMeta(operator.specialtyTag).label}
               </p>
             )}
@@ -486,7 +486,7 @@ function FocusedOperatorOverlay({
         </Tooltip>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-[0.6875rem] text-silver/60">
+      <div className="mt-3 flex flex-wrap gap-2 text-sm text-silver/60">
         <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
           <span>Fatigue {Math.round(operator.needFatigue)}</span>
         </Tooltip>
@@ -515,7 +515,7 @@ function FocusedOperatorOverlay({
           {operator.autonomyReasons.map((reason) => (
             <p
               key={reason}
-              className={`text-[0.6875rem] ${operator.quitRisk ? "text-magma" : "text-ember"}`}
+              className={`text-sm ${operator.quitRisk ? "text-magma" : "text-ember"}`}
             >
               {reason}
             </p>
@@ -526,18 +526,16 @@ function FocusedOperatorOverlay({
       {recoverySummary && (
         <div className="mt-2 space-y-1 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/55">
+            <span className="text-xs uppercase tracking-[0.12em] text-gold/55">
               {recoverySummary.statusLabel}
             </span>
-            <span className="text-[0.625rem] text-ember">
+            <span className="text-xs text-ember">
               {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
             </span>
           </div>
-          <p className="text-[0.6875rem] leading-relaxed text-silver/60">
-            {recoverySummary.reason}
-          </p>
+          <p className="text-sm leading-relaxed text-silver/60">{recoverySummary.reason}</p>
           {recoverySummary.policyLines.map((line) => (
-            <p key={line} className="text-[0.6875rem] leading-relaxed text-gold/70">
+            <p key={line} className="text-sm leading-relaxed text-gold/70">
               {line}
             </p>
           ))}
@@ -595,10 +593,10 @@ function FocusedVisitorOverlay({
           />
           <div className="min-w-0">
             <h3 className="truncate text-sm font-medium text-silver-bright">{visitor.name}</h3>
-            <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.8)]">
+            <p className="mt-0.5 text-sm uppercase tracking-[0.12em] text-[rgba(232,170,60,0.8)]">
               {getRoleMeta(visitor.desiredRoleTag).label}
             </p>
-            <span className="badge mt-1 border-[rgba(232,170,60,0.2)] bg-[rgba(232,170,60,0.1)] text-[0.625rem] text-[rgba(232,170,60,0.9)]">
+            <span className="badge mt-1 border-[rgba(232,170,60,0.2)] bg-[rgba(232,170,60,0.1)] text-xs text-[rgba(232,170,60,0.9)]">
               Rank {visitor.rank.toUpperCase()}
             </span>
           </div>
@@ -615,7 +613,7 @@ function FocusedVisitorOverlay({
 
       {/* Visiting timer */}
       <div className="mt-3">
-        <div className="flex items-center justify-between text-[0.6875rem]">
+        <div className="flex items-center justify-between text-sm">
           <span className="uppercase tracking-[0.12em] text-silver/50">Visiting</span>
           <span
             className={patienceUrgent ? "tabular-nums text-ember" : "tabular-nums text-silver/60"}
@@ -653,7 +651,7 @@ function FocusedVisitorOverlay({
       </div>
 
       {/* Quality indicator */}
-      <div className="mt-2 flex items-center gap-2 text-[0.6875rem] text-silver/50">
+      <div className="mt-2 flex items-center gap-2 text-sm text-silver/50">
         <Tooltip
           content="Quality reflects raw potential — higher quality produces better starting stats"
           side="top"
@@ -666,17 +664,13 @@ function FocusedVisitorOverlay({
 
       <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.06)] px-3 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[0.625rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
+          <span className="text-xs uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
             Recruitment Policy
           </span>
-          <span className="text-[0.6875rem] text-[rgba(232,170,60,0.92)]">
-            {rosterFlowSummary.label}
-          </span>
+          <span className="text-sm text-[rgba(232,170,60,0.92)]">{rosterFlowSummary.label}</span>
         </div>
-        <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
-          {rosterFlowSummary.summary}
-        </p>
-        <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+        <p className="mt-1 text-sm leading-relaxed text-silver/60">{rosterFlowSummary.summary}</p>
+        <div className="mt-1.5 flex flex-wrap gap-2 text-sm text-silver/45">
           {rosterFlowSummary.details.slice(0, 3).map((detail) => (
             <span key={detail}>{detail}</span>
           ))}
@@ -758,7 +752,7 @@ function FocusedVisitorOverlay({
 
       {showReplacementPicker && visitor.canReplace && replaceableOperators.length > 0 && (
         <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.04)] px-3 py-2">
-          <div className="text-[0.625rem] uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
+          <div className="text-xs uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
             Replace Operator
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -773,7 +767,7 @@ function FocusedVisitorOverlay({
               >
                 <button
                   type="button"
-                  className={`btn-ghost px-2 py-0.5 text-[0.6875rem] ${
+                  className={`btn-ghost px-2 py-0.5 text-sm ${
                     operator.canBeReplaced ? "" : "cursor-not-allowed text-silver/30"
                   }`}
                   disabled={!operator.canBeReplaced}
@@ -797,7 +791,7 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
     return (
       <div className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}>
         <div className={emptyStateIconClass}>&#9881;</div>
-        <p className="text-[0.7rem] font-medium text-gold/70">No recurring teams</p>
+        <p className="text-sm font-medium text-gold/70">No recurring teams</p>
         <p className="mt-1 text-xs text-silver/60">Teams form through repeated raid pairings</p>
       </div>
     );
@@ -820,13 +814,13 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
               </Tooltip>
             )}
           </div>
-          <div className="mt-1 text-[0.6875rem] text-silver/60">{team.statusSummary}</div>
+          <div className="mt-1 text-sm text-silver/60">{team.statusSummary}</div>
           {team.explanationReasons.slice(0, 2).map((reason) => (
-            <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
+            <div key={reason} className="mt-1 text-sm text-silver/50">
               {reason}
             </div>
           ))}
-          <div className="mt-1 flex items-center gap-3 text-[0.6875rem] text-silver/50">
+          <div className="mt-1 flex items-center gap-3 text-sm text-silver/50">
             <Tooltip content="Team coordination — builds through shared missions" side="top">
               <span>Cohesion {Math.round(team.cohesion)}</span>
             </Tooltip>
@@ -1637,26 +1631,22 @@ export function GameShell() {
                 >
                   {hq.guild.guildName}
                 </h1>
-                <span className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
+                <span className="text-xs uppercase tracking-[0.14em] text-gold/55">
                   {hq.guild.playerName}
                 </span>
                 <Tooltip content="Building tier - determines room slots and upgrade access">
                   <span className="badge badge-gold">T{hq.building.tier}</span>
                 </Tooltip>
-                <span className="hidden text-[0.6875rem] text-silver/48 sm:inline">
-                  {hq.building.name}
-                </span>
+                <span className="hidden text-sm text-silver/48 sm:inline">{hq.building.name}</span>
                 {hq.building.floorCount > 1 && (
                   <div className="flex items-center gap-1">
-                    <span className="text-[0.625rem] uppercase tracking-[0.15em] text-gold/60">
-                      Floor
-                    </span>
+                    <span className="text-xs uppercase tracking-[0.15em] text-gold/60">Floor</span>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => (
                         <button
                           key={floorIndex}
                           type="button"
-                          className={`rounded-full border px-2 py-1 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
+                          className={`rounded-full border px-2 py-1 text-xs uppercase tracking-[0.12em] transition-colors ${
                             hq.building.activeFloorIndex === floorIndex
                               ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
                               : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
@@ -2095,7 +2085,7 @@ export function GameShell() {
             <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <span
-                  className="text-[0.6875rem] uppercase tracking-[0.15em] text-silver/60"
+                  className="text-sm uppercase tracking-[0.15em] text-silver/60"
                   data-testid="session-mode"
                 >
                   {session.mode === "preview"
@@ -2107,14 +2097,14 @@ export function GameShell() {
                 {persistenceLabel && (
                   <span
                     data-testid="persistence-label"
-                    className={`text-[0.6875rem] uppercase tracking-[0.12em] ${persistenceClassName}`}
+                    className={`text-sm uppercase tracking-[0.12em] ${persistenceClassName}`}
                     title={session.persistence.errorMessage}
                   >
                     {persistenceLabel}
                   </span>
                 )}
               </div>
-              <span className="shrink-0 text-[0.6875rem] tabular-nums text-silver/60">
+              <span className="shrink-0 text-sm tabular-nums text-silver/60">
                 {session.registry.rooms.length} rooms &middot; {session.registry.missions.length}{" "}
                 missions
               </span>

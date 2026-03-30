@@ -33,13 +33,13 @@ function DeployedOperatorPortrait({ op }: { op: OperatorViewModel }) {
         {isDead && <div className="absolute inset-0 rounded bg-void/50" />}
       </div>
       <span
-        className={`max-w-[5rem] truncate text-[0.6875rem] ${
+        className={`max-w-[5rem] truncate text-sm ${
           isDead ? "text-magma line-through" : "text-silver/60"
         }`}
       >
         {op.name}
       </span>
-      {isDead && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
+      {isDead && <span className="text-sm font-medium text-magma">KIA</span>}
     </div>
   );
 }
@@ -169,7 +169,7 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
           {(() => {
             const role = getRoleMeta(op.roleTag);
             return (
-              <span className="text-[0.6875rem] text-gold/70" title={role.tip}>
+              <span className="text-sm text-gold/70" title={role.tip}>
                 {role.label}
               </span>
             );
@@ -178,19 +178,17 @@ function OperatorInspectionRow({ op }: { op: OperatorViewModel }) {
             (() => {
               const spec = getSpecialtyMeta(op.specialtyTag);
               return (
-                <span className="text-[0.6875rem] text-silver/60" title={spec.tip}>
+                <span className="text-sm text-silver/60" title={spec.tip}>
                   {spec.label}
                 </span>
               );
             })()}
-          {isDead && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
-          {!isDead && op.injurySeverity > 0 && (
-            <span className="text-[0.6875rem] text-ember">Injured</span>
-          )}
+          {isDead && <span className="text-sm font-medium text-magma">KIA</span>}
+          {!isDead && op.injurySeverity > 0 && <span className="text-sm text-ember">Injured</span>}
         </div>
 
         {!isDead && (
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.6875rem]">
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-sm">
             <span className="text-silver/60" title={OPERATOR_TIPS.morale}>
               Morale{" "}
               <span

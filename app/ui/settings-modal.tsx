@@ -36,7 +36,7 @@ function ToggleButton({
   return (
     <button
       type="button"
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.6875rem] uppercase tracking-[0.12em] transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm uppercase tracking-[0.12em] transition-colors ${
         active
           ? "border-[rgba(200,168,76,0.3)] bg-[rgba(200,168,76,0.12)] text-gold"
           : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/60 hover:text-silver-bright"
@@ -157,7 +157,7 @@ export function SettingsModal({
               />
             </div>
 
-            <div className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.4)] px-3 py-2 text-[0.75rem] leading-relaxed text-silver/55">
+            <div className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.4)] px-3 py-2 text-sm leading-relaxed text-silver/55">
               {renderWakeLockMessage(wakeLock, wakeLockEnabled)}
             </div>
           </div>

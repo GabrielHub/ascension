@@ -92,7 +92,7 @@ function OperatorLine({
         {name ?? getIdentifierLabel(operatorId)}
       </span>
       {roleLabel && (
-        <span className="text-[0.6rem] uppercase tracking-wider text-silver/40">
+        <span className="text-xs uppercase tracking-wider text-silver/40">
           {roleLabel.shortLabel ?? roleLabel.label}
         </span>
       )}
@@ -131,7 +131,7 @@ function EncounterCard({ encounter }: { encounter: FocusEncounter }) {
       <div className="flex-1">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-silver/80">{encounter.enemyLabel}</span>
-          <span className={`badge text-[0.6rem] ${threat.badge}`}>{threat.label}</span>
+          <span className={`badge text-xs ${threat.badge}`}>{threat.label}</span>
         </div>
         <div className="mt-1 flex items-center gap-1.5">
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-[rgba(212,84,30,0.08)]">
@@ -140,7 +140,7 @@ function EncounterCard({ encounter }: { encounter: FocusEncounter }) {
               style={{ width: `${hpPct}%` }}
             />
           </div>
-          <span className="text-[0.6rem] tabular-nums text-ember/60">{hpPct}%</span>
+          <span className="text-xs tabular-nums text-ember/60">{hpPct}%</span>
         </div>
       </div>
     </div>
@@ -153,9 +153,7 @@ function FocusedTranscriptStream({ detail }: { detail: RaidFocusedTeamDetail }) 
 
   return (
     <div className="mt-3 space-y-2 border-t border-[rgba(200,168,76,0.04)] pt-3">
-      <p className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/60">
-        Transcript
-      </p>
+      <p className="text-sm font-medium uppercase tracking-[0.12em] text-gold/60">Transcript</p>
 
       {/* Goal check summary badges */}
       {goalCheckSummary.length > 0 && (
@@ -170,7 +168,7 @@ function FocusedTranscriptStream({ detail }: { detail: RaidFocusedTeamDetail }) 
             return (
               <span
                 key={`${gc.kind}-${i}`}
-                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[0.55rem]`}
+                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs`}
                 style={{ borderColor: undefined }}
               >
                 <span className={badgeCls}>{gc.kind}</span>
@@ -184,10 +182,10 @@ function FocusedTranscriptStream({ detail }: { detail: RaidFocusedTeamDetail }) 
       {/* Enemies encountered */}
       {detail.enemiesEncountered.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          <span className="text-[0.55rem] font-medium uppercase tracking-wider text-ember/50">
+          <span className="text-xs font-medium uppercase tracking-wider text-ember/50">
             Hostiles:
           </span>
-          <span className="text-[0.55rem] text-silver/50">
+          <span className="text-xs text-silver/50">
             {detail.enemiesEncountered.length} encountered
           </span>
         </div>
@@ -200,7 +198,7 @@ function FocusedTranscriptStream({ detail }: { detail: RaidFocusedTeamDetail }) 
             <TranscriptEventLine key={`${evt.tickOffset}-${i}`} event={evt} />
           ))
         ) : (
-          <p className="py-1 text-[0.6rem] text-silver/40">Awaiting events...</p>
+          <p className="py-1 text-xs text-silver/40">Awaiting events...</p>
         )}
       </div>
     </div>
@@ -242,14 +240,10 @@ export function RaidFocusFrame({
           <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
             Team Focus
           </h3>
-          <p className="mt-1 text-[0.6875rem] text-silver/60">
-            {team.operatorIds.length} operators
-          </p>
+          <p className="mt-1 text-sm text-silver/60">{team.operatorIds.length} operators</p>
         </div>
         <div className="flex items-center gap-1.5">
-          {inCombat && (
-            <span className="badge badge-ember animate-pulse text-[0.6rem]">In Combat</span>
-          )}
+          {inCombat && <span className="badge badge-ember animate-pulse text-xs">In Combat</span>}
           <span className={`badge ${state.badge}`}>{state.label}</span>
           <button type="button" className="btn-ghost text-xs" onClick={onDismiss}>
             &times;
@@ -271,9 +265,7 @@ export function RaidFocusFrame({
       {/* Active encounter */}
       {encounter && encounter.healthFraction > 0 && (
         <div className="mt-3 space-y-1.5 border-t border-[rgba(212,84,30,0.06)] pt-3">
-          <p className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-ember/60">
-            Encounter
-          </p>
+          <p className="text-sm font-medium uppercase tracking-[0.12em] text-ember/60">Encounter</p>
           <EncounterCard encounter={encounter} />
         </div>
       )}
@@ -283,9 +275,7 @@ export function RaidFocusFrame({
 
       {/* Team members */}
       <div className="mt-3 space-y-1 border-t border-[rgba(200,168,76,0.04)] pt-3">
-        <p className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-silver/50">
-          Operators
-        </p>
+        <p className="text-sm font-medium uppercase tracking-[0.12em] text-silver/50">Operators</p>
         {team.operatorIds.map((id) => (
           <OperatorLine
             key={id}
@@ -298,7 +288,7 @@ export function RaidFocusFrame({
 
       {/* Position info */}
       <div className="mt-3 border-t border-[rgba(200,168,76,0.04)] pt-2">
-        <p className="text-[0.6875rem] tabular-nums text-silver/40">
+        <p className="text-sm tabular-nums text-silver/40">
           Position: {Math.round(team.x)}, {Math.round(team.y)}
         </p>
       </div>

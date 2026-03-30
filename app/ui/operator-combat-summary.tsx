@@ -28,9 +28,9 @@ const STAT_KEYS: readonly {
 function AbilityCard({ label, name, summary }: { label: string; name: string; summary: string }) {
   return (
     <div className="glass-card-inset rounded-lg px-2 py-2">
-      <div className="text-[0.5625rem] uppercase tracking-[0.14em] text-gold/50">{label}</div>
-      <div className="mt-1 text-[0.6875rem] text-silver-bright">{name}</div>
-      <p className="mt-1 text-[0.625rem] leading-relaxed text-silver/50">{summary}</p>
+      <div className="text-xs uppercase tracking-[0.14em] text-gold/50">{label}</div>
+      <div className="mt-1 text-sm text-silver-bright">{name}</div>
+      <p className="mt-1 text-xs leading-relaxed text-silver/50">{summary}</p>
     </div>
   );
 }
@@ -55,15 +55,15 @@ export function OperatorCombatSummary({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">{title}</span>
-        <div className="flex flex-wrap items-center justify-end gap-1.5 text-[0.625rem]">
+        <span className="text-xs uppercase tracking-[0.12em] text-gold/50">{title}</span>
+        <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
           <span className="badge badge-gold">Rank {combat.rank.toUpperCase()}</span>
           <span className="badge badge-slate">{attunementLabel}</span>
         </div>
       </div>
 
       {combat.traits.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 text-[0.625rem]">
+        <div className="flex flex-wrap gap-1.5 text-xs">
           {combat.traits.map((trait) => (
             <span key={trait} className="badge badge-slate">
               {getIdentifierLabel(trait)}
@@ -91,18 +91,18 @@ export function OperatorCombatSummary({
       </div>
 
       <div className="glass-card-inset rounded-lg px-2 py-2">
-        <div className="text-[0.5625rem] uppercase tracking-[0.14em] text-gold/50">Passives</div>
+        <div className="text-xs uppercase tracking-[0.14em] text-gold/50">Passives</div>
         <div className="mt-1.5 grid gap-1">
           {resolvedKit.passives.map((passive) => (
             <div key={passive.id}>
-              <div className="text-[0.6875rem] text-silver-bright">{passive.name}</div>
-              <p className="text-[0.625rem] leading-relaxed text-silver/50">{passive.summary}</p>
+              <div className="text-sm text-silver-bright">{passive.name}</div>
+              <p className="text-xs leading-relaxed text-silver/50">{passive.summary}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5 text-[0.625rem]">
+      <div className="grid grid-cols-3 gap-1.5 text-xs">
         {STAT_KEYS.map(({ key, label }) => (
           <div key={key} className="glass-card-inset rounded-lg px-2 py-1.5 text-center">
             <div className="text-gold/50">{label}</div>

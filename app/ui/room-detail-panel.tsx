@@ -180,9 +180,7 @@ function PrepRecipeCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <h4 className="text-xs font-medium text-silver-bright">{recipe.name}</h4>
-          <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-silver/60">
-            {recipe.description}
-          </p>
+          <p className="mt-0.5 text-sm leading-relaxed text-silver/60">{recipe.description}</p>
         </div>
         <Tooltip content={`+${recipe.outputBuffValue} ${recipe.outputBuffStat} for deployed team`}>
           <span className="badge badge-gold shrink-0">
@@ -192,9 +190,7 @@ function PrepRecipeCard({
       </div>
 
       <div className="mt-2">
-        <span className="text-[0.625rem] font-medium uppercase tracking-[0.12em] text-gold/70">
-          Inputs
-        </span>
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">Inputs</span>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {recipe.inputs.map((input) => (
             <Tooltip
@@ -217,9 +213,7 @@ function PrepRecipeCard({
       </div>
 
       {!recipe.isRoomStaffed && (
-        <p className="mt-2 text-[0.6875rem] text-ember/80">
-          Requires assigned logistics staff to produce.
-        </p>
+        <p className="mt-2 text-sm text-ember/80">Requires assigned logistics staff to produce.</p>
       )}
 
       <button
@@ -277,7 +271,7 @@ export function RoomDetailPanel({
             )}
           </div>
           <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5 text-[0.625rem] text-silver/60">
+          <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-silver/60">
             <span className="badge badge-slate">{getRoomStateLabel(room.roomStateId)}</span>
             <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
             <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
@@ -307,7 +301,7 @@ export function RoomDetailPanel({
           <div className="grid grid-cols-3 gap-2">
             <Tooltip content="Room tier — higher tiers unlock better upgrades">
               <div className="glass-card-inset p-2 text-center">
-                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">Tier</div>
+                <div className="text-xs uppercase tracking-wider text-gold/70">Tier</div>
                 <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
               </div>
             </Tooltip>
@@ -319,7 +313,7 @@ export function RoomDetailPanel({
               }
             >
               <div className="glass-card-inset p-2 text-center">
-                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">
+                <div className="text-xs uppercase tracking-wider text-gold/70">
                   {room.requiredStaffTag ? "Staff" : "Type"}
                 </div>
                 <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
@@ -337,7 +331,7 @@ export function RoomDetailPanel({
               }
             >
               <div className="glass-card-inset p-2 text-center">
-                <div className="text-[0.625rem] uppercase tracking-wider text-gold/70">
+                <div className="text-xs uppercase tracking-wider text-gold/70">
                   {room.requiredStaffTag ? "Load" : "Status"}
                 </div>
                 <div className="mt-0.5 text-sm font-medium text-silver-bright">
@@ -376,11 +370,11 @@ export function RoomDetailPanel({
 
           {whyItMatters.length > 0 && (
             <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
-              <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+              <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
                 Why This Room Matters
               </h4>
               {whyItMatters.map((reason) => (
-                <p key={reason} className="text-[0.6875rem] leading-relaxed text-silver/60">
+                <p key={reason} className="text-sm leading-relaxed text-silver/60">
                   {reason}
                 </p>
               ))}
@@ -398,13 +392,13 @@ export function RoomDetailPanel({
           {roomCulture && (
             <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
               <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
-                <h4 className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+                <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
                   Room Culture
                 </h4>
               </Tooltip>
               <div className="glass-card-inset space-y-2 p-3">
                 <div>
-                  <div className="text-[0.625rem] uppercase tracking-wider text-gold/60">Tone</div>
+                  <div className="text-xs uppercase tracking-wider text-gold/60">Tone</div>
                   <div className="mt-0.5 text-xs text-silver-bright">
                     {getCultureSummaryLabel(roomCulture.summary)}
                   </div>

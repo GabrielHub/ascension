@@ -48,11 +48,14 @@ Repo-specific correctional guidance only.
 - `as any`
 - walls, floors, or structural elements inside room scene SVGs
 - flat camera-facing props (non-isometric rectangles) in any HQ asset
+- font sizes below `text-xs` (0.75rem / 12px)
 
 ## UI Rule
 
 - Always use the `/frontend-design` skill when creating or heavily refactoring UI components or screens
 - Preserve and extend the established visual language already present in `app/ui`, `app/app.css`, and the shipped SVG assets
+- Minimum font size is `text-xs` (0.75rem / 12px) — never use arbitrary values below this (`text-[0.6875rem]`, `text-[0.625rem]`, etc.)
+- Use `text-xs` for labels, badges, and secondary metadata; use `text-sm` or larger for body text and descriptions
 
 ## Verification
 

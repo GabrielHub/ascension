@@ -25,7 +25,7 @@ export const TRANSCRIPT_KIND_STYLE: Record<string, { accent: string; label: stri
 export function GoalCheckBadge({ grade }: { grade: string }) {
   const badgeClass =
     grade === "pass" ? "badge-gold" : grade === "mixed" ? "badge-slate" : "badge-ember";
-  return <span className={`badge text-[0.55rem] ${badgeClass}`}>{grade}</span>;
+  return <span className={`badge text-xs ${badgeClass}`}>{grade}</span>;
 }
 
 export function TranscriptEventLine({ event }: { event: RaidTranscriptEvent }) {
@@ -39,14 +39,12 @@ export function TranscriptEventLine({ event }: { event: RaidTranscriptEvent }) {
 
   return (
     <div className="flex items-start gap-1.5 py-0.5">
-      <span
-        className={`shrink-0 text-[0.55rem] font-medium uppercase tracking-wider ${style.accent}`}
-      >
+      <span className={`shrink-0 text-xs font-medium uppercase tracking-wider ${style.accent}`}>
         {style.label}
       </span>
-      <span className="flex-1 text-[0.6rem] leading-snug text-silver/55">{event.message}</span>
+      <span className="flex-1 text-xs leading-snug text-silver/55">{event.message}</span>
       {event.goalCheckGrade && <GoalCheckBadge grade={event.goalCheckGrade} />}
-      {enemyLabel && <span className="shrink-0 text-[0.55rem] text-ember/50">{enemyLabel}</span>}
+      {enemyLabel && <span className="shrink-0 text-xs text-ember/50">{enemyLabel}</span>}
     </div>
   );
 }

@@ -259,7 +259,7 @@ function TeamMarkerElement({
 
       {/* Goal label badge */}
       <div
-        className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[0.5rem] font-semibold tracking-[0.15em]"
+        className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold tracking-[0.15em]"
         style={{
           backgroundColor: "rgba(6,8,16,0.9)",
           border: `1px solid ${style.ring}`,
@@ -274,7 +274,7 @@ function TeamMarkerElement({
       {/* Operator count badge */}
       {team.operatorIds.length > 1 && (
         <div
-          className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(6,8,16,0.92)] px-1.5 py-px text-[0.55rem] font-semibold tabular-nums text-silver/80 ring-1 ring-silver/15"
+          className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(6,8,16,0.92)] px-1.5 py-px text-xs font-semibold tabular-nums text-silver/80 ring-1 ring-silver/15"
           style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.3)" }}
         >
           {team.operatorIds.length}
@@ -380,7 +380,7 @@ function EnemyMarkerElement({ enemy, isDimmed }: { enemy: RaidEnemyMarker; isDim
 
       {/* Boss label */}
       {enemy.threat === "boss" && (
-        <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-[rgba(6,8,16,0.9)] px-1.5 py-px text-[0.45rem] font-bold uppercase tracking-[0.2em] text-ember ring-1 ring-ember/20">
+        <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-[rgba(6,8,16,0.9)] px-1.5 py-px text-xs font-bold uppercase tracking-[0.2em] text-ember ring-1 ring-ember/20">
           BOSS
         </div>
       )}
@@ -569,17 +569,13 @@ function CommandPanel({ snapshot, revealPct }: { snapshot: RaidWorldSnapshot; re
           <p className="max-w-[13rem] truncate font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-gold/90">
             {snapshot.dungeonName}
           </p>
-          <p className="mt-0.5 text-[0.625rem] uppercase tracking-[0.2em] text-silver/40">
-            Contract Site
-          </p>
+          <p className="mt-0.5 text-xs uppercase tracking-[0.2em] text-silver/40">Contract Site</p>
         </div>
 
         {/* Exploration progress */}
         <div className="border-b border-[rgba(200,168,76,0.04)] px-4 py-3">
           <div className="flex items-baseline justify-between">
-            <span className="text-[0.625rem] uppercase tracking-[0.15em] text-silver/45">
-              Explored
-            </span>
+            <span className="text-xs uppercase tracking-[0.15em] text-silver/45">Explored</span>
             <span className="font-[family-name:var(--font-display)] text-lg font-light tabular-nums text-gold/80">
               {revealPct}
               <span className="text-xs text-gold/50">%</span>
@@ -627,7 +623,7 @@ function CommandPanel({ snapshot, revealPct }: { snapshot: RaidWorldSnapshot; re
               detected
             </span>
             {bossPresent && (
-              <span className="rounded-full bg-magma/15 px-1.5 py-px text-[0.5rem] font-bold uppercase tracking-wider text-magma ring-1 ring-magma/20">
+              <span className="rounded-full bg-magma/15 px-1.5 py-px text-xs font-bold uppercase tracking-wider text-magma ring-1 ring-magma/20">
                 Boss
               </span>
             )}
@@ -655,9 +651,7 @@ function CommandPanel({ snapshot, revealPct }: { snapshot: RaidWorldSnapshot; re
         {/* Team goal breakdown (if teams exist) */}
         {snapshot.teams.length > 0 && (
           <div className="border-t border-[rgba(200,168,76,0.04)] px-4 py-3">
-            <p className="mb-2 text-[0.625rem] uppercase tracking-[0.15em] text-silver/40">
-              Team Activity
-            </p>
+            <p className="mb-2 text-xs uppercase tracking-[0.15em] text-silver/40">Team Activity</p>
             <div className="space-y-1.5">
               {snapshot.teams.map((team) => {
                 const goalStyle = getRaidGoalPresentation(team.goal);
@@ -670,11 +664,11 @@ function CommandPanel({ snapshot, revealPct }: { snapshot: RaidWorldSnapshot; re
                         boxShadow: `0 0 4px ${goalStyle.glow}`,
                       }}
                     />
-                    <span className="flex-1 text-[0.6875rem] text-silver/55">
+                    <span className="flex-1 text-sm text-silver/55">
                       {formatTeamLabel(team.teamId)}
                     </span>
                     <span
-                      className="text-[0.6rem] font-medium uppercase tracking-wider"
+                      className="text-xs font-medium uppercase tracking-wider"
                       style={{ color: goalStyle.color }}
                     >
                       {goalStyle.badgeLabel}

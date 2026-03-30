@@ -50,11 +50,9 @@ function EventLine({ event }: { event: RaidEvent }) {
 
   return (
     <div className="flex items-start gap-2 py-1">
-      <span className={`mt-px text-[0.6rem] leading-none ${style.accent}`}>{style.icon}</span>
-      <p className="flex-1 text-[0.6875rem] leading-snug text-silver/60">{event.message}</p>
-      <span className="shrink-0 pt-px text-[0.6rem] tabular-nums text-silver/40">
-        T{event.tick}
-      </span>
+      <span className={`mt-px text-xs leading-none ${style.accent}`}>{style.icon}</span>
+      <p className="flex-1 text-sm leading-snug text-silver/60">{event.message}</p>
+      <span className="shrink-0 pt-px text-xs tabular-nums text-silver/40">T{event.tick}</span>
     </div>
   );
 }
@@ -74,14 +72,14 @@ export function RaidEventFeed({ events, maxVisible = 8 }: RaidEventFeedProps) {
   if (visible.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-[rgba(200,168,76,0.06)] px-3 py-3">
-        <p className="text-center text-[0.6875rem] text-silver/40">No recent events</p>
+        <p className="text-center text-sm text-silver/40">No recent events</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-0.5">
-      <p className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-silver/50">
+      <p className="text-sm font-medium uppercase tracking-[0.12em] text-silver/50">
         Recent Events
       </p>
       <div className="max-h-40 space-y-0 overflow-y-auto">
@@ -90,7 +88,7 @@ export function RaidEventFeed({ events, maxVisible = 8 }: RaidEventFeedProps) {
         ))}
       </div>
       {events.length > maxVisible && (
-        <p className="pt-1 text-center text-[0.6rem] text-silver/40">
+        <p className="pt-1 text-center text-xs text-silver/40">
           +{events.length - maxVisible} earlier
         </p>
       )}

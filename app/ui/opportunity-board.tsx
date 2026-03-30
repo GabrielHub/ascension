@@ -118,7 +118,7 @@ export function OpportunityBoard({
           className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
         >
           <div className={emptyStateIconClass}>&#9672;</div>
-          <p className="text-[0.7rem] font-medium text-gold/70">No opportunities posted</p>
+          <p className="text-sm font-medium text-gold/70">No opportunities posted</p>
           <p className="mt-1 text-xs text-silver/60">
             Opportunities appear as {guildName} gains reputation
           </p>
@@ -142,7 +142,7 @@ export function OpportunityBoard({
 
       {/* Phase 2: Team readiness summary */}
       {livingOperators.length > 0 && (
-        <div className="flex items-center gap-3 text-[0.6875rem]">
+        <div className="flex items-center gap-3 text-sm">
           <span className="text-gold/70">{willingCount} willing</span>
           {refusingCount > 0 && <span className="text-ember">{refusingCount} refusing</span>}
         </div>
@@ -169,7 +169,7 @@ function RosterThinWarning({ rosterPressure }: { rosterPressure: RosterPressureV
       <span className={`text-xs font-medium ${isCritical ? "text-magma" : "text-ember"}`}>
         {isCritical ? "Roster critical" : "Roster strained"}
       </span>
-      <span className="text-[0.6875rem] text-silver/60">
+      <span className="text-sm text-silver/60">
         {rosterPressure.livingOperatorCount}/{rosterPressure.operatorCapacity} on roster
         {rosterPressure.vacancyCount > 0 &&
           ` · ${rosterPressure.vacancyCount} ${rosterPressure.vacancyCount === 1 ? "vacancy" : "vacancies"}`}

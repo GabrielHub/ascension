@@ -102,7 +102,7 @@ function LazySvgPreview({ src, alt, className }: { src: string; alt: string; cla
     return (
       <div
         ref={ref}
-        className={`flex items-center justify-center text-[0.6875rem] text-silver/60 ${className ?? ""}`}
+        className={`flex items-center justify-center text-sm text-silver/60 ${className ?? ""}`}
       >
         &times;
       </div>
@@ -224,7 +224,7 @@ function ColorSwatch({ color, label }: { color: string; label: string }) {
         className="h-3 w-3 rounded-sm border border-[rgba(200,168,76,0.12)]"
         style={{ backgroundColor: color }}
       />
-      <span className="text-[0.6rem] text-silver/50">{label}</span>
+      <span className="text-xs text-silver/50">{label}</span>
     </div>
   );
 }
@@ -292,7 +292,7 @@ function OperatorPlayground() {
             {recipes.length} authored recipes &mdash; modular portrait assembly from head, hair,
             eyes, face, and body parts with palette and skin tone
           </p>
-          <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/50">
+          <p className="mt-2 text-sm leading-relaxed text-silver/50">
             Each recipe drives both the full portrait and the HQ in-world actor marker from the same
             identity source. Marker colors shown below each portrait are derived automatically.
           </p>
@@ -317,7 +317,7 @@ function OperatorPlayground() {
                   <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
                     {recipe.name}
                   </h3>
-                  <span className="badge badge-gold text-[0.6rem]">{recipe.id}</span>
+                  <span className="badge badge-gold text-xs">{recipe.id}</span>
                 </div>
 
                 {/* Recipe metadata */}
@@ -333,7 +333,7 @@ function OperatorPlayground() {
                   ].map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.04)] px-2 py-0.5 text-[0.6rem] text-gold/60"
+                      className="rounded-full border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.04)] px-2 py-0.5 text-xs text-gold/60"
                     >
                       {tag}
                     </span>
@@ -344,7 +344,7 @@ function OperatorPlayground() {
                 <div className="flex items-end gap-6">
                   {/* Detail */}
                   <div>
-                    <p className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
                       Detail
                     </p>
                     <div className="h-52 w-[calc(120*13rem/160)] rounded-lg border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)]">
@@ -353,7 +353,7 @@ function OperatorPlayground() {
                   </div>
                   {/* Roster */}
                   <div>
-                    <p className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
                       Roster
                     </p>
                     <div className="h-14 w-[calc(120*3.5rem/160)] rounded border border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)]">
@@ -362,7 +362,7 @@ function OperatorPlayground() {
                   </div>
                   {/* Actor marker */}
                   <div>
-                    <p className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
                       HQ Marker
                     </p>
                     <div className="flex items-end gap-3">
@@ -378,14 +378,14 @@ function OperatorPlayground() {
 
                 {/* Marker color swatches */}
                 <div className="mt-4 flex items-center gap-4">
-                  <span className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-gold/40">
+                  <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/40">
                     Derived
                   </span>
                   <ColorSwatch color={marker.hairColor} label="hair" />
                   <ColorSwatch color={marker.clothingColor} label="clothing" />
                   <ColorSwatch color={marker.accentColor} label="accent" />
                   <ColorSwatch color={marker.skinColor} label="skin" />
-                  <span className="text-[0.6rem] text-silver/40">{marker.build}</span>
+                  <span className="text-xs text-silver/40">{marker.build}</span>
                 </div>
               </div>
             );
@@ -416,8 +416,8 @@ function OperatorPlayground() {
           </p>
         </div>
         <div className="mt-5 flex items-center gap-3">
-          <span className="badge badge-gold text-[0.6rem]">{recipes.length} recipes</span>
-          <span className="badge badge-ember text-[0.6rem]">approval pending</span>
+          <span className="badge badge-gold text-xs">{recipes.length} recipes</span>
+          <span className="badge badge-ember text-xs">approval pending</span>
         </div>
       </section>
     </div>
@@ -578,10 +578,8 @@ function EnvAssetCard({
         <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
           {name}
         </h3>
-        <span className="badge badge-gold text-[0.6rem]">{part.status}</span>
-        {part.roomFamily && (
-          <span className="badge badge-slate text-[0.6rem]">{part.roomFamily}</span>
-        )}
+        <span className="badge badge-gold text-xs">{part.status}</span>
+        {part.roomFamily && <span className="badge badge-slate text-xs">{part.roomFamily}</span>}
       </div>
 
       {/* Tags */}
@@ -589,7 +587,7 @@ function EnvAssetCard({
         {part.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.04)] px-2 py-0.5 text-[0.6rem] text-gold/60"
+            className="rounded-full border border-[rgba(200,168,76,0.1)] bg-[rgba(200,168,76,0.04)] px-2 py-0.5 text-xs text-gold/60"
           >
             {tag}
           </span>
@@ -599,7 +597,7 @@ function EnvAssetCard({
       {/* Multi-scale previews */}
       {scales.map((scale) => (
         <div key={scale.label} className="mt-4">
-          <p className="mb-2 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
             {scale.label}
           </p>
           <div className="flex justify-center">
@@ -620,7 +618,7 @@ function EnvAssetCard({
       ))}
 
       {/* File path */}
-      <p className="mt-4 text-center text-[0.6rem] text-silver/40">
+      <p className="mt-4 text-center text-xs text-silver/40">
         <code>{src}</code>
       </p>
     </div>
@@ -648,7 +646,7 @@ function EnvCategorySection({
           {ENV_CATEGORY_LABELS[category]}
         </h2>
         <p className="mt-1 text-xs text-silver/60">{ENV_CATEGORY_DESCRIPTIONS[category]}</p>
-        <p className="mt-2 text-[0.6875rem] text-silver/40">
+        <p className="mt-2 text-sm text-silver/40">
           {categoryParts.length} asset{categoryParts.length !== 1 ? "s" : ""} &mdash;{" "}
           {categoryParts.filter((p) => p.status === "approved").length} approved,{" "}
           {categoryParts.filter((p) => p.status === "exploration").length} exploration
@@ -675,7 +673,7 @@ function ActorMarkerGrid() {
         <p className="mt-1 text-xs text-silver/60">
           All {recipes.length} operator recipes rendered as chibi tokens at HQ zoom scales
         </p>
-        <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/50">
+        <p className="mt-2 text-sm leading-relaxed text-silver/50">
           Marker identity derives from the same appearance recipe that drives the full portrait.
           Hair, clothing, accent, and skin colors are extracted automatically. Build affects body
           width. No second identity source.
@@ -685,10 +683,7 @@ function ActorMarkerGrid() {
         {/* Scale comparison header */}
         <div className="mb-6 flex items-end gap-6">
           {(["In-world (40px)", "Room zoom (24px)", "Minimap (12px)"] as const).map((label) => (
-            <p
-              key={label}
-              className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50"
-            >
+            <p key={label} className="text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
               {label}
             </p>
           ))}
@@ -714,7 +709,7 @@ function ActorMarkerGrid() {
                 {/* Name */}
                 <div className="w-28 shrink-0">
                   <p className="truncate text-xs font-medium text-silver-bright">{recipe.name}</p>
-                  <p className="text-[0.6rem] text-silver/40">{build}</p>
+                  <p className="text-xs text-silver/40">{build}</p>
                 </div>
 
                 {/* In-world scale */}
@@ -757,15 +752,13 @@ function EnvPresetSelector({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-gold/50">
-        Lighting
-      </span>
+      <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/50">Lighting</span>
       {ENV_LIGHTING_PRESETS.map((p) => (
         <button
           key={p.id}
           type="button"
           onClick={() => onChange(p.id)}
-          className={`rounded-md border px-2.5 py-1 text-[0.6875rem] transition-colors ${
+          className={`rounded-md border px-2.5 py-1 text-sm transition-colors ${
             activeId === p.id
               ? "border-gold/40 bg-[rgba(200,168,76,0.12)] text-gold"
               : "border-[rgba(200,168,76,0.08)] text-silver/60 hover:border-gold/20 hover:text-silver/80"
@@ -800,7 +793,7 @@ function SceneReviewBoard({
           against the shared room contract and supported by shell, structural, prop, and background
           assets.
         </p>
-        <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/50">
+        <p className="mt-2 text-sm leading-relaxed text-silver/50">
           The runtime keeps the shell separate. Room scenes are the review anchor, and their
           metadata must stay aligned with the canonical geometry so new states can be reviewed
           without depending on new art.
@@ -809,7 +802,7 @@ function SceneReviewBoard({
 
       <div className="grid gap-4 border-b border-[rgba(200,168,76,0.04)] px-6 py-5 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
             Building Shell Backdrop
           </p>
           <div className="flex justify-center">
@@ -832,7 +825,7 @@ function SceneReviewBoard({
           </div>
         </div>
         <div>
-          <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
             Canonical Scene Geometry
           </p>
           <SceneContractSummary contract={contract} />
@@ -842,15 +835,15 @@ function SceneReviewBoard({
       <div className="px-6 py-5">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <p className="text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
               Progression Review
             </p>
-            <p className="mt-1 text-[0.6875rem] text-silver/50">
+            <p className="mt-1 text-sm text-silver/50">
               Approved scene states are grouped by series tag or room family. Missing steps stay
               visible so future scene art can be reviewed without changing the layout.
             </p>
           </div>
-          <p className="text-[0.625rem] text-silver/40">{sceneGroups.length} scene series</p>
+          <p className="text-xs text-silver/40">{sceneGroups.length} scene series</p>
         </div>
 
         <div className="space-y-4">
@@ -866,13 +859,13 @@ function SceneReviewBoard({
                     {group.label}
                   </h3>
                   {group.roomFamily && (
-                    <span className="badge badge-slate text-[0.6rem]">{group.roomFamily}</span>
+                    <span className="badge badge-slate text-xs">{group.roomFamily}</span>
                   )}
-                  <span className="badge badge-gold text-[0.6rem]">
+                  <span className="badge badge-gold text-xs">
                     {filledCount}/{group.steps.length} states
                   </span>
                   {filledCount > 1 && (
-                    <span className="text-[0.6rem] text-gold/40">
+                    <span className="text-xs text-gold/40">
                       {group.steps
                         .filter((s) => !s.isPlaceholder)
                         .map((s) => s.index)
@@ -890,12 +883,12 @@ function SceneReviewBoard({
                           className="flex min-h-[13rem] flex-col justify-between rounded-lg border border-dashed border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.22)] p-3"
                         >
                           <div>
-                            <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                            <p className="text-xs uppercase tracking-[0.18em] text-gold/40">
                               State {step.index}
                             </p>
                             <p className="mt-2 text-xs text-silver/60">Pending scene state</p>
                           </div>
-                          <p className="text-[0.625rem] leading-relaxed text-silver/40">
+                          <p className="text-xs leading-relaxed text-silver/40">
                             Placeholder only. Keep the geometry and metadata contract stable until
                             the new room art arrives.
                           </p>
@@ -911,10 +904,10 @@ function SceneReviewBoard({
                         className="flex min-h-[13rem] flex-col gap-3 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.32)] p-3"
                       >
                         <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                          <p className="text-xs uppercase tracking-[0.18em] text-gold/40">
                             State {step.index}
                           </p>
-                          <span className="badge badge-gold text-[0.55rem]">{part.status}</span>
+                          <span className="badge badge-gold text-xs">{part.status}</span>
                         </div>
                         <div
                           className="relative flex h-32 items-center justify-center overflow-hidden rounded-md border"
@@ -932,7 +925,7 @@ function SceneReviewBoard({
                             />
                           )}
                         </div>
-                        <div className="space-y-1 text-[0.6875rem] text-silver/60">
+                        <div className="space-y-1 text-sm text-silver/60">
                           <p className="text-silver-bright">{name}</p>
                           <p>Room family: {part.roomFamily ?? "n/a"}</p>
                           <p>
@@ -952,7 +945,7 @@ function SceneReviewBoard({
       </div>
 
       <div className="border-t border-[rgba(200,168,76,0.04)] px-6 py-5">
-        <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+        <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
           Supporting Assets
         </p>
         <div className="grid gap-6 sm:grid-cols-2">
@@ -980,9 +973,9 @@ function SceneReviewBoard({
                   <h3 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
                     {asset.label}
                   </h3>
-                  <span className="badge badge-gold text-[0.6rem]">{asset.detail}</span>
+                  <span className="badge badge-gold text-xs">{asset.detail}</span>
                 </div>
-                <p className="mb-3 text-[0.6875rem] text-silver/50">{asset.description}</p>
+                <p className="mb-3 text-sm text-silver/50">{asset.description}</p>
                 <div
                   className="relative h-44 w-full overflow-hidden rounded-lg border"
                   style={{ backgroundColor: preset.background, borderColor: preset.border }}
@@ -999,7 +992,7 @@ function SceneReviewBoard({
                     />
                   )}
                 </div>
-                <p className="mt-2 text-center text-[0.6rem] text-silver/40">
+                <p className="mt-2 text-center text-xs text-silver/40">
                   <code>{asset.previewSrc}</code>
                 </p>
               </div>
@@ -1049,10 +1042,8 @@ function HqEnvironmentPlayground() {
                 key={cat}
                 className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] px-3 py-2"
               >
-                <p className="text-[0.6875rem] font-medium text-silver-bright">
-                  {ENV_CATEGORY_LABELS[cat]}
-                </p>
-                <p className="text-[0.6rem] text-gold/50">
+                <p className="text-sm font-medium text-silver-bright">{ENV_CATEGORY_LABELS[cat]}</p>
+                <p className="text-xs text-gold/50">
                   {count} asset{count !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -1097,7 +1088,7 @@ function HqEnvironmentPlayground() {
           <p>
             <strong className="text-gold">Promoted assets:</strong> Shell, room scene, structure,
             prop, and background assets have been promoted to{" "}
-            <span className="badge badge-gold text-[0.6rem]">approved</span> status and copied from{" "}
+            <span className="badge badge-gold text-xs">approved</span> status and copied from{" "}
             <code className="text-gold/70">reference/</code> into canonical{" "}
             <code className="text-gold/70">parts/</code> and{" "}
             <code className="text-gold/70">recipes/</code> directories. Actor markers remain in
@@ -1151,9 +1142,7 @@ export function SvgPlaygroundPage() {
             <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.15em] text-gold">
               SVG Playground
             </h1>
-            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
-              {ASSET_CLASS_DESCRIPTIONS[assetClass]}
-            </p>
+            <p className="mt-0.5 text-sm text-silver/60">{ASSET_CLASS_DESCRIPTIONS[assetClass]}</p>
           </div>
           <Link to="/svg-assets" className="btn-ghost text-xs">
             asset viewer &rarr;

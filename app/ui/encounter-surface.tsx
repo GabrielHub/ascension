@@ -394,19 +394,19 @@ function OperatorDetailPanel({
           <div className="mt-2 grid grid-cols-3 gap-2">
             {actor.baseAttack != null && (
               <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
-                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">ATK</div>
+                <div className="text-xs uppercase tracking-[0.1em] text-silver/35">ATK</div>
                 <div className="text-sm tabular-nums text-silver-bright">{actor.baseAttack}</div>
               </div>
             )}
             {actor.baseDefense != null && (
               <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
-                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">DEF</div>
+                <div className="text-xs uppercase tracking-[0.1em] text-silver/35">DEF</div>
                 <div className="text-sm tabular-nums text-silver-bright">{actor.baseDefense}</div>
               </div>
             )}
             {actor.baseSpeed != null && (
               <div className="rounded bg-[rgba(6,6,8,0.5)] px-2 py-1.5 text-center">
-                <div className="text-[0.625rem] uppercase tracking-[0.1em] text-silver/35">SPD</div>
+                <div className="text-xs uppercase tracking-[0.1em] text-silver/35">SPD</div>
                 <div className="text-sm tabular-nums text-silver-bright">{actor.baseSpeed}</div>
               </div>
             )}
@@ -417,9 +417,7 @@ function OperatorDetailPanel({
       {/* Abilities section */}
       {(actor.skillId || actor.ultimateId || actor.regularAttackId) && (
         <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
-            Abilities
-          </h4>
+          <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">Abilities</h4>
           <div className="space-y-1.5">
             {actor.regularAttackId && (
               <AbilityRow id={actor.regularAttackId} kind="Attack" icon="\u2694" />
@@ -433,9 +431,7 @@ function OperatorDetailPanel({
       {/* Passives section */}
       {actor.passiveIds && actor.passiveIds.length > 0 && (
         <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
-            Passives
-          </h4>
+          <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">Passives</h4>
           <div className="space-y-1.5">
             {actor.passiveIds.map((pid) => (
               <AbilityRow key={pid} id={pid} kind="Passive" icon="\u2727" />
@@ -447,7 +443,7 @@ function OperatorDetailPanel({
       {/* Active status effects */}
       {actor.activeStatuses.length > 0 && (
         <div className="px-4 py-3">
-          <h4 className="mb-2 text-[0.6875rem] uppercase tracking-[0.14em] text-silver/40">
+          <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">
             Status Effects
           </h4>
           <div className="space-y-1">
@@ -478,7 +474,7 @@ function AbilityRow({ id, kind, icon }: { id: string; kind: string; icon: string
       <span className="text-sm leading-none text-silver/50">{icon}</span>
       <div className="min-w-0 flex-1">
         <span className="text-xs font-medium text-silver-bright">{meta.label}</span>
-        <span className="ml-1.5 text-[0.625rem] text-silver/30">{kind}</span>
+        <span className="ml-1.5 text-xs text-silver/30">{kind}</span>
       </div>
     </div>
   );
@@ -538,7 +534,7 @@ function SquadMemberCard({
 
         {/* Role tag — top right corner of portrait */}
         {roleMeta && (
-          <span className="absolute top-1.5 right-1.5 rounded bg-[rgba(6,6,8,0.7)] px-1 py-0.5 text-[0.5625rem] uppercase tracking-[0.1em] text-gold-dim">
+          <span className="absolute top-1.5 right-1.5 rounded bg-[rgba(6,6,8,0.7)] px-1 py-0.5 text-xs uppercase tracking-[0.1em] text-gold-dim">
             {roleMeta.label}
           </span>
         )}
@@ -563,7 +559,7 @@ function SquadMemberCard({
       {actor.condition !== "alive" && (
         <div className="border-t border-[rgba(200,168,76,0.06)] px-2 py-1 text-center">
           <Tooltip content={getEncounterConditionMeta(actor.condition).tip} side="top">
-            <span className="text-[0.5625rem] uppercase tracking-[0.1em] text-magma">
+            <span className="text-xs uppercase tracking-[0.1em] text-magma">
               {getEncounterConditionMeta(actor.condition).label}
             </span>
           </Tooltip>
@@ -577,7 +573,7 @@ function SquadMemberCard({
             const meta = getStatusMeta(s.statusId);
             return (
               <Tooltip key={`${s.statusId}-${i}`} content={meta.tip} side="top">
-                <span className="rounded bg-[rgba(200,168,76,0.06)] px-1 py-0.5 text-[0.5625rem] uppercase tracking-[0.04em] text-gold-dim">
+                <span className="rounded bg-[rgba(200,168,76,0.06)] px-1 py-0.5 text-xs uppercase tracking-[0.04em] text-gold-dim">
                   {meta.label}
                   <span className="ml-0.5 text-silver/25">({s.remainingDuration})</span>
                 </span>
@@ -680,9 +676,7 @@ function InterventionCard({
           ))}
         </div>
       </div>
-      {def?.summary && (
-        <p className="text-[0.6875rem] leading-relaxed text-silver/45">{def.summary}</p>
-      )}
+      {def?.summary && <p className="text-sm leading-relaxed text-silver/45">{def.summary}</p>}
     </button>
   );
 }
@@ -764,7 +758,7 @@ function TraceLog({ entries }: { entries: readonly EncounterActionRecord[] }) {
           {entries.map((entry, i) => (
             <div
               key={i}
-              className="border-b border-[rgba(200,168,76,0.03)] py-0.5 text-[0.6875rem] leading-relaxed text-silver/60"
+              className="border-b border-[rgba(200,168,76,0.03)] py-0.5 text-sm leading-relaxed text-silver/60"
             >
               <span className="mr-2 tabular-nums text-silver/30">R{entry.round}</span>
               <span className="mr-1 text-silver/50">[{entry.actionKind}]</span>

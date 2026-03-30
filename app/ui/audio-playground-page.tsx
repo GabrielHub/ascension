@@ -78,7 +78,7 @@ function VolumeSlider({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="w-20 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+      <span className="w-20 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
         {label}
       </span>
       <div className="relative flex-1">
@@ -105,7 +105,7 @@ function VolumeSlider({
             disabled:opacity-30 disabled:cursor-not-allowed"
         />
       </div>
-      <span className="w-12 text-right font-[family-name:var(--font-display)] text-[0.6875rem] tabular-nums text-silver/50">
+      <span className="w-12 text-right font-[family-name:var(--font-display)] text-sm tabular-nums text-silver/50">
         {value} dB
       </span>
     </div>
@@ -191,9 +191,9 @@ function SfxCueRow({
           <span className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
             {cue.label}
           </span>
-          <span className="badge badge-gold text-[0.55rem]">{cue.id}</span>
+          <span className="badge badge-gold text-xs">{cue.id}</span>
         </div>
-        <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-silver/50">{cue.description}</p>
+        <p className="mt-0.5 text-sm leading-relaxed text-silver/50">{cue.description}</p>
       </div>
 
       {/* Playback indicator dot */}
@@ -327,7 +327,7 @@ export function AudioPlaygroundPage() {
             <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.15em] text-gold">
               Audio Playground &mdash; SFX &amp; Ambience
             </h1>
-            <p className="mt-0.5 text-[0.6875rem] text-silver/60">
+            <p className="mt-0.5 text-sm text-silver/60">
               Phase 1 cue review &mdash; SFX-first rollout with restrained ambience beds
             </p>
           </div>
@@ -364,7 +364,7 @@ export function AudioPlaygroundPage() {
                   {engineState === "closed" && "Audio engine disposed"}
                 </span>
               </div>
-              <p className="mt-2 text-[0.6875rem] text-silver/55">
+              <p className="mt-2 text-sm text-silver/55">
                 Music:{" "}
                 <span className="text-silver-bright">{isMusicPlaying ? "Playing" : "Stopped"}</span>
               </p>
@@ -384,22 +384,22 @@ export function AudioPlaygroundPage() {
                 <button
                   type="button"
                   onClick={handleToggleMusic}
-                  className="btn-ghost px-3 py-1 text-[0.6875rem]"
+                  className="btn-ghost px-3 py-1 text-sm"
                 >
                   {isMusicPlaying ? "Stop Music" : "Start Music"}
                 </button>
                 <button
                   type="button"
                   onClick={handleResetMix}
-                  className="btn-ghost px-3 py-1 text-[0.6875rem]"
+                  className="btn-ghost px-3 py-1 text-sm"
                 >
                   Reset Mix
                 </button>
-                <span className="text-[0.6875rem] text-silver/55">
+                <span className="text-sm text-silver/55">
                   {sfxCount} SFX cues &middot; intermittent ambient music
                 </span>
               </div>
-              <p className="mb-3 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/50">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
                 Gain Staging
               </p>
               <VolumeSlider label="SFX" value={sfxVolume} onChange={handleSfxVolume} />

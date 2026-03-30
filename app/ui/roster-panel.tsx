@@ -128,18 +128,16 @@ function OperatorRow({
         {/* Phase 2: risk indicators inline */}
         {op.quitRisk && (
           <Tooltip content="Critical morale — may leave the team" side="top">
-            <span className="shrink-0 text-[0.6rem] text-magma">!</span>
+            <span className="shrink-0 text-xs text-magma">!</span>
           </Tooltip>
         )}
         {op.retentionRisk && !op.quitRisk && (
           <Tooltip content="Low loyalty — retention at risk" side="top">
-            <span className="shrink-0 text-[0.6rem] text-ember">!</span>
+            <span className="shrink-0 text-xs text-ember">!</span>
           </Tooltip>
         )}
         <span className="badge badge-gold ml-auto shrink-0">{getRoleMeta(op.roleTag).label}</span>
-        <span className={`shrink-0 text-[0.6875rem] ${statusLabelClass(op)}`}>
-          {statusLabel(op)}
-        </span>
+        <span className={`shrink-0 text-sm ${statusLabelClass(op)}`}>{statusLabel(op)}</span>
       </button>
 
       {isExpanded && (
@@ -157,7 +155,7 @@ function OperatorRow({
               <div className="mt-0.5 flex items-center gap-1.5">
                 <span className="badge badge-gold">{getRoleMeta(op.roleTag).label}</span>
                 {op.specialtyTag && (
-                  <span className="text-[0.6875rem] text-gold/60">
+                  <span className="text-sm text-gold/60">
                     {getSpecialtyMeta(op.specialtyTag).label}
                   </span>
                 )}
@@ -165,9 +163,7 @@ function OperatorRow({
               </div>
               {op.availableForRaid && (
                 <Tooltip content="Healthy and unassigned — can join a raid" side="top">
-                  <span className="mt-1 inline-block text-[0.6875rem] text-gold/70">
-                    Raid-ready
-                  </span>
+                  <span className="mt-1 inline-block text-sm text-gold/70">Raid-ready</span>
                 </Tooltip>
               )}
             </div>
@@ -190,7 +186,7 @@ function OperatorRow({
           </div>
 
           {/* Needs */}
-          <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
+          <div className="flex items-center gap-2 text-sm text-silver/50">
             <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
               <span>Fatigue {Math.round(op.needFatigue)}</span>
             </Tooltip>
@@ -210,7 +206,7 @@ function OperatorRow({
               {op.autonomyReasons.map((reason) => (
                 <div
                   key={reason}
-                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-[0.6875rem] shadow-[inset_2px_0_0_currentColor] ${
+                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm shadow-[inset_2px_0_0_currentColor] ${
                     op.quitRisk ? "bg-magma/8 text-magma" : "bg-ember/8 text-ember"
                   }`}
                 >
@@ -223,18 +219,16 @@ function OperatorRow({
           {recoverySummary && (
             <div className="glass-card-inset space-y-1.5 px-2 py-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+                <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
                   {recoverySummary.statusLabel}
                 </span>
-                <span className="text-[0.625rem] text-ember">
+                <span className="text-xs text-ember">
                   {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
                 </span>
               </div>
-              <p className="text-[0.6875rem] leading-relaxed text-silver/60">
-                {recoverySummary.reason}
-              </p>
+              <p className="text-sm leading-relaxed text-silver/60">{recoverySummary.reason}</p>
               {recoverySummary.policyLines.map((line) => (
-                <p key={line} className="text-[0.6875rem] leading-relaxed text-gold/70">
+                <p key={line} className="text-sm leading-relaxed text-gold/70">
                   {line}
                 </p>
               ))}
@@ -244,26 +238,24 @@ function OperatorRow({
           {retentionLine && (
             <div className="glass-card-inset px-2 py-1.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+                <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
                   Retention Pressure
                 </span>
-                <span className="text-[0.625rem] text-ember">
+                <span className="text-xs text-ember">
                   {getPolicyOptionLabel("rosterFlow", policies.rosterFlow)}
                 </span>
               </div>
-              <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-silver/60">
-                {retentionLine}
-              </p>
+              <p className="mt-0.5 text-sm leading-relaxed text-silver/60">{retentionLine}</p>
             </div>
           )}
 
           {/* Phase 2: Room culture summary if assigned to a room */}
           {assignedRoomCulture && (
             <div className="glass-card-inset px-2 py-1.5">
-              <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/50">
                 Room: {assignedRoomCulture.roomName}
               </div>
-              <div className="mt-0.5 text-[0.6875rem] text-silver/55">
+              <div className="mt-0.5 text-sm text-silver/55">
                 {getCultureSummaryLabel(assignedRoomCulture.summary)}
               </div>
               <div className="mt-1 flex flex-wrap gap-1">
@@ -284,11 +276,9 @@ function OperatorRow({
           {/* Phase 2: Team affiliation */}
           {operatorTeam && (
             <div className="glass-card-inset px-2 py-1.5">
-              <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">Team</div>
-              <div className="mt-0.5 text-[0.6875rem] text-silver/60">
-                {operatorTeam.statusSummary}
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-[0.6875rem] text-silver/50">
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/50">Team</div>
+              <div className="mt-0.5 text-sm text-silver/60">{operatorTeam.statusSummary}</div>
+              <div className="mt-1 flex items-center gap-2 text-sm text-silver/50">
                 <span>{operatorTeam.memberNames.join(", ")}</span>
                 <span className="opacity-30">&middot;</span>
                 <Tooltip content="Team coordination. Builds through shared missions" side="top">
@@ -296,7 +286,7 @@ function OperatorRow({
                 </Tooltip>
               </div>
               {operatorTeam.explanationReasons.slice(0, 2).map((reason) => (
-                <div key={reason} className="mt-1 text-[0.6875rem] text-silver/50">
+                <div key={reason} className="mt-1 text-sm text-silver/50">
                   {reason}
                 </div>
               ))}
@@ -307,9 +297,7 @@ function OperatorRow({
           {bonds.length > 0 && (
             <div>
               <Tooltip content="Interpersonal relationships formed through shared work" side="top">
-                <div className="mb-1 text-[0.6875rem] uppercase tracking-[0.12em] text-gold/50">
-                  Bonds
-                </div>
+                <div className="mb-1 text-sm uppercase tracking-[0.12em] text-gold/50">Bonds</div>
               </Tooltip>
               {bonds.map((rel) => {
                 const partnerName =
@@ -331,7 +319,7 @@ function OperatorRow({
                 return (
                   <div
                     key={`${rel.operatorAId}-${rel.operatorBId}`}
-                    className="flex items-center justify-between py-0.5 text-[0.6875rem]"
+                    className="flex items-center justify-between py-0.5 text-sm"
                   >
                     <span className="text-silver/70">{partnerName}</span>
                     <Tooltip content={cohesionTip} side="top">
@@ -356,7 +344,7 @@ function FallenRow({ op }: { op: OperatorViewModel }) {
       <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-magma/50" />
       <span className="min-w-0 truncate text-xs text-silver/50 line-through">{op.name}</span>
       <Tooltip content="Killed in action" side="top">
-        <span className="ml-auto text-[0.6875rem] text-magma/70">KIA</span>
+        <span className="ml-auto text-sm text-magma/70">KIA</span>
       </Tooltip>
     </div>
   );
@@ -397,14 +385,14 @@ function StaffRow({
         <span className="badge badge-slate ml-auto shrink-0">
           {getTagMeta(member.roleTag).label}
         </span>
-        <span className="shrink-0 text-[0.6875rem] text-silver/40">
+        <span className="shrink-0 text-sm text-silver/40">
           {isAssigned ? "assigned" : member.status}
         </span>
       </button>
 
       {isExpanded && (
         <div className="animate-enter ml-4 mt-1 border-l border-gold/10 pl-3 pb-1.5">
-          <div className="flex items-center gap-2 text-[0.6875rem] text-silver/50">
+          <div className="flex items-center gap-2 text-sm text-silver/50">
             <Tooltip content="Daily wage drawn from treasury" side="top">
               <span>${member.wage}/day</span>
             </Tooltip>
@@ -416,7 +404,7 @@ function StaffRow({
               {isAssigned && (
                 <button
                   type="button"
-                  className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
+                  className="btn-ghost px-2 py-0.5 text-sm"
                   onClick={() => onAssign(undefined)}
                 >
                   unassign
@@ -430,7 +418,7 @@ function StaffRow({
                 >
                   <button
                     type="button"
-                    className="btn-ghost px-2 py-0.5 text-[0.6875rem]"
+                    className="btn-ghost px-2 py-0.5 text-sm"
                     onClick={() => onAssign(room.id)}
                   >
                     {room.name.toLowerCase()}
@@ -494,15 +482,15 @@ function VisitorRow({
       <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5">
         <div className="min-w-0 flex-1">
           <span className="text-xs font-medium text-silver-bright">{visitor.name}</span>
-          <span className="ml-1.5 text-[0.6875rem] text-gold/60">
+          <span className="ml-1.5 text-sm text-gold/60">
             {getRoleMeta(visitor.desiredRoleTag).label}
           </span>
           {visitor.queueState === "deferred" && (
-            <span className="ml-1.5 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[0.625rem] uppercase tracking-[0.12em] text-gold/70">
+            <span className="ml-1.5 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-xs uppercase tracking-[0.12em] text-gold/70">
               Deferred
             </span>
           )}
-          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-silver/45">
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-silver/45">
             <span>Quality {Math.round(visitor.quality)}</span>
             <span className="opacity-30">&middot;</span>
             <span>{metaLine}</span>
@@ -515,7 +503,7 @@ function VisitorRow({
             type="button"
             data-testid="visitor-recruit"
             data-visitor-id={visitor.id}
-            className={`shrink-0 px-2 py-0.5 text-[0.6875rem] ${
+            className={`shrink-0 px-2 py-0.5 text-sm ${
               visitor.canAccept || visitor.canReplace
                 ? "btn-primary"
                 : "btn-ghost cursor-not-allowed text-silver/30"
@@ -539,7 +527,7 @@ function VisitorRow({
           >
             <button
               type="button"
-              className={`btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem] ${
+              className={`btn-ghost shrink-0 px-1.5 py-0.5 text-sm ${
                 visitor.canDefer ? "" : "cursor-not-allowed text-silver/30"
               }`}
               onClick={onDefer}
@@ -552,7 +540,7 @@ function VisitorRow({
           <Tooltip content="Remove this deferred recruit from reserve" side="top">
             <button
               type="button"
-              className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+              className="btn-ghost shrink-0 px-1.5 py-0.5 text-sm"
               onClick={onDismiss}
             >
               dismiss
@@ -565,7 +553,7 @@ function VisitorRow({
               type="button"
               data-testid="visitor-pass"
               data-visitor-id={visitor.id}
-              className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+              className="btn-ghost shrink-0 px-1.5 py-0.5 text-sm"
               onClick={onReject}
             >
               pass
@@ -576,9 +564,7 @@ function VisitorRow({
 
       {showReplacePicker && visitor.canReplace && replaceableOperators.length > 0 && (
         <div className="animate-enter ml-4 mt-1.5 space-y-1.5 border-l border-gold/10 pl-3 pb-2">
-          <div className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
-            Replace Operator
-          </div>
+          <div className="text-xs uppercase tracking-[0.12em] text-gold/50">Replace Operator</div>
           <div className="flex flex-wrap gap-1.5">
             {replaceableOperators.map((operator) => (
               <Tooltip
@@ -592,7 +578,7 @@ function VisitorRow({
               >
                 <button
                   type="button"
-                  className={`btn-ghost px-2 py-0.5 text-[0.6875rem] ${
+                  className={`btn-ghost px-2 py-0.5 text-sm ${
                     operator.canBeReplaced ? "" : "cursor-not-allowed text-silver/30"
                   }`}
                   disabled={!operator.canBeReplaced}
@@ -626,7 +612,7 @@ function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
     return (
       <button
         type="button"
-        className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+        className="btn-ghost px-1.5 py-0.5 text-sm"
         onClick={() => setOpen(true)}
       >
         + hire
@@ -640,7 +626,7 @@ function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
         <button
           key={roleTag}
           type="button"
-          className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+          className="btn-ghost px-1.5 py-0.5 text-sm"
           onClick={() => {
             onHire(roleTag);
             setOpen(false);
@@ -651,7 +637,7 @@ function StaffHireMenu({ onHire }: { onHire: (roleTag: string) => void }) {
       ))}
       <button
         type="button"
-        className="btn-ghost px-1 py-0.5 text-[0.6875rem] text-silver/40"
+        className="btn-ghost px-1 py-0.5 text-sm text-silver/40"
         onClick={() => setOpen(false)}
       >
         &times;
@@ -713,7 +699,7 @@ export function RosterPanel({
       {/* ── Pressure banner ─────────────────────────────── */}
       {rosterPressure.replacementPressureLevel !== "stable" && (
         <div
-          className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-[0.6875rem] ${
+          className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm ${
             rosterPressure.replacementPressureLevel === "critical"
               ? "bg-magma/8 text-magma shadow-[inset_2px_0_0_var(--color-magma)]"
               : "bg-ember/6 text-ember shadow-[inset_2px_0_0_var(--color-ember)]"
@@ -740,7 +726,7 @@ export function RosterPanel({
           <Tooltip content="Active operators / maximum capacity">
             <span
               data-testid="roster-operators-count"
-              className={`text-[0.6875rem] tabular-nums ${
+              className={`text-sm tabular-nums ${
                 rosterPressure.replacementPressureLevel === "critical"
                   ? "text-ember"
                   : rosterPressure.replacementPressureLevel === "strained"
@@ -755,15 +741,11 @@ export function RosterPanel({
 
         <div className="glass-card-inset mb-2 px-2.5 py-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
-              Daily Routine
-            </span>
-            <span className="text-[0.6875rem] text-gold">{staffingSummary.label}</span>
+            <span className="text-xs uppercase tracking-[0.12em] text-gold/50">Daily Routine</span>
+            <span className="text-sm text-gold">{staffingSummary.label}</span>
           </div>
-          <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
-            {staffingSummary.summary}
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+          <p className="mt-1 text-sm leading-relaxed text-silver/60">{staffingSummary.summary}</p>
+          <div className="mt-1.5 flex flex-wrap gap-2 text-sm text-silver/45">
             {staffingSummary.details.map((detail) => (
               <span key={detail}>{detail}</span>
             ))}
@@ -790,9 +772,7 @@ export function RosterPanel({
         ) : (
           <div className="px-2.5 py-4 text-center">
             <p className="text-xs text-silver/40">No operators yet</p>
-            <p className="mt-0.5 text-[0.6875rem] text-gold/50">
-              Recruit talent through your facilities
-            </p>
+            <p className="mt-0.5 text-sm text-gold/50">Recruit talent through your facilities</p>
           </div>
         )}
       </div>
@@ -800,7 +780,7 @@ export function RosterPanel({
       {/* ── Fallen ────────────────────────────────────────── */}
       {fallenOperators.length > 0 && (
         <div>
-          <div className="mb-0.5 px-1 text-[0.6875rem] uppercase tracking-[0.15em] text-silver/30">
+          <div className="mb-0.5 px-1 text-sm uppercase tracking-[0.15em] text-silver/30">
             Fallen ({fallenOperators.length})
           </div>
           {fallenOperators.map((op) => (
@@ -816,7 +796,7 @@ export function RosterPanel({
       <div>
         <div className="mb-1 flex items-center justify-between px-1">
           <Tooltip content="Hired workers assigned to rooms. Not combat-capable">
-            <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+            <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
               Staff ({staff.length})
             </span>
           </Tooltip>
@@ -836,7 +816,7 @@ export function RosterPanel({
             ))}
           </div>
         ) : (
-          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">No staff hired</p>
+          <p className="px-2.5 py-2 text-sm text-silver/30">No staff hired</p>
         )}
       </div>
 
@@ -844,31 +824,27 @@ export function RosterPanel({
       <div data-testid="roster-visitors">
         <div className="mb-1 flex items-center justify-between px-1">
           <Tooltip content="Potential recruits passing through. Accept to add as operators">
-            <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+            <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
               Visitors ({activeVisitors.length})
             </span>
           </Tooltip>
           {rosterPressure.vacancyCount > 0 ? (
             <Tooltip content="Open operator slots available for recruitment">
-              <span className="text-[0.6875rem] text-ember/70">
-                {rosterPressure.vacancyCount} to fill
-              </span>
+              <span className="text-sm text-ember/70">{rosterPressure.vacancyCount} to fill</span>
             </Tooltip>
           ) : activeVisitors.length > 0 ? (
-            <span className="text-[0.6875rem] text-silver/35">Roster full</span>
+            <span className="text-sm text-silver/35">Roster full</span>
           ) : null}
         </div>
         <div className="glass-card-inset mb-2 px-2.5 py-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-gold/50">
+            <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
               Recruitment Policy
             </span>
-            <span className="text-[0.6875rem] text-gold">{rosterFlowSummary.label}</span>
+            <span className="text-sm text-gold">{rosterFlowSummary.label}</span>
           </div>
-          <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
-            {rosterFlowSummary.summary}
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-[0.6875rem] text-silver/45">
+          <p className="mt-1 text-sm leading-relaxed text-silver/60">{rosterFlowSummary.summary}</p>
+          <div className="mt-1.5 flex flex-wrap gap-2 text-sm text-silver/45">
             {rosterFlowSummary.details.map((detail) => (
               <span key={detail}>{detail}</span>
             ))}
@@ -898,7 +874,7 @@ export function RosterPanel({
             ))}
           </div>
         ) : (
-          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">
+          <p className="px-2.5 py-2 text-sm text-silver/30">
             {rosterPressure.vacancyCount > 0 ? "Waiting for visitors..." : "No visitors right now"}
           </p>
         )}
@@ -906,10 +882,10 @@ export function RosterPanel({
         {deferredVisitors.length > 0 && (
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between px-1">
-              <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+              <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
                 Deferred ({deferredVisitors.length})
               </span>
-              <span className="text-[0.6875rem] text-silver/35">
+              <span className="text-sm text-silver/35">
                 Reserve {deferredVisitors.length}/{rosterPressure.deferredVisitorCapacity}
               </span>
             </div>

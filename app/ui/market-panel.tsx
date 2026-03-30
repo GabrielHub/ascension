@@ -24,7 +24,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
     <div className="animate-enter space-y-4" data-testid="market-panel">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Market</h3>
-        <span className="text-[0.6875rem] tabular-nums text-gold" data-testid="market-treasury">
+        <span className="text-sm tabular-nums text-gold" data-testid="market-treasury">
           ${guild.treasury}
         </span>
       </div>
@@ -32,7 +32,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
       {/* Buy section */}
       <div>
         <div className="mb-1.5 flex items-center justify-between px-1">
-          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+          <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
             Buy ({buyableItems.length})
           </span>
         </div>
@@ -55,7 +55,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                         </span>
                         <ItemRankBadge rank={item.rank} />
                       </div>
-                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                      <p className="mt-1 text-sm leading-relaxed text-silver/55">
                         {item.description}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -64,14 +64,12 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                       </div>
                     </div>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
-                      <span className="text-[0.6875rem] tabular-nums text-gold/70">
-                        ${item.buyPrice}
-                      </span>
+                      <span className="text-sm tabular-nums text-gold/70">${item.buyPrice}</span>
                       <button
                         type="button"
                         data-testid="market-buy-button"
                         data-item-id={item.itemId}
-                        className="btn-primary shrink-0 px-2 py-0.5 text-[0.6875rem]"
+                        className="btn-primary shrink-0 px-2 py-0.5 text-sm"
                         disabled={!canAfford}
                         onClick={() => callbacks.buyItem(item.itemId)}
                       >
@@ -84,7 +82,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
             })}
           </div>
         ) : (
-          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">Nothing to buy</p>
+          <p className="px-2.5 py-2 text-sm text-silver/30">Nothing to buy</p>
         )}
       </div>
 
@@ -94,7 +92,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
       {/* Sell section */}
       <div>
         <div className="mb-1.5 flex items-center justify-between px-1">
-          <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+          <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
             Sell ({sellableItems.length})
           </span>
         </div>
@@ -117,11 +115,9 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                           {inv.name}
                         </span>
                         <ItemRankBadge rank={inv.rank} />
-                        <span className="text-[0.6875rem] tabular-nums text-silver/50">
-                          x{inv.quantity}
-                        </span>
+                        <span className="text-sm tabular-nums text-silver/50">x{inv.quantity}</span>
                       </div>
-                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                      <p className="mt-1 text-sm leading-relaxed text-silver/55">
                         {inv.description}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -130,14 +126,12 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
                       </div>
                     </div>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
-                      <span className="text-[0.6875rem] tabular-nums text-gold/70">
-                        ${sellPrice}
-                      </span>
+                      <span className="text-sm tabular-nums text-gold/70">${sellPrice}</span>
                       <button
                         type="button"
                         data-testid="market-sell-button"
                         data-item-id={inv.itemId}
-                        className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+                        className="btn-ghost shrink-0 px-1.5 py-0.5 text-sm"
                         onClick={() => callbacks.sellItem(inv.itemId, 1)}
                       >
                         sell 1
@@ -149,7 +143,7 @@ export function MarketPanel({ marketItems, inventory, guild, callbacks }: Market
             })}
           </div>
         ) : (
-          <p className="px-2.5 py-2 text-[0.6875rem] text-silver/30">Nothing to sell</p>
+          <p className="px-2.5 py-2 text-sm text-silver/30">Nothing to sell</p>
         )}
       </div>
     </div>

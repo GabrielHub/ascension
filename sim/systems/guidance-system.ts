@@ -465,7 +465,11 @@ function maybeForceFirstIncident(context: SimSystemContext, currentMinute: numbe
   }
 }
 
-function enqueueGuidanceInterruption(context: SimSystemContext, beat: GuidanceBeat): void {
+function enqueueGuidanceInterruption(
+  context: SimSystemContext,
+  beat: GuidanceBeat,
+  copy: GuidanceBeat["copy"],
+): void {
   const activeInterruption = context.runtimeState.interruptionQueue.active;
   const layeredOverActiveInterruption = canLayerGuidanceOverInterruption(activeInterruption, beat);
 
@@ -476,15 +480,15 @@ function enqueueGuidanceInterruption(context: SimSystemContext, beat: GuidanceBe
       kind: "guidance",
       beatId: beat.id,
       track: beat.track,
-      title: beat.copy.title,
-      body: beat.copy.body,
-      subtitle: beat.copy.subtitle,
-      ctaLabel: beat.copy.ctaLabel,
+      title: copy.title,
+      body: copy.body,
+      subtitle: copy.subtitle,
+      ctaLabel: copy.ctaLabel,
       deliveryMode: beat.delivery.mode,
       milestoneOrder: beat.milestoneOrder,
       totalMilestones: OPENING_BEAT_COUNT,
       completionKind: beat.completion.kind,
-      fallbackBody: beat.copy.fallbackBody,
+      fallbackBody: copy.fallbackBody,
     },
     "guidance",
     getCurrentAbsoluteMinute(context),
@@ -552,7 +556,7 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
 
       // Blocking beats go through the interruption queue
       if (beat.delivery.mode === "blocking") {
-        enqueueGuidanceInterruption(context, beat);
+        enqueueGuidanceInterruption(context, beat, formattedCopy);
       }
       // Focused beats that pause world freeze simulation directly
       else if (beat.delivery.pauseWorld) {

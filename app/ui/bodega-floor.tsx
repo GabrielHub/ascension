@@ -128,20 +128,16 @@ function RoomCard({
       </div>
 
       <div className="mt-1.5 flex items-center gap-2">
-        <p className="min-w-0 truncate text-[0.6875rem] leading-snug text-silver/50">
-          {room.description}
-        </p>
+        <p className="min-w-0 truncate text-sm leading-snug text-silver/50">{room.description}</p>
         {highlightTags.slice(0, 2).map((tag) => (
           <Tooltip key={tag} content={getTagMeta(tag).tip}>
             <span className="badge badge-slate shrink-0">{getTagMeta(tag).label}</span>
           </Tooltip>
         ))}
-        {!room.isActive && (
-          <span className="shrink-0 text-[0.6875rem] text-silver/40">Inactive</span>
-        )}
+        {!room.isActive && <span className="shrink-0 text-sm text-silver/40">Inactive</span>}
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
         <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
         <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
         <Tooltip content={`Reserved vs active footprint: ${formatFootprintLabel(room)}`}>
@@ -157,7 +153,7 @@ function RoomCard({
       </div>
 
       {culture && (
-        <div className="mt-1.5 flex items-center gap-1.5 text-[0.625rem] text-silver/45">
+        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-silver/45">
           <Tooltip content={getToneMeta(culture.tone || "neutral").tip} side="top">
             <span>{getToneMeta(culture.tone || "neutral").label}</span>
           </Tooltip>
@@ -201,7 +197,7 @@ function ExpansionSlotCard({
           <span className="badge badge-slate uppercase tracking-[0.14em]">Locked</span>
           <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
           <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
           <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
           <Tooltip content="Reserved interior footprint">
@@ -222,14 +218,14 @@ function ExpansionSlotCard({
             <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/80">
               Place a room
             </span>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
               <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
               <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
             </div>
           </div>
           <button
             type="button"
-            className="text-[0.6875rem] text-silver/60 hover:text-gold/80"
+            className="text-sm text-silver/60 hover:text-gold/80"
             onClick={() => setShowPicker(false)}
           >
             cancel
@@ -241,7 +237,7 @@ function ExpansionSlotCard({
               <button
                 key={template.id}
                 type="button"
-                className="btn-primary px-2.5 py-1.5 text-[0.6875rem]"
+                className="btn-primary px-2.5 py-1.5 text-sm"
                 onClick={() => {
                   onPlaceRoom(template.id, slot.floorIndex, slot.slotId);
                   setShowPicker(false);
@@ -268,7 +264,7 @@ function ExpansionSlotCard({
         <span className="badge badge-gold uppercase tracking-[0.14em]">Open</span>
         <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 text-[0.625rem] text-silver/55">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
         <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
         <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
         <Tooltip content="Reserved interior footprint">
@@ -295,7 +291,7 @@ export function BodegaFloor({
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-gold/70">
+          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-gold/70">
             Current Floor Rooms
           </h3>
           <span className="text-xs text-silver/55">
@@ -323,7 +319,7 @@ export function BodegaFloor({
 
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-gold/70">
+          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-gold/70">
             Available Slots
           </h3>
           <span className="text-xs text-silver/55">

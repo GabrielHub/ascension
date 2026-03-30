@@ -162,6 +162,80 @@ a {
   border-radius: 0.625rem;
 }
 
+/* === Contract Dossier Card (extends .glass-card) ========================= */
+
+.contract-card {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  overflow: hidden;
+  transition:
+    border-color 400ms ease,
+    box-shadow 400ms ease,
+    transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contract-card::before {
+  background: linear-gradient(180deg, rgba(200, 168, 76, 0.04) 0%, transparent 30%);
+  opacity: 0;
+}
+
+.contract-card:hover {
+  box-shadow:
+    0 12px 56px rgba(0, 0, 0, 0.7),
+    0 0 1px rgba(200, 168, 76, 0.12);
+  transform: translateY(-2px);
+}
+
+.contract-card__portrait {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: linear-gradient(
+    180deg,
+    rgba(212, 84, 30, 0.04) 0%,
+    rgba(6, 6, 8, 0.6) 60%,
+    rgba(6, 6, 8, 0.85) 100%
+  );
+  border-right: 1px solid rgba(200, 168, 76, 0.04);
+  padding: 1.25rem 0.75rem;
+  min-height: 200px;
+}
+
+.contract-card__boss-img {
+  position: relative;
+  z-index: 1;
+  max-height: 120px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(212, 84, 30, 0.12));
+  transition:
+    transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 600ms ease;
+}
+
+.contract-card:hover .contract-card__boss-img {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 20px rgba(212, 84, 30, 0.25));
+}
+
+.contract-card__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center 40%, transparent 30%, rgba(6, 6, 8, 0.4) 100%);
+}
+
+.contract-card__intel {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+}
+
 /* --- Button styles -------------------------------------------------------- */
 .btn-primary {
   display: inline-flex;
@@ -175,7 +249,7 @@ a {
   color: var(--color-silver-bright);
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   transition:
@@ -209,7 +283,7 @@ a {
   color: rgba(200, 168, 76, 0.7);
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   text-transform: lowercase;
   letter-spacing: 0.1em;
   transition:
@@ -268,7 +342,7 @@ a {
   align-items: center;
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;

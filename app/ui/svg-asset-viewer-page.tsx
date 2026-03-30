@@ -29,13 +29,14 @@ import {
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
 } from "./environment-parts";
+import { SvgFileCatalogPanel } from "./svg-file-catalog-panel";
 import { emptyStateClass, tabButtonClass } from "./styles";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Asset class selector
 // ═══════════════════════════════════════════════════════════════════════════
 
-type AssetClass = "operators" | "hq-environment";
+type AssetClass = "all-assets" | "operators" | "hq-environment";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Constants
@@ -146,7 +147,7 @@ function LazySvgPreview({ src, alt, className }: { src: string; alt: string; cla
     return (
       <div
         ref={ref}
-        className={`flex items-center justify-center text-[0.6875rem] text-silver/60 ${className ?? ""}`}
+        className={`flex items-center justify-center text-sm text-silver/60 ${className ?? ""}`}
       >
         &times;
       </div>
@@ -175,18 +176,14 @@ function SvgPreview({ src, alt, className }: { src: string; alt: string; classNa
 
   if (error) {
     return (
-      <div
-        className={`flex items-center justify-center text-[0.6875rem] text-silver/60 ${className ?? ""}`}
-      >
+      <div className={`flex items-center justify-center text-sm text-silver/60 ${className ?? ""}`}>
         failed to load
       </div>
     );
   }
   if (!svgText) {
     return (
-      <div
-        className={`flex items-center justify-center text-[0.6875rem] text-silver/60 ${className ?? ""}`}
-      >
+      <div className={`flex items-center justify-center text-sm text-silver/60 ${className ?? ""}`}>
         loading&hellip;
       </div>
     );
@@ -269,9 +266,7 @@ function PortraitPartPreview({ part, className }: { part: OperatorPartMeta; clas
 
   if (!content) {
     return (
-      <div
-        className={`flex items-center justify-center text-[0.6875rem] text-silver/60 ${className ?? ""}`}
-      >
+      <div className={`flex items-center justify-center text-sm text-silver/60 ${className ?? ""}`}>
         &times;
       </div>
     );
@@ -303,7 +298,7 @@ function FilterSelect({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-gold/70">
+      <label className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
         {label}
       </label>
       <select
@@ -333,7 +328,7 @@ function MetadataRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="w-20 shrink-0 text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-gold/70">
+      <span className="w-20 shrink-0 text-sm font-medium uppercase tracking-[0.1em] text-gold/70">
         {label}
       </span>
       <div className="flex-1 text-xs text-silver-bright">{value ?? children}</div>
@@ -347,7 +342,7 @@ export function SceneContractSummary({
   contract: ReturnType<typeof getSceneReviewContract>;
 }) {
   return (
-    <div className="grid gap-2 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.32)] p-3 text-[0.6875rem] text-silver/70 sm:grid-cols-2">
+    <div className="grid gap-2 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.32)] p-3 text-sm text-silver/70 sm:grid-cols-2">
       <div>
         <span className="text-gold/60">Building</span>
         <div className="text-silver-bright">{contract.building}</div>
@@ -510,8 +505,8 @@ function OperatorPartListItem({
           {name}
         </p>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[0.6875rem] text-silver/60">{opCategoryLabel(part.category)}</span>
-          <span className={`text-[0.6875rem] ${RARITY_STYLES[part.rarity] ?? "text-silver/60"}`}>
+          <span className="text-sm text-silver/60">{opCategoryLabel(part.category)}</span>
+          <span className={`text-sm ${RARITY_STYLES[part.rarity] ?? "text-silver/60"}`}>
             {part.rarity}
           </span>
         </div>
@@ -542,7 +537,7 @@ function OperatorSingleDetail({ part }: { part: OperatorPartMeta }) {
           <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
             {name}
           </h3>
-          <p className="mt-1 text-[0.6875rem] text-silver/60">
+          <p className="mt-1 text-sm text-silver/60">
             <code className="text-gold/70">
               {PORTRAIT_CATEGORIES.has(part.category)
                 ? `${part.category}/${part.id.split("/").pop()}`
@@ -620,13 +615,11 @@ function OperatorComparisonView({ parts }: { parts: OperatorPartMeta[] }) {
                 <p className="text-xs font-medium text-silver-bright">{name}</p>
                 <div className="flex flex-wrap justify-center gap-1">
                   <span className="badge badge-gold">{opCategoryLabel(part.category)}</span>
-                  <span
-                    className={`text-[0.6875rem] ${RARITY_STYLES[part.rarity] ?? "text-silver/60"}`}
-                  >
+                  <span className={`text-sm ${RARITY_STYLES[part.rarity] ?? "text-silver/60"}`}>
                     {part.rarity}
                   </span>
                 </div>
-                <div className="space-y-0.5 text-[0.6875rem] text-silver/60">
+                <div className="space-y-0.5 text-sm text-silver/60">
                   <p>Roles: {part.roleTags.join(", ")}</p>
                   <p>Body: {part.bodyCompatibility.join(", ")}</p>
                 </div>
@@ -716,7 +709,7 @@ function OperatorRecipesContent() {
 
   return (
     <div className="animate-enter mx-auto max-w-5xl space-y-6 p-8">
-      <p className="text-[0.6875rem] text-silver/60">
+      <p className="text-sm text-silver/60">
         {recipes.length} appearance recipes &mdash; modular portrait assembly with derived HQ
         markers
       </p>
@@ -744,7 +737,7 @@ function OperatorRecipesContent() {
               {/* Name and recipe id */}
               <div className="w-full text-center">
                 <p className="text-xs font-medium text-silver-bright">{recipe.name}</p>
-                <p className="mt-0.5 text-[0.6rem] text-silver/40">{recipe.id}</p>
+                <p className="mt-0.5 text-xs text-silver/40">{recipe.id}</p>
               </div>
               {/* HQ marker + color swatches */}
               <div className="flex items-center gap-3">
@@ -770,7 +763,7 @@ function OperatorRecipesContent() {
                       style={{ backgroundColor: marker.skinColor }}
                     />
                   </div>
-                  <span className="text-[0.6rem] text-silver/40">{build} build</span>
+                  <span className="text-xs text-silver/40">{build} build</span>
                 </div>
               </div>
             </div>
@@ -881,10 +874,8 @@ function EnvPartListItem({
           {name}
         </p>
         <div className="mt-0.5 flex items-center gap-2">
-          <span className="text-[0.6875rem] text-silver/60">{envCategoryLabel(part.category)}</span>
-          <span
-            className={`text-[0.6875rem] ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}
-          >
+          <span className="text-sm text-silver/60">{envCategoryLabel(part.category)}</span>
+          <span className={`text-sm ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}>
             {part.status}
           </span>
         </div>
@@ -930,7 +921,7 @@ function EnvSingleDetail({
           <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
             {name}
           </h3>
-          <p className="mt-1 text-[0.6875rem] text-silver/60">
+          <p className="mt-1 text-sm text-silver/60">
             <code className="text-gold/70">{src}</code>
           </p>
         </div>
@@ -1000,7 +991,7 @@ function EnvComparisonView({
           <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
             Scene comparison for {parts.length} room states
           </h3>
-          <p className="mt-1 text-[0.6875rem] text-silver/50">Preset: {preset.label}</p>
+          <p className="mt-1 text-sm text-silver/50">Preset: {preset.label}</p>
         </div>
 
         <SceneContractSummary contract={sceneContract} />
@@ -1040,15 +1031,15 @@ function EnvComparisonView({
                   <div className="flex flex-wrap gap-1">
                     <span className="badge badge-gold">{envCategoryLabel(part.category)}</span>
                     <span
-                      className={`text-[0.6875rem] ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}
+                      className={`text-sm ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}
                     >
                       {part.status}
                     </span>
-                    <span className="badge badge-slate text-[0.6rem]">
+                    <span className="badge badge-slate text-xs">
                       {placement?.group.label ?? "Unmapped"}
                     </span>
                   </div>
-                  <p className="text-[0.6875rem] text-silver/60">
+                  <p className="text-sm text-silver/60">
                     {placement?.step
                       ? `State ${placement.step.index}${placement.step.isPlaceholder ? " placeholder" : ""}`
                       : "State unmapped"}
@@ -1064,7 +1055,7 @@ function EnvComparisonView({
             <h4 className="font-[family-name:var(--font-display)] text-sm font-light tracking-wide text-silver-bright">
               Scene series scaffold
             </h4>
-            <p className="text-[0.625rem] text-silver/40">{sceneGroups.length} scene series</p>
+            <p className="text-xs text-silver/40">{sceneGroups.length} scene series</p>
           </div>
           {sceneGroups.map((group) => (
             <div
@@ -1076,7 +1067,7 @@ function EnvComparisonView({
                   {group.label}
                 </h5>
                 {group.roomFamily && (
-                  <span className="badge badge-slate text-[0.6rem]">{group.roomFamily}</span>
+                  <span className="badge badge-slate text-xs">{group.roomFamily}</span>
                 )}
               </div>
               <div className="grid gap-3 md:grid-cols-3">
@@ -1086,13 +1077,13 @@ function EnvComparisonView({
                       key={step.part.id}
                       className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(15,14,18,0.18)] p-3"
                     >
-                      <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                      <p className="text-xs uppercase tracking-[0.18em] text-gold/40">
                         State {step.index}
                       </p>
                       <p className="mt-2 text-xs text-silver-bright">
                         {step.part.id.split("/").pop() ?? step.part.id}
                       </p>
-                      <p className="mt-1 text-[0.6875rem] text-silver/60">
+                      <p className="mt-1 text-sm text-silver/60">
                         {step.part.roomFamily ?? "n/a"} | {step.part.status}
                       </p>
                     </div>
@@ -1101,7 +1092,7 @@ function EnvComparisonView({
                       key={`${group.seriesKey}-${step.index}`}
                       className="rounded-lg border border-dashed border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.18)] p-3"
                     >
-                      <p className="text-[0.625rem] uppercase tracking-[0.18em] text-gold/40">
+                      <p className="text-xs uppercase tracking-[0.18em] text-gold/40">
                         State {step.index}
                       </p>
                       <p className="mt-2 text-xs text-silver/60">Pending scene state</p>
@@ -1122,7 +1113,7 @@ function EnvComparisonView({
         <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
           Comparing {parts.length} assets
         </h3>
-        <p className="mt-1 text-[0.6875rem] text-silver/50">Preset: {preset.label}</p>
+        <p className="mt-1 text-sm text-silver/50">Preset: {preset.label}</p>
       </div>
       <div
         className={`grid gap-4 ${
@@ -1160,9 +1151,7 @@ function EnvComparisonView({
                 <p className="text-xs font-medium text-silver-bright">{name}</p>
                 <div className="flex flex-wrap justify-center gap-1">
                   <span className="badge badge-gold">{envCategoryLabel(part.category)}</span>
-                  <span
-                    className={`text-[0.6875rem] ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}
-                  >
+                  <span className={`text-sm ${ENV_STATUS_STYLES[part.status] ?? "text-silver/60"}`}>
                     {part.status}
                   </span>
                 </div>
@@ -1180,7 +1169,7 @@ function EnvComparisonView({
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function SvgAssetViewerPage() {
-  const [assetClass, setAssetClass] = useState<AssetClass>("operators");
+  const [assetClass, setAssetClass] = useState<AssetClass>("all-assets");
 
   // ── Operator state ────────────────────────────────────────────────────
   const [partsIndex] = useState<OperatorPartsIndex>(partsIndexData as OperatorPartsIndex);
@@ -1312,7 +1301,12 @@ export function SvgAssetViewerPage() {
   const selectOnlyEnv = useCallback((id: string) => setEnvSelected(new Set([id])), []);
 
   // Active selection count for header
-  const activeSelectedCount = assetClass === "operators" ? opSelected.size : envSelected.size;
+  const activeSelectedCount =
+    assetClass === "operators"
+      ? opSelected.size
+      : assetClass === "hq-environment"
+        ? envSelected.size
+        : 0;
 
   return (
     <div className="flex h-dvh flex-col bg-void">
@@ -1327,7 +1321,7 @@ export function SvgAssetViewerPage() {
             SVG Asset Viewer
           </h1>
           {activeSelectedCount > 0 && (
-            <span className="text-[0.6875rem] text-gold/80">{activeSelectedCount} selected</span>
+            <span className="text-sm text-gold/80">{activeSelectedCount} selected</span>
           )}
           <Link to="/svg-playground" className="btn-ghost text-xs">
             playground &rarr;
@@ -1337,6 +1331,14 @@ export function SvgAssetViewerPage() {
         {/* Asset class selector + context tabs */}
         <div className="flex gap-0 border-t border-[rgba(200,168,76,0.04)] px-5">
           {/* Asset class tabs */}
+          <button
+            type="button"
+            className={tabButtonClass}
+            data-active={assetClass === "all-assets"}
+            onClick={() => setAssetClass("all-assets")}
+          >
+            All SVGs
+          </button>
           <button
             type="button"
             className={tabButtonClass}
@@ -1357,6 +1359,12 @@ export function SvgAssetViewerPage() {
           <div className="mx-3 my-auto h-4 w-px bg-[rgba(200,168,76,0.08)]" />
 
           {/* Context tabs for operators */}
+          {assetClass === "all-assets" && (
+            <span className={`${tabButtonClass} cursor-default`} data-active="true">
+              Full Catalog
+            </span>
+          )}
+
           {assetClass === "operators" &&
             (["parts", "recipes"] as const).map((tab) => (
               <button
@@ -1383,7 +1391,7 @@ export function SvgAssetViewerPage() {
                     key={p.id}
                     type="button"
                     onClick={() => setEnvPresetId(p.id)}
-                    className={`rounded px-2 py-0.5 text-[0.625rem] transition-colors ${
+                    className={`rounded px-2 py-0.5 text-xs transition-colors ${
                       envPresetId === p.id
                         ? "bg-[rgba(200,168,76,0.12)] text-gold"
                         : "text-silver/50 hover:text-silver/70"
@@ -1399,7 +1407,9 @@ export function SvgAssetViewerPage() {
       </header>
 
       {/* ── Content ───────────────────────────────────────────────────── */}
-      {assetClass === "operators" ? (
+      {assetClass === "all-assets" ? (
+        <SvgFileCatalogPanel />
+      ) : assetClass === "operators" ? (
         // ── OPERATOR CONTENT ──────────────────────────────────────────
         opTab === "parts" ? (
           <div className="flex flex-1 overflow-hidden">
@@ -1441,7 +1451,7 @@ export function SvgAssetViewerPage() {
                 />
               </div>
               <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.04)] px-3 py-2">
-                <span className="text-[0.6875rem] text-silver/60">
+                <span className="text-sm text-silver/60">
                   {filteredOpParts.length} result{filteredOpParts.length !== 1 ? "s" : ""}
                   {opHasFilters && (
                     <button
@@ -1459,7 +1469,7 @@ export function SvgAssetViewerPage() {
                     </button>
                   )}
                 </span>
-                <div className="flex items-center gap-2 text-[0.6875rem]">
+                <div className="flex items-center gap-2 text-sm">
                   {opSelected.size > 0 && (
                     <button
                       type="button"
@@ -1501,7 +1511,7 @@ export function SvgAssetViewerPage() {
                 <div className="flex h-full flex-col items-center justify-center gap-3">
                   <div className="text-2xl text-gold/15">&loz;</div>
                   <p className="text-xs text-silver/60">Select a part to inspect</p>
-                  <p className="text-[0.6875rem] text-silver/60">
+                  <p className="text-sm text-silver/60">
                     Click to select &middot; Ctrl+click to multi-select
                   </p>
                 </div>
@@ -1557,7 +1567,7 @@ export function SvgAssetViewerPage() {
               />
             </div>
             <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.04)] px-3 py-2">
-              <span className="text-[0.6875rem] text-silver/60">
+              <span className="text-sm text-silver/60">
                 {filteredEnvParts.length} result{filteredEnvParts.length !== 1 ? "s" : ""}
                 {envHasFilters && (
                   <button
@@ -1574,7 +1584,7 @@ export function SvgAssetViewerPage() {
                   </button>
                 )}
               </span>
-              <div className="flex items-center gap-2 text-[0.6875rem]">
+              <div className="flex items-center gap-2 text-sm">
                 {envSelected.size > 0 && (
                   <button
                     type="button"
@@ -1616,7 +1626,7 @@ export function SvgAssetViewerPage() {
               <div className="flex h-full flex-col items-center justify-center gap-3">
                 <div className="text-2xl text-gold/15">&loz;</div>
                 <p className="text-xs text-silver/60">Select an asset to inspect</p>
-                <p className="text-[0.6875rem] text-silver/60">
+                <p className="text-sm text-silver/60">
                   Click to select &middot; Ctrl+click to multi-select
                 </p>
               </div>

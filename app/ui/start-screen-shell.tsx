@@ -5,7 +5,7 @@ import { buildGameShellHref } from "app/features/runtime";
 import { formatSaveSlotTimestamp, type StartScreenSaveSlot } from "app/features/save-slots";
 import { useSaveSlots } from "app/features/save-slots/use-save-slots";
 import { DEFAULT_PLAYER_NAME, normalizeGameIdentity } from "lib/game-identity";
-import type { SaveSlotId } from "save";
+import { CURRENT_SAVE_SCHEMA_VERSION, type SaveSlotId } from "save";
 
 const P = {
   void: "#060608",
@@ -989,7 +989,7 @@ export function StartScreenShell() {
                     marginTop: "0.3rem",
                   }}
                 >
-                  v0.0.1
+                  Current schema v{CURRENT_SAVE_SCHEMA_VERSION}
                 </div>
               </div>
             </div>

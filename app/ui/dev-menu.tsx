@@ -116,9 +116,7 @@ type DebugGlobal = typeof globalThis & {
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-gold/60">
-      {children}
-    </h3>
+    <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-gold/60">{children}</h3>
   );
 }
 
@@ -416,9 +414,7 @@ export function DevMenuOverlay({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[0.625rem] uppercase tracking-[0.15em] text-silver/40">
-                Jump to
-              </span>
+              <span className="text-xs uppercase tracking-[0.15em] text-silver/40">Jump to</span>
               <div className="flex gap-1">
                 {Object.entries(PHASE_TARGETS).map(([key, { label, minuteOfDay }]) => (
                   <button
@@ -485,7 +481,7 @@ export function DevMenuOverlay({
           {/* Debug */}
           <div className="space-y-3">
             <SectionLabel>Debug</SectionLabel>
-            <p className="text-[0.6875rem] leading-relaxed text-silver/50">
+            <p className="text-sm leading-relaxed text-silver/50">
               Structured agent-inspection data is published to{" "}
               <code className="text-gold/70">window.__ASCENSION_DEBUG__</code> while this menu is
               open. Use the dumps below to push the same data into the browser console.
@@ -690,7 +686,7 @@ export function DevMenuOverlay({
                     }}
                   />
                 </div>
-                <div className="text-[0.625rem] text-silver/40 space-y-0.5 max-h-24 overflow-y-auto">
+                <div className="text-xs text-silver/40 space-y-0.5 max-h-24 overflow-y-auto">
                   {session.phase1View.encounter.actors.map((actor) => (
                     <div key={actor.actorId}>
                       [{actor.side}] {actor.label}: {actor.currentHp}/{actor.maxHp} HP
@@ -702,7 +698,7 @@ export function DevMenuOverlay({
                     </div>
                   ))}
                 </div>
-                <div className="text-[0.625rem] text-silver/40">
+                <div className="text-xs text-silver/40">
                   Interventions:{" "}
                   {session.phase1View.encounter.interventions
                     .filter((i) => i.usesRemaining > 0)

@@ -72,12 +72,12 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
           onClick={() => setExpanded(true)}
           className={`${glassPanelClass} flex items-center gap-2 rounded-lg px-3 py-2 shadow-lg transition-all duration-200 hover:bg-[rgba(200,168,76,0.06)]`}
         >
-          <span className="text-[0.6875rem] text-gold/50">{"\u25C6"}</span>
-          <span className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-silver/50">
+          <span className="text-sm text-gold/50">{"\u25C6"}</span>
+          <span className="text-xs font-medium uppercase tracking-[0.15em] text-silver/50">
             Event Log
           </span>
           {unreadCount > 0 && (
-            <span className="badge badge-gold ml-0.5 text-[0.5625rem]">{unreadCount}</span>
+            <span className="badge badge-gold ml-0.5 text-xs">{unreadCount}</span>
           )}
         </button>
       </div>
@@ -93,14 +93,10 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
         onClick={() => setExpanded(false)}
         className={`${glassPanelClass} flex shrink-0 items-center gap-2 rounded-t-xl border-b border-[rgba(200,168,76,0.08)] px-3 py-2 text-left transition-colors duration-150 hover:bg-[rgba(200,168,76,0.04)]`}
       >
-        <span className="text-[0.6875rem] text-gold/50">{"\u25C6"}</span>
-        <h2 className="text-[0.625rem] font-medium uppercase tracking-[0.15em] text-gold/60">
-          Event Log
-        </h2>
-        <span className="ml-auto text-[0.625rem] tabular-nums text-silver/30">
-          {entries.length}
-        </span>
-        <span className="text-[0.75rem] leading-none text-silver/30">{"\u2500"}</span>
+        <span className="text-sm text-gold/50">{"\u25C6"}</span>
+        <h2 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/60">Event Log</h2>
+        <span className="ml-auto text-xs tabular-nums text-silver/30">{entries.length}</span>
+        <span className="text-sm leading-none text-silver/30">{"\u2500"}</span>
       </button>
 
       {/* Scrolling body */}
@@ -110,7 +106,7 @@ export function EventLog({ entries, onEntryClick }: EventLogProps) {
       >
         {entries.length === 0 ? (
           <div className="flex h-20 items-center justify-center">
-            <p className="text-[0.625rem] text-silver/25">No events yet</p>
+            <p className="text-xs text-silver/25">No events yet</p>
           </div>
         ) : (
           <div className="space-y-px">
@@ -147,12 +143,12 @@ function EventLogRow({ entry, onClick }: { entry: EventLogEntry; onClick?: () =>
       tabIndex={isClickable ? 0 : -1}
     >
       {/* Icon */}
-      <span className={`mt-0.5 shrink-0 text-[0.625rem] ${accentClass}`}>{icon}</span>
+      <span className={`mt-0.5 shrink-0 text-xs ${accentClass}`}>{icon}</span>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <p className="break-words text-[0.625rem] leading-snug text-silver/70">{entry.message}</p>
-        <p className="mt-0.5 text-[0.5625rem] tabular-nums text-silver/25">{entry.timestamp}</p>
+        <p className="break-words text-xs leading-snug text-silver/70">{entry.message}</p>
+        <p className="mt-0.5 text-xs tabular-nums text-silver/25">{entry.timestamp}</p>
       </div>
     </button>
   );

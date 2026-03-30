@@ -24,7 +24,7 @@ export function Tooltip({ content, children, side = "bottom" }: TooltipProps) {
     <span className="group relative inline-flex items-center">
       {children}
       <span
-        className={`pointer-events-none absolute z-50 w-max max-w-[220px] rounded-md border border-[rgba(200,168,76,0.15)] bg-[rgba(15,14,18,0.95)] px-2.5 py-1.5 text-[0.6875rem] leading-[1.4] font-normal whitespace-normal text-silver/85 opacity-0 shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-[12px] transition-opacity delay-300 duration-150 group-hover:opacity-100 ${bubblePositionClass}`}
+        className={`pointer-events-none absolute z-50 w-max max-w-[220px] rounded-md border border-[rgba(200,168,76,0.15)] bg-[rgba(15,14,18,0.95)] px-2.5 py-1.5 text-sm leading-[1.4] font-normal whitespace-normal text-silver/85 opacity-0 shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-[12px] transition-opacity delay-300 duration-150 group-hover:opacity-100 ${bubblePositionClass}`}
         role="tooltip"
       >
         {content}

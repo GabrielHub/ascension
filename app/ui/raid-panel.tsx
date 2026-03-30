@@ -1,4 +1,5 @@
 import { getPolicyFactorMetadata } from "lib/policies";
+import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
 import { RAID_TIPS, getContractHintMeta, getWeaknessTargetMeta } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
@@ -6,6 +7,7 @@ import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
 import { Tooltip } from "./_tooltip";
 import { emptyStateClass, emptyStateIconClass, progressBarFillClass } from "./styles";
+import { getBossArtPath } from "./boss-art";
 import type { FocusPayload } from "render";
 import {
   rankBadgeClass,
@@ -36,11 +38,11 @@ function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
 
   return (
     <div className="relative mt-4 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-3">
-      <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">Management Context</p>
+      <p className="text-xs uppercase tracking-wider text-gold/60">Management Context</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {policyFactors.map(({ factor, meta }) => (
           <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
-            <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-[0.6875rem] text-gold/85">
+            <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-sm text-gold/85">
               {meta.policyLabel}: {meta.optionLabel}
             </span>
           </Tooltip>
@@ -94,25 +96,25 @@ function ContractResultCard({ result }: { result: ContractResultViewModel }) {
 
       <div className="relative mt-4 grid grid-cols-4 gap-3">
         <div className="glass-card-inset rounded-lg px-3 py-2 text-center">
-          <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">Raids</p>
+          <p className="text-xs uppercase tracking-wider text-gold/60">Raids</p>
           <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-silver-bright">
             {result.totalRaids}
           </p>
         </div>
         <div className="glass-card-inset rounded-lg px-3 py-2 text-center">
-          <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">Cash</p>
+          <p className="text-xs uppercase tracking-wider text-gold/60">Cash</p>
           <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-silver-bright">
             +{result.totalCashEarned}
           </p>
         </div>
         <div className="glass-card-inset rounded-lg px-3 py-2 text-center">
-          <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">Rep</p>
+          <p className="text-xs uppercase tracking-wider text-gold/60">Rep</p>
           <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-silver-bright">
             +{result.totalReputationEarned}
           </p>
         </div>
         <div className="glass-card-inset rounded-lg px-3 py-2 text-center">
-          <p className="text-[0.625rem] uppercase tracking-wider text-gold/60">KIA</p>
+          <p className="text-xs uppercase tracking-wider text-gold/60">KIA</p>
           <p
             className="mt-0.5 font-display text-sm font-semibold tabular-nums"
             style={{
@@ -141,115 +143,190 @@ function PostedContractCard({
   onBid: (postingId: string) => void;
   index: number;
 }) {
+  const bossArtPath = posting.bossHint ? getBossArtPath(posting.bossHint) : null;
+  const bossLabel = posting.bossHint ? getContractHintMeta(posting.bossHint).label : null;
   const delayClass =
     index === 0 ? "animate-enter" : index === 1 ? "animate-enter-delay-1" : "animate-enter-delay-2";
 
   return (
     <div
-      className={`glass-card ${delayClass} p-4`}
+      className={`glass-card contract-card ${delayClass}`}
       data-testid="contract-card"
       data-posting-id={posting.postingId}
     >
-      {/* Header: site concept + rank */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-sm font-semibold text-silver-bright">
-            {posting.siteConceptName}
-          </p>
-          <p className="mt-0.5 text-xs text-silver/50">
-            {posting.location} — {posting.missionName}
-          </p>
-          {posting.neighborhoodLabel && (
-            <p className="mt-0.5 text-[0.6875rem] text-gold/60">{posting.neighborhoodLabel}</p>
-          )}
-        </div>
-        <span className={`badge ${rankBadgeClass(posting.rank)} shrink-0`}>
-          Rank {posting.rank.toUpperCase()}
-        </span>
+      {/* Boss portrait panel */}
+      <div className="contract-card__portrait">
+        {bossArtPath ? (
+          <img src={bossArtPath} alt={bossLabel ?? "Boss"} className="contract-card__boss-img" />
+        ) : (
+          <svg viewBox="0 0 64 64" className="relative z-[1] h-16 w-16 opacity-20">
+            <circle
+              cx="32"
+              cy="32"
+              r="24"
+              fill="none"
+              stroke="var(--color-gold)"
+              strokeWidth="0.5"
+            />
+            <circle
+              cx="32"
+              cy="32"
+              r="14"
+              fill="none"
+              stroke="var(--color-gold)"
+              strokeWidth="0.3"
+              opacity="0.5"
+            />
+            <text
+              x="32"
+              y="38"
+              textAnchor="middle"
+              fill="var(--color-gold)"
+              fontSize="18"
+              fontFamily="var(--font-display)"
+              fontWeight="200"
+            >
+              ?
+            </text>
+          </svg>
+        )}
+
+        {bossLabel && (
+          <div className="relative z-[1] text-center">
+            <div className="mb-1 flex items-center justify-center gap-2">
+              <div className="h-px w-4 bg-gradient-to-r from-transparent to-ember/30" />
+              <div className="h-1 w-1 rotate-45 bg-ember/40" />
+              <div className="h-px w-4 bg-gradient-to-l from-transparent to-ember/30" />
+            </div>
+            <p className="text-sm uppercase tracking-[0.18em] text-ember/55">{bossLabel}</p>
+          </div>
+        )}
+
+        <div className="contract-card__vignette" />
       </div>
 
-      <p className="mt-3 text-[0.6875rem] leading-relaxed text-silver/60">{posting.siteSummary}</p>
+      {/* Intel panel */}
+      <div className="contract-card__intel">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h4 className="font-display text-lg font-semibold leading-tight text-silver-bright">
+              {posting.siteConceptName}
+            </h4>
+            <p className="mt-1 text-sm text-silver/45">
+              {posting.neighborhoodLabel || posting.location}
+              <span className="mx-1.5 text-gold/20">{"\u00B7"}</span>
+              {posting.missionName}
+            </p>
+          </div>
+          <span className={`badge ${rankBadgeClass(posting.rank)} shrink-0`}>
+            Rank {posting.rank.toUpperCase()}
+          </span>
+        </div>
 
-      {/* Stats row */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
-        <div className="flex items-baseline gap-1" title={RAID_TIPS.threat}>
-          <span className="text-gold/60">Threat</span>
-          <span className="tabular-nums text-silver-bright">{posting.threat}</span>
-        </div>
-        <div className="flex items-baseline gap-1" title={RAID_TIPS.intel}>
-          <span className="text-gold/60">Intel</span>
-          <span className="tabular-nums text-silver-bright">{posting.intel}</span>
-        </div>
-        <div className="flex items-baseline gap-1" title={RAID_TIPS.reward}>
-          <span className="text-gold/60">Reward</span>
-          <span className="tabular-nums text-silver-bright">{Math.round(posting.reward)}</span>
-        </div>
-        <div className="flex items-baseline gap-1" title={RAID_TIPS.risk}>
-          <span className="text-gold/60">Risk</span>
-          <span className="tabular-nums text-silver-bright">{Math.round(posting.risk)}</span>
-        </div>
-      </div>
+        <p className="mt-2.5 text-sm italic leading-relaxed text-silver/45">
+          {posting.siteSummary}
+        </p>
 
-      {/* Intel-gated details */}
-      <div className="mt-3 space-y-1.5">
-        {posting.knownTraits.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {posting.knownTraits.map((trait) => {
-              const meta = getContractHintMeta(trait);
-              return (
-                <span
-                  key={trait}
-                  className="rounded-sm bg-steel/60 px-1.5 py-0.5 text-[0.625rem] text-silver/70"
-                  title={meta.tip || undefined}
-                >
-                  {meta.label}
-                </span>
-              );
-            })}
-            {posting.hiddenTraitCount > 0 && (
-              <span className="rounded-sm bg-steel/30 px-1.5 py-0.5 text-[0.625rem] text-silver/40">
-                +{posting.hiddenTraitCount} unknown
-              </span>
+        {/* Stat blocks */}
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <div
+            className="glass-card-inset rounded-lg px-2 py-2 text-center"
+            title={RAID_TIPS.threat}
+          >
+            <p className="font-display text-base font-semibold tabular-nums text-silver-bright">
+              {posting.threat}
+            </p>
+            <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-gold/45">Threat</p>
+          </div>
+          <div
+            className="glass-card-inset rounded-lg px-2 py-2 text-center"
+            title={RAID_TIPS.intel}
+          >
+            <p className="font-display text-base font-semibold tabular-nums text-silver-bright">
+              {posting.intel}
+            </p>
+            <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-gold/45">Intel</p>
+          </div>
+          <div
+            className="glass-card-inset rounded-lg px-2 py-2 text-center"
+            title={RAID_TIPS.reward}
+          >
+            <p className="font-display text-base font-semibold tabular-nums text-gold">
+              {Math.round(posting.reward)}
+            </p>
+            <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-gold/45">Reward</p>
+          </div>
+          <div className="glass-card-inset rounded-lg px-2 py-2 text-center" title={RAID_TIPS.risk}>
+            <p className="font-display text-base font-semibold tabular-nums text-ember">
+              {Math.round(posting.risk)}
+            </p>
+            <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-gold/45">Risk</p>
+          </div>
+        </div>
+
+        {/* Intel details */}
+        {(posting.knownTraits.length > 0 ||
+          posting.enemyHints.length > 0 ||
+          posting.lootFamilyHints.length > 0) && (
+          <div className="mt-3 space-y-2">
+            {posting.knownTraits.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {posting.knownTraits.map((trait) => {
+                  const meta = getContractHintMeta(trait);
+                  return (
+                    <span
+                      key={trait}
+                      className="rounded-sm bg-steel/60 px-2 py-0.5 text-xs text-silver/70"
+                      title={meta.tip || undefined}
+                    >
+                      {meta.label}
+                    </span>
+                  );
+                })}
+                {posting.hiddenTraitCount > 0 && (
+                  <span className="rounded-sm bg-steel/30 px-2 py-0.5 text-xs text-silver/40">
+                    +{posting.hiddenTraitCount} unknown
+                  </span>
+                )}
+              </div>
+            )}
+
+            {(posting.enemyHints.length > 0 || posting.lootFamilyHints.length > 0) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-silver/40">
+                {posting.enemyHints.length > 0 && (
+                  <span>
+                    <span className="text-gold/45">Hostiles:</span>{" "}
+                    {posting.enemyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
+                  </span>
+                )}
+                {posting.lootFamilyHints.length > 0 && (
+                  <span>
+                    <span className="text-gold/45">Loot:</span>{" "}
+                    {posting.lootFamilyHints
+                      .map((hint) => getContractHintMeta(hint).label)
+                      .join(", ")}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {posting.enemyHints.length > 0 && (
-          <p className="text-[0.625rem] text-silver/45">
-            <span className="text-gold/50">Hostiles:</span>{" "}
-            {posting.enemyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
-          </p>
-        )}
-
-        {posting.lootFamilyHints.length > 0 && (
-          <p className="text-[0.625rem] text-silver/45">
-            <span className="text-gold/50">Loot:</span>{" "}
-            {posting.lootFamilyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
-          </p>
-        )}
-
-        {posting.bossHint && (
-          <p className="text-[0.625rem] text-silver/45">
-            <span className="text-gold/50">Boss risk:</span>{" "}
-            {getContractHintMeta(posting.bossHint).label}
-          </p>
-        )}
-      </div>
-
-      {/* Bid action */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-[0.625rem] text-silver/40">
-          Filing cost: <span className="tabular-nums text-silver/60">{posting.bidCost}</span>
-        </p>
-        <button
-          data-testid="contract-bid-button"
-          data-posting-id={posting.postingId}
-          className="btn-primary"
-          disabled={!posting.canBid}
-          onClick={() => onBid(posting.postingId)}
-        >
-          Secure Contract
-        </button>
+        {/* Action bar */}
+        <div className="mt-auto flex items-center justify-between border-t border-[rgba(200,168,76,0.06)] pt-3">
+          <span className="text-xs tabular-nums text-silver/35">
+            Filing cost: <span className="text-silver/55">{posting.bidCost}</span>
+          </span>
+          <button
+            data-testid="contract-bid-button"
+            data-posting-id={posting.postingId}
+            className="btn-primary"
+            disabled={!posting.canBid}
+            onClick={() => onBid(posting.postingId)}
+          >
+            Secure Contract
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -268,7 +345,7 @@ function ContractBoard({
     return (
       <div className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}>
         <div className={emptyStateIconClass}>&#9876;</div>
-        <p className="text-[0.7rem] font-medium text-gold/70">No contracts available</p>
+        <p className="text-sm font-medium text-gold/70">No contracts available</p>
       </div>
     );
   }
@@ -278,7 +355,7 @@ function ContractBoard({
       <h3 className="mb-3 text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
         Contract Board
       </h3>
-      <div className="space-y-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         {postings.map((posting, index) => (
           <PostedContractCard
             key={posting.postingId}
@@ -339,7 +416,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
             {contract.missionName} — {contract.location}
           </p>
           {contract.neighborhoodLabel && (
-            <p className="mt-0.5 text-[0.6875rem] text-gold/60">{contract.neighborhoodLabel}</p>
+            <p className="mt-0.5 text-sm text-gold/60">{contract.neighborhoodLabel}</p>
           )}
         </div>
         <div className="flex items-center gap-1.5">
@@ -367,10 +444,8 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
       {!isEnded && (
         <>
           <div className="glass-card-inset mt-3 rounded-lg px-3 py-3">
-            <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">Site read</p>
-            <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/65">
-              {contract.siteSummary}
-            </p>
+            <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Site read</p>
+            <p className="mt-1 text-sm leading-relaxed text-silver/65">{contract.siteSummary}</p>
           </div>
 
           {/* Stats */}
@@ -391,7 +466,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
           {/* Exploration progress */}
           <div className="mt-3">
-            <div className="flex items-center justify-between text-[0.625rem]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-gold/60">Exploration</span>
               <span className="tabular-nums text-silver/60">
                 {Math.round(contract.explorationProgress)}%
@@ -410,9 +485,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
               contract.enemyHints.length > 0 ||
               contract.lootFamilyHints.length > 0) && (
               <div className="glass-card-inset rounded-lg px-3 py-3">
-                <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
-                  Operational Read
-                </p>
+                <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Operational Read</p>
                 {contract.knownTraits.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {contract.knownTraits.map((trait) => (
@@ -423,13 +496,13 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                   </div>
                 )}
                 {contract.enemyHints.length > 0 && (
-                  <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/60">
+                  <p className="mt-2 text-sm leading-relaxed text-silver/60">
                     Hostiles:{" "}
                     {contract.enemyHints.map((hint) => getContractHintMeta(hint).label).join(", ")}
                   </p>
                 )}
                 {contract.lootFamilyHints.length > 0 && (
-                  <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/60">
+                  <p className="mt-1 text-sm leading-relaxed text-silver/60">
                     Likely loot:{" "}
                     {contract.lootFamilyHints
                       .map((hint) => getContractHintMeta(hint).label)
@@ -441,14 +514,12 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
             <div className="glass-card-inset rounded-lg px-3 py-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[0.625rem] uppercase tracking-[0.14em] text-gold/55">
-                  Boss Stakes
-                </p>
+                <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Boss Stakes</p>
                 <span className={`badge ${contract.bossAvailable ? "badge-ember" : "badge-slate"}`}>
                   {contract.bossAvailable ? "Route Open" : "Route Locked"}
                 </span>
               </div>
-              <p className="mt-2 text-[0.6875rem] text-silver-bright">
+              <p className="mt-2 text-sm text-silver-bright">
                 {contract.bossName ?? "Boss identity unconfirmed"}
               </p>
               {contract.bossTags.length > 0 && (
@@ -462,9 +533,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
               )}
               {contract.bossWeaknesses.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-[0.625rem] uppercase tracking-[0.12em] text-frost/75">
-                    Weaknesses
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.12em] text-frost/75">Weaknesses</p>
                   <div className="mt-1 flex flex-wrap gap-1.5">
                     {contract.bossWeaknesses.map((weakness) => {
                       const meta = getWeaknessTargetMeta(weakness.target);
@@ -480,7 +549,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                   </div>
                 </div>
               )}
-              <p className="mt-2 text-[0.6875rem] leading-relaxed text-silver/60">
+              <p className="mt-2 text-sm leading-relaxed text-silver/60">
                 {contract.bossAvailable
                   ? "The boss route is open. Enter the site expecting a decisive fight."
                   : "Explore further before expecting the boss route to appear."}
@@ -495,28 +564,28 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
 // ── Time-of-day ambient treatment ─────────────────────────────────────────
 
+const TIME_STYLE_SUNRISE: Record<string, string> = {
+  background: "linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, transparent 40%)",
+};
+const TIME_STYLE_SUNSET: Record<string, string> = {
+  background: "linear-gradient(180deg, rgba(212, 84, 30, 0.05) 0%, transparent 40%)",
+};
+const TIME_STYLE_NIGHT: Record<string, string> = {
+  background: "linear-gradient(180deg, rgba(26, 36, 64, 0.08) 0%, transparent 40%)",
+};
+const TIME_STYLE_DAY: Record<string, string> = {};
+
 function getTimeOfDayStyle(minuteOfDay: number): Record<string, string> {
-  const hour = Math.floor(minuteOfDay / 60);
-  if (hour >= 5 && hour < 8) {
-    // Dawn: warm amber tint
-    return {
-      background: "linear-gradient(180deg, rgba(200, 168, 76, 0.06) 0%, transparent 40%)",
-    };
+  switch (resolveTimeOfDayPhase(minuteOfDay)) {
+    case "sunrise":
+      return TIME_STYLE_SUNRISE;
+    case "sunset":
+      return TIME_STYLE_SUNSET;
+    case "night":
+      return TIME_STYLE_NIGHT;
+    default:
+      return TIME_STYLE_DAY;
   }
-  if (hour >= 18 && hour < 21) {
-    // Dusk: deep orange
-    return {
-      background: "linear-gradient(180deg, rgba(212, 84, 30, 0.05) 0%, transparent 40%)",
-    };
-  }
-  if (hour >= 21 || hour < 5) {
-    // Night: dark navy/void
-    return {
-      background: "linear-gradient(180deg, rgba(26, 36, 64, 0.08) 0%, transparent 40%)",
-    };
-  }
-  // Day (8-18): neutral/clear
-  return {};
 }
 
 // ── Main Panel ───────────────────────────────────────────────────────────
@@ -578,7 +647,7 @@ export function OperationsPanel({
               className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-8`}
             >
               <div className={emptyStateIconClass}>&#9876;</div>
-              <p className="text-[0.7rem] font-medium text-gold/70">No secured contract</p>
+              <p className="text-sm font-medium text-gold/70">No secured contract</p>
               <p className="mt-1 text-xs text-silver/60">
                 Waiting for the contract board to refresh
               </p>

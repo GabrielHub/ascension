@@ -15,12 +15,12 @@ export function StatBar({ label, value, max, tip }: StatBarProps) {
       <div className="flex items-center justify-between">
         {tip ? (
           <Tooltip content={tip} side="top">
-            <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
+            <span className="text-sm uppercase tracking-wider text-gold/70">{label}</span>
           </Tooltip>
         ) : (
-          <span className="text-[0.6875rem] uppercase tracking-wider text-gold/70">{label}</span>
+          <span className="text-sm uppercase tracking-wider text-gold/70">{label}</span>
         )}
-        <span className="text-[0.6875rem] tabular-nums text-silver/50">{value}</span>
+        <span className="text-sm tabular-nums text-silver/50">{value}</span>
       </div>
       <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
         <div

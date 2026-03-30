@@ -30,14 +30,10 @@ function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewMode
   return (
     <div className="flex items-center gap-1.5">
       <span className={`h-1.5 w-1.5 rounded-full ${outcome.died ? "bg-magma" : "bg-gold/40"}`} />
-      <span
-        className={`text-[0.6875rem] ${
-          outcome.died ? "text-magma line-through" : "text-silver/60"
-        }`}
-      >
+      <span className={`text-sm ${outcome.died ? "text-magma line-through" : "text-silver/60"}`}>
         {outcome.operatorName}
       </span>
-      {outcome.died && <span className="text-[0.6875rem] font-medium text-magma">KIA</span>}
+      {outcome.died && <span className="text-sm font-medium text-magma">KIA</span>}
     </div>
   );
 }
@@ -62,7 +58,7 @@ function PolicyAttributionRow({ factors }: { factors: readonly string[] }) {
     <div className="mt-2 flex flex-wrap gap-1.5">
       {policyFactors.map(({ factor, meta }) => (
         <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
-          <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-[0.6875rem] text-gold/80">
+          <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-sm text-gold/80">
             {meta.policyLabel}: {meta.optionLabel}
           </span>
         </Tooltip>
@@ -128,7 +124,7 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
               const { label, tip } = getNarrativeTagMeta(tag);
               return (
                 <Tooltip key={tag} content={tip}>
-                  <span className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-[0.6875rem] text-silver/60">
+                  <span className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-sm text-silver/60">
                     {label}
                   </span>
                 </Tooltip>

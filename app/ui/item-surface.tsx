@@ -29,7 +29,7 @@ export function StatEffectChips({
   emptyLabel?: string | null;
 }) {
   if (effects.length === 0) {
-    return emptyLabel ? <span className="text-[0.625rem] text-silver/35">{emptyLabel}</span> : null;
+    return emptyLabel ? <span className="text-xs text-silver/35">{emptyLabel}</span> : null;
   }
 
   return (

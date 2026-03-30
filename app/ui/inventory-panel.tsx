@@ -47,7 +47,7 @@ export function InventoryPanel({
           className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
         >
           <div className={emptyStateIconClass}>&#9744;</div>
-          <p className="text-[0.7rem] font-medium text-gold/70">No items</p>
+          <p className="text-sm font-medium text-gold/70">No items</p>
           <p className="mt-1 text-xs text-silver/60">
             Items are acquired from raids and the market
           </p>
@@ -60,7 +60,7 @@ export function InventoryPanel({
     <div className="animate-enter space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Inventory</h3>
-        <span className="text-[0.6875rem] tabular-nums text-silver/50">
+        <span className="text-sm tabular-nums text-silver/50">
           {inventory.reduce((sum, it) => sum + it.quantity, 0)} items
         </span>
       </div>
@@ -68,21 +68,19 @@ export function InventoryPanel({
       {equipment.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+            <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
               Current Loadouts
             </span>
-            <span className="text-[0.6875rem] text-silver/40">{equipment.length} operators</span>
+            <span className="text-sm text-silver/40">{equipment.length} operators</span>
           </div>
           <div className="space-y-1">
             {equipment.map((assignment) => (
               <div key={assignment.operatorId} className="glass-card-inset px-2.5 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-silver-bright">{assignment.operatorName}</span>
-                  <span className="text-[0.6875rem] text-gold/60">
-                    {assignment.accessorySummary}
-                  </span>
+                  <span className="text-sm text-gold/60">{assignment.accessorySummary}</span>
                 </div>
-                <div className="mt-1 grid gap-2 text-[0.6875rem] text-silver/55">
+                <div className="mt-1 grid gap-2 text-sm text-silver/55">
                   {assignment.weaponId ? (
                     <div>
                       <span>Weapon: {assignment.weaponName}</span>
@@ -117,14 +115,14 @@ export function InventoryPanel({
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+                    className="btn-ghost px-1.5 py-0.5 text-sm"
                     onClick={() => callbacks.autoAssignAccessory(assignment.operatorId)}
                   >
                     auto-assign
                   </button>
                   <button
                     type="button"
-                    className="btn-ghost px-1.5 py-0.5 text-[0.6875rem]"
+                    className="btn-ghost px-1.5 py-0.5 text-sm"
                     onClick={() => callbacks.unequipItem(assignment.operatorId, "accessory")}
                     disabled={!assignment.accessoryId}
                   >
@@ -142,7 +140,7 @@ export function InventoryPanel({
           className={`${emptyStateClass} rounded-lg border border-dashed border-gold-dim/15 py-10`}
         >
           <div className={emptyStateIconClass}>&#9744;</div>
-          <p className="text-[0.7rem] font-medium text-gold/70">No stored items</p>
+          <p className="text-sm font-medium text-gold/70">No stored items</p>
           <p className="mt-1 text-xs text-silver/60">
             The market and raid loot will replenish inventory over time
           </p>
@@ -154,7 +152,7 @@ export function InventoryPanel({
         return (
           <div key={cat}>
             <div className="mb-1.5 flex items-center justify-between px-1">
-              <span className="text-[0.6875rem] uppercase tracking-[0.15em] text-gold/60">
+              <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
                 {CATEGORY_LABELS[cat] ?? cat} ({items.length})
               </span>
             </div>
@@ -174,7 +172,7 @@ export function InventoryPanel({
                           </span>
                           <ItemRankBadge rank={item.rank} />
                         </div>
-                        <p className="mt-1 text-[0.6875rem] leading-relaxed text-silver/55">
+                        <p className="mt-1 text-sm leading-relaxed text-silver/55">
                           {item.description}
                         </p>
                         <div className="mt-1 flex flex-wrap gap-1">
@@ -183,13 +181,11 @@ export function InventoryPanel({
                         </div>
                       </div>
                       <div className="ml-auto flex shrink-0 items-center gap-2">
-                        <span className="text-[0.6875rem] tabular-nums text-gold/60">
-                          x{item.quantity}
-                        </span>
+                        <span className="text-sm tabular-nums text-gold/60">x{item.quantity}</span>
                         {sellPrice > 0 && (
                           <button
                             type="button"
-                            className="btn-ghost shrink-0 px-1.5 py-0.5 text-[0.6875rem]"
+                            className="btn-ghost shrink-0 px-1.5 py-0.5 text-sm"
                             onClick={() => callbacks.sellItem(item.itemId, 1)}
                             title={`Sell 1 for ${sellPrice}`}
                           >

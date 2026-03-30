@@ -19,7 +19,7 @@ export function VolumeSlider({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="w-20 text-[0.625rem] font-medium uppercase tracking-[0.2em] text-gold/55">
+      <span className="w-20 text-xs font-medium uppercase tracking-[0.2em] text-gold/55">
         {label}
       </span>
       <div className="relative flex-1">
@@ -46,7 +46,7 @@ export function VolumeSlider({
             disabled:cursor-not-allowed disabled:opacity-30"
         />
       </div>
-      <span className="w-14 text-right font-[family-name:var(--font-display)] text-[0.6875rem] tabular-nums text-silver/55">
+      <span className="w-14 text-right font-[family-name:var(--font-display)] text-sm tabular-nums text-silver/55">
         {value} dB
       </span>
     </div>
