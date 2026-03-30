@@ -281,7 +281,7 @@ The beat ID prefix `guidance/opening/` is assumed throughout. Full IDs in implem
 - **Satisfies:** supporting (teaches the raid-to-cash economy loop)
 - **Mode:** Focused (target: `ui/hq/category/market`, `pauseWorld: true`, `allowSkip: false`)
 - **Gate:** Beat 8 complete, at least one raid return with loot (`hasRaidReturnWithLoot`)
-- **Teaches:** Operators bring back monster parts and sometimes salvageable gear. Monster parts are stackable trade goods — sell them for cash on the market. The market is also where the player buys weapons, outfits, and accessories. Better gear means better raid outcomes means more loot. That is the loop.
+- **Teaches:** Operators bring back monster parts and sometimes salvageable gear. Some monster parts are junk for sale, while others are worth holding for prep and later consumable crafting. The market is where the player buys weapons, outfits, and accessories, sells what the guild does not need, and can eventually rely on autosell filters to keep low-value clutter under control. Better gear means better raid outcomes means more loot. That is the loop.
 - **Completion kind:** `market_opened` (market UI opened)
 - **Fires during:** Contract 2–3
 - **Copy tone:** Shopkeeper energy. The bodega is a business.

@@ -128,6 +128,7 @@ describe("buildGameCallbacks", () => {
         initiateRelocation: vi.fn(),
         setRoomActive: vi.fn(),
         setPolicy,
+        setLootFilter: vi.fn(),
         purchaseBuildingUpgrade: vi.fn(),
         purchaseRoomUpgrade: vi.fn(),
         acceptRecruit: vi.fn(),

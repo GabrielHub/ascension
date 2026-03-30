@@ -215,6 +215,14 @@ export interface EventTemplate extends TemplateBase {
 export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot" | "consumable";
 export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
 
+/** Canonical ascending rank order shared across all rank-aware systems. */
+export const ITEM_RANK_ORDER: readonly ItemRank[] = ["f", "e", "d", "c", "b", "a", "s"];
+
+export function getItemRankIndex(rank: string): number {
+  const index = ITEM_RANK_ORDER.indexOf(rank.toLowerCase() as ItemRank);
+  return index >= 0 ? index : 0;
+}
+
 export interface StatEffect {
   stat: string;
   value: number;

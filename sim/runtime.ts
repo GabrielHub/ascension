@@ -215,6 +215,12 @@ import {
   normalizeStaffRoleTag,
   type PreferenceProfileRecord,
 } from "./systems/commands";
+import {
+  buildLootAutomationView,
+  DEFAULT_LOOT_AUTOMATION,
+  normalizeLootAutomationSnapshot,
+  type LootAutomationView,
+} from "./systems/loot-automation";
 import type { RaidTeamGoal } from "lib/raid-team-goal";
 import {
   describeAccessoryAssignment,
@@ -790,6 +796,7 @@ export interface Phase2View {
   marketItems: MarketItemView[];
   dispositions: Phase2DispositionView[];
   notableTies: Phase2NotableTieView[];
+  lootAutomation: LootAutomationView;
 }
 
 export interface AscensionSimulation {
@@ -1279,6 +1286,7 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     roomCultures: extendedSnapshot.roomCultures ?? [],
     inventoryStacks: extendedSnapshot.inventoryStacks ?? [],
     equipmentAssignments: extendedSnapshot.equipmentAssignments ?? [],
+    lootAutomation: normalizeLootAutomationSnapshot(extendedSnapshot.lootAutomation),
   };
 }
 
@@ -1816,6 +1824,10 @@ function applyWorldSnapshot(
   BuildingAuthority.policies[buildingEntity] = {
     ...normalizePolicyState(runtimeSnapshot.policies ?? DEFAULT_POLICY_STATE),
   };
+  BuildingAuthority.lootAutomationEnabled[buildingEntity] =
+    (runtimeSnapshot.lootAutomation?.autoSellEnabled ?? DEFAULT_LOOT_AUTOMATION.autoSellEnabled)
+      ? 1
+      : 0;
 
   runtimeSnapshot.rooms.forEach((room, index) => {
     const entity = addEntity(world);
@@ -2538,6 +2550,9 @@ function applyWorldSnapshot(
           outfitOverlayId: EquipmentAssignment.outfitOverlayId[entity],
           accessoryId: EquipmentAssignment.accessoryId[entity],
         })),
+        lootAutomation: {
+          autoSellEnabled: BuildingAuthority.lootAutomationEnabled[buildingEntity] === 1,
+        },
         // Encounter, interruption, and incident persistence
         ...(runtimeState.activeEncounter
           ? {
@@ -3172,6 +3187,7 @@ function applyWorldSnapshot(
           stance: NotableTie.stance[entity],
           strength: NotableTie.strength[entity],
         })),
+        lootAutomation: buildLootAutomationView(context),
       };
       return phase2ViewCache;
     },

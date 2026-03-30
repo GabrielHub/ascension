@@ -1,11 +1,15 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { titleCase } from "./_glossary";
+import { ENV_LIGHTING_PRESETS, getEnvLightingPreset } from "./environment-parts";
 import { emptyStateClass } from "./styles";
 import {
   getLoadedSvgAssetCatalog,
   type SvgCatalogAsset,
   type SvgCatalogFamily,
 } from "./svg-file-catalog";
+
+// ── Constants ────────────────────────────────────────────────────────────
 
 const FAMILY_LABELS: Record<SvgCatalogFamily, string> = {
   operators: "Operators",
@@ -14,13 +18,11 @@ const FAMILY_LABELS: Record<SvgCatalogFamily, string> = {
   other: "Other",
 };
 
-function formatTokenLabel(value: string): string {
-  return value
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 5;
+const ZOOM_STEP = 0.25;
+
+// ── Shared UI ────────────────────────────────────────────────────────────
 
 function SearchInput({
   value,
@@ -80,12 +82,12 @@ function FilterSelect({
 }: {
   label: string;
   value: string;
-  options: { value: string; label: string }[];
+  options: readonly { value: string; label: string }[];
   onChange: (value: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
+      <label className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">
         {label}
       </label>
       <select
@@ -115,7 +117,7 @@ function MetadataRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="w-20 shrink-0 text-sm font-medium uppercase tracking-[0.1em] text-gold/70">
+      <span className="w-24 shrink-0 text-xs font-medium uppercase tracking-[0.1em] text-gold/70">
         {label}
       </span>
       <div className="flex-1 text-xs text-silver-bright">{value ?? children}</div>
@@ -123,209 +125,202 @@ function MetadataRow({
   );
 }
 
-function SelectionCheckbox({ isSelected }: { isSelected: boolean }) {
-  return (
-    <div
-      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-        isSelected
-          ? "border-gold bg-gold"
-          : "border-[rgba(200,168,76,0.15)] group-hover:border-gold/30"
-      }`}
-    >
-      {isSelected && (
-        <svg
-          viewBox="0 0 12 12"
-          className="h-2.5 w-2.5 text-void"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M2 6l3 3 5-5" />
-        </svg>
-      )}
-    </div>
-  );
-}
+// ── List Item ────────────────────────────────────────────────────────────
 
-function CatalogAssetThumbnail({
-  asset,
-  className,
-}: {
-  asset: SvgCatalogAsset;
-  className: string;
-}) {
-  return (
-    <img
-      src={asset.url}
-      alt={asset.label}
-      loading="lazy"
-      className={`object-contain ${className}`}
-      draggable={false}
-    />
-  );
-}
-
-function CatalogListItem({
+function AssetListItem({
   asset,
   isSelected,
-  onToggle,
   onSelect,
 }: {
   asset: SvgCatalogAsset;
   isSelected: boolean;
-  onToggle: () => void;
   onSelect: () => void;
 }) {
   return (
     <button
       type="button"
-      onClick={(event) => (event.ctrlKey || event.metaKey ? onToggle() : onSelect())}
-      className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-200 ${
+      onClick={onSelect}
+      className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-all duration-200 ${
         isSelected
           ? "border-gold/30 bg-[rgba(200,168,76,0.08)]"
           : "border-transparent hover:border-[rgba(200,168,76,0.1)] hover:bg-[rgba(200,168,76,0.03)]"
       }`}
     >
       <div
-        className={`flex h-16 w-20 shrink-0 items-center justify-center overflow-hidden rounded border ${
+        className={`flex h-12 w-14 shrink-0 items-center justify-center overflow-hidden rounded border ${
           isSelected
             ? "border-gold/20 bg-[rgba(200,168,76,0.06)]"
             : "border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.6)]"
         }`}
       >
-        <CatalogAssetThumbnail asset={asset} className="h-full w-full" />
+        <img
+          src={asset.url}
+          alt={asset.label}
+          loading="lazy"
+          className="h-full w-full object-contain"
+          draggable={false}
+        />
       </div>
       <div className="min-w-0 flex-1">
         <p
           className={`truncate text-xs font-medium ${isSelected ? "text-gold" : "text-silver-bright"}`}
         >
-          {asset.filename}
+          {asset.label}
         </p>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-silver/60">
-          <span>{FAMILY_LABELS[asset.family]}</span>
-          <span>{formatTokenLabel(asset.pack)}</span>
-          <span>{formatTokenLabel(asset.stage)}</span>
-          {asset.section && <span>{formatTokenLabel(asset.section)}</span>}
+        <div className="mt-0.5 flex items-center gap-1.5">
+          <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-xs text-gold/60">
+            {FAMILY_LABELS[asset.family]}
+          </span>
+          <span className="text-xs text-silver/50">{titleCase(asset.stage)}</span>
+          {asset.section && (
+            <span className="text-xs text-silver/40">{titleCase(asset.section)}</span>
+          )}
         </div>
       </div>
-      <SelectionCheckbox isSelected={isSelected} />
     </button>
   );
 }
 
-function CatalogSingleDetail({ asset }: { asset: SvgCatalogAsset }) {
+// ── Detail View ──────────────────────────────────────────────────────────
+
+function AssetDetail({
+  asset,
+  presetId,
+  zoom,
+}: {
+  asset: SvgCatalogAsset;
+  presetId: string;
+  zoom: number;
+}) {
+  const preset = getEnvLightingPreset(presetId);
+  const previewRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="animate-enter flex flex-col items-center gap-6 p-8">
-      <div className="flex h-80 w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.6)] p-4">
-        <CatalogAssetThumbnail asset={asset} className="max-h-full max-w-full" />
-      </div>
-      <div className="w-full max-w-2xl space-y-4">
-        <div className="text-center">
-          <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
-            {asset.label}
-          </h3>
-          <p className="mt-1 text-sm text-silver/60">
-            <code className="text-gold/70">{asset.url}</code>
-          </p>
+    <div className="animate-enter flex h-full flex-col">
+      {/* Preview area */}
+      <div
+        ref={previewRef}
+        className="relative flex flex-1 items-center justify-center overflow-auto"
+        style={{ backgroundColor: preset.background }}
+      >
+        <div
+          className="absolute inset-0 flex items-center justify-center p-8 transition-transform duration-150 ease-out"
+          style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}
+        >
+          <img
+            src={asset.url}
+            alt={asset.label}
+            className="max-h-[55vh] max-w-full object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
+            draggable={false}
+          />
         </div>
-        <div className="space-y-3 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.4)] p-4">
-          <MetadataRow label="Family" value={FAMILY_LABELS[asset.family]} />
-          <MetadataRow label="Pack" value={formatTokenLabel(asset.pack)} />
-          <MetadataRow label="Stage" value={formatTokenLabel(asset.stage)} />
-          {asset.section && <MetadataRow label="Section" value={formatTokenLabel(asset.section)} />}
-          <MetadataRow label="File" value={asset.filename} />
-          <MetadataRow label="Path">
-            <code className="text-sm text-gold/70">{asset.path}</code>
-          </MetadataRow>
-          <MetadataRow label="Directory">
-            <code className="text-sm text-gold/70">{asset.directory}</code>
-          </MetadataRow>
+        {preset.overlay && (
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: preset.overlay }}
+          />
+        )}
+      </div>
+
+      {/* Metadata */}
+      <div className="shrink-0 border-t border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.35)] p-5">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <div>
+            <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
+              {asset.label}
+            </h3>
+            <p className="mt-0.5">
+              <code className="text-xs text-gold/50">{asset.url}</code>
+            </p>
+          </div>
+          <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            <MetadataRow label="Family" value={FAMILY_LABELS[asset.family]} />
+            <MetadataRow label="Collection" value={titleCase(asset.pack)} />
+            <MetadataRow label="Type" value={titleCase(asset.stage)} />
+            {asset.section && <MetadataRow label="Section" value={titleCase(asset.section)} />}
+            <MetadataRow label="File" value={asset.filename} />
+            <MetadataRow label="Directory">
+              <code className="text-xs text-gold/40">{asset.directory}</code>
+            </MetadataRow>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function CatalogComparisonView({ assets }: { assets: SvgCatalogAsset[] }) {
-  return (
-    <div className="animate-enter p-6">
-      <div className="mb-5 text-center">
-        <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
-          Comparing {assets.length} SVG assets
-        </h3>
-      </div>
-      <div
-        className={`grid gap-4 ${
-          assets.length === 2 ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        }`}
-      >
-        {assets.map((asset) => (
-          <div
-            key={asset.id}
-            className="flex flex-col gap-3 rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] p-4"
-          >
-            <div className="flex h-40 items-center justify-center overflow-hidden rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.5)] p-3">
-              <CatalogAssetThumbnail asset={asset} className="max-h-full max-w-full" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-silver-bright">{asset.filename}</p>
-              <div className="flex flex-wrap gap-1">
-                <span className="badge badge-gold">{FAMILY_LABELS[asset.family]}</span>
-                <span className="badge badge-slate text-xs">{formatTokenLabel(asset.stage)}</span>
-                {asset.section && (
-                  <span className="badge badge-slate text-xs">
-                    {formatTokenLabel(asset.section)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ── Main Panel ───────────────────────────────────────────────────────────
 
 export function SvgFileCatalogPanel() {
   const catalog = getLoadedSvgAssetCatalog();
   const assets = catalog.assets;
+
+  // Filter state
   const [search, setSearch] = useState("");
-  const [family, setFamily] = useState("");
-  const [pack, setPack] = useState("");
-  const [stage, setStage] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [activeFamily, setActiveFamily] = useState<SvgCatalogFamily | null>(null);
+  const [collection, setCollection] = useState("");
+  const [type, setType] = useState("");
+  const [section, setSection] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const filterOptions = useMemo(() => {
-    const familyOptions = [...new Set(assets.map((asset) => asset.family))].map((value) => ({
-      value,
-      label: FAMILY_LABELS[value],
-    }));
-    const packOptions = [...new Set(assets.map((asset) => asset.pack))].map((value) => ({
-      value,
-      label: formatTokenLabel(value),
-    }));
-    const stageOptions = [...new Set(assets.map((asset) => asset.stage))].map((value) => ({
-      value,
-      label: formatTokenLabel(value),
-    }));
+  // Display state
+  const [presetId, setPresetId] = useState("neutral");
+  const [zoom, setZoom] = useState(1);
 
-    return {
-      families: familyOptions,
-      packs: packOptions.sort((left, right) => left.label.localeCompare(right.label)),
-      stages: stageOptions.sort((left, right) => left.label.localeCompare(right.label)),
+  // Wheel-zoom on the preview area (needs non-passive listener)
+  const mainRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      // Only zoom when cursor is over the preview (not the metadata)
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-preview-area]")) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      setZoom((z) => Math.min(Math.max(z + delta, ZOOM_MIN), ZOOM_MAX));
     };
-  }, [assets]);
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, []);
 
+  // Cascading filter options — narrow based on active filters
+  const filterOptions = useMemo(() => {
+    let base = [...assets] as readonly SvgCatalogAsset[];
+    if (activeFamily) base = base.filter((a) => a.family === activeFamily);
+
+    const collections = [...new Set(base.map((a) => a.pack))]
+      .sort()
+      .map((v) => ({ value: v, label: titleCase(v) }));
+
+    const afterCollection = collection ? base.filter((a) => a.pack === collection) : base;
+    const types = [...new Set(afterCollection.map((a) => a.stage))]
+      .sort()
+      .map((v) => ({ value: v, label: titleCase(v) }));
+
+    const afterType = type ? afterCollection.filter((a) => a.stage === type) : afterCollection;
+    const sections = [
+      ...new Set(afterType.map((a) => a.section).filter((s): s is string => s !== null)),
+    ]
+      .sort()
+      .map((v) => ({ value: v, label: titleCase(v) }));
+
+    return { collections, types, sections };
+  }, [assets, activeFamily, collection, type]);
+
+  // Filtered assets
   const filteredAssets = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const q = search.toLowerCase().trim();
     return assets.filter((asset) => {
-      if (query) {
+      if (activeFamily && asset.family !== activeFamily) return false;
+      if (collection && asset.pack !== collection) return false;
+      if (type && asset.stage !== type) return false;
+      if (section && asset.section !== section) return false;
+      if (q) {
         const haystack = [
           asset.label,
           asset.filename,
           asset.url,
-          asset.path,
-          asset.directory,
           asset.family,
           asset.pack,
           asset.stage,
@@ -333,165 +328,235 @@ export function SvgFileCatalogPanel() {
         ]
           .join(" ")
           .toLowerCase();
-
-        if (!haystack.includes(query)) {
-          return false;
-        }
+        if (!haystack.includes(q)) return false;
       }
-
-      if (family && asset.family !== family) return false;
-      if (pack && asset.pack !== pack) return false;
-      if (stage && asset.stage !== stage) return false;
-
       return true;
     });
-  }, [assets, search, family, pack, stage]);
+  }, [assets, search, activeFamily, collection, type, section]);
 
-  const selectedAssets = useMemo(
-    () => assets.filter((asset) => selected.has(asset.id)),
-    [assets, selected],
-  );
-
+  // Family counts (always against full catalog, not filtered)
   const familyCounts = useMemo(() => {
-    return (Object.keys(FAMILY_LABELS) as SvgCatalogFamily[]).map((key) => ({
-      key,
-      count: assets.filter((asset) => asset.family === key).length,
-    }));
+    const counts = new Map<SvgCatalogFamily, number>();
+    for (const asset of assets) {
+      counts.set(asset.family, (counts.get(asset.family) ?? 0) + 1);
+    }
+    return counts;
   }, [assets]);
 
-  const hasFilters = !!(search || family || pack || stage);
+  const hasFilters = !!(search || activeFamily || collection || type || section);
 
-  function toggleAsset(id: string) {
-    setSelected((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }
+  // Clear selection if selected asset is filtered out
+  const effectiveSelectedId =
+    selectedId && filteredAssets.some((a) => a.id === selectedId) ? selectedId : null;
+  const effectiveSelectedAsset = effectiveSelectedId
+    ? (assets.find((a) => a.id === effectiveSelectedId) ?? null)
+    : null;
 
-  function selectOnlyAsset(id: string) {
-    setSelected(new Set([id]));
+  const clearFilters = useCallback(() => {
+    setSearch("");
+    setActiveFamily(null);
+    setCollection("");
+    setType("");
+    setSection("");
+  }, []);
+
+  function toggleFamily(family: SvgCatalogFamily) {
+    if (activeFamily === family) {
+      setActiveFamily(null);
+    } else {
+      setActiveFamily(family);
+      setCollection("");
+      setType("");
+      setSection("");
+    }
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden">
-      <aside className="flex w-80 shrink-0 flex-col border-r border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)]">
+    <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+      {/* ── Sidebar ────────────────────────────────────────────────── */}
+      <aside className="flex w-full shrink-0 flex-col border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] lg:w-80 lg:border-b-0 lg:border-r">
+        {/* Search */}
         <div className="border-b border-[rgba(200,168,76,0.06)] p-3">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by filename, path, family…"
-          />
-          <p className="mt-2 text-sm leading-relaxed text-silver/50">
-            {catalog.description} This tab is generated from <code>{catalog.generatedFrom}</code>.
-          </p>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search assets..." />
         </div>
+
+        {/* Family toggle chips */}
+        <div className="flex flex-wrap gap-1.5 border-b border-[rgba(200,168,76,0.06)] px-3 py-2.5">
+          {(Object.keys(FAMILY_LABELS) as SvgCatalogFamily[]).map((family) => {
+            const count = familyCounts.get(family) ?? 0;
+            if (count === 0) return null;
+            const isActive = activeFamily === family;
+            return (
+              <button
+                key={family}
+                type="button"
+                onClick={() => toggleFamily(family)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+                  isActive
+                    ? "border-gold/30 bg-gold/15 text-gold"
+                    : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.5)] text-silver/50 hover:border-[rgba(200,168,76,0.15)] hover:text-silver/70"
+                }`}
+              >
+                {FAMILY_LABELS[family]} <span className="opacity-50">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filter dropdowns */}
         <div className="grid grid-cols-2 gap-2 border-b border-[rgba(200,168,76,0.06)] p-3">
           <FilterSelect
-            label="Family"
-            value={family}
-            onChange={setFamily}
-            options={filterOptions.families}
+            label="Collection"
+            value={collection}
+            onChange={(v) => {
+              setCollection(v);
+              setType("");
+              setSection("");
+            }}
+            options={filterOptions.collections}
           />
           <FilterSelect
-            label="Pack"
-            value={pack}
-            onChange={setPack}
-            options={filterOptions.packs}
+            label="Type"
+            value={type}
+            onChange={(v) => {
+              setType(v);
+              setSection("");
+            }}
+            options={filterOptions.types}
           />
-          <FilterSelect
-            label="Stage"
-            value={stage}
-            onChange={setStage}
-            options={filterOptions.stages}
-          />
+          {filterOptions.sections.length > 0 && (
+            <FilterSelect
+              label="Section"
+              value={section}
+              onChange={setSection}
+              options={filterOptions.sections}
+            />
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-2 border-b border-[rgba(200,168,76,0.04)] p-3">
-          {familyCounts.map((entry) => (
-            <div
-              key={entry.key}
-              className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] px-3 py-2"
-            >
-              <p className="text-sm font-medium text-silver-bright">{FAMILY_LABELS[entry.key]}</p>
-              <p className="text-xs text-gold/50">
-                {entry.count} asset{entry.count !== 1 ? "s" : ""}
-              </p>
-            </div>
-          ))}
-        </div>
+
+        {/* Result count */}
         <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.04)] px-3 py-2">
-          <span className="text-sm text-silver/60">
-            {filteredAssets.length} result{filteredAssets.length !== 1 ? "s" : ""}
+          <span className="text-xs text-silver/60">
+            {filteredAssets.length} asset{filteredAssets.length !== 1 ? "s" : ""}
             {hasFilters && (
               <button
                 type="button"
-                onClick={() => {
-                  setSearch("");
-                  setFamily("");
-                  setPack("");
-                  setStage("");
-                }}
+                onClick={clearFilters}
                 className="ml-2 text-gold/70 transition-colors hover:text-gold"
               >
                 clear
               </button>
             )}
           </span>
-          <div className="flex items-center gap-2 text-sm">
-            {selected.size > 0 && (
-              <button
-                type="button"
-                onClick={() => setSelected(new Set())}
-                className="text-silver/60 transition-colors hover:text-silver"
-              >
-                deselect
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setSelected(new Set(filteredAssets.map((asset) => asset.id)))}
-              className="text-gold/70 transition-colors hover:text-gold"
-            >
-              all
-            </button>
-          </div>
         </div>
-        <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
+
+        {/* Asset list */}
+        <div className="max-h-[42vh] flex-1 space-y-0.5 overflow-y-auto p-2 lg:max-h-none">
           {filteredAssets.length === 0 ? (
             <div className={`${emptyStateClass} py-10`}>
-              <p className="text-xs text-silver/60">No SVG assets match your filters</p>
+              <p className="text-xs text-silver/60">No assets match your filters</p>
             </div>
           ) : (
             filteredAssets.map((asset) => (
-              <CatalogListItem
+              <AssetListItem
                 key={asset.id}
                 asset={asset}
-                isSelected={selected.has(asset.id)}
-                onToggle={() => toggleAsset(asset.id)}
-                onSelect={() => selectOnlyAsset(asset.id)}
+                isSelected={effectiveSelectedId === asset.id}
+                onSelect={() => setSelectedId(effectiveSelectedId === asset.id ? null : asset.id)}
               />
             ))
           )}
         </div>
       </aside>
-      <main className="flex-1 overflow-y-auto">
-        {selectedAssets.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-            <div className="text-2xl text-gold/15">&loz;</div>
-            <p className="text-xs text-silver/60">Select an SVG asset to inspect</p>
-            <p className="max-w-md text-sm leading-relaxed text-silver/50">
-              This catalog includes every shipped SVG file under <code>public/data/</code>,
-              including reference art, room recipes, raid bosses, and operator parts.
-            </p>
+
+      {/* ── Detail panel ───────────────────────────────────────────── */}
+      <div ref={mainRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Toolbar: lighting presets + zoom controls */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.25)] px-4 py-2">
+          {/* Lighting presets */}
+          <div className="flex items-center gap-1">
+            {ENV_LIGHTING_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPresetId(p.id)}
+                className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                  presetId === p.id
+                    ? "bg-[rgba(200,168,76,0.12)] text-gold"
+                    : "text-silver/40 hover:text-silver/60"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
-        )}
-        {selectedAssets.length === 1 && <CatalogSingleDetail asset={selectedAssets[0]} />}
-        {selectedAssets.length > 1 && <CatalogComparisonView assets={selectedAssets} />}
-      </main>
+
+          <div className="h-4 w-px bg-[rgba(200,168,76,0.06)]" />
+
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(z - ZOOM_STEP, ZOOM_MIN))}
+              className="flex h-6 w-6 items-center justify-center rounded text-sm text-silver/50 transition-colors hover:bg-[rgba(200,168,76,0.06)] hover:text-silver"
+              aria-label="Zoom out"
+            >
+              &minus;
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom(1)}
+              className="min-w-[3.25rem] rounded px-1.5 py-0.5 text-center text-xs text-silver/50 transition-colors hover:text-silver"
+              title="Reset zoom"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX))}
+              className="flex h-6 w-6 items-center justify-center rounded text-sm text-silver/50 transition-colors hover:bg-[rgba(200,168,76,0.06)] hover:text-silver"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom(1)}
+              className="ml-1 rounded px-2 py-0.5 text-xs text-silver/40 transition-colors hover:text-silver/60"
+            >
+              Fit
+            </button>
+          </div>
+
+          {effectiveSelectedAsset && (
+            <>
+              <div className="h-4 w-px bg-[rgba(200,168,76,0.06)]" />
+              <span className="text-xs text-silver/40">Scroll to zoom in preview</span>
+            </>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="min-h-0 flex-1 overflow-hidden" data-preview-area>
+          {effectiveSelectedAsset ? (
+            <AssetDetail
+              key={effectiveSelectedAsset.id}
+              asset={effectiveSelectedAsset}
+              presetId={presetId}
+              zoom={zoom}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+              <div className="text-2xl text-gold/15">&loz;</div>
+              <p className="text-xs text-silver/60">Select an SVG asset to inspect</p>
+              <p className="max-w-md text-sm leading-relaxed text-silver/40">
+                Browse all {assets.length} shipped SVG files. Use the family chips and filters to
+                narrow results, or search by name.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

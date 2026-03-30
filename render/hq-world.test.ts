@@ -65,6 +65,28 @@ describe("HQ world navigation", () => {
     expect(geometry.roomProps[0]?.debugOrigin).toBeTruthy();
   });
 
+  it("renders fallback room props through svg metadata with preserved aspect ratio", () => {
+    const geometry = composeHqWorldGeometry([
+      createRoomSeed({
+        id: "room-instance/infirmary",
+        templateId: "room/infirmary:tier_1",
+        roomStateId: "room-state/infirmary:1",
+        slotId: "slot/infirmary",
+        name: "The Infirmary",
+        functionTag: "room:recovery",
+      }),
+    ]);
+
+    const bed = geometry.roomProps.find((sprite) =>
+      sprite.assetUrl.endsWith("iso-bed-medical.svg"),
+    );
+
+    expect(geometry.roomProps).toHaveLength(8);
+    expect(bed).toBeTruthy();
+    expect(bed!.width).not.toBe(108);
+    expect(bed!.width / bed!.height).toBeCloseTo(88 / 76, 3);
+  });
+
   it("renders available and locked expansion bays as explicit slot nodes", () => {
     const geometry = composeHqWorldGeometry([createRoomSeed()], {
       reservedSlots: [

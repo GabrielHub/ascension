@@ -290,3 +290,80 @@ export interface SvgCompositionLayer {
 export interface SvgCompositionRecipe {
   layers: readonly SvgCompositionLayer[];
 }
+
+// ── Unified HQ static scene placement ──────────────────────────────────
+
+export type HqPlacementAnchor = "scene-origin" | "iso-bottom" | "iso-center";
+export type HqPlacementKind = "room-scene" | "exterior" | "decoration";
+
+export interface HqScenePlacementOrigin {
+  svgOriginX: number;
+  svgOriginY: number;
+  viewBoxMinX: number;
+  viewBoxMinY: number;
+}
+
+/**
+ * SVG-space metadata for grid-aligned SVG placement.
+ * When present on a placement, the renderer derives size from the viewBox
+ * and position from the SVG anchor point, eliminating arbitrary width/height tuning.
+ */
+export interface HqSvgPlacementMeta {
+  /** X of the anchor point in SVG user-space coordinates. */
+  svgAnchorX: number;
+  /** Y of the anchor point in SVG user-space coordinates. */
+  svgAnchorY: number;
+  /** SVG viewBox as [minX, minY, width, height]. */
+  viewBox: readonly [number, number, number, number];
+}
+
+/**
+ * Canonical static placement definition for all non-actor HQ SVG content.
+ * Positions are grid-anchored (col/row), never raw screen x/y.
+ *
+ * Placement modes (in priority order):
+ * 1. `svgMeta` present — size from viewBox × scale, position from SVG anchor.
+ *    The svgAnchor point in SVG space maps to the grid point (col, row).
+ *    `anchorMode` is ignored; `width`/`height` are documentation-only.
+ * 2. `sceneOrigin` present with `anchorMode: "scene-origin"` — legacy room-scene mode.
+ * 3. Otherwise — `anchorMode` + explicit `width`/`height`.
+ */
+export interface HqStaticPlacementDef {
+  id: string;
+  assetId: string;
+  assetUrl: string;
+  kind: HqPlacementKind;
+  col: number;
+  row: number;
+  anchorMode: HqPlacementAnchor;
+  /** Rendering width. Ignored when svgMeta is present (derived from viewBox × scale). */
+  width: number;
+  /** Rendering height. Ignored when svgMeta is present (derived from viewBox × scale). */
+  height: number;
+  zIndex: number;
+  opacity: number;
+  scale: number;
+  /** Fine-tuning offset in screen pixels. Should be small, not the primary contract. */
+  offsetX?: number;
+  /** Fine-tuning offset in screen pixels. Should be small, not the primary contract. */
+  offsetY?: number;
+  /** SVG metadata — when present, rendering derives size and position from this. */
+  svgMeta?: HqSvgPlacementMeta;
+  /** Grid footprint in tiles (metadata for builder validation, not used by renderer). */
+  footprintCols?: number;
+  /** Grid footprint in tiles (metadata for builder validation, not used by renderer). */
+  footprintRows?: number;
+  /** Legacy room-scene origin (used when anchorMode is "scene-origin" and svgMeta is absent). */
+  sceneOrigin?: HqScenePlacementOrigin;
+  tags?: readonly string[];
+}
+
+/**
+ * A complete scene composition for one building/floor.
+ * Contains all static HQ SVG placements for that scope.
+ */
+export interface HqSceneComposition {
+  buildingId: string;
+  sceneId: string;
+  placements: readonly HqStaticPlacementDef[];
+}

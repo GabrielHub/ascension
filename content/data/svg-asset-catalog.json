@@ -135,18 +135,6 @@
       "section": "background"
     },
     {
-      "id": "svg-environments/hq/bodega/parts/background/iso-bg-sidewalk",
-      "url": "/data/svg-environments/hq/bodega/parts/background/iso-bg-sidewalk.svg",
-      "path": "data/svg-environments/hq/bodega/parts/background/iso-bg-sidewalk.svg",
-      "directory": "/data/svg-environments/hq/bodega/parts/background",
-      "filename": "iso-bg-sidewalk.svg",
-      "label": "Sidewalk",
-      "family": "hq",
-      "pack": "bodega",
-      "stage": "parts",
-      "section": "background"
-    },
-    {
       "id": "svg-environments/hq/bodega/parts/background/iso-bg-sky",
       "url": "/data/svg-environments/hq/bodega/parts/background/iso-bg-sky.svg",
       "path": "data/svg-environments/hq/bodega/parts/background/iso-bg-sky.svg",
@@ -165,18 +153,6 @@
       "directory": "/data/svg-environments/hq/bodega/parts/background",
       "filename": "iso-bg-steam-vent.svg",
       "label": "Steam Vent",
-      "family": "hq",
-      "pack": "bodega",
-      "stage": "parts",
-      "section": "background"
-    },
-    {
-      "id": "svg-environments/hq/bodega/parts/background/iso-bg-street",
-      "url": "/data/svg-environments/hq/bodega/parts/background/iso-bg-street.svg",
-      "path": "data/svg-environments/hq/bodega/parts/background/iso-bg-street.svg",
-      "directory": "/data/svg-environments/hq/bodega/parts/background",
-      "filename": "iso-bg-street.svg",
-      "label": "Street",
       "family": "hq",
       "pack": "bodega",
       "stage": "parts",
@@ -711,18 +687,6 @@
       "section": "props"
     },
     {
-      "id": "svg-environments/hq/bodega/parts/props/iso-screen-privacy",
-      "url": "/data/svg-environments/hq/bodega/parts/props/iso-screen-privacy.svg",
-      "path": "data/svg-environments/hq/bodega/parts/props/iso-screen-privacy.svg",
-      "directory": "/data/svg-environments/hq/bodega/parts/props",
-      "filename": "iso-screen-privacy.svg",
-      "label": "Screen Privacy",
-      "family": "hq",
-      "pack": "bodega",
-      "stage": "parts",
-      "section": "props"
-    },
-    {
       "id": "svg-environments/hq/bodega/parts/props/iso-shelf-wall",
       "url": "/data/svg-environments/hq/bodega/parts/props/iso-shelf-wall.svg",
       "path": "data/svg-environments/hq/bodega/parts/props/iso-shelf-wall.svg",
@@ -1197,6 +1161,18 @@
       "directory": "/data/svg-environments/raids/bosses",
       "filename": "sewer-warden.svg",
       "label": "Sewer Warden",
+      "family": "raids",
+      "pack": "raids",
+      "stage": "bosses",
+      "section": null
+    },
+    {
+      "id": "svg-environments/raids/bosses/the-attendant",
+      "url": "/data/svg-environments/raids/bosses/the-attendant.svg",
+      "path": "data/svg-environments/raids/bosses/the-attendant.svg",
+      "directory": "/data/svg-environments/raids/bosses",
+      "filename": "the-attendant.svg",
+      "label": "Attendant",
       "family": "raids",
       "pack": "raids",
       "stage": "bosses",

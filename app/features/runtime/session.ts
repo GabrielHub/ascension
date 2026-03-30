@@ -116,6 +116,9 @@ export interface RuntimeSessionCommands {
     input: Omit<Extract<SimCommand, { type: "sim/set-room-active" }>, "type">,
   ): Promise<void>;
   setPolicy(input: Omit<Extract<SimCommand, { type: "sim/set-policy" }>, "type">): Promise<void>;
+  setLootFilter(
+    input: Omit<Extract<SimCommand, { type: "sim/set-loot-filter" }>, "type">,
+  ): Promise<void>;
   purchaseBuildingUpgrade(
     input: Omit<Extract<SimCommand, { type: "sim/purchase-building-upgrade" }>, "type">,
   ): Promise<void>;
@@ -1583,6 +1586,13 @@ function createRuntimeSession(
     setPolicy(input) {
       return commands.dispatch({
         type: "sim/set-policy",
+        ...input,
+      });
+    },
+
+    setLootFilter(input) {
+      return commands.dispatch({
+        type: "sim/set-loot-filter",
         ...input,
       });
     },

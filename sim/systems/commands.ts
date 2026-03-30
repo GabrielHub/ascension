@@ -36,6 +36,12 @@ import {
   removeFromInventory,
   unequipItem,
 } from "./inventory";
+import {
+  applyLootAutomationSweep,
+  describeLootAutomationSweep,
+  isLootAutomationEnabled,
+  setLootAutomationEnabled,
+} from "./loot-automation";
 import { recordGuidanceInteraction } from "./guidance";
 import {
   AssignmentState,
@@ -520,7 +526,45 @@ export function getAdjustedMarketPriceForItem(
   };
 }
 
+/** How many buyable items the market stocks each day. */
+const DAILY_STOCK_SIZE = 10;
+
+/**
+ * Deterministic daily stock selection.
+ * Uses the game-day as a seed so the same day always produces the same subset.
+ */
+let cachedDailyStockDay = -1;
+let cachedDailyStockSet: ReadonlySet<string> = new Set();
+
+function getDailyStockSet(context: SimSystemContext): ReadonlySet<string> {
+  const timeEntity = context.singletonEntities.time;
+  const day = WorldTimeState.day[timeEntity];
+
+  if (day === cachedDailyStockDay) return cachedDailyStockSet;
+
+  const buyableItems = context.registry.items.filter((i) => i.buyPrice > 0);
+  let result: ReadonlySet<string>;
+  if (buyableItems.length <= DAILY_STOCK_SIZE) {
+    result = new Set(buyableItems.map((i) => i.id));
+  } else {
+    // Seeded shuffle via day-based hash
+    const seed = stableStringHash(`market-stock-day-${day}`);
+    const indexed = buyableItems.map((item, i) => ({
+      id: item.id,
+      score: stableStringHash(`${seed}-${i}-${item.id}`),
+    }));
+    indexed.sort((a, b) => a.score - b.score);
+    result = new Set(indexed.slice(0, DAILY_STOCK_SIZE).map((e) => e.id));
+  }
+
+  cachedDailyStockDay = day;
+  cachedDailyStockSet = result;
+  return result;
+}
+
 export function getAdjustedMarketItems(context: SimSystemContext): MarketItemView[] {
+  const dailyStock = getDailyStockSet(context);
+
   return context.registry.items.map((item) => {
     const price = getAdjustedMarketPriceForItem(context, item.id);
 
@@ -528,7 +572,7 @@ export function getAdjustedMarketItems(context: SimSystemContext): MarketItemVie
       itemId: item.id,
       buyPrice: price?.buyPrice ?? 0,
       sellPrice: price?.sellPrice ?? 0,
-      available: item.buyPrice > 0,
+      available: item.buyPrice > 0 && dailyStock.has(item.id),
     };
   });
 }
@@ -1191,6 +1235,37 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       pushRuntimeEvent(context, {
         kind: "event_change",
         message: `${GuildState.playerName[context.singletonEntities.guild]} changed ${getPolicyLabel(command.policyId)} to ${getPolicyOptionLabel(command.policyId, command.value)}.`,
+        accent: "gold",
+      });
+      return;
+    }
+    case "sim/set-loot-filter": {
+      const wasEnabled = isLootAutomationEnabled(context);
+      if (wasEnabled === command.enabled) {
+        return;
+      }
+
+      setLootAutomationEnabled(context, command.enabled);
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: command.enabled
+          ? "Loot filter enabled. Junk parts and obsolete gear will sell automatically."
+          : "Loot filter disabled. Loot will stay in inventory until reviewed manually.",
+        accent: "gold",
+      });
+
+      if (!command.enabled) {
+        return;
+      }
+
+      const sweep = applyLootAutomationSweep(context);
+      if (sweep.totalQuantity <= 0) {
+        return;
+      }
+
+      pushRuntimeEvent(context, {
+        kind: "resource_swing",
+        message: `Loot filter auto-sold ${describeLootAutomationSweep(context.registry, sweep)} for $${sweep.totalRevenue}`,
         accent: "gold",
       });
       return;

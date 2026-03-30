@@ -25,7 +25,7 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - HQ exteriors should support a clock-driven four-state day-night cycle: `sunrise`, `day`, `sunset`, and `night`.
 - The HQ day-night cycle is presentation-facing only by default. It changes the backdrop, skyline, exterior lighting, and decorative street dressing around the building shell; it does not add hidden gameplay modifiers on its own.
 - HQ exterior composition should be shell-relative, not permanently ground-level. The core framing contract is the building shell in the center plus authored zones around it, not a fixed promise of sidewalk, street, and alley semantics.
-- The current shipped bodega slice uses a hybrid version of that contract: the active phase, tint/fog/shadow values, and shell-relative backdrop-zone schema are data-backed, while some bodega-specific exterior dressing still comes from renderer-authored composition until fuller backdrop packages replace it.
+- The current shipped bodega slice uses the unified static HQ scene contract for non-actor SVG placement: the active phase, tint/fog/shadow values, shell-relative backdrop metadata, room scenes, exterior modules, and fallback room props are all grid-anchored through the same runtime placement path.
 
 ## Overlay UI Direction
 

@@ -194,4 +194,6 @@ export const BuildingAuthority = soa({
   contractResult: [] as (ContractResultSummary | null)[],
   /** Active HQ management policies. */
   policies: [] as PolicyState[],
+  /** Whether automatic loot filtering is enabled for new and swept inventory. */
+  lootAutomationEnabled: [] as number[],
 });

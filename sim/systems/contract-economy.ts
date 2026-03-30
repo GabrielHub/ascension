@@ -1,4 +1,5 @@
 import type { ContractRank } from "content/templates/site-concepts";
+import { ITEM_RANK_ORDER } from "content/templates/shared";
 import { clamp } from "./commands";
 
 export interface ContractRankBudgetConfig {
@@ -47,7 +48,7 @@ export const RAID_OPPORTUNITY_VARIANCE = {
   reward: { min: -8, max: 12 },
 } satisfies Record<"threat" | "intel" | "reward", EconomyVarianceRange>;
 
-const CONTRACT_RANK_ORDER: readonly ContractRank[] = ["f", "e", "d", "c", "b", "a", "s"];
+const CONTRACT_RANK_ORDER = ITEM_RANK_ORDER as readonly ContractRank[];
 
 export function getAvailableContractRanksForReputation(
   reputation: number,

@@ -51,6 +51,7 @@ import {
 } from "./commands";
 import { reconcileAssignmentsSystem } from "./assignment";
 import { addToInventory, autoSelectAccessory, unequipItem } from "./inventory";
+import { applyLootAutomationSweep, describeLootAutomationSweep } from "./loot-automation";
 import type { BossEncounterInstance } from "./encounter-types";
 import { createBossCommitmentPayload } from "./incidents";
 import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
@@ -2619,6 +2620,20 @@ function applyLootToInventory(context: SimSystemContext, loot: string[]): void {
   });
   itemCounts.forEach((quantity, itemId) => {
     addToInventory(context, itemId, quantity);
+  });
+
+  const sweep = applyLootAutomationSweep(
+    context,
+    Array.from(itemCounts.entries()).map(([itemId, quantity]) => ({ itemId, quantity })),
+  );
+  if (sweep.totalQuantity <= 0) {
+    return;
+  }
+
+  pushRuntimeEvent(context, {
+    kind: "resource_swing",
+    message: `Loot filter auto-sold ${describeLootAutomationSweep(context.registry, sweep)} for $${sweep.totalRevenue}`,
+    accent: "gold",
   });
 }
 

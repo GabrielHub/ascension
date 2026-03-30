@@ -8,6 +8,7 @@ import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
 import { buildNavigationGraph } from "./navigation";
 import { createEffectsWithOverrides } from "./world-effects";
+import { getExteriorScene } from "./hq-scene-data";
 import type {
   ActorMarker,
   HqBackdropSnapshot,
@@ -19,6 +20,8 @@ import type {
   HqPoint,
   HqRoomNode,
   HqSpritePlacement,
+  HqStaticPlacementDef,
+  HqSvgPlacementMeta,
   HqWallSegment,
   HqWallSide,
   HqWorldLayout,
@@ -92,6 +95,7 @@ const PROP_ASSETS = {
   bottles: `${ASSET_ROOT}/props/iso-bottles-shelf.svg`,
   register: `${ASSET_ROOT}/props/iso-register-cash.svg`,
   punchBag: `${ASSET_ROOT}/props/iso-bag-punching.svg`,
+  bench: `${ASSET_ROOT}/background/iso-bg-bench.svg`,
   // Bodega-specific props
   coffeeMachine: `${ASSET_ROOT}/props/iso-coffee-machine.svg`,
   menuBoard: `${ASSET_ROOT}/props/iso-menu-board.svg`,
@@ -106,22 +110,79 @@ const PROP_ASSETS = {
   posterMotivational: `${ASSET_ROOT}/props/iso-poster-motivational.svg`,
   ceilingFan: `${ASSET_ROOT}/props/iso-fan-ceiling.svg`,
   foodDebris: `${ASSET_ROOT}/props/iso-food-debris.svg`,
-  // Scenery (exterior)
-  awning: `${ASSET_ROOT}/background/iso-bg-awning.svg`,
-  hydrant: `${ASSET_ROOT}/background/iso-bg-hydrant.svg`,
-  lamp: `${ASSET_ROOT}/background/iso-bg-lamppost.svg`,
-  dumpster: `${ASSET_ROOT}/background/iso-bg-dumpster.svg`,
-  trash: `${ASSET_ROOT}/background/iso-bg-trash-bags.svg`,
-  steam: `${ASSET_ROOT}/background/iso-bg-steam-vent.svg`,
-  tree: `${ASSET_ROOT}/background/iso-bg-tree-street.svg`,
-  mailbox: `${ASSET_ROOT}/background/iso-bg-mailbox.svg`,
-  manhole: `${ASSET_ROOT}/background/iso-bg-manhole.svg`,
-  cone: `${ASSET_ROOT}/background/iso-bg-cone-traffic.svg`,
-  bench: `${ASSET_ROOT}/background/iso-bg-bench.svg`,
-  buildingTall: `${ASSET_ROOT}/background/iso-bg-building-tall.svg`,
-  garden: `${ASSET_ROOT}/background/iso-bg-garden.svg`,
-  backAlley: `${ASSET_ROOT}/background/iso-bg-back-alley.svg`,
 } as const;
+
+const PROP_SVG_VIEWBOX = {
+  bandages: [0, 0, 36, 28],
+  bed: [4, 10, 88, 76],
+  bench: [0, 0, 72, 58],
+  bottles: [0, 0, 68, 80],
+  box: [26, 26, 42, 56],
+  bucket: [0, 0, 36, 40],
+  cabinet: [21, 12, 58, 80],
+  ceilingFan: [0, 0, 48, 20],
+  chair: [28, 30, 40, 52],
+  clipboard: [0, 0, 36, 30],
+  clock: [0, 0, 36, 36],
+  coffeeMachine: [0, 0, 48, 64],
+  corkboard: [0, 0, 96, 96],
+  couch: [10, 26, 76, 56],
+  counter: [3, 2, 156, 108],
+  curtain: [0, 0, 64, 96],
+  deliCase: [0, 0, 140, 96],
+  desk: [13, 28, 69, 58],
+  firstAid: [0, 0, 24, 24],
+  foodDebris: [0, 0, 40, 24],
+  gearCrate: [0, 0, 40, 38],
+  guildLicense: [0, 0, 28, 34],
+  ivStand: [8, 12, 28, 84],
+  light: [0, 0, 96, 96],
+  mat: [6, 24, 84, 50],
+  medCabinet: [18, 10, 60, 78],
+  menuBoard: [0, 0, 56, 40],
+  microwave: [0, 0, 44, 36],
+  milkCrate: [0, 0, 32, 28],
+  monitor: [0, 0, 96, 96],
+  mopBroom: [0, 0, 28, 80],
+  phone: [0, 0, 24, 32],
+  pickledEggs: [0, 0, 24, 32],
+  plant: [30, 28, 36, 58],
+  poster: [0, 0, 32, 40],
+  posterMotivational: [0, 0, 30, 38],
+  punchBag: [32, 6, 32, 78],
+  radio: [0, 0, 52, 36],
+  register: [0, 0, 56, 48],
+  rug: [0, 0, 96, 48],
+  shelf: [0, 0, 76, 100],
+  sign: [8, 20, 48, 44],
+  stool: [12, 2, 24, 60],
+  table: [12, 24, 72, 66],
+  trayMedical: [0, 0, 48, 56],
+  waterCooler: [0, 0, 44, 72],
+} as const satisfies Record<keyof typeof PROP_ASSETS, readonly [number, number, number, number]>;
+
+function getPropSvgMeta(assetKey: keyof typeof PROP_ASSETS): HqSvgPlacementMeta {
+  const viewBox = PROP_SVG_VIEWBOX[assetKey];
+  const [minX, minY, width, height] = viewBox;
+  return {
+    svgAnchorX: minX + width / 2,
+    svgAnchorY: minY + height,
+    viewBox,
+  };
+}
+
+function derivePropSpriteScale(
+  assetKey: keyof typeof PROP_ASSETS,
+  legacyWidth: number,
+  legacyHeight: number,
+): number {
+  const [, , viewBoxWidth, viewBoxHeight] = PROP_SVG_VIEWBOX[assetKey];
+  const widthScale = legacyWidth / viewBoxWidth;
+  const heightScale = legacyHeight / viewBoxHeight;
+
+  // Geometric mean preserves approximate visual area while restoring the SVG's aspect ratio.
+  return Math.sqrt(widthScale * heightScale);
+}
 
 // ── Room recipe system ────────────────────────────────────────────────────
 
@@ -135,7 +196,9 @@ interface RecipePropPlacement {
   assetKey: keyof typeof PROP_ASSETS;
   relCol: number;
   relRow: number;
+  /** Sprite-box width used to derive svgMeta scale. */
   width: number;
+  /** Sprite-box height used to derive svgMeta scale. */
   height: number;
   zIndex: number;
   offsetX?: number;
@@ -1082,29 +1145,70 @@ function buildPerimeterTiles(footprints: readonly HqFootprint[]): HqPerimeterTil
 
 // ── Prop placement (recipe-driven) ────────────────────────────────────────
 
-function placeFloorSprite(
-  id: string,
-  assetUrl: string,
-  col: number,
-  row: number,
-  width: number,
-  height: number,
-  zIndex: number,
+// ── Unified static placement projection ──────────────────────────────────
+
+/**
+ * Project a grid-anchored HqStaticPlacementDef to screen-space HqSpritePlacement.
+ * This is the single code path for all non-actor HQ SVG placement.
+ *
+ * Priority: svgMeta → sceneOrigin → anchorMode with explicit width/height.
+ */
+export function projectStaticPlacement(
+  def: HqStaticPlacementDef,
   originX: number,
   originY: number,
-  offsetX = 0,
-  offsetY = 0,
 ): HqSpritePlacement {
-  const anchor = projectIso(col, row, originX, originY);
+  const anchor = projectIso(def.col, def.row, originX, originY);
+  const ox = def.offsetX ?? 0;
+  const oy = def.offsetY ?? 0;
+
+  let x: number;
+  let y: number;
+  let w: number;
+  let h: number;
+
+  if (def.svgMeta) {
+    // SVG-metadata placement: size from viewBox, position from SVG anchor.
+    const [vbMinX, vbMinY, vbW, vbH] = def.svgMeta.viewBox;
+    w = vbW * def.scale;
+    h = vbH * def.scale;
+    x = anchor.x - (def.svgMeta.svgAnchorX - vbMinX) * def.scale;
+    y = anchor.y - (def.svgMeta.svgAnchorY - vbMinY) * def.scale;
+  } else if (def.anchorMode === "scene-origin" && def.sceneOrigin) {
+    // Legacy room-scene placement.
+    const so = def.sceneOrigin;
+    w = def.width * def.scale;
+    h = def.height * def.scale;
+    x = anchor.x - (so.svgOriginX - so.viewBoxMinX);
+    y = anchor.y - (so.svgOriginY - so.viewBoxMinY);
+  } else {
+    // Simple anchor mode with explicit width/height.
+    w = def.width * def.scale;
+    h = def.height * def.scale;
+    switch (def.anchorMode) {
+      case "iso-bottom":
+        x = anchor.x - w / 2;
+        y = anchor.y - h;
+        break;
+      case "iso-center":
+        x = anchor.x - w / 2;
+        y = anchor.y - h / 2;
+        break;
+      default:
+        x = anchor.x;
+        y = anchor.y;
+    }
+  }
+
   return {
-    id,
-    assetUrl,
-    x: anchor.x - width / 2 + offsetX,
-    y: anchor.y - height + offsetY,
-    width,
-    height,
-    zIndex,
-    opacity: 1,
+    id: def.id,
+    assetUrl: def.assetUrl,
+    x: x + ox,
+    y: y + oy,
+    width: w,
+    height: h,
+    zIndex: def.zIndex,
+    opacity: def.opacity,
   };
 }
 
@@ -1120,42 +1224,56 @@ function buildRoomProps(
     const reserved = room.reservedFootprint;
     const active = room.activeFootprint;
     const activeTopCorner = projectIso(active.col, active.row, originX, originY);
+    const roomOpacity = room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35;
 
     if (recipe.sceneAsset) {
-      // Existing scene recipes are authored to the full reserved shell.
+      // Room scene: unified scene-origin projection
       const scene = recipe.sceneAsset;
-      const topCorner = projectIso(reserved.col, reserved.row, originX, originY);
-      props.push({
+      const placement: HqStaticPlacementDef = {
         id: `${room.id}/scene`,
+        assetId: "",
         assetUrl: scene.url,
-        x: topCorner.x - (scene.svgOriginX - scene.viewBoxMinX),
-        y: topCorner.y - (scene.svgOriginY - scene.viewBoxMinY),
+        kind: "room-scene",
+        col: reserved.col,
+        row: reserved.row,
+        anchorMode: "scene-origin",
         width: scene.svgWidth,
         height: scene.svgHeight,
         zIndex: 35,
-        opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35,
-        debugOrigin: activeTopCorner,
-      });
+        opacity: roomOpacity,
+        scale: 1,
+        sceneOrigin: {
+          svgOriginX: scene.svgOriginX,
+          svgOriginY: scene.svgOriginY,
+          viewBoxMinX: scene.viewBoxMinX,
+          viewBoxMinY: scene.viewBoxMinY,
+        },
+      };
+      const sprite = projectStaticPlacement(placement, originX, originY);
+      props.push({ ...sprite, debugOrigin: activeTopCorner });
     } else {
-      // Per-prop sprite placement (fallback for rooms without scene SVGs)
+      // Per-prop sprite placement routed through the same svgMeta projection contract.
       for (const propDef of recipe.props) {
-        props.push({
-          ...placeFloorSprite(
-            `${room.id}/${propDef.assetKey}`,
-            PROP_ASSETS[propDef.assetKey],
-            active.col + active.cols * propDef.relCol,
-            active.row + active.rows * propDef.relRow,
-            propDef.width,
-            propDef.height,
-            propDef.zIndex,
-            originX,
-            originY,
-            propDef.offsetX ?? 0,
-            propDef.offsetY ?? 0,
-          ),
-          opacity: room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35,
-          debugOrigin: activeTopCorner,
-        });
+        const svgMeta = getPropSvgMeta(propDef.assetKey);
+        const placement: HqStaticPlacementDef = {
+          id: `${room.id}/${propDef.assetKey}`,
+          assetId: `prop/${String(propDef.assetKey)}`,
+          assetUrl: PROP_ASSETS[propDef.assetKey],
+          kind: "decoration",
+          col: active.col + active.cols * propDef.relCol,
+          row: active.row + active.rows * propDef.relRow,
+          anchorMode: "iso-bottom",
+          svgMeta,
+          width: propDef.width,
+          height: propDef.height,
+          zIndex: propDef.zIndex,
+          opacity: roomOpacity,
+          scale: derivePropSpriteScale(propDef.assetKey, propDef.width, propDef.height),
+          offsetX: propDef.offsetX ?? 0,
+          offsetY: propDef.offsetY ?? 0,
+        };
+        const sprite = projectStaticPlacement(placement, originX, originY);
+        props.push({ ...sprite, debugOrigin: activeTopCorner });
       }
     }
   }
@@ -1240,159 +1358,17 @@ function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWal
   return segments;
 }
 
-// ── Scenery (background SVG sprites on grid) ──────────────────────────────
+// ── Scenery (data-driven exterior SVG placements) ────────────────────────
 
-function buildScenery(
-  footprints: readonly HqFootprint[],
+function buildExteriorScenery(
+  buildingId: string | undefined,
   originX: number,
   originY: number,
 ): HqSpritePlacement[] {
-  if (footprints.length === 0) return [];
-
-  // Derive building shell bounds from footprints
-  const minCol = Math.min(...footprints.map((fp) => fp.col));
-  const maxCol = Math.max(...footprints.map((fp) => fp.col + fp.cols));
-  const minRow = Math.min(...footprints.map((fp) => fp.row));
-  const maxRow = Math.max(...footprints.map((fp) => fp.row + fp.rows));
-
-  const proj = (col: number, row: number) => projectIso(col, row, originX, originY);
-  const placements: HqSpritePlacement[] = [];
-
-  // The bodega is a diamond in screen space. Place the apartment building
-  // along the LEFT side (col = minCol edge) and the garden along the
-  // RIGHT side (col = maxCol edge). Both stretch front-to-back.
-
-  // ── Apartment building (LEFT side, 2-tile gap from bodega) ──
-  // Runs the full length of the bodega's left edge, towering above it.
-  // The building SVG has a deep side face so it reads as a full block.
-  {
-    const topAnchor = proj(minCol - 2, minRow);
-    const botAnchor = proj(minCol - 2, maxRow);
-    const edgeLen = botAnchor.y - topAnchor.y;
-    const w = 900;
-    const h = edgeLen + 600;
-    placements.push({
-      id: "scenery/building-left",
-      assetUrl: PROP_ASSETS.buildingTall,
-      x: botAnchor.x - w * 0.55,
-      y: topAnchor.y - (h - edgeLen) + 40,
-      width: w,
-      height: h,
-      zIndex: 2,
-      opacity: 0.85,
-    });
-  }
-
-  // ── Garden (RIGHT side, gap from bodega) ──
-  // Green space to the right of the bodega, pushed out to avoid overlap.
-  {
-    const midRow = Math.floor((minRow + maxRow) / 2);
-    const mid = proj(maxCol + 4, midRow);
-    const w = 750;
-    const h = 600;
-    placements.push({
-      id: "scenery/garden",
-      assetUrl: PROP_ASSETS.garden,
-      x: mid.x - w * 0.3,
-      y: mid.y - h * 0.35,
-      width: w,
-      height: h,
-      zIndex: 3,
-      opacity: 0.9,
-    });
-  }
-
-  // ── Street tree (front sidewalk, right side) ──
-  {
-    const anchor = proj(maxCol + 2, maxRow + 2);
-    const w = 130;
-    const h = 210;
-    placements.push({
-      id: "scenery/tree-right",
-      assetUrl: PROP_ASSETS.tree,
-      x: anchor.x - w * 0.5,
-      y: anchor.y - h + 30,
-      width: w,
-      height: h,
-      zIndex: 9,
-      opacity: 0.9,
-    });
-  }
-
-  // ── Street tree (front sidewalk, left side) ──
-  {
-    const anchor = proj(minCol - 1, maxRow + 3);
-    const w = 110;
-    const h = 180;
-    placements.push({
-      id: "scenery/tree-left",
-      assetUrl: PROP_ASSETS.tree,
-      x: anchor.x - w * 0.5,
-      y: anchor.y - h + 25,
-      width: w,
-      height: h,
-      zIndex: 9,
-      opacity: 0.85,
-    });
-  }
-
-  // ── Back alley scene (behind bodega — dumpster, trash, pallets) ──
-  // Spans the full visual width of the bodega shell's back edge, plus
-  // extra columns on each side so it fills the space behind the building.
-  {
-    const leftBack = proj(minCol - 3, minRow - 3);
-    const rightBack = proj(maxCol + 3, minRow - 3);
-    const w = rightBack.x - leftBack.x;
-    const h = w * (310 / 600); // preserve SVG aspect ratio
-    const midX = (leftBack.x + rightBack.x) / 2;
-    const midY = (leftBack.y + rightBack.y) / 2;
-    placements.push({
-      id: "scenery/back-alley",
-      assetUrl: PROP_ASSETS.backAlley,
-      x: midX - w * 0.5,
-      y: midY - h * 0.55,
-      width: w,
-      height: h,
-      zIndex: 4,
-      opacity: 0.85,
-    });
-  }
-
-  // ── Hydrant (front-right sidewalk corner) ──
-  {
-    const anchor = proj(maxCol + 1, maxRow + 2);
-    const w = 45;
-    const h = 75;
-    placements.push({
-      id: "scenery/hydrant",
-      assetUrl: PROP_ASSETS.hydrant,
-      x: anchor.x - w * 0.5,
-      y: anchor.y - h + 12,
-      width: w,
-      height: h,
-      zIndex: 10,
-      opacity: 0.85,
-    });
-  }
-
-  // ── Lamppost (front sidewalk, center) ──
-  {
-    const anchor = proj(Math.floor((minCol + maxCol) / 2), maxRow + 3);
-    const w = 55;
-    const h = 140;
-    placements.push({
-      id: "scenery/lamp",
-      assetUrl: PROP_ASSETS.lamp,
-      x: anchor.x - w * 0.5,
-      y: anchor.y - h + 20,
-      width: w,
-      height: h,
-      zIndex: 10,
-      opacity: 0.85,
-    });
-  }
-
-  return placements;
+  if (!buildingId) return [];
+  const scene = getExteriorScene(buildingId);
+  if (!scene) return [];
+  return scene.placements.map((def) => projectStaticPlacement(def, originX, originY));
 }
 
 // ── Geometry shift helpers ────────────────────────────────────────────────
@@ -1560,7 +1536,7 @@ export function composeHqWorldGeometry(
     createExpansionSlotNode(slot, originX, originY),
   );
   const roomProps = buildRoomProps(rooms, originX, originY);
-  const scenery = buildScenery(perimeterFootprints, originX, originY);
+  const scenery = buildExteriorScenery(options.buildingId, originX, originY);
 
   const rawBounds = computeWorldBounds(
     rawRooms,

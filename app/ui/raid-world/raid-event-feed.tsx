@@ -49,10 +49,10 @@ function EventLine({ event }: { event: RaidEvent }) {
   const style = EVENT_STYLE[event.kind] ?? EVENT_STYLE["status-change"];
 
   return (
-    <div className="flex items-start gap-2 py-1">
-      <span className={`mt-px text-xs leading-none ${style.accent}`}>{style.icon}</span>
+    <div className="flex items-center gap-2 py-1">
+      <span className={`shrink-0 text-sm leading-none ${style.accent}`}>{style.icon}</span>
       <p className="flex-1 text-sm leading-snug text-silver/60">{event.message}</p>
-      <span className="shrink-0 pt-px text-xs tabular-nums text-silver/40">T{event.tick}</span>
+      <span className="shrink-0 text-xs tabular-nums text-silver/40">T{event.tick}</span>
     </div>
   );
 }

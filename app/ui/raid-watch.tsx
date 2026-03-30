@@ -45,10 +45,10 @@ function DeployedOperatorPortrait({ op }: { op: OperatorViewModel }) {
 }
 
 function TranscriptEventStream({ events }: { events: readonly RaidTranscriptEvent[] }) {
-  // Show last 8 events, most recent on top
-  const visible = events.slice(-8).reverse();
+  // Show last 5 events in compact card mode, most recent on top
+  const visible = events.slice(-5).reverse();
   return (
-    <div className="mt-2 max-h-32 space-y-0.5 overflow-y-auto rounded-md bg-[rgba(6,6,8,0.3)] px-2 py-1.5">
+    <div className="mt-2 max-h-24 space-y-0.5 overflow-y-auto rounded-md bg-[rgba(6,6,8,0.3)] px-2 py-1">
       {visible.map((evt, i) => (
         <TranscriptEventLine key={`${evt.tickOffset}-${i}`} event={evt} />
       ))}
@@ -79,21 +79,25 @@ function ActiveRaidCard({
     <button
       type="button"
       data-selected={isSelected || undefined}
-      className={`glass-card w-full cursor-pointer p-4 text-left transition-all ${
+      className={`glass-card flex w-full cursor-pointer flex-col p-3 text-left transition-all ${
         isSelected ? "ring-1 ring-gold/30 shadow-[0_0_16px_rgba(200,168,76,0.1)]" : ""
       }`}
       onClick={onSelect}
     >
+      {/* Header row: name + badge */}
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <h4 className="text-sm font-medium text-silver-bright">{raid.missionName}</h4>
-          {raid.location && <p className="mt-0.5 text-xs text-silver/60">{raid.location}</p>}
+        <div className="min-w-0">
+          <h4 className="truncate text-sm font-medium text-silver-bright">{raid.missionName}</h4>
+          {raid.location && (
+            <p className="mt-0.5 truncate text-xs text-silver/60">{raid.location}</p>
+          )}
         </div>
-        <span className="badge badge-ember">Active</span>
+        <span className="badge badge-ember flex-shrink-0">Active</span>
       </div>
 
-      <div className="mt-2 flex items-center gap-3 text-xs text-gold/70">
-        {raid.operatorIds.length > 0 && <span>{raid.operatorIds.length} operators deployed</span>}
+      {/* Stats row */}
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gold/70">
+        {raid.operatorIds.length > 0 && <span>{raid.operatorIds.length} deployed</span>}
         {raid.threat > 0 && <span title={RAID_TIPS.threat}>Threat {raid.threat}</span>}
         {raid.cohesion > 0 && (
           <span title={RAID_TIPS.cohesion}>Cohesion {Math.round(raid.cohesion)}</span>
@@ -106,21 +110,22 @@ function ActiveRaidCard({
         )}
       </div>
 
-      {/* Deployed operator portraits — raid context with visible gear */}
+      {/* Deployed operator portraits */}
       {deployedOps.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {deployedOps.map((op) => (
             <DeployedOperatorPortrait key={op.id} op={op} />
           ))}
         </div>
       )}
 
-      <div className="mt-3" title={RAID_TIPS.revealProgress}>
+      {/* Progress bar */}
+      <div className="mt-auto pt-2" title={RAID_TIPS.revealProgress}>
         <div className="flex items-center justify-between text-xs">
-          <span className="uppercase tracking-wider text-gold/70">Reveal Progress</span>
+          <span className="uppercase tracking-wider text-gold/70">Reveal</span>
           <span className="tabular-nums text-ember">{Math.round(progressPct)}%</span>
         </div>
-        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
+        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
           <div
             className="h-full rounded-full bg-ember/60 transition-all duration-700"
             style={{ width: `${progressPct}%` }}
@@ -128,7 +133,7 @@ function ActiveRaidCard({
         </div>
       </div>
 
-      {/* Transcript event stream — shown when RaidRun data is available */}
+      {/* Transcript — compact in card mode */}
       {raid.transcriptEvents && raid.transcriptEvents.length > 0 && (
         <TranscriptEventStream events={raid.transcriptEvents} />
       )}
@@ -350,15 +355,17 @@ export function RaidWatch({
       <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-ember">
         Active Operations ({activeRaids.length})
       </h3>
-      {activeRaids.map((raid) => (
-        <ActiveRaidCard
-          key={raid.id}
-          raid={raid}
-          operatorMap={operatorMap}
-          isSelected={raid.id === normalizedSelectedRaidId}
-          onSelect={() => handleSelectRaid(raid.id)}
-        />
-      ))}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {activeRaids.map((raid) => (
+          <ActiveRaidCard
+            key={raid.id}
+            raid={raid}
+            operatorMap={operatorMap}
+            isSelected={raid.id === normalizedSelectedRaidId}
+            onSelect={() => handleSelectRaid(raid.id)}
+          />
+        ))}
+      </div>
       {selectedRaid && <RaidTeamInspection raid={selectedRaid} operatorMap={operatorMap} />}
     </div>
   );

@@ -10,7 +10,7 @@ function toDisplayMeta(value: string | DisplayMeta): DisplayMeta {
   return typeof value === "string" ? { label: value, tip: "" } : value;
 }
 
-function titleCase(raw: string): string {
+export function titleCase(raw: string): string {
   return raw
     .replace(/[_-]/g, " ")
     .replace(/\s+/g, " ")
@@ -116,6 +116,12 @@ export const RAID_TIPS = {
   risk: "Estimated danger to deployed operators. Factors in threat level and team readiness.",
   revealProgress:
     "How much of the operation site has been explored. Reaching 100% completes the mission.",
+  rank: "Contract difficulty tier. Higher ranks mean tougher opposition and better rewards.",
+  contractActive: "This contract is in progress. Deploy raid teams to explore the site.",
+  contractWon: "The boss encounter was cleared and the contract is complete.",
+  contractLost: "The contract was failed. All progress on this site is lost.",
+  routeOpen: "The boss route is accessible. Prepare your team for a decisive fight.",
+  routeLocked: "More site exploration is needed before the boss route opens.",
   duration: "Estimated time to complete the operation.",
   interested: "Operators who have evaluated this opportunity and are willing to volunteer.",
   committed: "Operators who have formally committed to this operation.",
@@ -244,20 +250,56 @@ const CONTRACT_HINT_META = {
   "threat:ambush": { label: "Ambush", tip: "Expect concealed enemies and surprise pressure." },
   "threat:unstable": { label: "Unstable", tip: "Conditions can shift fast and punish slow teams." },
   "threat:hostile": { label: "Hostile", tip: "Direct aggression is expected throughout the site." },
-  "hazard:flooding": { label: "Flooding", tip: "" },
-  "hazard:low-visibility": { label: "Low Visibility", tip: "" },
-  "hazard:fumes": { label: "Fumes", tip: "" },
-  "hazard:poor-footing": { label: "Poor Footing", tip: "" },
-  "hazard:spatial-distortion": { label: "Spatial Distortion", tip: "" },
-  "hazard:noise": { label: "Noise", tip: "" },
-  "hazard:entanglement": { label: "Entanglement", tip: "" },
-  "hazard:pollen": { label: "Pollen", tip: "" },
-  "hazard:pressure": { label: "Pressure", tip: "" },
-  "hazard:entrapment": { label: "Entrapment", tip: "" },
-  "hazard:falling-debris": { label: "Falling Debris", tip: "" },
-  "hazard:structural-collapse": { label: "Structural Collapse", tip: "" },
-  "hazard:electrical": { label: "Electrical", tip: "" },
-  "hazard:magnetic-interference": { label: "Magnetic Interference", tip: "" },
+  "hazard:flooding": {
+    label: "Flooding",
+    tip: "Standing water slows movement and can short-circuit equipment.",
+  },
+  "hazard:low-visibility": {
+    label: "Low Visibility",
+    tip: "Limited sightlines reduce accuracy and early warning range.",
+  },
+  "hazard:fumes": { label: "Fumes", tip: "Toxic air degrades stamina and impairs concentration." },
+  "hazard:poor-footing": {
+    label: "Poor Footing",
+    tip: "Unstable surfaces slow movement and cause stumbles.",
+  },
+  "hazard:spatial-distortion": {
+    label: "Spatial Distortion",
+    tip: "Space bends unpredictably, disorienting navigation.",
+  },
+  "hazard:noise": {
+    label: "Noise",
+    tip: "Constant noise drowns out communication and masks approaching threats.",
+  },
+  "hazard:entanglement": {
+    label: "Entanglement",
+    tip: "Grasping debris and organic growth restrict movement.",
+  },
+  "hazard:pollen": { label: "Pollen", tip: "Airborne irritant impairs visibility and focus." },
+  "hazard:pressure": {
+    label: "Pressure",
+    tip: "Crushing atmospheric pressure drains endurance over time.",
+  },
+  "hazard:entrapment": {
+    label: "Entrapment",
+    tip: "Risk of being cornered or locked down by the environment.",
+  },
+  "hazard:falling-debris": {
+    label: "Falling Debris",
+    tip: "Overhead hazards threaten the squad with collapsing material.",
+  },
+  "hazard:structural-collapse": {
+    label: "Structural Collapse",
+    tip: "The site is unstable and sections may cave in without warning.",
+  },
+  "hazard:electrical": {
+    label: "Electrical",
+    tip: "Live currents create shock hazards throughout the area.",
+  },
+  "hazard:magnetic-interference": {
+    label: "Magnetic Interference",
+    tip: "Magnetic fields disrupt equipment and interfere with detection.",
+  },
   // Enemy family display names
   "enemy-family/tunnel-crawlers": { label: "Tunnel Crawlers", tip: "Burrowing pack predators." },
   "enemy-family/concrete-sentinels": {
@@ -523,9 +565,22 @@ export function getEncounterActorKindMeta(kind: string): DisplayMeta {
   return resolveDisplayMeta(kind, ENCOUNTER_ACTOR_KIND_META, titleCase);
 }
 
+const WEAKNESS_STAT_META = {
+  perception: {
+    label: "Perception",
+    tip: "Susceptible to high-awareness operators who spot its patterns.",
+  },
+  resilience: {
+    label: "Resilience",
+    tip: "Weak against durable operators who can absorb its punishment.",
+  },
+  speed: { label: "Speed", tip: "Struggles against fast operators who outpace its attacks." },
+  strength: { label: "Strength", tip: "Vulnerable to raw force and power-based approaches." },
+} satisfies DisplayRegistry;
+
 export function getWeaknessTargetMeta(target: string): DisplayMeta {
   if (target.startsWith("role:")) return getRoleMeta(target);
-  return resolveDisplayMeta(target, {}, humanizeIdentifier);
+  return resolveDisplayMeta(target, WEAKNESS_STAT_META, humanizeIdentifier);
 }
 
 export function getRequirementTypeMeta(type: string): DisplayMeta {

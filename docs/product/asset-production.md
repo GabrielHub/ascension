@@ -125,9 +125,10 @@ The HQ pipeline has stricter rules because the room system only works if every a
 - Recipe previews for HQ rooms must show the full room box, not only floating props.
 - Room interior props are authored as pre-composed scene SVGs — a single SVG per room containing all furniture, fixtures, and decorations hand-arranged for composition quality.
 - Scene SVGs must contain props only. Walls, floors, tile grids, and structural elements are engine-rendered and must never be duplicated inside scene SVGs.
+- Every non-actor HQ SVG rendered into world space must go through one canonical static placement contract driven by grid coordinates plus SVG metadata.
 - Scene SVGs use a canonical coordinate system aligned to the shared isometric grid (origin, viewBox, and tile dimensions defined in the render engine) so the engine can place them correctly within the building.
 - Full monolithic room SVGs that include their own walls and floors remain valid as exploration/reference artifacts but are not approved production output.
-- Individual prop SVGs still exist as a fallback for rooms that have not been upgraded to scene-based composition, and for non-room uses (exterior/background props).
+- Individual prop SVGs remain valid production assets for exterior use and for room recipes that still intentionally use prop composition, but they must still be placed through the same canonical HQ SVG scene contract.
 
 If an HQ asset does not align to the shared tile and facing rules, it is not production-ready even if it looks good in isolation.
 
@@ -138,7 +139,7 @@ The production contract is backed by two runtime-facing environment indexes that
 - `content/data/hq-environment-index.json` — modular tile-based HQ composition. Tracks shell, structure, prop, scene, background, and actor-marker parts against the canonical 96x48 isometric grid. The file also owns the shipped asset roots (`parts`, `reference`, `recipes`) plus the canonical room-scene placement numbers (tile size, wall height, scene origin, viewBox, room footprint). Each entry carries `category`, `tags`, `scale`, `roomFamily`, and `status` (approved or exploration).
 - `content/data/raid-environment-index.json` — dungeon minimap composition. Tracks tile, feature, fog-treatment, marker, and enemy parts for the top-down raid map language. Each entry carries `category`, `tags`, `scale`, `concept`, and `status`.
 
-For the current bodega slice, the HQ index also owns the live backdrop metadata contract: profile id, optional elevation-band id, four canonical time-of-day phase profiles, and shell-relative zone lists. Zone population is still partial in the shipped bodega, so renderer-authored fallback scenery remains acceptable until approved backdrop packages fully replace it.
+For the current bodega slice, the HQ index also owns the live backdrop metadata contract: profile id, optional elevation-band id, four canonical time-of-day phase profiles, and shell-relative zone lists. Runtime static exterior composition is now data-backed through the shared HQ scene-placement path rather than renderer-authored fallback dressing.
 
 New environment parts must be registered in the relevant index before promotion. Parts with `status: "exploration"` are not yet approved for canonical use and must pass through the full review pipeline before promotion to `status: "approved"`.
 
@@ -235,7 +236,7 @@ Use this for furniture, lighting, signage, clutter, plants, cabinets, desks, bed
 4. Author props directly inside the room's pre-composed scene SVG rather than as isolated individual sprites. Hand-arrange placement, layering, and overlap for composition quality.
 5. Validate the scene SVG in the actual game engine over engine-rendered walls and floors, not only in isolation.
 
-Props should finish the room recipe. They should not be responsible for inventing the room identity after the fact. Individual prop SVGs are still produced for non-room uses (exterior/background elements) and as a fallback for rooms without scene SVGs.
+Props should finish the room recipe. They should not be responsible for inventing the room identity after the fact. Individual prop SVGs are still produced for non-room uses and for intentional room-level prop composition, but their runtime placement still goes through the same canonical HQ SVG scene contract used by room scenes and exterior modules.
 
 ### 8. Operator Visual Workflow
 
@@ -270,9 +271,9 @@ Weapon-variation rule:
 Loot-item rule:
 
 - Stackable loot needs icon clarity at small sizes and must still read cleanly when paired with quantity text.
-- Early monster-part loot should be themed by dungeon concept and rank, but it should stay readable as trade goods rather than bespoke hero props.
+- Early monster-part loot should be themed by dungeon concept and rank, but it should stay readable as practical loot materials rather than bespoke hero props.
 - New loot items must be authored as part of the enemy-family content packet: site concept + boss + enemy family + themed loot items + per-family and per-boss drop tables.
-- The minimum deliverable for a new dungeon enemy family is 2 themed monster parts (one common, one uncommon) with sell prices in the F-rank envelope (6-12 cash).
+- The minimum deliverable for a new dungeon enemy family is 2 themed monster parts (one common, one uncommon) in the F-rank economy envelope; they may be junk-sale loot or protected crafting inputs depending on the recipe plan.
 
 #### Base Weapon SVG Recipe
 

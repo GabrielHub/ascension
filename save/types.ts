@@ -412,6 +412,10 @@ export interface EquipmentAssignmentSnapshot {
 
 export type PolicyStateSnapshot = PolicyState;
 
+export interface LootAutomationSnapshot {
+  autoSellEnabled: boolean;
+}
+
 export interface WorldSnapshot {
   guild: GuildSnapshot;
   time: WorldTimeSnapshot;
@@ -439,6 +443,7 @@ export interface WorldSnapshot {
   inventoryStacks?: InventoryStackSnapshot[];
   equipmentAssignments?: EquipmentAssignmentSnapshot[];
   policies?: PolicyStateSnapshot;
+  lootAutomation?: LootAutomationSnapshot;
   activeEncounter?: SaveStructuredRecord | null;
   interruptionQueue?: SaveStructuredRecord | null;
   incidentState?: SaveStructuredRecord | null;

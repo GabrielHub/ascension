@@ -59,6 +59,7 @@ import {
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
   buildInventoryViewModels,
+  buildLootAutomationViewModel,
   buildMarketItemViewModels,
   buildOpsViewFromPhase1,
   buildRoomCultureViewModels,
@@ -69,6 +70,7 @@ import type {
   EquipmentViewModel,
   GameCallbacks,
   InventoryItemViewModel,
+  LootAutomationViewModel,
   MarketItemViewModel,
   OperatorViewModel,
   RoomCultureViewModel,
@@ -189,6 +191,9 @@ export function buildGameCallbacks(
     setPolicy: (policyId, value) => {
       void session.commands.setPolicy({ policyId, value });
     },
+    setLootFilterEnabled: (enabled: boolean) => {
+      void session.commands.setLootFilter({ enabled });
+    },
     initiateRelocation: () => {
       void session.commands.initiateRelocation();
     },
@@ -251,7 +256,7 @@ export function buildGameCallbacks(
 
 const OPS_CATEGORIES: readonly { id: OpsCategory; label: string; icon: string }[] = [
   { id: "contract", label: "Contract", icon: "\u2691" },
-  { id: "active", label: "Active Raids", icon: "\u2694" },
+  { id: "active", label: "Active Ops", icon: "\u2694" },
   { id: "opportunities", label: "Opportunities", icon: "\u2606" },
   { id: "history", label: "History", icon: "\u2630" },
 ];
@@ -1246,6 +1251,10 @@ export function GameShell() {
     () => (phase2 && registry ? buildInventoryViewModels(phase2, registry) : []),
     [phase2, registry],
   );
+  const lootAutomation: LootAutomationViewModel | null = useMemo(
+    () => (phase2 ? buildLootAutomationViewModel(phase2.lootAutomation) : null),
+    [phase2],
+  );
 
   const equipment: EquipmentViewModel[] = useMemo(
     () => (phase2 && registry ? buildEquipmentViewModels(phase2, registry, operatorNameById) : []),
@@ -1468,6 +1477,9 @@ export function GameShell() {
       return;
     }
 
+    // Beats with requiresManualCompletion need the user to click the CTA button.
+    if (guidanceBeat.requiresManualCompletion) return;
+
     if (
       guidanceBeat.completionKind === "market_opened" &&
       activeTab === "hq" &&
@@ -1569,10 +1581,6 @@ export function GameShell() {
   const focusedRaidTeam =
     activeTab === "operations" && focus?.targetKind === "team"
       ? (raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null)
-      : null;
-  const focusedRaidDetail =
-    activeTab === "operations" && focus?.targetKind === "team" && operations
-      ? (operations.activeRaids.find((r) => r.id === focus.targetId)?.focusedDetail ?? null)
       : null;
 
   const focusedOperatorId =
@@ -1942,7 +1950,6 @@ export function GameShell() {
                   }
                   operatorStatuses={focusedRaidOperatorStatuses}
                   encounter={focusedRaidState?.encounter ?? null}
-                  focusedDetail={focusedRaidDetail}
                   onDismiss={() => setFocus(null)}
                 />
                 <div
@@ -2015,6 +2022,7 @@ export function GameShell() {
                   {activeTab === "hq" && hqCategory === "inventory" && (
                     <InventoryPanel
                       inventory={inventory}
+                      lootAutomation={lootAutomation}
                       equipment={equipment}
                       marketItems={marketItems}
                       callbacks={callbacks}
@@ -2025,6 +2033,7 @@ export function GameShell() {
                       marketItems={marketItems}
                       inventory={inventory}
                       guild={hq.guild}
+                      day={hq.time.day}
                       callbacks={callbacks}
                     />
                   )}

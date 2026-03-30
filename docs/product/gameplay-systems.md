@@ -262,12 +262,14 @@ Gear has stat effects. Equipment is not cosmetic.
 Gear, inventory, and market defaults:
 
 - Purchasing is the early-game path. Available gear quality is limited by guild reputation and rank.
-- Phase 2 should ship a minimal market surface for buying gear and selling excess gear or monster parts for cash.
+- Phase 2 should ship a minimal market surface for buying gear and selling excess gear or loot for cash.
 - That market can be framed in copy as rival-guild demand and supply, but Phase 2 does not require full rival-guild simulation, rival HQs, or persistent rival rosters.
-- Monster parts are sellable in Phase 2 and should mainly function as raid-to-cash conversion loot until deeper crafting lands.
+- Early monster parts can split between low-value junk and protected crafting inputs instead of assuming every monster drop is pure cash conversion.
 - Gear drops can go directly into the shared inventory stack when recovered from raids.
 - Accessories should auto-select from eligible inventory stacks using operator role, rank, preferences, and current needs.
 - Phase 2 only requires auto-selection for accessories. Broader automated weapon or outfit policy can land later if it proves necessary.
+- The HQ should support an optional runtime-owned loot filter that auto-sells junk monster parts and gear below the guild's current practical equipment floor.
+- That floor should be balance-owned, inferred from roster coverage and available higher-rank replacements, rather than set manually per item by the player.
 - The bodega may introduce lightweight consumable preparation as a precursor system, but that should stay deliberately narrow: short recipe lists, temporary raid aids, and no full workshop identity.
 - Porter's should make that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.

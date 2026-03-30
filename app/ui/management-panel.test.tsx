@@ -12,6 +12,7 @@ const callbacks: GameCallbacks = {
   tick: () => {},
   setRoomActive: () => {},
   setPolicy: vi.fn(),
+  setLootFilterEnabled: () => {},
   initiateRelocation: () => {},
   purchaseBuildingUpgrade: () => {},
   purchaseRoomUpgrade: () => {},
@@ -30,6 +31,7 @@ const callbacks: GameCallbacks = {
   unequipItem: () => {},
   bidContract: () => {},
   advanceContract: () => {},
+  prepConsumable: () => {},
 };
 
 describe("management panel", () => {

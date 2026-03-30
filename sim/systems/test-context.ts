@@ -3,6 +3,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { templateRegistry } from "content/templates";
 import type { TemplateRegistry } from "content/templates";
 import { DEFAULT_POLICY_STATE, type PolicyState } from "lib/policies";
+import { DEFAULT_LOOT_AUTOMATION, type LootAutomationSnapshot } from "./loot-automation";
 import { createBaseSimRuntimeState } from "../runtime";
 import {
   AssignmentState,
@@ -71,6 +72,7 @@ interface InitializeBuildingAuthorityOptions {
   postedContracts?: PostedContract[];
   contractResult?: ContractResultSummary | null;
   policies?: Partial<PolicyState>;
+  lootAutomation?: Partial<LootAutomationSnapshot>;
 }
 
 export function createSimTestContext(options: CreateSimTestContextOptions = {}): SimSystemContext {
@@ -161,6 +163,8 @@ export function initializeBuildingAuthority(
   BuildingAuthority.policies[buildingEntity] = options.policies
     ? ({ ...options.policies } as PolicyState)
     : { ...DEFAULT_POLICY_STATE };
+  BuildingAuthority.lootAutomationEnabled[buildingEntity] =
+    (options.lootAutomation?.autoSellEnabled ?? DEFAULT_LOOT_AUTOMATION.autoSellEnabled) ? 1 : 0;
 }
 
 export function addActiveTestOperators(context: SimSystemContext, count: number): number[] {

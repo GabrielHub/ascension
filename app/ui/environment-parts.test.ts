@@ -423,11 +423,22 @@ describe("envPartSvgPath", () => {
 describe("promoted asset status", () => {
   const parts = getLoadedEnvParts();
 
-  it("all non-actor-marker parts are approved", () => {
-    const nonMarkers = parts.filter((p) => p.category !== "actor-marker");
+  it("all non-actor-marker non-exploration parts are approved", () => {
+    const nonMarkers = parts.filter(
+      (p) => p.category !== "actor-marker" && p.status !== "exploration",
+    );
     expect(nonMarkers.length).toBeGreaterThan(0);
     for (const part of nonMarkers) {
       expect(part.status).toBe("approved");
+    }
+  });
+
+  it("exploration background parts are explicitly retained", () => {
+    const explorationBg = parts.filter(
+      (p) => p.category === "background" && p.status === "exploration",
+    );
+    for (const part of explorationBg) {
+      expect(part.tags).toContain("backdrop");
     }
   });
 

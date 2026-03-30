@@ -2111,6 +2111,39 @@ describe("save codec", () => {
     expect(normalized.world.policies).toEqual(policies);
   });
 
+  it("hydrates missing loot automation state as disabled by default", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        lootAutomation: undefined,
+      },
+    });
+
+    expect(hydrated.save.world.lootAutomation).toEqual({
+      autoSellEnabled: false,
+    });
+  });
+
+  it("round-trips explicit loot automation state through storage preparation", () => {
+    const base = createBaseSave();
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        lootAutomation: {
+          autoSellEnabled: true,
+        },
+      },
+    });
+
+    expect(normalized.world.lootAutomation).toEqual({
+      autoSellEnabled: true,
+    });
+  });
+
   // ── Relocation save/load through real codec path ────────────────────
 
   it("preserves post-relocation guidance state through codec hydration", () => {

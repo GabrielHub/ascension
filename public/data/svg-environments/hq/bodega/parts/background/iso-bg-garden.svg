@@ -1,91 +1,207 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 220">
-  <!-- Urban side-lot garden in isometric view.
-       Sits adjacent to a building wall — chain-link fence, planters,
-       overgrown bushes, a tree, community garden vibe.
+  <!-- NYC pocket park in isometric view.
+       Small vest-pocket park tucked between buildings — wrought-iron fence,
+       paved walkway, planted beds, bench, single shade tree.
        Render at 300-450px wide for proper scale next to the bodega. -->
 
-  <!-- Ground patch (isometric diamond, larger) -->
-  <polygon points="150,15 280,80 150,145 20,80"
-    fill="#1e2a1a" stroke="#2a3822" stroke-width="1" opacity="0.75"/>
+  <!-- Park ground (isometric diamond — grass/turf base) -->
+  <polygon points="150,18 275,80 150,142 25,80"
+    fill="#1a2816" stroke="#243018" stroke-width="0.8" opacity="0.8"/>
 
-  <!-- Dirt/mulch beds -->
-  <polygon points="150,30 240,75 150,120 60,75"
-    fill="#2a2218" opacity="0.5"/>
-
-  <!-- Back planter bed (against the wall side) -->
-  <polygon points="50,50 140,95 120,105 30,60"
-    fill="#1a2c16" stroke="#243018" stroke-width="0.8"/>
-  <polygon points="50,48 140,93 140,95 50,50"
-    fill="#3a3028" stroke="#2a2218" stroke-width="0.5"/>
-
-  <!-- Large bush cluster (back) -->
-  <ellipse cx="90" cy="55" rx="28" ry="18" fill="#142818"/>
-  <ellipse cx="75" cy="48" rx="20" ry="14" fill="#163020"/>
-  <ellipse cx="108" cy="52" rx="16" ry="12" fill="#122616"/>
-  <ellipse cx="65" cy="56" rx="12" ry="9" fill="#0e2414"/>
-  <!-- Highlights -->
-  <ellipse cx="82" cy="44" rx="8" ry="4" fill="#1a3422" opacity="0.45"/>
-  <ellipse cx="100" cy="48" rx="6" ry="3" fill="#1e3826" opacity="0.35"/>
-
-  <!-- Tree (right-center, larger) -->
-  <line x1="200" y1="95" x2="200" y2="45" stroke="#3a2818" stroke-width="5"/>
-  <line x1="200" y1="95" x2="200" y2="45" stroke="#4a3424" stroke-width="2.5"/>
-  <!-- Branches -->
-  <line x1="200" y1="60" x2="180" y2="38" stroke="#3a2818" stroke-width="2"/>
-  <line x1="200" y1="55" x2="220" y2="35" stroke="#3a2818" stroke-width="1.5"/>
-  <!-- Canopy -->
-  <ellipse cx="200" cy="35" rx="32" ry="22" fill="#102818"/>
-  <ellipse cx="188" cy="28" rx="20" ry="15" fill="#142c1c"/>
-  <ellipse cx="214" cy="26" rx="16" ry="14" fill="#0e2414"/>
-  <ellipse cx="200" cy="20" rx="22" ry="12" fill="#142c1c"/>
-  <ellipse cx="178" cy="36" rx="12" ry="9" fill="#0e2414"/>
-  <ellipse cx="222" cy="32" rx="10" ry="8" fill="#102818"/>
-  <!-- Top highlights -->
-  <ellipse cx="192" cy="22" rx="8" ry="4" fill="#163220" opacity="0.45"/>
-  <ellipse cx="210" cy="26" rx="6" ry="3" fill="#1a3624" opacity="0.35"/>
-  <!-- Ground shadow -->
-  <ellipse cx="205" cy="100" rx="26" ry="9" fill="rgba(0,0,0,0.15)"/>
-
-  <!-- Front raised planter (masonry) -->
-  <polygon points="100,100 200,150 200,162 100,112"
-    fill="#2e2820" stroke="#3a3028" stroke-width="0.8"/>
-  <polygon points="200,150 218,142 218,154 200,162"
-    fill="#241e18" stroke="#3a3028" stroke-width="0.5"/>
-  <polygon points="100,100 200,150 218,142 118,92"
-    fill="#342c24" stroke="#3a3028" stroke-width="0.5"/>
-  <!-- Plants in planter -->
-  <ellipse cx="150" cy="104" rx="22" ry="12" fill="#142a18"/>
-  <ellipse cx="138" cy="100" rx="14" ry="9" fill="#183020"/>
-  <ellipse cx="165" cy="98" rx="12" ry="8" fill="#122616"/>
-  <ellipse cx="180" cy="102" rx="10" ry="7" fill="#163020"/>
-
-  <!-- Small bush cluster (front-left) -->
-  <ellipse cx="60" cy="95" rx="14" ry="10" fill="#142818"/>
-  <ellipse cx="52" cy="92" rx="10" ry="7" fill="#163020"/>
-
-  <!-- Chain-link fence posts -->
-  <g stroke="#3a3838" fill="none" opacity="0.45">
-    <!-- Left fence -->
-    <line x1="30" y1="74" x2="30" y2="56" stroke-width="1.5"/>
-    <line x1="52" y1="85" x2="52" y2="67" stroke-width="1.5"/>
-    <!-- Wire -->
-    <line x1="30" y1="58" x2="52" y2="69" stroke-width="0.6"/>
-    <line x1="30" y1="64" x2="52" y2="75" stroke-width="0.6"/>
-    <!-- Right fence -->
-    <line x1="248" y1="85" x2="248" y2="67" stroke-width="1.5"/>
-    <line x1="268" y1="76" x2="268" y2="58" stroke-width="1.5"/>
-    <line x1="248" y1="69" x2="268" y2="60" stroke-width="0.6"/>
-    <line x1="248" y1="75" x2="268" y2="66" stroke-width="0.6"/>
+  <!-- Paved walkway (central diagonal path through the park) -->
+  <polygon points="150,38 210,68 150,98 90,68"
+    fill="#2a2824" stroke="#343028" stroke-width="0.5" opacity="0.6"/>
+  <!-- Path surface detail — subtle paver lines -->
+  <g stroke="#343028" stroke-width="0.3" opacity="0.3">
+    <line x1="110" y1="62" x2="150" y2="82"/>
+    <line x1="120" y1="58" x2="160" y2="78"/>
+    <line x1="130" y1="54" x2="170" y2="74"/>
+    <line x1="140" y1="50" x2="180" y2="70"/>
+    <line x1="130" y1="68" x2="170" y2="68"/>
+    <line x1="120" y1="68" x2="140" y2="58"/>
+    <line x1="160" y1="58" x2="180" y2="68"/>
   </g>
 
-  <!-- Stepping stones -->
-  <ellipse cx="140" cy="125" rx="8" ry="3.5" fill="#383028" opacity="0.4"/>
-  <ellipse cx="155" cy="132" rx="7" ry="3" fill="#383028" opacity="0.35"/>
-  <ellipse cx="125" cy="118" rx="6" ry="2.5" fill="#383028" opacity="0.3"/>
+  <!-- Left planted bed (organized rectangular planting area) -->
+  <polygon points="60,52 130,87 115,95 45,60"
+    fill="#162414" stroke="#1e2e18" stroke-width="0.5" opacity="0.7"/>
+  <!-- Mulch texture -->
+  <polygon points="65,55 125,87 112,93 52,61"
+    fill="#1e2a18" opacity="0.5"/>
 
-  <!-- Watering can -->
-  <g opacity="0.35">
-    <rect x="240" y="100" width="12" height="10" rx="1" fill="#2a4838"/>
-    <line x1="252" y1="102" x2="260" y2="98" stroke="#2a4838" stroke-width="1.5"/>
+  <!-- Right planted bed -->
+  <polygon points="170,87 240,52 255,60 185,95"
+    fill="#162414" stroke="#1e2e18" stroke-width="0.5" opacity="0.7"/>
+  <polygon points="175,87 235,55 248,61 188,93"
+    fill="#1e2a18" opacity="0.5"/>
+
+  <!-- Left bed shrubs (low ornamental hedging, tidy) -->
+  <ellipse cx="82" cy="64" rx="18" ry="10" fill="#122616"/>
+  <ellipse cx="72" cy="60" rx="12" ry="8" fill="#163020"/>
+  <ellipse cx="95" cy="68" rx="14" ry="8" fill="#102414"/>
+  <!-- Highlights -->
+  <ellipse cx="78" cy="58" rx="6" ry="3" fill="#1a3422" opacity="0.4"/>
+  <ellipse cx="92" cy="64" rx="5" ry="2.5" fill="#1e3826" opacity="0.3"/>
+
+  <!-- Right bed shrubs (matching ornamental hedging) -->
+  <ellipse cx="218" cy="64" rx="18" ry="10" fill="#122616"/>
+  <ellipse cx="228" cy="60" rx="12" ry="8" fill="#163020"/>
+  <ellipse cx="205" cy="68" rx="14" ry="8" fill="#102414"/>
+  <ellipse cx="222" cy="58" rx="6" ry="3" fill="#1a3422" opacity="0.4"/>
+  <ellipse cx="208" cy="64" rx="5" ry="2.5" fill="#1e3826" opacity="0.3"/>
+
+  <!-- Shade tree (right side of park, matching street-tree style) -->
+  <!-- Ground shadow -->
+  <ellipse cx="228" cy="92" rx="22" ry="7" fill="rgba(0,0,0,0.12)"/>
+  <!-- Trunk -->
+  <line x1="225" y1="88" x2="225" y2="42" stroke="#3a2818" stroke-width="4.5"/>
+  <line x1="225" y1="88" x2="225" y2="42" stroke="#4a3424" stroke-width="2.2"/>
+  <!-- Branches -->
+  <line x1="225" y1="56" x2="210" y2="36" stroke="#3a2818" stroke-width="2"/>
+  <line x1="225" y1="50" x2="242" y2="32" stroke="#3a2818" stroke-width="1.5"/>
+  <line x1="225" y1="62" x2="214" y2="48" stroke="#3a2818" stroke-width="1.2"/>
+  <!-- Canopy -->
+  <ellipse cx="225" cy="32" rx="28" ry="20" fill="#0e2818"/>
+  <ellipse cx="214" cy="26" rx="18" ry="14" fill="#102a1c"/>
+  <ellipse cx="238" cy="24" rx="14" ry="12" fill="#0c2616"/>
+  <ellipse cx="225" cy="18" rx="20" ry="12" fill="#102a1c"/>
+  <ellipse cx="204" cy="34" rx="10" ry="8" fill="#0e2818"/>
+  <ellipse cx="244" cy="30" rx="9" ry="7" fill="#0c2616"/>
+  <!-- Canopy highlights -->
+  <ellipse cx="218" cy="20" rx="7" ry="4" fill="#143020" opacity="0.45"/>
+  <ellipse cx="234" cy="24" rx="5" ry="3" fill="#163222" opacity="0.35"/>
+
+  <!-- Park bench (left side, along the path, iso-right axis) -->
+  <g transform="translate(62, 78)">
+    <!-- Bench shadow -->
+    <ellipse cx="18" cy="26" rx="16" ry="3" fill="rgba(0,0,0,0.1)"/>
+    <!-- Back legs -->
+    <g stroke="#3a3838" stroke-width="1.5" stroke-linecap="round">
+      <line x1="4" y1="2" x2="4" y2="16"/>
+      <line x1="28" y1="14" x2="28" y2="28"/>
+    </g>
+    <!-- Backrest -->
+    <polygon points="3,1 29,14 29,19 3,6"
+      fill="#6b422a" stroke="#553420" stroke-width="0.4"/>
+    <!-- Backrest slat -->
+    <line x1="3" y1="3.5" x2="29" y2="16.5" stroke="#553420" stroke-width="0.3" opacity="0.5"/>
+    <!-- Seat top -->
+    <polygon points="0,8 26,21 22,23 -4,10"
+      fill="#7a4e32" stroke="#5c3a1e" stroke-width="0.4"/>
+    <!-- Seat front -->
+    <polygon points="-4,10 22,23 22,25 -4,12"
+      fill="#5c3a1e" stroke="#4a2e16" stroke-width="0.3"/>
+    <!-- Front legs -->
+    <g stroke="#3a3838" stroke-width="1.5" stroke-linecap="round">
+      <line x1="0" y1="13" x2="0" y2="20"/>
+      <line x1="22" y1="25" x2="22" y2="30"/>
+    </g>
+    <!-- Armrest curves -->
+    <path d="M4,2 C2,6 0,10 0,13" fill="none" stroke="#454242" stroke-width="1" stroke-linecap="round"/>
+    <path d="M28,14 C26,18 24,22 22,25" fill="none" stroke="#454242" stroke-width="1" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wrought-iron fence (NYC style — short ornamental posts with rails) -->
+  <!-- Back-left fence run -->
+  <g stroke="#2e2e2e" fill="none" opacity="0.55">
+    <!-- Posts -->
+    <line x1="42" y1="58" x2="42" y2="44" stroke-width="1.5"/>
+    <line x1="62" y1="48" x2="62" y2="34" stroke-width="1.5"/>
+    <line x1="82" y1="38" x2="82" y2="24" stroke-width="1.5"/>
+    <line x1="102" y1="28" x2="102" y2="14" stroke-width="1.5"/>
+    <!-- Top rail -->
+    <line x1="42" y1="46" x2="102" y2="16" stroke-width="1"/>
+    <!-- Bottom rail -->
+    <line x1="42" y1="54" x2="102" y2="24" stroke-width="0.8"/>
+    <!-- Pickets -->
+    <line x1="52" y1="52" x2="52" y2="40" stroke-width="0.6"/>
+    <line x1="72" y1="42" x2="72" y2="30" stroke-width="0.6"/>
+    <line x1="92" y1="32" x2="92" y2="20" stroke-width="0.6"/>
+    <!-- Finials (small dots on post tops) -->
+    <circle cx="42" cy="43" r="1.2" fill="#3a3838"/>
+    <circle cx="62" cy="33" r="1.2" fill="#3a3838"/>
+    <circle cx="82" cy="23" r="1.2" fill="#3a3838"/>
+    <circle cx="102" cy="13" r="1.2" fill="#3a3838"/>
+  </g>
+
+  <!-- Back-right fence run -->
+  <g stroke="#2e2e2e" fill="none" opacity="0.55">
+    <!-- Posts -->
+    <line x1="198" y1="28" x2="198" y2="14" stroke-width="1.5"/>
+    <line x1="218" y1="38" x2="218" y2="24" stroke-width="1.5"/>
+    <line x1="238" y1="48" x2="238" y2="34" stroke-width="1.5"/>
+    <line x1="258" y1="58" x2="258" y2="44" stroke-width="1.5"/>
+    <!-- Top rail -->
+    <line x1="198" y1="16" x2="258" y2="46" stroke-width="1"/>
+    <!-- Bottom rail -->
+    <line x1="198" y1="24" x2="258" y2="54" stroke-width="0.8"/>
+    <!-- Pickets -->
+    <line x1="208" y1="20" x2="208" y2="32" stroke-width="0.6"/>
+    <line x1="228" y1="30" x2="228" y2="42" stroke-width="0.6"/>
+    <line x1="248" y1="40" x2="248" y2="52" stroke-width="0.6"/>
+    <!-- Finials -->
+    <circle cx="198" cy="13" r="1.2" fill="#3a3838"/>
+    <circle cx="218" cy="23" r="1.2" fill="#3a3838"/>
+    <circle cx="238" cy="33" r="1.2" fill="#3a3838"/>
+    <circle cx="258" cy="43" r="1.2" fill="#3a3838"/>
+  </g>
+
+  <!-- Front-left fence (shorter, flanking entrance gap) -->
+  <g stroke="#2e2e2e" fill="none" opacity="0.5">
+    <line x1="38" y1="66" x2="38" y2="52" stroke-width="1.5"/>
+    <line x1="58" y1="76" x2="58" y2="62" stroke-width="1.5"/>
+    <line x1="38" y1="54" x2="58" y2="64" stroke-width="1"/>
+    <line x1="38" y1="60" x2="58" y2="70" stroke-width="0.8"/>
+    <line x1="48" y1="58" x2="48" y2="68" stroke-width="0.6"/>
+    <circle cx="38" cy="51" r="1.2" fill="#3a3838"/>
+    <circle cx="58" cy="61" r="1.2" fill="#3a3838"/>
+  </g>
+
+  <!-- Front-right fence (flanking entrance gap) -->
+  <g stroke="#2e2e2e" fill="none" opacity="0.5">
+    <line x1="242" y1="76" x2="242" y2="62" stroke-width="1.5"/>
+    <line x1="262" y1="66" x2="262" y2="52" stroke-width="1.5"/>
+    <line x1="242" y1="64" x2="262" y2="54" stroke-width="1"/>
+    <line x1="242" y1="70" x2="262" y2="60" stroke-width="0.8"/>
+    <line x1="252" y1="68" x2="252" y2="58" stroke-width="0.6"/>
+    <circle cx="242" cy="61" r="1.2" fill="#3a3838"/>
+    <circle cx="262" cy="51" r="1.2" fill="#3a3838"/>
+  </g>
+
+  <!-- Small bollard lamp (left of path entrance, matching lamppost palette) -->
+  <g opacity="0.6">
+    <rect x="72" y="94" width="3" height="14" fill="#3a3838" rx="0.5"/>
+    <rect x="70" y="91" width="7" height="5" rx="1" fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
+    <rect x="71" y="93" width="5" height="2" rx="0.5" fill="#c8a84c" opacity="0.35"/>
+    <circle cx="73.5" cy="92" r="5" fill="rgba(200,168,76,0.06)"/>
+  </g>
+
+  <!-- Small bollard lamp (right of path entrance) -->
+  <g opacity="0.6">
+    <rect x="222" y="94" width="3" height="14" fill="#3a3838" rx="0.5"/>
+    <rect x="220" y="91" width="7" height="5" rx="1" fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
+    <rect x="221" y="93" width="5" height="2" rx="0.5" fill="#c8a84c" opacity="0.35"/>
+    <circle cx="223.5" cy="92" r="5" fill="rgba(200,168,76,0.06)"/>
+  </g>
+
+  <!-- Stepping stones at path entrance (front) -->
+  <ellipse cx="140" cy="108" rx="8" ry="3" fill="#2e2a24" opacity="0.35"/>
+  <ellipse cx="155" cy="115" rx="7" ry="2.5" fill="#2e2a24" opacity="0.3"/>
+  <ellipse cx="165" cy="108" rx="6" ry="2.5" fill="#2e2a24" opacity="0.25"/>
+
+  <!-- Small flowering accent in left bed -->
+  <g opacity="0.5">
+    <circle cx="75" cy="70" r="1.5" fill="#4a2838"/>
+    <circle cx="80" cy="72" r="1.2" fill="#4a2838"/>
+    <circle cx="88" cy="74" r="1.4" fill="#3e2034"/>
+    <circle cx="70" cy="73" r="1" fill="#3e2034"/>
+  </g>
+
+  <!-- Small flowering accent in right bed -->
+  <g opacity="0.5">
+    <circle cx="220" cy="70" r="1.5" fill="#4a2838"/>
+    <circle cx="215" cy="72" r="1.2" fill="#4a2838"/>
+    <circle cx="210" cy="74" r="1.4" fill="#3e2034"/>
+    <circle cx="225" cy="73" r="1" fill="#3e2034"/>
   </g>
 </svg>

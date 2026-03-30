@@ -46,6 +46,7 @@ export interface GameCallbacks {
   tick: (deltaMs: number) => void;
   setRoomActive: (roomId: string, isActive: boolean) => void;
   setPolicy: (policyId: PolicyId, value: PolicyValue) => void;
+  setLootFilterEnabled: (enabled: boolean) => void;
   initiateRelocation: () => void;
   purchaseBuildingUpgrade: (upgradeId: string) => void;
   purchaseRoomUpgrade: (roomId: string, upgradeId: string) => void;
@@ -399,6 +400,18 @@ export interface InventoryItemViewModel {
   rank: string;
   statEffects: readonly StatEffectViewModel[];
   tags: readonly string[];
+}
+
+export interface LootAutomationRuleViewModel {
+  category: "weapons" | "outfits" | "accessories";
+  label: string;
+  sellBelowRank: string | null;
+}
+
+export interface LootAutomationViewModel {
+  enabled: boolean;
+  equipmentRules: readonly LootAutomationRuleViewModel[];
+  autoSellJunkMonsterParts: boolean;
 }
 
 export interface PrepRecipeInputViewModel {
@@ -1887,6 +1900,35 @@ export function buildInventoryViewModels(
         tags: [...(template?.tags ?? [])],
       };
     });
+}
+
+const EQUIPMENT_CATEGORY_DISPLAY: Record<
+  string,
+  { id: LootAutomationRuleViewModel["category"]; label: string }
+> = {
+  weapon: { id: "weapons", label: "Weapons" },
+  "outfit-overlay": { id: "outfits", label: "Outfits" },
+  accessory: { id: "accessories", label: "Accessories" },
+};
+
+export function buildLootAutomationViewModel(
+  lootAutomation: Phase2View["lootAutomation"],
+): LootAutomationViewModel {
+  return {
+    enabled: lootAutomation.autoSellEnabled,
+    equipmentRules: lootAutomation.equipmentFilters.flatMap((rule) => {
+      const display = EQUIPMENT_CATEGORY_DISPLAY[rule.category];
+      if (!display) return [];
+      return [
+        {
+          category: display.id,
+          label: display.label,
+          sellBelowRank: rule.sellBelowRank ? rule.sellBelowRank.toUpperCase() : null,
+        },
+      ];
+    }),
+    autoSellJunkMonsterParts: lootAutomation.autoSellJunkMonsterParts,
+  };
 }
 
 /** Build market item view models from Phase 2 data. */

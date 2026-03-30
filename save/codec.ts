@@ -13,6 +13,7 @@ import {
   type BuildingSnapshot,
   type GuildSnapshot,
   type InventoryStackSnapshot,
+  type LootAutomationSnapshot,
   type NotableTieSnapshot,
   type OperatorDispositionSnapshot,
   type OperatorLifecycleSnapshot,
@@ -1666,6 +1667,26 @@ function parsePolicyStateSnapshot(
   };
 }
 
+function parseLootAutomationSnapshot(
+  value: unknown,
+  path: string,
+): { lootAutomation: LootAutomationSnapshot; changed: boolean } {
+  if (value === undefined || value === null) {
+    return {
+      lootAutomation: { autoSellEnabled: false },
+      changed: false,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  return {
+    lootAutomation: {
+      autoSellEnabled: expectBoolean(record.autoSellEnabled, `${path}.autoSellEnabled`),
+    },
+    changed: false,
+  };
+}
+
 function deriveDispositionFromOperator(operator: OperatorSnapshot): OperatorDispositionSnapshot {
   const moraleRecord = operator.morale;
   const loyaltyRecord = operator.loyalty;
@@ -1749,6 +1770,10 @@ function parseWorldSnapshot(
   const fogOfWar = parseFogOfWarSnapshot(record.fogOfWar, `${path}.fogOfWar`);
   const scheduler = parseSchedulerSnapshot(record.scheduler, `${path}.scheduler`);
   const policies = parsePolicyStateSnapshot(record.policies, `${path}.policies`, schemaVersion);
+  const lootAutomation = parseLootAutomationSnapshot(
+    record.lootAutomation,
+    `${path}.lootAutomation`,
+  );
   const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
   const rooms = parseCollection(record.rooms, `${path}.rooms`, (entry, entryPath) =>
     parseRoomSnapshot(entry, entryPath, schemaVersion, building.building),
@@ -2069,6 +2094,7 @@ function parseWorldSnapshot(
       inventoryStacks,
       equipmentAssignments,
       policies: policies.policies,
+      lootAutomation: lootAutomation.lootAutomation,
       // Encounter, interruption, and incident state: pass through if present, ignore if absent
       ...(record.activeEncounter && typeof record.activeEncounter === "object"
         ? { activeEncounter: record.activeEncounter as SaveStructuredRecord }
@@ -2104,6 +2130,7 @@ function parseWorldSnapshot(
       fogOfWar.changed ||
       scheduler.changed ||
       policies.changed ||
+      lootAutomation.changed ||
       guild.changed ||
       raidSummaryChanged ||
       phase2Changed ||

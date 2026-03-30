@@ -228,6 +228,7 @@ const OPENING_BEATS_MUTABLE = [
     delivery: {
       mode: "focused",
       target: "ui/hq/category/market",
+      fallbackIntent: "hq/open-market",
       pauseWorld: true,
       allowSkip: false,
       replayPolicy: "manual_replay",
@@ -245,7 +246,7 @@ const OPENING_BEATS_MUTABLE = [
       fallbackBody: "Open Market to review what loot can be sold and what gear can be bought.",
       eventLogSummary: "Guidance: loot and market loop explained",
     },
-    completion: { kind: "market_opened" },
+    completion: { kind: "market_opened", requiresManualCompletion: true },
   },
   {
     id: "guidance/opening/staffing-and-rooms",
@@ -269,8 +270,8 @@ const OPENING_BEATS_MUTABLE = [
       title: "Staffing and Rooms",
       subtitle: "Payroll should buy labor",
       body: "Idle staff and unused rooms are wasted overhead. Assign operators where they help, and bring dormant rooms online when {guildName} needs the capacity. Everyone is on the clock either way.",
-      ctaLabel: "Make one management change",
-      fallbackBody: "Assign staff or activate a room to keep the bodega functioning.",
+      ctaLabel: "Assign staff or activate a room",
+      fallbackBody: "Open the Rooms tab, then assign a staff member or activate an idle room.",
       eventLogSummary: "Guidance: staffing and room activation explained",
     },
     completion: { kind: "staffing_action_taken" },

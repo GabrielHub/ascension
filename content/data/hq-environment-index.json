@@ -139,7 +139,7 @@
           "tags": ["sky", "atmosphere", "skyline", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
-          "status": "approved"
+          "status": "exploration"
         },
         {
           "id": "background/iso-bg-tenement-left",
@@ -147,7 +147,7 @@
           "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
-          "status": "approved"
+          "status": "exploration"
         },
         {
           "id": "background/iso-bg-tenement-right",
@@ -155,21 +155,69 @@
           "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
-          "status": "approved"
+          "status": "exploration"
         },
         {
-          "id": "background/iso-bg-sidewalk",
+          "id": "background/iso-bg-building-tall",
           "category": "background",
-          "tags": ["sidewalk", "ground", "concrete", "curb", "isometric", "backdrop"],
+          "tags": ["building", "adjacent", "tall", "isometric", "backdrop", "slope-canonical"],
           "scale": "backdrop",
           "roomFamily": null,
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-street",
+          "id": "background/iso-bg-garden",
           "category": "background",
-          "tags": ["street", "asphalt", "road", "isometric", "backdrop"],
+          "tags": ["garden", "park", "foliage", "isometric", "backdrop"],
           "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-back-alley",
+          "category": "background",
+          "tags": ["alley", "rear", "dumpster", "trash", "isometric", "backdrop"],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-tree-street",
+          "category": "background",
+          "tags": ["tree", "sidewalk", "foliage", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-bench",
+          "category": "background",
+          "tags": ["bench", "seating", "sidewalk", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-mailbox",
+          "category": "background",
+          "tags": ["mailbox", "postal", "sidewalk", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-cone-traffic",
+          "category": "background",
+          "tags": ["cone", "traffic", "hazard", "street-detail", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-manhole",
+          "category": "background",
+          "tags": ["manhole", "cover", "street-detail", "isometric"],
+          "scale": "prop",
           "roomFamily": null,
           "status": "approved"
         },

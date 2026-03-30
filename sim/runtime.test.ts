@@ -164,6 +164,45 @@ describe("phase 1 runtime", () => {
     ]);
   });
 
+  it("updates runtime-owned loot filter state and exposes it in the phase 2 view", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.operators = snapshot.operators?.filter(
+      (operator) => operator.id === "operator/rose-vega",
+    );
+    snapshot.equipmentAssignments = snapshot.equipmentAssignments?.filter(
+      (assignment) => assignment.operatorId === "operator/rose-vega",
+    );
+    snapshot.inventoryStacks = [
+      { itemId: "weapon/pipe-wrench", quantity: 1 },
+      { itemId: "loot/monster-part/drain-sludge", quantity: 1 },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/set-loot-filter",
+      enabled: true,
+    });
+
+    expect(simulation.getWorldSnapshot().lootAutomation).toEqual({
+      autoSellEnabled: true,
+    });
+    expect(simulation.getPhase2View().lootAutomation).toMatchObject({
+      autoSellEnabled: true,
+      autoSellJunkMonsterParts: true,
+    });
+    expect(simulation.drainRuntimeEvents()).toEqual([
+      expect.objectContaining({
+        kind: "event_change",
+        message: "Loot filter enabled. Junk parts and obsolete gear will sell automatically.",
+      }),
+      expect.objectContaining({
+        kind: "resource_swing",
+        message: expect.stringContaining("Loot filter auto-sold"),
+      }),
+    ]);
+  });
+
   it("refuses to change objective bias during an active contract", () => {
     const simulation = createAscensionSimulation(
       createPreviewWorldSnapshot(templateRegistry),

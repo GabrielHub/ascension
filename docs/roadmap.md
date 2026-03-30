@@ -42,7 +42,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - The event log is the always-on notice surface for departures, returns, injuries, deaths, morale and loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
 - Shared uncertainty now influences raid resolution, damaged-team outcomes, operator departure checks, loot generation, and runtime event pressure.
-- Stackable shared inventory, loot drops, the market, and automatic accessory selection are implemented for weapons, outfit overlays, accessories, and monster-part loot.
+- Stackable shared inventory, loot drops, the market, automatic accessory selection, and runtime-owned loot filtering are implemented for weapons, outfit overlays, accessories, and monster-part loot.
 - Phase 2 content breadth is in place through authored gear families, loot families, additional room families for later tiers, and expanded operator/staff/runtime content definitions.
 - The bodega uses the four bodega-native room identities from the world foundation, and training rooms remain gated to later headquarters tiers.
 - The Phase 2 asset-production contract is documented and locked around canon-first briefs, recipe previews, modular production, props-only room scenes, controlled item variants, and viewer/playground review.
@@ -125,6 +125,7 @@ Deliverables:
 - room families that were combined in the bodega split into dedicated Porter's rooms as documented in the world foundation, including infirmary, break room, gym, briefing room, stockroom, prep room, and a bar-driven recruitment surface
 - training rooms unlock for the first time — no training exists in the bodega phase
 - Porter's introduces lightweight consumable prep from monster drops through a dedicated prep room; full gear crafting remains a later-tier system
+- low-rank loot clutter is now managed through an optional autosell filter that keeps junk monster parts and obsolete gear from piling up once the guild has outgrown them
 - office-tier rooms and role-specific room variants for later progression
 - recurring teams deepen into stronger lock-in, more persistent identity, and explicit player-visible naming once a team's identity has proven stable
 - established teams and rooms develop recognizable culture that affects new-hire integration and staffing choices

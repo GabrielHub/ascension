@@ -2,6 +2,7 @@ import type {
   EquipmentViewModel,
   GameCallbacks,
   InventoryItemViewModel,
+  LootAutomationViewModel,
   MarketItemViewModel,
 } from "./view-models";
 import { ItemRankBadge, ItemTagChips, StatEffectChips } from "./item-surface";
@@ -9,6 +10,7 @@ import { emptyStateClass, emptyStateIconClass } from "./styles";
 
 interface InventoryPanelProps {
   inventory: readonly InventoryItemViewModel[];
+  lootAutomation: LootAutomationViewModel | null;
   equipment: readonly EquipmentViewModel[];
   marketItems: readonly MarketItemViewModel[];
   callbacks: GameCallbacks;
@@ -26,6 +28,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function InventoryPanel({
   inventory,
+  lootAutomation,
   equipment,
   marketItems,
   callbacks,
@@ -59,11 +62,63 @@ export function InventoryPanel({
   return (
     <div className="animate-enter space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Inventory</h3>
-        <span className="text-sm tabular-nums text-silver/50">
-          {inventory.reduce((sum, it) => sum + it.quantity, 0)} items
-        </span>
+        <div>
+          <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Inventory
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">
+            Raid loot lands here first. Auto-filtering is balance-owned and only sells gear the
+            guild has already outgrown, plus junk monster parts.
+          </p>
+        </div>
+        <div className="text-right">
+          <span className="block text-sm tabular-nums text-silver/50">
+            {inventory.reduce((sum, it) => sum + it.quantity, 0)} items
+          </span>
+          <button
+            type="button"
+            data-testid="inventory-loot-filter-toggle"
+            className="btn-ghost mt-2 px-1.5 py-0.5 text-sm"
+            onClick={() => callbacks.setLootFilterEnabled(!(lootAutomation?.enabled ?? false))}
+          >
+            {lootAutomation?.enabled ? "loot filter on" : "loot filter off"}
+          </button>
+        </div>
       </div>
+
+      {lootAutomation && (
+        <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Loot Filter</p>
+              <p className="mt-1 text-sm leading-relaxed text-silver/65">
+                {lootAutomation.enabled
+                  ? "Enabled. New raid drops are filtered automatically."
+                  : "Disabled. All loot stays in storage until you review it."}
+              </p>
+            </div>
+            <span className={`badge ${lootAutomation.enabled ? "badge-gold" : "badge-slate"}`}>
+              {lootAutomation.enabled ? "Auto" : "Manual"}
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            {lootAutomation.equipmentRules.map((rule) => (
+              <div key={rule.category} className="rounded-lg border border-gold/8 px-3 py-2">
+                <p className="text-xs uppercase tracking-[0.12em] text-gold/55">{rule.label}</p>
+                <p className="mt-1 text-sm text-silver/65">
+                  {rule.sellBelowRank ? `Sell below ${rule.sellBelowRank}` : "Keep all ranks"}
+                </p>
+              </div>
+            ))}
+          </div>
+          {lootAutomation.autoSellJunkMonsterParts && (
+            <p className="mt-3 text-sm leading-relaxed text-silver/60">
+              Junk monster parts sell automatically. Parts reserved for prep and later consumable
+              crafting stay in storage.
+            </p>
+          )}
+        </div>
+      )}
 
       {equipment.length > 0 && (
         <div className="space-y-1.5">

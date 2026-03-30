@@ -1,7 +1,12 @@
 import { getPolicyFactorMetadata } from "lib/policies";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
-import { RAID_TIPS, getContractHintMeta, getWeaknessTargetMeta } from "./_glossary";
+import {
+  RAID_TIPS,
+  getContractHintMeta,
+  getNarrativeTagMeta,
+  getWeaknessTargetMeta,
+} from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
 import { RaidWatch } from "./raid-watch";
@@ -420,24 +425,36 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`badge ${rankBadgeClass(contract.rank)}`}>
-            Rank {contract.rank.toUpperCase()}
-          </span>
-          <span
-            className={`badge ${
+          <Tooltip content={RAID_TIPS.rank}>
+            <span className={`badge ${rankBadgeClass(contract.rank)}`}>
+              Rank {contract.rank.toUpperCase()}
+            </span>
+          </Tooltip>
+          <Tooltip
+            content={
               contract.bossDefeated
-                ? "badge-gold"
+                ? RAID_TIPS.contractWon
                 : contract.contractLost
-                  ? "badge-ember"
-                  : "badge-slate"
-            }`}
+                  ? RAID_TIPS.contractLost
+                  : RAID_TIPS.contractActive
+            }
           >
-            {contract.bossDefeated
-              ? "Boss Defeated"
-              : contract.contractLost
-                ? "Contract Lost"
-                : "Active"}
-          </span>
+            <span
+              className={`badge ${
+                contract.bossDefeated
+                  ? "badge-gold"
+                  : contract.contractLost
+                    ? "badge-ember"
+                    : "badge-slate"
+              }`}
+            >
+              {contract.bossDefeated
+                ? "Boss Defeated"
+                : contract.contractLost
+                  ? "Contract Lost"
+                  : "Active"}
+            </span>
+          </Tooltip>
         </div>
       </div>
 
@@ -450,16 +467,22 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
 
           {/* Stats */}
           <div className="mt-3 flex items-center gap-4 text-xs">
-            <div className="flex items-baseline gap-1" title={RAID_TIPS.threat}>
-              <span className="text-gold/70">Threat</span>
+            <div className="flex items-baseline gap-1">
+              <Tooltip content={RAID_TIPS.threat}>
+                <span className="text-gold/70">Threat</span>
+              </Tooltip>
               <span className="tabular-nums text-silver-bright">{contract.threat}</span>
             </div>
-            <div className="flex items-baseline gap-1" title={RAID_TIPS.intel}>
-              <span className="text-gold/70">Intel</span>
+            <div className="flex items-baseline gap-1">
+              <Tooltip content={RAID_TIPS.intel}>
+                <span className="text-gold/70">Intel</span>
+              </Tooltip>
               <span className="tabular-nums text-silver-bright">{contract.intel}</span>
             </div>
-            <div className="flex items-baseline gap-1" title={RAID_TIPS.reward}>
-              <span className="text-gold/70">Reward</span>
+            <div className="flex items-baseline gap-1">
+              <Tooltip content={RAID_TIPS.reward}>
+                <span className="text-gold/70">Reward</span>
+              </Tooltip>
               <span className="tabular-nums text-silver-bright">{Math.round(contract.reward)}</span>
             </div>
           </div>
@@ -467,7 +490,9 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
           {/* Exploration progress */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gold/60">Exploration</span>
+              <Tooltip content={RAID_TIPS.revealProgress}>
+                <span className="text-gold/60">Exploration</span>
+              </Tooltip>
               <span className="tabular-nums text-silver/60">
                 {Math.round(contract.explorationProgress)}%
               </span>
@@ -488,11 +513,14 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                 <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Operational Read</p>
                 {contract.knownTraits.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {contract.knownTraits.map((trait) => (
-                      <span key={trait} className="badge badge-slate">
-                        {getContractHintMeta(trait).label}
-                      </span>
-                    ))}
+                    {contract.knownTraits.map((trait) => {
+                      const meta = getContractHintMeta(trait);
+                      return (
+                        <Tooltip key={trait} content={meta.tip}>
+                          <span className="badge badge-slate">{meta.label}</span>
+                        </Tooltip>
+                      );
+                    })}
                   </div>
                 )}
                 {contract.enemyHints.length > 0 && (
@@ -515,20 +543,29 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
             <div className="glass-card-inset rounded-lg px-3 py-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Boss Stakes</p>
-                <span className={`badge ${contract.bossAvailable ? "badge-ember" : "badge-slate"}`}>
-                  {contract.bossAvailable ? "Route Open" : "Route Locked"}
-                </span>
+                <Tooltip
+                  content={contract.bossAvailable ? RAID_TIPS.routeOpen : RAID_TIPS.routeLocked}
+                >
+                  <span
+                    className={`badge ${contract.bossAvailable ? "badge-ember" : "badge-slate"}`}
+                  >
+                    {contract.bossAvailable ? "Route Open" : "Route Locked"}
+                  </span>
+                </Tooltip>
               </div>
               <p className="mt-2 text-sm text-silver-bright">
                 {contract.bossName ?? "Boss identity unconfirmed"}
               </p>
               {contract.bossTags.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {contract.bossTags.map((tag) => (
-                    <span key={tag} className="badge badge-slate">
-                      {getContractHintMeta(tag).label}
-                    </span>
-                  ))}
+                  {contract.bossTags.map((tag) => {
+                    const meta = getNarrativeTagMeta(tag);
+                    return (
+                      <Tooltip key={tag} content={meta.tip}>
+                        <span className="badge badge-slate">{meta.label}</span>
+                      </Tooltip>
+                    );
+                  })}
                 </div>
               )}
               {contract.bossWeaknesses.length > 0 && (
@@ -538,12 +575,11 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                     {contract.bossWeaknesses.map((weakness) => {
                       const meta = getWeaknessTargetMeta(weakness.target);
                       return (
-                        <span
-                          key={`${weakness.kind}-${weakness.target}`}
-                          className="badge border border-frost/20 bg-frost/10 text-frost"
-                        >
-                          {meta.label}
-                        </span>
+                        <Tooltip key={`${weakness.kind}-${weakness.target}`} content={meta.tip}>
+                          <span className="badge border border-frost/20 bg-frost/10 text-frost">
+                            {meta.label}
+                          </span>
+                        </Tooltip>
                       );
                     })}
                   </div>

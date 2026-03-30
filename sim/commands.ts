@@ -6,6 +6,7 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/set-active-floor",
   "sim/set-room-active",
   "sim/set-policy",
+  "sim/set-loot-filter",
   "sim/purchase-building-upgrade",
   "sim/purchase-room-upgrade",
   "sim/accept-recruit",
@@ -70,6 +71,10 @@ export type SimCommand =
       type: "sim/set-policy";
       policyId: PolicyId;
       value: PolicyValue;
+    }
+  | {
+      type: "sim/set-loot-filter";
+      enabled: boolean;
     }
   | {
       type: "sim/purchase-building-upgrade";

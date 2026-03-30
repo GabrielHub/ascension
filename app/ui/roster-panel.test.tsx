@@ -63,6 +63,7 @@ const callbacks: GameCallbacks = {
   tick: () => {},
   setRoomActive: () => {},
   setPolicy: () => {},
+  setLootFilterEnabled: () => {},
   initiateRelocation: () => {},
   purchaseBuildingUpgrade: () => {},
   purchaseRoomUpgrade: () => {},
@@ -81,6 +82,7 @@ const callbacks: GameCallbacks = {
   unequipItem: () => {},
   bidContract: () => {},
   advanceContract: () => {},
+  prepConsumable: () => {},
 };
 
 describe("roster panel", () => {

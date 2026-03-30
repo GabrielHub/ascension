@@ -1,26 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 18 78 62">
-  <!-- Isometric medical cot / examination bed. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 10 88 76">
+  <!-- Isometric medical recovery cot. Bodega-tier makeshift medical. -->
 
-  <!-- Mattress surface -->
-  <polygon points="12,38 52,58 82,43 42,23"
-    fill="#c8c4b8" stroke="#3a3838" stroke-width="0.8" opacity="0.9"/>
-  <!-- Pillow -->
-  <polygon points="42,26 56,33 64,29 50,22"
-    fill="#c8c4b8" stroke="#b0aca0" stroke-width="0.5"/>
+  <!-- Ground shadow -->
+  <ellipse cx="48" cy="74" rx="26" ry="8" fill="rgba(0,0,0,0.10)"/>
 
-  <!-- Frame front face -->
-  <polygon points="52,58 82,43 82,58 52,73"
-    fill="#3a3838" stroke="#252525" stroke-width="0.8"/>
+  <!-- Far-right leg + caster wheel (drawn first, behind frame) -->
+  <line x1="72" y1="50" x2="72" y2="64" stroke="#5a5a62" stroke-width="1.4"/>
+  <circle cx="72" cy="65" r="1.5" fill="#3a3a42"/>
+
+  <!-- Chrome-steel frame platform -->
+  <polygon points="48,28 72,44 48,60 24,44"
+    fill="#4a4a52" stroke="#3a3a42" stroke-width="0.8"/>
   <!-- Frame left face -->
-  <polygon points="12,38 52,58 52,73 12,53"
-    fill="#333030" stroke="#252525" stroke-width="0.6"/>
+  <polygon points="24,44 48,60 48,66 24,50"
+    fill="#3a3a42" stroke="#2e2e36" stroke-width="0.6"/>
+  <!-- Frame front face -->
+  <polygon points="48,60 72,44 72,50 48,66"
+    fill="#404048" stroke="#2e2e36" stroke-width="0.6"/>
 
-  <!-- Legs -->
-  <line x1="18" y1="45" x2="18" y2="60" stroke="#3a3838" stroke-width="2"/>
-  <line x1="76" y1="48" x2="76" y2="63" stroke="#3a3838" stroke-width="2"/>
-  <line x1="48" y1="62" x2="48" y2="77" stroke="#3a3838" stroke-width="2"/>
-  <line x1="46" y1="32" x2="46" y2="45" stroke="#3a3838" stroke-width="2"/>
+  <!-- Near-left leg + caster wheel -->
+  <line x1="24" y1="50" x2="24" y2="64" stroke="#5a5a62" stroke-width="1.4"/>
+  <circle cx="24" cy="65" r="1.5" fill="#3a3a42"/>
+  <!-- Near-bottom leg + caster wheel -->
+  <line x1="48" y1="66" x2="48" y2="80" stroke="#5a5a62" stroke-width="1.4"/>
+  <circle cx="48" cy="81" r="1.5" fill="#3a3a42"/>
+
+  <!-- Mattress top surface -->
+  <polygon points="48,24 70,40 48,56 26,40"
+    fill="#d0ccc4" stroke="#b4b0a8" stroke-width="0.5"/>
+  <!-- Mattress left face (visible thickness) -->
+  <polygon points="26,40 48,56 48,60 26,44"
+    fill="#bab6ae" stroke="#a8a4a0" stroke-width="0.4"/>
+  <!-- Mattress front face -->
+  <polygon points="48,56 70,40 70,44 48,60"
+    fill="#c4c0b8" stroke="#a8a4a0" stroke-width="0.4"/>
 
   <!-- Sheet fold line -->
-  <line x1="32" y1="38" x2="52" y2="48" stroke="#b0aca0" stroke-width="0.4" opacity="0.4"/>
+  <line x1="38" y1="34" x2="48" y2="42" stroke="#c0bcb4" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Pillow (head end, upper-right area of mattress) -->
+  <polygon points="58,36 65,33 70,36 63,39"
+    fill="#dcd8d0" stroke="#c4c0b8" stroke-width="0.4"/>
+  <polygon points="63,39 70,36 70,38 63,41"
+    fill="#d0ccc4" stroke="#bab6ae" stroke-width="0.3"/>
+
+  <!-- Near-side guardrail (hospital bed side rail) -->
+  <line x1="34" y1="34" x2="34" y2="46" stroke="#5a5a62" stroke-width="1.1"/>
+  <line x1="42" y1="40" x2="42" y2="52" stroke="#5a5a62" stroke-width="1.1"/>
+  <line x1="34" y1="34" x2="42" y2="40" stroke="#6a6a72" stroke-width="0.8"/>
+  <line x1="34" y1="38" x2="42" y2="44" stroke="#5a5a62" stroke-width="0.6"/>
+
+  <!-- Far-side guardrail -->
+  <line x1="54" y1="22" x2="54" y2="32" stroke="#5a5a62" stroke-width="1.1"/>
+  <line x1="62" y1="26" x2="62" y2="34" stroke="#5a5a62" stroke-width="1.1"/>
+  <line x1="54" y1="22" x2="62" y2="26" stroke="#6a6a72" stroke-width="0.8"/>
+  <line x1="54" y1="26" x2="62" y2="30" stroke="#5a5a62" stroke-width="0.6"/>
+
+  <!-- Head-end bar (raised metal frame at head of bed) -->
+  <line x1="68" y1="32" x2="68" y2="42" stroke="#5a5a62" stroke-width="1.6"/>
+  <line x1="52" y1="46" x2="52" y2="56" stroke="#5a5a62" stroke-width="1.6"/>
+  <line x1="68" y1="32" x2="52" y2="46" stroke="#6a6a72" stroke-width="1"/>
+
+  <!-- Foot-end bar (raised metal frame at foot of bed) -->
+  <line x1="46" y1="18" x2="46" y2="28" stroke="#5a5a62" stroke-width="1.6"/>
+  <line x1="28" y1="34" x2="28" y2="44" stroke="#5a5a62" stroke-width="1.6"/>
+  <line x1="46" y1="18" x2="28" y2="34" stroke="#6a6a72" stroke-width="1"/>
 </svg>
