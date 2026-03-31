@@ -28,6 +28,8 @@ describe("interruption host", () => {
         boundContext: {
           operatorIds: ["operator/vera-santos"],
         },
+        presenterId: "presenter/assistant",
+        presenterExpression: "concerned",
       },
     };
 
@@ -37,6 +39,8 @@ describe("interruption host", () => {
 
     expect(html).toContain("Injury Setback");
     expect(html).toContain("Vera Santos");
+    expect(html).toContain("Mara Cordero");
+    expect(html).toContain("/data/presenters/assistant/concerned.jpg");
     expect(html).not.toContain("injury_setback");
     expect(html).not.toContain("operator/vera-santos");
   });

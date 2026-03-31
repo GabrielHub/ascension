@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { GuidanceActiveBeatView } from "sim/systems/guidance";
 import { glassPanelClass } from "./styles";
+import { PresenterPanel } from "./presenter-panel";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -214,6 +215,16 @@ function AnchoredCoachmark({
         <div className="h-px bg-gradient-to-r from-transparent via-[rgba(200,168,76,0.3)] to-transparent" />
 
         <div className="px-5 pt-4 pb-5">
+          {beat.presenterId && (
+            <div className="mb-3">
+              <PresenterPanel
+                presenterId={beat.presenterId}
+                presenterExpression={beat.presenterExpression}
+                variant="compact"
+              />
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -321,6 +332,16 @@ function CenteredFallbackShell({
             <div className="mt-px h-px bg-gradient-to-r from-transparent via-[rgba(200,168,76,0.12)] to-transparent" />
 
             <div className="px-6 pt-5 pb-6">
+              {beat.presenterId && (
+                <div className="mb-4">
+                  <PresenterPanel
+                    presenterId={beat.presenterId}
+                    presenterExpression={beat.presenterExpression}
+                    variant="compact"
+                  />
+                </div>
+              )}
+
               {/* Header */}
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="min-w-0">

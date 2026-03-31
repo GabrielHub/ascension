@@ -2161,7 +2161,25 @@ describe("save codec", () => {
       ],
       dismissedBeatIds: [],
       activeBeatId: null,
-      activeBeatView: null,
+      activeBeatView: {
+        beatId: "guidance/opening/board-briefing",
+        track: "opening",
+        deliveryMode: "blocking",
+        target: null,
+        fallbackIntent: null,
+        presenterId: "presenter/assistant",
+        presenterExpression: "serious",
+        copy: {
+          title: "Welcome, Boss",
+          body: "Test",
+          ctaLabel: "Understood",
+        },
+        milestoneOrder: 1,
+        totalMilestones: 13,
+        completionKind: "acknowledged",
+        pauseWorld: true,
+        allowSkip: false,
+      },
       queuedBeatIds: [],
       lastEvaluationMinute: 2000,
       openingPathState: "completed",
@@ -2197,6 +2215,9 @@ describe("save codec", () => {
     expect(restoredGuidance.openingPathState).toBe("completed");
     expect(restoredGuidance.completedBeatIds).toEqual(guidanceState.completedBeatIds);
     expect(restoredGuidance.seenBeatIds).toEqual(guidanceState.seenBeatIds);
+    expect((restoredGuidance.activeBeatView as Record<string, string>).presenterId).toBe(
+      "presenter/assistant",
+    );
     expect((restoredGuidance.interactionCounts as Record<string, number>).staffingActions).toBe(4);
     expect((restoredGuidance.interactionCounts as Record<string, number>).upgradesPurchased).toBe(
       2,
@@ -2216,6 +2237,8 @@ describe("save codec", () => {
           buildingFromId: "building/bodega",
           buildingToId: "building/porters",
           treasuryCost: 600,
+          presenterId: "presenter/assistant",
+          presenterExpression: "neutral",
         },
         sourceSystem: "relocation-system",
         timestamp: 5000,
@@ -2248,6 +2271,8 @@ describe("save codec", () => {
     expect(payload.beat).toBe("moving");
     expect(payload.buildingToId).toBe("building/porters");
     expect(payload.treasuryCost).toBe(600);
+    expect(payload.presenterId).toBe("presenter/assistant");
+    expect(payload.presenterExpression).toBe("neutral");
   });
 
   it("round-trips post-relocation Porter's state through storage normalization", () => {

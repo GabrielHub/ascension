@@ -33,6 +33,7 @@ const RELOCATION_EVENT_ID = "event/relocation/bodega-to-next-hq";
 const RELOCATION_FROM = "building/bodega";
 const RELOCATION_TO = "building/porters";
 const RELOCATION_TREASURY_COST = 600;
+const ASSISTANT_PRESENTER_ID = "presenter/assistant";
 
 export const RELOCATION_THRESHOLDS = {
   buildingTier: 4,
@@ -207,6 +208,8 @@ export function initiateRelocation(context: SimSystemContext): boolean {
     buildingFromId: RELOCATION_FROM,
     buildingToId: RELOCATION_TO,
     treasuryCost: RELOCATION_TREASURY_COST,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
   };
 
   enqueueInterruption(
@@ -245,6 +248,7 @@ export function advanceRelocationBeat(
       const decisionPayload: RelocationPayload = {
         ...resolvedPayload,
         beat: "decision",
+        presenterExpression: "concerned",
       };
       enqueueInterruption(
         context.runtimeState.interruptionQueue,
@@ -286,6 +290,7 @@ export function advanceRelocationBeat(
         const movingPayload: RelocationPayload = {
           ...resolvedPayload,
           beat: "moving",
+          presenterExpression: "neutral",
         };
         enqueueInterruption(
           context.runtimeState.interruptionQueue,

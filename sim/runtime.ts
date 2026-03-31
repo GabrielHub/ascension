@@ -28,7 +28,8 @@ import {
   PASSIVES,
 } from "content/templates/kits";
 import { OPENING_BEAT_COUNT } from "./systems/guidance-beats";
-import { syncOpeningContractTracking } from "./systems/guidance";
+import { syncOpeningContractTracking, type GuidanceActiveBeatView } from "./systems/guidance";
+import { validateIncidentTemplates } from "./systems/incidents";
 import { evaluateRelocationGate, getRelocationBlockers } from "./systems/relocation";
 // Type-only re-declarations to avoid importing from systems/ modules.
 // Those modules have init-time circular dependencies through the systems barrel.
@@ -45,7 +46,7 @@ type GuidanceState = {
   completedBeatIds: string[];
   dismissedBeatIds: string[];
   activeBeatId: string | null;
-  activeBeatView: unknown;
+  activeBeatView: GuidanceActiveBeatView | null;
   queuedBeatIds: string[];
   lastEvaluationMinute: number;
   openingPathState: string;
@@ -108,6 +109,12 @@ function lazyCreateGuidanceState(openingPathState = "completed"): GuidanceState 
       lastTrackedContractSiteId: null,
     },
   };
+}
+
+function cloneGuidanceActiveBeatView(
+  activeBeatView: GuidanceActiveBeatView | null,
+): GuidanceActiveBeatView | null {
+  return activeBeatView ? { ...activeBeatView } : null;
 }
 
 function lazyBuildEncounterView(
@@ -686,26 +693,7 @@ export interface Phase1RuntimeView {
   activeInterruption: import("./systems/interruptions").InterruptionInstance | null;
   worldTimeFrozen: boolean;
   guidance: {
-    activeBeat: {
-      beatId: string;
-      track: string;
-      deliveryMode: string;
-      target: string | null;
-      fallbackIntent: string | null;
-      copy: {
-        title: string;
-        body: string;
-        subtitle?: string;
-        ctaLabel: string;
-        ctaDismissLabel?: string;
-        fallbackBody?: string;
-      };
-      milestoneOrder: number;
-      totalMilestones: number;
-      completionKind: string;
-      pauseWorld: boolean;
-      allowSkip: boolean;
-    } | null;
+    activeBeat: GuidanceActiveBeatView | null;
     openingPathState: string;
     completedOpeningBeats: number;
     totalOpeningBeats: number;
@@ -1464,7 +1452,9 @@ function restoreGuidanceStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot):
       dismissedBeatIds: Array.isArray(data.dismissedBeatIds) ? data.dismissedBeatIds : [],
       activeBeatId: typeof data.activeBeatId === "string" ? data.activeBeatId : null,
       activeBeatView:
-        data.activeBeatView && typeof data.activeBeatView === "object" ? data.activeBeatView : null,
+        data.activeBeatView && typeof data.activeBeatView === "object"
+          ? (data.activeBeatView as GuidanceActiveBeatView)
+          : null,
       queuedBeatIds: Array.isArray(data.queuedBeatIds) ? data.queuedBeatIds : [],
       lastEvaluationMinute:
         typeof data.lastEvaluationMinute === "number" ? data.lastEvaluationMinute : 0,
@@ -2618,9 +2608,9 @@ function applyWorldSnapshot(
                 completedBeatIds: [...runtimeState.guidanceState.completedBeatIds],
                 dismissedBeatIds: [...runtimeState.guidanceState.dismissedBeatIds],
                 activeBeatId: runtimeState.guidanceState.activeBeatId,
-                activeBeatView: runtimeState.guidanceState.activeBeatView
-                  ? { ...(runtimeState.guidanceState.activeBeatView as Record<string, unknown>) }
-                  : null,
+                activeBeatView: cloneGuidanceActiveBeatView(
+                  runtimeState.guidanceState.activeBeatView,
+                ),
                 queuedBeatIds: [...runtimeState.guidanceState.queuedBeatIds],
                 lastEvaluationMinute: runtimeState.guidanceState.lastEvaluationMinute,
                 openingPathState: runtimeState.guidanceState.openingPathState,
@@ -3024,30 +3014,7 @@ function applyWorldSnapshot(
         activeInterruption: runtimeState.interruptionQueue.active,
         worldTimeFrozen: runtimeState.worldTimeFrozen,
         guidance: {
-          activeBeat: runtimeState.guidanceState.activeBeatView
-            ? {
-                ...(runtimeState.guidanceState.activeBeatView as {
-                  beatId: string;
-                  track: string;
-                  deliveryMode: string;
-                  target: string | null;
-                  fallbackIntent: string | null;
-                  copy: {
-                    title: string;
-                    body: string;
-                    subtitle?: string;
-                    ctaLabel: string;
-                    ctaDismissLabel?: string;
-                    fallbackBody?: string;
-                  };
-                  milestoneOrder: number;
-                  totalMilestones: number;
-                  completionKind: string;
-                  pauseWorld: boolean;
-                  allowSkip: boolean;
-                }),
-              }
-            : null,
+          activeBeat: cloneGuidanceActiveBeatView(runtimeState.guidanceState.activeBeatView),
           openingPathState: runtimeState.guidanceState.openingPathState,
           completedOpeningBeats: runtimeState.guidanceState.completedBeatIds.filter((id) =>
             id.startsWith("guidance/opening/"),
@@ -3214,5 +3181,6 @@ export function createAscensionSimulation(
   registry: TemplateRegistry,
   options?: { simulationSeed?: number },
 ): AscensionSimulation {
+  validateIncidentTemplates(registry);
   return applyWorldSnapshot(snapshot, registry, options);
 }

@@ -395,11 +395,15 @@ describeBrowser("canonical opening browser path", () => {
     await page.goto(BASE_URL, { waitUntil: "networkidle" });
     await waitForDriver(page);
     await page.getByTestId("slot-new").first().click();
+    await page.getByRole("button", { name: /Enter Slot 1/i }).click();
     await page.getByTestId("game-shell").waitFor({ state: "visible" });
 
     const captures: Observation[] = [];
     const beatSequence = new Set<string>();
     const remember = (label: string, snapshot: BrowserTestSnapshot) => {
+      for (const completedBeatId of snapshot.guidance.completedBeatIds) {
+        beatSequence.add(completedBeatId);
+      }
       if (snapshot.guidance.activeBeatId) {
         beatSequence.add(snapshot.guidance.activeBeatId);
       }
@@ -599,22 +603,29 @@ describeBrowser("canonical opening browser path", () => {
     snapshot = await waitForSnapshot(
       page,
       "loot and market guidance",
-      (next) => next.guidance.activeBeatId === "guidance/opening/loot-and-market",
+      (next) =>
+        next.guidance.activeBeatId === "guidance/opening/loot-and-market" ||
+        next.guidance.activeBeatId === "guidance/opening/staffing-and-rooms" ||
+        next.guidance.completedBeatIds.includes("guidance/opening/loot-and-market"),
     );
     remember("loot-and-market", snapshot);
+
+    if (snapshot.guidance.activeBeatId === "guidance/opening/staffing-and-rooms") {
+      remember("staffing-and-rooms", snapshot);
+    } else {
+      await openMarket(page);
+      snapshot = await waitForSnapshot(
+        page,
+        "staffing and rooms guidance",
+        (next) => next.guidance.activeBeatId === "guidance/opening/staffing-and-rooms",
+      );
+      remember("staffing-and-rooms", snapshot);
+    }
 
     await openRoster(page);
     const stillLockedRecruitButton = page.getByTestId("visitor-recruit").first();
     expect(await stillLockedRecruitButton.isEnabled()).toBe(true);
     remember("recruit-still-available-before-upgrade", await getSnapshot(page));
-
-    await openMarket(page);
-    snapshot = await waitForSnapshot(
-      page,
-      "staffing and rooms guidance",
-      (next) => next.guidance.activeBeatId === "guidance/opening/staffing-and-rooms",
-    );
-    remember("staffing-and-rooms", snapshot);
 
     await openRooms(page);
     await clickRoomCard(page, "Supply Closet");

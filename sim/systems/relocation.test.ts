@@ -481,6 +481,8 @@ describe("relocation initiation guards", () => {
     const activePayload = context.runtimeState.interruptionQueue.active!
       .payload as RelocationPayload;
     expect(activePayload.beat).toBe("offer");
+    expect(activePayload.presenterId).toBe("presenter/assistant");
+    expect(activePayload.presenterExpression).toBe("serious");
   });
 });
 
@@ -528,6 +530,7 @@ describe("relocation save/load stability", () => {
     const queueState = context.runtimeState.interruptionQueue;
     const serialized = JSON.parse(JSON.stringify(queueState));
     expect(serialized.active.payload.beat).toBe("decision");
+    expect(serialized.active.payload.presenterExpression).toBe("concerned");
   });
 
   it("moving beat payload round-trips through JSON and completes handoff", () => {
@@ -553,6 +556,7 @@ describe("relocation save/load stability", () => {
     const queueSnapshot = JSON.parse(JSON.stringify(context.runtimeState.interruptionQueue));
     expect(queueSnapshot.active.payload.beat).toBe("moving");
     expect(queueSnapshot.active.payload.buildingToId).toBe("building/porters");
+    expect(queueSnapshot.active.payload.presenterExpression).toBe("neutral");
 
     // Restore the queue from JSON (simulates load)
     context.runtimeState.interruptionQueue.active = queueSnapshot.active;

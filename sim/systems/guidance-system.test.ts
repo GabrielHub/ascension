@@ -173,6 +173,8 @@ function createIncidentInterruption(): InterruptionInstance {
       boundContext: {
         operatorIds: ["operator/a", "operator/b"],
       },
+      presenterId: "presenter/assistant",
+      presenterExpression: "serious",
     },
   };
 }
@@ -199,6 +201,8 @@ function createBossCommitmentInterruption(): InterruptionInstance {
       bossRank: "f",
       stakeSummary: "Failure will hit the roster hard.",
       teamConditionSummary: "The team is bruised but still standing.",
+      presenterId: "presenter/assistant",
+      presenterExpression: "serious",
     },
   };
 }
@@ -229,6 +233,9 @@ describe("guidance system", () => {
     advanceGuidanceSystem(context, 0);
 
     expect(context.runtimeState.guidanceState.activeBeatId).toBe("guidance/opening/first-incident");
+    expect(context.runtimeState.guidanceState.activeBeatView?.presenterId).toBe(
+      "presenter/assistant",
+    );
     expect(context.runtimeState.interruptionQueue.active?.type).toBe("guidance");
     expect(context.runtimeState.interruptionQueue.queue[0]?.type).toBe("incident");
   });
@@ -288,6 +295,9 @@ describe("guidance system", () => {
     expect(context.runtimeState.guidanceState.activeBeatId).toBe(
       "guidance/opening/boss-commitment",
     );
+    expect(context.runtimeState.guidanceState.activeBeatView?.presenterId).toBe(
+      "presenter/assistant",
+    );
     expect(context.runtimeState.interruptionQueue.active?.type).toBe("guidance");
     expect(context.runtimeState.interruptionQueue.queue[0]?.type).toBe("raid_boss_commitment");
   });
@@ -309,6 +319,8 @@ describe("guidance system", () => {
       deliveryMode: chooseFirstContractBeat.delivery.mode,
       target: chooseFirstContractBeat.delivery.target ?? null,
       fallbackIntent: chooseFirstContractBeat.delivery.fallbackIntent ?? null,
+      presenterId: chooseFirstContractBeat.presenterId,
+      presenterExpression: chooseFirstContractBeat.presenterExpression,
       copy: chooseFirstContractBeat.copy,
       milestoneOrder: chooseFirstContractBeat.milestoneOrder,
       totalMilestones: OPENING_BEAT_IDS.length,

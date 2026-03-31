@@ -77,6 +77,8 @@ export interface GuidanceBeat {
   track: GuidanceTrack;
   featureIds: string[];
   milestoneOrder: number;
+  presenterId?: string;
+  presenterExpression?: string;
   delivery: GuidanceBeatDelivery;
   gating: GuidanceBeatGating;
   bindings: Record<string, string>;
@@ -92,6 +94,8 @@ export interface GuidanceActiveBeatView {
   deliveryMode: GuidanceDeliveryMode;
   target: string | null;
   fallbackIntent: string | null;
+  presenterId?: string;
+  presenterExpression?: string;
   copy: GuidanceBeatCopy;
   milestoneOrder: number;
   totalMilestones: number;
@@ -384,6 +388,8 @@ export function activateBeat(
     deliveryMode: beat.delivery.mode,
     target: beat.delivery.target ?? null,
     fallbackIntent: beat.delivery.fallbackIntent ?? null,
+    presenterId: beat.presenterId,
+    presenterExpression: beat.presenterExpression,
     copy: beat.copy,
     milestoneOrder: beat.milestoneOrder,
     totalMilestones,

@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
 
-import { BuildingAuthority, GuildState, OperatorIdentity, WorldTimeState } from "../components";
+import {
+  BuildingAuthority,
+  GuildState,
+  OperatorIdentity,
+  RoomInstance,
+  WorldTimeState,
+} from "../components";
 import type { PendingIncident } from "./incidents";
 import {
   OPENING_SAFE_INCIDENT_CATEGORIES,
@@ -13,10 +19,14 @@ import {
   isOpeningIncidentMercyWindowActive,
   queueIncident,
   selectIncidentCandidate,
+  validateIncidentTemplates,
 } from "./incidents";
 import type { SimSystemContext } from "./types";
 
-function createIncidentContext(): SimSystemContext {
+function createIncidentContext(options?: {
+  buildingId?: "building/bodega" | "building/porters";
+  roomTemplateId?: string;
+}): SimSystemContext {
   const world = createWorld();
   const guildEntity = addEntity(world);
   const timeEntity = addEntity(world);
@@ -31,6 +41,9 @@ function createIncidentContext(): SimSystemContext {
   GuildState.intel[guildEntity] = 5;
   WorldTimeState.day[timeEntity] = 1;
   WorldTimeState.minuteOfDay[timeEntity] = 600;
+  const buildingId = options?.buildingId ?? "building/bodega";
+  const buildingIndex = templateRegistry.buildingIndexById.get(buildingId) ?? 0;
+  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = buildingIndex;
   BuildingAuthority.contractLifecycle[buildingEntity] = "active";
   BuildingAuthority.contractSite[buildingEntity] = {
     contractSiteId: "contract/test",
@@ -72,12 +85,23 @@ function createIncidentContext(): SimSystemContext {
   OperatorIdentity.specialtyTag[operatorB] = "";
   OperatorIdentity.lifecycleStatus[operatorB] = "active";
 
+  const roomEntities: number[] = [];
+  if (options?.roomTemplateId) {
+    const roomEntity = addEntity(world);
+    addComponent(world, roomEntity, RoomInstance);
+    RoomInstance.id[roomEntity] = "room-instance/test";
+    RoomInstance.templateIndex[roomEntity] =
+      templateRegistry.roomIndexById.get(options.roomTemplateId) ?? 0;
+    RoomInstance.isOperational[roomEntity] = 1;
+    roomEntities.push(roomEntity);
+  }
+
   return {
     world,
     registry: templateRegistry,
     singletonEntities: { guild: guildEntity, time: timeEntity, building: buildingEntity },
     runtimeState: {
-      roomEntities: [],
+      roomEntities,
       operatorEntities: [operatorA, operatorB],
       raidOpportunityEntities: [],
       staffEntities: [],
@@ -144,6 +168,10 @@ function createIncidentContext(): SimSystemContext {
 }
 
 describe("incident interruption payloads", () => {
+  it("validates authored incident template references against the template registry", () => {
+    expect(() => validateIncidentTemplates(templateRegistry)).not.toThrow();
+  });
+
   it("summarizes bound operators with display names instead of ids", () => {
     const template = INCIDENT_TEMPLATES.find(
       (entry) => entry.id === "incident/injury-complication",
@@ -168,6 +196,36 @@ describe("incident interruption payloads", () => {
     expect(payload.subjectSummary).toBe("Vera Santos");
   });
 
+  it("carries presenter bindings and room labels for Porter's incident payloads", () => {
+    const template = INCIDENT_TEMPLATES.find(
+      (entry) => entry.id === "incident/kitchen-standards-slip",
+    );
+    expect(template).toBeDefined();
+
+    const incident: PendingIncident = {
+      instanceId: "incident-porters-1",
+      templateId: "incident/kitchen-standards-slip",
+      triggerFamily: "room_breakdown",
+      createdAtMinute: 120,
+      boundContext: {
+        operatorIds: [],
+        roomId: "room-instance/prep",
+      },
+      choices: template?.choices ?? [],
+    };
+
+    const payload = createIncidentInterruptionPayload(
+      incident,
+      template!,
+      {},
+      { "room-instance/prep": "Prep Room" },
+    );
+
+    expect(payload.presenterId).toBe("presenter/cook");
+    expect(payload.presenterExpression).toBe("serious");
+    expect(payload.subjectSummary).toBe("Prep Room");
+  });
+
   it("filters incident selection to opening-safe templates during the mercy window", () => {
     const categories = new Set<string>();
 
@@ -188,6 +246,50 @@ describe("incident interruption payloads", () => {
     }
 
     expect(categories.size).toBeGreaterThan(1);
+  });
+
+  it("keeps Porter's-only incidents out of the bodega and admits them in Porter's", () => {
+    const bodegaContext = createIncidentContext();
+    const bodegaCandidate = selectIncidentCandidate(
+      bodegaContext,
+      bodegaContext.runtimeState.incidentState,
+      600,
+      100,
+      {
+        allowedCategories: ["kitchen_quality", "bar_drama"],
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+      },
+    );
+    expect(bodegaCandidate).toBeNull();
+
+    const portersContext = createIncidentContext({
+      buildingId: "building/porters",
+      roomTemplateId: "room/prep_room:tier_1",
+    });
+    portersContext.runtimeState.guidanceState.openingPathState = "completed";
+    portersContext.runtimeState.guidanceState.openingTiming = {
+      firstRaidReturnCompletedAtMinute: null,
+      firstIncidentSeededAtMinute: null,
+      securedContractCount: 4,
+      lastTrackedContractSiteId: null,
+    };
+    const portersCandidate = selectIncidentCandidate(
+      portersContext,
+      portersContext.runtimeState.incidentState,
+      600,
+      100,
+      {
+        allowedCategories: ["kitchen_quality"],
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+      },
+    );
+
+    expect(portersCandidate).toBeTruthy();
+    expect(portersCandidate?.templateId).toBe("incident/kitchen-standards-slip");
   });
 
   it("enforces mercy window for the first three contracts by contract count", () => {

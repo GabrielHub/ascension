@@ -5,8 +5,9 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 ## Toolchain
 
 - Use `Vite+` entry points, not plain Vite defaults.
-- Prefer `vp install`, `vp dev`, `vp check`, `vp test`, `vp build`.
+- Prefer `vp install`, `vp dev`, `vp check`, `vp test`, `vp build`, and `vp preview` for standard web workflows.
 - Prefer `vp` workflows over raw package-manager commands unless there is a concrete reason not to.
+- Use package scripts only for tasks that do not have a `vp` equivalent, such as `pnpm tauri:dev`, `pnpm tauri:build`, `pnpm test:tauri`, and `pnpm mcp:tauri-test`.
 
 ## Architecture
 
@@ -94,7 +95,7 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Put screenshots in `tauri-test/screenshots/`
 - Put logs in `tauri-test/logs/`
 - Put traces and other artifacts in `tauri-test/artifacts/`
-- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over ad hoc desktop automation stacks
+- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over ad hoc desktop automation stacks; there is no `vp` equivalent for that desktop harness
 
 ## References
 

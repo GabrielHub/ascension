@@ -57,5 +57,5 @@ Staff are the infrastructure that lets operators focus on the dangerous work. Th
 Some staff and support characters may serve as recurring narrative presenters in interruption modals, guidance beats, and event briefings, but presenter characters are not required to be simulation staff roles.
 
 - The **assistant** is the first presenter and should anchor bodega guidance and general operational briefings.
-- Porter's later adds building-specific presenters such as **the cook** and **the bartender** for incidents tied to their domains.
+- Porter's includes building-specific presenters such as **the cook** and **the bartender** for incidents tied to their domains.
 - Presenter status is a narrative and presentation role, not a separate gameplay-authority layer. The simulation still owns the event, choices, and outcomes.

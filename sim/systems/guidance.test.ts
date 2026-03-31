@@ -178,6 +178,8 @@ describe("guidance save restore", () => {
       deliveryMode: "focused",
       target: "ui/hq/category/rooms",
       fallbackIntent: "hq/open-rooms",
+      presenterId: "presenter/assistant",
+      presenterExpression: "neutral",
       copy: {
         title: "First Upgrade",
         body: "Test",
@@ -203,6 +205,8 @@ describe("guidance save restore", () => {
     const restored = restoreGuidanceState(snapshotGuidanceState(state));
 
     expect(restored.activeBeatView?.completionKind).toBe("upgrade_purchased");
+    expect(restored.activeBeatView?.presenterId).toBe("presenter/assistant");
+    expect(restored.activeBeatView?.presenterExpression).toBe("neutral");
     expect(restored.activeBeatProgressBaseline).toBe(2);
     expect(restored.interactionCounts).toEqual({
       staffingActions: 1,

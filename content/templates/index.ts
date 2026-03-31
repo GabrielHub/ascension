@@ -6,6 +6,7 @@ import { enemyFamilyTemplates } from "./enemies";
 import { eventTemplates } from "./events";
 import { dropTables as dropTableData, itemTemplates, prepRecipeTemplates } from "./items";
 import { missionTemplates } from "./missions";
+import { presenterTemplates } from "./presenters";
 import { resourceTemplates } from "./resources";
 import { roomTemplates } from "./rooms";
 import {
@@ -16,6 +17,7 @@ import {
   type ItemTemplate,
   type MissionTemplate,
   type OrdinaryEnemyTemplate,
+  type PresenterTemplate,
   type PrepRecipeTemplate,
   type ResourceTemplate,
   type RoomTemplate,
@@ -35,6 +37,7 @@ const TEMPLATE_CATEGORY_ORDER: readonly TemplateCategory[] = [
   "upgrades",
   "missions",
   "events",
+  "presenters",
   "items",
   "prepRecipes",
   "dropTables",
@@ -283,6 +286,74 @@ function validateEventTemplates(
         category: "events",
         templateId: template.id,
         message: "weight must be greater than zero.",
+      });
+    }
+  });
+}
+
+function validatePresenterTemplates(
+  templates: readonly PresenterTemplate[],
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  templates.forEach((template) => {
+    validateBaseTemplate("presenters", template, issues);
+
+    if (template.roleDescription.trim().length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "roleDescription must be a non-empty string.",
+      });
+    }
+
+    const expressionEntries = Object.entries(template.portraitByExpression);
+    if (expressionEntries.length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "portraitByExpression must include at least one expression asset.",
+      });
+    }
+
+    if (!template.portraitByExpression[template.defaultExpression]) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: `defaultExpression "${template.defaultExpression}" must resolve to a portrait asset.`,
+      });
+    }
+
+    expressionEntries.forEach(([expression, path]) => {
+      if (expression.trim().length === 0) {
+        issues.push({
+          category: "presenters",
+          templateId: template.id,
+          message: "portraitByExpression keys must be non-empty strings.",
+        });
+      }
+
+      if (path.trim().length === 0) {
+        issues.push({
+          category: "presenters",
+          templateId: template.id,
+          message: `portrait asset path for expression "${expression}" must be non-empty.`,
+        });
+      }
+    });
+
+    if (template.generation.canonBrief.trim().length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "generation.canonBrief must be a non-empty string.",
+      });
+    }
+
+    if (template.generation.masterPrompt.trim().length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "generation.masterPrompt must be a non-empty string.",
       });
     }
   });
@@ -666,6 +737,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   const upgrades = [...upgradeTemplates];
   const missions = [...missionTemplates];
   const events = [...eventTemplates];
+  const presenters = [...presenterTemplates];
   const items = [...itemTemplates];
   const dropTables = [...dropTableData];
   const enemyFamilies = [...enemyFamilyTemplates];
@@ -677,6 +749,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   const upgradeLookup = makeLookup("upgrades", upgrades, issues);
   const missionLookup = makeLookup("missions", missions, issues);
   const eventLookup = makeLookup("events", events, issues);
+  const presenterLookup = makeLookup("presenters", presenters, issues);
   const itemLookup = makeLookup("items", items, issues);
   const dropTableLookup = makeLookup(
     "dropTables",
@@ -699,6 +772,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   );
   validateMissionTemplates(missions, issues);
   validateEventTemplates(events, issues);
+  validatePresenterTemplates(presenters, issues);
   validateItemTemplates(items, issues);
   validatePrepRecipes(prepRecipes, itemLookup.byId, roomLookup.byId, issues);
   validateDropTables(dropTables, itemLookup.byId, issues);
@@ -715,6 +789,7 @@ export function createTemplateRegistry(): TemplateRegistry {
     upgrades,
     missions,
     events,
+    presenters,
     items,
     dropTables,
     enemyFamilies,
@@ -724,6 +799,7 @@ export function createTemplateRegistry(): TemplateRegistry {
     upgradeById: upgradeLookup.byId,
     missionById: missionLookup.byId,
     eventById: eventLookup.byId,
+    presenterById: presenterLookup.byId,
     itemById: itemLookup.byId,
     dropTableById: dropTableLookup,
     enemyFamilyById: enemyFamilyLookup,

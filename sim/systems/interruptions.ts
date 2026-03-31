@@ -50,7 +50,12 @@ export interface SettingsPayload {
   kind: "settings";
 }
 
-export interface IncidentPayload {
+export interface PresenterBinding {
+  presenterId?: string;
+  presenterExpression?: string;
+}
+
+export interface IncidentPayload extends PresenterBinding {
   kind: "incident";
   incidentInstanceId: string;
   templateId: string;
@@ -77,7 +82,7 @@ export interface IncidentBoundContext {
   bossId?: string;
 }
 
-export interface RaidBossCommitmentPayload {
+export interface RaidBossCommitmentPayload extends PresenterBinding {
   kind: "raid_boss_commitment";
   activeRaidId: string;
   contractSiteId: string;
@@ -91,14 +96,14 @@ export interface RaidBossCommitmentPayload {
   teamConditionSummary: string;
 }
 
-export interface AnnouncementPayload {
+export interface AnnouncementPayload extends PresenterBinding {
   kind: "announcement";
   title: string;
   message: string;
   accent?: string;
 }
 
-export interface WarningPayload {
+export interface WarningPayload extends PresenterBinding {
   kind: "warning";
   title: string;
   message: string;
@@ -107,7 +112,7 @@ export interface WarningPayload {
 
 export type RelocationBeat = "offer" | "decision" | "moving";
 
-export interface RelocationPayload {
+export interface RelocationPayload extends PresenterBinding {
   kind: "relocation";
   eventId: string;
   beat: RelocationBeat;
@@ -116,7 +121,7 @@ export interface RelocationPayload {
   treasuryCost: number;
 }
 
-export interface GuidancePayload {
+export interface GuidancePayload extends PresenterBinding {
   kind: "guidance";
   beatId: string;
   track: string;

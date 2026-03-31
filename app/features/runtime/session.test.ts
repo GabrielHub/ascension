@@ -156,6 +156,8 @@ function createOpeningActiveBeatView(beatId: string) {
     deliveryMode: beat.delivery.mode,
     target: beat.delivery.target ?? null,
     fallbackIntent: beat.delivery.fallbackIntent ?? null,
+    presenterId: beat.presenterId,
+    presenterExpression: beat.presenterExpression,
     copy: beat.copy,
     milestoneOrder: beat.milestoneOrder,
     totalMilestones: OPENING_BEAT_IDS.length,

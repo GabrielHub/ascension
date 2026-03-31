@@ -37,11 +37,12 @@ The game should make the player feel all of the following:
 
 ## Future Product Priorities
 
+- Finish the promotion review on top of the shipped relocation, presenter pass, and Porter's baseline.
 - Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
 - Broaden the late-bodega content pool so repeated campaigns do not collapse into the same few recruits, sites, loadouts, and pressure patterns.
-- Define the first post-bodega headquarters tier as a real management step up, not just a capacity increase.
-- Expand from one headquarters tier into larger buildings that change spatial and staffing decisions, not just numbers.
-- Expand the HQ model from a single-plane bodega into floor-indexed multi-floor buildings, with presentation contracts that can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
+- Deepen the shipped Porter's tier so it continues to feel like a real management step up, not just a capacity increase.
+- Expand from the shipped Porter's baseline into larger buildings that change spatial and staffing decisions, not just numbers.
+- Extend the shipped multi-floor HQ model so later buildings can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
 - Grow external pressure through reputation, regulation, competition, and factional response.
 - Push operator social memory, injury, recovery, and retention further so roster management stays central.
 - Increase mission and event variety without losing the observational, non-direct-control identity.

@@ -72,9 +72,9 @@ The opening-campaign remediation pass is no longer an active roadmap milestone. 
 
 Future onboarding work can still deepen later as new systems and headquarters tiers land, but the "close the opening path" milestone itself is complete.
 
-## Current Milestone: Bodega Endgame, Narrative Presenter Pass, And Porter's Handoff
+## Current Milestone: Bodega Endgame And Promotion Review
 
-Goal: close the remaining early-game milestone work now that the relocation contract and Porter's core entry slice are landed. The remaining milestone focus is presenter-system work, promotion-grade verification, and any residual breadth or closeout fixes exposed by that verification.
+Goal: close the remaining early-game milestone work now that the relocation contract, Porter's core entry slice, and the presenter pass are landed. The remaining milestone focus is promotion-grade verification and any residual breadth or closeout fixes exposed by that verification.
 
 Current shipped baseline:
 
@@ -85,6 +85,7 @@ Current shipped baseline:
 - the shipped bodega-era bosses now have authored encounter portraits
 - the relocation trigger, blockers, carryover/reset rules, and save-safe handoff contract are implemented
 - relocation readiness, blockers, and the relocation interruption entry flow are surfaced in the player-facing management/UI layer
+- the narrative presenter system is shipped across guidance, interruptions, relocation framing, and Porter's-specific incident surfaces
 - Porter's is implemented as the first post-bodega headquarters tier, including:
   - multi-floor HQ support
   - starter landing state and upgrade path
@@ -94,8 +95,6 @@ Current shipped baseline:
 
 Remaining work:
 
-- add the narrative presenter system as a bodega finishing-touch pass, starting with the assistant and retrofitting existing interruption-backed beats
-- extend that presenter system into Porter's-specific bindings for the cook and bartender
 - finish promotion-grade end-to-end verification for relocation and the full Porter's arrival path on a relocation-ready late-bodega run, and close any defects exposed there
 - finish the promotion review against the closed early-game campaign
 - broaden authored F/E/D content only if the promotion review still shows that repeated bodega campaigns are too narrow
@@ -225,8 +224,8 @@ Exit criteria:
 2. Completed: get the bodega playable on top of that infrastructure.
 3. Completed: finish the bodega visually.
 4. Completed: make the first bodega slice good.
-5. Finish the remaining presenter pass and promotion-grade review work from the shipped Porter's baseline.
-6. Expand into Porter's.
+5. Finish the remaining promotion-grade review work from the shipped Porter's baseline.
+6. Deepen Porter's beyond the shipped entry slice.
 7. Add systemic competitors.
 8. Add prestige content.
 

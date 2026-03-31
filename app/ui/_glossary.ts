@@ -473,6 +473,8 @@ const INCIDENT_CATEGORY_META = {
   morale_surge: { label: "Morale Surge", tip: "" },
   room_tension: { label: "Room Tension", tip: "" },
   regulatory_scrutiny: { label: "Regulatory Scrutiny", tip: "" },
+  kitchen_quality: { label: "Kitchen Quality", tip: "" },
+  bar_drama: { label: "Bar Drama", tip: "" },
 } satisfies DisplayRegistry;
 
 export type NarrativeTagMeta = DisplayMeta;

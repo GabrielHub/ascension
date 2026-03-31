@@ -489,6 +489,8 @@ function enqueueGuidanceInterruption(
       totalMilestones: OPENING_BEAT_COUNT,
       completionKind: beat.completion.kind,
       fallbackBody: copy.fallbackBody,
+      presenterId: beat.presenterId,
+      presenterExpression: beat.presenterExpression,
     },
     "guidance",
     getCurrentAbsoluteMinute(context),

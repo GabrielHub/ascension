@@ -6,6 +6,7 @@
  * resolve deterministic consequences, and use the interruption framework.
  */
 
+import type { TemplateRegistry } from "content/templates";
 import type { SimSystemContext } from "./types";
 import {
   type IncidentPayload,
@@ -15,10 +16,12 @@ import {
 } from "./interruptions";
 import { enqueueInterruption } from "./interruptions";
 import {
+  BuildingAuthority,
   GuildState,
   MoraleState,
   LoyaltyState,
   OperatorIdentity,
+  RoomInstance,
   WorldTimeState,
 } from "../components";
 import {
@@ -82,6 +85,10 @@ export interface IncidentTemplate {
   cooldownMinutes: number;
   noveltyWeight: number;
   briefingTemplate: string;
+  requiredBuildingIds?: readonly string[];
+  preferredRoomTemplateIds?: readonly string[];
+  presenterId?: string;
+  presenterExpression?: string;
   choices: readonly IncidentChoice[];
 }
 
@@ -122,6 +129,9 @@ export function createIncidentState(): IncidentState {
 }
 
 const OPENING_INCIDENT_LEARNED_BEAT_ID = "guidance/opening/first-incident";
+const ASSISTANT_PRESENTER_ID = "presenter/assistant";
+const COOK_PRESENTER_ID = "presenter/cook";
+const BARTENDER_PRESENTER_ID = "presenter/bartender";
 
 export const OPENING_SAFE_INCIDENT_CATEGORIES = [
   "personnel_conflict",
@@ -575,7 +585,139 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
       },
     ],
   },
+  {
+    id: "incident/kitchen-standards-slip",
+    name: "Kitchen Standards Slip",
+    category: "kitchen_quality",
+    tags: ["porters", "kitchen", "quality"],
+    weight: 16,
+    triggerFamily: "room_breakdown",
+    pressureTags: ["pressure:logistics", "pressure:room", "pressure:economy"],
+    pressureThreshold: 35,
+    requiredContext: ["room"],
+    requiredBuildingIds: ["building/porters"],
+    preferredRoomTemplateIds: ["room/prep_room:tier_1"],
+    cooldownMinutes: 720,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "Rafi says the prep room is one sloppy delivery away from feeding the building garbage. If you want Porter's to feel like an upgrade, this gets fixed now.",
+    presenterId: COOK_PRESENTER_ID,
+    presenterExpression: "serious",
+    choices: [
+      {
+        choiceId: "buy_fresh_stock",
+        label: "Buy Fresh Stock",
+        description: "Spend now, reset the standard, and stop the room from spiraling.",
+        consequenceSummary: "Treasury down, reputation steadied.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -60 },
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -6 },
+        ],
+      },
+      {
+        choiceId: "tighten_the_menu",
+        label: "Tighten the Menu",
+        description: "Cut the weak options and ask the line to carry a smaller service cleanly.",
+        consequenceSummary: "Less chaos, slight morale hit from the squeeze.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -4 },
+          { kind: "reputation_delta", targetRef: "guild", value: 1 },
+        ],
+      },
+      {
+        choiceId: "coast_on_it",
+        label: "Coast on It",
+        description: "Tell Rafi to make it work until the next payout lands.",
+        consequenceSummary: "No cash cost, but the room's credibility takes the hit.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/bar-regulars-spillover",
+    name: "Regulars Spillover",
+    category: "bar_drama",
+    tags: ["porters", "bar", "recruitment", "drama"],
+    weight: 18,
+    triggerFamily: "operator_conflict",
+    pressureTags: ["pressure:social", "pressure:reputation"],
+    pressureThreshold: 30,
+    requiredContext: ["operator_a", "room"],
+    requiredBuildingIds: ["building/porters"],
+    preferredRoomTemplateIds: ["room/bar:tier_1"],
+    cooldownMinutes: 600,
+    noveltyWeight: 1.25,
+    briefingTemplate:
+      "Imani intercepted {operator_a} turning a loud booth into a room-wide problem. The bar is still salvageable if you decide how public the correction is.",
+    presenterId: BARTENDER_PRESENTER_ID,
+    presenterExpression: "amused",
+    choices: [
+      {
+        choiceId: "comp_the_tab",
+        label: "Comp the Tab",
+        description: "Smooth the room over, pay for the damage, and keep the regulars talking.",
+        consequenceSummary: "Treasury down, mood and reputation recover.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -45 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 4 },
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+      {
+        choiceId: "quiet_pull_aside",
+        label: "Pull Them Aside",
+        description: "Handle it in the back and keep the room from becoming a spectacle.",
+        consequenceSummary: "Loyalty up, reputation steadied.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 5 },
+          { kind: "reputation_delta", targetRef: "guild", value: 1 },
+        ],
+      },
+      {
+        choiceId: "make_an_example",
+        label: "Make an Example",
+        description: "Let everyone see the correction so the next scene dies before it starts.",
+        consequenceSummary: "Reputation rises, the operator resents it.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 3 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+        ],
+      },
+    ],
+  },
 ];
+
+export function validateIncidentTemplates(
+  registry: Pick<TemplateRegistry, "buildingById" | "roomById" | "presenterById">,
+): void {
+  const issues: string[] = [];
+
+  INCIDENT_TEMPLATES.forEach((template) => {
+    template.requiredBuildingIds?.forEach((buildingId) => {
+      if (!registry.buildingById.has(buildingId)) {
+        issues.push(`${template.id} references unknown building "${buildingId}".`);
+      }
+    });
+
+    template.preferredRoomTemplateIds?.forEach((roomTemplateId) => {
+      if (!registry.roomById.has(roomTemplateId)) {
+        issues.push(`${template.id} references unknown room template "${roomTemplateId}".`);
+      }
+    });
+
+    if (template.presenterId && !registry.presenterById.has(template.presenterId)) {
+      issues.push(`${template.id} references unknown presenter "${template.presenterId}".`);
+    }
+  });
+
+  if (issues.length > 0) {
+    throw new Error(`Incident template validation failed.\n${issues.join("\n")}`);
+  }
+}
 
 // ── Incident evaluation and binding ──────────────────────────────────────
 
@@ -615,6 +757,59 @@ export function isOpeningIncidentMercyWindowActive(context: SimSystemContext): b
   return isOpeningFirstIncidentSequenceActive(context);
 }
 
+function getActiveBuildingId(context: SimSystemContext): string | null {
+  const buildingEntity = context.singletonEntities.building;
+  const template =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+  return template?.id ?? null;
+}
+
+function findEligibleIncidentRoomEntity(
+  context: SimSystemContext,
+  template: IncidentTemplate,
+): number | undefined {
+  const preferredTemplateIds = new Set(template.preferredRoomTemplateIds ?? []);
+
+  return context.runtimeState.roomEntities.find((entity) => {
+    if (RoomInstance.isOperational[entity] !== 1) {
+      return false;
+    }
+
+    if (preferredTemplateIds.size === 0) {
+      return true;
+    }
+
+    const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[entity]];
+    return roomTemplate ? preferredTemplateIds.has(roomTemplate.id) : false;
+  });
+}
+
+function hasRequiredIncidentContext(
+  context: SimSystemContext,
+  template: IncidentTemplate,
+): boolean {
+  const activeOperators = context.runtimeState.operatorEntities.filter(
+    (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
+  );
+
+  if (template.requiredContext.includes("operator_a") && activeOperators.length < 1) {
+    return false;
+  }
+
+  if (template.requiredContext.includes("operator_b") && activeOperators.length < 2) {
+    return false;
+  }
+
+  if (
+    template.requiredContext.includes("room") &&
+    findEligibleIncidentRoomEntity(context, template) === undefined
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 function buildEligibleIncidentTemplates(
   context: SimSystemContext,
   state: IncidentState,
@@ -623,6 +818,7 @@ function buildEligibleIncidentTemplates(
   options: IncidentSelectionOptions,
 ): IncidentTemplate[] {
   const mercyWindowActive = isOpeningIncidentMercyWindowActive(context);
+  const activeBuildingId = getActiveBuildingId(context);
   return INCIDENT_TEMPLATES.filter((template) => {
     if (
       mercyWindowActive &&
@@ -630,6 +826,15 @@ function buildEligibleIncidentTemplates(
         template.category as (typeof OPENING_SAFE_INCIDENT_CATEGORIES)[number],
       )
     ) {
+      return false;
+    }
+    if (
+      template.requiredBuildingIds &&
+      (activeBuildingId === null || !template.requiredBuildingIds.includes(activeBuildingId))
+    ) {
+      return false;
+    }
+    if (!hasRequiredIncidentContext(context, template)) {
       return false;
     }
     if (options.allowedCategories && !options.allowedCategories.includes(template.category)) {
@@ -719,6 +924,18 @@ function buildOperatorNameMap(context: SimSystemContext): Record<string, string>
   return operatorNames;
 }
 
+function buildRoomNameMap(context: SimSystemContext): Record<string, string> {
+  const roomNames: Record<string, string> = {};
+  for (const entity of context.runtimeState.roomEntities) {
+    const roomId = RoomInstance.id[entity];
+    const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[entity]];
+    if (roomId && roomTemplate) {
+      roomNames[roomId] = roomTemplate.name;
+    }
+  }
+  return roomNames;
+}
+
 export function queueIncident(
   context: SimSystemContext,
   state: IncidentState,
@@ -742,6 +959,7 @@ export function queueIncident(
     incident,
     template,
     buildOperatorNameMap(context),
+    buildRoomNameMap(context),
   );
   const subjectSummary = payload.subjectSummary.trim();
   const subjectSuffix = subjectSummary.length > 0 ? ` (${subjectSummary})` : "";
@@ -767,6 +985,7 @@ function bindIncidentSubjects(
   template: IncidentTemplate,
 ): IncidentBoundContext {
   const operatorIds: string[] = [];
+  let roomId: string | undefined;
   const activeOperators = context.runtimeState.operatorEntities.filter(
     (e) => OperatorIdentity.lifecycleStatus[e] === "active",
   );
@@ -797,9 +1016,16 @@ function bindIncidentSubjects(
     operatorIds.push(OperatorIdentity.id[activeOperators[idx]]);
   }
 
+  if (template.requiredContext.includes("room")) {
+    const roomEntity = findEligibleIncidentRoomEntity(context, template);
+    if (roomEntity !== undefined) {
+      roomId = RoomInstance.id[roomEntity];
+    }
+  }
+
   return {
     operatorIds,
-    roomId: undefined,
+    roomId,
     teamId: undefined,
     contractSiteId: undefined,
     bossId: undefined,
@@ -977,13 +1203,29 @@ export function createBossCommitmentPayload(
     bossRank,
     stakeSummary: `Rank ${bossRank.toUpperCase()} boss encounter. ${operatorIds.length} operators committed.`,
     teamConditionSummary: "Team is in operational condition.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
   };
+}
+
+function getDefaultIncidentPresenterExpression(template: IncidentTemplate): string | undefined {
+  switch (template.category) {
+    case "morale_surge":
+    case "contract_opportunity":
+      return "amused";
+    case "injury_setback":
+    case "kitchen_quality":
+      return "concerned";
+    default:
+      return "serious";
+  }
 }
 
 export function createIncidentInterruptionPayload(
   incident: PendingIncident,
   template: IncidentTemplate,
   operatorNames: Record<string, string>,
+  roomNames: Record<string, string> = {},
 ): IncidentPayload {
   let briefing = template.briefingTemplate;
   if (incident.boundContext.operatorIds[0]) {
@@ -994,6 +1236,10 @@ export function createIncidentInterruptionPayload(
     const name = operatorNames[incident.boundContext.operatorIds[1]] ?? "Unknown";
     briefing = briefing.replace("{operator_b}", name);
   }
+  if (incident.boundContext.roomId) {
+    const roomName = roomNames[incident.boundContext.roomId] ?? "the room";
+    briefing = briefing.replace("{room}", roomName);
+  }
 
   const choiceViews: IncidentChoiceView[] = incident.choices.map((c) => ({
     choiceId: c.choiceId,
@@ -1001,9 +1247,13 @@ export function createIncidentInterruptionPayload(
     description: c.description,
     consequenceSummary: c.consequenceSummary,
   }));
-  const subjectSummary = incident.boundContext.operatorIds
-    .map((operatorId) => operatorNames[operatorId] ?? operatorId)
-    .join(", ");
+  const subjectSummaryParts = incident.boundContext.operatorIds.map(
+    (operatorId) => operatorNames[operatorId] ?? operatorId,
+  );
+  if (incident.boundContext.roomId && roomNames[incident.boundContext.roomId]) {
+    subjectSummaryParts.push(roomNames[incident.boundContext.roomId]);
+  }
+  const subjectSummary = subjectSummaryParts.join(", ");
 
   return {
     kind: "incident",
@@ -1015,5 +1265,8 @@ export function createIncidentInterruptionPayload(
     subjectSummary,
     choices: choiceViews,
     boundContext: incident.boundContext,
+    presenterId: template.presenterId ?? ASSISTANT_PRESENTER_ID,
+    presenterExpression:
+      template.presenterExpression ?? getDefaultIncidentPresenterExpression(template),
   };
 }

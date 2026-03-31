@@ -1,11 +1,15 @@
 import type { GuidanceBeat } from "./guidance";
 
+const ASSISTANT_PRESENTER_ID = "presenter/assistant";
+
 const OPENING_BEATS_MUTABLE = [
   {
     id: "guidance/opening/board-briefing",
     track: "opening",
     featureIds: ["contracts"],
     milestoneOrder: 1,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "blocking",
       pauseWorld: true,
@@ -32,6 +36,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["contracts", "bidding"],
     milestoneOrder: 2,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "focused",
       target: "ui/ops/contract-board",
@@ -59,6 +65,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["rooms", "bodega"],
     milestoneOrder: 3,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "amused",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/rooms",
@@ -87,6 +95,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["roster", "operators", "gear"],
     milestoneOrder: 4,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "neutral",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/roster",
@@ -114,6 +124,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["raids", "autonomy"],
     milestoneOrder: 5,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "focused",
       target: "ui/raid/map",
@@ -142,6 +154,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["raids", "results"],
     milestoneOrder: 6,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
     delivery: {
       mode: "focused",
       target: "ui/ops/panel/history",
@@ -170,6 +184,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["roster", "recovery"],
     milestoneOrder: 7,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/roster",
@@ -198,6 +214,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["incidents", "interruptions"],
     milestoneOrder: 8,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "blocking",
       pauseWorld: true,
@@ -225,6 +243,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["loot", "market", "inventory"],
     milestoneOrder: 9,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "amused",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/market",
@@ -253,6 +273,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["staffing", "rooms"],
     milestoneOrder: 10,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "neutral",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/rooms",
@@ -281,6 +303,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["upgrades", "rooms"],
     milestoneOrder: 11,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "neutral",
     delivery: {
       mode: "focused",
       target: "ui/hq/category/rooms",
@@ -311,6 +335,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["recovery", "failure"],
     milestoneOrder: 12,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "blocking",
       pauseWorld: true,
@@ -338,6 +364,8 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["boss-commitment", "encounters"],
     milestoneOrder: 13,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
     delivery: {
       mode: "blocking",
       pauseWorld: true,

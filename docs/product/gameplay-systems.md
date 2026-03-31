@@ -47,7 +47,7 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
 - Guidance beats, incidents, and other interruption-backed narrative surfaces may optionally bind an authored presenter character id.
 - Presenter binding is content data layered on the existing runtime-owned interruption and guidance systems, not a parallel authority path.
-- The first presenter should be the assistant retrofitted into the bodega path. Porter's later adds domain presenters such as the cook and bartender.
+- The shipped presenter layer starts with the assistant retrofitted into the bodega path and extends into Porter's domain presenters such as the cook and bartender.
 - Future AI support may help draft or vary non-authoritative copy only after the deterministic framework exists. It must not choose triggers, hidden weights, available choices, or outcome logic.
 - Any AI-assisted authoring workflow for tutorials or narrative events must include the world foundation as canonical tone and content input so generated material stays consistent with the setting.
 

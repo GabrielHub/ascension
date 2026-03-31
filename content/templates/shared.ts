@@ -212,6 +212,18 @@ export interface EventTemplate extends TemplateBase {
   weight: number;
 }
 
+export interface PresenterTemplate extends TemplateBase {
+  kind: "presenter";
+  roleDescription: string;
+  portraitByExpression: Readonly<Record<string, string>>;
+  defaultExpression: string;
+  generation: {
+    canonBrief: string;
+    masterPrompt: string;
+    preserveList: readonly string[];
+  };
+}
+
 export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot" | "consumable";
 export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
 
@@ -282,6 +294,7 @@ export interface TemplateRegistryValidationIssue {
     | "upgrades"
     | "missions"
     | "events"
+    | "presenters"
     | "items"
     | "prepRecipes"
     | "dropTables"
@@ -297,6 +310,7 @@ export interface TemplateRegistry {
   upgrades: readonly UpgradeTemplate[];
   missions: readonly MissionTemplate[];
   events: readonly EventTemplate[];
+  presenters: readonly PresenterTemplate[];
   items: readonly ItemTemplate[];
   dropTables: readonly DropTable[];
   enemyFamilies: readonly EnemyFamilyTemplate[];
@@ -306,6 +320,7 @@ export interface TemplateRegistry {
   upgradeById: ReadonlyMap<string, UpgradeTemplate>;
   missionById: ReadonlyMap<string, MissionTemplate>;
   eventById: ReadonlyMap<string, EventTemplate>;
+  presenterById: ReadonlyMap<string, PresenterTemplate>;
   itemById: ReadonlyMap<string, ItemTemplate>;
   dropTableById: ReadonlyMap<string, DropTable>;
   enemyFamilyById: ReadonlyMap<string, EnemyFamilyTemplate>;

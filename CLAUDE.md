@@ -5,8 +5,9 @@ Repo-specific correctional guidance only.
 ## Toolchain
 
 - Use `Vite+`.
-- Prefer `vp dev`, `vp check`, `vp test`, `vp build`.
+- Prefer `vp install`, `vp dev`, `vp check`, `vp test`, `vp build`, and `vp preview` for standard web workflows.
 - Do not assume standard Vite-only workflows unless explicitly documented.
+- Use package scripts only when there is no `vp` equivalent, such as `pnpm tauri:dev`, `pnpm tauri:build`, `pnpm test:tauri`, and `pnpm mcp:tauri-test`.
 
 ## Architecture
 
@@ -101,7 +102,7 @@ Repo-specific correctional guidance only.
 - Put screenshots in `tauri-test/screenshots/`
 - Put logs in `tauri-test/logs/`
 - Put traces and other artifacts in `tauri-test/artifacts/`
-- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over separate one-off desktop drivers
+- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over separate one-off desktop drivers; there is no `vp` equivalent for that desktop harness
 
 ## References
 

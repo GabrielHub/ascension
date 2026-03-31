@@ -1,15 +1,17 @@
 # Ascension
 
-Ascension is a web-first management sim about running a dungeon-clearing guild in near-future New York City. The shipped playtest host is now a Windows Tauri desktop app, while the gameplay runtime, ECS simulation, rendering, UI intents, and save codec remain web-owned.
+Ascension is a web-first management sim about running a dungeon-clearing guild in near-future New York City. The gameplay runtime, ECS simulation, rendering, UI intents, and save codec remain web-owned; the shipped playtest host is a Windows Tauri desktop app.
 
-## Current Posture
+## What This README Is For
 
-- Browser mode remains the fastest development surface through `vp dev`.
-- Browser mode keeps browser-backed save slots for day-to-day feature work.
-- The Tauri desktop host uses file-backed JSON saves under app-local storage for playtesting.
-- Save validation, migration, and compatibility still flow through the shared `PersistedSaveGame` codec.
-- Browser automation remains the primary fast regression loop for gameplay and UI work.
-- Tauri desktop automation covers desktop host behavior, file saves, import/export, and installer-facing integration.
+This file is the top-level project guide:
+
+- what the project is
+- how to run and verify it
+- which commands are standard
+- where to look next in the codebase and docs
+
+Implementation detail, roadmap depth, world canon, and repo-specific workflow rules live in code, tests, `docs/`, `AGENTS.md`, and `CLAUDE.md`.
 
 ## Stack
 
@@ -21,38 +23,47 @@ Ascension is a web-first management sim about running a dungeon-clearing guild i
 - Tauri 2 for the Windows desktop host
 - Tailwind CSS 4 for styling
 - Vitest for unit and browser-surface tests
+- Playwright for browser regression coverage
 - WebdriverIO + `tauri-driver` harness code for desktop integration validation
 
-## Workflows
+## Development
 
-Preferred commands:
+Standard web workflows use `vp`:
 
 ```bash
 vp install
 vp dev
-pnpm tauri:dev
 vp check
 vp test
-pnpm test:tauri
 vp build
+vp preview
+```
+
+Use `vp dev` for ordinary gameplay and UI iteration. Browser mode remains the fastest development surface and keeps browser-backed saves for day-to-day work.
+
+Desktop-host workflows are separate because there is no `vp` equivalent for them:
+
+```bash
+pnpm tauri:dev
+pnpm test:tauri
 pnpm tauri:build
 pnpm mcp:tauri-test
 ```
 
-Use `vp dev` for ordinary gameplay and UI iteration. Use `pnpm tauri:dev` when the change touches the desktop host, file-backed saves, import/export, or installed-app behavior.
+Use those only when the change touches the Tauri host, file-backed saves, desktop import/export, packaging, or installed-app behavior.
 
-## Repo Map
+## Project Shape
 
-- `app/` React Router entry points, UI, desktop bridge wiring, and app-facing feature hooks
-- `content/` authored templates, requirements, effects, and bootstrap data
-- `sim/` ECS components, commands, systems, and runtime assembly
-- `render/` world rendering, camera logic, and SVG/world presentation helpers
-- `save/` snapshot codec, types, browser and desktop storage backends, and migration logic
-- `src-tauri/` Tauri desktop host, native save bridge commands, and Windows packaging config
-- `playwright/` browser automation screenshots, logs, and artifacts
-- `tauri-test/` desktop automation harness, MCP wrapper, screenshots, logs, and artifacts
-- `public/data/` environment, portrait, and other runtime-loaded asset data
-- `docs/` roadmap, product-plan, world-foundation, and execution-plan references
+- `app/` React Router shell, UI, browser/desktop wiring, and app-facing features
+- `sim/` ECS components, systems, commands, runtime assembly, and gameplay authority
+- `content/` authored templates, bootstrap data, requirements, effects, and generated content manifests
+- `render/` world rendering, camera logic, SVG helpers, and presentation-side rendering support
+- `save/` save types, codec, migration, and browser/desktop storage backends
+- `lib/` shared runtime contracts and helpers consumed across sim, save, render, and UI
+- `src-tauri/` Windows desktop host and packaging config
+- `playwright/` browser automation artifacts and tests
+- `tauri-test/` desktop automation harness and artifacts
+- `docs/` roadmap, future-facing product docs, world canon, and active execution plans
 
 ## Documentation
 
@@ -66,4 +77,5 @@ Use `vp dev` for ordinary gameplay and UI iteration. Use `pnpm tauri:dev` when t
 
 - Code, tests, templates, and assets are the source of truth for implemented behavior.
 - The web engine remains authoritative; Tauri is a thin desktop host.
+- Browser automation is the primary fast regression loop for gameplay and UI work.
 - Desktop save files are normalized JSON, written atomically with backup recovery.

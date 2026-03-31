@@ -1477,9 +1477,6 @@ export function GameShell() {
       return;
     }
 
-    // Beats with requiresManualCompletion need the user to click the CTA button.
-    if (guidanceBeat.requiresManualCompletion) return;
-
     if (
       guidanceBeat.completionKind === "market_opened" &&
       activeTab === "hq" &&
@@ -1490,7 +1487,11 @@ export function GameShell() {
         beatId: guidanceBeat.beatId,
         signal: "market_opened",
       });
+      return;
     }
+
+    // Beats with requiresManualCompletion need the user to click the CTA button.
+    if (guidanceBeat.requiresManualCompletion) return;
   }, [activeTab, guidanceBeat, hqCategory, session]);
 
   useEffect(() => {

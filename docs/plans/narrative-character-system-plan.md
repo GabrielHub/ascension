@@ -4,19 +4,18 @@ Add authored presenter characters to interruption-backed guidance, incidents, an
 
 ## Status
 
-This is now the next active implementation plan.
+Status: shipped.
 
-Prerequisites that were previously open are now satisfied:
+Implemented outcome:
 
-- the relocation contract is shipped
-- Porter's core entry slice is shipped
-- the remaining dependency for Porter's-specific presenters is the presenter system itself, not unresolved headquarters work
+- authored presenter registry and runtime presenter binding contract
+- presenter-aware interruption and guidance UI with text-only fallback preserved
+- assistant retrofit across the bodega opening, operational briefings, incidents, and relocation framing
+- Porter's-specific presenter bindings for the cook and bartender
+- shipped raster portrait family with neutral / concerned / serious / amused variants
+- save/load-safe presenter persistence and browser/runtime verification for the opening presenter path
 
-Execution order from here:
-
-1. land the presenter contract and UI foundation
-2. retrofit the assistant into the bodega guidance / interruption path
-3. extend the same system into Porter's-specific presenters for the cook and bartender
+This file is now a shipped implementation record rather than an active execution plan.
 
 ## Canon Inputs
 
@@ -28,9 +27,9 @@ Read before implementing:
 - `docs/product/asset-production.md`
 - `docs/world/premise-and-tone.md`
 - `docs/world/content-rules.md`
+- `docs/world/headquarters-and-rooms.md`
 - `docs/world/operators-and-staff.md`
 - `docs/research/shipped-plans/opening-campaign-spec.md`
-- `docs/plans/porters-entry-plan.md`
 - `app/ui/interruption-host.tsx`
 - `app/ui/guidance-host.tsx`
 - `app/ui/game-modal.tsx`
@@ -83,7 +82,7 @@ This plan is split into a bodega-first foundation and a Porter's follow-through.
 
 ### Phase 1: Presenter Contract And UI Foundation
 
-Add the system surface with no canon drift and no dependency on Porter's.
+Implemented.
 
 Deliverables:
 
@@ -120,7 +119,7 @@ Likely files:
 
 ### Phase 2: The Assistant Slice
 
-Ship the first authored presenter in the bodega path.
+Implemented.
 
 Deliverables:
 
@@ -149,7 +148,7 @@ Likely files:
 
 ### Phase 3: Porter's Presenter Extension
 
-Use the same system for building-specific faces once Porter's exists.
+Implemented.
 
 Deliverables:
 
@@ -164,7 +163,7 @@ Deliverables:
 
 Dependency:
 
-- This phase depends on `porters-entry-plan.md` landing the relevant building content and incidents.
+- This phase depends on Porter's-specific incidents and guidance beats being authored where presenter bindings add value. The building and relocation baseline are already shipped.
 
 ## Authoring Contract
 
@@ -190,7 +189,7 @@ Raster-generation workflow for presenter portraits:
 5. Review portraits inside the actual interruption modal, not just on a blank page.
 6. Keep the final prompt set and invariants alongside the asset registration so later edits stay consistent.
 
-Minimum recommended expression set for the first slice:
+Minimum shipped expression set:
 
 - neutral
 - concerned
@@ -199,10 +198,10 @@ Minimum recommended expression set for the first slice:
 
 Do not expand the expression count until the modal layout and production cadence are proven.
 
-Recommended first-slice framing:
+Shipped framing:
 
 - single character
-- bust-up or waist-up
+- full-body in a vertical 4:5 composition
 - 3/4 or front-facing portrait
 - plain warm-white or light neutral background
 - no scene clutter
@@ -232,7 +231,7 @@ These are the parts most likely to create drift or implementation pain if they a
 
 ## Verification
 
-When code changes land for this plan:
+Shipped verification used for this plan:
 
 - run `vp check`
 - run `vp test`
@@ -243,7 +242,8 @@ Verification expectations:
 - save/load restores the same unresolved interruption with the same presenter binding
 - guidance beats with presenters and guidance beats without presenters both render correctly
 - interruption modals with presenters and interruption modals without presenters both render correctly
-- the bodega opening path still progresses correctly after the assistant retrofit
+- the bodega opening path progresses correctly after the assistant retrofit
+- the canonical browser opening path passes against the current new-game flow
 
 Likely test targets:
 
@@ -256,4 +256,4 @@ Likely test targets:
 - presenter definitions exist as authored content, not ad hoc UI constants
 - interruption and guidance surfaces can optionally show presenter portrait + name without changing authority or save behavior
 - the assistant is visible in the bodega's authored guidance / briefing path
-- Porter's-specific presenters are blocked only on Porter's content, not on unresolved presenter-system design
+- the cook and bartender are visible through the same presenter system in Porter's-specific content
