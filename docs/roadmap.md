@@ -72,11 +72,13 @@ The opening-campaign remediation pass is no longer an active roadmap milestone. 
 
 Future onboarding work can still deepen later as new systems and headquarters tiers land, but the "close the opening path" milestone itself is complete.
 
-## Current Milestone: Bodega Endgame And Promotion Review
+## Completed: Bodega Endgame And Promotion Review
 
-Goal: close the remaining early-game milestone work now that the relocation contract, Porter's core entry slice, and the presenter pass are landed. The remaining milestone focus is promotion-grade verification and any residual breadth or closeout fixes exposed by that verification.
+Status: shipped.
 
-Current shipped baseline:
+The bodega closeout milestone is no longer active. The early-game campaign now has a verified end state: the full bodega arc, the relocation gate, the real browser relocation handoff into Porter's, and a save-safe post-move baseline. The promotion review did not expose any remaining defect that blocks closure, and it did not justify mandatory new F/E/D breadth work before moving on.
+
+Shipped baseline:
 
 - the full bodega building arc is implemented
 - bodega-native support rooms are implemented
@@ -93,19 +95,13 @@ Current shipped baseline:
   - prep-room consumables
   - Porter's-specific recruitment, income, and contract-rank tuning
 
-Remaining work:
-
-- finish promotion-grade end-to-end verification for relocation and the full Porter's arrival path on a relocation-ready late-bodega run, and close any defects exposed there
-- finish the promotion review against the closed early-game campaign
-- broaden authored F/E/D content only if the promotion review still shows that repeated bodega campaigns are too narrow
-
 Exit criteria:
 
 - the bodega has a clean and credible end state instead of feeling like an open-ended sandbox
 - relocation has a concrete runtime target and a save-safe handoff
 - the second headquarters tier starts from a closed early-game baseline and a shipped Porter's target
 
-## Phase 3: Porter's Expansion
+## Current Milestone: Porter's Expansion
 
 Goal: prove that scale changes gameplay, not just numbers.
 
@@ -224,7 +220,7 @@ Exit criteria:
 2. Completed: get the bodega playable on top of that infrastructure.
 3. Completed: finish the bodega visually.
 4. Completed: make the first bodega slice good.
-5. Finish the remaining promotion-grade review work from the shipped Porter's baseline.
+5. Completed: close the bodega endgame and promotion review from the shipped Porter's baseline.
 6. Deepen Porter's beyond the shipped entry slice.
 7. Add systemic competitors.
 8. Add prestige content.

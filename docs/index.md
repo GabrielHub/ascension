@@ -26,7 +26,7 @@ Documentation is intentionally narrow.
 
 ### Research
 
-- No active research docs are checked in right now. Add research docs only when they answer a live future-facing question.
+- No active research docs are checked in right now. Historical shipped specs may remain under `docs/research/shipped-plans/` when they add implementation context without changing current project state.
 
 ## How To Use
 

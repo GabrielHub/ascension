@@ -37,9 +37,8 @@ The game should make the player feel all of the following:
 
 ## Future Product Priorities
 
-- Finish the promotion review on top of the shipped relocation, presenter pass, and Porter's baseline.
 - Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
-- Broaden the late-bodega content pool so repeated campaigns do not collapse into the same few recruits, sites, loadouts, and pressure patterns.
+- Broaden the late-bodega content pool only if later repeated-campaign evidence shows collapse into the same few recruits, sites, loadouts, and pressure patterns.
 - Deepen the shipped Porter's tier so it continues to feel like a real management step up, not just a capacity increase.
 - Expand from the shipped Porter's baseline into larger buildings that change spatial and staffing decisions, not just numbers.
 - Extend the shipped multi-floor HQ model so later buildings can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.

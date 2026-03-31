@@ -6,7 +6,7 @@ Status: implemented. This file remains only as a reference input for shipped ope
 
 ## Run This Plan First
 
-Do not start `bodega-closure-plan.md`, `management-policy-surfaces-plan.md`, or the dynamic portions of `economy-and-balance-harness-plan.md` until this plan has locked the opening path.
+Do not start bodega-closure work, `management-policy-surfaces-plan.md`, or the dynamic portions of `economy-and-balance-harness-plan.md` until this plan has locked the opening path.
 
 ## Canon Inputs
 

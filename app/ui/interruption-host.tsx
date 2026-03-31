@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
 import type {
   InterruptionInstance,
@@ -453,6 +453,24 @@ export function InterruptionHost({
   onResolve,
   onDismiss: _onDismiss,
 }: InterruptionHostProps) {
+  const resolvingInstanceRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    resolvingInstanceRef.current = null;
+  }, [activeInterruption?.instanceId]);
+
+  const handleResolve = useCallback(
+    (instanceId: string, choiceId?: string) => {
+      if (resolvingInstanceRef.current === instanceId) {
+        return;
+      }
+
+      resolvingInstanceRef.current = instanceId;
+      onResolve(instanceId, choiceId);
+    },
+    [onResolve],
+  );
+
   if (!activeInterruption) {
     return null;
   }
@@ -467,7 +485,7 @@ export function InterruptionHost({
   switch (payload.kind) {
     case "incident":
       return (
-        <IncidentModal instance={activeInterruption} payload={payload} onResolve={onResolve} />
+        <IncidentModal instance={activeInterruption} payload={payload} onResolve={handleResolve} />
       );
 
     case "raid_boss_commitment":
@@ -475,7 +493,7 @@ export function InterruptionHost({
         <BossCommitmentModal
           instance={activeInterruption}
           payload={payload}
-          onResolve={onResolve}
+          onResolve={handleResolve}
         />
       );
 
@@ -486,21 +504,27 @@ export function InterruptionHost({
           payload={payload}
           guildName={guildName}
           playerName={playerName}
-          onResolve={onResolve}
+          onResolve={handleResolve}
         />
       );
 
     case "announcement":
       return (
-        <AnnouncementModal instance={activeInterruption} payload={payload} onResolve={onResolve} />
+        <AnnouncementModal
+          instance={activeInterruption}
+          payload={payload}
+          onResolve={handleResolve}
+        />
       );
 
     case "warning":
-      return <WarningModal instance={activeInterruption} payload={payload} onResolve={onResolve} />;
+      return (
+        <WarningModal instance={activeInterruption} payload={payload} onResolve={handleResolve} />
+      );
 
     case "guidance":
       return (
-        <GuidanceModal instance={activeInterruption} payload={payload} onResolve={onResolve} />
+        <GuidanceModal instance={activeInterruption} payload={payload} onResolve={handleResolve} />
       );
 
     default:

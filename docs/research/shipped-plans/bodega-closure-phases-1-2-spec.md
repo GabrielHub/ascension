@@ -1,15 +1,14 @@
 # Bodega Closure: Phases 1-2 Execution Spec
 
-Phase 1 and Phase 2 deliverable for `bodega-closure-plan.md`. This document locks the building upgrade order, names the management problem each upgrade solves, defines slot and capacity changes, and specifies the first bodega-native support room rollout.
+Phase 1 and Phase 2 deliverable for the now-shipped bodega closure work. This document locks the building upgrade order, names the management problem each upgrade solves, defines slot and capacity changes, and specifies the first bodega-native support room rollout.
 
-Status: implemented. This spec remains checked in only because the remaining bodega-closure work still references the shipped building and room baseline it defined.
+Status: implemented. This spec remains checked in as historical implementation context for the shipped bodega baseline.
 
 ## Canon Inputs
 
 Read before implementing:
 
-- `docs/roadmap.md` (Current Milestone: Bodega Endgame And Second-Building Handoff)
-- `docs/plans/bodega-closure-plan.md`
+- `docs/roadmap.md`
 - `docs/plans/opening-campaign-spec.md`
 - `docs/plans/economy-target-envelope.md`
 - `docs/plans/management-policy-contract.md`
@@ -25,7 +24,7 @@ Read before implementing:
 
 ## Locked Constraints
 
-Inherited from `bodega-closure-plan.md` and the roadmap:
+Inherited from the shipped bodega baseline and the roadmap:
 
 - The bodega stays a bodega. Upgrades make it better, not different.
 - No training rooms in the bodega.
