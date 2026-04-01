@@ -23,7 +23,7 @@ function NumberField({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/40">
+      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/60">
         {label}
       </label>
       <input
@@ -51,7 +51,7 @@ function TextField({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/40">
+      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/60">
         {label}
       </label>
       <input
@@ -73,7 +73,7 @@ function LayoutWarningsPanel({
   dispatch: React.Dispatch<BuilderAction>;
 }) {
   if (warnings.length === 0) {
-    return <div className="p-3 text-center text-xs text-gold/25">No warnings</div>;
+    return <div className="p-3 text-center text-xs text-gold/50">No warnings</div>;
   }
 
   const levelColors = {
@@ -113,7 +113,7 @@ function ShellInspector({
   dispatch: React.Dispatch<BuilderAction>;
 }) {
   if (!state.shell) {
-    return <div className="p-4 text-center text-xs text-gold/25">No shell loaded</div>;
+    return <div className="p-4 text-center text-xs text-gold/50">No shell loaded</div>;
   }
 
   return (
@@ -148,7 +148,7 @@ function ShellInspector({
         />
       </div>
 
-      <div className="rounded bg-void/30 p-2 text-xs text-gold/25">
+      <div className="rounded bg-void/30 p-2 text-xs text-gold/50">
         Arrow keys nudge the selected shell one tile at a time.
       </div>
     </div>
@@ -237,7 +237,7 @@ function LayoutList({
         >
           <div>
             <div className="text-xs text-silver/80">Shell footprint</div>
-            <div className="text-xs text-gold/25">
+            <div className="text-xs text-gold/50">
               {state.shell.cols}x{state.shell.rows} at {state.shell.col},{state.shell.row}
             </div>
           </div>
@@ -246,7 +246,7 @@ function LayoutList({
       )}
 
       {state.slots.length === 0 ? (
-        <div className="p-4 text-center text-xs text-gold/25">No room slots yet</div>
+        <div className="p-4 text-center text-xs text-gold/50">No room slots yet</div>
       ) : (
         state.slots.map((slot) => (
           <button
@@ -260,7 +260,7 @@ function LayoutList({
           >
             <div className="min-w-0">
               <div className="truncate text-xs text-silver/80">{slot.slotId}</div>
-              <div className="text-xs text-gold/25">
+              <div className="text-xs text-gold/50">
                 {slot.cols}x{slot.rows} at {slot.col},{slot.row}
               </div>
             </div>
@@ -308,14 +308,14 @@ export function LayoutSidebar({ state, dispatch }: LayoutSidebarProps) {
             <button
               key={tab}
               onClick={() => setOverrideTab(tab)}
-              className={`flex-1 border-b-2 px-2 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
+              className={`flex-1 border-b-2 px-1.5 py-2 text-xs font-medium uppercase tracking-[0.08em] transition-colors ${
                 isActive
                   ? "border-b-gold text-gold"
-                  : "border-b-transparent text-gold/40 hover:text-gold/60"
+                  : "border-b-transparent text-gold/50 hover:text-gold/70"
               }`}
             >
               {tab}
-              {count > 0 && <span className="ml-1 text-xs text-gold/30">({count})</span>}
+              {count > 0 && <span className="ml-1 text-xs text-gold/50">({count})</span>}
             </button>
           );
         })}
@@ -331,7 +331,7 @@ export function LayoutSidebar({ state, dispatch }: LayoutSidebarProps) {
         ) : selectedSlot ? (
           <SlotInspector slot={selectedSlot} dispatch={dispatch} />
         ) : (
-          <div className="p-4 text-center text-xs text-gold/25">
+          <div className="p-4 text-center text-xs text-gold/50">
             Select shell or slot to inspect
           </div>
         )}

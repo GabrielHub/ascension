@@ -964,6 +964,7 @@ export function queueIncident(
   const subjectSummary = payload.subjectSummary.trim();
   const subjectSuffix = subjectSummary.length > 0 ? ` (${subjectSummary})` : "";
 
+  context.runtimeState.pendingCueIds.push("event.incident.open");
   pushRuntimeEvent(context, {
     kind: "event_change",
     message: `Incident: ${payload.title}${subjectSuffix} requires attention.`,

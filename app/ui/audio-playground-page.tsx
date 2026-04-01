@@ -13,8 +13,8 @@ import {
 import { glassCardNavyClass } from "./styles";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Audio Playground — Phase 1 SFX & Ambience Review Surface
-   Audition, compare, and approve cues before they ship in-game.
+   Audio Playground — Phase 1 SFX & Music Review Surface
+   Audition gameplay cues and state-owned music before they ship in-game.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const CATEGORY_META: Record<string, { title: string; subtitle: string }> = {
@@ -40,7 +40,7 @@ const CATEGORY_META: Record<string, { title: string; subtitle: string }> = {
   },
   event: {
     title: "Event Cues",
-    subtitle: "Pressure and system events",
+    subtitle: "Pressure, incidents, interruptions, and guidance",
   },
 };
 
@@ -138,7 +138,9 @@ function SfxCueRow({
 
   const handlePlay = useCallback(() => {
     if (!engine || engine.state !== "running") return;
+
     engine.playCue(cue.id);
+
     setPlaying(true);
 
     if (resetTimerRef.current !== null) {
@@ -312,7 +314,7 @@ export function AudioPlaygroundPage() {
   const grouped = groupCuesByCategory();
   const isRunning = engineState === "running";
   const engine = isRunning ? engineRef.current : null;
-  const sfxCount = STARTER_CUES.filter((cue) => cue.kind === "sfx").length;
+  const cueCount = STARTER_CUES.length;
 
   return (
     <div className="min-h-dvh bg-void">
@@ -325,10 +327,10 @@ export function AudioPlaygroundPage() {
           <div className="h-4 w-px bg-[rgba(200,168,76,0.08)]" />
           <div className="flex-1">
             <h1 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.15em] text-gold">
-              Audio Playground &mdash; SFX &amp; Ambience
+              Audio Playground &mdash; SFX &amp; Music
             </h1>
             <p className="mt-0.5 text-sm text-silver/60">
-              Phase 1 cue review &mdash; SFX-first rollout with restrained ambience beds
+              Phase 1 cue review &mdash; gameplay cues plus state-owned background music
             </p>
           </div>
           <Link to="/svg-playground" className="btn-ghost text-xs">
@@ -396,7 +398,7 @@ export function AudioPlaygroundPage() {
                   Reset Mix
                 </button>
                 <span className="text-sm text-silver/55">
-                  {sfxCount} SFX cues &middot; intermittent ambient music
+                  {cueCount} gameplay cues &middot; state-owned background music
                 </span>
               </div>
               <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
@@ -442,8 +444,7 @@ export function AudioPlaygroundPage() {
               <code className="text-gold/60">staff.*</code>,{" "}
               <code className="text-gold/60">operator.*</code>,{" "}
               <code className="text-gold/60">raid.*</code>,{" "}
-              <code className="text-gold/60">event.*</code>,{" "}
-              <code className="text-gold/60">ambience.*</code>
+              <code className="text-gold/60">event.*</code>
             </p>
             <p>
               <strong className="text-gold">Transient only:</strong> Audio playback state is never

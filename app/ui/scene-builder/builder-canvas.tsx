@@ -5,7 +5,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import {
+  getHqBackdropManifestForBuilding,
+  getHqEnvironmentRenderConfig,
+} from "lib/hq-environment-manifest";
+import { BACKDROP_BASE_FILLS } from "lib/hq-time-phase";
+import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { projectIso } from "render/hq-world";
 import type { HqPoint } from "render/types";
 
@@ -24,6 +29,38 @@ const TILE_H = ENV.composition.tileHeight;
 const GRID_EXTEND = 8;
 const BASE_W = 1400;
 const BASE_H = 900;
+
+const PHASE_SKY_STOPS: Readonly<
+  Record<
+    HqTimeOfDayPhase,
+    readonly [
+      { offset: string; color: string },
+      { offset: string; color: string },
+      { offset: string; color: string },
+    ]
+  >
+> = {
+  sunrise: [
+    { offset: "0%", color: "rgba(241, 154, 93, 0.35)" },
+    { offset: "55%", color: "rgba(101, 77, 88, 0.18)" },
+    { offset: "100%", color: "rgba(24, 20, 16, 0)" },
+  ],
+  day: [
+    { offset: "0%", color: "rgba(164, 190, 214, 0.16)" },
+    { offset: "50%", color: "rgba(90, 113, 136, 0.08)" },
+    { offset: "100%", color: "rgba(36, 36, 46, 0)" },
+  ],
+  sunset: [
+    { offset: "0%", color: "rgba(255, 122, 76, 0.34)" },
+    { offset: "55%", color: "rgba(122, 63, 54, 0.18)" },
+    { offset: "100%", color: "rgba(22, 16, 16, 0)" },
+  ],
+  night: [
+    { offset: "0%", color: "rgba(46, 70, 130, 0.30)" },
+    { offset: "55%", color: "rgba(18, 26, 52, 0.16)" },
+    { offset: "100%", color: "rgba(10, 10, 14, 0)" },
+  ],
+};
 
 function isoTilePath(col: number, row: number, ox: number, oy: number): string {
   const c = projectIso(col, row, ox, oy);
@@ -45,6 +82,29 @@ function isoRectPath(
   const br = projectIso(col + cols, row + rows, ox, oy);
   const bl = projectIso(col, row + rows, ox, oy);
   return `M${tl.x},${tl.y} L${tr.x},${tr.y} L${br.x},${br.y} L${bl.x},${bl.y} Z`;
+}
+
+function getIsoRectBounds(
+  col: number,
+  row: number,
+  cols: number,
+  rows: number,
+  ox: number,
+  oy: number,
+): { minX: number; maxX: number; minY: number; maxY: number } {
+  const points = [
+    projectIso(col, row, ox, oy),
+    projectIso(col + cols, row, ox, oy),
+    projectIso(col + cols, row + rows, ox, oy),
+    projectIso(col, row + rows, ox, oy),
+  ];
+
+  return {
+    minX: Math.min(...points.map((point) => point.x)),
+    maxX: Math.max(...points.map((point) => point.x)),
+    minY: Math.min(...points.map((point) => point.y)),
+    maxY: Math.max(...points.map((point) => point.y)),
+  };
 }
 
 const svgCache = new Map<string, string>();
@@ -202,6 +262,7 @@ function PlacementSprite({
           onDragStart(placement.id, event);
         }
       }}
+      onClick={(event) => event.stopPropagation()}
       style={{ cursor: canDrag ? (isSelected ? "grab" : "pointer") : "default" }}
     >
       <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} fill="transparent" stroke="none" />
@@ -333,6 +394,7 @@ function SlotOverlay({
           onDragStart(slot.slotId, event);
         }
       }}
+      onClick={(event) => event.stopPropagation()}
       style={{ cursor: canDrag ? (isSelected ? "grab" : "pointer") : "default" }}
     >
       <path
@@ -388,6 +450,7 @@ function ShellOverlay({
           onDragStart(event);
         }
       }}
+      onClick={(event) => event.stopPropagation()}
     />
   );
 }
@@ -431,7 +494,22 @@ export function BuilderCanvas({ state, dispatch }: BuilderCanvasProps) {
 
   const vw = BASE_W / state.camera.zoom;
   const vh = BASE_H / state.camera.zoom;
-  const viewBox = `${state.camera.x - vw / 2} ${state.camera.y - vh / 2} ${vw} ${vh}`;
+  const viewX = state.camera.x - vw / 2;
+  const viewY = state.camera.y - vh / 2;
+  const viewBox = `${viewX} ${viewY} ${vw} ${vh}`;
+  const previewBackdrop = getHqBackdropManifestForBuilding(state.buildingId)?.phases[
+    state.previewPhase
+  ];
+  const shellBounds = useMemo(
+    () =>
+      shell
+        ? getIsoRectBounds(shell.col, shell.row, shell.cols, shell.rows, originX, originY)
+        : null,
+    [shell?.col, shell?.row, shell?.cols, shell?.rows, originX, originY],
+  );
+  const skyStops = PHASE_SKY_STOPS[state.previewPhase];
+  const skyGradientId = `builder-sky-${state.previewPhase}`;
+  const shellGlowId = `builder-shell-glow-${state.previewPhase}`;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -697,6 +775,51 @@ export function BuilderCanvas({ state, dispatch }: BuilderCanvasProps) {
       onClick={handleCanvasClick}
       onContextMenu={(event) => event.preventDefault()}
     >
+      <defs>
+        <linearGradient id={skyGradientId} x1={viewX} y1={viewY} x2={viewX} y2={viewY + vh}>
+          {skyStops.map((stop) => (
+            <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+          ))}
+        </linearGradient>
+        {shellBounds && (
+          <radialGradient
+            id={shellGlowId}
+            cx={(shellBounds.minX + shellBounds.maxX) / 2}
+            cy={shellBounds.minY - 12}
+            r={Math.max(shellBounds.maxX - shellBounds.minX, shellBounds.maxY - shellBounds.minY)}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0%" stopColor="rgba(200, 168, 76, 0.12)" />
+            <stop offset="55%" stopColor="rgba(200, 168, 76, 0.04)" />
+            <stop offset="100%" stopColor="rgba(200, 168, 76, 0)" />
+          </radialGradient>
+        )}
+      </defs>
+
+      <rect
+        x={viewX}
+        y={viewY}
+        width={vw}
+        height={vh}
+        fill={BACKDROP_BASE_FILLS[state.previewPhase]}
+      />
+      <rect x={viewX} y={viewY} width={vw} height={vh} fill={`url(#${skyGradientId})`} />
+
+      {shellBounds && (
+        <>
+          <rect
+            x={shellBounds.minX - TILE_W}
+            y={shellBounds.minY - TILE_H * 1.5}
+            width={shellBounds.maxX - shellBounds.minX + TILE_W * 2}
+            height={shellBounds.maxY - shellBounds.minY + TILE_H * 2}
+            fill={`url(#${shellGlowId})`}
+            opacity={
+              state.previewPhase === "night" ? 0.9 : state.previewPhase === "sunset" ? 0.65 : 0.35
+            }
+          />
+        </>
+      )}
+
       {state.overlays.grid &&
         Array.from({ length: gridMaxCol - gridMinCol }, (_, ci) =>
           Array.from({ length: gridMaxRow - gridMinRow }, (_, ri) => {
@@ -797,6 +920,27 @@ export function BuilderCanvas({ state, dispatch }: BuilderCanvasProps) {
               </text>
             );
           })}
+        </>
+      )}
+
+      {previewBackdrop && (
+        <>
+          <rect
+            x={viewX}
+            y={viewY}
+            width={vw}
+            height={vh}
+            fill={previewBackdrop.ambientTint}
+            pointerEvents="none"
+          />
+          <rect
+            x={viewX}
+            y={viewY}
+            width={vw}
+            height={vh}
+            fill={previewBackdrop.fogColor}
+            pointerEvents="none"
+          />
         </>
       )}
     </svg>

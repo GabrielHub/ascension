@@ -15,6 +15,7 @@ import type {
   HqStaticPlacementDef,
   HqSvgPlacementMeta,
 } from "render/types";
+import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
 import type { EnvPartMeta } from "../environment-parts";
 
 // ── Overlay visibility toggles ──────────────────────────────────────────
@@ -84,6 +85,7 @@ export interface SceneBuilderState {
   floorIndex: number;
   buildingTier: number;
   editorMode: BuilderMode;
+  previewPhase: HqTimeOfDayPhase;
 
   placements: BuilderPlacement[];
   selectedPlacementId: string | null;
@@ -110,6 +112,8 @@ export type BuilderAction =
   | { type: "SET_BUILDING_TIER"; buildingTier: number }
   | { type: "SET_FLOOR"; floorIndex: number }
   | { type: "SET_EDITOR_MODE"; mode: BuilderMode }
+  | { type: "SET_PREVIEW_PHASE"; phase: HqTimeOfDayPhase }
+  | { type: "CYCLE_PREVIEW_PHASE"; direction: -1 | 1 }
   | { type: "LOAD_PLACEMENTS"; placements: HqStaticPlacementDef[] }
   | { type: "LOAD_LAYOUT"; layout: BuildingFloorLayout | null }
   | { type: "SELECT_PLACEMENT"; id: string | null }

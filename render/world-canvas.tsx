@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
+import { BACKDROP_BASE_FILLS } from "lib/hq-time-phase";
+
 import {
   applyWheelZoom,
   beginPan,
@@ -820,17 +822,6 @@ function seededRand(seed: number): number {
   const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
-
-/** Phase-aware base fill colors for the HQ backdrop.
- *  Must match the darkest ground tile (void) so that the isometric
- *  diamond edges blend seamlessly into the canvas background.
- *  The sky is drawn separately by drawFlankingBuildings. */
-const BACKDROP_BASE_FILLS: Record<HqTimeOfDayPhase, string> = {
-  sunrise: "#181410",
-  day: "#24242e",
-  sunset: "#161010",
-  night: "#0a0a0e",
-};
 
 function drawBackdrop(
   ctx: CanvasRenderingContext2D,

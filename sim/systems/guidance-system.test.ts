@@ -238,6 +238,7 @@ describe("guidance system", () => {
     );
     expect(context.runtimeState.interruptionQueue.active?.type).toBe("guidance");
     expect(context.runtimeState.interruptionQueue.queue[0]?.type).toBe("incident");
+    expect(context.runtimeState.pendingCueIds).toContain("event.guidance.beat");
   });
 
   it("completes the first-incident beat when the underlying incident is resolved", () => {
@@ -300,6 +301,7 @@ describe("guidance system", () => {
     );
     expect(context.runtimeState.interruptionQueue.active?.type).toBe("guidance");
     expect(context.runtimeState.interruptionQueue.queue[0]?.type).toBe("raid_boss_commitment");
+    expect(context.runtimeState.pendingCueIds).toContain("event.guidance.beat");
   });
 
   it("advances immediately into the bodega overview beat when the first contract is secured", () => {

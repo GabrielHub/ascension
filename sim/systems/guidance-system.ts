@@ -473,6 +473,7 @@ function enqueueGuidanceInterruption(
   const activeInterruption = context.runtimeState.interruptionQueue.active;
   const layeredOverActiveInterruption = canLayerGuidanceOverInterruption(activeInterruption, beat);
 
+  context.runtimeState.pendingCueIds.push("event.guidance.beat");
   enqueueInterruption(
     context.runtimeState.interruptionQueue,
     "guidance",

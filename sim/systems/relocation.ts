@@ -221,6 +221,7 @@ export function initiateRelocation(context: SimSystemContext): boolean {
     { blockingMode: "blocking", persistence: "persistent" },
   );
 
+  context.runtimeState.pendingCueIds.push("hq.relocation.offer");
   pushRuntimeEvent(context, {
     kind: "event_change",
     message: formatIdentityRuntimeText(
@@ -285,6 +286,7 @@ export function advanceRelocationBeat(
 
         // Debit treasury once the handoff is still valid.
         GuildState.treasury[guildEntity] -= resolvedPayload.treasuryCost;
+        context.runtimeState.pendingCueIds.push("hq.relocation.confirm");
 
         // Enqueue the moving beat
         const movingPayload: RelocationPayload = {
@@ -443,6 +445,7 @@ function executeRelocationHandoff(context: SimSystemContext): void {
   }
 
   // ── 8. Push relocation event ───────────────────────────────────────
+  context.runtimeState.pendingCueIds.push("hq.relocation.land");
   pushRuntimeEvent(context, {
     kind: "relocation",
     message: formatIdentityRuntimeText(

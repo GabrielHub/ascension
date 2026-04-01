@@ -5,7 +5,7 @@ export function meta() {
     { title: "Ascension | Audio Playground" },
     {
       name: "description",
-      content: "Audio cue playground — SFX and ambience review before in-game rollout.",
+      content: "Audio cue playground — gameplay cue and music review before in-game rollout.",
     },
   ];
 }

@@ -23,7 +23,7 @@ export function LayoutToolsPanel({ state, dispatch }: LayoutToolsPanelProps) {
         </h3>
       </div>
 
-      <div className="space-y-3 p-3 text-xs text-gold/35">
+      <div className="space-y-3 p-3 text-xs text-gold/50">
         <p>
           Edit the canonical shell footprint and room-slot layout for the current building stage and
           floor.
@@ -44,7 +44,7 @@ export function LayoutToolsPanel({ state, dispatch }: LayoutToolsPanelProps) {
         </button>
 
         <div className="rounded bg-void/30 p-3">
-          <div className="text-xs uppercase tracking-[0.14em] text-gold/45">Current Floor</div>
+          <div className="text-xs uppercase tracking-[0.14em] text-gold/60">Current Floor</div>
           <div className="mt-2 text-silver/70">
             Shell: {shell ? `${shell.cols}x${shell.rows} at ${shell.col},${shell.row}` : "None"}
           </div>
@@ -52,8 +52,8 @@ export function LayoutToolsPanel({ state, dispatch }: LayoutToolsPanelProps) {
         </div>
 
         <div className="rounded bg-void/30 p-3">
-          <div className="text-xs uppercase tracking-[0.14em] text-gold/45">Layout Workflow</div>
-          <div className="mt-2 space-y-1 text-gold/30">
+          <div className="text-xs uppercase tracking-[0.14em] text-gold/60">Layout Workflow</div>
+          <div className="mt-2 space-y-1 text-gold/50">
             <div>Click shell or room overlays to inspect them.</div>
             <div>Drag selected shell or slots on the canvas to reposition them.</div>
             <div>Use the inspector to resize, rename, and export canonical floor data.</div>

@@ -34,6 +34,7 @@ import {
 import { INCIDENT_TEMPLATES } from "./incidents";
 import type { ActorCombatState } from "./encounter-types";
 import { getBossEncounterDefinition } from "./encounter-types";
+import { deferredSimulationSystemsReady } from "./index";
 
 // ── Kit template validation ──────────────────────────────────────────────
 
@@ -305,7 +306,7 @@ describe("encounter simulation", () => {
     simulation.runtimeState.guidanceState.queuedBeatIds = [];
     simulation.runtimeState.interruptionQueue.active = null;
     simulation.runtimeState.interruptionQueue.queue = [];
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await deferredSimulationSystemsReady;
 
     simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
     const activeInterruption = simulation.getPhase1View().activeInterruption;
@@ -332,7 +333,7 @@ describe("encounter simulation", () => {
     simulation.runtimeState.guidanceState.queuedBeatIds = [];
     simulation.runtimeState.interruptionQueue.active = null;
     simulation.runtimeState.interruptionQueue.queue = [];
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await deferredSimulationSystemsReady;
 
     simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
     const activeInterruption = simulation.getPhase1View().activeInterruption;

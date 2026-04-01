@@ -7,12 +7,12 @@ const toneState = vi.hoisted(() => ({
 
 const cueState = vi.hoisted(() => ({
   playCalls: [] as string[],
-  stopCalls: [] as string[],
 }));
 
 const musicState = vi.hoisted(() => ({
   started: false,
   disposed: false,
+  currentState: "hq",
 }));
 
 vi.mock("tone", () => {
@@ -43,21 +43,6 @@ vi.mock("tone", () => {
 });
 
 vi.mock("./cues", () => {
-  const createAmbienceCue = (id: string) => ({
-    id,
-    kind: "ambience" as const,
-    play: ({
-      registerActiveAmbienceStop,
-    }: {
-      registerActiveAmbienceStop: (stop: () => void) => void;
-    }) => {
-      cueState.playCalls.push(id);
-      registerActiveAmbienceStop(() => {
-        cueState.stopCalls.push(id);
-      });
-    },
-  });
-
   return {
     STARTER_CUE_MAP: new Map([
       [
@@ -70,8 +55,6 @@ vi.mock("./cues", () => {
           },
         },
       ],
-      ["ambience.hq.base", createAmbienceCue("ambience.hq.base")],
-      ["ambience.raid.base", createAmbienceCue("ambience.raid.base")],
     ]),
   };
 });
@@ -81,11 +64,17 @@ vi.mock("./music", () => ({
     get playing() {
       return musicState.started;
     },
+    get currentState() {
+      return musicState.currentState;
+    },
     start() {
       musicState.started = true;
     },
     stop() {
       musicState.started = false;
+    },
+    setState(nextState: string) {
+      musicState.currentState = nextState;
     },
     dispose() {
       musicState.disposed = true;
@@ -100,9 +89,9 @@ beforeEach(() => {
   toneState.contextState = "suspended";
   toneState.startCalls = 0;
   cueState.playCalls = [];
-  cueState.stopCalls = [];
   musicState.started = false;
   musicState.disposed = false;
+  musicState.currentState = "hq";
 });
 
 describe("audio engine", () => {
@@ -121,38 +110,6 @@ describe("audio engine", () => {
     engine.dispose();
   });
 
-  it("does not restart an ambience bed that is already active", async () => {
-    const engine = createAudioEngine();
-    await engine.unlock();
-
-    engine.startAmbience("ambience.hq.base");
-    engine.startAmbience("ambience.hq.base");
-
-    expect(cueState.playCalls).toEqual(["ambience.hq.base"]);
-    expect(cueState.stopCalls).toEqual([]);
-    expect(engine.activeAmbienceId).toBe("ambience.hq.base");
-
-    engine.dispose();
-  });
-
-  it("stops the previous ambience before switching beds", async () => {
-    const engine = createAudioEngine();
-    await engine.unlock();
-
-    engine.startAmbience("ambience.hq.base");
-    engine.startAmbience("ambience.raid.base");
-
-    expect(cueState.playCalls).toEqual(["ambience.hq.base", "ambience.raid.base"]);
-    expect(cueState.stopCalls).toEqual(["ambience.hq.base"]);
-
-    engine.stopAmbience();
-
-    expect(cueState.stopCalls).toEqual(["ambience.hq.base", "ambience.raid.base"]);
-    expect(engine.activeAmbienceId).toBeNull();
-
-    engine.dispose();
-  });
-
   it("starts and stops music via the scheduler", async () => {
     const engine = createAudioEngine();
     await engine.unlock();
@@ -167,5 +124,18 @@ describe("audio engine", () => {
 
     engine.dispose();
     expect(musicState.disposed).toBe(true);
+  });
+
+  it("forwards music state changes to the scheduler", async () => {
+    const engine = createAudioEngine();
+    await engine.unlock();
+
+    expect(engine.musicState).toBe("hq");
+
+    engine.setMusicState("raid-exploration");
+
+    expect(engine.musicState).toBe("raid-exploration");
+
+    engine.dispose();
   });
 });

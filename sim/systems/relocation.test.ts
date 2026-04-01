@@ -483,6 +483,7 @@ describe("relocation initiation guards", () => {
     expect(activePayload.beat).toBe("offer");
     expect(activePayload.presenterId).toBe("presenter/assistant");
     expect(activePayload.presenterExpression).toBe("serious");
+    expect(context.runtimeState.pendingCueIds).toContain("hq.relocation.offer");
   });
 });
 
@@ -597,11 +598,13 @@ describe("relocation carryover/reset contract", () => {
     const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
     advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
     expect(GuildState.treasury[context.singletonEntities.guild]).toBe(treasuryBefore - 600);
+    expect(context.runtimeState.pendingCueIds).toContain("hq.relocation.confirm");
 
     // After moving — treasury unchanged from post-accept
     const movingResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
     advanceRelocationBeat(context, movingResolved!.payload as RelocationPayload, "acknowledge");
     expect(GuildState.treasury[context.singletonEntities.guild]).toBe(treasuryBefore - 600);
+    expect(context.runtimeState.pendingCueIds).toContain("hq.relocation.land");
   });
 
   it("refuses the accept step if the treasury drops below the deposit", () => {

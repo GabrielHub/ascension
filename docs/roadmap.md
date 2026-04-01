@@ -30,6 +30,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - Permanent operator death, operator departure, and roster replacement pressure are implemented.
 - Pressure events are generated from runtime state rather than hand-authored UI triggers.
 - The shipped interruption layer is runtime-owned: settings, incidents, and boss-commitment beats can freeze the simulation, persist when gameplay-authoritative, and restore cleanly through save/load.
+- The shipped audio layer is state-owned and save-safe: shell, runtime-session, and simulation cue ownership is explicit; HQ, operations, raid, boss, and decompression music states are derived from runtime state; and ambience beds plus promoted cues are validated through the audio playground.
 - Interactive incidents now bind to runtime subjects, surface authored choices through blocking modals, resolve deterministic consequence bundles in simulation code, and persist through refresh/load.
 - Operator portraits use the shipped modular recipe-based SVG pipeline, including visible gear overlays where present.
 - The bodega now renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, staff, and visitor markers.

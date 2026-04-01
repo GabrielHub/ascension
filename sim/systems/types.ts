@@ -2,26 +2,13 @@ import type { World } from "bitecs";
 
 import type { TemplateRegistry } from "content/templates";
 import type { KitTemplateRegistry } from "content/templates/kits";
+import type { RuntimeCueId } from "lib/runtime-cues";
 import type { BossEncounterInstance } from "./encounter-types";
 import type { InterruptionQueueState } from "./interruptions";
 import type { IncidentState } from "./incidents";
 import type { GuidanceState } from "./guidance";
 
-export type RuntimeCueId =
-  | "hq.visitor"
-  | "hq.dismiss"
-  | "raid.launch"
-  | "raid.boss.approach"
-  | "raid.boss.commit"
-  | "raid.boss.phase"
-  | "raid.boss.summon"
-  | "raid.boss.victory"
-  | "raid.boss.failure"
-  | "raid.return.success"
-  | "raid.return.failure"
-  | "raid.death"
-  | "raid.opportunity"
-  | "event.pressure";
+export type { RuntimeCueId } from "lib/runtime-cues";
 
 // ── Structured events for the event log ──────────────────────────────────
 

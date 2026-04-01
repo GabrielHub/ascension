@@ -2,45 +2,49 @@
  * Audio cue definitions for Phase 1.
  *
  * Cue IDs follow the locked namespace from the contract-lock plan:
- * hq.*, room.*, staff.*, operator.*, raid.*, event.*, ambience.*
+ * hq.*, room.*, staff.*, operator.*, raid.*, event.*
  *
  * Each cue defines metadata for the playground and a Tone.js play function
- * that receives the target bus node. Cues must not hold persistent state.
+ * that receives the target SFX bus. Cues must not hold persistent state.
  */
 
 import type * as Tone from "tone";
+import { RUNTIME_CUE_IDS } from "lib/runtime-cues";
 
 // ─── Cue ID namespace ────────────────────────────────────────────────────────
 
-export const AUDIO_CUE_IDS = [
+const APP_ONLY_AUDIO_CUE_IDS = [
+  // ── HQ ──
   "hq.open",
   "hq.close",
   "hq.upgrade",
-  "hq.visitor",
-  "hq.dismiss",
+  "hq.floor.switch",
+  "hq.market.buy",
+  "hq.market.sell",
+  "hq.equip",
+  "hq.unequip",
+  "hq.prep",
+  // ── Room ──
   "room.place",
   "room.activate",
   "room.deactivate",
+  // ── Staff ──
   "staff.hire",
   "staff.assign",
+  // ── Operator ──
   "operator.recruit",
-  "raid.launch",
-  "raid.boss.approach",
-  "raid.boss.commit",
-  "raid.boss.phase",
-  "raid.boss.summon",
-  "raid.boss.victory",
-  "raid.boss.failure",
-  "raid.return.success",
-  "raid.return.failure",
-  "raid.death",
-  "raid.opportunity",
-  "event.pressure",
+  "raid.contract.bid",
+  "raid.contract.advance",
+  // ── Event ──
+  "event.incident.resolve",
+  "event.interruption.resolve",
 ] as const;
+
+export const AUDIO_CUE_IDS = [...APP_ONLY_AUDIO_CUE_IDS, ...RUNTIME_CUE_IDS] as const;
 
 export type AudioCueId = (typeof AUDIO_CUE_IDS)[number];
 
-export type AudioCueCategory = "hq" | "room" | "staff" | "operator" | "raid" | "event" | "ambience";
+export type AudioCueCategory = "hq" | "room" | "staff" | "operator" | "raid" | "event";
 
 export function getCueCategory(id: AudioCueId): AudioCueCategory {
   const prefix = id.split(".")[0];
@@ -54,21 +58,34 @@ export interface AudioCueDefinition {
   label: string;
   description: string;
   category: AudioCueCategory;
-  kind: "sfx" | "ambience";
+  kind: "sfx";
   play: (ctx: CuePlayContext) => void;
 }
 
 export interface CuePlayContext {
   Tone: typeof Tone;
   sfxBus: Tone.Channel;
-  ambienceBus: Tone.Channel;
-  registerActiveAmbienceStop: (stop: () => void) => void;
 }
 
 // ─── SFX play helpers ────────────────────────────────────────────────────────
 
 function sfx(meta: Omit<AudioCueDefinition, "kind" | "category">): AudioCueDefinition {
   return { ...meta, kind: "sfx", category: getCueCategory(meta.id) };
+}
+
+/** Factory for two-note coin chime SFX (shared by market buy/sell). */
+function coinChimePlayer(noteA: string, noteB: string): AudioCueDefinition["play"] {
+  return ({ Tone, sfxBus }) => {
+    const synth = new Tone.Synth({
+      oscillator: { type: "triangle" },
+      envelope: { attack: 0.005, decay: 0.12, sustain: 0, release: 0.15 },
+    }).connect(sfxBus);
+    synth.volume.value = -8;
+    const now = Tone.now();
+    synth.triggerAttackRelease(noteA, "32n", now);
+    synth.triggerAttackRelease(noteB, "32n", now + 0.06);
+    setTimeout(() => synth.dispose(), 800);
+  };
 }
 
 // ─── Starter cue catalog ────────────────────────────────────────────────────
@@ -449,7 +466,176 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     },
   }),
 
-  // ── Event ──
+  // ── HQ (new) ──
+  sfx({
+    id: "hq.floor.switch",
+    label: "Floor Switch",
+    description: "Soft elevator-like whoosh when switching floors.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.NoiseSynth({
+        noise: { type: "pink" },
+        envelope: { attack: 0.02, decay: 0.15, sustain: 0, release: 0.1 },
+      }).connect(sfxBus);
+      synth.volume.value = -14;
+      synth.triggerAttackRelease("8n");
+      setTimeout(() => synth.dispose(), 800);
+    },
+  }),
+
+  sfx({
+    id: "hq.market.buy",
+    label: "Market Buy",
+    description: "Bright coin-like chime when purchasing an item.",
+    play: coinChimePlayer("A5", "E5"),
+  }),
+
+  sfx({
+    id: "hq.market.sell",
+    label: "Market Sell",
+    description: "Descending coin tone when selling an item.",
+    play: coinChimePlayer("E5", "A4"),
+  }),
+
+  sfx({
+    id: "hq.equip",
+    label: "Equip Item",
+    description: "Short metallic lock-in when equipping gear.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.MetalSynth({
+        frequency: 300,
+        envelope: { attack: 0.001, decay: 0.08, release: 0.05 },
+        harmonicity: 5,
+        modulationIndex: 8,
+        resonance: 3000,
+        octaves: 1,
+      }).connect(sfxBus);
+      synth.volume.value = -16;
+      synth.triggerAttackRelease("32n");
+      setTimeout(() => synth.dispose(), 600);
+    },
+  }),
+
+  sfx({
+    id: "hq.unequip",
+    label: "Unequip Item",
+    description: "Soft release click when unequipping gear.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.NoiseSynth({
+        noise: { type: "white" },
+        envelope: { attack: 0.001, decay: 0.06, sustain: 0, release: 0.02 },
+      }).connect(sfxBus);
+      synth.volume.value = -12;
+      synth.triggerAttackRelease("32n");
+      setTimeout(() => synth.dispose(), 500);
+    },
+  }),
+
+  sfx({
+    id: "hq.prep",
+    label: "Prep Consumable",
+    description: "Bubbling mortar-and-pestle tone when prepping a consumable.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.02, release: 0.15 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("G4", "32n", now);
+      synth.triggerAttackRelease("B4", "32n", now + 0.08);
+      synth.triggerAttackRelease("D5", "32n", now + 0.16);
+      setTimeout(() => synth.dispose(), 1000);
+    },
+  }),
+
+  sfx({
+    id: "hq.relocation.offer",
+    label: "Relocation Offer",
+    description: "Anticipatory ascending tone when relocation is offered.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.03, decay: 0.3, sustain: 0.1, release: 0.4 },
+      }).connect(sfxBus);
+      const now = Tone.now();
+      synth.triggerAttackRelease("C4", "8n", now);
+      synth.triggerAttackRelease("E4", "8n", now + 0.2);
+      synth.triggerAttackRelease("G4", "8n", now + 0.4);
+      synth.triggerAttackRelease("C5", "4n", now + 0.6);
+      setTimeout(() => synth.dispose(), 2500);
+    },
+  }),
+
+  sfx({
+    id: "hq.relocation.confirm",
+    label: "Relocation Confirmed",
+    description: "Grand chord when relocation is confirmed.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.PolySynth(Tone.Synth, {
+        options: {
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.04, decay: 0.4, sustain: 0.15, release: 0.6 },
+        },
+      }).connect(sfxBus);
+      const now = Tone.now();
+      synth.triggerAttackRelease(["C4", "E4", "G4"], "4n", now);
+      synth.triggerAttackRelease(["C5", "E5", "G5"], "2n", now + 0.25);
+      setTimeout(() => synth.dispose(), 3000);
+    },
+  }),
+
+  sfx({
+    id: "hq.relocation.land",
+    label: "Relocation Landing",
+    description: "Warm arrival tone when settling into the new headquarters.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.PolySynth(Tone.Synth, {
+        options: {
+          oscillator: { type: "sine" },
+          envelope: { attack: 0.08, decay: 0.5, sustain: 0.2, release: 0.8 },
+        },
+      }).connect(sfxBus);
+      synth.volume.value = -4;
+      synth.triggerAttackRelease(["G3", "B3", "D4", "G4"], "1n");
+      setTimeout(() => synth.dispose(), 4000);
+    },
+  }),
+
+  // ── Raid (new) ──
+  sfx({
+    id: "raid.contract.bid",
+    label: "Contract Bid",
+    description: "Confident stamp when bidding on a contract.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.MembraneSynth({
+        pitchDecay: 0.01,
+        octaves: 3,
+        envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.08 },
+      }).connect(sfxBus);
+      synth.volume.value = -6;
+      synth.triggerAttackRelease("G2", "16n");
+      setTimeout(() => synth.dispose(), 800);
+    },
+  }),
+
+  sfx({
+    id: "raid.contract.advance",
+    label: "Contract Advance",
+    description: "Short forward step when advancing to the next contract cycle.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.12 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("D4", "32n", now);
+      synth.triggerAttackRelease("G4", "16n", now + 0.08);
+      setTimeout(() => synth.dispose(), 800);
+    },
+  }),
+
+  // ── Event (existing + new) ──
   sfx({
     id: "event.pressure",
     label: "Pressure Event",
@@ -463,6 +649,87 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
       const now = Tone.now();
       synth.triggerAttackRelease("Bb5", "32n", now);
       synth.triggerAttackRelease("Bb5", "32n", now + 0.15);
+      setTimeout(() => synth.dispose(), 1000);
+    },
+  }),
+
+  sfx({
+    id: "event.incident.open",
+    label: "Incident Open",
+    description: "Urgent attention tone when an incident demands a decision.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.005, decay: 0.15, sustain: 0.03, release: 0.2 },
+      }).connect(sfxBus);
+      synth.volume.value = -9;
+      const now = Tone.now();
+      synth.triggerAttackRelease("Eb4", "16n", now);
+      synth.triggerAttackRelease("Ab4", "16n", now + 0.12);
+      setTimeout(() => synth.dispose(), 1200);
+    },
+  }),
+
+  sfx({
+    id: "event.incident.resolve",
+    label: "Incident Resolved",
+    description: "Settling tone when an incident decision is made.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.25 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("Ab4", "16n", now);
+      synth.triggerAttackRelease("Eb4", "8n", now + 0.1);
+      setTimeout(() => synth.dispose(), 1200);
+    },
+  }),
+
+  sfx({
+    id: "event.interruption.open",
+    label: "Interruption Open",
+    description: "Soft attention chime when an interruption surfaces.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.18, sustain: 0.02, release: 0.2 },
+      }).connect(sfxBus);
+      synth.volume.value = -8;
+      const now = Tone.now();
+      synth.triggerAttackRelease("D5", "16n", now);
+      synth.triggerAttackRelease("F#5", "16n", now + 0.1);
+      setTimeout(() => synth.dispose(), 1000);
+    },
+  }),
+
+  sfx({
+    id: "event.interruption.resolve",
+    label: "Interruption Resolved",
+    description: "Soft close when an interruption is resolved or dismissed.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.18 },
+      }).connect(sfxBus);
+      synth.volume.value = -10;
+      synth.triggerAttackRelease("F#4", "16n");
+      setTimeout(() => synth.dispose(), 800);
+    },
+  }),
+
+  sfx({
+    id: "event.guidance.beat",
+    label: "Guidance Beat",
+    description: "Gentle nudge tone when a guidance beat appears.",
+    play({ Tone, sfxBus }) {
+      const synth = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.02, decay: 0.2, sustain: 0, release: 0.25 },
+      }).connect(sfxBus);
+      synth.volume.value = -12;
+      synth.triggerAttackRelease("A4", "16n");
       setTimeout(() => synth.dispose(), 1000);
     },
   }),

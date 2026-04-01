@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveTimeOfDayPhase } from "./hq-time-phase";
+import { HQ_TIME_OF_DAY_PHASES, resolveTimeOfDayPhase } from "./hq-time-phase";
 
 describe("resolveTimeOfDayPhase", () => {
+  it("exports the canonical preview phase order", () => {
+    expect(HQ_TIME_OF_DAY_PHASES).toEqual(["sunrise", "day", "sunset", "night"]);
+  });
+
   it("maps minute 0 to night", () => {
     expect(resolveTimeOfDayPhase(0)).toBe("night");
   });

@@ -40,28 +40,10 @@ const SVG_TENEMENT_LEFT: HqSvgPlacementMeta = {
   viewBox: [0, 0, 280, 480],
 };
 
-const SVG_TENEMENT_RIGHT: HqSvgPlacementMeta = {
-  svgAnchorX: 140,
-  svgAnchorY: 480,
-  viewBox: [0, 0, 280, 480],
-};
-
-const SVG_GARDEN: HqSvgPlacementMeta = {
-  svgAnchorX: 150,
-  svgAnchorY: 80,
-  viewBox: [0, 0, 300, 220],
-};
-
 const SVG_TREE_STREET: HqSvgPlacementMeta = {
   svgAnchorX: 30,
   svgAnchorY: 100,
   viewBox: [0, 0, 60, 100],
-};
-
-const SVG_HYDRANT: HqSvgPlacementMeta = {
-  svgAnchorX: 20,
-  svgAnchorY: 56,
-  viewBox: [0, 0, 40, 56],
 };
 
 const SVG_LAMPPOST: HqSvgPlacementMeta = {
@@ -70,131 +52,57 @@ const SVG_LAMPPOST: HqSvgPlacementMeta = {
   viewBox: [0, 0, 48, 180],
 };
 
-const SVG_AWNING: HqSvgPlacementMeta = {
-  svgAnchorX: 100,
+const SVG_BUILDING_TALL: HqSvgPlacementMeta = {
+  svgAnchorX: 380,
+  svgAnchorY: 750,
+  viewBox: [0, -155, 760, 905],
+};
+
+const SVG_BENCH: HqSvgPlacementMeta = {
+  svgAnchorX: 36,
   svgAnchorY: 58,
-  viewBox: [0, 0, 200, 70],
+  viewBox: [0, 0, 72, 58],
 };
 
 // ── Bodega exterior placements ──────────────────────────────────────────
 
 const BODEGA_EXTERIOR_PLACEMENTS: readonly HqStaticPlacementDef[] = [
-  // ── Main adjacent tenement (LEFT side) ───────────────────────────────
   {
     id: "scenery/building-left",
     assetId: "background/iso-bg-tenement-left",
     assetUrl: bodegaBg("iso-bg-tenement-left.svg"),
     kind: "exterior",
-    col: -3,
-    row: 20,
+    col: -1,
+    row: 8,
     anchorMode: "iso-bottom",
     svgMeta: SVG_TENEMENT_LEFT,
-    footprintCols: 5,
-    footprintRows: 7,
     width: 280,
     height: 480,
     zIndex: 2,
     opacity: 0.92,
-    scale: 1.0,
-    tags: ["building", "adjacent", "left", "tenement"],
-  },
-  // ── Main adjacent tenement (RIGHT side) ──────────────────────────────
-  {
-    id: "scenery/building-right",
-    assetId: "background/iso-bg-tenement-right",
-    assetUrl: bodegaBg("iso-bg-tenement-right.svg"),
-    kind: "exterior",
-    col: 12,
-    row: 18,
-    anchorMode: "iso-bottom",
-    svgMeta: SVG_TENEMENT_RIGHT,
+    scale: 1,
     footprintCols: 5,
     footprintRows: 7,
-    width: 280,
-    height: 480,
-    zIndex: 2,
-    opacity: 0.9,
-    scale: 1.0,
-    tags: ["building", "adjacent", "right", "tenement"],
+    tags: ["building", "adjacent", "left", "tenement"],
   },
-  // ── Small right-side pocket greenery (not a full park) ───────────────
-  {
-    id: "scenery/garden-side-lot",
-    assetId: "background/iso-bg-garden",
-    assetUrl: bodegaBg("iso-bg-garden.svg"),
-    kind: "exterior",
-    col: 15,
-    row: 13,
-    anchorMode: "iso-center",
-    svgMeta: SVG_GARDEN,
-    footprintCols: 3,
-    footprintRows: 3,
-    width: 300,
-    height: 220,
-    zIndex: 3,
-    opacity: 0.76,
-    scale: 0.72,
-    tags: ["garden", "side-lot", "right"],
-  },
-  // ── Street tree (front sidewalk, right side) ─────────────────────────
   {
     id: "scenery/tree-right",
     assetId: "background/iso-bg-tree-street",
     assetUrl: bodegaBg("iso-bg-tree-street.svg"),
     kind: "exterior",
-    col: 14,
+    col: 5,
     row: 20,
     anchorMode: "iso-bottom",
     svgMeta: SVG_TREE_STREET,
-    footprintCols: 1,
-    footprintRows: 1,
     width: 60,
     height: 100,
     zIndex: 9,
     opacity: 0.82,
     scale: 1.2,
-    tags: ["tree", "sidewalk", "right"],
-  },
-  // ── Storefront awning (front edge of the bodega shell) ───────────────
-  {
-    id: "scenery/storefront-awning",
-    assetId: "background/iso-bg-awning",
-    assetUrl: bodegaBg("iso-bg-awning.svg"),
-    kind: "decoration",
-    col: 5,
-    row: 19,
-    anchorMode: "iso-bottom",
-    svgMeta: SVG_AWNING,
-    footprintCols: 3,
-    footprintRows: 1,
-    width: 200,
-    height: 70,
-    zIndex: 12,
-    opacity: 0.96,
-    scale: 1.1,
-    offsetY: -14,
-    tags: ["awning", "storefront", "bodega"],
-  },
-  // ── Hydrant (front-right sidewalk corner) ────────────────────────────
-  {
-    id: "scenery/hydrant",
-    assetId: "background/iso-bg-hydrant",
-    assetUrl: bodegaBg("iso-bg-hydrant.svg"),
-    kind: "exterior",
-    col: 11,
-    row: 20,
-    anchorMode: "iso-bottom",
-    svgMeta: SVG_HYDRANT,
     footprintCols: 1,
     footprintRows: 1,
-    width: 40,
-    height: 56,
-    zIndex: 10,
-    opacity: 0.86,
-    scale: 1.04,
-    tags: ["hydrant", "sidewalk"],
+    tags: ["tree", "sidewalk", "right"],
   },
-  // ── Lamppost (front sidewalk, left of storefront) ────────────────────
   {
     id: "scenery/lamp",
     assetId: "background/iso-bg-lamppost",
@@ -212,6 +120,36 @@ const BODEGA_EXTERIOR_PLACEMENTS: readonly HqStaticPlacementDef[] = [
     opacity: 0.82,
     scale: 0.88,
     tags: ["lamppost", "sidewalk"],
+  },
+  {
+    id: "placement/background-iso-bg-building-tall-2",
+    assetId: "background/iso-bg-building-tall",
+    assetUrl: bodegaBg("iso-bg-building-tall.svg"),
+    kind: "exterior",
+    col: 1.5,
+    row: 19.5,
+    anchorMode: "iso-bottom",
+    svgMeta: SVG_BUILDING_TALL,
+    width: 760,
+    height: 905,
+    zIndex: 2,
+    opacity: 1,
+    scale: 1,
+  },
+  {
+    id: "placement/background-iso-bg-bench-4",
+    assetId: "background/iso-bg-bench",
+    assetUrl: bodegaBg("iso-bg-bench.svg"),
+    kind: "exterior",
+    col: 4.5,
+    row: 20,
+    anchorMode: "iso-bottom",
+    svgMeta: SVG_BENCH,
+    width: 72,
+    height: 58,
+    zIndex: 2,
+    opacity: 1,
+    scale: 1,
   },
 ];
 

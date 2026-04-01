@@ -10,3 +10,5 @@ export {
 } from "./cues";
 
 export { createAudioEngine, type AudioEngine, type AudioEngineState } from "./engine";
+
+export { selectMusicState, type MusicState, type AudioStateInputs } from "./state";

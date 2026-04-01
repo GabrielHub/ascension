@@ -229,7 +229,7 @@ export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps)
             className={`rounded px-2 py-0.5 text-xs transition-colors ${
               category === cat.value
                 ? "bg-gold/15 text-gold"
-                : "text-gold/40 hover:bg-gold/5 hover:text-gold/60"
+                : "text-gold/50 hover:bg-gold/5 hover:text-gold/70"
             }`}
           >
             {cat.label}
@@ -246,7 +246,7 @@ export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps)
             className={`rounded px-2 py-0.5 text-xs transition-colors ${
               statusFilter === opt.value
                 ? "bg-frost/15 text-frost"
-                : "text-gold/30 hover:text-gold/50"
+                : "text-gold/50 hover:text-gold/70"
             }`}
           >
             {opt.label}
@@ -257,11 +257,11 @@ export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps)
       {/* Asset list */}
       <div className="flex-1 overflow-y-auto">
         {allParts.length === 0 ? (
-          <div className="p-4 text-center text-xs text-gold/25">
+          <div className="p-4 text-center text-xs text-gold/50">
             No environment asset pack is available for this building yet.
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-4 text-center text-xs text-gold/25">No assets match filters</div>
+          <div className="p-4 text-center text-xs text-gold/50">No assets match filters</div>
         ) : (
           <div className="space-y-px p-1">
             {filtered.map((part) => (
@@ -287,11 +287,11 @@ export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps)
                     >
                       {part.status}
                     </span>
-                    <span className="truncate text-xs text-gold/30">{part.category}</span>
+                    <span className="truncate text-xs text-gold/50">{part.category}</span>
                   </div>
                 </div>
                 <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="text-xs text-gold/40">
+                  <span className="text-xs text-gold/50">
                     {pendingAssetId === part.id ? "Placing..." : "+ Place"}
                   </span>
                 </div>
@@ -302,7 +302,7 @@ export function AssetBrowser({ buildingId, shell, dispatch }: AssetBrowserProps)
       </div>
 
       <div className="border-t border-gold/8 px-3 py-1.5">
-        <span className="text-xs text-gold/30">{filtered.length} assets</span>
+        <span className="text-xs text-gold/50">{filtered.length} assets</span>
       </div>
     </div>
   );

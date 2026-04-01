@@ -343,6 +343,7 @@ describe("incident interruption payloads", () => {
     );
 
     expect(queued).toBe(true);
+    expect(context.runtimeState.pendingCueIds).toContain("event.incident.open");
     expect(context.runtimeState.pendingEvents).toEqual([
       {
         kind: "event_change",

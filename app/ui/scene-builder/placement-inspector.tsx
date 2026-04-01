@@ -33,7 +33,7 @@ function PropField({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/40">
+      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/60">
         {label}
       </label>
       <input
@@ -66,7 +66,7 @@ function AnchorSelect({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/40">
+      <label className="w-16 text-right text-xs uppercase tracking-wider text-gold/60">
         Anchor
       </label>
       <select
@@ -101,7 +101,7 @@ function SelectionInspector({
     <div className="space-y-3 p-3">
       {/* ID display */}
       <div>
-        <div className="mb-1 text-xs uppercase tracking-wider text-gold/40">Placement ID</div>
+        <div className="mb-1 text-xs uppercase tracking-wider text-gold/60">Placement ID</div>
         <div className="truncate rounded bg-void/40 px-2 py-1 text-xs text-silver/70">
           {placement.id}
         </div>
@@ -109,7 +109,7 @@ function SelectionInspector({
 
       {/* Asset info */}
       <div>
-        <div className="mb-1 text-xs uppercase tracking-wider text-gold/40">Asset</div>
+        <div className="mb-1 text-xs uppercase tracking-wider text-gold/60">Asset</div>
         <div className="truncate rounded bg-void/40 px-2 py-1 text-xs text-frost/70">
           {placement.assetId}
         </div>
@@ -117,7 +117,7 @@ function SelectionInspector({
 
       {/* Kind badge */}
       <div className="flex items-center gap-2">
-        <span className="text-xs uppercase tracking-wider text-gold/40">Kind</span>
+        <span className="text-xs uppercase tracking-wider text-gold/60">Kind</span>
         <span className="rounded bg-gold/10 px-1.5 py-0.5 text-xs text-gold/60">
           {placement.kind}
         </span>
@@ -234,7 +234,7 @@ function SelectionInspector({
       </div>
 
       {/* Keyboard shortcuts hint */}
-      <div className="space-y-0.5 rounded bg-void/30 p-2 text-xs text-gold/25">
+      <div className="space-y-0.5 rounded bg-void/30 p-2 text-xs text-gold/60">
         <div>Arrow keys = nudge (Shift = 0.25)</div>
         <div>Ctrl+D = duplicate</div>
         <div>Delete = remove</div>
@@ -255,7 +255,7 @@ function PlacementList({
 }) {
   if (state.placements.length === 0) {
     return (
-      <div className="p-4 text-center text-xs text-gold/25">
+      <div className="p-4 text-center text-xs text-gold/50">
         No placements yet. Use the asset browser to place assets.
       </div>
     );
@@ -279,7 +279,7 @@ function PlacementList({
               : "hover:border-gold/10 hover:bg-gold/3"
           }`}
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-void/40 text-xs tabular-nums text-gold/30">
+          <div className="flex h-6 w-6 items-center justify-center rounded bg-void/40 text-xs tabular-nums text-gold/50">
             {idx + 1}
           </div>
           <div className="min-w-0 flex-1">
@@ -287,7 +287,7 @@ function PlacementList({
               <span className="truncate text-xs text-silver/80">{p.assetId.split("/").pop()}</span>
               {p.dirty && <span className="h-1.5 w-1.5 rounded-full bg-ember/60" />}
             </div>
-            <div className="text-xs text-gold/25">
+            <div className="text-xs text-gold/50">
               ({p.col}, {p.row}) z:{p.zIndex}
             </div>
           </div>
@@ -297,7 +297,7 @@ function PlacementList({
                 e.stopPropagation();
                 dispatch({ type: "REORDER_PLACEMENT", id: p.id, direction: "up" });
               }}
-              className="rounded px-1 py-0.5 text-xs text-gold/30 hover:bg-gold/10 hover:text-gold/60"
+              className="rounded px-1 py-0.5 text-xs text-gold/50 hover:bg-gold/10 hover:text-gold/70"
               title="Move up in list"
             >
               ^
@@ -307,7 +307,7 @@ function PlacementList({
                 e.stopPropagation();
                 dispatch({ type: "REORDER_PLACEMENT", id: p.id, direction: "down" });
               }}
-              className="rounded px-1 py-0.5 text-xs text-gold/30 hover:bg-gold/10 hover:text-gold/60"
+              className="rounded px-1 py-0.5 text-xs text-gold/50 hover:bg-gold/10 hover:text-gold/70"
               title="Move down in list"
             >
               v
@@ -329,7 +329,7 @@ function WarningsPanel({
   dispatch: React.Dispatch<BuilderAction>;
 }) {
   if (warnings.length === 0) {
-    return <div className="p-3 text-center text-xs text-gold/25">No warnings</div>;
+    return <div className="p-3 text-center text-xs text-gold/50">No warnings</div>;
   }
 
   const levelColors = {
@@ -404,16 +404,16 @@ export function RightSidebar({ state, dispatch }: RightSidebarProps) {
                   setOverrideTab(tab);
                 }
               }}
-              className={`flex-1 border-b-2 px-2 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${
+              className={`flex-1 border-b-2 px-1.5 py-2 text-xs font-medium uppercase tracking-[0.08em] transition-colors ${
                 isActive
                   ? "border-b-gold text-gold"
-                  : "border-b-transparent text-gold/40 hover:text-gold/60"
+                  : "border-b-transparent text-gold/50 hover:text-gold/70"
               }`}
             >
               {tab}
               {count > 0 && (
                 <span
-                  className={`ml-1 text-xs ${tab === "warnings" && count > 0 ? "text-ember/60" : "text-gold/30"}`}
+                  className={`ml-1 text-xs ${tab === "warnings" && count > 0 ? "text-ember/70" : "text-gold/50"}`}
                 >
                   ({count})
                 </span>

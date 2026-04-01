@@ -46,6 +46,7 @@ describe("music scheduler", () => {
   it("is not playing on creation", () => {
     const sched = createMusicScheduler({ Tone, bus });
     expect(sched.playing).toBe(false);
+    expect(sched.currentState).toBe("hq");
     sched.dispose();
   });
 
@@ -102,6 +103,49 @@ describe("music scheduler", () => {
 
     vi.advanceTimersByTime(9_000);
     expect(mockState.synths).toHaveLength(1);
+
+    sched.dispose();
+  });
+
+  it("changes state and reschedules", () => {
+    const sched = createMusicScheduler({ Tone, bus });
+    sched.start();
+    expect(sched.currentState).toBe("hq");
+
+    sched.setState("boss-encounter");
+    expect(sched.currentState).toBe("boss-encounter");
+
+    // Advance past encounter's max initial delay (3s)
+    vi.advanceTimersByTime(4_000);
+    expect(mockState.synths.length).toBeGreaterThanOrEqual(1);
+
+    sched.dispose();
+  });
+
+  it("plays raid exploration music when raids become active", () => {
+    const sched = createMusicScheduler({ Tone, bus });
+    sched.start();
+    sched.setState("raid-exploration");
+
+    vi.advanceTimersByTime(7_000);
+    expect(mockState.synths.length).toBeGreaterThanOrEqual(1);
+
+    sched.dispose();
+  });
+
+  it("does not reschedule if same state is set", () => {
+    const sched = createMusicScheduler({ Tone, bus });
+    sched.start();
+
+    // Advance partway into the HQ delay
+    vi.advanceTimersByTime(2_000);
+    const synthCount = mockState.synths.length;
+
+    sched.setState("hq"); // no-op
+    expect(sched.currentState).toBe("hq");
+
+    // Count should not change from a no-op setState
+    expect(mockState.synths.length).toBe(synthCount);
 
     sched.dispose();
   });

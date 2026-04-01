@@ -24,6 +24,7 @@ import {
   CURRENT_SAVE_SCHEMA_VERSION,
   SAVE_SLOT_IDS,
   saveStorage,
+  type EquipmentAssignmentSnapshot,
   type PersistedSaveGame,
   type SaveSlotId,
   type WorldSnapshot,
@@ -75,6 +76,41 @@ export interface RuntimeRouteRequest {
   slotId?: SaveSlotId;
   guildName?: string;
   playerName?: string;
+}
+
+function getInventoryQuantity(snapshot: WorldSnapshot, itemId: string): number {
+  return snapshot.inventoryStacks?.find((stack) => stack.itemId === itemId)?.quantity ?? 0;
+}
+
+function getEquipmentAssignment(
+  snapshot: WorldSnapshot,
+  operatorId: string,
+): EquipmentAssignmentSnapshot | undefined {
+  return snapshot.equipmentAssignments?.find((assignment) => assignment.operatorId === operatorId);
+}
+
+function hasGenericInterruptionCue(interruption: RuntimePhase1View["activeInterruption"]): boolean {
+  return interruption?.type === "announcement" || interruption?.type === "warning";
+}
+
+function resolveInterruptionTransitionCues(
+  beforePhase1View: RuntimePhase1View,
+  afterPhase1View: RuntimePhase1View,
+): AudioCueId[] {
+  const beforeInterruption = beforePhase1View.activeInterruption;
+  const afterInterruption = afterPhase1View.activeInterruption;
+  if (beforeInterruption?.instanceId === afterInterruption?.instanceId) {
+    return [];
+  }
+
+  const cues: AudioCueId[] = [];
+  if (hasGenericInterruptionCue(beforeInterruption)) {
+    cues.push("event.interruption.resolve");
+  }
+  if (hasGenericInterruptionCue(afterInterruption)) {
+    cues.push("event.interruption.open");
+  }
+  return cues;
 }
 
 export interface RuntimeSessionPersistenceState {
@@ -415,6 +451,67 @@ function resolveCuesForCommand(
     case "sim/dismiss-recruit": {
       return afterPhase1View.visitors.length < beforePhase1View.visitors.length
         ? ["hq.dismiss"]
+        : [];
+    }
+    case "sim/set-active-floor": {
+      return beforePhase1View.building.activeFloorIndex !==
+        afterPhase1View.building.activeFloorIndex
+        ? ["hq.floor.switch"]
+        : [];
+    }
+    case "sim/buy-item": {
+      return getInventoryQuantity(afterWorldSnapshot, command.itemId) >
+        getInventoryQuantity(beforeWorldSnapshot, command.itemId)
+        ? ["hq.market.buy"]
+        : [];
+    }
+    case "sim/sell-item": {
+      return getInventoryQuantity(afterWorldSnapshot, command.itemId) <
+        getInventoryQuantity(beforeWorldSnapshot, command.itemId)
+        ? ["hq.market.sell"]
+        : [];
+    }
+    case "sim/auto-assign-accessory": {
+      const previousAssignment = getEquipmentAssignment(beforeWorldSnapshot, command.operatorId);
+      const nextAssignment = getEquipmentAssignment(afterWorldSnapshot, command.operatorId);
+      return previousAssignment?.accessoryId !== nextAssignment?.accessoryId &&
+        (nextAssignment?.accessoryId?.length ?? 0) > 0
+        ? ["hq.equip"]
+        : [];
+    }
+    case "sim/unequip-item": {
+      const previousAssignment = getEquipmentAssignment(beforeWorldSnapshot, command.operatorId);
+      const nextAssignment = getEquipmentAssignment(afterWorldSnapshot, command.operatorId);
+      const previousItemId = previousAssignment?.[`${command.slot}Id`];
+      const nextItemId = nextAssignment?.[`${command.slot}Id`];
+      return (previousItemId?.length ?? 0) > 0 && (nextItemId?.length ?? 0) === 0
+        ? ["hq.unequip"]
+        : [];
+    }
+    case "sim/prep-consumable": {
+      const before = beforeWorldSnapshot.inventoryStacks ?? [];
+      const after = afterWorldSnapshot.inventoryStacks ?? [];
+      const sumBefore = before.reduce((s, e) => s + e.quantity, 0);
+      const sumAfter = after.reduce((s, e) => s + e.quantity, 0);
+      return sumBefore !== sumAfter ? ["hq.prep"] : [];
+    }
+    case "sim/bid-contract": {
+      return beforePhase1View.contractLifecycle !== "active" &&
+        afterPhase1View.contractLifecycle === "active"
+        ? ["raid.contract.bid"]
+        : [];
+    }
+    case "sim/advance-contract": {
+      return beforePhase1View.contractLifecycle === "resolved" &&
+        afterPhase1View.contractLifecycle === "bidding"
+        ? ["raid.contract.advance"]
+        : [];
+    }
+    case "sim/incident-resolve": {
+      return beforePhase1View.activeInterruption?.payload.kind === "incident" &&
+        beforePhase1View.activeInterruption.instanceId !==
+          afterPhase1View.activeInterruption?.instanceId
+        ? ["event.incident.resolve"]
         : [];
     }
     default:
@@ -1533,6 +1630,7 @@ function createRuntimeSession(
             beforePhase1View,
             session.phase1View,
           ),
+          ...resolveInterruptionTransitionCues(beforePhase1View, session.phase1View),
         );
         appendSimulationCues();
         notifyListeners();

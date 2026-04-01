@@ -4,6 +4,16 @@ import { builderReducer, INITIAL_STATE } from "./builder-state";
 import { createPlacement } from "./builder-types";
 
 describe("builderReducer decoration shell guards", () => {
+  it("cycles preview lighting without marking the editor dirty", () => {
+    const nextState = builderReducer(INITIAL_STATE, {
+      type: "CYCLE_PREVIEW_PHASE",
+      direction: 1,
+    });
+
+    expect(nextState.previewPhase).toBe("sunset");
+    expect(nextState.isDirty).toBe(false);
+  });
+
   it("rejects adding decorations inside the shell footprint", () => {
     const state = {
       ...INITIAL_STATE,

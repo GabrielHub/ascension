@@ -13,6 +13,7 @@ import {
   getBuildingLayout,
   getBuildingLayoutDefinition,
 } from "content/building-layouts";
+import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { getExteriorScene } from "render/hq-scene-data";
 
 import { getLoadedEnvParts } from "../environment-parts";
@@ -43,6 +44,13 @@ const BUILDINGS: { id: string; label: string }[] = [
   { id: "building/porters", label: "Porter's" },
 ];
 
+const PREVIEW_PHASE_LABELS: Readonly<Record<HqTimeOfDayPhase, string>> = {
+  sunrise: "Sunrise",
+  day: "Day",
+  sunset: "Sunset",
+  night: "Night",
+};
+
 // ── Overlay toggle button ───────────────────────────────────────────────
 
 function OverlayToggle({
@@ -60,7 +68,7 @@ function OverlayToggle({
       className={`rounded border px-2 py-1 text-xs font-medium uppercase tracking-wider transition-all ${
         active
           ? "border-gold/25 bg-gold/12 text-gold"
-          : "border-gold/8 bg-transparent text-gold/30 hover:border-gold/15 hover:text-gold/50"
+          : "border-gold/8 bg-transparent text-gold/50 hover:border-gold/15 hover:text-gold/70"
       }`}
     >
       {label}
@@ -368,7 +376,7 @@ export function SceneBuilderPage() {
 
         {/* Building selector */}
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wider text-gold/35">Building</span>
+          <span className="text-xs uppercase tracking-wider text-gold/50">Building</span>
           <select
             value={state.buildingId}
             onChange={(e) => handleBuildingChange(e.target.value)}
@@ -387,7 +395,7 @@ export function SceneBuilderPage() {
           <>
             <div className="h-4 w-px bg-gold/15" />
             <div className="flex items-center gap-1.5">
-              <span className="text-xs uppercase tracking-wider text-gold/35">Floor</span>
+              <span className="text-xs uppercase tracking-wider text-gold/50">Floor</span>
               <select
                 value={state.floorIndex}
                 onChange={(e) => handleFloorChange(Number(e.target.value))}
@@ -408,7 +416,7 @@ export function SceneBuilderPage() {
         {stageOptions.length > 1 && (
           <>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs uppercase tracking-wider text-gold/35">Stage</span>
+              <span className="text-xs uppercase tracking-wider text-gold/50">Stage</span>
               <select
                 value={state.buildingTier}
                 onChange={(e) => handleTierChange(Number(e.target.value))}
@@ -425,6 +433,39 @@ export function SceneBuilderPage() {
             <div className="h-4 w-px bg-gold/15" />
           </>
         )}
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-wider text-gold/50">Lighting</span>
+          <button
+            onClick={() => dispatch({ type: "CYCLE_PREVIEW_PHASE", direction: -1 })}
+            className="rounded border border-gold/15 bg-void/60 px-2 py-1 text-xs text-gold/55 transition-colors hover:border-gold/25 hover:text-gold"
+            aria-label="Previous lighting phase"
+          >
+            Prev
+          </button>
+          {(Object.keys(PREVIEW_PHASE_LABELS) as HqTimeOfDayPhase[]).map((phase) => (
+            <button
+              key={phase}
+              onClick={() => dispatch({ type: "SET_PREVIEW_PHASE", phase })}
+              className={`rounded px-2 py-1 text-xs uppercase tracking-[0.12em] ${
+                state.previewPhase === phase
+                  ? "bg-gold/12 text-gold"
+                  : "text-gold/50 hover:bg-gold/5 hover:text-gold/70"
+              }`}
+            >
+              {PREVIEW_PHASE_LABELS[phase]}
+            </button>
+          ))}
+          <button
+            onClick={() => dispatch({ type: "CYCLE_PREVIEW_PHASE", direction: 1 })}
+            className="rounded border border-gold/15 bg-void/60 px-2 py-1 text-xs text-gold/55 transition-colors hover:border-gold/25 hover:text-gold"
+            aria-label="Next lighting phase"
+          >
+            Next
+          </button>
+        </div>
+
+        <div className="h-4 w-px bg-gold/15" />
 
         {/* Overlay toggles */}
         <div className="flex items-center gap-1">
@@ -449,10 +490,10 @@ export function SceneBuilderPage() {
           </span>
         )}
 
-        <span className="text-xs tabular-nums text-gold/25">
+        <span className="text-xs tabular-nums text-gold/50">
           {state.placements.length} placements
         </span>
-        <span className="text-xs tabular-nums text-gold/25">{state.slots.length} slots</span>
+        <span className="text-xs tabular-nums text-gold/50">{state.slots.length} slots</span>
 
         {state.warnings.length > 0 && (
           <span className="text-xs text-ember/50">
@@ -476,7 +517,7 @@ export function SceneBuilderPage() {
               className={`rounded px-2 py-1 text-xs uppercase tracking-[0.12em] ${
                 state.editorMode === mode
                   ? "bg-gold/12 text-gold"
-                  : "text-gold/35 hover:bg-gold/5 hover:text-gold/55"
+                  : "text-gold/50 hover:bg-gold/5 hover:text-gold/70"
               }`}
             >
               {mode}
@@ -488,13 +529,13 @@ export function SceneBuilderPage() {
         <div className="flex gap-1">
           <Link
             to="/svg-playground"
-            className="rounded px-2 py-1 text-xs text-gold/30 transition-colors hover:bg-gold/5 hover:text-gold/50"
+            className="rounded px-2 py-1 text-xs text-gold/50 transition-colors hover:bg-gold/5 hover:text-gold/70"
           >
             SVG Playground
           </Link>
           <Link
             to="/game"
-            className="rounded px-2 py-1 text-xs text-gold/30 transition-colors hover:bg-gold/5 hover:text-gold/50"
+            className="rounded px-2 py-1 text-xs text-gold/50 transition-colors hover:bg-gold/5 hover:text-gold/70"
           >
             Game
           </Link>
@@ -520,10 +561,13 @@ export function SceneBuilderPage() {
 
           {/* Canvas HUD overlay */}
           <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
-            <span className="rounded bg-void/60 px-2 py-1 text-xs tabular-nums text-gold/30 backdrop-blur-sm">
+            <span className="rounded bg-void/60 px-2 py-1 text-xs tabular-nums text-gold/50 backdrop-blur-sm">
               Zoom: {(state.camera.zoom * 100).toFixed(0)}%
             </span>
-            <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/20 backdrop-blur-sm">
+            <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/50 backdrop-blur-sm">
+              Preview: {PREVIEW_PHASE_LABELS[state.previewPhase]}
+            </span>
+            <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/40 backdrop-blur-sm">
               Right-drag to pan | Scroll to zoom at cursor | Click+drag to move
             </span>
           </div>
@@ -531,7 +575,7 @@ export function SceneBuilderPage() {
 
         {/* Right sidebar: Inspector + Placements */}
         <aside
-          className={`${glassPanelClass} w-72 flex-shrink-0 border-l border-gold/8 overflow-hidden`}
+          className={`${glassPanelClass} w-80 min-w-[20rem] flex-shrink-0 border-l border-gold/8 overflow-hidden xl:w-96`}
         >
           {state.editorMode === "scene" ? (
             <RightSidebar state={state} dispatch={dispatch} />

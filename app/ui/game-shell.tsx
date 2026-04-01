@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
-import { createAudioEngine, type AudioEngine, type AudioEngineState } from "app/features/audio";
+import {
+  createAudioEngine,
+  selectMusicState,
+  type AudioEngine,
+  type AudioEngineState,
+} from "app/features/audio";
 import { updateBrowserTestSnapshot } from "app/features/browser/test-driver";
 import { useGameSettings } from "app/features/settings";
 import {
@@ -1545,6 +1550,35 @@ export function GameShell() {
       engine.playCue(cueId);
     }
   }, [audioState, session?.state, session]);
+
+  // ── Derive stable audio primitives from phase1View ──
+  const hasActiveEncounter = phase1View?.encounter != null;
+  const hasActiveRaids = (phase1View?.activeRaids.length ?? 0) > 0;
+  const hasBossApproach = phase1View?.activeInterruption?.type === "raid_boss_commitment";
+  const isReviewingResult = phase1View?.contractResult != null;
+
+  // ── Derive music state from runtime ──
+  useEffect(() => {
+    const engine = audioEngineRef.current;
+    if (!engine || audioState !== "running") return;
+
+    const inputs = {
+      activeTab,
+      hasActiveEncounter,
+      hasBossApproach,
+      hasActiveRaids,
+      isReviewingResult,
+    };
+
+    engine.setMusicState(selectMusicState(inputs));
+  }, [
+    audioState,
+    activeTab,
+    hasActiveEncounter,
+    hasBossApproach,
+    hasActiveRaids,
+    isReviewingResult,
+  ]);
 
   // Derive focused raid state (must be before early returns to keep hook count stable)
   const focusedRaidState =

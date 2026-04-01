@@ -1305,6 +1305,36 @@ describe("runtime session lifecycle", () => {
     session.dispose();
   });
 
+  it("emits hq.floor.switch only when the active floor changes", async () => {
+    const world = createBodegaWorldSnapshot();
+    world.building = {
+      activeBuildingId: "building/porters",
+      activeBuildingTier: 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 7,
+      operatorSlotCount: 12,
+    };
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(createPersistedSave("slot/1", world));
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
+    session.drainPendingCues();
+
+    await session.commands.setActiveFloor({ floorIndex: 1 });
+    expect(session.state.phase1View.building.activeFloorIndex).toBe(1);
+    expect(session.drainPendingCues()).toEqual(["hq.floor.switch"]);
+
+    await session.commands.setActiveFloor({ floorIndex: 1 });
+    expect(session.drainPendingCues()).toEqual([]);
+
+    session.dispose();
+  });
+
   it("supports buying, auto-equipping, unequipping, and reselling items through the runtime session", async () => {
     const itemId = "accessory/field-lead-badge";
     const item = templateRegistry.itemById.get(itemId);
@@ -1347,10 +1377,12 @@ describe("runtime session lifecycle", () => {
     });
 
     const treasuryBefore = session.worldSnapshot.guild.treasury;
+    session.drainPendingCues();
 
     await session.commands.buyItem({ itemId });
     expect(session.worldSnapshot.guild.treasury).toBe(treasuryBefore - item!.buyPrice);
     expect(session.worldSnapshot.inventoryStacks).toEqual([{ itemId, quantity: 1 }]);
+    expect(session.drainPendingCues()).toEqual(["hq.market.buy"]);
 
     await session.commands.autoAssignAccessory({ operatorId: "operator/rose-vega" });
     expect(
@@ -1362,6 +1394,7 @@ describe("runtime session lifecycle", () => {
       accessoryPartId: itemId,
     });
     expect(session.worldSnapshot.inventoryStacks).toEqual([]);
+    expect(session.drainPendingCues()).toEqual(["hq.equip"]);
 
     await session.commands.unequipItem({
       operatorId: "operator/rose-vega",
@@ -1375,12 +1408,14 @@ describe("runtime session lifecycle", () => {
       outfitOverlayPartId: "outfit-overlay/tactical-vest",
     });
     expect(session.worldSnapshot.inventoryStacks).toEqual([{ itemId, quantity: 1 }]);
+    expect(session.drainPendingCues()).toEqual(["hq.unequip"]);
 
     await session.commands.sellItem({ itemId, quantity: 1 });
     expect(session.worldSnapshot.guild.treasury).toBe(
       treasuryBefore - item!.buyPrice + item.sellPrice,
     );
     expect(session.worldSnapshot.inventoryStacks).toEqual([]);
+    expect(session.drainPendingCues()).toEqual(["hq.market.sell"]);
 
     session.dispose();
   });
@@ -1410,6 +1445,84 @@ describe("runtime session lifecycle", () => {
       await session.commands.assignStaff({ staffId: staff!.id });
     }
     expect(session.drainPendingCues()).toEqual([]);
+
+    await session.commands.setActiveFloor({
+      floorIndex: session.state.phase1View.building.activeFloorIndex,
+    });
+    expect(session.drainPendingCues()).toEqual([]);
+
+    await session.commands.sellItem({ itemId: "accessory/field-lead-badge", quantity: 1 });
+    expect(session.drainPendingCues()).toEqual([]);
+
+    await session.commands.autoAssignAccessory({ operatorId: "operator/does-not-exist" });
+    expect(session.drainPendingCues()).toEqual([]);
+
+    await session.commands.unequipItem({
+      operatorId: "operator/does-not-exist",
+      slot: "accessory",
+    });
+    expect(session.drainPendingCues()).toEqual([]);
+
+    session.dispose();
+  });
+
+  it("emits generic interruption transition cues when announcement or warning interruptions rotate", async () => {
+    const world = createNewGameWorldSnapshot(templateRegistry);
+    (world as Record<string, unknown>).interruptionQueue = {
+      active: {
+        instanceId: "interruption-1",
+        type: "announcement",
+        priority: 50,
+        blockingMode: "blocking",
+        createdAtMinute: 120,
+        sourceSystem: "test",
+        dismissible: false,
+        persistence: "transient",
+        payload: {
+          kind: "announcement",
+          title: "Heads Up",
+          message: "Testing generic interruption cues.",
+        },
+      },
+      queue: [
+        {
+          instanceId: "interruption-2",
+          type: "warning",
+          priority: 100,
+          blockingMode: "blocking",
+          createdAtMinute: 121,
+          sourceSystem: "test",
+          dismissible: false,
+          persistence: "persistent",
+          payload: {
+            kind: "warning",
+            title: "Danger",
+            message: "Testing generic interruption promotion.",
+            severity: "critical",
+          },
+        },
+      ],
+      nextInstanceId: 3,
+    };
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(createPersistedSave("slot/1", world));
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
+    session.drainPendingCues();
+    await session.commands.dispatch({
+      type: "sim/interruption-resolve",
+      instanceId: "interruption-1",
+    });
+
+    expect(session.drainPendingCues()).toEqual([
+      "event.interruption.resolve",
+      "event.interruption.open",
+    ]);
 
     session.dispose();
   });

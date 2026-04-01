@@ -8,6 +8,7 @@ import type {
   BuilderRoomSlotState,
   SceneBuilderState,
 } from "./builder-types";
+import { HQ_TIME_OF_DAY_PHASES } from "lib/hq-time-phase";
 import { placementOverlapsShell } from "./builder-validation";
 import { DEFAULT_OVERLAYS } from "./builder-types";
 
@@ -16,6 +17,7 @@ export const INITIAL_STATE: SceneBuilderState = {
   floorIndex: 0,
   buildingTier: 1,
   editorMode: "scene",
+  previewPhase: "day",
   placements: [],
   selectedPlacementId: null,
   shell: null,
@@ -100,6 +102,17 @@ export function builderReducer(state: SceneBuilderState, action: BuilderAction):
 
     case "SET_EDITOR_MODE":
       return { ...state, editorMode: action.mode };
+
+    case "SET_PREVIEW_PHASE":
+      return { ...state, previewPhase: action.phase };
+
+    case "CYCLE_PREVIEW_PHASE": {
+      const currentIndex = HQ_TIME_OF_DAY_PHASES.indexOf(state.previewPhase);
+      const nextIndex =
+        (currentIndex + action.direction + HQ_TIME_OF_DAY_PHASES.length) %
+        HQ_TIME_OF_DAY_PHASES.length;
+      return { ...state, previewPhase: HQ_TIME_OF_DAY_PHASES[nextIndex] };
+    }
 
     case "LOAD_PLACEMENTS":
       return withDirty(
