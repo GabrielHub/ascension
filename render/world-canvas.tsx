@@ -13,6 +13,7 @@ import {
   endPan,
   screenToWorld,
   updatePan,
+  worldToScreen,
   type PanState,
 } from "./camera";
 import type {
@@ -75,6 +76,193 @@ const DEFAULT_VIEWPORT: CanvasViewport = {
   height: 600,
   dpr: 1,
 };
+
+// ── HQ depth-of-field profile ──────────────────────────────────────────────
+
+const HQ_DOF_NEAR_RATIO = 0.82;
+const HQ_DOF_FAR_RATIO = 0.08;
+const HQ_DOF_SATURATION_FLOOR = 0.66;
+const HQ_DOF_BACKDROP_ALPHA_FLOOR = 0.58;
+const HQ_DOF_SCENERY_ALPHA_FLOOR = 0.8;
+
+export const HQ_DOF_BACKDROP_ZONES = [
+  "rear",
+  "leftFlank",
+  "rightFlank",
+  "belowShell",
+  "fore",
+  "aboveShell",
+] as const;
+
+type HqDofBackdropZone = (typeof HQ_DOF_BACKDROP_ZONES)[number];
+type HqDofLayerKind = "backdrop" | "scenery" | "sky" | "silhouettes" | "facades";
+
+interface ScreenRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  bottom: number;
+}
+
+const DOF_MAX_BLUR_BY_LAYER: Readonly<Record<HqDofLayerKind, number>> = {
+  backdrop: 20,
+  scenery: 12,
+  sky: 22,
+  silhouettes: 18,
+  facades: 16,
+};
+
+interface ScratchEntry {
+  canvas: HTMLCanvasElement | OffscreenCanvas;
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+}
+const scratchCanvasCache = new Map<string, ScratchEntry>();
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function lerp(start: number, end: number, amount: number): number {
+  return start + (end - start) * amount;
+}
+
+export function sampleHqDofIntensity(screenY: number, viewportHeight: number): number {
+  if (viewportHeight <= 0) return 0;
+
+  const nearY = viewportHeight * HQ_DOF_NEAR_RATIO;
+  const farY = viewportHeight * HQ_DOF_FAR_RATIO;
+  if (screenY >= nearY) return 0;
+  if (screenY <= farY) return 1;
+
+  return clamp01((nearY - screenY) / (nearY - farY));
+}
+
+export function projectWorldRectToScreen(
+  rect: Readonly<{ x: number; y: number; width: number; height: number }>,
+  camera: CameraState,
+  viewW: number,
+  viewH: number,
+): ScreenRect {
+  const { x, y } = worldToScreen(rect.x, rect.y, camera, viewW, viewH);
+  const width = rect.width * camera.zoom;
+  const height = rect.height * camera.zoom;
+  return { x, y, width, height, bottom: y + height };
+}
+
+export function computeHqDofAppearance(
+  kind: HqDofLayerKind,
+  screenBottomY: number,
+  viewportHeight: number,
+  baseAlpha = 1,
+): Readonly<{ intensity: number; blurPx: number; saturation: number; alpha: number }> {
+  const intensity = sampleHqDofIntensity(screenBottomY, viewportHeight);
+  const alphaFloor = kind === "scenery" ? HQ_DOF_SCENERY_ALPHA_FLOOR : HQ_DOF_BACKDROP_ALPHA_FLOOR;
+  return {
+    intensity,
+    blurPx: DOF_MAX_BLUR_BY_LAYER[kind] * intensity,
+    saturation: lerp(1, HQ_DOF_SATURATION_FLOOR, intensity),
+    alpha: baseAlpha * lerp(1, alphaFloor, intensity),
+  };
+}
+
+export function buildHqDofPassPlan(snapshot: HqWorldSnapshot) {
+  return {
+    backgroundBackdropZones: ["rear", "leftFlank", "rightFlank"] as const,
+    structuralBackdropZones: ["belowShell"] as const,
+    foregroundBackdropZones: ["fore", "aboveShell"] as const,
+    dofScenery: snapshot.scenery.slice().sort((a, b) => a.zIndex - b.zIndex),
+    crispRoomProps: snapshot.roomProps,
+    crispFxOverlay: snapshot.backdrop?.zones.fxOverlay ?? [],
+    actorsUseDof: false as const,
+    structuralLayersUseDof: false as const,
+  };
+}
+
+function supportsCanvasFilters(ctx: CanvasRenderingContext2D): boolean {
+  return "filter" in ctx;
+}
+
+function applyDofFilter(
+  ctx: CanvasRenderingContext2D,
+  appearance: Readonly<{ blurPx: number; saturation: number; alpha: number }>,
+): void {
+  ctx.globalAlpha = appearance.alpha;
+  if (supportsCanvasFilters(ctx)) {
+    const filterParts: string[] = [];
+    if (appearance.blurPx > 0.01) filterParts.push(`blur(${appearance.blurPx.toFixed(2)}px)`);
+    if (appearance.saturation < 0.999) {
+      filterParts.push(`saturate(${appearance.saturation.toFixed(3)})`);
+    }
+    ctx.filter = filterParts.length > 0 ? filterParts.join(" ") : "none";
+  }
+}
+
+function getScratchContext(
+  key: string,
+  width: number,
+  height: number,
+): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null {
+  const cached = scratchCanvasCache.get(key);
+  if (cached) {
+    if (cached.canvas.width !== width) cached.canvas.width = width;
+    if (cached.canvas.height !== height) cached.canvas.height = height;
+    return cached.ctx;
+  }
+
+  let canvas: HTMLCanvasElement | OffscreenCanvas;
+  if (typeof OffscreenCanvas !== "undefined") {
+    canvas = new OffscreenCanvas(width, height);
+  } else if (typeof document !== "undefined") {
+    canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+  } else {
+    return null;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  scratchCanvasCache.set(key, { canvas, ctx });
+  return ctx;
+}
+
+function withWorldTransform(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  camera: CameraState,
+  viewW: number,
+  viewH: number,
+  draw: () => void,
+): void {
+  ctx.save();
+  ctx.translate(viewW / 2, viewH / 2);
+  ctx.scale(camera.zoom, camera.zoom);
+  ctx.translate(-camera.x, -camera.y);
+  draw();
+  ctx.restore();
+}
+
+function withScreenSpace(ctx: CanvasRenderingContext2D, draw: () => void): void {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  draw();
+  ctx.restore();
+}
+
+function drawBackdropDistanceHaze(
+  ctx: CanvasRenderingContext2D,
+  viewW: number,
+  viewH: number,
+): void {
+  const nearY = viewH * HQ_DOF_NEAR_RATIO;
+  const farY = viewH * HQ_DOF_FAR_RATIO;
+  const gradient = ctx.createLinearGradient(0, farY, 0, nearY);
+  gradient.addColorStop(0, "rgba(8, 10, 18, 0.34)");
+  gradient.addColorStop(0.45, "rgba(10, 12, 20, 0.22)");
+  gradient.addColorStop(1, "rgba(10, 12, 20, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, viewW, nearY);
+}
 
 // ── Phase-aware perimeter fill colors ──────────────────────────────────────
 
@@ -198,7 +386,7 @@ function tileNoise(col: number, row: number): number {
 }
 
 function drawPolygon(
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   points: readonly HqPoint[],
   fillStyle: string | CanvasGradient,
   strokeStyle?: string,
@@ -1001,6 +1189,53 @@ function drawBackdropZone(
   }
 }
 
+function drawDofManagedBackdropZone(
+  ctx: CanvasRenderingContext2D,
+  snapshot: HqWorldSnapshot,
+  camera: CameraState,
+  viewW: number,
+  viewH: number,
+  zone: HqDofBackdropZone,
+  imageCache: SvgImageCache,
+): void {
+  const bd = snapshot.backdrop;
+  if (!bd) return;
+  const assetIds = bd.zones[zone];
+  if (!assetIds || assetIds.length === 0) return;
+
+  for (let i = 0; i < assetIds.length; i++) {
+    const url = backdropAssetUrl(assetIds[i]);
+    const img = imageCache.get(url);
+    if (!img) {
+      imageCache.load(url);
+      continue;
+    }
+
+    const placement = computeBackdropZonePlacement(
+      snapshot,
+      zone,
+      assetIds[i],
+      img.naturalWidth / (img.naturalHeight || 1),
+      img.naturalHeight,
+      i,
+    );
+    if (!placement) continue;
+
+    const screenRect = projectWorldRectToScreen(placement, camera, viewW, viewH);
+    const appearance = computeHqDofAppearance(
+      "backdrop",
+      screenRect.bottom,
+      viewH,
+      placement.alpha ?? 1,
+    );
+
+    ctx.save();
+    applyDofFilter(ctx, appearance);
+    ctx.drawImage(img, screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+    ctx.restore();
+  }
+}
+
 // ── Flanking buildings (NYC tenement facades behind the ground plane) ─────
 
 // ── Phase-aware flanking building palette ──────────────────────────────────
@@ -1114,9 +1349,25 @@ const FLANKING_PALETTES: Record<HqTimeOfDayPhase, FlankingPalette> = {
   },
 };
 
-function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
+type FlankingBand = "sky" | "silhouettes" | "facades";
+
+interface FlankingGeometry {
+  phase: HqTimeOfDayPhase;
+  palette: FlankingPalette;
+  topPt: HqPoint;
+  leftPt: HqPoint;
+  rightPt: HqPoint;
+  bldMinCol: number;
+  bldMaxCol: number;
+  bldMinRow: number;
+  bldMaxRow: number;
+  storyH: number;
+  project: (col: number, row: number) => HqPoint;
+}
+
+function computeFlankingGeometry(snapshot: HqWorldSnapshot): FlankingGeometry | null {
   const periBounds = computeGridBounds(snapshot.modular.perimeterTiles);
-  if (!periBounds) return;
+  if (!periBounds) return null;
 
   const phase: HqTimeOfDayPhase = snapshot.backdrop?.phase ?? "night";
   const pal = FLANKING_PALETTES[phase];
@@ -1130,9 +1381,36 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   const leftPt = proj(periMinCol, periMaxRow);
   const rightPt = proj(periMaxCol, periMinRow);
 
+  const floorBounds = computeGridBounds(snapshot.modular.floorTiles);
+  if (!floorBounds) return null;
+  const bldMinCol = floorBounds.minCol;
+  const bldMaxCol = floorBounds.maxCol + 1;
+  const bldMinRow = floorBounds.minRow;
+  const bldMaxRow = floorBounds.maxRow + 1;
+  const storyH = snapshot.layout.wallHeight;
+
+  return {
+    phase,
+    palette: pal,
+    topPt,
+    leftPt,
+    rightPt,
+    bldMinCol,
+    bldMaxCol,
+    bldMinRow,
+    bldMaxRow,
+    storyH,
+    project: proj,
+  };
+}
+
+function drawFlankingSkyBand(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  geometry: FlankingGeometry,
+): void {
+  const { palette: pal, topPt, leftPt, rightPt } = geometry;
   const EXT = 3000;
 
-  // ── A. Deep background sky ──
   ctx.fillStyle = pal.sky;
   ctx.beginPath();
   ctx.moveTo(topPt.x, topPt.y);
@@ -1151,16 +1429,13 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   ctx.lineTo(topPt.x, topPt.y - EXT);
   ctx.closePath();
   ctx.fill();
+}
 
-  const floorBounds = computeGridBounds(snapshot.modular.floorTiles);
-  if (!floorBounds) return;
-  const bldMinCol = floorBounds.minCol;
-  const bldMaxCol = floorBounds.maxCol + 1;
-  const bldMinRow = floorBounds.minRow;
-  const bldMaxRow = floorBounds.maxRow + 1;
-  const storyH = snapshot.layout.wallHeight;
-
-  // ── B. Far building silhouettes (skyline depth) ──
+function drawFlankingSilhouetteBand(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  geometry: FlankingGeometry,
+): void {
+  const { palette: pal, bldMinCol, bldMaxCol, bldMinRow, bldMaxRow, storyH, project } = geometry;
   const bgBuildings = [
     {
       col: bldMinCol - 2,
@@ -1197,8 +1472,8 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
   ];
 
   for (const bg of bgBuildings) {
-    const p0 = proj(bg.col, bg.r0);
-    const p1 = proj(bg.col, bg.r1);
+    const p0 = project(bg.col, bg.r0);
+    const p1 = project(bg.col, bg.r1);
     drawPolygon(ctx, [p0, p1, { x: p1.x, y: p1.y - bg.h }, { x: p0.x, y: p0.y - bg.h }], bg.fill);
 
     // Sparse distant windows
@@ -1221,8 +1496,13 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
       }
     }
   }
+}
 
-  // ── C. Immediate neighbor facades (6-story tenements) ──
+function drawFlankingFacadeBand(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  geometry: FlankingGeometry,
+): void {
+  const { palette: pal, bldMinCol, bldMaxCol, bldMinRow, bldMaxRow, storyH, project } = geometry;
   const neighborH = storyH * 6;
   const floors = 6;
 
@@ -1230,8 +1510,8 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
     { c: bldMinCol, side: "left" as const, seed: 0 },
     { c: bldMaxCol, side: "right" as const, seed: 2 },
   ]) {
-    const p0 = proj(c, bldMinRow);
-    const p1 = proj(c, bldMaxRow);
+    const p0 = project(c, bldMinRow);
+    const p1 = project(c, bldMaxRow);
     const fW = Math.abs(p1.x - p0.x);
     const fDy = p1.y - p0.y;
 
@@ -1370,8 +1650,8 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
 
   // Water tower on left building
   {
-    const p0 = proj(bldMinCol, bldMinRow);
-    const p1 = proj(bldMinCol, bldMaxRow);
+    const p0 = project(bldMinCol, bldMinRow);
+    const p1 = project(bldMinCol, bldMaxRow);
     const tx = p0.x + (p1.x - p0.x) * 0.7;
     const ty = p0.y + (p1.y - p0.y) * 0.7 - neighborH;
     const legH = 16;
@@ -1407,8 +1687,8 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
 
   // Antenna mast on right building
   {
-    const p0 = proj(bldMaxCol, bldMinRow);
-    const p1 = proj(bldMaxCol, bldMaxRow);
+    const p0 = project(bldMaxCol, bldMinRow);
+    const p1 = project(bldMaxCol, bldMaxRow);
     const ax = p0.x + (p1.x - p0.x) * 0.3;
     const ay = p0.y + (p1.y - p0.y) * 0.3 - neighborH;
 
@@ -1448,8 +1728,8 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
 
   // Vent pipes on left rooftop
   {
-    const p0 = proj(bldMinCol, bldMinRow);
-    const p1 = proj(bldMinCol, bldMaxRow);
+    const p0 = project(bldMinCol, bldMinRow);
+    const p1 = project(bldMinCol, bldMaxRow);
     const vx = p0.x + (p1.x - p0.x) * 0.25;
     const vy = p0.y + (p1.y - p0.y) * 0.25 - neighborH;
     ctx.fillStyle = "rgba(20, 18, 26, 0.85)";
@@ -1460,6 +1740,23 @@ function drawFlankingBuildings(ctx: CanvasRenderingContext2D, snapshot: HqWorldS
     ] as const) {
       ctx.fillRect(vx + dx - 1.5, vy - h, 3, h);
     }
+  }
+}
+
+function drawFlankingBuildingsBand(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  geometry: FlankingGeometry,
+  band: FlankingBand,
+): void {
+  switch (band) {
+    case "sky":
+      drawFlankingSkyBand(ctx, geometry);
+      return;
+    case "silhouettes":
+      drawFlankingSilhouetteBand(ctx, geometry);
+      return;
+    case "facades":
+      drawFlankingFacadeBand(ctx, geometry);
   }
 }
 
@@ -1559,6 +1856,59 @@ function drawSprite(
   ctx.save();
   ctx.globalAlpha = sprite.opacity;
   ctx.drawImage(img, sprite.x, sprite.y, sprite.width, sprite.height);
+  ctx.restore();
+}
+
+function drawDofManagedSprite(
+  ctx: CanvasRenderingContext2D,
+  sprite: HqSpritePlacement,
+  imageCache: SvgImageCache,
+  camera: CameraState,
+  viewW: number,
+  viewH: number,
+): void {
+  const img = imageCache.load(sprite.assetUrl);
+  if (!img) return;
+
+  const screenRect = projectWorldRectToScreen(sprite, camera, viewW, viewH);
+  const appearance = computeHqDofAppearance("scenery", screenRect.bottom, viewH, sprite.opacity);
+  ctx.save();
+  applyDofFilter(ctx, appearance);
+  ctx.drawImage(img, screenRect.x, screenRect.y, screenRect.width, screenRect.height);
+  ctx.restore();
+}
+
+function drawDofManagedFlankingBand(
+  ctx: CanvasRenderingContext2D,
+  geometry: FlankingGeometry,
+  camera: CameraState,
+  viewW: number,
+  viewH: number,
+  band: FlankingBand,
+  screenBottomY: number,
+): void {
+  const scratchCtx = getScratchContext(`hq-dof-${band}`, Math.ceil(viewW), Math.ceil(viewH));
+  if (!scratchCtx) {
+    withWorldTransform(ctx, camera, viewW, viewH, () =>
+      drawFlankingBuildingsBand(ctx, geometry, band),
+    );
+    return;
+  }
+
+  scratchCtx.save();
+  scratchCtx.setTransform(1, 0, 0, 1, 0, 0);
+  scratchCtx.clearRect(0, 0, viewW, viewH);
+  withWorldTransform(scratchCtx, camera, viewW, viewH, () =>
+    drawFlankingBuildingsBand(scratchCtx, geometry, band),
+  );
+  scratchCtx.restore();
+
+  const appearance = computeHqDofAppearance(band, screenBottomY, viewH, 1);
+
+  ctx.save();
+  applyDofFilter(ctx, appearance);
+  const scratchCanvas = scratchCtx.canvas as HTMLCanvasElement | OffscreenCanvas;
+  ctx.drawImage(scratchCanvas, 0, 0, viewW, viewH);
   ctx.restore();
 }
 
@@ -1988,35 +2338,57 @@ function drawHqWorld(
   pointerWorld?: { x: number; y: number } | null,
 ): void {
   const focusedRoomId = focus?.targetKind === "room" ? focus.targetId : null;
+  const dofPlan = buildHqDofPassPlan(snapshot);
 
   drawBackdrop(ctx, viewW, viewH, snapshot.backdrop);
+
+  // 0. DOF-managed background art in screen space
+  dofPlan.backgroundBackdropZones.forEach((zone) =>
+    drawDofManagedBackdropZone(ctx, snapshot, camera, viewW, viewH, zone, imageCache),
+  );
+  const flankingGeometry = computeFlankingGeometry(snapshot);
+  if (flankingGeometry) {
+    drawDofManagedFlankingBand(ctx, flankingGeometry, camera, viewW, viewH, "sky", viewH * 0.08);
+    drawDofManagedFlankingBand(
+      ctx,
+      flankingGeometry,
+      camera,
+      viewW,
+      viewH,
+      "silhouettes",
+      viewH * 0.22,
+    );
+    drawDofManagedFlankingBand(
+      ctx,
+      flankingGeometry,
+      camera,
+      viewW,
+      viewH,
+      "facades",
+      viewH * 0.34,
+    );
+  }
+  drawBackdropDistanceHaze(ctx, viewW, viewH);
 
   ctx.save();
   ctx.translate(viewW / 2, viewH / 2);
   ctx.scale(camera.zoom, camera.zoom);
   ctx.translate(-camera.x, -camera.y);
 
-  // 0b. Backdrop zone SVGs (rear sky behind flanking buildings)
-  drawBackdropZone(ctx, snapshot, "rear", imageCache);
-
-  // 1. Flanking buildings (drawn first, behind everything)
-  drawFlankingBuildings(ctx, snapshot);
-
-  // 1b. Backdrop flank SVGs (tenements on left/right)
-  drawBackdropZone(ctx, snapshot, "leftFlank", imageCache);
-  drawBackdropZone(ctx, snapshot, "rightFlank", imageCache);
-
   // 2. Perimeter tiles (drawn on top of flanking buildings)
   drawPerimeterTiles(ctx, snapshot);
 
-  // 2b. Backdrop below-shell zone (street, sidewalk)
-  drawBackdropZone(ctx, snapshot, "belowShell", imageCache);
+  // 2b. Backdrop street props remain in front of the perimeter.
+  dofPlan.structuralBackdropZones.forEach((zone) =>
+    withScreenSpace(ctx, () =>
+      drawDofManagedBackdropZone(ctx, snapshot, camera, viewW, viewH, zone, imageCache),
+    ),
+  );
 
-  // 3. Scenery behind rooms
-  snapshot.scenery
-    .slice()
-    .sort((a, b) => a.zIndex - b.zIndex)
-    .forEach((sprite) => drawSprite(ctx, sprite, imageCache));
+  // 2c. Exterior scenery keeps its legacy layer position while using DOF-aware compositing.
+  dofPlan.dofScenery.forEach((sprite) =>
+    withScreenSpace(ctx, () => drawDofManagedSprite(ctx, sprite, imageCache, camera, viewW, viewH)),
+  );
 
   // 3. Room ambient glow (under walls/floor, for operational rooms)
   for (const room of snapshot.rooms) {
@@ -2078,9 +2450,12 @@ function drawHqWorld(
     drawFocusHighlightRect(ctx, effectiveFocus);
   }
 
-  // 10. Backdrop foreground props
-  drawBackdropZone(ctx, snapshot, "fore", imageCache);
-  drawBackdropZone(ctx, snapshot, "aboveShell", imageCache);
+  // 10. Foreground backdrop props render above the shell again.
+  dofPlan.foregroundBackdropZones.forEach((zone) =>
+    withScreenSpace(ctx, () =>
+      drawDofManagedBackdropZone(ctx, snapshot, camera, viewW, viewH, zone, imageCache),
+    ),
+  );
 
   // 11. Debug overlay (toggle with G key in dev builds)
   drawPropDebugOverlay(ctx, snapshot);
