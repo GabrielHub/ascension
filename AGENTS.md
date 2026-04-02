@@ -2,22 +2,38 @@
 
 Repo-specific correctional guidance only. Assume normal engineering competence.
 
+## Agent Autonomy
+
+- Challenge requests you believe are wrong, suboptimal, or improvable — offer alternatives before executing
+- Think before acting: read the relevant code, understand context, and form a plan before making changes
+- The user is not always right — pushback grounded in evidence or engineering judgment is expected
+
+## Coding Discipline
+
+- Read code before modifying it — do not propose changes to files you have not read
+- Do not add features, refactor, or make improvements beyond what was asked
+- Do not create helpers, utilities, or abstractions for one-time operations — prefer inline simplicity
+- Do not add error handling or validation for scenarios that cannot occur — validate only at system boundaries
+- Do not add backwards-compatibility shims, re-exports, or placeholder comments for removed code
+- Prefer editing existing files over creating new ones
+- Do not introduce security vulnerabilities (command injection, XSS, SQL injection, etc.)
+
 ## Toolchain
 
-- Use `Vite+` entry points, not plain Vite defaults.
+- Use `Vite+`.
 - Prefer `vp install`, `vp dev`, `vp check`, `vp test`, `vp build`, and `vp preview` for standard web workflows.
-- Prefer `vp` workflows over raw package-manager commands unless there is a concrete reason not to.
-- Use package scripts only for tasks that do not have a `vp` equivalent, such as `pnpm tauri:dev`, `pnpm tauri:build`, `pnpm test:tauri`, and `pnpm mcp:tauri-test`.
+- Do not assume standard Vite-only workflows unless explicitly documented.
+- Use package scripts only when there is no `vp` equivalent, such as `pnpm tauri:dev`, `pnpm tauri:build`, `pnpm test:tauri`, and `pnpm mcp:tauri-test`.
 
 ## Architecture
 
-- ECS owns mutable gameplay state.
-- Templates own static gameplay configuration.
-- Systems own gameplay behavior.
+- ECS owns authoritative mutable gameplay state.
+- Templates own static gameplay definitions.
+- Systems own gameplay consequences.
 - UI owns presentation and typed intents only.
 - React Router owns shell navigation only.
-- Save code serializes and migrates state, but does not invent gameplay outcomes.
-- Rendering and SVG code must not become hidden gameplay engines.
+- Save code owns serialization and migration, not gameplay repair.
+- Render and SVG code must not become alternate rule engines.
 
 ## Content Generation
 
@@ -28,7 +44,7 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 ## Documentation Policy
 
 - Code, tests, templates, and assets are the source of truth for implemented behavior.
-- Do not add docs that restate behavior already made clear by the implementation.
+- Do not write docs that duplicate behavior already explained by the implementation.
 - Keep `docs/` for roadmap, future-facing questions, and research only.
 - Keep repo workflow rules in `AGENTS.md` and `CLAUDE.md`.
 
@@ -40,26 +56,35 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Reference fixtures (full room with walls/floors) are exploration/preview artifacts only, not production output
 - See `docs/product/asset-production.md` HQ Isometric Contract for the full production pipeline
 
-## Do Not
+## Forbidden Mistakes
 
-- put gameplay rules in React components
-- mutate gameplay state directly from UI
-- make the router a gameplay-state owner
-- add named-content branches unless documented
+- gameplay logic in React components
+- direct UI-owned gameplay mutation
+- router-owned gameplay state
+- named-content branches without documentation
 - treat scaffold defaults or stale docs as stronger than code-level contracts
-- use `as any`
-- include walls, floors, or structural elements inside room scene SVGs
-- use flat camera-facing props (non-isometric rectangles) in any HQ asset
+- `as any`
+- walls, floors, or structural elements inside room scene SVGs
+- flat camera-facing props (non-isometric rectangles) in any HQ asset
+- font sizes below `text-xs` (0.75rem / 12px)
+
+## UI Rule
+
+- Always use the `/frontend-design` skill when creating or heavily refactoring UI components or screens
+- Preserve and extend the established visual language already present in `app/ui`, `app/app.css`, and the shipped SVG assets
+- Minimum font size is `text-xs` (0.75rem / 12px) — never use arbitrary values below this (`text-[0.6875rem]`, `text-[0.625rem]`, etc.)
+- Use `text-xs` for labels, badges, and secondary metadata; use `text-sm` or larger for body text and descriptions
 
 ## Verification
 
-- If you change code, run `vp check` before calling the work complete
-- Run `vp test` and `vp build` when the change touches runtime behavior, saved data, or app integration
-- Do not hand-wave lint, type, or test failures as unrelated
+- Do not present code changes as complete without running `vp check`
+- Also run `vp test` and `vp build` when the change affects behavior or integration
+- Fix failing checks instead of dismissing them as unrelated
 
 ## Workflow
 
-- Do not autonomously launch follow-up tasks after finishing the requested work
+- Do not autonomously continue into extra cleanup or follow-up tasks after completing the asked work
+- If the user points to a likely cause for a bug, investigate that first
 - Keep commits atomic when asked to prepare commits
 
 ## Host Split
@@ -69,7 +94,7 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Browser mode keeps browser-backed saves for development work
 - Tauri desktop mode uses file-backed saves for playtesting and integration validation
 - Do not move gameplay authority into Rust or the Tauri shell
-- Validate browser behavior and desktop behavior on the host that actually owns the responsibility
+- Use the host that actually owns the behavior you are validating
 
 ## Playwright
 
@@ -90,12 +115,12 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 
 ## Tauri Automation
 
-- Use Tauri automation when the task touches the desktop host, file-backed saves, import/export, packaging, or installed-app behavior
+- Use Tauri automation for desktop-host validation, file-backed saves, import/export, packaging, and installer behavior
 - Desktop automation artifacts live under `tauri-test/`
 - Put screenshots in `tauri-test/screenshots/`
 - Put logs in `tauri-test/logs/`
 - Put traces and other artifacts in `tauri-test/artifacts/`
-- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over ad hoc desktop automation stacks; there is no `vp` equivalent for that desktop harness
+- Prefer the checked-in `tauri-test/` harness and `pnpm mcp:tauri-test` server over separate one-off desktop drivers; there is no `vp` equivalent for that desktop harness
 
 ## References
 

@@ -866,10 +866,10 @@ function buildPhaseGaps(): EarlyCampaignEconomyLedger["gaps"] {
   return [
     {
       gapId: "gap/direct-treatment-repair-spend",
-      title: "No standalone treatment or repair spend system",
+      title: "Direct treatment spend is present but still coarse",
       blocksPhase2: false,
       detail:
-        "Recovery is currently time-based and modifier-driven. Treasury-linked treatment or repair pressure only appears indirectly through upgrades and specific incident choices.",
+        "Post-raid treatment and restock now remove treasury directly, but the system is still a flat summary-level sink rather than a richer medical supply or repair economy.",
     },
     {
       gapId: "gap/envelope-thresholds",

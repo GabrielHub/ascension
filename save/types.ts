@@ -290,6 +290,7 @@ export interface RaidSummarySnapshot extends SaveStructuredRecord {
   result: "success" | "failure" | "mixed";
   reputationDelta: number;
   cashDelta: number;
+  treatmentCost?: number;
   operatorOutcomes?: RaidOperatorOutcomeSnapshot[];
   narrativeTags?: string[];
   intelMismatchTags?: string[];
@@ -304,14 +305,18 @@ export interface ContractSiteSnapshot {
   location: string;
   rank?: string;
   bossDefeated: boolean;
+  missionCompleted?: boolean;
   contractLost: boolean;
   threat: number;
   intel: number;
   reward: number;
   securedAtTick: number;
   explorationProgress?: number;
+  closureProgress?: number;
+  closureThreshold?: number;
   bossIntelProgress?: number;
   bossPressureProgress?: number;
+  requiresBossClear?: boolean;
   bossAvailable?: boolean;
 }
 
@@ -342,7 +347,7 @@ export interface ContractResultSnapshot {
   siteConceptId: string;
   location: string;
   rank: string;
-  outcome: "boss_defeated" | "contract_lost";
+  outcome: "mission_complete" | "boss_defeated" | "contract_lost";
   totalRaids: number;
   totalCashEarned: number;
   totalReputationEarned: number;
@@ -417,6 +422,7 @@ export interface LootAutomationSnapshot {
 }
 
 export interface WorldSnapshot {
+  simulationSeed?: number;
   guild: GuildSnapshot;
   time: WorldTimeSnapshot;
   building: BuildingSnapshot;

@@ -53,6 +53,14 @@ describe("early campaign simulation harness", () => {
     }
   });
 
+  it("keeps seeded opener runs moving and surfaces recruit timing in the opening window", async () => {
+    const suite = await buildEarlyCampaignSimulationSuite({ seedCount: 4, contractLimit: 3 });
+
+    expect(suite.runs.every((run) => run.stalled === false)).toBe(true);
+    expect(suite.runs.every((run) => run.contractCycles.length > 0)).toBe(true);
+    expect(suite.runs.every((run) => run.firstRecruitViableContract !== null)).toBe(true);
+  });
+
   it("renders self-consistent simulation artifacts", async () => {
     const artifacts = await buildEarlyCampaignSimulationArtifacts({
       seedCount: 1,

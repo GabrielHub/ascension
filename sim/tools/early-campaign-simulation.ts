@@ -15,6 +15,8 @@ const DEFAULT_SEED_COUNT = 24;
 const DEFAULT_START_SEED = 1;
 const DEFAULT_CONTRACT_LIMIT = 8;
 const DEFAULT_TICK_MINUTES = 60;
+const DEFAULT_SCENARIO_PROFILES = ["skilled", "average", "struggling"] as const;
+const OPENING_STABILITY_PROFILE_SEED_COUNT = 8;
 const MINIMUM_BID_COST = 7;
 const CRITICAL_TREASURY_FLOOR = 50;
 const MAX_RECRUIT_PAYROLL_INCREASE_PCT = 20;
@@ -25,7 +27,6 @@ const INCOME_UPGRADE_IDS = [
   "upgrade/building/bodega:frontage",
 ] as const;
 const GUIDED_FIRST_UPGRADE_ID = INCOME_UPGRADE_IDS[0];
-const CORE_OPENING_COMPLETE_BEAT_ID = "guidance/opening/first-upgrade";
 const FIRST_CONTRACT_CHOICE_BEAT_ID = "guidance/opening/first-contract-choice";
 
 const SCENARIO_TARGETS = {
@@ -37,6 +38,7 @@ const SCENARIO_TARGETS = {
 type ThresholdStatus = "pass" | "out_of_band" | "fail" | "not_measurable";
 type CycleOutcome = "success" | "mixed" | "failure";
 type ScenarioLabel = keyof typeof SCENARIO_TARGETS;
+type ScenarioProfile = (typeof DEFAULT_SCENARIO_PROFILES)[number];
 type InjuryBand = "minor" | "moderate" | "severe";
 
 type Phase1View = ReturnType<ReturnType<typeof createAscensionSimulation>["getPhase1View"]>;
@@ -156,6 +158,7 @@ const watchItemSchema = z.object({
 
 const earlyCampaignSimulationRunSchema = z.object({
   seed: z.number().int().nonnegative(),
+  scenarioProfile: z.enum(DEFAULT_SCENARIO_PROFILES),
   inferredScenario: z.enum(["skilled", "average", "struggling"]),
   completedContracts: z.number().int().nonnegative(),
   contractCycles: z.array(contractCycleSchema),
@@ -183,6 +186,7 @@ const earlyCampaignSimulationRunSchema = z.object({
   totalLootSoldCash: z.number().nonnegative(),
   totalUpgradeSpend: z.number().nonnegative(),
   totalIncidentCashDelta: z.number(),
+  totalTreatmentSpend: z.number().nonnegative(),
   treasuryAfterThreeContracts: z.number().nullable(),
   deployableOperatorsAfterThreeContracts: z.number().nullable(),
   unsafeIncidentsInFirstThreeContracts: z.number().int().nonnegative(),
@@ -211,12 +215,13 @@ export const earlyCampaignSimulationSchema = z.object({
   meta: z.object({
     scenarioId: z.literal("canonical-opening-path"),
     canonicalScenarioPath: z.literal("content/bootstrap.ts#canonicalNewGameScenario"),
-    planPath: z.literal("docs/plans/economy-and-balance-harness-plan.md"),
-    targetEnvelopePath: z.literal("docs/plans/economy-target-envelope.md"),
+    planPath: z.literal("docs/plans/bodega-early-game-balance-followup.md"),
+    targetEnvelopePath: z.literal("docs/research/shipped-plans/economy-target-envelope.md"),
     seedCount: z.number().int().positive(),
     startSeed: z.number().int().nonnegative(),
     contractLimit: z.number().int().positive(),
     tickMinutes: z.number().int().positive(),
+    scenarioProfiles: z.array(z.enum(DEFAULT_SCENARIO_PROFILES)).min(1),
   }),
   aggregate: z.object({
     runCount: z.number().int().positive(),
@@ -291,6 +296,7 @@ interface SimulationOptions {
   contractLimit?: number;
   tickMinutes?: number;
   policyState?: Partial<PolicyState>;
+  scenarioProfiles?: readonly ScenarioProfile[];
 }
 
 interface PendingCycleStart {
@@ -309,6 +315,7 @@ interface PendingCycleStart {
 
 interface WorkingCycle extends z.infer<typeof contractCycleSchema> {
   resolved: boolean;
+  resolvedAtMinute: number | null;
 }
 
 interface OpenInjuryEpisode {
@@ -354,6 +361,7 @@ interface RunWorkingState {
   collapseReason: string | null;
   lastProgressSignature: string | null;
   stagnantIterations: number;
+  countedRaidSummaryIds: Set<string>;
 }
 
 function round2(value: number): number {
@@ -397,6 +405,19 @@ function combineStatuses(statuses: ThresholdStatus[]): ThresholdStatus {
   return [...statuses].sort((left, right) => statusWeight(right) - statusWeight(left))[0];
 }
 
+function getBossTimingAggregateStatus(values: number[]): ThresholdStatus {
+  if (values.length === 0) {
+    return "not_measurable";
+  }
+  if (values.some((value) => value < 6 || value > 9)) {
+    return "fail";
+  }
+  if (values.some((value) => value < 7 || value > 8)) {
+    return "out_of_band";
+  }
+  return "pass";
+}
+
 function getCheckStatus(
   checks: Record<string, z.infer<typeof thresholdCheckSchema>>,
   key: string,
@@ -404,11 +425,10 @@ function getCheckStatus(
   return checks[key]?.status ?? "not_measurable";
 }
 
-function rateForStatus(
-  runs: EarlyCampaignSimulationRun[],
-  selector: (run: EarlyCampaignSimulationRun) => ThresholdStatus,
+function rateForStatuses(
+  statuses: readonly ThresholdStatus[],
 ): z.infer<typeof aggregateMetricSchema> {
-  if (runs.length === 0) {
+  if (statuses.length === 0) {
     return {
       passRate: 0,
       outOfBandRate: 0,
@@ -417,23 +437,30 @@ function rateForStatus(
     };
   }
 
-  const mutable = {
+  const counts = {
     pass: 0,
     out_of_band: 0,
     fail: 0,
     not_measurable: 0,
   };
 
-  runs.forEach((run) => {
-    mutable[selector(run)] += 1;
+  statuses.forEach((status) => {
+    counts[status] += 1;
   });
 
   return {
-    passRate: round2((mutable.pass / runs.length) * 100),
-    outOfBandRate: round2((mutable.out_of_band / runs.length) * 100),
-    failRate: round2((mutable.fail / runs.length) * 100),
-    notMeasurableRate: round2((mutable.not_measurable / runs.length) * 100),
+    passRate: round2((counts.pass / statuses.length) * 100),
+    outOfBandRate: round2((counts.out_of_band / statuses.length) * 100),
+    failRate: round2((counts.fail / statuses.length) * 100),
+    notMeasurableRate: round2((counts.not_measurable / statuses.length) * 100),
   };
+}
+
+function rateForStatus(
+  runs: EarlyCampaignSimulationRun[],
+  selector: (run: EarlyCampaignSimulationRun) => ThresholdStatus,
+): z.infer<typeof aggregateMetricSchema> {
+  return rateForStatuses(runs.map(selector));
 }
 
 function classifyCycleOutcome(
@@ -472,6 +499,39 @@ function classifyScenario(
   );
   return distances[0].label;
 }
+
+const SCENARIO_PROFILE_CONFIG: Record<
+  ScenarioProfile,
+  {
+    contractPick: "best" | "middle" | "worst";
+    incidentChoice: "best" | "first" | "worst";
+    earliestUpgradeContract: number;
+    earliestRecruitContract: number;
+    recoveryWaitMaxHours: number;
+  }
+> = {
+  skilled: {
+    contractPick: "best",
+    incidentChoice: "best",
+    earliestUpgradeContract: 2,
+    earliestRecruitContract: 1,
+    recoveryWaitMaxHours: 8,
+  },
+  average: {
+    contractPick: "middle",
+    incidentChoice: "first",
+    earliestUpgradeContract: 3,
+    earliestRecruitContract: 2,
+    recoveryWaitMaxHours: 12,
+  },
+  struggling: {
+    contractPick: "worst",
+    incidentChoice: "worst",
+    earliestUpgradeContract: 3,
+    earliestRecruitContract: 3,
+    recoveryWaitMaxHours: 12,
+  },
+};
 
 function getIncomeUpgradeIdsFromView(phase1: Phase1View): string[] {
   return [
@@ -575,34 +635,37 @@ function getInjuryBand(severity: number): InjuryBand {
   return "severe";
 }
 
-function hasCompletedCoreOpeningPath(completedBeatIds: readonly string[]): boolean {
-  return completedBeatIds.includes(CORE_OPENING_COMPLETE_BEAT_ID);
-}
-
 function choosePostedContract(
   phase1: Phase1View,
-  options: { preferBoardOrder: boolean },
+  options: { preferBoardOrder: boolean; scenarioProfile: ScenarioProfile },
 ): Phase1View["postedContracts"][number] | null {
-  if (phase1.postedContracts.length === 0) {
+  const bidable = [...phase1.postedContracts].filter((posting) => posting.canBid);
+  if (bidable.length === 0) {
     return null;
   }
   if (options.preferBoardOrder) {
-    return phase1.postedContracts.find((posting) => posting.canBid) ?? null;
+    return bidable[0] ?? null;
   }
-  return (
-    [...phase1.postedContracts]
-      .filter((posting) => posting.canBid)
-      .sort((left, right) => {
-        const leftScore = left.risk - left.reward * 0.08;
-        const rightScore = right.risk - right.reward * 0.08;
-        return (
-          leftScore - rightScore ||
-          left.risk - right.risk ||
-          right.reward - left.reward ||
-          left.postingId.localeCompare(right.postingId)
-        );
-      })[0] ?? null
-  );
+  const ranked = bidable.sort((left, right) => {
+    const leftScore = left.risk - left.reward * 0.08;
+    const rightScore = right.risk - right.reward * 0.08;
+    return (
+      leftScore - rightScore ||
+      left.risk - right.risk ||
+      right.reward - left.reward ||
+      left.postingId.localeCompare(right.postingId)
+    );
+  });
+
+  switch (SCENARIO_PROFILE_CONFIG[options.scenarioProfile].contractPick) {
+    case "worst":
+      return ranked[ranked.length - 1] ?? null;
+    case "middle":
+      return ranked[Math.floor((ranked.length - 1) / 2)] ?? null;
+    case "best":
+    default:
+      return ranked[0] ?? null;
+  }
 }
 
 function evaluateIncidentChoice(templateId: string, choiceId: string): number {
@@ -671,7 +734,7 @@ function chooseIncidentChoice(
     kind: "incident";
     choices?: ReadonlyArray<{ choiceId: string; label: string }>;
   },
-  options: { preferFirstChoice: boolean },
+  options: { preferFirstChoice: boolean; scenarioProfile: ScenarioProfile },
 ): {
   choiceId: string;
   choiceLabel: string;
@@ -688,14 +751,29 @@ function chooseIncidentChoice(
     return buildIncidentChoiceResult(payload, firstChoice.choiceId, firstChoice.label);
   }
 
-  const choice = [...payload.choices].sort((left, right) => {
+  const ranked = [...payload.choices].sort((left, right) => {
     return (
       evaluateIncidentChoice(payload.templateId, right.choiceId) -
         evaluateIncidentChoice(payload.templateId, left.choiceId) ||
       left.choiceId.localeCompare(right.choiceId)
     );
-  })[0];
-  return buildIncidentChoiceResult(payload, choice.choiceId, choice.label);
+  });
+
+  switch (SCENARIO_PROFILE_CONFIG[options.scenarioProfile].incidentChoice) {
+    case "worst": {
+      const choice = ranked[ranked.length - 1] ?? ranked[0];
+      return buildIncidentChoiceResult(payload, choice.choiceId, choice.label);
+    }
+    case "first": {
+      const choice = payload.choices[0] ?? ranked[0];
+      return buildIncidentChoiceResult(payload, choice.choiceId, choice.label);
+    }
+    case "best":
+    default: {
+      const choice = ranked[0];
+      return buildIncidentChoiceResult(payload, choice.choiceId, choice.label);
+    }
+  }
 }
 
 function selectUpgradeActionById(
@@ -722,18 +800,16 @@ function selectUpgradeActionById(
 
 function chooseUpgradeAction(
   phase1: Phase1View,
-  options: { guidedOnly: boolean; preferredUpgradeId?: string },
+  options: {
+    guidedOnly: boolean;
+    preferredUpgradeId?: string;
+    scenarioProfile: ScenarioProfile;
+    completedContracts: number;
+  },
 ):
   | { type: "sim/purchase-building-upgrade"; upgradeId: string }
   | { type: "sim/purchase-room-upgrade"; roomId: string; upgradeId: string }
   | null {
-  if (options.preferredUpgradeId) {
-    const preferredAction = selectUpgradeActionById(phase1, options.preferredUpgradeId);
-    if (preferredAction) {
-      return preferredAction;
-    }
-  }
-
   const candidateUpgrades = INCOME_UPGRADE_IDS.filter((upgradeId) => {
     if (phase1.building.availableBuildingUpgradeIds.includes(upgradeId)) {
       return true;
@@ -746,10 +822,26 @@ function chooseUpgradeAction(
     return null;
   }
 
+  const preferredUpgradeId =
+    options.scenarioProfile === "skilled" ? options.preferredUpgradeId : undefined;
+  const selectedUpgradeId =
+    preferredUpgradeId && candidateUpgrades.includes(preferredUpgradeId)
+      ? preferredUpgradeId
+      : chosen;
+
   if (options.guidedOnly) {
     return null;
   }
-  return selectUpgradeActionById(phase1, chosen);
+  if (
+    options.completedContracts + 1 <
+    SCENARIO_PROFILE_CONFIG[options.scenarioProfile].earliestUpgradeContract
+  ) {
+    return null;
+  }
+  if (phase1.resources.cash - getUpgradeCost(selectedUpgradeId) <= CRITICAL_TREASURY_FLOOR) {
+    return null;
+  }
+  return selectUpgradeActionById(phase1, selectedUpgradeId);
 }
 
 function projectRecruitViability(phase1: Phase1View): {
@@ -757,7 +849,7 @@ function projectRecruitViability(phase1: Phase1View): {
   projectedTwoCycleTreasuryFloor: number;
   payrollIncreasePctOfGross: number;
 } | null {
-  const visitor = phase1.visitors[0];
+  const visitor = phase1.visitors.find((entry) => entry.canAccept !== false);
   if (!visitor || visitor.canAccept === false) {
     return null;
   }
@@ -787,8 +879,9 @@ function chooseRecruitDecision(
   phase1: Phase1View,
   run: EarlyCampaignSimulationRun,
   options: {
-    coreOpeningComplete: boolean;
+    hasAcceptedRecruit: boolean;
     majorRosterPressure: boolean;
+    scenarioProfile: ScenarioProfile;
   },
 ): {
   visitorId: string;
@@ -797,14 +890,20 @@ function chooseRecruitDecision(
   payrollIncreasePctOfGross: number;
 } | null {
   const viability = projectRecruitViability(phase1);
-  if (!viability || !options.coreOpeningComplete || !options.majorRosterPressure) {
+  if (!viability || run.completedContracts < 1) {
+    return null;
+  }
+
+  const evaluatingInitialRecruit = !options.hasAcceptedRecruit;
+  if (!evaluatingInitialRecruit && !options.majorRosterPressure) {
     return null;
   }
 
   const accept =
     viability.projectedTwoCycleTreasuryFloor > CRITICAL_TREASURY_FLOOR &&
     viability.payrollIncreasePctOfGross <= MAX_RECRUIT_PAYROLL_INCREASE_PCT &&
-    run.completedContracts >= 1;
+    run.completedContracts >=
+      SCENARIO_PROFILE_CONFIG[options.scenarioProfile].earliestRecruitContract;
 
   return {
     visitorId: viability.visitorId,
@@ -831,6 +930,31 @@ function getSellableLoot(
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
     .sort((left, right) => left.itemId.localeCompare(right.itemId));
+}
+
+function getEmergencySellableInventory(
+  phase2: Phase2View,
+): Array<{ itemId: string; quantity: number; sellPrice: number }> {
+  return phase2.inventory
+    .map((stack) => {
+      const item = templateRegistry.itemById.get(stack.itemId);
+      if (!item || item.sellPrice <= 0 || stack.quantity <= 0 || item.category === "loot") {
+        return null;
+      }
+      return {
+        itemId: stack.itemId,
+        quantity: stack.quantity,
+        sellPrice: item.sellPrice,
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+    .sort((left, right) => {
+      const quantityDelta = right.quantity - left.quantity;
+      if (quantityDelta !== 0) {
+        return quantityDelta;
+      }
+      return left.sellPrice - right.sellPrice || left.itemId.localeCompare(right.itemId);
+    });
 }
 
 function getDeploymentImpact(episode: {
@@ -865,6 +989,28 @@ function detectCollapse(phase1: Phase1View): string | null {
   return null;
 }
 
+function shouldWaitForRecoveryWindow(
+  phase1: Phase1View,
+  cycle: WorkingCycle | null,
+  scenarioProfile: ScenarioProfile,
+): boolean {
+  if (
+    !cycle?.resolved ||
+    cycle.index > 3 ||
+    cycle.resolvedAtMinute === null ||
+    phase1.contractLifecycle !== "resolved"
+  ) {
+    return false;
+  }
+
+  if (getRosterCapableOperatorCount(phase1) >= 2) {
+    return false;
+  }
+
+  const elapsedRecoveryHours = (phase1.clock.absoluteMinute - cycle.resolvedAtMinute) / 60;
+  return elapsedRecoveryHours < SCENARIO_PROFILE_CONFIG[scenarioProfile].recoveryWaitMaxHours;
+}
+
 function maybeRecordUpgradeAffordability(
   run: EarlyCampaignSimulationRun,
   working: RunWorkingState,
@@ -897,7 +1043,8 @@ function maybeRecordRecruitViability(
   working: RunWorkingState,
   phase1: Phase1View,
 ): void {
-  if (working.firstRecruitViableContract !== null || getCycleOrRunIndex(run, working) < 1) {
+  const cycleIndex = Math.max(1, getCycleOrRunIndex(run, working));
+  if (working.firstRecruitViableContract !== null) {
     return;
   }
 
@@ -910,7 +1057,7 @@ function maybeRecordRecruitViability(
     return;
   }
 
-  working.firstRecruitViableContract = getCycleOrRunIndex(run, working);
+  working.firstRecruitViableContract = cycleIndex;
   working.firstRecruitProjectedTwoCycleTreasuryFloor = viability.projectedTwoCycleTreasuryFloor;
   working.firstRecruitPayrollIncreasePctOfGross = viability.payrollIncreasePctOfGross;
 }
@@ -1077,6 +1224,7 @@ function observeState(
       }
     }
     working.currentCycle.resolved = true;
+    working.currentCycle.resolvedAtMinute = currentMinute;
     if (working.currentCycle.bossCleared && working.firstBossClearContract === null) {
       working.firstBossClearContract = working.currentCycle.index;
     }
@@ -1085,6 +1233,14 @@ function observeState(
   if (detectDeadlock(phase1, phase2)) {
     working.deadlocked = true;
   }
+
+  phase1.raidSummaries.forEach((summary) => {
+    if (working.countedRaidSummaryIds.has(summary.id)) {
+      return;
+    }
+    working.countedRaidSummaryIds.add(summary.id);
+    run.totalTreatmentSpend += Math.max(0, summary.treatmentCost ?? 0);
+  });
 
   const collapseReason = detectCollapse(phase1);
   if (collapseReason) {
@@ -1096,12 +1252,14 @@ function observeState(
     run.completedContracts,
     working.currentCycle?.index ?? 0,
     phase1.contractLifecycle,
+    phase1.clock.absoluteMinute,
     phase1.resources.cash,
     phase1.resources.reputation,
     phase1.activeRaids.length,
     phase1.raidSummaries.length,
     phase1.visitors.length,
     phase1.activeInterruption?.instanceId ?? "",
+    simulation.runtimeState.guidanceState.activeBeatId ?? "",
     simulation.runtimeState.activeEncounter?.status ?? "",
   ].join("|");
 
@@ -1539,9 +1697,10 @@ function evaluateRun(run: EarlyCampaignSimulationRun): z.infer<typeof runEvaluat
 
 async function simulateSingleRun(
   seed: number,
+  scenarioProfile: ScenarioProfile,
   options: Required<SimulationOptions>,
 ): Promise<EarlyCampaignSimulationRun> {
-  const snapshot = createNewGameWorldSnapshot(templateRegistry);
+  const snapshot = createNewGameWorldSnapshot(templateRegistry, undefined, { seed });
   snapshot.policies = normalizePolicyState(options.policyState);
   const simulation = createAscensionSimulation(snapshot, templateRegistry, {
     simulationSeed: seed,
@@ -1549,6 +1708,7 @@ async function simulateSingleRun(
 
   const run: EarlyCampaignSimulationRun = {
     seed,
+    scenarioProfile,
     inferredScenario: "average",
     completedContracts: 0,
     contractCycles: [],
@@ -1572,6 +1732,7 @@ async function simulateSingleRun(
     totalLootSoldCash: 0,
     totalUpgradeSpend: 0,
     totalIncidentCashDelta: 0,
+    totalTreatmentSpend: 0,
     treasuryAfterThreeContracts: null,
     deployableOperatorsAfterThreeContracts: null,
     unsafeIncidentsInFirstThreeContracts: 0,
@@ -1616,6 +1777,7 @@ async function simulateSingleRun(
     collapseReason: null,
     lastProgressSignature: null,
     stagnantIterations: 0,
+    countedRaidSummaryIds: new Set(),
   };
 
   simulation.tick(60_000);
@@ -1624,7 +1786,6 @@ async function simulateSingleRun(
   for (let iteration = 0; iteration < 10_000; iteration += 1) {
     const { phase1, phase2 } = observeState(simulation, run, working);
     const guidanceState = simulation.runtimeState.guidanceState;
-    const coreOpeningComplete = hasCompletedCoreOpeningPath(guidanceState.completedBeatIds);
     const preferFirstIncidentChoice =
       guidanceState.activeBeatId === "guidance/opening/first-incident";
     const activeOperators = phase1.operators.filter(
@@ -1667,6 +1828,7 @@ async function simulateSingleRun(
       ) {
         const decision = chooseIncidentChoice(phase1.activeInterruption.payload, {
           preferFirstChoice: preferFirstIncidentChoice,
+          scenarioProfile,
         });
         if (decision) {
           run.incidents.push({
@@ -1779,6 +1941,22 @@ async function simulateSingleRun(
     }
 
     if (
+      phase1.contractLifecycle === "bidding" &&
+      !phase1.postedContracts.some((posting) => posting.canBid)
+    ) {
+      const liquidationStack = getEmergencySellableInventory(phase2)[0];
+      if (liquidationStack) {
+        const quantityToSell = liquidationStack.quantity > 1 ? liquidationStack.quantity - 1 : 1;
+        simulation.dispatch({
+          type: "sim/sell-item",
+          itemId: liquidationStack.itemId,
+          quantity: quantityToSell,
+        });
+        continue;
+      }
+    }
+
+    if (
       (activeBeatId === "guidance/opening/staffing-and-rooms" ||
         guidanceState.completedBeatIds.includes("guidance/opening/loot-and-market")) &&
       phase1.rooms.some(
@@ -1818,6 +1996,8 @@ async function simulateSingleRun(
       const upgradeAction = chooseUpgradeAction(phase1, {
         guidedOnly: false,
         preferredUpgradeId: GUIDED_FIRST_UPGRADE_ID,
+        scenarioProfile,
+        completedContracts: run.completedContracts,
       });
       if (upgradeAction) {
         const cost = getUpgradeCost(upgradeAction.upgradeId);
@@ -1846,10 +2026,12 @@ async function simulateSingleRun(
 
     if (phase1.contractLifecycle !== "active") {
       const recruitDecision = chooseRecruitDecision(phase1, run, {
-        coreOpeningComplete,
+        hasAcceptedRecruit: working.firstRecruitAcceptedContract !== null,
         majorRosterPressure,
+        scenarioProfile,
       });
-      const visitor = phase1.visitors[0];
+      const visitor =
+        phase1.visitors.find((entry) => entry.id === recruitDecision?.visitorId) ?? null;
       if (recruitDecision && visitor) {
         run.recruits.push({
           contractIndex: getCycleOrRunIndex(run, working),
@@ -1886,6 +2068,10 @@ async function simulateSingleRun(
     }
 
     if (phase1.contractLifecycle === "resolved") {
+      if (shouldWaitForRecoveryWindow(phase1, working.currentCycle, scenarioProfile)) {
+        simulation.tick(options.tickMinutes * 60 * 1000);
+        continue;
+      }
       simulation.dispatch({ type: "sim/advance-contract" });
       continue;
     }
@@ -1897,8 +2083,8 @@ async function simulateSingleRun(
       }
 
       const posting = choosePostedContract(phase1, {
-        preferBoardOrder:
-          activeBeatId === FIRST_CONTRACT_CHOICE_BEAT_ID || run.completedContracts < 3,
+        preferBoardOrder: activeBeatId === FIRST_CONTRACT_CHOICE_BEAT_ID,
+        scenarioProfile,
       });
       if (posting) {
         working.pendingCycleStart = {
@@ -1963,6 +2149,7 @@ async function simulateSingleRun(
             dailyGrossIncomeAtStart: start.dailyGrossIncomeAtStart,
             payrollBurdenAtStartPct: start.payrollBurdenAtStartPct,
             resolved: false,
+            resolvedAtMinute: null,
           };
         }
         working.pendingCycleStart = null;
@@ -2045,33 +2232,33 @@ async function simulateSingleRun(
   return earlyCampaignSimulationRunSchema.parse(run);
 }
 
-function summarizeScenarioRate(
+function summarizeProfileRate(
   runs: EarlyCampaignSimulationRun[],
   predicate: (run: EarlyCampaignSimulationRun) => boolean,
 ): z.infer<typeof aggregateScenarioRateSchema> {
-  const byScenario: Record<ScenarioLabel, EarlyCampaignSimulationRun[]> = {
+  const byProfile: Record<ScenarioProfile, EarlyCampaignSimulationRun[]> = {
     skilled: [],
     average: [],
     struggling: [],
   };
   runs.forEach((run) => {
-    byScenario[run.inferredScenario].push(run);
+    byProfile[run.scenarioProfile].push(run);
   });
 
   return {
     skilled:
-      byScenario.skilled.length === 0
+      byProfile.skilled.length === 0
         ? 0
-        : round2((byScenario.skilled.filter(predicate).length / byScenario.skilled.length) * 100),
+        : round2((byProfile.skilled.filter(predicate).length / byProfile.skilled.length) * 100),
     average:
-      byScenario.average.length === 0
+      byProfile.average.length === 0
         ? 0
-        : round2((byScenario.average.filter(predicate).length / byScenario.average.length) * 100),
+        : round2((byProfile.average.filter(predicate).length / byProfile.average.length) * 100),
     struggling:
-      byScenario.struggling.length === 0
+      byProfile.struggling.length === 0
         ? 0
         : round2(
-            (byScenario.struggling.filter(predicate).length / byScenario.struggling.length) * 100,
+            (byProfile.struggling.filter(predicate).length / byProfile.struggling.length) * 100,
           ),
   };
 }
@@ -2092,18 +2279,19 @@ export async function buildEarlyCampaignSimulationSuite(
     contractLimit: options.contractLimit ?? DEFAULT_CONTRACT_LIMIT,
     tickMinutes: options.tickMinutes ?? DEFAULT_TICK_MINUTES,
     policyState: normalizePolicyState(options.policyState),
+    scenarioProfiles: [...(options.scenarioProfiles ?? ["skilled"])],
   };
 
   await deferredSimulationSystemsReady;
   await deferredSimulationGuidanceReady;
 
   const runs: EarlyCampaignSimulationRun[] = [];
-  for (
-    let seed = resolvedOptions.startSeed;
-    seed < resolvedOptions.startSeed + resolvedOptions.seedCount;
-    seed += 1
-  ) {
-    runs.push(await simulateSingleRun(seed, resolvedOptions));
+  for (let runIndex = 0; runIndex < resolvedOptions.seedCount; runIndex += 1) {
+    const scenarioProfile =
+      resolvedOptions.scenarioProfiles[runIndex % resolvedOptions.scenarioProfiles.length];
+    const seed =
+      resolvedOptions.startSeed + Math.floor(runIndex / resolvedOptions.scenarioProfiles.length);
+    runs.push(await simulateSingleRun(seed, scenarioProfile, resolvedOptions));
   }
 
   const finalTreasuries = runs.map((run) => run.finalTreasury);
@@ -2146,9 +2334,69 @@ export async function buildEarlyCampaignSimulationSuite(
         .map((cycle) => cycle.payrollBurdenAtStartPct),
     ),
   );
+  const casualtyPressureAggregate = rateForStatus(
+    runs,
+    (run) => run.evaluation.m5CasualtyPressure.overall,
+  );
   const meanRaidCountPerContract = average(
     runs.flatMap((run) => run.contractCycles.map((cycle) => cycle.raidCount)),
   );
+  const openingProfileRuns: EarlyCampaignSimulationRun[] = [];
+  for (const scenarioProfile of DEFAULT_SCENARIO_PROFILES) {
+    for (
+      let seed = resolvedOptions.startSeed;
+      seed < resolvedOptions.startSeed + OPENING_STABILITY_PROFILE_SEED_COUNT;
+      seed += 1
+    ) {
+      openingProfileRuns.push(
+        await simulateSingleRun(seed, scenarioProfile, {
+          ...resolvedOptions,
+          contractLimit: 3,
+        }),
+      );
+    }
+  }
+
+  const profileOpeningTreasuryRates = summarizeProfileRate(
+    openingProfileRuns,
+    (run) => (run.treasuryAfterThreeContracts ?? 0) > CRITICAL_TREASURY_FLOOR,
+  );
+  const profileOpeningDeployableRates = summarizeProfileRate(
+    openingProfileRuns,
+    (run) => (run.deployableOperatorsAfterThreeContracts ?? 0) >= 2,
+  );
+  const m7AggregateStatuses = [
+    evaluateBoundedMetric(profileOpeningTreasuryRates.average, {
+      passMin: 95.01,
+      failMin: 90,
+      target: "> 95% average-profile runs above $50 after three contracts",
+      detail: "Average-profile opening treasury stability target.",
+    }).status,
+    evaluateBoundedMetric(profileOpeningTreasuryRates.struggling, {
+      passMin: 80.01,
+      failMin: 70,
+      target: "> 80% struggling-profile runs above $50 after three contracts",
+      detail: "Struggling-profile opening treasury stability target.",
+    }).status,
+    evaluateBoundedMetric(profileOpeningDeployableRates.skilled, {
+      passMin: 99.01,
+      failMin: 95,
+      target: "> 99% skilled-profile runs keep 2 deployable operators after three contracts",
+      detail: "Skilled-profile roster stability target.",
+    }).status,
+    evaluateBoundedMetric(profileOpeningDeployableRates.average, {
+      passMin: 99.01,
+      failMin: 95,
+      target: "> 99% average-profile runs keep 2 deployable operators after three contracts",
+      detail: "Average-profile roster stability target.",
+    }).status,
+    evaluateBoundedMetric(profileOpeningDeployableRates.struggling, {
+      passMin: 99.01,
+      failMin: 95,
+      target: "> 99% struggling-profile runs keep 2 deployable operators after three contracts",
+      detail: "Struggling-profile roster stability target.",
+    }).status,
+  ];
   const lootVarianceShare =
     variance(finalTreasuries) <= 0
       ? 0
@@ -2186,12 +2434,13 @@ export async function buildEarlyCampaignSimulationSuite(
     meta: {
       scenarioId: "canonical-opening-path",
       canonicalScenarioPath: "content/bootstrap.ts#canonicalNewGameScenario",
-      planPath: "docs/plans/economy-and-balance-harness-plan.md",
-      targetEnvelopePath: "docs/plans/economy-target-envelope.md",
+      planPath: "docs/plans/bodega-early-game-balance-followup.md",
+      targetEnvelopePath: "docs/research/shipped-plans/economy-target-envelope.md",
       seedCount: resolvedOptions.seedCount,
       startSeed: resolvedOptions.startSeed,
       contractLimit: resolvedOptions.contractLimit,
       tickMinutes: resolvedOptions.tickMinutes,
+      scenarioProfiles: resolvedOptions.scenarioProfiles,
     },
     aggregate: {
       runCount: runs.length,
@@ -2250,11 +2499,11 @@ export async function buildEarlyCampaignSimulationSuite(
       },
       firstBossContact: {
         meanContract: average(firstBossContactValues),
-        status: firstBossContactValues.length > 0 ? "pass" : "not_measurable",
+        status: getBossTimingAggregateStatus(firstBossContactValues),
       },
       firstBossClear: {
         meanContract: average(firstBossClearValues),
-        status: firstBossClearValues.length > 0 ? "pass" : "not_measurable",
+        status: getBossTimingAggregateStatus(firstBossClearValues),
       },
       metrics: {
         m1TreasuryFlow: rateForStatus(runs, (run) => run.evaluation.m1TreasuryFlow.overall),
@@ -2266,18 +2515,12 @@ export async function buildEarlyCampaignSimulationSuite(
         ),
         m5CasualtyPressure: rateForStatus(runs, (run) => run.evaluation.m5CasualtyPressure.overall),
         m6DeadlockRate: rateForStatus(runs, (run) => run.evaluation.m6DeadlockRate.overall),
-        m7OpeningStability: rateForStatus(runs, (run) => run.evaluation.m7OpeningStability.overall),
+        m7OpeningStability: rateForStatuses(m7AggregateStatuses),
         m8RelocationPacing: rateForStatus(runs, (run) => run.evaluation.m8RelocationPacing.overall),
       },
-      scenarioDeadlockRates: summarizeScenarioRate(runs, (run) => !run.deadlocked),
-      scenarioOpeningTreasuryRates: summarizeScenarioRate(
-        runs,
-        (run) => (run.treasuryAfterThreeContracts ?? 0) > CRITICAL_TREASURY_FLOOR,
-      ),
-      scenarioOpeningDeployableRates: summarizeScenarioRate(
-        runs,
-        (run) => (run.deployableOperatorsAfterThreeContracts ?? 0) >= 2,
-      ),
+      scenarioDeadlockRates: summarizeProfileRate(openingProfileRuns, (run) => !run.deadlocked),
+      scenarioOpeningTreasuryRates: profileOpeningTreasuryRates,
+      scenarioOpeningDeployableRates: profileOpeningDeployableRates,
       watchItems: {
         payrollBurdenStress: {
           status:
@@ -2309,10 +2552,17 @@ export async function buildEarlyCampaignSimulationSuite(
           measured: runs.filter((run) => run.unsafeIncidentsInFirstThreeContracts > 0).length,
         },
         injuryPressureNoTreatmentCost: {
-          status: combineStatuses(runs.map((run) => run.evaluation.m5CasualtyPressure.overall)),
-          detail:
-            "Direct treatment spend remains zero in all runs. Injury pressure is measured through downtime, deployability, and collapse pressure only.",
-          measured: 0,
+          status:
+            runs.some((run) => run.totalTreatmentSpend > 0) &&
+            casualtyPressureAggregate.failRate <= 5
+              ? "pass"
+              : runs.some((run) => run.totalTreatmentSpend > 0)
+                ? "out_of_band"
+                : "fail",
+          detail: runs.some((run) => run.totalTreatmentSpend > 0)
+            ? `Direct treatment spend is now active. Mean treatment/restock spend is $${average(runs.map((run) => run.totalTreatmentSpend)) ?? 0} per run.`
+            : "No direct treatment spend was recorded in the sampled runs.",
+          measured: average(runs.map((run) => run.totalTreatmentSpend)) ?? 0,
         },
         relocationReadiness: {
           status: runs.some((run) => run.relocationReadyContract !== null)
@@ -2347,16 +2597,17 @@ export function renderEarlyCampaignSimulationReport(suite: EarlyCampaignSimulati
   lines.push("# Early Campaign Deterministic Simulation Report");
   lines.push("");
   lines.push(
-    `Canonical opening-path headless simulation across ${suite.meta.seedCount} seeds using ECS runtime commands and browser-aligned opening policy choices, with no browser dependency.`,
+    `Canonical opening-path headless simulation across ${suite.meta.seedCount} canonical runs, plus a seeded opening-stability profile sample, using ECS runtime commands and browser-aligned opening policy choices with no browser dependency.`,
   );
   lines.push("");
   lines.push("## Run Envelope");
   lines.push("");
   lines.push(
-    `- Seeds: ${suite.meta.startSeed} to ${suite.meta.startSeed + suite.meta.seedCount - 1}`,
+    `- Canonical seeds: ${suite.meta.startSeed} to ${suite.meta.startSeed + suite.meta.seedCount - 1}`,
   );
   lines.push(`- Contract limit per run: ${suite.meta.contractLimit}`);
   lines.push(`- Tick size: ${suite.meta.tickMinutes} in-game minutes`);
+  lines.push(`- Canonical policy profile: ${suite.meta.scenarioProfiles.join(", ")}`);
   lines.push(`- Completed runs: ${suite.aggregate.completedRunCount}/${suite.aggregate.runCount}`);
   lines.push(`- Deadlock rate: ${suite.aggregate.deadlockRate}%`);
   lines.push(`- Collapse rate: ${suite.aggregate.collapseRate}%`);
@@ -2436,7 +2687,7 @@ export function renderEarlyCampaignSimulationReport(suite: EarlyCampaignSimulati
   lines.push("## Scenario Rates");
   lines.push("");
   lines.push(
-    "| Scenario Bucket | No Deadlock | Treasury > $50 After 3 Contracts | Deployable >= 2 After 3 Contracts |",
+    "| Scenario Profile | No Deadlock | Treasury > $50 After 3 Contracts | Deployable >= 2 After 3 Contracts |",
   );
   lines.push("| --- | ---: | ---: | ---: |");
   lines.push(

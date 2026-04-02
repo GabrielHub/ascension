@@ -13,8 +13,8 @@ describe("early campaign economy ledger", () => {
     expect(() => earlyCampaignEconomyLedgerSchema.parse(ledger)).not.toThrow();
     expect(ledger.meta.startingState.treasury).toBe(400);
     expect(ledger.meta.startingState.dailyStorefrontIncomeBase).toBe(50);
-    expect(ledger.meta.startingState.dailyPayroll).toBe(81);
-    expect(ledger.meta.startingState.dailyNetCashBeforeUpgrades).toBe(-31);
+    expect(ledger.meta.startingState.dailyPayroll).toBe(73);
+    expect(ledger.meta.startingState.dailyNetCashBeforeUpgrades).toBe(-23);
   });
 
   it("covers the required early-game sources and sinks", () => {
@@ -38,6 +38,6 @@ describe("early campaign economy ledger", () => {
     expect(artifacts.report).toContain("# Early Campaign Economy Report");
     expect(artifacts.report).toContain("## Contract Board Envelope");
     expect(artifacts.report).toContain("## Phase 2 Gaps");
-    expect(artifacts.report).toContain("No standalone treatment or repair spend system");
+    expect(artifacts.report).toContain("Direct treatment spend is present but still coarse");
   });
 });

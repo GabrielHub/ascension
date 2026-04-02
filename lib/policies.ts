@@ -307,10 +307,10 @@ const RECOVERY_TRIAGE_CONFIG = {
     stressMoraleContributionMultiplier: 1.2,
   },
   balanced_rotation: {
-    injuryRaidThreshold: 60,
+    injuryRaidThreshold: 75,
     recoveryBlockScoreModifier: 0,
-    recoveryRateMultiplier: 1,
-    fatigueRaidPenaltyThreshold: 80,
+    recoveryRateMultiplier: 1.2,
+    fatigueRaidPenaltyThreshold: 95,
     stressMoraleContributionMultiplier: 1,
   },
   full_recovery: {

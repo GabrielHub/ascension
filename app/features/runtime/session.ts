@@ -182,6 +182,7 @@ export interface RuntimeSessionCommands {
   ): Promise<void>;
   buyItem(input: Omit<Extract<SimCommand, { type: "sim/buy-item" }>, "type">): Promise<void>;
   sellItem(input: Omit<Extract<SimCommand, { type: "sim/sell-item" }>, "type">): Promise<void>;
+  equipItem(input: Omit<Extract<SimCommand, { type: "sim/equip-item" }>, "type">): Promise<void>;
   autoAssignAccessory(
     input: Omit<Extract<SimCommand, { type: "sim/auto-assign-accessory" }>, "type">,
   ): Promise<void>;
@@ -237,6 +238,11 @@ function createNewSaveGame(
     guildNameFallback: `Guild Slot ${getSlotNumber(slotId)}`,
   });
 
+  const seed = Math.max(
+    2,
+    stableStringHash(`${slotId}:${timestamp}:${identity.guildName}:${identity.playerName}`),
+  );
+
   return {
     slotId,
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
@@ -247,7 +253,7 @@ function createNewSaveGame(
       createdAt: timestamp,
       lastPlayedAt: timestamp,
     },
-    world: createNewGameWorldSnapshot(templateRegistry, identity),
+    world: createNewGameWorldSnapshot(templateRegistry, identity, { seed }),
   };
 }
 
@@ -470,6 +476,13 @@ function resolveCuesForCommand(
         getInventoryQuantity(beforeWorldSnapshot, command.itemId)
         ? ["hq.market.sell"]
         : [];
+    }
+    case "sim/equip-item": {
+      const previousAssignment = getEquipmentAssignment(beforeWorldSnapshot, command.operatorId);
+      const nextAssignment = getEquipmentAssignment(afterWorldSnapshot, command.operatorId);
+      const previousItemId = previousAssignment?.[`${command.slot}Id`];
+      const nextItemId = nextAssignment?.[`${command.slot}Id`];
+      return previousItemId !== nextItemId && (nextItemId?.length ?? 0) > 0 ? ["hq.equip"] : [];
     }
     case "sim/auto-assign-accessory": {
       const previousAssignment = getEquipmentAssignment(beforeWorldSnapshot, command.operatorId);
@@ -1768,6 +1781,13 @@ function createRuntimeSession(
     sellItem(input) {
       return commands.dispatch({
         type: "sim/sell-item",
+        ...input,
+      });
+    },
+
+    equipItem(input) {
+      return commands.dispatch({
+        type: "sim/equip-item",
         ...input,
       });
     },

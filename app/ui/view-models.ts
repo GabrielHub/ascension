@@ -61,6 +61,11 @@ export interface GameCallbacks {
   setActiveFloor: (floorIndex: number) => void;
   buyItem: (itemId: string) => void;
   sellItem: (itemId: string, quantity: number) => void;
+  equipItem: (
+    operatorId: string,
+    slot: "weapon" | "outfitOverlay" | "accessory",
+    itemId: string,
+  ) => void;
   autoAssignAccessory: (operatorId: string) => void;
   unequipItem: (operatorId: string, slot: "weapon" | "outfitOverlay" | "accessory") => void;
   bidContract: (postingId: string) => void;
@@ -553,11 +558,15 @@ export interface ContractSiteViewModel {
   location: string;
   rank: string;
   bossDefeated: boolean;
+  missionCompleted: boolean;
   contractLost: boolean;
   threat: number;
   intel: number;
   reward: number;
   explorationProgress: number;
+  closureProgress: number;
+  closureThreshold: number;
+  requiresBossClear: boolean;
   bossAvailable: boolean;
   knownTraits: readonly string[];
   enemyHints: readonly string[];
@@ -600,7 +609,7 @@ export interface ContractResultViewModel {
   siteConceptName: string;
   location: string;
   rank: string;
-  outcome: "boss_defeated" | "contract_lost";
+  outcome: "mission_complete" | "boss_defeated" | "contract_lost";
   totalRaids: number;
   totalCashEarned: number;
   totalReputationEarned: number;
@@ -1292,11 +1301,15 @@ export function buildOpsViewFromPhase1(
           location: getLocationLabel(view.contractSite.location),
           rank: (view.contractSite.rank ?? "f").toUpperCase(),
           bossDefeated: view.contractSite.bossDefeated,
+          missionCompleted: view.contractSite.missionCompleted ?? false,
           contractLost: view.contractSite.contractLost,
           threat: view.contractSite.threat,
           intel: view.contractSite.intel,
           reward: view.contractSite.reward,
           explorationProgress: view.contractSite.explorationProgress ?? 0,
+          closureProgress: view.contractSite.closureProgress ?? 0,
+          closureThreshold: view.contractSite.closureThreshold ?? 100,
+          requiresBossClear: view.contractSite.requiresBossClear ?? false,
           bossAvailable: view.contractSite.bossAvailable ?? false,
           knownTraits: siteSurface.knownTraits,
           enemyHints: siteSurface.enemyHints,

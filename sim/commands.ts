@@ -18,6 +18,7 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/assign-staff",
   "sim/buy-item",
   "sim/sell-item",
+  "sim/equip-item",
   "sim/auto-assign-accessory",
   "sim/unequip-item",
   "sim/encounter-start",
@@ -125,6 +126,12 @@ export type SimCommand =
       quantity: number;
     }
   | {
+      type: "sim/equip-item";
+      operatorId: string;
+      slot: "weapon" | "outfitOverlay" | "accessory";
+      itemId: string;
+    }
+  | {
       type: "sim/auto-assign-accessory";
       operatorId: string;
     }
@@ -222,7 +229,7 @@ export type SimCommand =
     }
   | {
       type: "sim/dev-force-contract-end";
-      outcome: "boss_defeated" | "contract_lost";
+      outcome: "mission_complete" | "boss_defeated" | "contract_lost";
     };
 
 export interface SimCommandQueue {

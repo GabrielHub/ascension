@@ -25,6 +25,7 @@ function createBaseSave(): PersistedSaveGame {
       lastPlayedAt: "2026-03-20T12:00:00.000Z",
     },
     world: {
+      simulationSeed: 0,
       guild: {
         guildName: "Bodega Guild",
         playerName: "Boss",
@@ -373,6 +374,24 @@ describe("save codec", () => {
     expect(normalized.world.visitors).toBeUndefined();
     expect(normalized.world.raidOpportunities).toBeUndefined();
     expect(normalized.world.activeEvents).toBeUndefined();
+  });
+
+  it("persists simulationSeed through storage preparation and hydration", () => {
+    const base = createBaseSave();
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        simulationSeed: 4242,
+      },
+    });
+
+    expect(normalized.world.simulationSeed).toBe(4242);
+
+    const hydrated = hydratePersistedSaveGame(normalized);
+
+    expect(hydrated.save.world.simulationSeed).toBe(4242);
   });
 
   it("migrates schema 2 saves by deriving raid membership and flattening legacy outcomes", () => {
@@ -937,14 +956,18 @@ describe("save codec", () => {
       location: "district/lower-east-side",
       rank: "f",
       bossDefeated: false,
+      missionCompleted: false,
       contractLost: false,
       threat: 80,
       intel: 44,
       reward: 150,
       securedAtTick: 480,
       explorationProgress: 32,
+      closureProgress: 0,
+      closureThreshold: 100,
       bossIntelProgress: 18,
       bossPressureProgress: 24,
+      requiresBossClear: false,
       bossAvailable: false,
     });
     expect(normalized.world.postedContracts).toEqual([

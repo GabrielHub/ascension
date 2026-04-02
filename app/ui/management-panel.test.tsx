@@ -27,6 +27,7 @@ const callbacks: GameCallbacks = {
   setActiveFloor: () => {},
   buyItem: () => {},
   sellItem: () => {},
+  equipItem: () => {},
   autoAssignAccessory: () => {},
   unequipItem: () => {},
   bidContract: () => {},

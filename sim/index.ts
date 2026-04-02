@@ -1,4 +1,8 @@
-import { bootstrapScenario, canonicalNewGameScenario } from "content/bootstrap";
+import {
+  bootstrapScenario,
+  buildRandomizedNewGameScenario,
+  canonicalNewGameScenario,
+} from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
 import { DEFAULT_GUILD_NAME, normalizeGameIdentity, type GameIdentity } from "lib/game-identity";
 import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
@@ -11,20 +15,22 @@ import {
   type Phase1RuntimeWorldSnapshot,
 } from "./runtime";
 
-const BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID: Record<string, Phase1OperatorSnapshot["appearance"]> = {
+const OPERATOR_APPEARANCE_PRESET_BY_ID: Record<string, string> = {
+  "operator/rose-vega": "vera-004",
+  "operator/milo-hart": "dax-008",
+};
+
+const BOOTSTRAP_OPERATOR_VISIBLE_GEAR_BY_ID: Record<
+  string,
+  NonNullable<Phase1OperatorSnapshot["appearance"]["visibleGear"]>
+> = {
   "operator/rose-vega": {
-    presetId: "vera-004",
-    visibleGear: {
-      weaponPartId: "weapon/tactical-rifle",
-      outfitOverlayPartId: "outfit-overlay/tactical-vest",
-    },
+    weaponPartId: "weapon/tactical-rifle",
+    outfitOverlayPartId: "outfit-overlay/tactical-vest",
   },
   "operator/milo-hart": {
-    presetId: "dax-008",
-    visibleGear: {
-      weaponPartId: "weapon/dual-daggers",
-      accessoryPartId: "accessory/comm-earpiece",
-    },
+    weaponPartId: "weapon/dual-daggers",
+    accessoryPartId: "accessory/comm-earpiece",
   },
 };
 
@@ -40,7 +46,11 @@ function buildScenarioWorldSnapshot(
   scenario: typeof bootstrapScenario,
   registry: TemplateRegistry,
   identityInput?: Partial<GameIdentity>,
+  options?: {
+    includeBootstrapEquipment?: boolean;
+  },
 ): WorldSnapshot {
+  const includeBootstrapEquipment = options?.includeBootstrapEquipment ?? false;
   const identity = normalizeGameIdentity(identityInput, {
     guildNameFallback: DEFAULT_GUILD_NAME,
   });
@@ -107,11 +117,11 @@ function buildScenarioWorldSnapshot(
       injury: { ...operator.injury },
       assignment: { ...operator.assignment },
       appearance: {
-        presetId: BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]?.presetId ?? "kael-001",
-        ...(BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]?.visibleGear
+        presetId: OPERATOR_APPEARANCE_PRESET_BY_ID[operator.id] ?? "kael-001",
+        ...(includeBootstrapEquipment && BOOTSTRAP_OPERATOR_VISIBLE_GEAR_BY_ID[operator.id]
           ? {
               visibleGear: {
-                ...BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id]!.visibleGear,
+                ...BOOTSTRAP_OPERATOR_VISIBLE_GEAR_BY_ID[operator.id],
               },
             }
           : {}),
@@ -153,30 +163,32 @@ function buildScenarioWorldSnapshot(
       satisfactionLevel: Math.round((operator.morale.current + operator.loyalty.current) / 2),
     })),
     inventoryStacks: scenario.inventory.map((entry) => ({ ...entry })),
-    equipmentAssignments: scenario.operators
-      .map((operator) => {
-        const appearance = BOOTSTRAP_OPERATOR_APPEARANCE_BY_ID[operator.id];
-        if (!appearance?.visibleGear) {
-          return null;
-        }
+    equipmentAssignments: includeBootstrapEquipment
+      ? scenario.operators
+          .map((operator) => {
+            const visibleGear = BOOTSTRAP_OPERATOR_VISIBLE_GEAR_BY_ID[operator.id];
+            if (!visibleGear) {
+              return null;
+            }
 
-        return {
-          operatorId: operator.id,
-          weaponId: appearance.visibleGear.weaponPartId ?? "",
-          outfitOverlayId: appearance.visibleGear.outfitOverlayPartId ?? "",
-          accessoryId: appearance.visibleGear.accessoryPartId ?? "",
-        };
-      })
-      .filter(
-        (
-          entry,
-        ): entry is {
-          operatorId: string;
-          weaponId: string;
-          outfitOverlayId: string;
-          accessoryId: string;
-        } => entry !== null,
-      ),
+            return {
+              operatorId: operator.id,
+              weaponId: visibleGear.weaponPartId ?? "",
+              outfitOverlayId: visibleGear.outfitOverlayPartId ?? "",
+              accessoryId: visibleGear.accessoryPartId ?? "",
+            };
+          })
+          .filter(
+            (
+              entry,
+            ): entry is {
+              operatorId: string;
+              weaponId: string;
+              outfitOverlayId: string;
+              accessoryId: string;
+            } => entry !== null,
+          )
+      : [],
   } satisfies Phase1RuntimeWorldSnapshot;
 
   return snapshot;
@@ -187,7 +199,9 @@ function getAbsoluteMinute(snapshot: WorldSnapshot): number {
 }
 
 export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry);
+  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry, undefined, {
+    includeBootstrapEquipment: true,
+  });
   const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
   return simulation.getWorldSnapshot();
@@ -196,9 +210,17 @@ export function createBootstrapWorldSnapshot(registry: TemplateRegistry): WorldS
 export function createNewGameWorldSnapshot(
   registry: TemplateRegistry,
   identity?: Partial<GameIdentity>,
+  options?: { seed?: number },
 ): WorldSnapshot {
-  const bootstrap = buildScenarioWorldSnapshot(canonicalNewGameScenario, registry, identity);
-  const simulation = createAscensionSimulation(bootstrap, registry);
+  const seed = options?.seed ?? 1;
+  const bootstrap = buildScenarioWorldSnapshot(
+    seed === 1 ? canonicalNewGameScenario : buildRandomizedNewGameScenario(seed),
+    registry,
+    identity,
+  );
+  const simulation = createAscensionSimulation(bootstrap, registry, {
+    simulationSeed: seed,
+  });
   simulation.tick(0);
   const snapshot = simulation.getWorldSnapshot();
   // Set opening guidance AFTER the tick so the guidance system does not
@@ -230,9 +252,16 @@ export function createNewGameWorldSnapshot(
 }
 
 export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSnapshot {
-  const bootstrap = buildScenarioWorldSnapshot(bootstrapScenario, registry, {
-    guildName: "Sandbox Guild",
-  });
+  const bootstrap = buildScenarioWorldSnapshot(
+    bootstrapScenario,
+    registry,
+    {
+      guildName: "Sandbox Guild",
+    },
+    {
+      includeBootstrapEquipment: true,
+    },
+  );
   const simulation = createAscensionSimulation(bootstrap, registry);
   simulation.tick(0);
   const world = simulation.getWorldSnapshot();
@@ -258,14 +287,18 @@ export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSna
       location: posting.location,
       rank: posting.rank,
       bossDefeated: false,
+      missionCompleted: false,
       contractLost: false,
       threat: posting.threat,
       intel: posting.intel,
       reward: posting.reward,
       securedAtTick,
       explorationProgress: 0,
+      closureProgress: 0,
+      closureThreshold: 100,
       bossIntelProgress: 0,
       bossPressureProgress: 0,
+      requiresBossClear: false,
       bossAvailable: false,
     },
     postedContracts: [],

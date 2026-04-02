@@ -285,6 +285,17 @@ describe("phase 1 runtime", () => {
     ).toThrow(/Missing runtime operator snapshot/);
   });
 
+  it("preserves simulationSeed through seeded new-game snapshot restore", () => {
+    const snapshot = createNewGameWorldSnapshot(templateRegistry, undefined, { seed: 4242 });
+
+    expect(snapshot.simulationSeed).toBe(4242);
+
+    const restored = createAscensionSimulation(snapshot, templateRegistry);
+
+    expect(restored.runtimeState.simulationSeed).toBe(4242);
+    expect(restored.getWorldSnapshot().simulationSeed).toBe(4242);
+  });
+
   it("applies building and room upgrades through the locked commands", () => {
     const roomUpgradeSimulation = createBootstrapSimulation(templateRegistry);
     roomUpgradeSimulation.dispatch({
@@ -1706,7 +1717,7 @@ describe("phase 1 runtime", () => {
     expect(fogAfter?.completedRaidRevealBase).toBe(50);
   });
 
-  it("requires consecutive failures to lose a contract", () => {
+  it("does not lose a contract when failures are interrupted by a successful objective push", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 
     snapshot.contractSite = {
@@ -1832,7 +1843,7 @@ describe("phase 1 runtime", () => {
 
     simulation.tick(1000);
 
-    expect(simulation.getPhase1View().contractSite?.contractLost).toBe(false);
+    expect(simulation.getPhase1View().contractResult?.outcome).toBe("mission_complete");
   });
 
   it("visitor generation only produces field-role recruits", () => {

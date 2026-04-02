@@ -640,11 +640,15 @@ export interface Phase1RuntimeView {
     location: string;
     rank: string;
     bossDefeated: boolean;
+    missionCompleted: boolean;
     contractLost: boolean;
     threat: number;
     intel: number;
     reward: number;
     explorationProgress: number;
+    closureProgress: number;
+    closureThreshold: number;
+    requiresBossClear: boolean;
     bossAvailable: boolean;
   } | null;
   contractResult: {
@@ -654,7 +658,7 @@ export interface Phase1RuntimeView {
     siteConceptName: string;
     location: string;
     rank: string;
-    outcome: "boss_defeated" | "contract_lost";
+    outcome: "mission_complete" | "boss_defeated" | "contract_lost";
     totalRaids: number;
     totalCashEarned: number;
     totalReputationEarned: number;
@@ -1371,7 +1375,7 @@ function createRuntimeState(
   const teamIds = (snapshot.recurringTeams ?? []).map((t) => t.id);
 
   return createBaseSimRuntimeState({
-    simulationSeed: options?.simulationSeed ?? 0,
+    simulationSeed: options?.simulationSeed ?? snapshot.simulationSeed ?? 0,
     nextRoomSequence: nextSequenceFromIds(roomIds),
     nextOperatorSequence: nextSequenceFromIds(operatorIds),
     nextOpportunitySequence: nextSequenceFromIds(opportunityIds),
@@ -1768,9 +1772,13 @@ function applyWorldSnapshot(
         ...runtimeSnapshot.contractSite,
         siteConceptId: runtimeSnapshot.contractSite.siteConceptId ?? "",
         rank: (runtimeSnapshot.contractSite.rank as ContractRank) ?? "f",
+        missionCompleted: runtimeSnapshot.contractSite.missionCompleted ?? false,
         explorationProgress: runtimeSnapshot.contractSite.explorationProgress ?? 0,
+        closureProgress: runtimeSnapshot.contractSite.closureProgress ?? 0,
+        closureThreshold: runtimeSnapshot.contractSite.closureThreshold ?? 100,
         bossIntelProgress: runtimeSnapshot.contractSite.bossIntelProgress ?? 0,
         bossPressureProgress: runtimeSnapshot.contractSite.bossPressureProgress ?? 0,
+        requiresBossClear: runtimeSnapshot.contractSite.requiresBossClear ?? false,
         bossAvailable: runtimeSnapshot.contractSite.bossAvailable ?? false,
       }
     : null;
@@ -1780,6 +1788,7 @@ function applyWorldSnapshot(
     runtimeSnapshot.contractLifecycle ??
     (runtimeSnapshot.contractSite &&
     !runtimeSnapshot.contractSite.bossDefeated &&
+    !runtimeSnapshot.contractSite.missionCompleted &&
     !runtimeSnapshot.contractSite.contractLost
       ? "active"
       : runtimeSnapshot.contractSite
@@ -1801,7 +1810,10 @@ function applyWorldSnapshot(
     ? {
         ...runtimeSnapshot.contractResult,
         rank: runtimeSnapshot.contractResult.rank as ContractRank,
-        outcome: runtimeSnapshot.contractResult.outcome as "boss_defeated" | "contract_lost",
+        outcome: runtimeSnapshot.contractResult.outcome as
+          | "mission_complete"
+          | "boss_defeated"
+          | "contract_lost",
       }
     : null;
 
@@ -2268,6 +2280,7 @@ function applyWorldSnapshot(
       ).length;
 
       return {
+        simulationSeed: runtimeState.simulationSeed,
         guild: {
           guildName: GuildState.guildName[guildEntity],
           playerName: GuildState.playerName[guildEntity],
@@ -2925,11 +2938,15 @@ function applyWorldSnapshot(
             location: cs.location,
             rank: cs.rank ?? "f",
             bossDefeated: cs.bossDefeated,
+            missionCompleted: cs.missionCompleted ?? false,
             contractLost: cs.contractLost,
             threat: cs.threat,
             intel: cs.intel,
             reward: cs.reward,
             explorationProgress: cs.explorationProgress ?? 0,
+            closureProgress: cs.closureProgress ?? 0,
+            closureThreshold: cs.closureThreshold ?? 100,
+            requiresBossClear: cs.requiresBossClear ?? false,
             bossAvailable: cs.bossAvailable ?? false,
           };
         })(),

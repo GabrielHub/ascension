@@ -142,6 +142,7 @@ describe("buildGameCallbacks", () => {
         setActiveFloor: vi.fn(),
         buyItem: vi.fn(),
         sellItem: vi.fn(),
+        equipItem: vi.fn(),
         autoAssignAccessory: vi.fn(),
         unequipItem: vi.fn(),
         dispatch: vi.fn(),

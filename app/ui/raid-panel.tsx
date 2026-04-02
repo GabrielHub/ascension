@@ -60,7 +60,13 @@ function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
 // ── Contract Result Summary ──────────────────────────────────────────────
 
 function ContractResultCard({ result }: { result: ContractResultViewModel }) {
-  const isVictory = result.outcome === "boss_defeated";
+  const isVictory = result.outcome !== "contract_lost";
+  const title =
+    result.outcome === "boss_defeated"
+      ? "Boss Defeated"
+      : result.outcome === "mission_complete"
+        ? "Contract Complete"
+        : "Contract Lost";
 
   return (
     <div
@@ -85,7 +91,7 @@ function ContractResultCard({ result }: { result: ContractResultViewModel }) {
             className="text-xs font-medium uppercase tracking-[0.18em]"
             style={{ color: isVictory ? "var(--color-gold)" : "var(--color-ember)" }}
           >
-            {isVictory ? "Contract Complete" : "Contract Lost"}
+            {title}
           </h3>
           <p className="mt-1.5 font-display text-base font-semibold text-silver-bright">
             {result.siteConceptName}
@@ -405,7 +411,24 @@ function ContractResolutionSurface({
 // ── Active Contract Status (enhanced) ────────────────────────────────────
 
 function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
-  const isEnded = contract.bossDefeated || contract.contractLost;
+  const isEnded = contract.bossDefeated || contract.missionCompleted || contract.contractLost;
+  const progressPct =
+    contract.closureThreshold <= 0
+      ? 0
+      : Math.min(100, (contract.closureProgress / contract.closureThreshold) * 100);
+  const statusLabel = contract.bossDefeated
+    ? "Boss Defeated"
+    : contract.missionCompleted
+      ? "Objective Secured"
+      : contract.contractLost
+        ? "Contract Lost"
+        : "Active";
+  const statusTip =
+    contract.bossDefeated || contract.missionCompleted
+      ? RAID_TIPS.contractWon
+      : contract.contractLost
+        ? RAID_TIPS.contractLost
+        : RAID_TIPS.contractActive;
 
   return (
     <div className="glass-card p-4" data-testid="contract-status">
@@ -430,29 +453,17 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
               Rank {contract.rank.toUpperCase()}
             </span>
           </Tooltip>
-          <Tooltip
-            content={
-              contract.bossDefeated
-                ? RAID_TIPS.contractWon
-                : contract.contractLost
-                  ? RAID_TIPS.contractLost
-                  : RAID_TIPS.contractActive
-            }
-          >
+          <Tooltip content={statusTip}>
             <span
               className={`badge ${
-                contract.bossDefeated
+                contract.bossDefeated || contract.missionCompleted
                   ? "badge-gold"
                   : contract.contractLost
                     ? "badge-ember"
                     : "badge-slate"
               }`}
             >
-              {contract.bossDefeated
-                ? "Boss Defeated"
-                : contract.contractLost
-                  ? "Contract Lost"
-                  : "Active"}
+              {statusLabel}
             </span>
           </Tooltip>
         </div>
@@ -491,17 +502,14 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs">
               <Tooltip content={RAID_TIPS.revealProgress}>
-                <span className="text-gold/60">Exploration</span>
+                <span className="text-gold/60">
+                  {contract.requiresBossClear ? "Objective Prep" : "Objective Progress"}
+                </span>
               </Tooltip>
-              <span className="tabular-nums text-silver/60">
-                {Math.round(contract.explorationProgress)}%
-              </span>
+              <span className="tabular-nums text-silver/60">{Math.round(progressPct)}%</span>
             </div>
             <div className="mt-1 h-1 overflow-hidden rounded-full bg-void/80">
-              <div
-                className={progressBarFillClass}
-                style={{ width: `${Math.min(100, contract.explorationProgress)}%` }}
-              />
+              <div className={progressBarFillClass} style={{ width: `${progressPct}%` }} />
             </div>
           </div>
 
@@ -554,9 +562,11 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                 </Tooltip>
               </div>
               <p className="mt-2 text-sm text-silver-bright">
-                {contract.bossName ?? "Boss identity unconfirmed"}
+                {contract.requiresBossClear
+                  ? (contract.bossName ?? "Boss identity unconfirmed")
+                  : "Ordinary clearance contract"}
               </p>
-              {contract.bossTags.length > 0 && (
+              {contract.requiresBossClear && contract.bossTags.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {contract.bossTags.map((tag) => {
                     const meta = getNarrativeTagMeta(tag);
@@ -568,7 +578,7 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                   })}
                 </div>
               )}
-              {contract.bossWeaknesses.length > 0 && (
+              {contract.requiresBossClear && contract.bossWeaknesses.length > 0 && (
                 <div className="mt-2">
                   <p className="text-xs uppercase tracking-[0.12em] text-frost/75">Weaknesses</p>
                   <div className="mt-1 flex flex-wrap gap-1.5">
@@ -586,9 +596,11 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
                 </div>
               )}
               <p className="mt-2 text-sm leading-relaxed text-silver/60">
-                {contract.bossAvailable
-                  ? "The boss route is open. Enter the site expecting a decisive fight."
-                  : "Explore further before expecting the boss route to appear."}
+                {contract.requiresBossClear
+                  ? contract.bossAvailable
+                    ? "The boss route is open. Enter the site expecting a decisive fight."
+                    : "Secure more of the contract objective before expecting the boss route to appear."
+                  : "This job is scoped as ordinary contract work. Secure the objective, get out, and keep the guild moving."}
               </p>
             </div>
           </div>

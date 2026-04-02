@@ -11,7 +11,11 @@ import {
 import type { RuntimeSession } from "app/features/runtime";
 import type { EventLogEntry, HqViewModel, OperationsViewModel } from "app/ui/view-models";
 import type { FocusPayload } from "render";
-import { createAscensionSimulation, createBootstrapWorldSnapshot } from "sim";
+import {
+  createAscensionSimulation,
+  createBootstrapWorldSnapshot,
+  createNewGameWorldSnapshot,
+} from "sim";
 import { OPENING_BEAT_IDS } from "sim/systems/guidance-beats";
 
 type ActiveTab = "hq" | "operations";
@@ -56,7 +60,7 @@ export interface BrowserTestSnapshot {
     contractLifecycle: RuntimeSession["phase1View"]["contractLifecycle"];
     contractResult: {
       contractSiteId: string;
-      outcome: "boss_defeated" | "contract_lost";
+      outcome: "mission_complete" | "boss_defeated" | "contract_lost";
       totalRaids: number;
     } | null;
     contractSiteId: string | null;
@@ -108,6 +112,7 @@ export interface BrowserTestSnapshot {
     livingOperatorIds: string[];
     operatorCapacity: number;
     operatorIds: string[];
+    operatorRoleTags: string[];
     staffIds: string[];
     vacancyCount: number;
     visitorIds: string[];
@@ -364,12 +369,32 @@ async function seedRelocationReadySave(slotId: SaveSlotId): Promise<void> {
   await saveStorage.writeSaveGame(save);
 }
 
+async function seedNewGameSave(slotId: SaveSlotId, seed: number): Promise<void> {
+  const world = createNewGameWorldSnapshot(templateRegistry, undefined, { seed });
+  const timestamp = new Date().toISOString();
+  const save: PersistedSaveGame = {
+    slotId,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+    compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+    metadata: {
+      guildName: world.guild.guildName,
+      playerName: world.guild.playerName,
+      createdAt: timestamp,
+      lastPlayedAt: timestamp,
+    },
+    world,
+  };
+
+  await saveStorage.writeSaveGame(save);
+}
+
 declare global {
   interface Window {
     __ASCENSION_BROWSER_TEST__?: {
       getSnapshot(): BrowserTestSnapshot | null;
       listSlots(): ReturnType<typeof listStartScreenSaveSlots>;
       resetSaveSlots(): Promise<void>;
+      seedNewGameSave(slotId?: SaveSlotId, seed?: number): Promise<void>;
       seedRelocationReadySave(slotId?: SaveSlotId): Promise<void>;
     };
   }
@@ -562,6 +587,7 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
       livingOperatorIds,
       operatorCapacity: hq.rosterPressure.operatorCapacity,
       operatorIds: hq.operators.map((operator) => operator.id),
+      operatorRoleTags: hq.operators.map((operator) => operator.roleTag),
       staffIds: hq.staff.map((staff) => staff.id),
       vacancyCount: hq.rosterPressure.vacancyCount,
       visitorIds: hq.visitors.map((visitor) => visitor.id),
@@ -647,6 +673,9 @@ export function registerBrowserTestDriver(): void {
     },
     async seedRelocationReadySave(slotId = "slot/1") {
       await seedRelocationReadySave(slotId);
+    },
+    async seedNewGameSave(slotId = "slot/1", seed = 1) {
+      await seedNewGameSave(slotId, seed);
     },
   };
 }

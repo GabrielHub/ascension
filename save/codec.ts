@@ -683,6 +683,9 @@ function parseContractSiteSnapshot(
         ? { rank: "f" }
         : { rank: expectString(record.rank, `${path}.rank`) }),
       bossDefeated: expectBoolean(record.bossDefeated, `${path}.bossDefeated`),
+      ...(record.missionCompleted === undefined
+        ? { missionCompleted: false }
+        : { missionCompleted: expectBoolean(record.missionCompleted, `${path}.missionCompleted`) }),
       contractLost: expectBoolean(record.contractLost, `${path}.contractLost`),
       threat: expectNumber(record.threat, `${path}.threat`),
       intel: expectNumber(record.intel, `${path}.intel`),
@@ -695,6 +698,16 @@ function parseContractSiteSnapshot(
               record.explorationProgress,
               `${path}.explorationProgress`,
             ),
+          }),
+      ...(record.closureProgress === undefined
+        ? { closureProgress: 0 }
+        : {
+            closureProgress: expectNumber(record.closureProgress, `${path}.closureProgress`),
+          }),
+      ...(record.closureThreshold === undefined
+        ? { closureThreshold: 100 }
+        : {
+            closureThreshold: expectNumber(record.closureThreshold, `${path}.closureThreshold`),
           }),
       ...(record.bossIntelProgress === undefined
         ? { bossIntelProgress: 0 }
@@ -709,6 +722,11 @@ function parseContractSiteSnapshot(
               `${path}.bossPressureProgress`,
             ),
           }),
+      ...(record.requiresBossClear === undefined
+        ? { requiresBossClear: false }
+        : {
+            requiresBossClear: expectBoolean(record.requiresBossClear, `${path}.requiresBossClear`),
+          }),
       ...(record.bossAvailable === undefined
         ? { bossAvailable: false }
         : { bossAvailable: expectBoolean(record.bossAvailable, `${path}.bossAvailable`) }),
@@ -716,9 +734,13 @@ function parseContractSiteSnapshot(
     changed:
       record.siteConceptId === undefined ||
       record.rank === undefined ||
+      record.missionCompleted === undefined ||
       record.explorationProgress === undefined ||
+      record.closureProgress === undefined ||
+      record.closureThreshold === undefined ||
       record.bossIntelProgress === undefined ||
       record.bossPressureProgress === undefined ||
+      record.requiresBossClear === undefined ||
       record.bossAvailable === undefined,
   };
 }
@@ -808,8 +830,12 @@ function parseContractResultSnapshot(
 
   const record = expectRecord(value, path);
   const outcome = expectString(record.outcome, `${path}.outcome`);
-  if (outcome !== "boss_defeated" && outcome !== "contract_lost") {
-    fail(`${path}.outcome`, 'must be "boss_defeated" or "contract_lost".');
+  if (
+    outcome !== "mission_complete" &&
+    outcome !== "boss_defeated" &&
+    outcome !== "contract_lost"
+  ) {
+    fail(`${path}.outcome`, 'must be "mission_complete", "boss_defeated", or "contract_lost".');
   }
 
   return {
@@ -1487,6 +1513,9 @@ function parseRaidSummarySnapshot(
     result: parseRaidResult(record.result, `${path}.result`),
     reputationDelta: expectNumber(record.reputationDelta, `${path}.reputationDelta`),
     cashDelta: expectNumber(record.cashDelta, `${path}.cashDelta`),
+    ...(record.treatmentCost === undefined
+      ? {}
+      : { treatmentCost: expectNumber(record.treatmentCost, `${path}.treatmentCost`) }),
     operatorOutcomes: parsedOperatorOutcomes.map(({ _changed: _ignored, ...outcome }) => outcome),
     narrativeTags:
       narrativeTags === undefined ? [] : expectStringArray(narrativeTags, `${path}.narrativeTags`),
@@ -1714,6 +1743,10 @@ function parseWorldSnapshot(
   const originalRecord = expectRecord(value, path);
   const legacyContent = sanitizeLegacyContentReferences(originalRecord);
   const record = legacyContent.record;
+  const simulationSeed =
+    record.simulationSeed === undefined
+      ? 0
+      : expectInteger(record.simulationSeed, `${path}.simulationSeed`);
   const appearanceContext = createOperatorAppearanceParseContext(options);
   const operators = parseOptionalCollection(
     record.operators,
@@ -2044,6 +2077,7 @@ function parseWorldSnapshot(
 
   return {
     world: {
+      simulationSeed,
       guild: guild.guild,
       time: parseWorldTimeSnapshot(record.time, `${path}.time`),
       building: building.building,
@@ -2110,6 +2144,7 @@ function parseWorldSnapshot(
         : {}),
     },
     changed:
+      record.simulationSeed === undefined ||
       building.changed ||
       rooms.some((room) => room.changed) ||
       operators.changed ||

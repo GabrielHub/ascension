@@ -41,7 +41,7 @@ export interface ContractResultSummary {
   siteConceptId: string;
   location: string;
   rank: ContractRank;
-  outcome: "boss_defeated" | "contract_lost";
+  outcome: "mission_complete" | "boss_defeated" | "contract_lost";
   totalRaids: number;
   totalCashEarned: number;
   totalReputationEarned: number;
@@ -100,6 +100,7 @@ export interface RaidSummaryRecord {
   intel: number;
   reward: number;
   cohesion: number;
+  treatmentCost?: number;
   operatorOutcomes: ActiveRaidResolutionPacket["operatorOutcomes"];
   narrativeTags: string[];
   intelMismatchTags: string[];
@@ -122,6 +123,8 @@ export interface ContractSiteState {
   rank: ContractRank;
   /** Whether the dungeon boss has been defeated. */
   bossDefeated: boolean;
+  /** Whether the ordinary contract objective has been completed. */
+  missionCompleted: boolean;
   /** Whether the contract has been lost. */
   contractLost: boolean;
   /** Threat level for this site. */
@@ -134,10 +137,16 @@ export interface ContractSiteState {
   securedAtTick: number;
   /** Site progress: exploration completion 0-100. */
   explorationProgress: number;
+  /** Site progress toward ordinary contract closure 0-threshold. */
+  closureProgress: number;
+  /** Progress threshold required to resolve the current contract. */
+  closureThreshold: number;
   /** Site progress: boss intel gathered 0-100. */
   bossIntelProgress: number;
   /** Site progress: boss pressure from successful raids 0-100. */
   bossPressureProgress: number;
+  /** Whether this contract requires a boss clear instead of ordinary closure. */
+  requiresBossClear: boolean;
   /** Whether the boss encounter is available for commitment. */
   bossAvailable: boolean;
 }

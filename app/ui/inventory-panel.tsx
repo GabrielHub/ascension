@@ -41,6 +41,8 @@ export function InventoryPanel({
   }
 
   const sellPriceByItemId = new Map(marketItems.map((mi) => [mi.itemId, mi.sellPrice]));
+  const availableWeapons = grouped.get("weapons") ?? [];
+  const availableOutfits = grouped.get("outfits") ?? [];
 
   if (inventory.length === 0 && equipment.length === 0) {
     return (
@@ -168,6 +170,48 @@ export function InventoryPanel({
                   )}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
+                  {availableWeapons.map((item) => (
+                    <button
+                      key={`${assignment.operatorId}:weapon:${item.itemId}`}
+                      type="button"
+                      className="btn-ghost px-1.5 py-0.5 text-sm"
+                      onClick={() =>
+                        callbacks.equipItem(assignment.operatorId, "weapon", item.itemId)
+                      }
+                      title={`Equip ${item.name}${item.quantity > 1 ? ` (x${item.quantity})` : ""}`}
+                    >
+                      equip {item.name}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn-ghost px-1.5 py-0.5 text-sm"
+                    onClick={() => callbacks.unequipItem(assignment.operatorId, "weapon")}
+                    disabled={!assignment.weaponId}
+                  >
+                    clear weapon
+                  </button>
+                  {availableOutfits.map((item) => (
+                    <button
+                      key={`${assignment.operatorId}:outfit:${item.itemId}`}
+                      type="button"
+                      className="btn-ghost px-1.5 py-0.5 text-sm"
+                      onClick={() =>
+                        callbacks.equipItem(assignment.operatorId, "outfitOverlay", item.itemId)
+                      }
+                      title={`Equip ${item.name}${item.quantity > 1 ? ` (x${item.quantity})` : ""}`}
+                    >
+                      equip {item.name}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn-ghost px-1.5 py-0.5 text-sm"
+                    onClick={() => callbacks.unequipItem(assignment.operatorId, "outfitOverlay")}
+                    disabled={!assignment.outfitOverlayId}
+                  >
+                    clear outfit
+                  </button>
                   <button
                     type="button"
                     className="btn-ghost px-1.5 py-0.5 text-sm"
