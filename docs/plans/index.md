@@ -21,6 +21,7 @@ Before working any plan:
 
 - the narrative presenter system is shipped and no longer belongs in the active plans queue
 - `bodega-closure` is complete and archived under `docs/research/shipped-plans/`; its shipped status now lives in code, tests, and the roadmap instead of this queue.
+- `bodega-early-game-balance-followup` is complete; its shipped status now lives in runtime code, deterministic reports, and Playwright coverage instead of this queue.
 - the HQ unified static-scene system is shipped; future HQ asset production and the scene builder must reuse that runtime contract instead of adding alternate placement paths
 - the state-owned audio contract is shipped; further audio changes should extend the existing shell/session/sim ownership model instead of reopening a broad remediation pass
 - `ai-content-layer` is intentionally last.

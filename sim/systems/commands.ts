@@ -32,6 +32,7 @@ import { buyItem, sellItem, getMarketPriceForItem, type MarketItemView } from ".
 import {
   addToInventory,
   autoSelectAccessory,
+  equipItem,
   getInventoryCount,
   removeFromInventory,
   unequipItem,
@@ -1589,6 +1590,21 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       pushRuntimeEvent(context, {
         kind: "resource_swing",
         message: `Sold ${command.quantity} ${itemName}${command.quantity === 1 ? "" : "s"} for $${pricing.sellPrice * command.quantity}`,
+        accent: "gold",
+      });
+      return;
+    }
+    case "sim/equip-item": {
+      if (!equipItem(context, command.operatorId, command.slot, command.itemId)) {
+        return;
+      }
+      const itemName = context.registry.itemById.get(command.itemId)?.name ?? command.itemId;
+      const operatorEntity = findOperatorEntityById(context, command.operatorId);
+      const operatorName =
+        operatorEntity !== undefined ? OperatorIdentity.name[operatorEntity] : command.operatorId;
+      pushRuntimeEvent(context, {
+        kind: "resource_swing",
+        message: `${operatorName} equipped ${itemName}`,
         accent: "gold",
       });
       return;

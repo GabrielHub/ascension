@@ -27,13 +27,13 @@ export interface PostedContractEconomyBudget extends ContractEconomyBudget {
 export type RaidEconomyResult = "success" | "failure" | "mixed";
 
 export const CONTRACT_RANK_CONFIG: Record<ContractRank, ContractRankBudgetConfig> = {
-  f: { threatBase: 34, rewardBase: 54, paceMultiplier: 1.0 },
-  e: { threatBase: 48, rewardBase: 80, paceMultiplier: 1.15 },
-  d: { threatBase: 60, rewardBase: 120, paceMultiplier: 1.3 },
-  c: { threatBase: 72, rewardBase: 170, paceMultiplier: 1.5 },
-  b: { threatBase: 82, rewardBase: 230, paceMultiplier: 1.7 },
-  a: { threatBase: 90, rewardBase: 300, paceMultiplier: 2.0 },
-  s: { threatBase: 95, rewardBase: 400, paceMultiplier: 2.5 },
+  f: { threatBase: 34, rewardBase: 42, paceMultiplier: 1.0 },
+  e: { threatBase: 48, rewardBase: 64, paceMultiplier: 1.1 },
+  d: { threatBase: 60, rewardBase: 94, paceMultiplier: 1.25 },
+  c: { threatBase: 72, rewardBase: 138, paceMultiplier: 1.4 },
+  b: { threatBase: 82, rewardBase: 188, paceMultiplier: 1.6 },
+  a: { threatBase: 90, rewardBase: 250, paceMultiplier: 1.85 },
+  s: { threatBase: 95, rewardBase: 330, paceMultiplier: 2.2 },
 };
 
 export const POSTED_CONTRACT_VARIANCE = {
@@ -154,11 +154,11 @@ export function computeRaidOpportunityEconomyBudget(
 export function computeRaidReputationDelta(result: RaidEconomyResult): number {
   switch (result) {
     case "success":
-      return 7;
+      return 5;
     case "mixed":
-      return 2;
+      return 1;
     case "failure":
-      return -5;
+      return -6;
   }
 }
 
@@ -169,18 +169,26 @@ export function computeRaidCashDelta(
 ): number {
   switch (result) {
     case "success":
-      return Math.round(reward);
+      return Math.round(reward * 0.7);
     case "mixed":
-      return Math.round(reward * 0.55);
+      return Math.round(reward * 0.36);
     case "failure":
-      return -Math.round(risk * 0.5);
+      return -Math.round(risk * 0.68);
   }
 }
 
 export function computeBossCompletionCashBonus(reward: number, rank: ContractRank): number {
-  return Math.round(reward * 1.5 * CONTRACT_RANK_CONFIG[rank].paceMultiplier);
+  return Math.round(reward * 1.15 * CONTRACT_RANK_CONFIG[rank].paceMultiplier);
 }
 
 export function computeBossCompletionReputationBonus(): number {
   return 15;
+}
+
+export function computeMissionCompletionCashBonus(reward: number, rank: ContractRank): number {
+  return Math.round(reward * 0.55 * CONTRACT_RANK_CONFIG[rank].paceMultiplier);
+}
+
+export function computeMissionCompletionReputationBonus(): number {
+  return 4;
 }

@@ -688,97 +688,275 @@ export const bootstrapScenario = {
   ],
 } satisfies BootstrapScenario;
 
+export const previewBootstrapScenario = bootstrapScenario;
+
 const CANONICAL_OPERATOR_IDS = new Set([
   "operator/rose-vega",
   "operator/milo-hart",
   "operator/jin-tanaka",
   "operator/vera-santos",
 ]);
-
 const CANONICAL_STAFF_IDS = new Set(["staff/aina", "staff/boris"]);
-const CANONICAL_RELATIONSHIP_OPERATOR_IDS = new Set(["operator/rose-vega", "operator/milo-hart"]);
+const OPERATOR_POOL_BY_ROLE = {
+  "role:field_lead": ["operator/rose-vega", "operator/vera-santos"],
+  "role:scout": ["operator/milo-hart", "operator/ash-okafor"],
+  "role:medic": ["operator/jin-tanaka", "operator/lena-park"],
+} as const;
+const VISITOR_ID_BY_SOURCE_ID = {
+  "visitor/preview-1": "visitor/nika",
+  "visitor/preview-2": "visitor/dax",
+  "visitor/preview-3": "visitor/quinn",
+} as const satisfies Record<string, string>;
 
-export const previewBootstrapScenario = bootstrapScenario;
+type BootstrapOperator = BootstrapScenario["operators"][number];
+type BootstrapRelationship = BootstrapScenario["operatorRelationships"][number];
+type BootstrapStaff = BootstrapScenario["staff"][number];
+type BootstrapVisitor = BootstrapScenario["visitors"][number];
 
-export const canonicalNewGameScenario = {
-  guild: {
-    ...bootstrapScenario.guild,
-    treasury: 400,
-  },
-  time: {
-    ...bootstrapScenario.time,
-  },
-  building: {
-    ...bootstrapScenario.building,
-  },
-  rooms: bootstrapScenario.rooms.map((room) => ({
+function createScenarioRng(seed: number): () => number {
+  // Keep the opening-scenario generator sequence-stable. Replacing this with
+  // sim/uncertainty's SeededRng would silently reshuffle seeded new-game starts.
+  let state = seed >>> 0;
+  if (state === 0) {
+    state = 1;
+  }
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x1_0000_0000;
+  };
+}
+
+function shuffleWithRng<T>(values: readonly T[], next: () => number): T[] {
+  const clone = [...values];
+  for (let index = clone.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(next() * (index + 1));
+    [clone[index], clone[swapIndex]] = [clone[swapIndex], clone[index]];
+  }
+  return clone;
+}
+
+function cloneRoomSeed(room: BootstrapRoomSeed): BootstrapRoomSeed {
+  return {
     ...room,
     reservedFootprint: { ...room.reservedFootprint },
     ...(room.activeFootprint ? { activeFootprint: { ...room.activeFootprint } } : {}),
-  })),
-  operators: bootstrapScenario.operators
-    .filter((operator) => CANONICAL_OPERATOR_IDS.has(operator.id))
-    .map((operator) => ({
-      ...operator,
-      identity: { ...operator.identity },
-      preferences: {
-        ...operator.preferences,
-        preferredMissionTags: [...operator.preferences.preferredMissionTags],
-        preferredPartnerIds:
-          operator.id === "operator/jin-tanaka" || operator.id === "operator/vera-santos"
-            ? []
-            : [...operator.preferences.preferredPartnerIds],
+  };
+}
+
+function cloneOperator(operator: BootstrapOperator, selectedOperatorIds?: ReadonlySet<string>) {
+  const preferredPartnerIds = selectedOperatorIds
+    ? operator.preferences.preferredPartnerIds.filter((partnerId) =>
+        selectedOperatorIds.has(partnerId),
+      )
+    : [...operator.preferences.preferredPartnerIds];
+
+  return {
+    ...operator,
+    identity: { ...operator.identity },
+    preferences: {
+      ...operator.preferences,
+      preferredMissionTags: [...operator.preferences.preferredMissionTags],
+      preferredPartnerIds,
+    },
+    schedule: { ...operator.schedule },
+    needs: { ...operator.needs },
+    morale: { ...operator.morale },
+    loyalty: { ...operator.loyalty },
+    injury: { ...operator.injury },
+    assignment: { ...operator.assignment },
+    combat: {
+      ...operator.combat,
+      traits: [...operator.combat.traits],
+      kit: {
+        ...operator.combat.kit,
+        passiveIds: [...operator.combat.kit.passiveIds],
       },
-      schedule: { ...operator.schedule },
-      needs: { ...operator.needs },
-      morale:
-        operator.id === "operator/vera-santos"
-          ? {
-              current: 70,
-              baseline: 65,
-            }
-          : { ...operator.morale },
-      loyalty: { ...operator.loyalty },
-      injury: { ...operator.injury },
-      assignment: { ...operator.assignment },
-      combat: {
-        ...operator.combat,
-        traits: [...operator.combat.traits],
-        kit: {
-          ...operator.combat.kit,
-          passiveIds: [...operator.combat.kit.passiveIds],
-        },
-        baseStats: { ...operator.combat.baseStats },
+      baseStats: { ...operator.combat.baseStats },
+    },
+  } satisfies BootstrapOperator;
+}
+
+function cloneRelationship(relationship: BootstrapRelationship): BootstrapRelationship {
+  return {
+    ...relationship,
+    historyTags: [...relationship.historyTags],
+  };
+}
+
+function cloneStaff(staff: BootstrapStaff): BootstrapStaff {
+  return {
+    ...staff,
+    assignment: { ...staff.assignment },
+  };
+}
+
+function cloneVisitor(visitor: BootstrapVisitor): BootstrapVisitor {
+  return {
+    ...visitor,
+    id: VISITOR_ID_BY_SOURCE_ID[visitor.id] ?? visitor.id,
+  };
+}
+
+function buildCanonicalSeedScenario(): BootstrapScenario {
+  const selectedOperatorIds = new Set(CANONICAL_OPERATOR_IDS);
+  return {
+    guild: {
+      ...bootstrapScenario.guild,
+      treasury: 400,
+    },
+    time: {
+      ...bootstrapScenario.time,
+    },
+    building: {
+      ...bootstrapScenario.building,
+    },
+    rooms: bootstrapScenario.rooms.map(cloneRoomSeed),
+    operators: bootstrapScenario.operators
+      .filter((operator) => CANONICAL_OPERATOR_IDS.has(operator.id))
+      .map((operator) => {
+        const clone = cloneOperator(operator, selectedOperatorIds);
+        if (clone.id === "operator/vera-santos") {
+          clone.morale = { current: 70, baseline: 65 };
+        }
+        return clone;
+      }),
+    operatorRelationships: bootstrapScenario.operatorRelationships
+      .filter(
+        (relationship) =>
+          relationship.operatorAId === "operator/milo-hart" &&
+          relationship.operatorBId === "operator/rose-vega",
+      )
+      .map(cloneRelationship),
+    staff: bootstrapScenario.staff
+      .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
+      .map(cloneStaff),
+    visitors: [
+      {
+        ...cloneVisitor(bootstrapScenario.visitors[0]),
+        patience: 540,
       },
-    })),
-  operatorRelationships: bootstrapScenario.operatorRelationships
+    ],
+    raidOpportunities: [],
+    inventory: [
+      { itemId: "weapon/pipe-wrench", quantity: 2 },
+      { itemId: "weapon/kitchen-knife", quantity: 1 },
+      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
+      { itemId: "accessory/comm-earpiece", quantity: 1 },
+    ],
+  };
+}
+
+export function buildRandomizedNewGameScenario(seed: number): BootstrapScenario {
+  if (seed === 1) {
+    return buildCanonicalSeedScenario();
+  }
+
+  const next = createScenarioRng(seed);
+  const operatorsById = new Map(
+    bootstrapScenario.operators.map((operator) => [operator.id, operator]),
+  );
+  const visitorsById = new Map(bootstrapScenario.visitors.map((visitor) => [visitor.id, visitor]));
+
+  const chosenOperators = [
+    OPERATOR_POOL_BY_ROLE["role:field_lead"][
+      Math.floor(next() * OPERATOR_POOL_BY_ROLE["role:field_lead"].length)
+    ],
+    OPERATOR_POOL_BY_ROLE["role:scout"][
+      Math.floor(next() * OPERATOR_POOL_BY_ROLE["role:scout"].length)
+    ],
+    OPERATOR_POOL_BY_ROLE["role:medic"][
+      Math.floor(next() * OPERATOR_POOL_BY_ROLE["role:medic"].length)
+    ],
+  ];
+
+  const addFourthOperator = next() < 0.4;
+  if (addFourthOperator) {
+    const extraPool = shuffleWithRng(
+      bootstrapScenario.operators
+        .map((operator) => operator.id)
+        .filter(
+          (operatorId) =>
+            !chosenOperators.includes(operatorId) &&
+            operatorsById.get(operatorId)?.identity.roleTag !== "role:medic",
+        ),
+      next,
+    );
+    if (extraPool[0]) {
+      chosenOperators.push(extraPool[0]);
+    }
+  }
+
+  const selectedOperatorIds = new Set(chosenOperators);
+  const operators = chosenOperators
+    .map((operatorId) => operatorsById.get(operatorId))
+    .filter((operator): operator is BootstrapOperator => operator !== undefined)
+    .map((operator) => cloneOperator(operator, selectedOperatorIds));
+
+  const relationships = shuffleWithRng(bootstrapScenario.operatorRelationships, next)
     .filter(
       (relationship) =>
-        CANONICAL_RELATIONSHIP_OPERATOR_IDS.has(relationship.operatorAId) &&
-        CANONICAL_RELATIONSHIP_OPERATOR_IDS.has(relationship.operatorBId),
+        selectedOperatorIds.has(relationship.operatorAId) &&
+        selectedOperatorIds.has(relationship.operatorBId),
     )
-    .map((relationship) => ({
-      ...relationship,
-      historyTags: [...relationship.historyTags],
-    })),
-  staff: bootstrapScenario.staff
-    .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
-    .map((staff) => ({
-      ...staff,
-      assignment: { ...staff.assignment },
-    })),
-  visitors: [
+    .slice(0, 1)
+    .map(cloneRelationship);
+
+  const optionalVisitorPool = shuffleWithRng(["visitor/preview-2", "visitor/preview-3"], next);
+  const visitors = [
     {
-      ...bootstrapScenario.visitors[0],
-      id: "visitor/nika",
+      ...cloneVisitor(visitorsById.get("visitor/preview-1")!),
       patience: 540,
     },
-  ],
-  raidOpportunities: [],
-  inventory: [
+    ...(next() < 0.45
+      ? [
+          {
+            ...cloneVisitor(visitorsById.get(optionalVisitorPool[0])!),
+            patience: 480,
+          },
+        ]
+      : []),
+  ];
+
+  const utilityPool = shuffleWithRng(
+    [
+      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
+      { itemId: "accessory/comm-earpiece", quantity: 1 },
+      { itemId: "accessory/tactical-scarf", quantity: 1 },
+    ] as const,
+    next,
+  );
+  const inventory = [
     { itemId: "weapon/pipe-wrench", quantity: 2 },
     { itemId: "weapon/kitchen-knife", quantity: 1 },
-    { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
-    { itemId: "accessory/comm-earpiece", quantity: 1 },
-  ],
-} satisfies BootstrapScenario;
+    utilityPool[0],
+    ...(addFourthOperator && next() < 0.35 ? [utilityPool[1]] : []),
+  ];
+
+  const treasury = addFourthOperator ? 340 : 320;
+
+  return {
+    guild: {
+      ...bootstrapScenario.guild,
+      treasury,
+    },
+    time: {
+      ...bootstrapScenario.time,
+    },
+    building: {
+      ...bootstrapScenario.building,
+    },
+    rooms: bootstrapScenario.rooms.map(cloneRoomSeed),
+    operators,
+    operatorRelationships: relationships,
+    staff: bootstrapScenario.staff
+      .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
+      .map(cloneStaff),
+    visitors,
+    raidOpportunities: [],
+    inventory,
+  };
+}
+
+export const canonicalNewGameScenario = buildRandomizedNewGameScenario(
+  1,
+) satisfies BootstrapScenario;

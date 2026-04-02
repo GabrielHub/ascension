@@ -399,13 +399,13 @@ describe("Phase 2 morale/loyalty consequences", () => {
 // ── Needs threshold tests ─────────────────────────────────────────────────
 
 describe("Phase 2 needs thresholds", () => {
-  it("injury > 60 prevents raid assignment", () => {
+  it("injury > 75 prevents raid assignment", () => {
     const world = createWorld();
     const entity = addEntity(world);
     addComponent(world, entity, InjuryState);
     addComponent(world, entity, NeedState);
 
-    InjuryState.severity[entity] = 65;
+    InjuryState.severity[entity] = 76;
     NeedState.fatigue[entity] = 50;
     NeedState.stress[entity] = 50;
     NeedState.hunger[entity] = 50;
@@ -414,14 +414,14 @@ describe("Phase 2 needs thresholds", () => {
     expect(flags.injuryPreventsRaid).toBe(true);
   });
 
-  it("fatigue > 80 adds exhaustion penalty", () => {
+  it("fatigue > 95 adds exhaustion penalty", () => {
     const world = createWorld();
     const entity = addEntity(world);
     addComponent(world, entity, InjuryState);
     addComponent(world, entity, NeedState);
 
     InjuryState.severity[entity] = 0;
-    NeedState.fatigue[entity] = 85;
+    NeedState.fatigue[entity] = 96;
     NeedState.stress[entity] = 50;
     NeedState.hunger[entity] = 50;
 

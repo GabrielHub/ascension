@@ -332,7 +332,7 @@ describe("legacy save hydration", () => {
 });
 
 describe("runtime session lifecycle", () => {
-  it("creates new-game sessions from the canonical sparse opening seed", async () => {
+  it("creates new-game sessions from the seeded opening envelope", async () => {
     vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(undefined);
     vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
 
@@ -342,24 +342,25 @@ describe("runtime session lifecycle", () => {
     });
 
     expect(session.mode).toBe("new");
-    expect(session.worldSnapshot.guild.treasury).toBe(400);
-    expect(session.worldSnapshot.operators?.map((operator) => operator.id)).toEqual([
-      "operator/rose-vega",
-      "operator/milo-hart",
-      "operator/jin-tanaka",
-      "operator/vera-santos",
-    ]);
+    expect([320, 340]).toContain(session.worldSnapshot.guild.treasury);
+    expect(session.worldSnapshot.operators?.length).toBeGreaterThanOrEqual(3);
+    expect(session.worldSnapshot.operators?.length).toBeLessThanOrEqual(4);
+    expect(
+      new Set(session.worldSnapshot.operators?.map((operator) => operator.identity.roleTag)),
+    ).toEqual(new Set(["role:field_lead", "role:scout", "role:medic"]));
     expect(session.worldSnapshot.staff?.map((staff) => staff.id)).toEqual([
       "staff/aina",
       "staff/boris",
     ]);
-    expect(session.worldSnapshot.visitors?.map((visitor) => visitor.id)).toEqual(["visitor/nika"]);
-    expect(session.worldSnapshot.inventoryStacks).toEqual([
-      { itemId: "weapon/pipe-wrench", quantity: 2 },
-      { itemId: "weapon/kitchen-knife", quantity: 1 },
-      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
-      { itemId: "accessory/comm-earpiece", quantity: 1 },
-    ]);
+    expect(session.worldSnapshot.visitors?.map((visitor) => visitor.id)).toContain("visitor/nika");
+    expect(session.worldSnapshot.visitors?.length).toBeGreaterThanOrEqual(1);
+    expect(session.worldSnapshot.visitors?.length).toBeLessThanOrEqual(2);
+    expect(session.worldSnapshot.inventoryStacks).toEqual(
+      expect.arrayContaining([
+        { itemId: "weapon/pipe-wrench", quantity: 2 },
+        { itemId: "weapon/kitchen-knife", quantity: 1 },
+      ]),
+    );
     expect(session.state.phase1View.guidance.openingPathState).toBe("active");
     expect(
       (createNewGameWorldSnapshot(templateRegistry) as Record<string, unknown>).guidanceState,
@@ -846,6 +847,11 @@ describe("runtime session lifecycle", () => {
       type: "sim/dev-set-resource",
       resourceId: "resource/reputation",
       amount: 300,
+    });
+    await session.commands.dispatch({
+      type: "sim/dev-set-resource",
+      resourceId: "resource/cash",
+      amount: 1000,
     });
 
     await session.commands.purchaseBuildingUpgrade({
@@ -1391,7 +1397,6 @@ describe("runtime session lifecycle", () => {
     ).toEqual({
       weaponPartId: "weapon/tactical-rifle",
       outfitOverlayPartId: "outfit-overlay/tactical-vest",
-      accessoryPartId: itemId,
     });
     expect(session.worldSnapshot.inventoryStacks).toEqual([]);
     expect(session.drainPendingCues()).toEqual(["hq.equip"]);
@@ -1416,6 +1421,48 @@ describe("runtime session lifecycle", () => {
     );
     expect(session.worldSnapshot.inventoryStacks).toEqual([]);
     expect(session.drainPendingCues()).toEqual(["hq.market.sell"]);
+
+    session.dispose();
+  });
+
+  it("keeps canonical new-game sessions on the sparse starter loadout and supports manual weapon equips", async () => {
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(undefined);
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "new",
+      slotId: "slot/1",
+    });
+
+    const targetOperator = session.state.phase1View.operators[0];
+    expect(targetOperator).toBeDefined();
+    expect(targetOperator?.appearance.visibleGear).toBeUndefined();
+    expect(session.worldSnapshot.equipmentAssignments).toEqual([]);
+    expect(session.worldSnapshot.inventoryStacks).toEqual(
+      expect.arrayContaining([
+        { itemId: "weapon/pipe-wrench", quantity: 2 },
+        { itemId: "weapon/kitchen-knife", quantity: 1 },
+      ]),
+    );
+    session.drainPendingCues();
+
+    await session.commands.equipItem({
+      operatorId: targetOperator!.id,
+      slot: "weapon",
+      itemId: "weapon/pipe-wrench",
+    });
+
+    expect(
+      session.state.phase1View.operators.find((operator) => operator.id === targetOperator!.id)
+        ?.appearance.visibleGear,
+    ).toBeUndefined();
+    expect(session.worldSnapshot.inventoryStacks).toEqual(
+      expect.arrayContaining([
+        { itemId: "weapon/pipe-wrench", quantity: 1 },
+        { itemId: "weapon/kitchen-knife", quantity: 1 },
+      ]),
+    );
+    expect(session.drainPendingCues()).toEqual(["hq.equip", "event.guidance.beat"]);
 
     session.dispose();
   });

@@ -1,4 +1,9 @@
 import { addComponent, addEntity, removeEntity } from "bitecs";
+import {
+  getDefaultOperatorAppearancePartsIndex,
+  getOperatorVisibleGearPartCategory,
+  parseOperatorAppearancePartIndex,
+} from "save/appearance";
 
 import {
   EquipmentAssignment,
@@ -69,6 +74,25 @@ export function getInventoryCount(context: SimSystemContext, itemId: string): nu
   return InventoryStack.quantity[existing];
 }
 
+const operatorAppearancePartsIndex = parseOperatorAppearancePartIndex(
+  getDefaultOperatorAppearancePartsIndex(),
+);
+
+function resolveVisibleGearPartId(
+  itemId: string,
+  slot: "weapon" | "outfitOverlay" | "accessory",
+): string {
+  const slotId =
+    slot === "weapon"
+      ? "weaponPartId"
+      : slot === "outfitOverlay"
+        ? "outfitOverlayPartId"
+        : "accessoryPartId";
+  const expectedCategory = getOperatorVisibleGearPartCategory(slotId);
+  const part = operatorAppearancePartsIndex.get(itemId);
+  return part?.category === expectedCategory ? itemId : "";
+}
+
 export function equipItem(
   context: SimSystemContext,
   operatorId: string,
@@ -99,19 +123,28 @@ export function equipItem(
     case "weapon":
       EquipmentAssignment.weaponId[equipEntity] = itemId;
       if (operatorEntity !== undefined) {
-        OperatorIdentity.appearanceWeaponPartId[operatorEntity] = itemId;
+        OperatorIdentity.appearanceWeaponPartId[operatorEntity] = resolveVisibleGearPartId(
+          itemId,
+          "weapon",
+        );
       }
       break;
     case "outfitOverlay":
       EquipmentAssignment.outfitOverlayId[equipEntity] = itemId;
       if (operatorEntity !== undefined) {
-        OperatorIdentity.appearanceOutfitOverlayPartId[operatorEntity] = itemId;
+        OperatorIdentity.appearanceOutfitOverlayPartId[operatorEntity] = resolveVisibleGearPartId(
+          itemId,
+          "outfitOverlay",
+        );
       }
       break;
     case "accessory":
       EquipmentAssignment.accessoryId[equipEntity] = itemId;
       if (operatorEntity !== undefined) {
-        OperatorIdentity.appearanceAccessoryPartId[operatorEntity] = itemId;
+        OperatorIdentity.appearanceAccessoryPartId[operatorEntity] = resolveVisibleGearPartId(
+          itemId,
+          "accessory",
+        );
       }
       break;
   }

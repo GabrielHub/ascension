@@ -27,6 +27,7 @@ import {
 } from "lib/policies";
 import { SeededRng, boundedRoll, shuffle } from "../uncertainty";
 import type { OperatorBaseStats } from "./derived-stats";
+import { computeRaidCashDelta, computeRaidReputationDelta } from "./contract-economy";
 
 // ── Operator combat state for simulation ──────────────────────────────
 
@@ -617,6 +618,8 @@ export interface RaidSimulationInput {
   missionId: string;
   siteSeed: number;
   missionDurationHours: number;
+  contractReward: number;
+  contractRisk: number;
   operators: SimOperator[];
   enemyFamilies: readonly EnemyFamilyTemplate[];
   enemyFamilyIds: readonly string[];
@@ -1022,14 +1025,12 @@ export function simulateRaidRun(input: RaidSimulationInput): RaidRunSnapshot {
       retreating,
     );
 
-    const reputationDelta = result === "success" ? 7 : result === "mixed" ? 2 : -5;
-    const cashBase = 100 + input.missionDurationHours * 15;
+    const reputationDelta = computeRaidReputationDelta(result);
+    const baseCashDelta = computeRaidCashDelta(result, input.contractReward, input.contractRisk);
     const cashDelta =
-      result === "success"
-        ? Math.round(cashBase * objectiveBias.lootMultiplier)
-        : result === "mixed"
-          ? Math.round(cashBase * 0.55 * objectiveBias.lootMultiplier)
-          : -Math.round(cashBase * 0.3);
+      result === "failure"
+        ? baseCashDelta
+        : Math.round(baseCashDelta * objectiveBias.lootMultiplier);
 
     const contributingFactors = buildContributingFactors(
       input,

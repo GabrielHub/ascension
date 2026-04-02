@@ -241,6 +241,13 @@ export function buildGameCallbacks(
     sellItem: (itemId: string, quantity: number) => {
       void session.commands.sellItem({ itemId, quantity });
     },
+    equipItem: (
+      operatorId: string,
+      slot: "weapon" | "outfitOverlay" | "accessory",
+      itemId: string,
+    ) => {
+      void session.commands.equipItem({ operatorId, slot, itemId });
+    },
     autoAssignAccessory: (operatorId: string) => {
       void session.commands.autoAssignAccessory({ operatorId });
     },

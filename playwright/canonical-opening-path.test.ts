@@ -413,28 +413,33 @@ describeBrowser("canonical opening browser path", () => {
     let snapshot = await waitForSnapshot(
       page,
       "canonical new-game seed",
-      (next) => next.session.mode === "new" && next.resources.cash === 400,
+      (next) =>
+        next.session.mode === "new" &&
+        next.roster.operatorIds.length >= 3 &&
+        next.roster.operatorIds.length <= 4 &&
+        next.roster.visitorIds.includes("visitor/nika"),
     );
     const seedSnapshot = snapshot;
     remember("seed", snapshot);
     await captureScreenshot(page, "canonical-opening-seed");
 
     expect(snapshot.session.isPreview).toBe(false);
-    expect(snapshot.resources.cash).toBe(400);
-    expect(snapshot.roster.operatorIds).toEqual([
-      "operator/rose-vega",
-      "operator/milo-hart",
-      "operator/jin-tanaka",
-      "operator/vera-santos",
-    ]);
+    expect(snapshot.resources.cash).toBeGreaterThanOrEqual(320);
+    expect(snapshot.resources.cash).toBeLessThanOrEqual(340);
+    expect(snapshot.roster.operatorIds.length).toBeGreaterThanOrEqual(3);
+    expect(snapshot.roster.operatorIds.length).toBeLessThanOrEqual(4);
     expect(snapshot.roster.staffIds).toEqual(["staff/aina", "staff/boris"]);
-    expect(snapshot.roster.visitorIds).toEqual(["visitor/nika"]);
-    expect(snapshot.inventory).toEqual([
-      { itemId: "weapon/pipe-wrench", quantity: 2 },
-      { itemId: "weapon/kitchen-knife", quantity: 1 },
-      { itemId: "outfit-overlay/padded-jacket", quantity: 1 },
-      { itemId: "accessory/comm-earpiece", quantity: 1 },
-    ]);
+    expect(snapshot.roster.visitorIds).toContain("visitor/nika");
+    expect(snapshot.roster.visitorIds.length).toBeGreaterThanOrEqual(1);
+    expect(snapshot.roster.visitorIds.length).toBeLessThanOrEqual(2);
+    expect(snapshot.inventory).toEqual(
+      expect.arrayContaining([
+        { itemId: "weapon/pipe-wrench", quantity: 2 },
+        { itemId: "weapon/kitchen-knife", quantity: 1 },
+      ]),
+    );
+    expect(snapshot.inventory.length).toBeGreaterThanOrEqual(3);
+    expect(snapshot.inventory.length).toBeLessThanOrEqual(4);
     expect(snapshot.guidance.activeBeatId).toBe("guidance/opening/board-briefing");
     expect(snapshot.interruption?.payloadKind).toBe("guidance");
 
@@ -529,17 +534,14 @@ describeBrowser("canonical opening browser path", () => {
     snapshot = await clickGuidanceActionAndWait(page, snapshot);
     remember("first-raid-return-complete", snapshot);
 
-    snapshot = await waitForSnapshot(
-      page,
-      "roster condition",
-      (next) => next.guidance.activeBeatId === "guidance/opening/roster-condition",
-    );
-    remember("roster-condition", snapshot);
-    snapshot = await clickGuidanceActionAndWait(page, snapshot);
-    remember("roster-condition-complete", snapshot);
-
     for (let hour = 1; hour <= 6; hour += 1) {
       snapshot = await getSnapshot(page);
+      if (snapshot.guidance.activeBeatId === "guidance/opening/roster-condition") {
+        remember("roster-condition", snapshot);
+        snapshot = await clickGuidanceActionAndWait(page, snapshot);
+        remember("roster-condition-complete", snapshot);
+        continue;
+      }
       if (
         snapshot.guidance.activeBeatId === "guidance/opening/first-incident" &&
         snapshot.interruption?.payloadKind === "guidance" &&
@@ -600,14 +602,30 @@ describeBrowser("canonical opening browser path", () => {
     expect(incidentChoice).toBeTruthy();
     await page.getByRole("button", { name: incidentChoice! }).first().click();
 
-    snapshot = await waitForSnapshot(
-      page,
-      "loot and market guidance",
-      (next) =>
-        next.guidance.activeBeatId === "guidance/opening/loot-and-market" ||
-        next.guidance.activeBeatId === "guidance/opening/staffing-and-rooms" ||
-        next.guidance.completedBeatIds.includes("guidance/opening/loot-and-market"),
-    );
+    for (let hour = 1; hour <= 6; hour += 1) {
+      snapshot = await getSnapshot(page);
+      if (snapshot.guidance.activeBeatId === "guidance/opening/roster-condition") {
+        remember("roster-condition-late", snapshot);
+        snapshot = await clickGuidanceActionAndWait(page, snapshot);
+        remember("roster-condition-late-complete", snapshot);
+        continue;
+      }
+      if (
+        snapshot.guidance.activeBeatId === "guidance/opening/loot-and-market" ||
+        snapshot.guidance.activeBeatId === "guidance/opening/staffing-and-rooms" ||
+        snapshot.guidance.completedBeatIds.includes("guidance/opening/loot-and-market")
+      ) {
+        break;
+      }
+
+      snapshot = await advanceOneHour(page);
+      remember(`await-loot-and-market+${hour}h`, snapshot);
+    }
+    expect(
+      snapshot.guidance.activeBeatId === "guidance/opening/loot-and-market" ||
+        snapshot.guidance.activeBeatId === "guidance/opening/staffing-and-rooms" ||
+        snapshot.guidance.completedBeatIds.includes("guidance/opening/loot-and-market"),
+    ).toBe(true);
     remember("loot-and-market", snapshot);
 
     if (snapshot.guidance.activeBeatId === "guidance/opening/staffing-and-rooms") {
@@ -696,11 +714,20 @@ describeBrowser("canonical opening browser path", () => {
       expect(report.beatSequence).toContain(beatId);
     }
     const beatIndices = new Map(report.beatSequence.map((beatId, index) => [beatId, index]));
-    for (let index = 1; index < requiredBeats.length; index += 1) {
-      expect(
-        (beatIndices.get(requiredBeats[index - 1]) ?? -1) <
-          (beatIndices.get(requiredBeats[index]) ?? -1),
-      ).toBe(true);
+    const orderedPairs: Array<[string, string]> = [
+      ["guidance/opening/board-briefing", "guidance/opening/first-contract-choice"],
+      ["guidance/opening/first-contract-choice", "guidance/opening/bodega-overview"],
+      ["guidance/opening/bodega-overview", "guidance/opening/roster-and-equip"],
+      ["guidance/opening/roster-and-equip", "guidance/opening/first-team-departure"],
+      ["guidance/opening/first-team-departure", "guidance/opening/first-raid-return"],
+      ["guidance/opening/first-raid-return", "guidance/opening/roster-condition"],
+      ["guidance/opening/first-raid-return", "guidance/opening/first-incident"],
+      ["guidance/opening/first-incident", "guidance/opening/loot-and-market"],
+      ["guidance/opening/roster-condition", "guidance/opening/staffing-and-rooms"],
+      ["guidance/opening/loot-and-market", "guidance/opening/staffing-and-rooms"],
+    ];
+    for (const [beforeBeat, afterBeat] of orderedPairs) {
+      expect((beatIndices.get(beforeBeat) ?? -1) < (beatIndices.get(afterBeat) ?? -1)).toBe(true);
     }
 
     expect(earlyRuntimeIncident).toBeUndefined();

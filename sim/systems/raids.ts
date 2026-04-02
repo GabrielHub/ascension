@@ -29,6 +29,7 @@ import {
   RaidOpportunityState,
   RaidParticipationState,
   RecurringTeam,
+  RoomInstance,
   RoomCulture,
   ScheduleState,
   WorldTimeState,
@@ -80,6 +81,8 @@ import {
   RAID_OPPORTUNITY_VARIANCE,
   computeBossCompletionCashBonus,
   computeBossCompletionReputationBonus,
+  computeMissionCompletionCashBonus,
+  computeMissionCompletionReputationBonus,
   computePostedContractEconomyBudget,
   computeRaidCashDelta,
   computeRaidOpportunityEconomyBudget,
@@ -145,7 +148,25 @@ const FOG_GRID_HEIGHT = 16;
 const FIRST_CONTRACT_SHIELD_END_BEAT_ID = FIRST_RAID_RETURN_BEAT_ID;
 const FIRST_CONTRACT_SHIELDED_INJURY_TOTAL = 58;
 const FIRST_CONTRACT_FATAL_INJURY_THRESHOLD = 95;
-const INJURY_RECOVERY_HOURS_PER_POINT = 0.3;
+const INJURY_RECOVERY_HOURS_PER_POINT = 0.18;
+const ORDINARY_CONTRACT_CLOSURE_THRESHOLD = 90;
+const BOSS_CONTRACT_CLOSURE_THRESHOLD = 80;
+const BOSS_ROUTE_UNLOCK_PROGRESS = 35;
+const FIRST_BOSS_CONTRACT_ORDINAL = 7;
+const RECURRING_BOSS_CONTRACT_INTERVAL = 4;
+const ORDINARY_CONTRACT_PROGRESS_BY_RESULT = {
+  success: 90,
+  mixed: 60,
+  failure: 10,
+} as const;
+const BOSS_CONTRACT_PROGRESS_BY_RESULT = {
+  success: 75,
+  mixed: 55,
+  failure: 12,
+} as const;
+const RAID_TREATMENT_BASE_COST = 4;
+const RAID_TREATMENT_COST_PER_INJURY = 0.45;
+const FIRST_AID_STATION_UPGRADE_ID = "upgrade/room/dining_area:first_aid_station";
 const FIRST_CONTRACT_INJURY_CAP_BY_RESULT = {
   success: 6,
   mixed: 10,
@@ -168,6 +189,93 @@ function getCellCenter(x: number, y: number) {
     x: x * 32 + 16,
     y: y * 32 + 16,
   };
+}
+
+function hasContractConcluded(contractSite: ContractSiteState | null | undefined): boolean {
+  return Boolean(
+    contractSite &&
+    (contractSite.bossDefeated || contractSite.missionCompleted || contractSite.contractLost),
+  );
+}
+
+function getResolvedContractCount(
+  context: SimSystemContext,
+  options?: { excludeContractSiteId?: string },
+): number {
+  const buildingEntity = context.singletonEntities.building;
+  const excludeContractSiteId = options?.excludeContractSiteId ?? null;
+  const contractSiteIds = new Set<string>();
+
+  (BuildingAuthority.raidSummaries[buildingEntity] ?? []).forEach((summary) => {
+    if (!summary.contractSiteId || summary.contractSiteId === excludeContractSiteId) {
+      return;
+    }
+    contractSiteIds.add(summary.contractSiteId);
+  });
+
+  const activeResult = BuildingAuthority.contractResult[buildingEntity];
+  if (
+    activeResult?.contractSiteId &&
+    activeResult.contractSiteId !== excludeContractSiteId &&
+    !contractSiteIds.has(activeResult.contractSiteId)
+  ) {
+    contractSiteIds.add(activeResult.contractSiteId);
+  }
+
+  return contractSiteIds.size;
+}
+
+function shouldRequireBossClear(contractOrdinal: number): boolean {
+  if (contractOrdinal < FIRST_BOSS_CONTRACT_ORDINAL) {
+    return false;
+  }
+  return (contractOrdinal - FIRST_BOSS_CONTRACT_ORDINAL) % RECURRING_BOSS_CONTRACT_INTERVAL === 0;
+}
+
+function getContractClosureThreshold(contractOrdinal: number): number {
+  return shouldRequireBossClear(contractOrdinal)
+    ? BOSS_CONTRACT_CLOSURE_THRESHOLD
+    : ORDINARY_CONTRACT_CLOSURE_THRESHOLD;
+}
+
+function getContractProgressDelta(
+  result: ActiveRaidResolutionPacket["result"],
+  requiresBossClear: boolean,
+  objectiveBias: ReturnType<typeof getObjectiveBiasConfig>,
+): number {
+  const base = requiresBossClear
+    ? BOSS_CONTRACT_PROGRESS_BY_RESULT[result]
+    : ORDINARY_CONTRACT_PROGRESS_BY_RESULT[result];
+  const biasBonus =
+    (objectiveBias.goalWeightModifiers.exploring ?? 0) +
+    (requiresBossClear ? (objectiveBias.goalWeightModifiers.boss ?? 0) : 0);
+  return Math.max(0, Math.round(base + biasBonus * 0.25));
+}
+
+function getRaidTreatmentCost(
+  context: SimSystemContext,
+  packet: ActiveRaidPacketRecord,
+  operatorEntityById: ReadonlyMap<string, number>,
+): number {
+  const roomEntities = context.runtimeState.roomEntities;
+  const hasFirstAidStation = roomEntities.some((entity) => {
+    return (RoomInstance.appliedUpgradeIds[entity] ?? []).includes(FIRST_AID_STATION_UPGRADE_ID);
+  });
+  const treatmentMultiplier = hasFirstAidStation ? 0.7 : 1;
+  const firstContractDiscount = isFirstContractDeathShieldActive(context) ? 0.5 : 1;
+
+  const totalCost = packet.resolutionPacket.operatorOutcomes.reduce((sum, outcome) => {
+    if (outcome.died || outcome.injuryDelta <= 0 || !operatorEntityById.has(outcome.operatorId)) {
+      return sum;
+    }
+    return (
+      sum +
+      RAID_TREATMENT_BASE_COST +
+      Math.round(outcome.injuryDelta * RAID_TREATMENT_COST_PER_INJURY)
+    );
+  }, 0);
+
+  return Math.max(0, Math.round(totalCost * treatmentMultiplier * firstContractDiscount));
 }
 
 function getRaidPlaybackStepIndex(packet: ActiveRaidPacketRecord): number {
@@ -1022,7 +1130,7 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
   const currentMinute = getCurrentAbsoluteMinute(context);
 
-  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) {
+  if (!contractSite || hasContractConcluded(contractSite)) {
     return;
   }
 
@@ -1730,13 +1838,17 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     missionId: mission.id,
     siteSeed,
     missionDurationHours: mission.baseDurationHours,
+    contractReward: RaidOpportunityState.reward[opportunityEntity],
+    contractRisk: RaidOpportunityState.threat[opportunityEntity],
     operators: simOperators,
     enemyFamilies: context.registry.enemyFamilies,
     enemyFamilyIds: siteConcept?.enemyFamilyIds ?? [],
     hazardTags: siteConcept?.hazardTags ?? [],
-    hasBoss: siteConcept?.bossId
-      ? context.registry.bossById.has(siteConcept.bossId)
-      : (mission.combatProfile?.boss ?? null) !== null,
+    hasBoss:
+      contractSite?.requiresBossClear === true &&
+      (siteConcept?.bossId
+        ? context.registry.bossById.has(siteConcept.bossId)
+        : (mission.combatProfile?.boss ?? null) !== null),
     bossId: siteConcept?.bossId ?? mission.combatProfile?.boss?.bossId,
     intelLevel: RaidOpportunityState.intel[opportunityEntity],
     teamCohesion,
@@ -1932,6 +2044,8 @@ function finalizeRaidPacket(
     AssignmentState.kind[operatorEntity] =
       InjuryState.recoveryHoursRemaining[operatorEntity] > 0 ? "recovery" : "idle";
     AssignmentState.targetId[operatorEntity] = "";
+    ScheduleState.currentBlock[operatorEntity] =
+      InjuryState.recoveryHoursRemaining[operatorEntity] > 0 ? "recovery" : "idle";
   });
 
   const lootRng = new SeededRng(
@@ -1943,6 +2057,19 @@ function finalizeRaidPacket(
     objectiveBias.lootMultiplier,
   );
   applyLootToInventory(context, lootDrops);
+
+  const treatmentCost = getRaidTreatmentCost(context, packet, operatorEntityById);
+  if (treatmentCost > 0) {
+    GuildState.treasury[context.singletonEntities.guild] = Math.max(
+      0,
+      GuildState.treasury[context.singletonEntities.guild] - treatmentCost,
+    );
+    pushRuntimeEvent(context, {
+      kind: "resource_swing",
+      message: `Post-raid treatment and restock cost -$${treatmentCost}`,
+      accent: "ember",
+    });
+  }
 
   const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
     .filter((outcome) => outcome.died)
@@ -1982,6 +2109,7 @@ function finalizeRaidPacket(
       result: packet.resolutionPacket.result,
       reputationDelta: packet.resolutionPacket.reputationDelta,
       cashDelta: packet.resolutionPacket.cashDelta,
+      treatmentCost,
       threat: packet.threat,
       intel: packet.intel,
       reward: packet.reward,
@@ -2235,7 +2363,7 @@ function mapStepKindToEventKind(
 
 function updateRaidPresentation(context: SimSystemContext): void {
   const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
-  if (!contractSite || contractSite.contractLost || contractSite.bossDefeated) {
+  if (!contractSite || hasContractConcluded(contractSite)) {
     context.runtimeState.raidPresentation = {
       contractSiteId: null,
       teams: [],
@@ -3070,7 +3198,7 @@ function updateContractLifecycle(context: SimSystemContext): void {
         enterBiddingPhase(context);
         return;
       }
-      if (contractSite.bossDefeated || contractSite.contractLost) {
+      if (hasContractConcluded(contractSite)) {
         enterResolvedPhase(context, contractSite);
         return;
       }
@@ -3078,12 +3206,12 @@ function updateContractLifecycle(context: SimSystemContext): void {
       return;
     }
     case "bidding": {
-      if (contractSite && !contractSite.bossDefeated && !contractSite.contractLost) {
+      if (contractSite && !hasContractConcluded(contractSite)) {
         setContractLifecycle(context, "active");
         ensureRaidPresentationSeed(context, contractSite.contractSiteId);
         return;
       }
-      if (contractSite && (contractSite.bossDefeated || contractSite.contractLost)) {
+      if (contractSite && hasContractConcluded(contractSite)) {
         BuildingAuthority.contractSite[buildingEntity] = null;
       }
       if (postedContracts.length === 0) {
@@ -3092,11 +3220,7 @@ function updateContractLifecycle(context: SimSystemContext): void {
       return;
     }
     case "resolved": {
-      if (
-        contractSite &&
-        (contractSite.bossDefeated || contractSite.contractLost) &&
-        !contractResult
-      ) {
+      if (contractSite && hasContractConcluded(contractSite) && !contractResult) {
         enterResolvedPhase(context, contractSite);
         return;
       }
@@ -3123,7 +3247,11 @@ function enterResolvedPhase(context: SimSystemContext, contractSite: ContractSit
     siteConceptId: contractSite.siteConceptId ?? "",
     location: contractSite.location,
     rank: contractSite.rank ?? "f",
-    outcome: contractSite.bossDefeated ? "boss_defeated" : "contract_lost",
+    outcome: contractSite.bossDefeated
+      ? "boss_defeated"
+      : contractSite.missionCompleted
+        ? "mission_complete"
+        : "contract_lost",
     totalRaids: summaries.length,
     totalCashEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.cashDelta), 0),
     totalReputationEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.reputationDelta), 0),
@@ -3142,11 +3270,15 @@ function enterResolvedPhase(context: SimSystemContext, contractSite: ContractSit
   // Clear transient site state
   clearSiteTransientState(context);
 
-  const outcomeLabel = contractSite.bossDefeated ? "Boss defeated" : "Contract lost";
+  const outcomeLabel = contractSite.bossDefeated
+    ? "Boss defeated"
+    : contractSite.missionCompleted
+      ? "Objective secured"
+      : "Contract lost";
   pushRuntimeEvent(context, {
     kind: "event_change",
     message: `${outcomeLabel} — contract resolved`,
-    accent: contractSite.bossDefeated ? "gold" : "magma",
+    accent: contractSite.contractLost ? "magma" : "gold",
   });
 }
 
@@ -3328,6 +3460,8 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
 
   // Create the new contract site from the posting
   const currentMinute = getCurrentAbsoluteMinute(context);
+  const contractOrdinal = getResolvedContractCount(context) + 1;
+  const requiresBossClear = shouldRequireBossClear(contractOrdinal);
   const newContract: ContractSiteState = {
     contractSiteId: `contract/${currentMinute}`,
     missionId: posting.missionId,
@@ -3335,14 +3469,18 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
     location: posting.location,
     rank: posting.rank,
     bossDefeated: false,
+    missionCompleted: false,
     contractLost: false,
     threat: posting.threat,
     intel: posting.intel,
     reward: posting.reward,
     securedAtTick: currentMinute,
     explorationProgress: 0,
+    closureProgress: 0,
+    closureThreshold: getContractClosureThreshold(contractOrdinal),
     bossIntelProgress: 0,
     bossPressureProgress: 0,
+    requiresBossClear,
     bossAvailable: false,
   };
 
@@ -3476,7 +3614,7 @@ function advanceFogOfWar(context: SimSystemContext): void {
 function updateExplorationProgress(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
-  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+  if (!contractSite || hasContractConcluded(contractSite)) return;
 
   const fog = BuildingAuthority.fogOfWar[buildingEntity];
   const totalCells = fog ? fog.gridWidth * fog.gridHeight : 1;
@@ -3487,18 +3625,22 @@ function updateExplorationProgress(context: SimSystemContext): void {
 function updateSummaryDerivedProgress(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
-  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+  if (!contractSite || hasContractConcluded(contractSite)) return;
   const objectiveBias = getObjectiveBiasConfig(getPolicyState(context));
 
   const summaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
     (s) => s.contractSiteId === contractSite.contractSiteId,
   );
-  let successCount = 0;
   let intelContribution = 0;
   let pressureContribution = 0;
+  let closureContribution = 0;
   for (const s of summaries) {
+    closureContribution += getContractProgressDelta(
+      s.result,
+      contractSite.requiresBossClear,
+      objectiveBias,
+    );
     if (s.result === "success") {
-      successCount++;
       intelContribution += 15 * objectiveBias.intelMultiplier;
       pressureContribution += 32;
     } else if (s.result === "mixed") {
@@ -3508,18 +3650,32 @@ function updateSummaryDerivedProgress(context: SimSystemContext): void {
       pressureContribution += 8;
     }
   }
-  contractSite.bossIntelProgress = clamp(intelContribution, 0, 100);
-  contractSite.bossPressureProgress = clamp(
-    pressureContribution + contractSite.explorationProgress * 0.4,
+  contractSite.closureProgress = clamp(
+    closureContribution + contractSite.explorationProgress * 0.2,
+    0,
+    contractSite.closureThreshold,
+  );
+  contractSite.bossIntelProgress = clamp(
+    contractSite.requiresBossClear ? intelContribution : 0,
     0,
     100,
   );
-  const forcedBossWindow =
-    summaries.length >= 2 && summaries.some((summary) => summary.result !== "failure");
+  contractSite.bossPressureProgress = clamp(
+    contractSite.requiresBossClear
+      ? pressureContribution + contractSite.explorationProgress * 0.35
+      : 0,
+    0,
+    100,
+  );
+  const routeUnlockExplorationFloor = Math.max(
+    15,
+    Math.round(objectiveBias.contractExplorationThreshold * 0.35),
+  );
   contractSite.bossAvailable =
-    (forcedBossWindow ||
-      (contractSite.explorationProgress >= objectiveBias.contractExplorationThreshold &&
-        contractSite.bossPressureProgress >= objectiveBias.contractPressureThreshold)) &&
+    contractSite.requiresBossClear &&
+    contractSite.closureProgress >= BOSS_ROUTE_UNLOCK_PROGRESS &&
+    contractSite.explorationProgress >= routeUnlockExplorationFloor &&
+    summaries.some((summary) => summary.result !== "failure") &&
     !contractSite.bossDefeated;
 }
 
@@ -3657,7 +3813,7 @@ export function selectTeamGoal(
 function checkDungeonClosure(context: SimSystemContext): void {
   const buildingEntity = context.singletonEntities.building;
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
-  if (!contractSite || contractSite.bossDefeated || contractSite.contractLost) return;
+  if (!contractSite || hasContractConcluded(contractSite)) return;
 
   const raidSummaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).filter(
     (summary) => summary.contractSiteId === contractSite.contractSiteId,
@@ -3679,6 +3835,31 @@ function checkDungeonClosure(context: SimSystemContext): void {
     pushRuntimeEvent(context, {
       kind: "event_change",
       message: `Boss defeated! Contract complete.`,
+      accent: "gold",
+    });
+    return;
+  }
+
+  if (
+    !contractSite.requiresBossClear &&
+    contractSite.closureProgress >= contractSite.closureThreshold &&
+    raidSummaries.some((summary) => summary.result !== "failure")
+  ) {
+    GuildState.reputation[context.singletonEntities.guild] +=
+      computeMissionCompletionReputationBonus();
+    GuildState.treasury[context.singletonEntities.guild] += computeMissionCompletionCashBonus(
+      contractSite.reward,
+      contractSite.rank ?? "f",
+    );
+    BuildingAuthority.contractSite[buildingEntity] = {
+      ...contractSite,
+      missionCompleted: true,
+      bossAvailable: false,
+      closureProgress: contractSite.closureThreshold,
+    };
+    pushRuntimeEvent(context, {
+      kind: "event_change",
+      message: "Objective secured. Contract ready to close out.",
       accent: "gold",
     });
     return;

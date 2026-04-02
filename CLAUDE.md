@@ -1,6 +1,22 @@
 # CLAUDE.md
 
-Repo-specific correctional guidance only.
+Repo-specific correctional guidance only. Assume normal engineering competence.
+
+## Agent Autonomy
+
+- Challenge requests you believe are wrong, suboptimal, or improvable — offer alternatives before executing
+- Think before acting: read the relevant code, understand context, and form a plan before making changes
+- The user is not always right — pushback grounded in evidence or engineering judgment is expected
+
+## Coding Discipline
+
+- Read code before modifying it — do not propose changes to files you have not read
+- Do not add features, refactor, or make improvements beyond what was asked
+- Do not create helpers, utilities, or abstractions for one-time operations — prefer inline simplicity
+- Do not add error handling or validation for scenarios that cannot occur — validate only at system boundaries
+- Do not add backwards-compatibility shims, re-exports, or placeholder comments for removed code
+- Prefer editing existing files over creating new ones
+- Do not introduce security vulnerabilities (command injection, XSS, SQL injection, etc.)
 
 ## Toolchain
 
@@ -46,6 +62,7 @@ Repo-specific correctional guidance only.
 - direct UI-owned gameplay mutation
 - router-owned gameplay state
 - named-content branches without documentation
+- treat scaffold defaults or stale docs as stronger than code-level contracts
 - `as any`
 - walls, floors, or structural elements inside room scene SVGs
 - flat camera-facing props (non-isometric rectangles) in any HQ asset
@@ -68,6 +85,7 @@ Repo-specific correctional guidance only.
 
 - Do not autonomously continue into extra cleanup or follow-up tasks after completing the asked work
 - If the user points to a likely cause for a bug, investigate that first
+- Keep commits atomic when asked to prepare commits
 
 ## Host Split
 

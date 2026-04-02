@@ -49,6 +49,8 @@ function makeBaseInput(overrides: Partial<RaidSimulationInput> = {}): RaidSimula
     missionId: "mission/clearance",
     siteSeed: 42,
     missionDurationHours: 6,
+    contractReward: 120,
+    contractRisk: 54,
     operators: [
       makeOperator({ operatorId: "op/1", name: "Rose" }),
       makeOperator({
