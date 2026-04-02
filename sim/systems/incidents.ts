@@ -140,6 +140,7 @@ export const OPENING_SAFE_INCIDENT_CATEGORIES = [
   "morale_surge",
   "contract_opportunity",
 ] as const;
+const OPENING_SAFE_INCIDENT_CATEGORY_SET = new Set<string>(OPENING_SAFE_INCIDENT_CATEGORIES);
 
 const OPENING_FORCE_SEED_INCIDENT_CATEGORIES = [
   "personnel_conflict",
@@ -585,6 +586,495 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
       },
     ],
   },
+  // ── Bodega-specific incidents ──────────────────────────────────────────
+
+  {
+    id: "incident/coffee-machine-breakdown",
+    name: "Coffee Machine Breakdown",
+    category: "supply_shortage",
+    tags: ["bodega", "supplies", "morale", "low-stakes"],
+    weight: 20,
+    triggerFamily: "room_breakdown",
+    pressureTags: ["pressure:logistics", "pressure:morale"],
+    pressureThreshold: 15,
+    requiredContext: ["room"],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 600,
+    noveltyWeight: 1.3,
+    briefingTemplate:
+      "The coffee machine finally died. Foot traffic is already down and the operators are giving you looks. The nearest wholesale place has a refurbished unit, but it is not cheap.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
+    choices: [
+      {
+        choiceId: "buy_replacement",
+        label: "Buy a Replacement",
+        description: "Get a refurbished unit from the wholesale place before lunch.",
+        consequenceSummary: "Treasury down, morale and reputation recovered.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -65 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 6 },
+          { kind: "reputation_delta", targetRef: "guild", value: 1 },
+        ],
+      },
+      {
+        choiceId: "bodega_coffee_run",
+        label: "Send Someone for Bodega Coffee",
+        description:
+          "Buy drip coffee from the place around the corner until you can afford better.",
+        consequenceSummary: "Small ongoing cost, morale steadied.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -20 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 2 },
+        ],
+      },
+      {
+        choiceId: "tough_it_out",
+        label: "They Can Drink Water",
+        description: "The guild clears dungeons, not coffee orders.",
+        consequenceSummary: "Free, but morale drops and foot traffic suffers.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/health-inspector-visit",
+    name: "Health Inspector Visit",
+    category: "regulatory_scrutiny",
+    tags: ["bodega", "compliance", "regulatory", "institutional"],
+    weight: 18,
+    triggerFamily: "compliance_pressure",
+    pressureTags: ["pressure:regulatory", "pressure:reputation"],
+    pressureThreshold: 30,
+    requiredContext: [],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "A health inspector showed up unannounced. The bodega technically still has a food license and she is asking about the back room where operators eat. She has not noticed the clearance permits yet.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
+    choices: [
+      {
+        choiceId: "full_tour",
+        label: "Give Her the Full Tour",
+        description: "Be transparent. Show the dual-use setup and hope the paperwork holds.",
+        consequenceSummary: "Reputation boost if it passes, but costs time and attention.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 4 },
+          { kind: "treasury_delta", targetRef: "guild", value: -30 },
+        ],
+      },
+      {
+        choiceId: "redirect",
+        label: "Steer Her to the Front",
+        description: "Keep her in the storefront and let Aina handle the charm offensive.",
+        consequenceSummary: "Passes inspection narrowly. No real cost.",
+        effects: [{ kind: "reputation_delta", targetRef: "guild", value: 1 }],
+      },
+      {
+        choiceId: "close_early",
+        label: "Close Early for the Day",
+        description: "Apologize, cite maintenance, and reschedule. Buy time to clean up.",
+        consequenceSummary: "Loses a day of income but avoids scrutiny.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -40 },
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/neighborhood-complaint",
+    name: "Neighborhood Noise Complaint",
+    category: "room_tension",
+    tags: ["bodega", "external", "noise", "community"],
+    weight: 16,
+    triggerFamily: "room_breakdown",
+    pressureTags: ["pressure:social", "pressure:reputation"],
+    pressureThreshold: 25,
+    requiredContext: ["room"],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 720,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "The upstairs tenant is at the counter again, this time with a petition. Says the operators coming and going at night are scaring the building. Three other neighbors signed it.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
+    choices: [
+      {
+        choiceId: "apologize_and_compensate",
+        label: "Apologize and Offer a Gift Card",
+        description: "Smooth it over with free sandwiches and a promise to keep it down.",
+        consequenceSummary: "Small treasury hit, reputation protected.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -35 },
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+      {
+        choiceId: "enforce_quiet_hours",
+        label: "Set Quiet Hours",
+        description: "Restrict late-night operator traffic. Slows operations slightly.",
+        consequenceSummary: "Reputation saved, but contract pressure up.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 1 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 5 },
+        ],
+      },
+      {
+        choiceId: "ignore_petition",
+        label: "Ignore the Petition",
+        description: "The bodega was here first. They can call 311.",
+        consequenceSummary: "No cost, but reputation hit and tension lingers.",
+        effects: [{ kind: "reputation_delta", targetRef: "guild", value: -3 }],
+      },
+    ],
+  },
+  {
+    id: "incident/operator-side-hustle",
+    name: "Operator Side Hustle",
+    category: "personnel_conflict",
+    tags: ["bodega", "loyalty", "moonlighting"],
+    weight: 22,
+    triggerFamily: "operator_conflict",
+    pressureTags: ["pressure:retention", "pressure:loyalty"],
+    pressureThreshold: 35,
+    requiredContext: ["operator_a"],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 960,
+    noveltyWeight: 1.3,
+    briefingTemplate:
+      "{operator_a} has been picking up freelance clearance gigs on their days off. It is technically not against policy, but they showed up to the last raid tired and unfocused.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
+    choices: [
+      {
+        choiceId: "raise_pay",
+        label: "Raise Their Pay",
+        description: "If they need more money, give them a reason to stop looking elsewhere.",
+        consequenceSummary: "Treasury down, loyalty and morale up.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -80 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 10 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 5 },
+        ],
+      },
+      {
+        choiceId: "confront_directly",
+        label: "Have the Conversation",
+        description: "Tell them the guild needs them present or not at all.",
+        consequenceSummary: "Loyalty test. Could go either way.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 3 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -3 },
+        ],
+      },
+      {
+        choiceId: "let_it_slide",
+        label: "Look the Other Way",
+        description: "Everyone hustles. Just hope it does not get worse.",
+        consequenceSummary: "No confrontation, but the pattern continues.",
+        effects: [{ kind: "departure_risk", targetRef: "subject_a", value: 15 }],
+      },
+    ],
+  },
+  {
+    id: "incident/broken-ac-heatwave",
+    name: "Heatwave with No AC",
+    category: "room_tension",
+    tags: ["bodega", "room", "comfort", "morale"],
+    weight: 14,
+    triggerFamily: "room_breakdown",
+    pressureTags: ["pressure:room", "pressure:morale"],
+    pressureThreshold: 20,
+    requiredContext: ["room"],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.4,
+    briefingTemplate:
+      "The AC is dead and it is 94 degrees outside. The dining area smells like sweat and old sandwiches. Two operators are refusing to eat in there.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
+    choices: [
+      {
+        choiceId: "emergency_repair",
+        label: "Call Emergency Repair",
+        description: "Pay the after-hours rate and get the AC fixed today.",
+        consequenceSummary: "Treasury hit, but morale recovers fast.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -90 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 8 },
+        ],
+      },
+      {
+        choiceId: "buy_fans",
+        label: "Buy Box Fans",
+        description: "Cheap, loud, and better than nothing.",
+        consequenceSummary: "Small cost, partial comfort.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -25 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 3 },
+        ],
+      },
+      {
+        choiceId: "endure",
+        label: "Open the Windows",
+        description: "Hope for a breeze. The city has survived worse.",
+        consequenceSummary: "Free, but morale tanks.",
+        effects: [{ kind: "morale_delta", targetRef: "subject_a", value: -6 }],
+      },
+    ],
+  },
+  {
+    id: "incident/stray-cat-situation",
+    name: "The Cat Situation",
+    category: "morale_surge",
+    tags: ["bodega", "morale", "community", "positive"],
+    weight: 12,
+    triggerFamily: "morale_opportunity",
+    pressureTags: ["pressure:low"],
+    pressureThreshold: 10,
+    requiredContext: [],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.6,
+    briefingTemplate:
+      "A stray cat has taken up residence behind the counter. The operators have named it. The neighbors are feeding it. Aina says it is technically a health code violation but nobody seems to care.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "amused",
+    choices: [
+      {
+        choiceId: "keep_the_cat",
+        label: "The Cat Stays",
+        description: "Adopt it officially. Get it shots. The bodega has a mascot now.",
+        consequenceSummary: "Small cost, morale and reputation boost.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -30 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 10 },
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+      {
+        choiceId: "let_it_stay_informal",
+        label: "Do Not Make It Official",
+        description: "Nobody asked. The cat comes and goes. So does everyone.",
+        consequenceSummary: "Free morale boost, slight risk of future complaint.",
+        effects: [{ kind: "morale_delta", targetRef: "subject_a", value: 6 }],
+      },
+      {
+        choiceId: "rehome_the_cat",
+        label: "Find It a Home",
+        description: "Responsible, sensible, and deeply unpopular.",
+        consequenceSummary: "No ongoing risk, but the team resents you for a week.",
+        effects: [{ kind: "morale_delta", targetRef: "subject_a", value: -5 }],
+      },
+    ],
+  },
+  {
+    id: "incident/delivery-mix-up",
+    name: "Supply Delivery Mix-Up",
+    category: "supply_shortage",
+    tags: ["bodega", "supplies", "logistics"],
+    weight: 18,
+    triggerFamily: "contract_pressure",
+    pressureTags: ["pressure:logistics", "pressure:economy"],
+    pressureThreshold: 20,
+    requiredContext: [],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 480,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "The supply delivery got mixed up with the bodega's grocery order. Half the field kit is missing and there are six cases of energy drinks nobody ordered sitting in the supply closet.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "amused",
+    choices: [
+      {
+        choiceId: "rush_order",
+        label: "Rush a Correct Order",
+        description: "Pay for expedited delivery to get the real supplies in today.",
+        consequenceSummary: "Treasury down, operational readiness restored.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -50 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -8 },
+        ],
+      },
+      {
+        choiceId: "sell_energy_drinks",
+        label: "Sell the Energy Drinks",
+        description: "Offload them to the corner store and use the cash for proper supplies.",
+        consequenceSummary: "Partial recovery, creative problem-solving.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: 15 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -3 },
+          { kind: "intel_delta", targetRef: "guild", value: 1 },
+        ],
+      },
+      {
+        choiceId: "make_do",
+        label: "Improvise with What Arrived",
+        description: "The operators can caffeinate and figure it out.",
+        consequenceSummary: "No cost, morale boost from the absurdity, readiness takes a hit.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 3 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 4 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/former-operator-visit",
+    name: "Former Operator Drops By",
+    category: "personnel_conflict",
+    tags: ["bodega", "retention", "loyalty", "community"],
+    weight: 14,
+    triggerFamily: "morale_opportunity",
+    pressureTags: ["pressure:social", "pressure:morale"],
+    pressureThreshold: 20,
+    requiredContext: ["operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.4,
+    briefingTemplate:
+      "Someone who used to clear sites for the guild stopped by. They are doing well — better guild, better pay, better building. {operator_a} has been quiet since the visit.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "concerned",
+    choices: [
+      {
+        choiceId: "acknowledge",
+        label: "Talk to Your Operator",
+        description: "Check in. See where their head is at. Show you noticed.",
+        consequenceSummary: "Loyalty boost from the attention.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 6 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 3 },
+        ],
+      },
+      {
+        choiceId: "team_dinner",
+        label: "Buy the Team Dinner",
+        description: "Remind everyone why they are here. Good food helps.",
+        consequenceSummary: "Treasury down, broad morale boost.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -45 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 7 },
+          { kind: "team_cohesion_delta", targetRef: "team", value: 4 },
+        ],
+      },
+      {
+        choiceId: "say_nothing",
+        label: "Let It Pass",
+        description: "People visit. People leave. Focus on the work.",
+        consequenceSummary: "No cost, but the mood lingers.",
+        effects: [{ kind: "morale_delta", targetRef: "subject_a", value: -3 }],
+      },
+    ],
+  },
+  {
+    id: "incident/deli-counter-argument",
+    name: "Counter Confrontation",
+    category: "personnel_conflict",
+    tags: ["bodega", "conflict", "public", "recruitment"],
+    weight: 20,
+    triggerFamily: "operator_conflict",
+    pressureTags: ["pressure:social", "pressure:reputation"],
+    pressureThreshold: 30,
+    requiredContext: ["operator_a", "operator_b"],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 480,
+    noveltyWeight: 1.15,
+    briefingTemplate:
+      "{operator_a} and {operator_b} got into it at the counter in front of a walk-in prospect. The visitor left. Aina is not happy.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
+    choices: [
+      {
+        choiceId: "apologize_to_prospect",
+        label: "Chase Down the Prospect",
+        description: "Send someone after the visitor with an apology and a free coffee.",
+        consequenceSummary: "Small cost, might salvage the recruit lead.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -15 },
+          { kind: "reputation_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+      {
+        choiceId: "bench_both",
+        label: "Bench Both Operators",
+        description: "No raids for either of them until they can keep it professional.",
+        consequenceSummary: "Both operators stew, but the message is clear.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+          { kind: "morale_delta", targetRef: "subject_b", value: -4 },
+          { kind: "reputation_delta", targetRef: "guild", value: 1 },
+        ],
+      },
+      {
+        choiceId: "move_on",
+        label: "Damage Control Only",
+        description:
+          "Clean up the counter, restock the display, hope the next visitor did not hear.",
+        consequenceSummary: "No direct cost, reputation takes the hit.",
+        effects: [{ kind: "reputation_delta", targetRef: "guild", value: -2 }],
+      },
+    ],
+  },
+  {
+    id: "incident/power-outage",
+    name: "Block-Wide Power Outage",
+    category: "breach_emergency",
+    tags: ["bodega", "emergency", "infrastructure"],
+    weight: 12,
+    triggerFamily: "contract_pressure",
+    pressureTags: ["pressure:logistics", "pressure:time"],
+    pressureThreshold: 40,
+    requiredContext: [],
+    requiredBuildingIds: ["building/bodega"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.5,
+    briefingTemplate:
+      "The whole block lost power. The bodega is running on phone flashlights and whatever sunlight comes through the front window. The supply closet refrigeration is off. Con Ed says four to six hours.",
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
+    choices: [
+      {
+        choiceId: "generator_rental",
+        label: "Rent a Generator",
+        description: "Keep critical systems running and show the block you have it together.",
+        consequenceSummary: "Expensive, but operations continue and reputation rises.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -75 },
+          { kind: "reputation_delta", targetRef: "guild", value: 3 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -5 },
+        ],
+      },
+      {
+        choiceId: "candles_and_patience",
+        label: "Break Out the Candles",
+        description: "Wait it out. The operators have worked in darker conditions.",
+        consequenceSummary: "Free, but productivity and readiness drop.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 8 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -2 },
+        ],
+      },
+      {
+        choiceId: "close_and_deploy",
+        label: "Close Shop, Deploy Everyone",
+        description: "No point sitting in the dark. Send teams out early.",
+        consequenceSummary: "Operations advance, but stress rises.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -10 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+        ],
+      },
+    ],
+  },
+
+  // ── Porter's-specific incidents ──────────────────────────────────────────
+
   {
     id: "incident/kitchen-standards-slip",
     name: "Kitchen Standards Slip",
@@ -819,13 +1309,20 @@ function buildEligibleIncidentTemplates(
 ): IncidentTemplate[] {
   const mercyWindowActive = isOpeningIncidentMercyWindowActive(context);
   const activeBuildingId = getActiveBuildingId(context);
+  const recentFamilyCounts = new Map<string, number>();
+  if (!options.ignoreRecentFamilyLimit) {
+    for (const historyEntry of state.history) {
+      if (currentMinute - historyEntry.resolvedAtMinute >= 480) {
+        continue;
+      }
+      recentFamilyCounts.set(
+        historyEntry.triggerFamily,
+        (recentFamilyCounts.get(historyEntry.triggerFamily) ?? 0) + 1,
+      );
+    }
+  }
   return INCIDENT_TEMPLATES.filter((template) => {
-    if (
-      mercyWindowActive &&
-      !OPENING_SAFE_INCIDENT_CATEGORIES.includes(
-        template.category as (typeof OPENING_SAFE_INCIDENT_CATEGORIES)[number],
-      )
-    ) {
+    if (mercyWindowActive && !OPENING_SAFE_INCIDENT_CATEGORY_SET.has(template.category)) {
       return false;
     }
     if (
@@ -845,10 +1342,7 @@ function buildEligibleIncidentTemplates(
       return false;
     }
     if (!options.ignoreRecentFamilyLimit) {
-      const recentCount = state.history.filter(
-        (h) =>
-          h.triggerFamily === template.triggerFamily && currentMinute - h.resolvedAtMinute < 480,
-      ).length;
+      const recentCount = recentFamilyCounts.get(template.triggerFamily) ?? 0;
       if (recentCount >= 2) return false;
     }
     return true;

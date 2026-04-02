@@ -20,6 +20,10 @@ const OPENING_STABILITY_PROFILE_SEED_COUNT = 8;
 const MINIMUM_BID_COST = 7;
 const CRITICAL_TREASURY_FLOOR = 50;
 const MAX_RECRUIT_PAYROLL_INCREASE_PCT = 20;
+const openingSafeIncidentCategorySet = new Set<string>(OPENING_SAFE_INCIDENT_CATEGORIES);
+const incidentTemplateById = new Map(INCIDENT_TEMPLATES.map((template) => [template.id, template]));
+const incidentChoiceScoreCache = new Map<string, number>();
+const earlyCampaignSimulationSuiteCache = new Map<string, Promise<EarlyCampaignSimulationSuite>>();
 
 const INCOME_UPGRADE_IDS = [
   "upgrade/room/register:records_wall",
@@ -669,13 +673,19 @@ function choosePostedContract(
 }
 
 function evaluateIncidentChoice(templateId: string, choiceId: string): number {
-  const template = INCIDENT_TEMPLATES.find((entry) => entry.id === templateId);
+  const cacheKey = `${templateId}:${choiceId}`;
+  const cachedScore = incidentChoiceScoreCache.get(cacheKey);
+  if (cachedScore !== undefined) {
+    return cachedScore;
+  }
+
+  const template = incidentTemplateById.get(templateId);
   const choice = template?.choices.find((entry) => entry.choiceId === choiceId);
   if (!choice) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  return choice.effects.reduce((score, effect) => {
+  const score = choice.effects.reduce((score, effect) => {
     switch (effect.kind) {
       case "treasury_delta":
         return score + effect.value;
@@ -693,6 +703,8 @@ function evaluateIncidentChoice(templateId: string, choiceId: string): number {
         return score;
     }
   }, 0);
+  incidentChoiceScoreCache.set(cacheKey, score);
+  return score;
 }
 
 function buildIncidentChoiceResult(
@@ -709,7 +721,7 @@ function buildIncidentChoiceResult(
   templateName: string;
   category: string;
 } | null {
-  const template = INCIDENT_TEMPLATES.find((entry) => entry.id === payload.templateId);
+  const template = incidentTemplateById.get(payload.templateId);
   if (!template) {
     return null;
   }
@@ -1840,15 +1852,11 @@ async function simulateSingleRun(
             choiceId: decision.choiceId,
             choiceLabel: decision.choiceLabel,
             treasuryDelta: decision.treasuryDelta,
-            openingSafeCategory: OPENING_SAFE_INCIDENT_CATEGORIES.includes(
-              decision.category as (typeof OPENING_SAFE_INCIDENT_CATEGORIES)[number],
-            ),
+            openingSafeCategory: openingSafeIncidentCategorySet.has(decision.category),
           });
           if (
             getCycleOrRunIndex(run, working) <= 3 &&
-            !OPENING_SAFE_INCIDENT_CATEGORIES.includes(
-              decision.category as (typeof OPENING_SAFE_INCIDENT_CATEGORIES)[number],
-            )
+            !openingSafeIncidentCategorySet.has(decision.category)
           ) {
             working.unsafeIncidentsInFirstThreeContracts += 1;
           }
@@ -2270,6 +2278,17 @@ function formatMetricAggregate(
   return `- ${label}: ${aggregate.passRate}% pass, ${aggregate.outOfBandRate}% out-of-band, ${aggregate.failRate}% fail, ${aggregate.notMeasurableRate}% n/a`;
 }
 
+function getEarlyCampaignSimulationCacheKey(options: Required<SimulationOptions>): string {
+  return JSON.stringify({
+    seedCount: options.seedCount,
+    startSeed: options.startSeed,
+    contractLimit: options.contractLimit,
+    tickMinutes: options.tickMinutes,
+    policyState: options.policyState,
+    scenarioProfiles: options.scenarioProfiles,
+  });
+}
+
 export async function buildEarlyCampaignSimulationSuite(
   options: SimulationOptions = {},
 ): Promise<EarlyCampaignSimulationSuite> {
@@ -2281,310 +2300,329 @@ export async function buildEarlyCampaignSimulationSuite(
     policyState: normalizePolicyState(options.policyState),
     scenarioProfiles: [...(options.scenarioProfiles ?? ["skilled"])],
   };
+  const cacheKey = getEarlyCampaignSimulationCacheKey(resolvedOptions);
+  let suitePromise = earlyCampaignSimulationSuiteCache.get(cacheKey);
+  if (!suitePromise) {
+    suitePromise = (async () => {
+      await deferredSimulationSystemsReady;
+      await deferredSimulationGuidanceReady;
 
-  await deferredSimulationSystemsReady;
-  await deferredSimulationGuidanceReady;
+      const runs: EarlyCampaignSimulationRun[] = [];
+      for (let runIndex = 0; runIndex < resolvedOptions.seedCount; runIndex += 1) {
+        const scenarioProfile =
+          resolvedOptions.scenarioProfiles[runIndex % resolvedOptions.scenarioProfiles.length];
+        const seed =
+          resolvedOptions.startSeed +
+          Math.floor(runIndex / resolvedOptions.scenarioProfiles.length);
+        runs.push(await simulateSingleRun(seed, scenarioProfile, resolvedOptions));
+      }
 
-  const runs: EarlyCampaignSimulationRun[] = [];
-  for (let runIndex = 0; runIndex < resolvedOptions.seedCount; runIndex += 1) {
-    const scenarioProfile =
-      resolvedOptions.scenarioProfiles[runIndex % resolvedOptions.scenarioProfiles.length];
-    const seed =
-      resolvedOptions.startSeed + Math.floor(runIndex / resolvedOptions.scenarioProfiles.length);
-    runs.push(await simulateSingleRun(seed, scenarioProfile, resolvedOptions));
-  }
-
-  const finalTreasuries = runs.map((run) => run.finalTreasury);
-  const totalLootSold = runs.map((run) => run.totalLootSoldCash);
-  const totalOutcomeCounts = runs.reduce(
-    (counts, run) => {
-      counts.success += run.outcomeCounts.success;
-      counts.mixed += run.outcomeCounts.mixed;
-      counts.failure += run.outcomeCounts.failure;
-      return counts;
-    },
-    { success: 0, mixed: 0, failure: 0 },
-  );
-  const totalCycles = Math.max(
-    1,
-    totalOutcomeCounts.success + totalOutcomeCounts.mixed + totalOutcomeCounts.failure,
-  );
-  const firstIncomeAffordableValues = runs
-    .map((run) => run.firstIncomeUpgradeAffordableContract)
-    .filter((value): value is number => value !== null);
-  const firstIncomePurchasedValues = runs
-    .map((run) => run.firstIncomeUpgradePurchasedContract)
-    .filter((value): value is number => value !== null);
-  const firstRecruitViableValues = runs
-    .map((run) => run.firstRecruitViableContract)
-    .filter((value): value is number => value !== null);
-  const firstRecruitAcceptedValues = runs
-    .map((run) => run.firstRecruitAcceptedContract)
-    .filter((value): value is number => value !== null);
-  const firstBossContactValues = runs
-    .map((run) => run.firstBossContactContract)
-    .filter((value): value is number => value !== null);
-  const firstBossClearValues = runs
-    .map((run) => run.firstBossClearContract)
-    .filter((value): value is number => value !== null);
-  const openingPayrollBurdenMean = average(
-    runs.flatMap((run) =>
-      run.contractCycles
-        .filter((cycle) => cycle.index >= 1 && cycle.index <= 3)
-        .map((cycle) => cycle.payrollBurdenAtStartPct),
-    ),
-  );
-  const casualtyPressureAggregate = rateForStatus(
-    runs,
-    (run) => run.evaluation.m5CasualtyPressure.overall,
-  );
-  const meanRaidCountPerContract = average(
-    runs.flatMap((run) => run.contractCycles.map((cycle) => cycle.raidCount)),
-  );
-  const openingProfileRuns: EarlyCampaignSimulationRun[] = [];
-  for (const scenarioProfile of DEFAULT_SCENARIO_PROFILES) {
-    for (
-      let seed = resolvedOptions.startSeed;
-      seed < resolvedOptions.startSeed + OPENING_STABILITY_PROFILE_SEED_COUNT;
-      seed += 1
-    ) {
-      openingProfileRuns.push(
-        await simulateSingleRun(seed, scenarioProfile, {
-          ...resolvedOptions,
-          contractLimit: 3,
-        }),
+      const finalTreasuries = runs.map((run) => run.finalTreasury);
+      const totalLootSold = runs.map((run) => run.totalLootSoldCash);
+      const totalOutcomeCounts = runs.reduce(
+        (counts, run) => {
+          counts.success += run.outcomeCounts.success;
+          counts.mixed += run.outcomeCounts.mixed;
+          counts.failure += run.outcomeCounts.failure;
+          return counts;
+        },
+        { success: 0, mixed: 0, failure: 0 },
       );
-    }
-  }
+      const totalCycles = Math.max(
+        1,
+        totalOutcomeCounts.success + totalOutcomeCounts.mixed + totalOutcomeCounts.failure,
+      );
+      const firstIncomeAffordableValues = runs
+        .map((run) => run.firstIncomeUpgradeAffordableContract)
+        .filter((value): value is number => value !== null);
+      const firstIncomePurchasedValues = runs
+        .map((run) => run.firstIncomeUpgradePurchasedContract)
+        .filter((value): value is number => value !== null);
+      const firstRecruitViableValues = runs
+        .map((run) => run.firstRecruitViableContract)
+        .filter((value): value is number => value !== null);
+      const firstRecruitAcceptedValues = runs
+        .map((run) => run.firstRecruitAcceptedContract)
+        .filter((value): value is number => value !== null);
+      const firstBossContactValues = runs
+        .map((run) => run.firstBossContactContract)
+        .filter((value): value is number => value !== null);
+      const firstBossClearValues = runs
+        .map((run) => run.firstBossClearContract)
+        .filter((value): value is number => value !== null);
+      const openingPayrollBurdenMean = average(
+        runs.flatMap((run) =>
+          run.contractCycles
+            .filter((cycle) => cycle.index >= 1 && cycle.index <= 3)
+            .map((cycle) => cycle.payrollBurdenAtStartPct),
+        ),
+      );
+      const casualtyPressureAggregate = rateForStatus(
+        runs,
+        (run) => run.evaluation.m5CasualtyPressure.overall,
+      );
+      const meanRaidCountPerContract = average(
+        runs.flatMap((run) => run.contractCycles.map((cycle) => cycle.raidCount)),
+      );
+      const openingProfileRuns: EarlyCampaignSimulationRun[] = [];
+      for (const scenarioProfile of DEFAULT_SCENARIO_PROFILES) {
+        for (
+          let seed = resolvedOptions.startSeed;
+          seed < resolvedOptions.startSeed + OPENING_STABILITY_PROFILE_SEED_COUNT;
+          seed += 1
+        ) {
+          openingProfileRuns.push(
+            await simulateSingleRun(seed, scenarioProfile, {
+              ...resolvedOptions,
+              contractLimit: 3,
+            }),
+          );
+        }
+      }
 
-  const profileOpeningTreasuryRates = summarizeProfileRate(
-    openingProfileRuns,
-    (run) => (run.treasuryAfterThreeContracts ?? 0) > CRITICAL_TREASURY_FLOOR,
-  );
-  const profileOpeningDeployableRates = summarizeProfileRate(
-    openingProfileRuns,
-    (run) => (run.deployableOperatorsAfterThreeContracts ?? 0) >= 2,
-  );
-  const m7AggregateStatuses = [
-    evaluateBoundedMetric(profileOpeningTreasuryRates.average, {
-      passMin: 95.01,
-      failMin: 90,
-      target: "> 95% average-profile runs above $50 after three contracts",
-      detail: "Average-profile opening treasury stability target.",
-    }).status,
-    evaluateBoundedMetric(profileOpeningTreasuryRates.struggling, {
-      passMin: 80.01,
-      failMin: 70,
-      target: "> 80% struggling-profile runs above $50 after three contracts",
-      detail: "Struggling-profile opening treasury stability target.",
-    }).status,
-    evaluateBoundedMetric(profileOpeningDeployableRates.skilled, {
-      passMin: 99.01,
-      failMin: 95,
-      target: "> 99% skilled-profile runs keep 2 deployable operators after three contracts",
-      detail: "Skilled-profile roster stability target.",
-    }).status,
-    evaluateBoundedMetric(profileOpeningDeployableRates.average, {
-      passMin: 99.01,
-      failMin: 95,
-      target: "> 99% average-profile runs keep 2 deployable operators after three contracts",
-      detail: "Average-profile roster stability target.",
-    }).status,
-    evaluateBoundedMetric(profileOpeningDeployableRates.struggling, {
-      passMin: 99.01,
-      failMin: 95,
-      target: "> 99% struggling-profile runs keep 2 deployable operators after three contracts",
-      detail: "Struggling-profile roster stability target.",
-    }).status,
-  ];
-  const lootVarianceShare =
-    variance(finalTreasuries) <= 0
-      ? 0
-      : round2((variance(totalLootSold) / variance(finalTreasuries)) * 100);
+      const profileOpeningTreasuryRates = summarizeProfileRate(
+        openingProfileRuns,
+        (run) => (run.treasuryAfterThreeContracts ?? 0) > CRITICAL_TREASURY_FLOOR,
+      );
+      const profileOpeningDeployableRates = summarizeProfileRate(
+        openingProfileRuns,
+        (run) => (run.deployableOperatorsAfterThreeContracts ?? 0) >= 2,
+      );
+      const m7AggregateStatuses = [
+        evaluateBoundedMetric(profileOpeningTreasuryRates.average, {
+          passMin: 95.01,
+          failMin: 90,
+          target: "> 95% average-profile runs above $50 after three contracts",
+          detail: "Average-profile opening treasury stability target.",
+        }).status,
+        evaluateBoundedMetric(profileOpeningTreasuryRates.struggling, {
+          passMin: 80.01,
+          failMin: 70,
+          target: "> 80% struggling-profile runs above $50 after three contracts",
+          detail: "Struggling-profile opening treasury stability target.",
+        }).status,
+        evaluateBoundedMetric(profileOpeningDeployableRates.skilled, {
+          passMin: 99.01,
+          failMin: 95,
+          target: "> 99% skilled-profile runs keep 2 deployable operators after three contracts",
+          detail: "Skilled-profile roster stability target.",
+        }).status,
+        evaluateBoundedMetric(profileOpeningDeployableRates.average, {
+          passMin: 99.01,
+          failMin: 95,
+          target: "> 99% average-profile runs keep 2 deployable operators after three contracts",
+          detail: "Average-profile roster stability target.",
+        }).status,
+        evaluateBoundedMetric(profileOpeningDeployableRates.struggling, {
+          passMin: 99.01,
+          failMin: 95,
+          target: "> 99% struggling-profile runs keep 2 deployable operators after three contracts",
+          detail: "Struggling-profile roster stability target.",
+        }).status,
+      ];
+      const lootVarianceShare =
+        variance(finalTreasuries) <= 0
+          ? 0
+          : round2((variance(totalLootSold) / variance(finalTreasuries)) * 100);
 
-  const notableFindings: string[] = [];
-  if (firstIncomeAffordableValues.some((value) => value < 2)) {
-    notableFindings.push(
-      "The cheapest income upgrade is affordable before the contract-2 target window. Starting treasury currently overshoots the Phase 2 pacing assumption.",
-    );
-  }
-  if (firstIncomePurchasedValues.some((value) => value < 3)) {
-    notableFindings.push(
-      "The first income upgrade is being purchased earlier than the contract-3 target. Guidance gating delays purchase, but not enough to keep it inside the envelope.",
-    );
-  }
-  if (runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)) {
-    notableFindings.push(
-      "Unsafe incident categories appeared inside the first three contracts, which violates the mercy-window assumption.",
-    );
-  }
-  if (lootVarianceShare > 20) {
-    notableFindings.push(
-      "Loot sell variance is contributing more than 20% of observed final-treasury variance across seeds.",
-    );
-  }
-  if (meanRaidCountPerContract !== null && meanRaidCountPerContract > 2) {
-    notableFindings.push(
-      `Contracts averaged ${meanRaidCountPerContract} raids each. That now matches the browser-path contract model more closely, but it also means the Phase 2 per-contract envelope needs recalibration before its cycle-mix targets can be treated as authoritative.`,
-    );
-  }
+      const notableFindings: string[] = [];
+      if (firstIncomeAffordableValues.some((value) => value < 2)) {
+        notableFindings.push(
+          "The cheapest income upgrade is affordable before the contract-2 target window. Starting treasury currently overshoots the Phase 2 pacing assumption.",
+        );
+      }
+      if (firstIncomePurchasedValues.some((value) => value < 3)) {
+        notableFindings.push(
+          "The first income upgrade is being purchased earlier than the contract-3 target. Guidance gating delays purchase, but not enough to keep it inside the envelope.",
+        );
+      }
+      if (runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)) {
+        notableFindings.push(
+          "Unsafe incident categories appeared inside the first three contracts, which violates the mercy-window assumption.",
+        );
+      }
+      if (lootVarianceShare > 20) {
+        notableFindings.push(
+          "Loot sell variance is contributing more than 20% of observed final-treasury variance across seeds.",
+        );
+      }
+      if (meanRaidCountPerContract !== null && meanRaidCountPerContract > 2) {
+        notableFindings.push(
+          `Contracts averaged ${meanRaidCountPerContract} raids each. That now matches the browser-path contract model more closely, but it also means the Phase 2 per-contract envelope needs recalibration before its cycle-mix targets can be treated as authoritative.`,
+        );
+      }
 
-  const suite: EarlyCampaignSimulationSuite = {
-    schemaVersion: EARLY_CAMPAIGN_SIMULATION_SCHEMA_VERSION,
-    meta: {
-      scenarioId: "canonical-opening-path",
-      canonicalScenarioPath: "content/bootstrap.ts#canonicalNewGameScenario",
-      planPath: "docs/plans/bodega-early-game-balance-followup.md",
-      targetEnvelopePath: "docs/research/shipped-plans/economy-target-envelope.md",
-      seedCount: resolvedOptions.seedCount,
-      startSeed: resolvedOptions.startSeed,
-      contractLimit: resolvedOptions.contractLimit,
-      tickMinutes: resolvedOptions.tickMinutes,
-      scenarioProfiles: resolvedOptions.scenarioProfiles,
-    },
-    aggregate: {
-      runCount: runs.length,
-      completedRunCount: runs.filter(
-        (run) => run.completedContracts >= resolvedOptions.contractLimit,
-      ).length,
-      deadlockRate: round2((runs.filter((run) => run.deadlocked).length / runs.length) * 100),
-      collapseRate: round2((runs.filter((run) => run.collapsed).length / runs.length) * 100),
-      stallRate: round2((runs.filter((run) => run.stalled).length / runs.length) * 100),
-      outcomeDistribution: {
-        success: round2((totalOutcomeCounts.success / totalCycles) * 100),
-        mixed: round2((totalOutcomeCounts.mixed / totalCycles) * 100),
-        failure: round2((totalOutcomeCounts.failure / totalCycles) * 100),
-      },
-      inferredScenarioDistribution: {
-        skilled: round2(
-          (runs.filter((run) => run.inferredScenario === "skilled").length / runs.length) * 100,
-        ),
-        average: round2(
-          (runs.filter((run) => run.inferredScenario === "average").length / runs.length) * 100,
-        ),
-        struggling: round2(
-          (runs.filter((run) => run.inferredScenario === "struggling").length / runs.length) * 100,
-        ),
-      },
-      meanFinalTreasury: average(finalTreasuries) ?? 0,
-      treasuryVariance: variance(finalTreasuries),
-      lootVarianceShare,
-      firstIncomeUpgradeAffordable: {
-        meanContract: average(firstIncomeAffordableValues),
-        status: combineStatuses(
-          runs.map((run) =>
-            getCheckStatus(run.evaluation.m3UpgradeTiming.checks, "first_affordable"),
-          ),
-        ),
-      },
-      firstIncomeUpgradePurchased: {
-        meanContract: average(firstIncomePurchasedValues),
-        status: combineStatuses(
-          runs.map((run) =>
-            getCheckStatus(run.evaluation.m3UpgradeTiming.checks, "first_purchased"),
-          ),
-        ),
-      },
-      firstRecruitViable: {
-        meanContract: average(firstRecruitViableValues),
-        status: combineStatuses(
-          runs.map((run) =>
-            getCheckStatus(run.evaluation.m4RecruitAcceptance.checks, "first_recruit_affordable"),
-          ),
-        ),
-      },
-      firstRecruitAccepted: {
-        meanContract: average(firstRecruitAcceptedValues),
-        status: firstRecruitAcceptedValues.length > 0 ? "pass" : "not_measurable",
-      },
-      firstBossContact: {
-        meanContract: average(firstBossContactValues),
-        status: getBossTimingAggregateStatus(firstBossContactValues),
-      },
-      firstBossClear: {
-        meanContract: average(firstBossClearValues),
-        status: getBossTimingAggregateStatus(firstBossClearValues),
-      },
-      metrics: {
-        m1TreasuryFlow: rateForStatus(runs, (run) => run.evaluation.m1TreasuryFlow.overall),
-        m2PayrollBurden: rateForStatus(runs, (run) => run.evaluation.m2PayrollBurden.overall),
-        m3UpgradeTiming: rateForStatus(runs, (run) => run.evaluation.m3UpgradeTiming.overall),
-        m4RecruitAcceptance: rateForStatus(
-          runs,
-          (run) => run.evaluation.m4RecruitAcceptance.overall,
-        ),
-        m5CasualtyPressure: rateForStatus(runs, (run) => run.evaluation.m5CasualtyPressure.overall),
-        m6DeadlockRate: rateForStatus(runs, (run) => run.evaluation.m6DeadlockRate.overall),
-        m7OpeningStability: rateForStatuses(m7AggregateStatuses),
-        m8RelocationPacing: rateForStatus(runs, (run) => run.evaluation.m8RelocationPacing.overall),
-      },
-      scenarioDeadlockRates: summarizeProfileRate(openingProfileRuns, (run) => !run.deadlocked),
-      scenarioOpeningTreasuryRates: profileOpeningTreasuryRates,
-      scenarioOpeningDeployableRates: profileOpeningDeployableRates,
-      watchItems: {
-        payrollBurdenStress: {
-          status:
-            openingPayrollBurdenMean === null
-              ? "not_measurable"
-              : openingPayrollBurdenMean > 180
-                ? "out_of_band"
-                : openingPayrollBurdenMean >= 130
+      const suite: EarlyCampaignSimulationSuite = {
+        schemaVersion: EARLY_CAMPAIGN_SIMULATION_SCHEMA_VERSION,
+        meta: {
+          scenarioId: "canonical-opening-path",
+          canonicalScenarioPath: "content/bootstrap.ts#canonicalNewGameScenario",
+          planPath: "docs/plans/bodega-early-game-balance-followup.md",
+          targetEnvelopePath: "docs/research/shipped-plans/economy-target-envelope.md",
+          seedCount: resolvedOptions.seedCount,
+          startSeed: resolvedOptions.startSeed,
+          contractLimit: resolvedOptions.contractLimit,
+          tickMinutes: resolvedOptions.tickMinutes,
+          scenarioProfiles: resolvedOptions.scenarioProfiles,
+        },
+        aggregate: {
+          runCount: runs.length,
+          completedRunCount: runs.filter(
+            (run) => run.completedContracts >= resolvedOptions.contractLimit,
+          ).length,
+          deadlockRate: round2((runs.filter((run) => run.deadlocked).length / runs.length) * 100),
+          collapseRate: round2((runs.filter((run) => run.collapsed).length / runs.length) * 100),
+          stallRate: round2((runs.filter((run) => run.stalled).length / runs.length) * 100),
+          outcomeDistribution: {
+            success: round2((totalOutcomeCounts.success / totalCycles) * 100),
+            mixed: round2((totalOutcomeCounts.mixed / totalCycles) * 100),
+            failure: round2((totalOutcomeCounts.failure / totalCycles) * 100),
+          },
+          inferredScenarioDistribution: {
+            skilled: round2(
+              (runs.filter((run) => run.inferredScenario === "skilled").length / runs.length) * 100,
+            ),
+            average: round2(
+              (runs.filter((run) => run.inferredScenario === "average").length / runs.length) * 100,
+            ),
+            struggling: round2(
+              (runs.filter((run) => run.inferredScenario === "struggling").length / runs.length) *
+                100,
+            ),
+          },
+          meanFinalTreasury: average(finalTreasuries) ?? 0,
+          treasuryVariance: variance(finalTreasuries),
+          lootVarianceShare,
+          firstIncomeUpgradeAffordable: {
+            meanContract: average(firstIncomeAffordableValues),
+            status: combineStatuses(
+              runs.map((run) =>
+                getCheckStatus(run.evaluation.m3UpgradeTiming.checks, "first_affordable"),
+              ),
+            ),
+          },
+          firstIncomeUpgradePurchased: {
+            meanContract: average(firstIncomePurchasedValues),
+            status: combineStatuses(
+              runs.map((run) =>
+                getCheckStatus(run.evaluation.m3UpgradeTiming.checks, "first_purchased"),
+              ),
+            ),
+          },
+          firstRecruitViable: {
+            meanContract: average(firstRecruitViableValues),
+            status: combineStatuses(
+              runs.map((run) =>
+                getCheckStatus(
+                  run.evaluation.m4RecruitAcceptance.checks,
+                  "first_recruit_affordable",
+                ),
+              ),
+            ),
+          },
+          firstRecruitAccepted: {
+            meanContract: average(firstRecruitAcceptedValues),
+            status: firstRecruitAcceptedValues.length > 0 ? "pass" : "not_measurable",
+          },
+          firstBossContact: {
+            meanContract: average(firstBossContactValues),
+            status: getBossTimingAggregateStatus(firstBossContactValues),
+          },
+          firstBossClear: {
+            meanContract: average(firstBossClearValues),
+            status: getBossTimingAggregateStatus(firstBossClearValues),
+          },
+          metrics: {
+            m1TreasuryFlow: rateForStatus(runs, (run) => run.evaluation.m1TreasuryFlow.overall),
+            m2PayrollBurden: rateForStatus(runs, (run) => run.evaluation.m2PayrollBurden.overall),
+            m3UpgradeTiming: rateForStatus(runs, (run) => run.evaluation.m3UpgradeTiming.overall),
+            m4RecruitAcceptance: rateForStatus(
+              runs,
+              (run) => run.evaluation.m4RecruitAcceptance.overall,
+            ),
+            m5CasualtyPressure: rateForStatus(
+              runs,
+              (run) => run.evaluation.m5CasualtyPressure.overall,
+            ),
+            m6DeadlockRate: rateForStatus(runs, (run) => run.evaluation.m6DeadlockRate.overall),
+            m7OpeningStability: rateForStatuses(m7AggregateStatuses),
+            m8RelocationPacing: rateForStatus(
+              runs,
+              (run) => run.evaluation.m8RelocationPacing.overall,
+            ),
+          },
+          scenarioDeadlockRates: summarizeProfileRate(openingProfileRuns, (run) => !run.deadlocked),
+          scenarioOpeningTreasuryRates: profileOpeningTreasuryRates,
+          scenarioOpeningDeployableRates: profileOpeningDeployableRates,
+          watchItems: {
+            payrollBurdenStress: {
+              status:
+                openingPayrollBurdenMean === null
+                  ? "not_measurable"
+                  : openingPayrollBurdenMean > 180
+                    ? "out_of_band"
+                    : openingPayrollBurdenMean >= 130
+                      ? "pass"
+                      : "out_of_band",
+              detail:
+                openingPayrollBurdenMean === null
+                  ? "No opening payroll samples were recorded."
+                  : `Mean opening payroll burden is ${round2(openingPayrollBurdenMean)}% against a 130%-180% target band.`,
+              measured: openingPayrollBurdenMean,
+            },
+            lootSellVariance: {
+              status: lootVarianceShare > 20 ? "fail" : "pass",
+              detail: `Loot variance share proxy is ${lootVarianceShare}% of final treasury variance. The watch threshold is 20%.`,
+              measured: lootVarianceShare,
+            },
+            incidentMercyWindow: {
+              status: runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)
+                ? "fail"
+                : "pass",
+              detail: runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)
+                ? "At least one seeded run surfaced a non-opening-safe incident category inside the first three contracts."
+                : "No seeded run surfaced a non-opening-safe incident category inside the first three contracts.",
+              measured: runs.filter((run) => run.unsafeIncidentsInFirstThreeContracts > 0).length,
+            },
+            injuryPressureNoTreatmentCost: {
+              status:
+                runs.some((run) => run.totalTreatmentSpend > 0) &&
+                casualtyPressureAggregate.failRate <= 5
                   ? "pass"
-                  : "out_of_band",
-          detail:
-            openingPayrollBurdenMean === null
-              ? "No opening payroll samples were recorded."
-              : `Mean opening payroll burden is ${round2(openingPayrollBurdenMean)}% against a 130%-180% target band.`,
-          measured: openingPayrollBurdenMean,
-        },
-        lootSellVariance: {
-          status: lootVarianceShare > 20 ? "fail" : "pass",
-          detail: `Loot variance share proxy is ${lootVarianceShare}% of final treasury variance. The watch threshold is 20%.`,
-          measured: lootVarianceShare,
-        },
-        incidentMercyWindow: {
-          status: runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)
-            ? "fail"
-            : "pass",
-          detail: runs.some((run) => run.unsafeIncidentsInFirstThreeContracts > 0)
-            ? "At least one seeded run surfaced a non-opening-safe incident category inside the first three contracts."
-            : "No seeded run surfaced a non-opening-safe incident category inside the first three contracts.",
-          measured: runs.filter((run) => run.unsafeIncidentsInFirstThreeContracts > 0).length,
-        },
-        injuryPressureNoTreatmentCost: {
-          status:
-            runs.some((run) => run.totalTreatmentSpend > 0) &&
-            casualtyPressureAggregate.failRate <= 5
-              ? "pass"
-              : runs.some((run) => run.totalTreatmentSpend > 0)
+                  : runs.some((run) => run.totalTreatmentSpend > 0)
+                    ? "out_of_band"
+                    : "fail",
+              detail: runs.some((run) => run.totalTreatmentSpend > 0)
+                ? `Direct treatment spend is now active. Mean treatment/restock spend is $${average(runs.map((run) => run.totalTreatmentSpend)) ?? 0} per run.`
+                : "No direct treatment spend was recorded in the sampled runs.",
+              measured: average(runs.map((run) => run.totalTreatmentSpend)) ?? 0,
+            },
+            relocationReadiness: {
+              status: runs.some((run) => run.relocationReadyContract !== null)
                 ? "out_of_band"
-                : "fail",
-          detail: runs.some((run) => run.totalTreatmentSpend > 0)
-            ? `Direct treatment spend is now active. Mean treatment/restock spend is $${average(runs.map((run) => run.totalTreatmentSpend)) ?? 0} per run.`
-            : "No direct treatment spend was recorded in the sampled runs.",
-          measured: average(runs.map((run) => run.totalTreatmentSpend)) ?? 0,
+                : "not_measurable",
+              detail: runs.some((run) => run.relocationReadyContract !== null)
+                ? "Relocation readiness was reached inside the Phase 3 window, which is earlier than the Phase 2 pacing table expects."
+                : "No seeded run reached relocation readiness inside the 8-contract Phase 3 window.",
+              measured:
+                average(
+                  runs
+                    .map((run) => run.relocationReadyContract)
+                    .filter((value): value is number => value !== null),
+                ) ?? null,
+            },
+          },
+          notableFindings,
         },
-        relocationReadiness: {
-          status: runs.some((run) => run.relocationReadyContract !== null)
-            ? "out_of_band"
-            : "not_measurable",
-          detail: runs.some((run) => run.relocationReadyContract !== null)
-            ? "Relocation readiness was reached inside the Phase 3 window, which is earlier than the Phase 2 pacing table expects."
-            : "No seeded run reached relocation readiness inside the 8-contract Phase 3 window.",
-          measured:
-            average(
-              runs
-                .map((run) => run.relocationReadyContract)
-                .filter((value): value is number => value !== null),
-            ) ?? null,
-        },
-      },
-      notableFindings,
-    },
-    runs,
-  };
+        runs,
+      };
 
-  return earlyCampaignSimulationSchema.parse(suite);
+      return earlyCampaignSimulationSchema.parse(suite);
+    })();
+    earlyCampaignSimulationSuiteCache.set(cacheKey, suitePromise);
+  }
+
+  return structuredClone(await suitePromise);
 }
 
 export function renderEarlyCampaignSimulationJson(suite: EarlyCampaignSimulationSuite): string {

@@ -62,7 +62,10 @@ This section is intentionally summary-level. The implementation itself is the so
 - The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
 - The bodega now ships the full three-step building arc (Frontage, Annex, Backyard Extension), bodega-native support rooms (Back Office, Backstock, Alley), hard roster-cap overflow handling, and authored encounter portraits for the three shipped bodega-era bosses.
 - The management UI now surfaces relocation readiness, blockers, carryover and reset rules, and the runtime entry point into the relocation interruption flow.
-- The HQ exterior supports a four-state day-night cycle (sunrise, day, sunset, night) derived from the existing simulation clock, with manifest-driven backdrop profiles, per-phase lighting, and a future-building-ready schema.
+- The second headquarters tier is shipped at first pass: relocation into Porter's is runtime-owned and save-safe; Porter's has multi-floor layouts, explicit floor switching, starter room placement, upgrade definitions, waterfront stage data, higher recruitment and income tuning, and a D-rank contract ceiling.
+- Porter's room and progression breadth now exist beyond the relocation landing state: the runtime/template layer supports the Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, and Deck catalogs, plus lightweight consumable prep from monster drops.
+- The optional runtime-owned loot filter auto-sells junk monster parts and obsolete gear once the guild has already outgrown them.
+- The HQ backdrop system now supports bodega and Porter's across sunrise, day, sunset, and night states with simulation-clock-derived phases, manifest-driven presentation data, elevation-band support, and hybrid renderer-authored dressing where package coverage is still intentionally partial.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
 
 ## Completed: Opening Campaign Remediation
@@ -102,61 +105,54 @@ Exit criteria:
 - relocation has a concrete runtime target and a save-safe handoff
 - the second headquarters tier starts from a closed early-game baseline and a shipped Porter's target
 
-## Current Milestone: Porter's Expansion
+## Completed: Porter's Baseline
 
-Goal: prove that scale changes gameplay, not just numbers.
+Status: shipped.
 
-Status: the Porter's entry slice is now shipped through relocation landing, starter rooms, multi-floor support, upgrades, prep-room consumables, and first-pass tuning. This section remains future-facing for deeper second-headquarters and later-building work beyond the shipped entry slice.
+The second headquarters is no longer just a future placeholder. The relocation handoff into Porter's, the starter multi-floor building state, the second-building room catalog, the higher contract ceiling, the prep-room consumable loop, and the first Porter's upgrade track are all in the repo now. What remains is not "ship Porter's at all"; it is to deepen why Porter's feels different once the player is there.
 
-Deliverables:
+Shipped baseline:
 
-- second headquarters definition and upgrade path
-- Porter's as the concrete second-headquarters identity: Red Hook bar and restaurant below, converted operational rooms above, waterfront expansion later
-- relocation event framed as a systemic milestone, not just a map swap
-- prebuilt initial layouts for new building phases
-- multi-floor support
-- floor-indexed HQ presentation state so the active floor is explicit in the runtime view rather than implied by one flat map
-- a first floor-navigation/view contract that supports moving between floors without rewriting the entire HQ interaction model
-- floor-aware exterior/background selection that can reuse shared elevation bands across similar floors
-- room families that were combined in the bodega split into dedicated Porter's rooms as documented in the world foundation, including infirmary, break room, gym, briefing room, stockroom, prep room, and a bar-driven recruitment surface
-- training rooms unlock for the first time — no training exists in the bodega phase
-- Porter's introduces lightweight consumable prep from monster drops through a dedicated prep room; full gear crafting remains a later-tier system
-- low-rank loot clutter is now managed through an optional autosell filter that keeps junk monster parts and obsolete gear from piling up once the guild has outgrown them
-- office-tier rooms and role-specific room variants for later progression
-- recurring teams deepen into stronger lock-in, more persistent identity, and explicit player-visible naming once a team's identity has proven stable
-- established teams and rooms develop recognizable culture that affects new-hire integration and staffing choices
-- deeper intel gathering and intel-improvement systems
-- better recruitment expectations
-- broader dungeon pool
-- more complex staffing demands
+- relocation into Porter's is a player-facing runtime milestone with save-safe carryover and reset rules
+- Porter's starts from a multi-floor HQ with explicit floor-aware presentation state
+- Porter's starter rooms are implemented and split bodega functions into public, operational, recovery, training, and prep spaces
+- Porter's building upgrades and waterfront expansion definitions are implemented, including upgrade-gated room unlocks for Break Room, Briefing Room, Dock, and Deck
+- Porter's raises the recruitment/income baseline, supports D-rank contract progression, and adds lightweight consumable prep from monster drops
+- the optional loot filter is implemented as runtime-owned automation rather than player-maintained per-item rules
 
-Exit criteria:
+## Completed: HQ Day-Night Foundation
 
-- moving to the next building changes how the player allocates space, labor, and money
-- moving between floors is a real part of understanding and managing the headquarters, not just a cosmetic label
-- the second building does not require bespoke exterior art for every single floor when adjacent floors share the same outside read
-- the second headquarters tier mostly feels like added content, not rewritten infrastructure
+Status: shipped foundation.
 
-## Cross-Building HQ Day-Night Presentation Pass
+The first cross-building HQ day-night pass is no longer a standalone future milestone. The simulation clock now drives four canonical exterior phases, backdrop manifests exist for both shipped headquarters identities, and the schema already supports shared elevation bands for multi-floor buildings. Remaining backdrop-package cleanup belongs inside future building-environment work, not as a separate roadmap phase.
 
-Goal: make headquarters exteriors feel lived-in across the existing bodega and every future building tier without turning lighting into hidden gameplay logic.
+## Current Milestone: Porter's Functional Differentiation
+
+Goal: prove that the second headquarters changes management decisions because its specialized rooms matter, not just because Porter's has more slots and bigger numbers.
+
+Status: next planning target.
+
+The Porter's baseline is shipped. The next pass should deepen the Porter's-only room families and upgrade track that already exist in templates, layouts, view models, and tests before the roadmap expands again into broader midgame pressure.
 
 Deliverables:
 
-- derive HQ time-of-day presentation from the existing simulation clock instead of introducing a separate presentation timer
-- standardize four canonical HQ exterior states: sunrise, day, sunset, and night
-- apply those states only to the background and exterior decorative dressing around the HQ shell in the first pass
-- give each building theme its own authored exterior backdrop package for all four states rather than recoloring one universal background
-- define those backdrop packages in shell-relative zones so the same system can later serve ground-floor buildings, multi-floor HQs, and tower-scale headquarters
-- keep the future verticality path open through reusable elevation bands, so similar floors can share exterior packages instead of requiring bespoke art for every floor
-- replace the remaining hardcoded bodega exterior dressing with fully package-driven building-specific exterior variants
+- turn `room:training` from room availability and schedule affinity into a real bounded progression or readiness system that is meaningfully unlocked by Porter's without changing fixed attunement or rank identity
+- make the Office and Briefing Room deepen contract preparation through clearer intel, risk interpretation, or boss-preparation effects that are visible before and after bidding
+- make Break Room, Infirmary, Dock, and Deck produce explicit recovery, morale, and staging consequences so upstairs/private space and waterfront space change staffing and schedule decisions
+- ensure Porter's upgrade purchases and waterfront unlocks are exercised through the player-facing campaign instead of existing mainly as template breadth and regression coverage
+- use D-rank contract/site breadth and second-building staffing pressure to validate that these room differences matter during ordinary play
+
+Immediate planning slice:
+
+- scope the first execution plan around training, briefing/intel, and private recovery/staging because those hooks already exist in room tags, layout data, UI language, and progression content
+- keep this pass inside the shipped Porter's building instead of opening a third headquarters, full crafting, or city-institution pressure at the same time
 
 Exit criteria:
 
-- the bodega visibly changes across the four day-night states when the existing clock advances
-- adding a new building now includes a clear requirement to ship four exterior backdrop variants as part of its environment package
-- the first implementation does not block future floor-aware backgrounds for multi-floor or skyscraper headquarters
-- the feature remains presentation-only unless the product plan is explicitly updated later
+- a Porter's run creates decisions that do not exist in the bodega because specialized rooms change outcomes, not just capacity
+- at least one Porter's-only room family changes raid preparation and one changes recovery or social outcomes in clearly visible ways
+- the player's reason to keep upgrading Porter's is operational differentiation, not only bigger numbers
+- this pass does not open full crafting, city-institution pressure, or a new headquarters tier early
 
 ## Phase 4: Midgame Systems
 
@@ -222,8 +218,8 @@ Exit criteria:
 3. Completed: finish the bodega visually.
 4. Completed: make the first bodega slice good.
 5. Completed: close the bodega endgame and promotion review from the shipped Porter's baseline.
-6. Deepen Porter's beyond the shipped entry slice.
-7. Add systemic competitors.
-8. Add prestige content.
+6. Deepen Porter's functional differentiation and player-facing upgrade path.
+7. Add midgame external pressure.
+8. Add later-building and prestige content.
 
 That order matters more than any specific library choice.
