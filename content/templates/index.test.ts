@@ -17,9 +17,9 @@ describe("template registry", () => {
     expect(registry.upgrades).toHaveLength(12);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(13);
-    expect(registry.items).toHaveLength(62);
+    expect(registry.items).toHaveLength(106);
     expect(registry.prepRecipes).toHaveLength(4);
-    expect(registry.dropTables).toHaveLength(27);
+    expect(registry.dropTables).toHaveLength(60);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
       "mission/containment",
@@ -115,6 +115,12 @@ describe("template registry", () => {
       "weapon/baseball-bat",
       "weapon/crowbar",
       "weapon/box-cutter",
+      "weapon/tire-iron",
+      "weapon/claw-hammer",
+      "weapon/chain-length",
+      "weapon/nail-bat",
+      "weapon/stun-baton",
+      "weapon/rebar-spike",
       "weapon/tactical-knife",
       "weapon/machete",
       "weapon/compact-crossbow",
@@ -124,24 +130,39 @@ describe("template registry", () => {
       "weapon/tactical-rifle",
       "weapon/dual-daggers",
       "weapon/sidearm",
+      "weapon/rift-scored-blade",
+      "weapon/pulse-baton",
+      "weapon/breach-hammer",
+      "weapon/focused-carbine",
     ];
 
     const outfitIds = [
       "outfit-overlay/padded-jacket",
       "outfit-overlay/leather-vest",
       "outfit-overlay/work-coveralls",
+      "outfit-overlay/denim-jacket",
+      "outfit-overlay/hi-vis-vest",
+      "outfit-overlay/insulated-parka",
+      "outfit-overlay/courier-jacket",
       "outfit-overlay/tactical-vest",
       "outfit-overlay/stealth-cloak",
       "outfit-overlay/reinforced-hoodie",
       "outfit-overlay/heavy-plate",
       "outfit-overlay/field-medic-coat",
       "outfit-overlay/ballistic-vest",
+      "outfit-overlay/rift-lined-jacket",
+      "outfit-overlay/signal-dampening-coat",
+      "outfit-overlay/composite-plate-carrier",
     ];
 
     const accessoryIds = [
       "accessory/comm-earpiece",
       "accessory/tactical-scarf",
       "accessory/wrist-brace",
+      "accessory/knee-pads",
+      "accessory/work-gloves",
+      "accessory/respirator-mask",
+      "accessory/ankle-holster",
       "accessory/eye-visor",
       "accessory/medkit-pouch",
       "accessory/scout-binocs",
@@ -150,6 +171,9 @@ describe("template registry", () => {
       "accessory/reinforced-gloves",
       "accessory/utility-belt",
       "accessory/trauma-kit",
+      "accessory/rift-compass",
+      "accessory/dampening-earbuds",
+      "accessory/stabilizer-gauntlet",
     ];
 
     const lootIds = [
@@ -177,6 +201,26 @@ describe("template registry", () => {
       "loot/monster-part/rubber-fragment",
       "loot/monster-part/frost-shard",
       "loot/monster-part/preserved-marrow",
+      "loot/monster-part/ticket-stub",
+      "loot/monster-part/rail-splice",
+      "loot/monster-part/lacquer-bead",
+      "loot/monster-part/solvent-gland",
+      "loot/monster-part/oxide-flake",
+      "loot/monster-part/rivet-cluster",
+      "loot/monster-part/glass-tooth",
+      "loot/monster-part/pawned-core",
+      "loot/monster-part/celluloid-strip",
+      "loot/monster-part/butter-residue",
+      "loot/monster-part/algae-mat",
+      "loot/monster-part/cistern-scale",
+      "loot/monster-part/star-chart-shard",
+      "loot/monster-part/lens-fragment",
+      "loot/monster-part/pressure-seal",
+      "loot/monster-part/turbine-tooth",
+      "loot/monster-part/prop-residue",
+      "loot/monster-part/curtain-thread",
+      "loot/monster-part/culture-sample",
+      "loot/monster-part/reagent-vial",
     ];
 
     [...weaponIds, ...outfitIds, ...accessoryIds, ...lootIds].forEach((id) => {

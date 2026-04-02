@@ -173,6 +173,97 @@ export const itemTemplates = [
     sellPrice: 8,
     statEffects: [{ stat: "speed", value: 3 }],
   },
+  // ── F-rank weapons (continued) ──────────────────────────────────────────
+  {
+    id: "weapon/tire-iron",
+    kind: "item",
+    name: "Tire Iron",
+    tags: ["rank:f"],
+    description:
+      "Bent from a trunk kit. The curve makes it worse for tires and better for everything else.",
+    category: "weapon",
+    rank: "f",
+    buyPrice: 28,
+    sellPrice: 11,
+    statEffects: [
+      { stat: "strength", value: 3 },
+      { stat: "endurance", value: 1 },
+    ],
+  },
+  {
+    id: "weapon/claw-hammer",
+    kind: "item",
+    name: "Claw Hammer",
+    tags: ["rank:f"],
+    description: "Standard-issue framing hammer. The claw end is not decorative.",
+    category: "weapon",
+    rank: "f",
+    buyPrice: 22,
+    sellPrice: 9,
+    statEffects: [{ stat: "strength", value: 2 }],
+  },
+  {
+    id: "weapon/chain-length",
+    kind: "item",
+    name: "Chain Length",
+    tags: ["rank:f"],
+    description: "Three feet of hardware chain with a padlock on one end. Flexible reach.",
+    category: "weapon",
+    rank: "f",
+    buyPrice: 18,
+    sellPrice: 7,
+    statEffects: [
+      { stat: "speed", value: 2 },
+      { stat: "strength", value: 1 },
+    ],
+  },
+  // ── E-rank weapons ──────────────────────────────────────────────────────
+  {
+    id: "weapon/nail-bat",
+    kind: "item",
+    name: "Nail Bat",
+    tags: ["rank:e"],
+    description:
+      "A baseball bat with roofing nails driven through the barrel. Field-modified and ugly.",
+    category: "weapon",
+    rank: "e",
+    buyPrice: 55,
+    sellPrice: 22,
+    statEffects: [
+      { stat: "strength", value: 5 },
+      { stat: "speed", value: -1 },
+    ],
+  },
+  {
+    id: "weapon/stun-baton",
+    kind: "item",
+    name: "Stun Baton",
+    tags: ["rank:e"],
+    description: "A collapsible baton with a jury-rigged electric tip. Brief but persuasive.",
+    category: "weapon",
+    rank: "e",
+    buyPrice: 80,
+    sellPrice: 32,
+    statEffects: [
+      { stat: "speed", value: 3 },
+      { stat: "strength", value: 3 },
+    ],
+  },
+  {
+    id: "weapon/rebar-spike",
+    kind: "item",
+    name: "Rebar Spike",
+    tags: ["rank:e"],
+    description: "A sharpened length of rebar pulled from a condemned site. Heavier than it looks.",
+    category: "weapon",
+    rank: "e",
+    buyPrice: 65,
+    sellPrice: 26,
+    statEffects: [
+      { stat: "strength", value: 4 },
+      { stat: "resilience", value: 1 },
+    ],
+  },
   {
     id: "weapon/hand-axe",
     kind: "item",
@@ -202,6 +293,74 @@ export const itemTemplates = [
       { stat: "speed", value: 4 },
       { stat: "perception", value: 3 },
       { stat: "strength", value: 2 },
+    ],
+  },
+  // ── D-rank weapons (rift-touched) ───────────────────────────────────
+  {
+    id: "weapon/rift-scored-blade",
+    kind: "item",
+    name: "Rift-Scored Blade",
+    tags: ["rank:d"],
+    description:
+      "A machete whose edge developed micro-fissures from prolonged rift exposure. Cuts follow trajectories that shouldn't be possible.",
+    category: "weapon",
+    rank: "d",
+    buyPrice: 170,
+    sellPrice: 68,
+    statEffects: [
+      { stat: "strength", value: 6 },
+      { stat: "speed", value: 3 },
+    ],
+  },
+  {
+    id: "weapon/pulse-baton",
+    kind: "item",
+    name: "Pulse Baton",
+    tags: ["rank:d"],
+    description:
+      "A riot baton with a salvaged rift-crystal emitter seated in the grip. The impact reverberates at a frequency that disrupts coordination.",
+    category: "weapon",
+    rank: "d",
+    buyPrice: 145,
+    sellPrice: 58,
+    statEffects: [
+      { stat: "strength", value: 4 },
+      { stat: "speed", value: 3 },
+      { stat: "perception", value: 2 },
+    ],
+  },
+  {
+    id: "weapon/breach-hammer",
+    kind: "item",
+    name: "Breach Hammer",
+    tags: ["rank:d"],
+    description:
+      "A two-handed sledge built for structural entry in rift sites. The head hums at a frequency that weakens material bonds on contact.",
+    category: "weapon",
+    rank: "d",
+    buyPrice: 190,
+    sellPrice: 76,
+    statEffects: [
+      { stat: "strength", value: 8 },
+      { stat: "resilience", value: 2 },
+      { stat: "speed", value: -1 },
+    ],
+  },
+  {
+    id: "weapon/focused-carbine",
+    kind: "item",
+    name: "Focused Carbine",
+    tags: ["rank:d"],
+    description:
+      "A short-barreled rifle with a rift-glass reflex sight. In rift-dense air, the rounds track slightly toward center mass.",
+    category: "weapon",
+    rank: "d",
+    buyPrice: 200,
+    sellPrice: 80,
+    statEffects: [
+      { stat: "strength", value: 4 },
+      { stat: "perception", value: 4 },
+      { stat: "speed", value: 2 },
     ],
   },
 
@@ -311,6 +470,72 @@ export const itemTemplates = [
       { stat: "resilience", value: 1 },
     ],
   },
+  // ── F-rank outfits (continued) ─────────────────────────────────────────
+  {
+    id: "outfit-overlay/denim-jacket",
+    kind: "item",
+    name: "Denim Jacket",
+    tags: ["rank:f"],
+    description:
+      "A thick denim jacket with the sleeves intact. Turns a glancing blow into a bruise.",
+    category: "outfit-overlay",
+    rank: "f",
+    buyPrice: 32,
+    sellPrice: 13,
+    statEffects: [
+      { stat: "resilience", value: 2 },
+      { stat: "speed", value: 1 },
+    ],
+  },
+  {
+    id: "outfit-overlay/hi-vis-vest",
+    kind: "item",
+    name: "Hi-Vis Vest",
+    tags: ["rank:f"],
+    description: "Reflective safety vest. Offers negligible protection but makes you easy to find.",
+    category: "outfit-overlay",
+    rank: "f",
+    buyPrice: 15,
+    sellPrice: 6,
+    statEffects: [
+      { stat: "perception", value: 2 },
+      { stat: "endurance", value: 1 },
+    ],
+  },
+  // ── E-rank outfits ─────────────────────────────────────────────────────
+  {
+    id: "outfit-overlay/insulated-parka",
+    kind: "item",
+    name: "Insulated Parka",
+    tags: ["rank:e"],
+    description:
+      "A heavy cold-weather parka with synthetic fill. Slows you down but shrugs off impacts.",
+    category: "outfit-overlay",
+    rank: "e",
+    buyPrice: 70,
+    sellPrice: 28,
+    statEffects: [
+      { stat: "resilience", value: 4 },
+      { stat: "endurance", value: 1 },
+      { stat: "speed", value: -1 },
+    ],
+  },
+  {
+    id: "outfit-overlay/courier-jacket",
+    kind: "item",
+    name: "Courier Jacket",
+    tags: ["rank:e"],
+    description:
+      "A bike messenger jacket with built-in armor panels. Designed for people who get hit by cars.",
+    category: "outfit-overlay",
+    rank: "e",
+    buyPrice: 78,
+    sellPrice: 31,
+    statEffects: [
+      { stat: "speed", value: 3 },
+      { stat: "resilience", value: 2 },
+    ],
+  },
   {
     id: "outfit-overlay/reinforced-hoodie",
     kind: "item",
@@ -341,6 +566,58 @@ export const itemTemplates = [
       { stat: "resilience", value: 6 },
       { stat: "endurance", value: 2 },
       { stat: "speed", value: 1 },
+    ],
+  },
+  // ── D-rank outfits (rift-touched) ──────────────────────────────────
+  {
+    id: "outfit-overlay/rift-lined-jacket",
+    kind: "item",
+    name: "Rift-Lined Jacket",
+    tags: ["rank:d"],
+    description:
+      "A tactical jacket with rift-fiber woven into the lining. Impact energy dissipates in directions that don't exist.",
+    category: "outfit-overlay",
+    rank: "d",
+    buyPrice: 175,
+    sellPrice: 70,
+    statEffects: [
+      { stat: "resilience", value: 6 },
+      { stat: "speed", value: 2 },
+      { stat: "endurance", value: 2 },
+    ],
+  },
+  {
+    id: "outfit-overlay/signal-dampening-coat",
+    kind: "item",
+    name: "Signal-Dampening Coat",
+    tags: ["rank:d"],
+    description:
+      "A long coat treated with compounds that block rift-frequency interference. Feels colder than ambient by exactly two degrees.",
+    category: "outfit-overlay",
+    rank: "d",
+    buyPrice: 155,
+    sellPrice: 62,
+    statEffects: [
+      { stat: "resilience", value: 5 },
+      { stat: "perception", value: 3 },
+      { stat: "endurance", value: 1 },
+    ],
+  },
+  {
+    id: "outfit-overlay/composite-plate-carrier",
+    kind: "item",
+    name: "Composite Plate Carrier",
+    tags: ["rank:d"],
+    description:
+      "Military surplus with rift-ceramic inserts. The inserts glow faintly at night and nobody can explain why.",
+    category: "outfit-overlay",
+    rank: "d",
+    buyPrice: 185,
+    sellPrice: 74,
+    statEffects: [
+      { stat: "resilience", value: 8 },
+      { stat: "endurance", value: 2 },
+      { stat: "speed", value: -1 },
     ],
   },
 
@@ -454,6 +731,67 @@ export const itemTemplates = [
     sellPrice: 7,
     statEffects: [{ stat: "endurance", value: 2 }],
   },
+  // ── F-rank accessories (continued) ─────────────────────────────────────
+  {
+    id: "accessory/knee-pads",
+    kind: "item",
+    name: "Knee Pads",
+    tags: ["rank:f"],
+    description: "Construction-grade knee pads. Keeps you moving through crawlspaces and rubble.",
+    category: "accessory",
+    rank: "f",
+    buyPrice: 16,
+    sellPrice: 6,
+    statEffects: [
+      { stat: "endurance", value: 1 },
+      { stat: "resilience", value: 1 },
+    ],
+  },
+  {
+    id: "accessory/work-gloves",
+    kind: "item",
+    name: "Work Gloves",
+    tags: ["rank:f"],
+    description: "Leather-palm work gloves. Not rated for combat but better than bare hands.",
+    category: "accessory",
+    rank: "f",
+    buyPrice: 14,
+    sellPrice: 5,
+    statEffects: [{ stat: "strength", value: 1 }],
+  },
+  // ── E-rank accessories ─────────────────────────────────────────────────
+  {
+    id: "accessory/respirator-mask",
+    kind: "item",
+    name: "Respirator Mask",
+    tags: ["rank:e"],
+    description:
+      "A half-face respirator that filters spores, fumes, and whatever else dungeons exhale.",
+    category: "accessory",
+    rank: "e",
+    buyPrice: 48,
+    sellPrice: 19,
+    statEffects: [
+      { stat: "endurance", value: 3 },
+      { stat: "resilience", value: 1 },
+    ],
+  },
+  {
+    id: "accessory/ankle-holster",
+    kind: "item",
+    name: "Ankle Holster",
+    tags: ["rank:e"],
+    description:
+      "A concealed holster that keeps a backup tool accessible without slowing you down.",
+    category: "accessory",
+    rank: "e",
+    buyPrice: 42,
+    sellPrice: 17,
+    statEffects: [
+      { stat: "speed", value: 2 },
+      { stat: "perception", value: 1 },
+    ],
+  },
   {
     id: "accessory/shoulder-lamp",
     kind: "item",
@@ -500,6 +838,57 @@ export const itemTemplates = [
       { stat: "endurance", value: 3 },
       { stat: "resilience", value: 2 },
       { stat: "perception", value: 1 },
+    ],
+  },
+  // ── D-rank accessories (rift-touched) ──────────────────────────────
+  {
+    id: "accessory/rift-compass",
+    kind: "item",
+    name: "Rift Compass",
+    tags: ["rank:d"],
+    description:
+      "Points toward rift density instead of north. Spins when you're about to have a bad day.",
+    category: "accessory",
+    rank: "d",
+    buyPrice: 115,
+    sellPrice: 46,
+    statEffects: [
+      { stat: "perception", value: 4 },
+      { stat: "speed", value: 2 },
+    ],
+  },
+  {
+    id: "accessory/dampening-earbuds",
+    kind: "item",
+    name: "Dampening Earbuds",
+    tags: ["rank:d"],
+    description:
+      "Filter out psychic noise from rift entities. Hum faintly when dimensional stress is nearby.",
+    category: "accessory",
+    rank: "d",
+    buyPrice: 110,
+    sellPrice: 44,
+    statEffects: [
+      { stat: "endurance", value: 3 },
+      { stat: "resilience", value: 2 },
+      { stat: "perception", value: 1 },
+    ],
+  },
+  {
+    id: "accessory/stabilizer-gauntlet",
+    kind: "item",
+    name: "Stabilizer Gauntlet",
+    tags: ["rank:d"],
+    description:
+      "Wrist-mounted gyroscopic stabilizer. Keeps your hands steady when the space around you isn't.",
+    category: "accessory",
+    rank: "d",
+    buyPrice: 125,
+    sellPrice: 50,
+    statEffects: [
+      { stat: "strength", value: 3 },
+      { stat: "speed", value: 2 },
+      { stat: "resilience", value: 2 },
     ],
   },
 
@@ -808,6 +1197,276 @@ export const itemTemplates = [
     sellPrice: 12,
     statEffects: [],
   },
+  // ── Themed family loot: transit-haunts ─────────────────────────────────
+  {
+    id: "loot/monster-part/ticket-stub",
+    kind: "item",
+    name: "Ticket Stub",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description: "A crumpled transit stub that never expires. The date keeps changing.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 7,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/rail-splice",
+    kind: "item",
+    name: "Rail Splice",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description:
+      "A short connector from animated track. Hums at the frequency of an approaching train.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 11,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: fume-wraiths ─────────────────────────────────
+  {
+    id: "loot/monster-part/lacquer-bead",
+    kind: "item",
+    name: "Lacquer Bead",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description: "A hardened droplet of supernatural nail polish. The color shifts under UV.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/solvent-gland",
+    kind: "item",
+    name: "Solvent Gland",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description: "An organ-like sac from a fume wraith. The acetone inside never evaporates.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 12,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: rust-creepers ─────────────────────────────────
+  {
+    id: "loot/monster-part/oxide-flake",
+    kind: "item",
+    name: "Oxide Flake",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description:
+      "Metallic rust chips from animated ironwork. Crumbles between fingers but cuts first.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 7,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/rivet-cluster",
+    kind: "item",
+    name: "Rivet Cluster",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description: "A fused mass of bolts and rivets from structural entities. Magnetically active.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 11,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: display-mimics ───────────────────────────────
+  {
+    id: "loot/monster-part/glass-tooth",
+    kind: "item",
+    name: "Glass Tooth",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description: "A shard of display glass shaped like a molar. Sharp on every surface.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/pawned-core",
+    kind: "item",
+    name: "Pawned Core",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description: "A dense node from the center of a display mimic. Refracts light wrong.",
+    category: "loot",
+    rank: "f",
+    buyPrice: 0,
+    sellPrice: 12,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: reel-phantoms (E-rank) ─────────────────────────
+  {
+    id: "loot/monster-part/celluloid-strip",
+    kind: "item",
+    name: "Celluloid Strip",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description:
+      "A strip of film stock from an impossible reel. The frames show places that don't exist.",
+    category: "loot",
+    rank: "e",
+    buyPrice: 0,
+    sellPrice: 10,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/butter-residue",
+    kind: "item",
+    name: "Butter Residue",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description:
+      "Congealed popcorn butter from theater entities. Warm, viscous, and faintly luminescent.",
+    category: "loot",
+    rank: "e",
+    buyPrice: 0,
+    sellPrice: 14,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: cistern-dwellers (E-rank) ─────────────────────
+  {
+    id: "loot/monster-part/algae-mat",
+    kind: "item",
+    name: "Algae Mat",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:auto_sell_junk", "loot:dungeon_drop"],
+    description: "A thick mat of animate algae from a water tower. Writhes slowly when wet.",
+    category: "loot",
+    rank: "e",
+    buyPrice: 0,
+    sellPrice: 9,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/cistern-scale",
+    kind: "item",
+    name: "Cistern Scale",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description: "Calcified plating from water tower organisms. Rings like a bell when flicked.",
+    category: "loot",
+    rank: "e",
+    buyPrice: 0,
+    sellPrice: 15,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: astral-parasites (D-rank) ─────────────────────
+  {
+    id: "loot/monster-part/star-chart-shard",
+    kind: "item",
+    name: "Star Chart Shard",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:dungeon_drop"],
+    description:
+      "A glass fragment etched with constellations that don't match any known sky. Warm in moonlight.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 18,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/lens-fragment",
+    kind: "item",
+    name: "Lens Fragment",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description:
+      "A curved shard from an observatory lens. Looking through it shows a different version of the room you're in.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 22,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: pressure-spawn (D-rank) ───────────────────────
+  {
+    id: "loot/monster-part/pressure-seal",
+    kind: "item",
+    name: "Pressure Seal",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:dungeon_drop"],
+    description:
+      "A gasket from pressurized pipe entities. Compressed to impossible density — heavier than lead.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 17,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/turbine-tooth",
+    kind: "item",
+    name: "Turbine Tooth",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description: "A blade from an animate turbine. Spins on flat surfaces when nobody is watching.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 24,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: stage-haunts (D-rank) ─────────────────────────
+  {
+    id: "loot/monster-part/prop-residue",
+    kind: "item",
+    name: "Prop Residue",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:dungeon_drop"],
+    description:
+      "Theatrical dust from animated stage equipment. Smells like greasepaint and ozone.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 16,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/curtain-thread",
+    kind: "item",
+    name: "Curtain Thread",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description:
+      "Fibers from a stage curtain that moves with intent. The weave pattern changes when unobserved.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 20,
+    statEffects: [],
+  },
+
+  // ── Themed family loot: lab-specimens (D-rank) ────────────────────────
+  {
+    id: "loot/monster-part/culture-sample",
+    kind: "item",
+    name: "Culture Sample",
+    tags: ["loot:monster_part", "loot:sell_only", "loot:dungeon_drop"],
+    description: "A sealed vial of rift-mutated cell culture. The cells inside are still dividing.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 19,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/reagent-vial",
+    kind: "item",
+    name: "Reagent Vial",
+    tags: ["loot:monster_part", "loot:crafting_input", "loot:dungeon_drop"],
+    description:
+      "A stoppered vial of unknown reagent from automated lab equipment. The liquid changes color in response to nearby life.",
+    category: "loot",
+    rank: "d",
+    buyPrice: 0,
+    sellPrice: 26,
+    statEffects: [],
+  },
+
   // ── Consumables (Prep Room products) ─────────────────────────────────
   {
     id: "consumable/rift-tonic",
@@ -1231,6 +1890,401 @@ export const dropTables = [
       { itemId: "outfit-overlay/padded-jacket", weight: 5, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/monster-part/carapace", weight: 12, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── Family tables: transit-haunts ─────────────────────────────────────
+  {
+    id: "drop-table/transit-haunts-regular",
+    entries: [
+      { itemId: "loot/monster-part/ticket-stub", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/rail-splice", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+    ],
+  },
+  {
+    id: "drop-table/transit-haunts-elite",
+    entries: [
+      { itemId: "loot/monster-part/rail-splice", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ticket-stub", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/carapace", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-dispatcher",
+    entries: [
+      { itemId: "loot/monster-part/rail-splice", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/ticket-stub", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/crowbar", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/work-coveralls", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/carapace", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── Family tables: fume-wraiths ──────────────────────────────────────
+  {
+    id: "drop-table/fume-wraiths-regular",
+    entries: [
+      { itemId: "loot/monster-part/lacquer-bead", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/solvent-gland", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 25, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/sinew", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 15, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/fume-wraiths-elite",
+    entries: [
+      { itemId: "loot/monster-part/solvent-gland", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/lacquer-bead", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/carapace", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-manicurist",
+    entries: [
+      { itemId: "loot/monster-part/solvent-gland", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/lacquer-bead", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/box-cutter", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/comm-earpiece", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/sinew", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/ichor", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── Family tables: rust-creepers ──────────────────────────────────────
+  {
+    id: "drop-table/rust-creepers-regular",
+    entries: [
+      { itemId: "loot/monster-part/oxide-flake", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/rivet-cluster", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+    ],
+  },
+  {
+    id: "drop-table/rust-creepers-elite",
+    entries: [
+      { itemId: "loot/monster-part/rivet-cluster", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/oxide-flake", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-inspector",
+    entries: [
+      { itemId: "loot/monster-part/rivet-cluster", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/oxide-flake", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/pipe-wrench", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/padded-jacket", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/carapace", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── Family tables: display-mimics ─────────────────────────────────────
+  {
+    id: "drop-table/display-mimics-regular",
+    entries: [
+      { itemId: "loot/monster-part/glass-tooth", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/pawned-core", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/sinew", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+    ],
+  },
+  {
+    id: "drop-table/display-mimics-elite",
+    entries: [
+      { itemId: "loot/monster-part/pawned-core", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/glass-tooth", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-appraiser",
+    entries: [
+      { itemId: "loot/monster-part/pawned-core", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/glass-tooth", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/kitchen-knife", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/wrist-brace", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/sinew", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+  // ── E-rank family tables: reel-phantoms ─────────────────────────────
+  {
+    id: "drop-table/reel-phantoms-regular",
+    entries: [
+      { itemId: "loot/monster-part/celluloid-strip", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/butter-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/sinew", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+    ],
+  },
+  {
+    id: "drop-table/reel-phantoms-elite",
+    entries: [
+      { itemId: "loot/monster-part/butter-residue", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/celluloid-strip", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-projectionist",
+    entries: [
+      { itemId: "loot/monster-part/butter-residue", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/celluloid-strip", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/stun-baton", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/reinforced-hoodie", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/sinew", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── E-rank family tables: cistern-dwellers ────────────────────────────
+  {
+    id: "drop-table/cistern-dwellers-regular",
+    entries: [
+      { itemId: "loot/monster-part/algae-mat", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/cistern-scale", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/fang", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+    ],
+  },
+  {
+    id: "drop-table/cistern-dwellers-elite",
+    entries: [
+      { itemId: "loot/monster-part/cistern-scale", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/algae-mat", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/carapace", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-valve-master",
+    entries: [
+      { itemId: "loot/monster-part/cistern-scale", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/algae-mat", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/rebar-spike", weight: 8, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/insulated-parka", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/carapace", weight: 12, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank base tables ─────────────────────────────────────────────
+  {
+    id: "drop-table/dungeon-d-regular",
+    entries: [
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/fang", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/bone-shard", weight: 10, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/dungeon-d-elite",
+    entries: [
+      { itemId: "loot/monster-part/void-residue", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 15, minQuantity: 2, maxQuantity: 3 },
+      { itemId: "loot/monster-part/bone-shard", weight: 15, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/dungeon-d-boss",
+    entries: [
+      { itemId: "loot/monster-part/void-residue", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 2, maxQuantity: 3 },
+      { itemId: "weapon/reinforced-bat", weight: 3, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "weapon/rift-scored-blade", weight: 3, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "weapon/pulse-baton", weight: 3, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/ballistic-vest", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/rift-lined-jacket", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/utility-belt", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/rift-compass", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/carapace", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/fang", weight: 13, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank family tables: astral-parasites ────────────────────────────
+  {
+    id: "drop-table/astral-parasites-regular",
+    entries: [
+      { itemId: "loot/monster-part/star-chart-shard", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/lens-fragment", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/void-residue", weight: 10, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/fang", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/astral-parasites-elite",
+    entries: [
+      { itemId: "loot/monster-part/lens-fragment", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/star-chart-shard", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-astronomer",
+    entries: [
+      { itemId: "loot/monster-part/lens-fragment", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/star-chart-shard", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/focused-carbine", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/rift-compass", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank family tables: pressure-spawn ──────────────────────────────
+  {
+    id: "drop-table/pressure-spawn-regular",
+    entries: [
+      { itemId: "loot/monster-part/pressure-seal", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/turbine-tooth", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/void-residue", weight: 10, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/pressure-spawn-elite",
+    entries: [
+      { itemId: "loot/monster-part/turbine-tooth", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/pressure-seal", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/carapace", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-engineer",
+    entries: [
+      { itemId: "loot/monster-part/turbine-tooth", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/pressure-seal", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/breach-hammer", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      {
+        itemId: "outfit-overlay/composite-plate-carrier",
+        weight: 5,
+        minQuantity: 1,
+        maxQuantity: 1,
+      },
+      { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/bone-shard", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank family tables: stage-haunts ────────────────────────────────
+  {
+    id: "drop-table/stage-haunts-regular",
+    entries: [
+      { itemId: "loot/monster-part/prop-residue", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/curtain-thread", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/void-residue", weight: 10, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/sinew", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/stage-haunts-elite",
+    entries: [
+      { itemId: "loot/monster-part/curtain-thread", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/prop-residue", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/sinew", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-director",
+    entries: [
+      { itemId: "loot/monster-part/curtain-thread", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/prop-residue", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/pulse-baton", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/dampening-earbuds", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/sinew", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank family tables: lab-specimens ───────────────────────────────
+  {
+    id: "drop-table/lab-specimens-regular",
+    entries: [
+      { itemId: "loot/monster-part/culture-sample", weight: 30, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/reagent-vial", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/void-residue", weight: 10, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/ichor", weight: 20, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/fang", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/lab-specimens-elite",
+    entries: [
+      { itemId: "loot/monster-part/reagent-vial", weight: 25, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/culture-sample", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 20, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ichor", weight: 25, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-researcher",
+    entries: [
+      { itemId: "loot/monster-part/reagent-vial", weight: 20, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/culture-sample", weight: 15, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "loot/monster-part/void-residue", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 15, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "weapon/rift-scored-blade", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/signal-dampening-coat", weight: 5, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/ichor", weight: 10, minQuantity: 2, maxQuantity: 4 },
     ],
   },
 ] satisfies readonly DropTable[];
