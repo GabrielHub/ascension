@@ -4,6 +4,7 @@ import {
   SAVE_SLOT_IDS,
   type OperatorAppearanceSnapshot,
   type OperatorCombatSnapshot,
+  type OperatorTrainingSnapshot,
   type ActiveEventSnapshot,
   type ActiveRaidSnapshot,
   type ContractResultSnapshot,
@@ -91,6 +92,10 @@ type ParsedRaidOpportunitySnapshot = RaidOpportunitySnapshot & { _changed: boole
 type ParsedRaidSummarySnapshot = RaidSummarySnapshot & { _changed: boolean };
 
 const CONTRACT_LIFECYCLE_PHASES = ["idle", "bidding", "active", "resolved"] as const;
+const CONTRACT_BOARD_INTEL_SOURCES = ["street", "back_office", "office"] as const;
+const CONTRACT_BOARD_INTEL_QUALITIES = ["rough", "reviewed", "dossier"] as const;
+const CONTRACT_BRIEFING_SOURCES = ["briefing_room", "briefing_room_and_prep"] as const;
+const CONTRACT_BRIEFING_STATUSES = ["briefed", "drilled"] as const;
 
 interface OperatorAppearanceParseContext {
   getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
@@ -661,6 +666,76 @@ function parseRoomSnapshot(
   };
 }
 
+function parseContractBoardIntelSnapshot(
+  value: unknown,
+  path: string,
+): { boardIntel: NonNullable<ContractSiteSnapshot["boardIntel"]>; changed: boolean } {
+  if (value === undefined) {
+    return {
+      boardIntel: {
+        source: "street",
+        quality: "rough",
+      },
+      changed: true,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  const source =
+    record.source === undefined ? "street" : expectString(record.source, `${path}.source`);
+  if (!CONTRACT_BOARD_INTEL_SOURCES.some((candidate) => candidate === source)) {
+    fail(`${path}.source`, `must be one of ${CONTRACT_BOARD_INTEL_SOURCES.join(", ")}.`);
+  }
+  const quality =
+    record.quality === undefined ? "rough" : expectString(record.quality, `${path}.quality`);
+  if (!CONTRACT_BOARD_INTEL_QUALITIES.some((candidate) => candidate === quality)) {
+    fail(`${path}.quality`, `must be one of ${CONTRACT_BOARD_INTEL_QUALITIES.join(", ")}.`);
+  }
+
+  return {
+    boardIntel: {
+      source,
+      quality,
+    },
+    changed: record.source === undefined || record.quality === undefined,
+  };
+}
+
+function parseContractBriefingSnapshot(
+  value: unknown,
+  path: string,
+): { briefing: NonNullable<ContractSiteSnapshot["briefing"]> | null; changed: boolean } {
+  if (value == null) {
+    return {
+      briefing: null,
+      changed: false,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  const source = expectString(record.source, `${path}.source`);
+  if (!CONTRACT_BRIEFING_SOURCES.some((candidate) => candidate === source)) {
+    fail(`${path}.source`, `must be one of ${CONTRACT_BRIEFING_SOURCES.join(", ")}.`);
+  }
+  const status = expectString(record.status, `${path}.status`);
+  if (!CONTRACT_BRIEFING_STATUSES.some((candidate) => candidate === status)) {
+    fail(`${path}.status`, `must be one of ${CONTRACT_BRIEFING_STATUSES.join(", ")}.`);
+  }
+
+  return {
+    briefing: {
+      source,
+      status,
+      opportunityIntelBonus: expectNumber(
+        record.opportunityIntelBonus,
+        `${path}.opportunityIntelBonus`,
+      ),
+      bossIntelBonus: expectNumber(record.bossIntelBonus, `${path}.bossIntelBonus`),
+    },
+    changed: false,
+  };
+}
+
 function parseContractSiteSnapshot(
   value: unknown,
   path: string,
@@ -670,6 +745,14 @@ function parseContractSiteSnapshot(
   }
 
   const record = expectRecord(value, path);
+  const { boardIntel, changed: boardIntelChanged } = parseContractBoardIntelSnapshot(
+    record.boardIntel,
+    `${path}.boardIntel`,
+  );
+  const { briefing, changed: briefingChanged } = parseContractBriefingSnapshot(
+    record.briefing,
+    `${path}.briefing`,
+  );
 
   return {
     contractSite: {
@@ -730,6 +813,8 @@ function parseContractSiteSnapshot(
       ...(record.bossAvailable === undefined
         ? { bossAvailable: false }
         : { bossAvailable: expectBoolean(record.bossAvailable, `${path}.bossAvailable`) }),
+      boardIntel,
+      briefing,
     },
     changed:
       record.siteConceptId === undefined ||
@@ -741,7 +826,9 @@ function parseContractSiteSnapshot(
       record.bossIntelProgress === undefined ||
       record.bossPressureProgress === undefined ||
       record.requiresBossClear === undefined ||
-      record.bossAvailable === undefined,
+      record.bossAvailable === undefined ||
+      boardIntelChanged ||
+      briefingChanged,
   };
 }
 
@@ -769,6 +856,10 @@ function parseContractLifecycleSnapshot(
 
 function parsePostedContractSnapshot(value: unknown, path: string): ParsedPostedContractSnapshot {
   const record = expectRecord(value, path);
+  const { boardIntel, changed: boardIntelChanged } = parseContractBoardIntelSnapshot(
+    record.boardIntel,
+    `${path}.boardIntel`,
+  );
 
   return {
     postingId: expectString(record.postingId, `${path}.postingId`),
@@ -811,12 +902,14 @@ function parsePostedContractSnapshot(value: unknown, path: string): ParsedPosted
       : {
           neighborhoodLabel: expectString(record.neighborhoodLabel, `${path}.neighborhoodLabel`),
         }),
+    boardIntel,
     _changed:
       record.knownTraits === undefined ||
       record.hiddenTraitCount === undefined ||
       record.enemyHints === undefined ||
       record.lootFamilyHints === undefined ||
-      record.neighborhoodLabel === undefined,
+      record.neighborhoodLabel === undefined ||
+      boardIntelChanged,
   };
 }
 
@@ -1191,6 +1284,57 @@ function parseOptionalOperatorCombatSnapshot(
   };
 }
 
+function parseOperatorTrainingSnapshot(value: unknown, path: string): OperatorTrainingSnapshot {
+  const record = expectRecord(value, path);
+  const strength = expectNumber(record.strength, `${path}.strength`);
+  const speed = expectNumber(record.speed, `${path}.speed`);
+  const endurance = expectNumber(record.endurance, `${path}.endurance`);
+  const resilience = expectNumber(record.resilience, `${path}.resilience`);
+
+  if (
+    strength < 0 ||
+    strength > 100 ||
+    speed < 0 ||
+    speed > 100 ||
+    endurance < 0 ||
+    endurance > 100 ||
+    resilience < 0 ||
+    resilience > 100
+  ) {
+    fail(path, "must contain readiness values between 0 and 100.");
+  }
+
+  return {
+    strength,
+    speed,
+    endurance,
+    resilience,
+  };
+}
+
+function parseOptionalOperatorTrainingSnapshot(
+  value: unknown,
+  path: string,
+  schemaVersion: number,
+): { training: OperatorTrainingSnapshot; changed: boolean } {
+  if (value !== undefined) {
+    return {
+      training: parseOperatorTrainingSnapshot(value, path),
+      changed: false,
+    };
+  }
+
+  return {
+    training: {
+      strength: 0,
+      speed: 0,
+      endurance: 0,
+      resilience: 0,
+    },
+    changed: schemaVersion < 17,
+  };
+}
+
 function parseOperatorSnapshot(
   value: unknown,
   path: string,
@@ -1219,6 +1363,11 @@ function parseOperatorSnapshot(
     identity,
     schemaVersion,
   );
+  const training = parseOptionalOperatorTrainingSnapshot(
+    record.training,
+    `${path}.training`,
+    schemaVersion,
+  );
 
   return {
     id: expectString(record.id, `${path}.id`),
@@ -1233,7 +1382,8 @@ function parseOperatorSnapshot(
     assignment: parseOptionalStructuredRecord(record.assignment, `${path}.assignment`),
     appearance: appearance.appearance,
     ...(combat.combat !== undefined ? { combat: combat.combat } : {}),
-    _changed: appearance.changed || lifecycle.changed || combat.changed,
+    training: training.training,
+    _changed: appearance.changed || lifecycle.changed || combat.changed || training.changed,
   };
 }
 
@@ -1445,6 +1595,22 @@ function parseActiveRaidSnapshotWithFallback(
         : expectStringArray(operatorIds, `${path}.operatorIds`),
     returnTick: expectInteger(returnTick, `${path}.returnTick`),
     durationHours: expectNumber(durationHours, `${path}.durationHours`),
+    ...(record.briefingSource === undefined
+      ? { briefingSource: null }
+      : {
+          briefingSource:
+            record.briefingSource === null
+              ? null
+              : expectString(record.briefingSource, `${path}.briefingSource`),
+        }),
+    ...(record.briefingStatus === undefined
+      ? { briefingStatus: null }
+      : {
+          briefingStatus:
+            record.briefingStatus === null
+              ? null
+              : expectString(record.briefingStatus, `${path}.briefingStatus`),
+        }),
     resolutionPacket: expectRecord(resolutionPacket, `${path}.resolutionPacket`),
     _changed: changed,
   };

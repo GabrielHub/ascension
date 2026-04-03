@@ -196,6 +196,27 @@ function OperatorRow({
             </Tooltip>
           </div>
 
+          <div className="glass-card-inset px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
+                Training Readiness
+              </span>
+              <span className="text-sm text-gold">
+                {op.training.statusLabel} ({op.training.average})
+              </span>
+            </div>
+            <div className="mt-1 flex flex-wrap gap-2 text-sm text-silver/55">
+              <span>STR +{op.training.bonuses.strength}</span>
+              <span>SPD +{op.training.bonuses.speed}</span>
+              <span>END +{op.training.bonuses.endurance}</span>
+              <span>RES +{op.training.bonuses.resilience}</span>
+            </div>
+            <p className="mt-1 text-sm leading-relaxed text-silver/50">
+              Bounded physical prep from gym time. It improves raid readiness without changing role,
+              attunement, or rank.
+            </p>
+          </div>
+
           <div className="border-t border-gold/10 pt-2">
             <OperatorCombatSummary combat={op.combat} />
           </div>

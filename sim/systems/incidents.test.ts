@@ -147,6 +147,7 @@ function createIncidentContext(options?: {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
         openingTiming: {
           firstRaidReturnCompletedAtMinute: null,
           firstIncidentSeededAtMinute: null,

@@ -14,6 +14,9 @@ import {
 import { clamp, getRoomTemplateForEntity } from "./commands";
 import type { SimSystem } from "./types";
 
+const PORTERS_INFIRMARY_TEMPLATE_ID = "room/infirmary:tier_1";
+const PORTERS_BREAK_ROOM_TEMPLATE_ID = "room/break_room:tier_1";
+
 export interface NeedReadinessFlags {
   injuryPreventsRaid: boolean;
   exhaustionPenalty: boolean;
@@ -46,8 +49,16 @@ function getOperationalRecoveryRate(context: Parameters<SimSystem>[0]): number {
       return total;
     }
 
+    const templateRecoveryModifier =
+      template.id === PORTERS_INFIRMARY_TEMPLATE_ID
+        ? 1.1
+        : template.id === PORTERS_BREAK_ROOM_TEMPLATE_ID
+          ? 0.35
+          : 0;
+
     return (
       total +
+      templateRecoveryModifier +
       (RoomInstance.appliedUpgradeIds[roomEntity] ?? []).reduce((upgradeTotal, upgradeId) => {
         const upgrade = context.registry.upgradeById.get(upgradeId);
         if (!upgrade) {

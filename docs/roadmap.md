@@ -54,6 +54,7 @@ This section is intentionally summary-level. The implementation itself is the so
 - First-class operator kit templates are implemented for regular attacks, skills, ultimates, and passives, with deterministic runtime execution rules shared by encounter simulation and player-facing combat identity surfaces.
 - A shared simulation-owned derived-stat layer computes effective operator stats from base stats, equipped gear stat effects, and injury penalties, and exposes a single combat-power aggregate for raid resolution.
 - Gear stat effects are now first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, with those contributions flowing through the derived-stat layer into raid outcomes.
+- Porter's training is now a shipped bounded readiness loop: operational `room:training` space accrues save-safe physical readiness (strength, speed, endurance, resilience), feeds derived stats and raid readiness, decays through neglect and raid wear, and stays absent from bodega runs.
 - Raid resolution is stat-driven and boss-aware: missions carry explicit enemy group profiles and boss combat profiles with tags, weaknesses, and threat values that modify challenge and team scores during autonomous resolution.
 - Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty, while boss weaknesses reward matching team composition.
 - Loot distribution is now driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
@@ -64,9 +65,11 @@ This section is intentionally summary-level. The implementation itself is the so
 - The management UI now surfaces relocation readiness, blockers, carryover and reset rules, and the runtime entry point into the relocation interruption flow.
 - The second headquarters tier is shipped at first pass: relocation into Porter's is runtime-owned and save-safe; Porter's has multi-floor layouts, explicit floor switching, starter room placement, upgrade definitions, waterfront stage data, higher recruitment and income tuning, and a D-rank contract ceiling.
 - Porter's room and progression breadth now exist beyond the relocation landing state: the runtime/template layer supports the Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, and Deck catalogs, plus lightweight consumable prep from monster drops.
+- Porter's upgrade arc is now a real player-facing campaign: guidance and management surfaces point the player through Kitchen Overhaul, Upstairs Conversion, The Remodel, and The Waterfront, while deterministic and browser regression coverage prove those unlocks are actually used in Porter's play.
 - The optional runtime-owned loot filter auto-sells junk monster parts and obsolete gear once the guild has already outgrown them.
 - The HQ backdrop system now supports bodega and Porter's across sunrise, day, sunset, and night states with simulation-clock-derived phases, manifest-driven presentation data, elevation-band support, and hybrid renderer-authored dressing where package coverage is still intentionally partial.
 - The shipped host split is in place: browser mode remains the primary fast development and regression surface, while Tauri desktop mode owns playtest hosting, file-backed saves, desktop import/export, and desktop integration automation.
+- The dev-only command console is shipped in place of the old button sheet: the backtick-opened modal exposes a typed command registry, shared `/help` and `/list` discovery, structured command output, history, browser-test-friendly selectors, and runtime-safe setup paths instead of ad hoc snapshot mutation.
 
 ## Completed: Opening Campaign Remediation
 
@@ -130,27 +133,37 @@ The first cross-building HQ day-night pass is no longer a standalone future mile
 
 Goal: prove that the second headquarters changes management decisions because its specialized rooms matter, not just because Porter's has more slots and bigger numbers.
 
-Status: next planning target.
+Status: final design closeout.
 
-The Porter's baseline is shipped. The next pass should deepen the Porter's-only room families and upgrade track that already exist in templates, layouts, view models, and tests before the roadmap expands again into broader midgame pressure.
+Shipped so far inside this milestone:
+
+- Porter's gym and shared `room:training` tag now drive a real bounded readiness system instead of placeholder copy or schedule affinity alone.
+- Porter's Office and Briefing Room now change contract reading and raid preparation through board intel, briefing state, save-safe writeback, and player-facing contract surfaces.
+- Porter's Infirmary, Break Room, Dock, and Deck now change recovery, morale, decompression, and staging outcomes through simulation-owned room effects, post-raid factors, and room-detail feedback.
+- Porter's management guidance, deterministic campaign harness, and browser regression now exercise the canonical Kitchen Overhaul-through-Waterfront upgrade path and prove the unlocked rooms are actually used.
+
+Active execution plans:
+
+- `docs/plans/porters-design-revision-plan.md`
+
+The Porter's baseline, systems passes, and campaign-validation pass are shipped. The remaining work is the follow-up design revision that keeps copy, UI hierarchy, and supporting assets aligned with what the runtime already does before the roadmap expands again into broader midgame pressure.
 
 Deliverables:
 
-- turn `room:training` from room availability and schedule affinity into a real bounded progression or readiness system that is meaningfully unlocked by Porter's without changing fixed attunement or rank identity
-- make the Office and Briefing Room deepen contract preparation through clearer intel, risk interpretation, or boss-preparation effects that are visible before and after bidding
-- make Break Room, Infirmary, Dock, and Deck produce explicit recovery, morale, and staging consequences so upstairs/private space and waterfront space change staffing and schedule decisions
-- ensure Porter's upgrade purchases and waterfront unlocks are exercised through the player-facing campaign instead of existing mainly as template breadth and regression coverage
-- use D-rank contract/site breadth and second-building staffing pressure to validate that these room differences matter during ordinary play
+- keep the shipped training, contract-prep, recovery, and waterfront outputs readable in normal play through final UI/copy hierarchy work instead of debugger-only context
+- update roadmap, product, or world wording only where the shipped Porter's behavior materially changed future-facing language
+- use D-rank contract/site breadth and second-building staffing pressure as the validation context for the already-shipped Porter's room differences
 
-Immediate planning slice:
+Execution framing:
 
-- scope the first execution plan around training, briefing/intel, and private recovery/staging because those hooks already exist in room tags, layout data, UI language, and progression content
+- treat the remaining pass as presentation, copy, and asset follow-through on the shipped systems and campaign work
+- do not reopen the finished training, contract-prep, recovery/waterfront, or upgrade-campaign passes unless verification exposes a concrete regression
 - keep this pass inside the shipped Porter's building instead of opening a third headquarters, full crafting, or city-institution pressure at the same time
 
 Exit criteria:
 
 - a Porter's run creates decisions that do not exist in the bodega because specialized rooms change outcomes, not just capacity
-- at least one Porter's-only room family changes raid preparation and one changes recovery or social outcomes in clearly visible ways
+- the shipped Porter's mechanics are readable in normal play without depending on debugger-only context, placeholder copy, or stale bodega wording
 - the player's reason to keep upgrading Porter's is operational differentiation, not only bigger numbers
 - this pass does not open full crafting, city-institution pressure, or a new headquarters tier early
 

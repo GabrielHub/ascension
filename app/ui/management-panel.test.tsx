@@ -62,6 +62,8 @@ describe("management panel", () => {
         contractLifecycle={hq.contractLifecycle}
         building={hq.building}
         rooms={hq.rooms}
+        upgrades={hq.upgrades}
+        operators={hq.operators}
         relocationGate={hq.relocationGate}
         callbacks={callbacks}
       />,
@@ -104,6 +106,8 @@ describe("management panel", () => {
           availableBuildingUpgradeIds: [],
         }}
         rooms={[]}
+        upgrades={[]}
+        operators={[]}
         relocationGate={null}
         callbacks={callbacks}
       />,
@@ -142,6 +146,8 @@ describe("management panel", () => {
           availableBuildingUpgradeIds: [],
         }}
         rooms={[]}
+        upgrades={[]}
+        operators={[]}
         relocationGate={null}
         callbacks={callbacks}
       />,
@@ -149,5 +155,128 @@ describe("management panel", () => {
 
     expect(html).toContain("Completed");
     expect(html).toContain("Porter&#x27;s is now Red Hook Guild&#x27;s headquarters.");
+  });
+
+  it("shows the next Porter's campaign step after relocation", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guildName="Red Hook Guild"
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="bidding"
+        building={{
+          id: "building/porters",
+          name: "Porter's",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 0,
+          floorCount: 2,
+          usedRoomSlots: 7,
+          totalRoomSlots: 7,
+          operatorSlots: 12,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: ["upgrade/building/porters:kitchen_overhaul"],
+        }}
+        rooms={[]}
+        upgrades={[
+          {
+            id: "upgrade/building/porters:kitchen_overhaul",
+            name: "Kitchen Overhaul",
+            description: "Rebuilds the kitchen into something a health inspector would survive.",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: false,
+            isAffordable: true,
+            requirements: [],
+            effects: [{ label: "+10 cash income", type: "modify_resource_income" }],
+          },
+          {
+            id: "upgrade/building/porters:upstairs_conversion",
+            name: "Upstairs Conversion",
+            description: "Converts the old apartments into operating rooms.",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: false,
+            isAffordable: false,
+            requirements: [],
+            effects: [{ label: "Unlock The Briefing Room", type: "unlock_room_template" }],
+          },
+        ]}
+        operators={[
+          {
+            id: "operator/test",
+            name: "Rose Vega",
+            roleTag: "role:field_lead",
+            specialtyTag: "focus:containment",
+            moraleCurrent: 64,
+            moraleBaseline: 70,
+            loyaltyCurrent: 72,
+            loyaltyBaseline: 72,
+            assignmentKind: "idle",
+            assignmentTargetId: "",
+            injurySeverity: 0,
+            injuryRecoveryHours: 0,
+            needHunger: 12,
+            needFatigue: 28,
+            needStress: 24,
+            scheduleBlock: "idle",
+            riskTolerance: 50,
+            intent: "idle",
+            dominantNeed: "rest",
+            availableForRaid: true,
+            readinessScore: 68,
+            appearancePresetId: "vera-004",
+            visibleGear: {
+              weapon: null,
+              outfitOverlay: null,
+              accessory: null,
+            },
+            lifecycle: { status: "active" },
+            combat: {
+              rank: "f",
+              attunementTag: "attunement:none",
+              traits: [],
+              regularAttackId: "attack/basic",
+              skillId: "skill/basic",
+              ultimateId: "ultimate/basic",
+              passiveIds: [],
+              baseStats: {
+                strength: 10,
+                speed: 10,
+                endurance: 10,
+                resilience: 10,
+                perception: 10,
+                intelligence: 10,
+              },
+            },
+            training: {
+              strength: 0,
+              speed: 0,
+              endurance: 0,
+              resilience: 0,
+              average: 0,
+              statusLabel: "Untrained",
+              bonuses: {
+                strength: 0,
+                speed: 0,
+                endurance: 0,
+                resilience: 0,
+              },
+            },
+            refusalRisk: false,
+            quitRisk: false,
+            retentionRisk: false,
+            autonomyReasons: [],
+            canBeReplaced: true,
+            replaceLockedReason: null,
+          },
+        ]}
+        relocationGate={null}
+        callbacks={callbacks}
+      />,
+    );
+
+    expect(html).toContain("Porter&#x27;s Upgrade Arc");
+    expect(html).toContain("Kitchen Overhaul");
+    expect(html).toContain("Affordable now");
   });
 });

@@ -1,6 +1,8 @@
-import type { GuidanceBeat } from "./guidance";
+import type { GuidanceBeat, GuidanceTrack } from "./guidance";
 
 const ASSISTANT_PRESENTER_ID = "presenter/assistant";
+const COOK_PRESENTER_ID = "presenter/cook";
+const BARTENDER_PRESENTER_ID = "presenter/bartender";
 
 const OPENING_BEATS_MUTABLE = [
   {
@@ -404,3 +406,173 @@ export const BODEGA_SPECIFIC_BEAT_IDS: readonly string[] = OPENING_BEATS.filter(
 ).map((b) => b.id);
 
 export const FIRST_RAID_RETURN_BEAT_ID = "guidance/opening/first-raid-return";
+
+const PORTERS_CAMPAIGN_BEATS_MUTABLE = [
+  {
+    id: "guidance/porters/kitchen-overhaul",
+    track: "feature_intro",
+    featureIds: ["porters", "upgrades", "economy", "morale"],
+    milestoneOrder: 1,
+    presenterId: COOK_PRESENTER_ID,
+    presenterExpression: "serious",
+    delivery: {
+      mode: "focused",
+      target: "ui/hq/category/management",
+      fallbackIntent: "hq/open-management",
+      pauseWorld: true,
+      allowSkip: false,
+      replayPolicy: "manual_replay",
+    },
+    gating: {
+      requiredCompletedBeatIds: [],
+      requiredBuildingId: "building/porters",
+      requiredAffordableUpgradeId: "upgrade/building/porters:kitchen_overhaul",
+      requiredMissingUpgradeId: "upgrade/building/porters:kitchen_overhaul",
+    },
+    bindings: {},
+    copy: {
+      title: "Kitchen First",
+      subtitle: "Stabilize the house before you expand it",
+      body: "Porter's is bigger than the bodega, but the kitchen is still half compromise. Kitchen Overhaul is the cleanest way to turn the move into steadier income, better morale, and a room the staff does not have to apologize for. Buy that first, then start opening more of the building.",
+      ctaLabel: "Review management",
+      fallbackBody:
+        "Open Management. Porter's first priority is Kitchen Overhaul before you chase more space.",
+      eventLogSummary:
+        "Porter's guidance: Kitchen Overhaul should anchor the first post-move spend",
+    },
+    completion: {
+      kind: "upgrade_purchased",
+      upgradeId: "upgrade/building/porters:kitchen_overhaul",
+    },
+  },
+  {
+    id: "guidance/porters/upstairs-conversion",
+    track: "feature_intro",
+    featureIds: ["porters", "upgrades", "briefing", "recovery"],
+    milestoneOrder: 2,
+    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterExpression: "serious",
+    delivery: {
+      mode: "focused",
+      target: "ui/hq/category/management",
+      fallbackIntent: "hq/open-management",
+      pauseWorld: true,
+      allowSkip: false,
+      replayPolicy: "manual_replay",
+    },
+    gating: {
+      requiredCompletedBeatIds: ["guidance/porters/kitchen-overhaul"],
+      requiredBuildingId: "building/porters",
+      requiredAffordableUpgradeId: "upgrade/building/porters:upstairs_conversion",
+      requiredMissingUpgradeId: "upgrade/building/porters:upstairs_conversion",
+      requireContractPrepGap: true,
+    },
+    bindings: {},
+    copy: {
+      title: "Open The Upstairs",
+      subtitle: "Prep and decompression need their own rooms",
+      body: "Porter's is still briefing crews and bleeding off stress in borrowed corners. Upstairs Conversion unlocks the Break Room and the Briefing Room so contract prep stops sharing space with everything else. That is the next meaningful improvement.",
+      ctaLabel: "Review management",
+      fallbackBody:
+        "Open Management. Upstairs Conversion is the next step once Porter's needs real prep and off-shift space.",
+      eventLogSummary: "Porter's guidance: Upstairs Conversion is now the next upgrade target",
+    },
+    completion: {
+      kind: "upgrade_purchased",
+      upgradeId: "upgrade/building/porters:upstairs_conversion",
+    },
+  },
+  {
+    id: "guidance/porters/remodel",
+    track: "feature_intro",
+    featureIds: ["porters", "upgrades", "recovery", "morale"],
+    milestoneOrder: 3,
+    presenterId: BARTENDER_PRESENTER_ID,
+    presenterExpression: "concerned",
+    delivery: {
+      mode: "focused",
+      target: "ui/hq/category/management",
+      fallbackIntent: "hq/open-management",
+      pauseWorld: true,
+      allowSkip: false,
+      replayPolicy: "manual_replay",
+    },
+    gating: {
+      requiredCompletedBeatIds: ["guidance/porters/upstairs-conversion"],
+      requiredBuildingId: "building/porters",
+      requiredAffordableUpgradeId: "upgrade/building/porters:remodel",
+      requiredMissingUpgradeId: "upgrade/building/porters:remodel",
+      requireRecoveryPressure: true,
+    },
+    bindings: {},
+    copy: {
+      title: "Finish The Remodel",
+      subtitle: "Traffic is up. Attrition is next unless you fix the room",
+      body: "The bigger shell helps, but the place still grinds people down after live work. The Remodel is the quality pass that turns Porter's from merely larger into somewhere people can recover inside. Buy it before morale wear starts eating the whole phase.",
+      ctaLabel: "Review management",
+      fallbackBody:
+        "Open Management. Porter's is showing recovery pressure, and The Remodel is the next stabilizing spend.",
+      eventLogSummary: "Porter's guidance: The Remodel is now the next upgrade target",
+    },
+    completion: {
+      kind: "upgrade_purchased",
+      upgradeId: "upgrade/building/porters:remodel",
+    },
+  },
+  {
+    id: "guidance/porters/waterfront",
+    track: "feature_intro",
+    featureIds: ["porters", "upgrades", "waterfront", "staging"],
+    milestoneOrder: 4,
+    presenterId: BARTENDER_PRESENTER_ID,
+    presenterExpression: "amused",
+    delivery: {
+      mode: "focused",
+      target: "ui/hq/category/management",
+      fallbackIntent: "hq/open-management",
+      pauseWorld: true,
+      allowSkip: false,
+      replayPolicy: "manual_replay",
+    },
+    gating: {
+      requiredCompletedBeatIds: ["guidance/porters/remodel"],
+      requiredBuildingId: "building/porters",
+      requiredAffordableUpgradeId: "upgrade/building/porters:waterfront",
+      requiredMissingUpgradeId: "upgrade/building/porters:waterfront",
+      requireStagingPressure: true,
+    },
+    bindings: {},
+    copy: {
+      title: "Open The Waterfront",
+      subtitle: "Porter's should use the harbor, not just look at it",
+      body: "You have the building under control. The next gain is operational: Waterfront unlocks the Dock for cleaner staging and the Deck for real post-raid air. Buy it while Porter's is still the center of the campaign, not after the phase is already over.",
+      ctaLabel: "Review management",
+      fallbackBody:
+        "Open Management. Waterfront staging and decompression are the next meaningful Porter's unlocks.",
+      eventLogSummary: "Porter's guidance: Waterfront is now the final upgrade target",
+    },
+    completion: {
+      kind: "upgrade_purchased",
+      upgradeId: "upgrade/building/porters:waterfront",
+    },
+  },
+] as const satisfies readonly GuidanceBeat[];
+
+export const PORTERS_CAMPAIGN_BEATS: readonly GuidanceBeat[] = PORTERS_CAMPAIGN_BEATS_MUTABLE;
+
+export const PORTERS_CAMPAIGN_BEAT_IDS: readonly string[] = PORTERS_CAMPAIGN_BEATS.map((b) => b.id);
+
+export const ALL_GUIDANCE_BEATS: readonly GuidanceBeat[] = [
+  ...OPENING_BEATS,
+  ...PORTERS_CAMPAIGN_BEATS,
+];
+
+export const ALL_GUIDANCE_BEAT_BY_ID: ReadonlyMap<string, GuidanceBeat> = new Map(
+  ALL_GUIDANCE_BEATS.map((b) => [b.id, b]),
+);
+
+export const GUIDANCE_BEAT_COUNT_BY_TRACK: Readonly<Record<GuidanceTrack, number>> = {
+  opening: OPENING_BEATS.length,
+  feature_intro: PORTERS_CAMPAIGN_BEATS.length,
+  narrative: 0,
+};

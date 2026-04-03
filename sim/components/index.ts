@@ -20,5 +20,6 @@ export * from "./room-culture";
 export * from "./room-instance";
 export * from "./schedule-state";
 export * from "./staff-state";
+export * from "./training-state";
 export * from "./visitor-state";
 export * from "./world-time";

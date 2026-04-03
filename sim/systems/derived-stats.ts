@@ -1,5 +1,6 @@
 import { EquipmentAssignment, InjuryState, OperatorIdentity } from "../components";
 import type { SimSystemContext } from "./types";
+import { getTrainingDerivedBonus, readOperatorTrainingSnapshot } from "./training";
 
 // ── Interfaces ───────────────────────────────────────────────────────────
 
@@ -109,6 +110,28 @@ export function collectStatModifiers(context: SimSystemContext, entity: number):
       });
     }
   }
+
+  const training = readOperatorTrainingSnapshot(entity);
+  const trainingBonuses = {
+    strength: getTrainingDerivedBonus(training.strength),
+    speed: getTrainingDerivedBonus(training.speed),
+    endurance: getTrainingDerivedBonus(training.endurance),
+    resilience: getTrainingDerivedBonus(training.resilience),
+  } as const;
+
+  (Object.entries(trainingBonuses) as Array<[keyof typeof trainingBonuses, number]>).forEach(
+    ([stat, value]) => {
+      if (value <= 0) {
+        return;
+      }
+
+      modifiers.push({
+        source: `training:${stat}`,
+        stat,
+        value,
+      });
+    },
+  );
 
   return modifiers;
 }

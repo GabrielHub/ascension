@@ -506,6 +506,8 @@ describe("save codec", () => {
         operatorIds: ["operator/7"],
         returnTick: 735,
         durationHours: 3,
+        briefingSource: null,
+        briefingStatus: null,
         resolutionPacket: {
           result: "mixed",
           reputationDelta: 1,
@@ -877,6 +879,16 @@ describe("save codec", () => {
           bossIntelProgress: 18,
           bossPressureProgress: 24,
           bossAvailable: false,
+          boardIntel: {
+            source: "office",
+            quality: "dossier",
+          },
+          briefing: {
+            source: "briefing_room",
+            status: "briefed",
+            opportunityIntelBonus: 8,
+            bossIntelBonus: 15,
+          },
         },
         postedContracts: [
           {
@@ -898,6 +910,10 @@ describe("save codec", () => {
             lootFamilyHints: ["Tunnel Salvage"],
             bossHint: "boss/tunneler-brood-mother",
             neighborhoodLabel: "lower east side",
+            boardIntel: {
+              source: "office",
+              quality: "dossier",
+            },
           },
         ],
         contractResult: {
@@ -969,6 +985,16 @@ describe("save codec", () => {
       bossPressureProgress: 24,
       requiresBossClear: false,
       bossAvailable: false,
+      boardIntel: {
+        source: "office",
+        quality: "dossier",
+      },
+      briefing: {
+        source: "briefing_room",
+        status: "briefed",
+        opportunityIntelBonus: 8,
+        bossIntelBonus: 15,
+      },
     });
     expect(normalized.world.postedContracts).toEqual([
       {
@@ -990,6 +1016,10 @@ describe("save codec", () => {
         lootFamilyHints: ["Tunnel Salvage"],
         bossHint: "boss/tunneler-brood-mother",
         neighborhoodLabel: "lower east side",
+        boardIntel: {
+          source: "office",
+          quality: "dossier",
+        },
       },
     ]);
     expect(normalized.world.contractResult).toEqual({
@@ -2096,6 +2126,57 @@ describe("save codec", () => {
     expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
     const op = normalized.world.operators?.[0];
     expect(op?.combat).toEqual(combat);
+  });
+
+  it("hydrates missing operator training state with zeroed readiness defaults", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 16,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            ...base.world.operators![0],
+            training: undefined,
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.operators?.[0].training).toEqual({
+      strength: 0,
+      speed: 0,
+      endurance: 0,
+      resilience: 0,
+    });
+  });
+
+  it("round-trips explicit operator training state through storage preparation", () => {
+    const base = createBaseSave();
+    const training = {
+      strength: 62,
+      speed: 44,
+      endurance: 58,
+      resilience: 36,
+    };
+
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            ...base.world.operators![0],
+            training,
+          },
+        ],
+      },
+    });
+
+    expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
+    expect(normalized.world.operators?.[0].training).toEqual(training);
   });
 
   it("hydrates missing policy state with migration-safe defaults", () => {

@@ -141,6 +141,7 @@ function createIncidentSystemContext(): SimSystemContext {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
         openingTiming: {
           firstRaidReturnCompletedAtMinute: 540,
           firstIncidentSeededAtMinute: null,

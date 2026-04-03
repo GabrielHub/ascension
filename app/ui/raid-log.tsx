@@ -1,7 +1,5 @@
-import { getPolicyFactorMetadata } from "lib/policies";
-
 import type { RaidOperatorOutcomeViewModel, RaidSummaryViewModel } from "./view-models";
-import { getNarrativeTagMeta } from "./_glossary";
+import { getNarrativeTagMeta, resolveContributingFactors } from "./_glossary";
 import { Tooltip } from "./_tooltip";
 import { emptyStateClass } from "./styles";
 
@@ -38,31 +36,33 @@ function OperatorOutcomeLine({ outcome }: { outcome: RaidOperatorOutcomeViewMode
   );
 }
 
-function PolicyAttributionRow({ factors }: { factors: readonly string[] }) {
-  const policyFactors = factors
-    .map((factor) => ({ factor, meta: getPolicyFactorMetadata(factor) }))
-    .filter(
-      (
-        entry,
-      ): entry is {
-        factor: string;
-        meta: NonNullable<ReturnType<typeof getPolicyFactorMetadata>>;
-      } => entry.meta !== null,
-    );
+function ContributingFactorRow({ factors }: { factors: readonly string[] }) {
+  const displayFactors = resolveContributingFactors(factors);
 
-  if (policyFactors.length === 0) {
+  if (displayFactors.length === 0) {
     return null;
   }
 
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      {policyFactors.map(({ factor, meta }) => (
-        <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
-          <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-sm text-gold/80">
-            {meta.policyLabel}: {meta.optionLabel}
-          </span>
-        </Tooltip>
-      ))}
+      {displayFactors.map(({ factor, policyMeta, factorMeta }) =>
+        policyMeta ? (
+          <Tooltip
+            key={factor}
+            content={`${policyMeta.explanation} Tradeoff: ${policyMeta.tradeoff}`}
+          >
+            <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-sm text-gold/80">
+              {policyMeta.policyLabel}: {policyMeta.optionLabel}
+            </span>
+          </Tooltip>
+        ) : factorMeta ? (
+          <Tooltip key={factor} content={factorMeta.tip}>
+            <span className="rounded bg-[rgba(200,168,76,0.04)] px-1.5 py-0.5 text-sm text-silver/70">
+              {factorMeta.label}
+            </span>
+          </Tooltip>
+        ) : null,
+      )}
     </div>
   );
 }
@@ -99,7 +99,7 @@ function RaidSummaryCard({ summary }: { summary: RaidSummaryViewModel }) {
         </span>
       </div>
 
-      <PolicyAttributionRow factors={summary.contributingFactors} />
+      <ContributingFactorRow factors={summary.contributingFactors} />
 
       {/* Per-operator outcome lines */}
       {summary.operatorOutcomes.length > 0 && (

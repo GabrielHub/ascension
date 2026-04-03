@@ -59,6 +59,7 @@ import {
   RoomInstance,
   ScheduleState,
   StaffState,
+  TrainingState,
   VisitorState,
   WorldTimeState,
 } from "../components";
@@ -796,6 +797,7 @@ function createOperatorEntity(
   addComponent(context.world, entity, PreferenceState);
   addComponent(context.world, entity, RaidParticipationState);
   addComponent(context.world, entity, InjuryState);
+  addComponent(context.world, entity, TrainingState);
 
   OperatorIdentity.id[entity] = `operator/${context.runtimeState.nextOperatorSequence}`;
   OperatorIdentity.name[entity] = source.name;
@@ -850,6 +852,10 @@ function createOperatorEntity(
   InjuryState.severity[entity] = 0;
   InjuryState.recoveryHoursRemaining[entity] = 0;
   InjuryState.treated[entity] = 0;
+  TrainingState.strength[entity] = 0;
+  TrainingState.speed[entity] = 0;
+  TrainingState.endurance[entity] = 0;
+  TrainingState.resilience[entity] = 0;
 
   context.runtimeState.operatorEntities.push(entity);
   ensureOperatorDispositionEntity(context, OperatorIdentity.id[entity]);
@@ -1296,7 +1302,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       applyCosts(context, costs);
       BuildingAuthority.appliedUpgradeIds[buildingEntity] = [...appliedUpgradeIds, upgrade.id];
-      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
+      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase", upgrade.id);
       const eventMessage = getBuildingUpgradeEventMessage(upgrade.id);
       if (eventMessage) {
         pushRuntimeEvent(context, {
@@ -1337,7 +1343,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       applyCosts(context, costs);
       const nextAppliedUpgradeIds = [...appliedUpgradeIds, upgrade.id];
       RoomInstance.appliedUpgradeIds[roomEntity] = nextAppliedUpgradeIds;
-      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
+      recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase", upgrade.id);
       RoomInstance.roomStateId[roomEntity] = getRoomStateId(template.id, nextAppliedUpgradeIds);
       const activeFootprint = getRoomActiveFootprint(
         template.id,
@@ -1643,6 +1649,11 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
     case "sim/dev-set-time": {
       const timeEntity = context.singletonEntities.time;
       WorldTimeState.minuteOfDay[timeEntity] = Math.max(0, Math.min(1439, command.minuteOfDay));
+      return;
+    }
+    case "sim/dev-set-day": {
+      const timeEntity = context.singletonEntities.time;
+      WorldTimeState.day[timeEntity] = Math.max(1, command.day);
       return;
     }
     case "sim/bid-contract":

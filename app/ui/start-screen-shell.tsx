@@ -265,6 +265,18 @@ function OccupiedCard({
             >
               {slot.metadata.guildName}
             </h3>
+            <p
+              className="mt-0.5 truncate text-xs"
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 500,
+                color: P.silverBody,
+                letterSpacing: "0.03em",
+                opacity: 0.7,
+              }}
+            >
+              {slot.metadata.playerName}
+            </p>
             <div
               className="mt-1.5 flex flex-wrap items-center gap-2"
               style={{

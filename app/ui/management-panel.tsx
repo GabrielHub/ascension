@@ -19,6 +19,8 @@ interface ManagementPanelProps {
   contractLifecycle: HqViewModel["contractLifecycle"];
   building: HqViewModel["building"];
   rooms: HqViewModel["rooms"];
+  upgrades: HqViewModel["upgrades"];
+  operators: HqViewModel["operators"];
   relocationGate: HqViewModel["relocationGate"];
   callbacks: GameCallbacks;
 }
@@ -131,6 +133,121 @@ function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
           })}
         </div>
       )}
+    </section>
+  );
+}
+
+const PORTERS_BUILDING_UPGRADE_ORDER = [
+  "upgrade/building/porters:kitchen_overhaul",
+  "upgrade/building/porters:upstairs_conversion",
+  "upgrade/building/porters:remodel",
+  "upgrade/building/porters:waterfront",
+] as const;
+
+function PortersCampaignCard({
+  rooms,
+  upgrades,
+  operators,
+}: {
+  rooms: HqViewModel["rooms"];
+  upgrades: HqViewModel["upgrades"];
+  operators: HqViewModel["operators"];
+}) {
+  const orderedUpgrades = PORTERS_BUILDING_UPGRADE_ORDER.map((upgradeId) =>
+    upgrades.find((upgrade) => upgrade.id === upgradeId),
+  ).filter((upgrade): upgrade is NonNullable<(typeof upgrades)[number]> => upgrade !== undefined);
+  const nextUpgradeIndex = orderedUpgrades.findIndex((upgrade) => !upgrade.isApplied);
+  const nextUpgrade = nextUpgradeIndex === -1 ? null : orderedUpgrades[nextUpgradeIndex];
+  const placedRoomTemplateIds = new Set(rooms.map((room) => room.templateId));
+  const recoveryPressure = operators.some(
+    (operator) =>
+      operator.lifecycle.status === "active" &&
+      (operator.injurySeverity > 0 ||
+        operator.needFatigue >= 35 ||
+        operator.needStress >= 35 ||
+        operator.moraleCurrent < operator.moraleBaseline - 5),
+  );
+
+  const whyNow =
+    nextUpgrade?.id === "upgrade/building/porters:kitchen_overhaul"
+      ? "Kitchen Overhaul is the first stabilizer. It turns the bigger building into steadier cash flow and cleaner morale before you open more space."
+      : nextUpgrade?.id === "upgrade/building/porters:upstairs_conversion"
+        ? "Porter's still lacks a dedicated Briefing Room and private break space. Upstairs Conversion unlocks both, which is the first real post-move contract-prep step."
+        : nextUpgrade?.id === "upgrade/building/porters:remodel"
+          ? recoveryPressure
+            ? "Operators are already carrying visible wear. The Remodel is the quality pass that keeps Porter's from becoming a larger room with the same old attrition."
+            : "The shell is open, but it still needs the quality pass that makes recovery and morale gains stick across a real Porter's run."
+          : nextUpgrade?.id === "upgrade/building/porters:waterfront"
+            ? "The harbor side is still idle. Waterfront turns Porter's final expansion into staging throughput and post-raid decompression while this HQ still matters."
+            : "Every shipped Porter's upgrade is online.";
+
+  const unlockPreview =
+    nextUpgrade?.id === "upgrade/building/porters:upstairs_conversion"
+      ? "Unlocks: The Break Room, The Briefing Room"
+      : nextUpgrade?.id === "upgrade/building/porters:waterfront"
+        ? "Unlocks: The Dock, The Deck"
+        : nextUpgrade?.effects.length
+          ? `Impact: ${nextUpgrade.effects.map((effect) => effect.label).join(" | ")}`
+          : "Impact: already applied";
+
+  return (
+    <section
+      className="glass-card space-y-3 rounded-2xl p-4"
+      data-testid="management-porters-campaign"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-medium text-silver-bright">Porter's Upgrade Arc</h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">
+            Porter's has a fixed four-step campaign. The next meaningful spend should move the room
+            mix forward, not just drain cash at random.
+          </p>
+        </div>
+        <span className={`badge ${nextUpgrade ? "badge-gold" : "badge-slate"}`}>
+          {nextUpgrade ? `Step ${nextUpgradeIndex + 1} of ${orderedUpgrades.length}` : "Complete"}
+        </span>
+      </div>
+
+      <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
+        <p className="text-xs uppercase tracking-[0.14em] text-gold/55">
+          {nextUpgrade ? "Next recommended upgrade" : "Campaign status"}
+        </p>
+        <p className="mt-1 text-sm text-silver-bright">
+          {nextUpgrade ? nextUpgrade.name : "All shipped Porter's upgrades are online."}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-silver/65">
+          {nextUpgrade
+            ? nextUpgrade.description
+            : "Briefing, recovery, and waterfront staging are all unlocked for this headquarters."}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Why now</p>
+        <p className="text-sm leading-relaxed text-silver/65">{whyNow}</p>
+        <p className="text-sm leading-relaxed text-gold/70">{unlockPreview}</p>
+      </div>
+
+      {nextUpgrade && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm leading-relaxed text-silver/50">
+            {nextUpgrade.isAffordable
+              ? "Affordable now. Purchase it from the Rooms panel on any selected room card."
+              : "Not affordable yet. The management card updates as soon as the treasury and reputation clear the cost."}
+          </p>
+          <span className={`badge ${nextUpgrade.isAffordable ? "badge-gold" : "badge-slate"}`}>
+            {nextUpgrade.isAffordable ? "Affordable" : "Saving"}
+          </span>
+        </div>
+      )}
+
+      {!placedRoomTemplateIds.has("room/briefing_room:tier_1") &&
+        nextUpgrade?.id !== "upgrade/building/porters:upstairs_conversion" && (
+          <p className="rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2 text-sm leading-relaxed text-silver/60">
+            The Briefing Room is still offline. Secured Porter's contracts will stay unbriefed until
+            Upstairs Conversion is bought and the room is actually placed.
+          </p>
+        )}
     </section>
   );
 }
@@ -272,6 +389,8 @@ export function ManagementPanel({
   contractLifecycle,
   building,
   rooms,
+  upgrades,
+  operators,
   relocationGate,
   callbacks,
 }: ManagementPanelProps) {
@@ -298,6 +417,10 @@ export function ManagementPanel({
         />
         <StaffingPressureCard rooms={rooms} />
       </div>
+
+      {building.id === "building/porters" && (
+        <PortersCampaignCard rooms={rooms} upgrades={upgrades} operators={operators} />
+      )}
 
       <div className="grid gap-3 xl:grid-cols-2">
         {SHIPPED_POLICY_IDS.map((policyId) => {

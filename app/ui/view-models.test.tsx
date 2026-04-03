@@ -160,6 +160,83 @@ describe("phase 1 view models", () => {
     });
   });
 
+  it("maps operator and gym training state into the HQ view model", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const phase1View = simulation.getPhase1View();
+    const firstOperator = phase1View.operators[0];
+
+    if (!firstOperator) {
+      throw new Error("expected bootstrap simulation to include an operator");
+    }
+
+    const hq = buildHqViewFromPhase1(
+      {
+        ...phase1View,
+        building: {
+          ...phase1View.building,
+          trainingRateModifier: 0.2,
+        },
+        rooms: [
+          ...phase1View.rooms,
+          {
+            id: "room-instance/gym",
+            templateId: "room/gym:tier_1",
+            name: "The Gym",
+            tier: 1,
+            floorIndex: 1,
+            slotId: "slot/gym",
+            roomStateId: "room-state/gym",
+            isRequestedActive: true,
+            isOperational: true,
+            capacity: 3,
+            occupancy: 0,
+            requiredStaffTag: "",
+            assignedStaffCount: 0,
+            appliedUpgradeIds: [],
+            availableUpgradeIds: [],
+            reservedFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
+            activeFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
+          },
+        ],
+        operators: [
+          {
+            ...firstOperator,
+            schedule: {
+              ...firstOperator.schedule,
+              currentBlock: "training",
+            },
+            training: {
+              strength: 52,
+              speed: 31,
+              endurance: 46,
+              resilience: 22,
+            },
+          },
+          ...phase1View.operators.slice(1),
+        ],
+      },
+      templateRegistry,
+    );
+
+    expect(hq.operators[0].training).toEqual(
+      expect.objectContaining({
+        average: 38,
+        statusLabel: "Conditioning",
+        bonuses: expect.objectContaining({
+          strength: 2,
+          speed: 1,
+        }),
+      }),
+    );
+    expect(hq.rooms.find((room) => room.id === "room-instance/gym")?.training).toEqual(
+      expect.objectContaining({
+        currentTraineeCount: 1,
+        currentTraineeNames: [firstOperator.identity.name],
+        rateModifier: 20,
+      }),
+    );
+  });
+
   it("passes through runtime-owned recruit projections without recomputing them in UI", () => {
     const simulation = createBootstrapSimulation(templateRegistry);
     const phase1View = simulation.getPhase1View();
@@ -191,6 +268,56 @@ describe("phase 1 view models", () => {
         projectedLoyalty: 77,
         canAccept: firstVisitor.canAccept,
         canReplace: firstVisitor.canReplace,
+      }),
+    );
+  });
+
+  it("uses runtime-owned secured-contract prep instead of rebuilding the site read in UI", () => {
+    const simulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
+    const phase1View = simulation.getPhase1View();
+
+    if (!phase1View.contractSite) {
+      throw new Error("expected preview snapshot to include an active contract");
+    }
+
+    const operations = buildOpsViewFromPhase1(
+      {
+        ...phase1View,
+        contractSite: {
+          ...phase1View.contractSite,
+          siteSummary: "Runtime-owned briefing packet.",
+          neighborhoodLabel: "Red Hook Waterfront",
+          boardIntel: { source: "office", quality: "dossier" },
+          briefing: {
+            source: "briefing_room",
+            status: "briefed",
+            opportunityIntelBonus: 8,
+            bossIntelBonus: 15,
+          },
+          knownTraits: ["threat:ambush"],
+          enemyHints: ["enemy-family/mannequin-stalkers"],
+          lootFamilyHints: ["Industrial Salvage"],
+          bossName: "The Referee",
+          bossTags: ["boss:area-damage"],
+          bossWeaknesses: [{ kind: "stat", target: "perception" }],
+        },
+      },
+      templateRegistry,
+    );
+
+    expect(operations.contractSite).toEqual(
+      expect.objectContaining({
+        siteSummary: "Runtime-owned briefing packet.",
+        neighborhoodLabel: "Red Hook Waterfront",
+        knownTraits: ["threat:ambush"],
+        enemyHints: ["enemy-family/mannequin-stalkers"],
+        lootFamilyHints: ["Industrial Salvage"],
+        bossName: "The Referee",
+        bossTags: ["boss:area-damage"],
+        bossWeaknesses: [{ kind: "stat", target: "perception" }],
       }),
     );
   });

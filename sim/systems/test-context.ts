@@ -11,6 +11,7 @@ import {
   GuildState,
   OperatorIdentity,
   RaidParticipationState,
+  TrainingState,
   WorldTimeState,
 } from "../components";
 import type {
@@ -175,6 +176,7 @@ export function addActiveTestOperators(context: SimSystemContext, count: number)
     addComponent(context.world, entity, OperatorIdentity);
     addComponent(context.world, entity, RaidParticipationState);
     addComponent(context.world, entity, AssignmentState);
+    addComponent(context.world, entity, TrainingState);
 
     OperatorIdentity.id[entity] = `operator-${index}`;
     OperatorIdentity.name[entity] = `Operator ${index}`;
@@ -183,6 +185,10 @@ export function addActiveTestOperators(context: SimSystemContext, count: number)
     RaidParticipationState.activeRaidId[entity] = "";
     AssignmentState.kind[entity] = "idle";
     AssignmentState.targetId[entity] = "";
+    TrainingState.strength[entity] = 0;
+    TrainingState.speed[entity] = 0;
+    TrainingState.endurance[entity] = 0;
+    TrainingState.resilience[entity] = 0;
 
     context.runtimeState.operatorEntities.push(entity);
     entities.push(entity);

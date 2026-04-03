@@ -118,6 +118,7 @@ function createTestContext(items: ItemTemplate[] = []): SimSystemContext {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
       },
       kitRegistry: {
         regularAttacks: [],

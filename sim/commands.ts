@@ -222,6 +222,10 @@ export type SimCommand =
       minuteOfDay: number;
     }
   | {
+      type: "sim/dev-set-day";
+      day: number;
+    }
+  | {
       type: "sim/dev-trigger-boss-commitment";
     }
   | {

@@ -81,6 +81,12 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Also run `vp test` and `vp build` when the change affects behavior or integration
 - Fix failing checks instead of dismissing them as unrelated
 
+## Testing Save Files
+
+- When creating a new save file for testing, use "Test" or "Testing" as the guild/player name so test saves are easy to identify
+- AI agents may freely delete save files labeled as test saves during testing workflows — no confirmation needed
+- Do not delete save files that are not clearly labeled as test saves without asking
+
 ## Workflow
 
 - Do not autonomously continue into extra cleanup or follow-up tasks after completing the asked work
@@ -104,9 +110,9 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Never start dev servers autonomously for Playwright work
 - Treat Playwright as a single-owner shared resource by default
 - Do not run concurrent Playwright sessions or parallel Playwright agents unless the user explicitly wants that coordination and the active owner releases the browser first
-- Prefer the existing sandbox and dev menu entrypoints during browser testing when they help reach relevant game states faster
-- Use the dev menu deliberately as a testing aid, not as an excuse to bypass the real user flow when the flow itself is what needs validation
-- The dev menu (backtick key in-game, dev builds only) provides cheat actions; the sandbox is the non-persistent preview session
+- Prefer the existing sandbox and dev command console entrypoints during browser testing when they help reach relevant game states faster
+- Use the dev command console deliberately as a testing aid, not as an excuse to bypass the real user flow when the flow itself is what needs validation
+- The dev command console (backtick key in-game, dev builds only) provides typed runtime-safe cheat actions; the sandbox is the non-persistent preview session
 - Store Playwright artifacts under `playwright/`, not in the repo root
 - Put screenshots in `playwright/screenshots/`
 - Put logs and network captures in `playwright/logs/`

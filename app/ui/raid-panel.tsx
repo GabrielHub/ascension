@@ -1,4 +1,3 @@
-import { getPolicyFactorMetadata } from "lib/policies";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
 import {
@@ -6,6 +5,7 @@ import {
   getContractHintMeta,
   getNarrativeTagMeta,
   getWeaknessTargetMeta,
+  resolveContributingFactors,
 } from "./_glossary";
 import { OpportunityBoard } from "./opportunity-board";
 import { RaidLog } from "./raid-log";
@@ -25,19 +25,42 @@ import {
   type RosterPressureViewModel,
 } from "./view-models";
 
-function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
-  const policyFactors = factors
-    .map((factor) => ({ factor, meta: getPolicyFactorMetadata(factor) }))
-    .filter(
-      (
-        entry,
-      ): entry is {
-        factor: string;
-        meta: NonNullable<ReturnType<typeof getPolicyFactorMetadata>>;
-      } => entry.meta !== null,
-    );
+function getBoardIntelLabel(boardIntel: PostedContractViewModel["boardIntel"]): string {
+  switch (boardIntel.source) {
+    case "office":
+      return "Office Dossier";
+    case "back_office":
+      return "Back Office Review";
+    default:
+      return "Street Board";
+  }
+}
 
-  if (policyFactors.length === 0) {
+function getBoardIntelDetail(boardIntel: PostedContractViewModel["boardIntel"]): string {
+  switch (boardIntel.quality) {
+    case "dossier":
+      return "Risk filed, boss rumors cross-checked, and site traits read cleanly before you bid.";
+    case "reviewed":
+      return "Paperwork is reviewed, but the board still carries blind spots.";
+    default:
+      return "This is raw board traffic. Expect missing context and thin risk reads.";
+  }
+}
+
+function getBriefingLabel(briefing: NonNullable<ContractSiteViewModel["briefing"]>): string {
+  return briefing.status === "drilled" ? "Team Drilled" : "Team Briefed";
+}
+
+function getBriefingDetail(briefing: NonNullable<ContractSiteViewModel["briefing"]>): string {
+  return briefing.source === "briefing_room_and_prep"
+    ? `Briefing Room and Prep Room are feeding launch notes. Each raid leaves with +${briefing.opportunityIntelBonus} field intel and +${briefing.bossIntelBonus} boss-read progress.`
+    : `The Briefing Room is shaping the launch package. Each raid leaves with +${briefing.opportunityIntelBonus} field intel and +${briefing.bossIntelBonus} boss-read progress.`;
+}
+
+function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
+  const displayFactors = resolveContributingFactors(factors);
+
+  if (displayFactors.length === 0) {
     return null;
   }
 
@@ -45,13 +68,24 @@ function ContractPolicySummary({ factors }: { factors: readonly string[] }) {
     <div className="relative mt-4 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-3">
       <p className="text-xs uppercase tracking-wider text-gold/60">Management Context</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {policyFactors.map(({ factor, meta }) => (
-          <Tooltip key={factor} content={`${meta.explanation} Tradeoff: ${meta.tradeoff}`}>
-            <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-sm text-gold/85">
-              {meta.policyLabel}: {meta.optionLabel}
-            </span>
-          </Tooltip>
-        ))}
+        {displayFactors.map(({ factor, policyMeta, factorMeta }) =>
+          policyMeta ? (
+            <Tooltip
+              key={factor}
+              content={`${policyMeta.explanation} Tradeoff: ${policyMeta.tradeoff}`}
+            >
+              <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-sm text-gold/85">
+                {policyMeta.policyLabel}: {policyMeta.optionLabel}
+              </span>
+            </Tooltip>
+          ) : factorMeta ? (
+            <Tooltip key={factor} content={factorMeta.tip}>
+              <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-sm text-silver/70">
+                {factorMeta.label}
+              </span>
+            </Tooltip>
+          ) : null,
+        )}
       </div>
     </div>
   );
@@ -237,6 +271,15 @@ function PostedContractCard({
         <p className="mt-2.5 text-sm italic leading-relaxed text-silver/45">
           {posting.siteSummary}
         </p>
+
+        <div className="mt-3 flex items-center gap-2">
+          <Tooltip content={getBoardIntelDetail(posting.boardIntel)}>
+            <span className="badge badge-slate">{getBoardIntelLabel(posting.boardIntel)}</span>
+          </Tooltip>
+          <span className="text-xs uppercase tracking-[0.12em] text-gold/40">
+            {posting.boardIntel.quality}
+          </span>
+        </div>
 
         {/* Stat blocks */}
         <div className="mt-3 grid grid-cols-4 gap-2">
@@ -475,6 +518,18 @@ function ContractSiteStatus({ contract }: { contract: ContractSiteViewModel }) {
             <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Site read</p>
             <p className="mt-1 text-sm leading-relaxed text-silver/65">{contract.siteSummary}</p>
           </div>
+
+          {contract.briefing && (
+            <div className="glass-card-inset mt-3 rounded-lg px-3 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Briefing Layer</p>
+                <span className="badge badge-gold">{getBriefingLabel(contract.briefing)}</span>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-silver/65">
+                {getBriefingDetail(contract.briefing)}
+              </p>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="mt-3 flex items-center gap-4 text-xs">

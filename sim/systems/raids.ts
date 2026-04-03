@@ -13,6 +13,9 @@ import {
   BuildingAuthority,
   type ActiveRaidPacketRecord,
   type ActiveRaidResolutionPacket,
+  type ContractBoardIntelState,
+  type ContractBriefingState,
+  type ContractBossWeaknessIntel,
   type ContractLifecyclePhase,
   type ContractResultSummary,
   type ContractSiteState,
@@ -66,6 +69,7 @@ import {
   upsertNotableTie,
 } from "./social";
 import { computeDerivedStats, type OperatorBaseStats } from "./derived-stats";
+import type { TemplateRegistry } from "content/templates";
 import type { BossTag, BossWeakness } from "content/templates/shared";
 import { siteConceptTemplates, siteConceptById } from "content/templates/site-concepts";
 import { SeededRng, weightedChoice, boundedRoll } from "../uncertainty";
@@ -104,6 +108,11 @@ import type {
 } from "./types";
 import { seedFromSimulationKey } from "./seed-utils";
 import { FIRST_RAID_RETURN_BEAT_ID } from "./guidance-beats";
+import {
+  applyPostRaidTrainingWear,
+  getOperatorTrainingReadinessContribution,
+  getTeamTrainingFactor,
+} from "./training";
 
 export type { RaidTeamGoal } from "lib/raid-team-goal";
 
@@ -172,6 +181,13 @@ const FIRST_CONTRACT_INJURY_CAP_BY_RESULT = {
   mixed: 10,
   failure: 14,
 } as const;
+const PORTERS_OFFICE_TEMPLATE_ID = "room/office:tier_1";
+const PORTERS_BRIEFING_ROOM_TEMPLATE_ID = "room/briefing_room:tier_1";
+const PORTERS_PREP_ROOM_TEMPLATE_ID = "room/prep_room:tier_1";
+const PORTERS_INFIRMARY_TEMPLATE_ID = "room/infirmary:tier_1";
+const PORTERS_BREAK_ROOM_TEMPLATE_ID = "room/break_room:tier_1";
+const PORTERS_DOCK_TEMPLATE_ID = "room/dock:tier_1";
+const PORTERS_DECK_TEMPLATE_ID = "room/deck:tier_1";
 
 export interface RaidReadinessSignal {
   availabilityScore: number;
@@ -182,6 +198,12 @@ export interface RaidReadinessSignal {
 
 function pushRuntimeCue(context: SimSystemContext, cueId: RuntimeCueId): void {
   context.runtimeState.pendingCueIds.push(cueId);
+}
+
+function pushUniqueTag(tags: string[], tag: string): void {
+  if (!tags.includes(tag)) {
+    tags.push(tag);
+  }
 }
 
 function getCellCenter(x: number, y: number) {
@@ -196,6 +218,211 @@ function hasContractConcluded(contractSite: ContractSiteState | null | undefined
     contractSite &&
     (contractSite.bossDefeated || contractSite.missionCompleted || contractSite.contractLost),
   );
+}
+
+function getContractBoardIntelState(context: SimSystemContext): ContractBoardIntelState {
+  if (hasOperationalRoomTemplate(context, PORTERS_OFFICE_TEMPLATE_ID)) {
+    return {
+      source: "office",
+      quality: "dossier",
+    };
+  }
+
+  if (hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID)) {
+    return {
+      source: "back_office",
+      quality: "reviewed",
+    };
+  }
+
+  return {
+    source: "street",
+    quality: "rough",
+  };
+}
+
+export function getContractBriefingState(
+  context: SimSystemContext,
+  contractSite: ContractSiteState | null | undefined,
+): ContractBriefingState | null {
+  if (!contractSite || hasContractConcluded(contractSite)) {
+    return null;
+  }
+
+  if (!hasOperationalRoomTemplate(context, PORTERS_BRIEFING_ROOM_TEMPLATE_ID)) {
+    return null;
+  }
+
+  if (hasOperationalRoomTemplate(context, PORTERS_PREP_ROOM_TEMPLATE_ID)) {
+    return {
+      source: "briefing_room_and_prep",
+      status: "drilled",
+      opportunityIntelBonus: 16,
+      bossIntelBonus: 30,
+    };
+  }
+
+  return {
+    source: "briefing_room",
+    status: "briefed",
+    opportunityIntelBonus: 8,
+    bossIntelBonus: 15,
+  };
+}
+
+function getBoardIntelFloor(boardIntel: ContractBoardIntelState): number {
+  switch (boardIntel.quality) {
+    case "dossier":
+      return 45;
+    case "reviewed":
+      return 30;
+    default:
+      return 0;
+  }
+}
+
+function getBoardIntelBonus(boardIntel: ContractBoardIntelState): number {
+  switch (boardIntel.quality) {
+    case "dossier":
+      return 20;
+    case "reviewed":
+      return 15;
+    default:
+      return 0;
+  }
+}
+
+function getBoardAdjustedContractIntel(
+  contractIntel: number,
+  boardIntel: ContractBoardIntelState,
+): number {
+  return clamp(
+    Math.max(contractIntel, getBoardIntelFloor(boardIntel)) + getBoardIntelBonus(boardIntel),
+    10,
+    100,
+  );
+}
+
+function getOpportunityIntelWithBriefing(
+  contractIntel: number,
+  briefing: ContractBriefingState | null = null,
+): number {
+  return clamp(contractIntel + (briefing?.opportunityIntelBonus ?? 0), 10, 100);
+}
+
+function buildBossWeaknessIntel(
+  weaknesses: readonly BossWeakness[],
+  maxCount: number,
+): ContractBossWeaknessIntel[] {
+  return weaknesses.slice(0, maxCount).map((weakness) => ({
+    kind: weakness.kind,
+    target: weakness.target,
+  }));
+}
+
+function resolveContractBossProfile(
+  registry: Pick<TemplateRegistry, "missionById" | "bossById">,
+  missionId: string,
+  siteConceptId: string,
+) {
+  const concept = siteConceptById.get(siteConceptId);
+  const missionBoss = registry.missionById.get(missionId)?.combatProfile?.boss ?? null;
+  const siteBossId = concept?.bossId ?? null;
+  const siteBoss = siteBossId ? (registry.bossById.get(siteBossId) ?? null) : null;
+  return missionBoss ?? siteBoss;
+}
+
+function buildBoardContractIntel(
+  siteConceptId: string,
+  contractIntel: number,
+  boardIntel: ContractBoardIntelState,
+): Pick<
+  PostedContract,
+  "knownTraits" | "hiddenTraitCount" | "enemyHints" | "lootFamilyHints" | "bossHint"
+> {
+  const concept = siteConceptById.get(siteConceptId);
+  const allTraits = [...(concept?.threatProfileTags ?? []), ...(concept?.hazardTags ?? [])];
+  const knownTraitCount = (() => {
+    switch (boardIntel.quality) {
+      case "dossier":
+        return contractIntel >= 55 ? allTraits.length : Math.ceil(allTraits.length * 0.8);
+      case "reviewed":
+        return contractIntel >= 60 ? allTraits.length : Math.ceil(allTraits.length * 0.6);
+      default:
+        if (contractIntel >= 60) return allTraits.length;
+        if (contractIntel >= 30) return Math.ceil(allTraits.length * 0.6);
+        return Math.ceil(allTraits.length * 0.3);
+    }
+  })();
+
+  return {
+    knownTraits: allTraits.slice(0, knownTraitCount),
+    hiddenTraitCount: Math.max(0, allTraits.length - knownTraitCount),
+    enemyHints:
+      boardIntel.quality === "dossier" || contractIntel >= 40
+        ? [...(concept?.enemyFamilyIds ?? [])]
+        : [],
+    lootFamilyHints:
+      boardIntel.quality === "dossier" || contractIntel >= 30
+        ? [...(concept?.lootThemeLabels ?? [])]
+        : [],
+    bossHint:
+      boardIntel.quality === "dossier" || contractIntel >= 50 ? (concept?.bossId ?? null) : null,
+  };
+}
+
+export function buildActiveContractIntelSurface(input: {
+  missionId: string;
+  siteConceptId: string;
+  contractIntel: number;
+  boardIntel: ContractBoardIntelState;
+  briefing: ContractBriefingState | null;
+  requiresBossClear: boolean;
+  registry: Pick<TemplateRegistry, "missionById" | "bossById">;
+}): {
+  siteSummary: string;
+  neighborhoodLabel: string;
+  knownTraits: readonly string[];
+  enemyHints: readonly string[];
+  lootFamilyHints: readonly string[];
+  bossName: string | null;
+  bossTags: readonly BossTag[];
+  bossWeaknesses: readonly ContractBossWeaknessIntel[];
+} {
+  const concept = siteConceptById.get(input.siteConceptId);
+  const boardRead = buildBoardContractIntel(
+    input.siteConceptId,
+    input.contractIntel,
+    input.boardIntel,
+  );
+  const boss = resolveContractBossProfile(input.registry, input.missionId, input.siteConceptId);
+  const knowsBossFromBoard = boardRead.bossHint !== null;
+  const knowsBossFromBriefing = input.briefing !== null && input.requiresBossClear;
+
+  return {
+    siteSummary: concept?.conceptSummary ?? "Operational read pending.",
+    neighborhoodLabel: concept?.worldSpaceLabel ?? "",
+    knownTraits:
+      input.briefing === null
+        ? boardRead.knownTraits
+        : [...(concept?.threatProfileTags ?? []), ...(concept?.hazardTags ?? [])],
+    enemyHints:
+      input.briefing === null ? boardRead.enemyHints : [...(concept?.enemyFamilyIds ?? [])],
+    lootFamilyHints:
+      input.briefing === null ? boardRead.lootFamilyHints : [...(concept?.lootThemeLabels ?? [])],
+    bossName: knowsBossFromBriefing || knowsBossFromBoard ? (boss?.name ?? null) : null,
+    bossTags:
+      knowsBossFromBriefing && boss
+        ? boss.tags.slice(0, input.briefing?.status === "drilled" ? boss.tags.length : 1)
+        : [],
+    bossWeaknesses:
+      knowsBossFromBriefing && boss
+        ? buildBossWeaknessIntel(
+            boss.weaknesses,
+            input.briefing?.status === "drilled" ? boss.weaknesses.length : 1,
+          )
+        : [],
+  };
 }
 
 function getResolvedContractCount(
@@ -1070,6 +1297,7 @@ export function computeOperatorRaidReadiness(
     NeedState.fatigue[entity] > recoveryTriage.fatigueRaidPenaltyThreshold
       ? (NeedState.fatigue[entity] - recoveryTriage.fatigueRaidPenaltyThreshold) * 0.9
       : 0;
+  const trainingContribution = getOperatorTrainingReadinessContribution(entity);
   const availabilityScore = clamp(
     100 -
       InjuryState.severity[entity] * 0.85 -
@@ -1079,7 +1307,8 @@ export function computeOperatorRaidReadiness(
       fatiguePenalty -
       schedulePressure * 0.45 -
       assignmentPenalty +
-      LoyaltyState.current[entity] * 0.08,
+      LoyaltyState.current[entity] * 0.08 +
+      trainingContribution * 0.7,
     0,
     100,
   );
@@ -1088,6 +1317,7 @@ export function computeOperatorRaidReadiness(
       MoraleState.current[entity] * 0.26 +
       LoyaltyState.current[entity] * 0.18 +
       computeRiskRewardFit(context, entity, opportunityEntity) +
+      Math.max(0, trainingContribution) * 0.35 +
       (ScheduleState.currentBlock[entity] === "rest"
         ? -PreferenceState.recoveryBias[entity] * 0.12
         : 0),
@@ -1099,7 +1329,9 @@ export function computeOperatorRaidReadiness(
     availabilityScore,
     willingnessScore,
     readinessScore: clamp(
-      (availabilityScore + willingnessScore) / 2 + (100 - InjuryState.severity[entity]) * 0.08,
+      (availabilityScore + willingnessScore) / 2 +
+        (100 - InjuryState.severity[entity]) * 0.08 +
+        trainingContribution,
       0,
       100,
     ),
@@ -1159,6 +1391,7 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
 
   const sequence = context.runtimeState.nextOpportunitySequence;
   const mission = getMissionTemplate(context, contractSite.missionId);
+  const briefing = getContractBriefingState(context, contractSite);
   const entity = addEntity(context.world);
   const rng = new SeededRng(
     seedFromSimulationKey(
@@ -1180,7 +1413,7 @@ function spawnRaidOpportunity(context: SimSystemContext): void {
   );
   const opportunityBudget = computeRaidOpportunityEconomyBudget({
     contractThreat: contractSite.threat,
-    contractIntel: contractSite.intel,
+    contractIntel: getOpportunityIntelWithBriefing(contractSite.intel, briefing),
     contractReward: contractSite.reward,
     missionExpectedThreatTagCount: mission.expectedThreatTags.length,
     threatVariance,
@@ -1792,7 +2025,11 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
 
   const startedTick = getCurrentAbsoluteMinute(context);
   const raidId = `raid/${context.runtimeState.nextRaidSequence}`;
-  const durationHours = Math.max(1, mission.baseDurationHours * objectiveBias.durationMultiplier);
+  const dockOperational = hasOperationalRoomTemplate(context, PORTERS_DOCK_TEMPLATE_ID);
+  let durationHours = Math.max(1, mission.baseDurationHours * objectiveBias.durationMultiplier);
+  if (dockOperational) {
+    durationHours = Math.max(1, durationHours - 1);
+  }
   const returnTick = startedTick + Math.max(60, Math.round(durationHours * 60));
   const averageReadiness =
     operatorEntities.reduce((total, entity) => {
@@ -1822,6 +2059,10 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
   if (stagingOperational) {
     teamCohesion = clamp(teamCohesion + (stagingStaffed ? 8 : 4), 0, 100);
   }
+  if (dockOperational) {
+    teamCohesion = clamp(teamCohesion + 6, 0, 100);
+  }
+  const contractBriefing = getContractBriefingState(context, contractSite);
 
   // ── Run deterministic raid simulation ──
   const siteSeed = seedFromSimulationKey(
@@ -1837,7 +2078,7 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     contractSiteId: contractSite?.contractSiteId ?? "",
     missionId: mission.id,
     siteSeed,
-    missionDurationHours: mission.baseDurationHours,
+    missionDurationHours: durationHours,
     contractReward: RaidOpportunityState.reward[opportunityEntity],
     contractRisk: RaidOpportunityState.threat[opportunityEntity],
     operators: simOperators,
@@ -1853,7 +2094,11 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
     intelLevel: RaidOpportunityState.intel[opportunityEntity],
     teamCohesion,
     contractExplorationProgress: contractSite?.explorationProgress ?? 0,
-    contractBossIntelProgress: contractSite?.bossIntelProgress ?? 0,
+    contractBossIntelProgress: clamp(
+      (contractSite?.bossIntelProgress ?? 0) + (contractBriefing?.bossIntelBonus ?? 0),
+      0,
+      100,
+    ),
     contractBossAvailable: contractSite?.bossAvailable ?? false,
     contractPosture: objectiveBiasState.contractPosture,
     objectiveBias: objectiveBiasState.objectiveBias,
@@ -1873,6 +2118,9 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
         teamCohesion,
       );
   applyFirstContractDeathShield(context, resolutionPacket);
+  if (dockOperational) {
+    pushUniqueTag(resolutionPacket.narrativeTags, "dock:staged");
+  }
 
   BuildingAuthority.activeRaidPackets[context.singletonEntities.building] = [
     ...(BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []),
@@ -1892,6 +2140,8 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
       intel: RaidOpportunityState.intel[opportunityEntity],
       reward: RaidOpportunityState.reward[opportunityEntity],
       cohesion: teamCohesion,
+      briefingSource: contractBriefing?.source ?? null,
+      briefingStatus: contractBriefing?.status ?? null,
       resolutionPacket,
       raidRun,
     },
@@ -1953,6 +2203,17 @@ function finalizeRaidPacket(
   const missionTemplate = context.registry.missions.find((m) => m.id === packet.missionId);
   const missionLabel = missionTemplate?.name ?? packet.missionId;
   const res = packet.resolutionPacket;
+  const infirmaryOperational = hasOperationalRoomTemplate(context, PORTERS_INFIRMARY_TEMPLATE_ID);
+  const breakRoomOperational = hasOperationalRoomTemplate(context, PORTERS_BREAK_ROOM_TEMPLATE_ID);
+  const deckOperational = hasOperationalRoomTemplate(context, PORTERS_DECK_TEMPLATE_ID);
+  let usedInfirmary = false;
+  let usedBreakRoom = false;
+  let usedDeck = false;
+  const trainingFactors = getTeamTrainingFactor(
+    packet.operatorIds
+      .map((operatorId) => operatorEntityById.get(operatorId))
+      .filter((entity): entity is number => entity !== undefined),
+  );
   const returningOperatorNames = packet.resolutionPacket.operatorOutcomes
     .filter((outcome) => !outcome.died)
     .map((outcome) => {
@@ -1961,6 +2222,27 @@ function finalizeRaidPacket(
         ? outcome.operatorId
         : (OperatorIdentity.name[operatorEntity] ?? outcome.operatorId);
     });
+  res.operatorOutcomes.forEach((outcome) => {
+    if (outcome.died) {
+      return;
+    }
+
+    if (deckOperational) {
+      outcome.moraleDelta += 2;
+      usedDeck = true;
+    }
+
+    if (breakRoomOperational && (outcome.injuryDelta > 0 || outcome.status !== "steady")) {
+      outcome.moraleDelta += 2;
+      outcome.loyaltyDelta += 2;
+      usedBreakRoom = true;
+    }
+
+    if (infirmaryOperational && outcome.injuryDelta > 0) {
+      outcome.moraleDelta += 1;
+      usedInfirmary = true;
+    }
+  });
   if (returningOperatorNames.length > 0) {
     pushRuntimeEvent(context, {
       kind: "team_return",
@@ -1982,6 +2264,10 @@ function finalizeRaidPacket(
     if (operatorEntity === undefined) {
       return;
     }
+    const injuryDelta =
+      infirmaryOperational && outcome.injuryDelta > 0
+        ? Math.max(0, outcome.injuryDelta - 2)
+        : outcome.injuryDelta;
 
     MoraleState.current[operatorEntity] = clamp(
       MoraleState.current[operatorEntity] + outcome.moraleDelta,
@@ -1994,14 +2280,17 @@ function finalizeRaidPacket(
       100,
     );
     InjuryState.severity[operatorEntity] = clamp(
-      InjuryState.severity[operatorEntity] + outcome.injuryDelta,
+      InjuryState.severity[operatorEntity] + injuryDelta,
       0,
       100,
     );
     InjuryState.recoveryHoursRemaining[operatorEntity] = Math.max(
       InjuryState.recoveryHoursRemaining[operatorEntity],
-      outcome.injuryDelta * INJURY_RECOVERY_HOURS_PER_POINT,
+      injuryDelta *
+        INJURY_RECOVERY_HOURS_PER_POINT *
+        (infirmaryOperational && outcome.injuryDelta > 0 ? 0.72 : 1),
     );
+    applyPostRaidTrainingWear(operatorEntity, outcome.injuryDelta, outcome.died === true);
     RaidParticipationState.activeRaidId[operatorEntity] = "";
     RaidParticipationState.missionId[operatorEntity] = "";
     RaidParticipationState.returnTick[operatorEntity] = 0;
@@ -2070,6 +2359,15 @@ function finalizeRaidPacket(
       accent: "ember",
     });
   }
+  if (usedInfirmary) {
+    pushUniqueTag(res.narrativeTags, "infirmary:stabilized");
+  }
+  if (usedBreakRoom) {
+    pushUniqueTag(res.narrativeTags, "break_room:decompressed");
+  }
+  if (usedDeck) {
+    pushUniqueTag(res.narrativeTags, "deck:aired_out");
+  }
 
   const diedOperatorIds = packet.resolutionPacket.operatorOutcomes
     .filter((outcome) => outcome.died)
@@ -2118,18 +2416,37 @@ function finalizeRaidPacket(
       narrativeTags: packet.resolutionPacket.narrativeTags,
       intelMismatchTags: packet.resolutionPacket.intelMismatchTags,
       bossDefeated: packet.resolutionPacket.narrativeTags.includes("boss:defeated"),
-      contributingFactors: packet.raidRun?.summaryDraft?.contributingFactors ?? [
-        ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
-        ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
-        ...(packet.intel >= 60 ? ["intel:high"] : []),
-        ...(packet.intel < 30 ? ["intel:low"] : []),
-        ...(packet.resolutionPacket.narrativeTags.includes("boss:weakness-exploited")
-          ? ["boss:weakness-exploited"]
-          : []),
-        ...(packet.resolutionPacket.narrativeTags.includes("boss:defeated")
-          ? ["boss:defeated"]
-          : []),
-      ],
+      contributingFactors: Array.from(
+        new Set([
+          ...(packet.raidRun?.summaryDraft?.contributingFactors ?? []),
+          ...(packet.cohesion >= 70 ? ["cohesion:strong"] : []),
+          ...(packet.cohesion < 40 ? ["cohesion:weak"] : []),
+          ...(packet.intel >= 60 ? ["intel:high"] : []),
+          ...(packet.intel < 30 ? ["intel:low"] : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("boss:weakness-exploited")
+            ? ["boss:weakness-exploited"]
+            : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("boss:defeated")
+            ? ["boss:defeated"]
+            : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("dock:staged") ? ["dock:staged"] : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("infirmary:stabilized")
+            ? ["infirmary:stabilized"]
+            : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("break_room:decompressed")
+            ? ["break_room:decompressed"]
+            : []),
+          ...(packet.resolutionPacket.narrativeTags.includes("deck:aired_out")
+            ? ["deck:aired_out"]
+            : []),
+          ...(packet.briefingStatus === "drilled"
+            ? ["briefing:drilled"]
+            : packet.briefingStatus === "briefed"
+              ? ["briefing:briefed"]
+              : []),
+          ...trainingFactors,
+        ]),
+      ),
     },
   ];
 }
@@ -3202,6 +3519,7 @@ function updateContractLifecycle(context: SimSystemContext): void {
         enterResolvedPhase(context, contractSite);
         return;
       }
+      contractSite.briefing = getContractBriefingState(context, contractSite);
       ensureRaidPresentationSeed(context, contractSite.contractSiteId);
       return;
     }
@@ -3317,12 +3635,7 @@ function generateContractBoard(context: SimSystemContext): void {
   const currentMinute = getCurrentAbsoluteMinute(context);
   const reputation = GuildState.reputation[guildEntity];
   const rng = new SeededRng(seedFromSimulationKey(context, `board:${currentMinute}:${reputation}`));
-  const backOfficeOperational =
-    hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID) ||
-    hasOperationalRoomWithTag(context, "ops:intel");
-  const backOfficeStaffed =
-    hasStaffedOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID) ||
-    hasStaffedOperationalRoomWithTag(context, "ops:intel");
+  const boardIntel = getContractBoardIntelState(context);
 
   // Determine available ranks based on reputation, capped by building ceiling
   const buildingTemplateIndex = BuildingAuthority.activeBuildingTemplateIndex[buildingEntity];
@@ -3377,31 +3690,8 @@ function generateContractBoard(context: SimSystemContext): void {
         POSTED_CONTRACT_VARIANCE.reward.max,
       ),
     });
-    const contractIntel = Math.min(
-      100,
-      Math.max(budget.intel, backOfficeOperational ? 30 : budget.intel) +
-        (backOfficeStaffed ? 15 : 0),
-    );
-
-    // Intel controls what the player knows before bidding
-    const allTraits = [...concept.threatProfileTags, ...concept.hazardTags];
-    const knownTraitCount =
-      contractIntel >= 60
-        ? allTraits.length
-        : contractIntel >= 30
-          ? Math.ceil(allTraits.length * 0.6)
-          : Math.ceil(allTraits.length * 0.3);
-    const knownTraits = allTraits.slice(0, knownTraitCount);
-    const hiddenTraitCount = allTraits.length - knownTraitCount;
-
-    // Enemy hints based on intel
-    const enemyHints = contractIntel >= 40 ? [...concept.enemyFamilyIds] : [];
-
-    // Loot family hints
-    const lootFamilyHints = contractIntel >= 30 ? [...concept.lootThemeLabels] : [];
-
-    // Boss hint — resolved from boss registry via site concept's real bossId
-    const bossHint = contractIntel >= 50 ? concept.bossId : null;
+    const contractIntel = getBoardAdjustedContractIntel(budget.intel, boardIntel);
+    const boardRead = buildBoardContractIntel(concept.siteConceptId, contractIntel, boardIntel);
 
     return {
       postingId: `posting/${currentMinute}/${index}`,
@@ -3416,12 +3706,13 @@ function generateContractBoard(context: SimSystemContext): void {
       bidCost: budget.bidCost,
       minReputation: getMinimumReputationForContractRank(rank),
       generatedAtTick: currentMinute,
-      knownTraits,
-      hiddenTraitCount,
-      enemyHints,
-      lootFamilyHints,
-      bossHint,
+      knownTraits: boardRead.knownTraits,
+      hiddenTraitCount: boardRead.hiddenTraitCount,
+      enemyHints: boardRead.enemyHints,
+      lootFamilyHints: boardRead.lootFamilyHints,
+      bossHint: boardRead.bossHint,
       neighborhoodLabel: formatNeighborhoodLabel(location),
+      boardIntel,
     };
   });
 
@@ -3474,6 +3765,8 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
     threat: posting.threat,
     intel: posting.intel,
     reward: posting.reward,
+    boardIntel: { ...posting.boardIntel },
+    briefing: null,
     securedAtTick: currentMinute,
     explorationProgress: 0,
     closureProgress: 0,
@@ -3484,6 +3777,7 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
     bossAvailable: false,
   };
 
+  newContract.briefing = getContractBriefingState(context, newContract);
   BuildingAuthority.contractSite[buildingEntity] = newContract;
   initializeFogOfWar(context);
 

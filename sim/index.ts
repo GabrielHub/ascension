@@ -241,6 +241,7 @@ export function createNewGameWorldSnapshot(
       staffingActions: 0,
       upgradesPurchased: 0,
     },
+    lastPurchasedUpgradeId: null,
     openingTiming: {
       firstRaidReturnCompletedAtMinute: null,
       firstIncidentSeededAtMinute: null,
@@ -292,6 +293,8 @@ export function createPreviewWorldSnapshot(registry: TemplateRegistry): WorldSna
       threat: posting.threat,
       intel: posting.intel,
       reward: posting.reward,
+      boardIntel: posting.boardIntel ?? { source: "street", quality: "rough" },
+      briefing: null,
       securedAtTick,
       explorationProgress: 0,
       closureProgress: 0,

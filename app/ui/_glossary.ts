@@ -1,3 +1,5 @@
+import { getPolicyFactorMetadata, type PolicyFactorMetadata } from "lib/policies";
+
 export interface DisplayMeta {
   label: string;
   tip: string;
@@ -477,6 +479,69 @@ const INCIDENT_CATEGORY_META = {
   bar_drama: { label: "Bar Drama", tip: "" },
 } satisfies DisplayRegistry;
 
+const RAID_CONTRIBUTING_FACTOR_META = {
+  "cohesion:strong": {
+    label: "Strong Cohesion",
+    tip: "The team was coordinated enough to turn preparation into cleaner field execution.",
+  },
+  "cohesion:weak": {
+    label: "Weak Cohesion",
+    tip: "Poor team coordination undermined the run even when the team had enough raw ability.",
+  },
+  "intel:high": {
+    label: "High Intel",
+    tip: "Accurate site intel reduced surprises and let the team make cleaner calls.",
+  },
+  "intel:low": {
+    label: "Low Intel",
+    tip: "Thin recon left the team exposed to avoidable surprises and bad routing.",
+  },
+  "training:prepared": {
+    label: "Prepared",
+    tip: "The squad entered the raid with solid physical training readiness from Porter's gym time.",
+  },
+  "training:drilled": {
+    label: "Drilled",
+    tip: "The squad arrived exceptionally well conditioned. Training was a real edge in the field.",
+  },
+  "training:neglected": {
+    label: "Neglected",
+    tip: "The squad went in underconditioned. Lack of training readiness hurt the run.",
+  },
+  "briefing:briefed": {
+    label: "Briefed",
+    tip: "The Briefing Room gave the team a cleaner launch package and more reliable field context.",
+  },
+  "briefing:drilled": {
+    label: "Drilled",
+    tip: "Briefing and prep were both online, so the team left with a sharper, better-rehearsed plan.",
+  },
+  "dock:staged": {
+    label: "Dock Staging",
+    tip: "The waterfront dock gave the team a cleaner launch and shaved time off the run.",
+  },
+  "infirmary:stabilized": {
+    label: "Infirmary Support",
+    tip: "Medical recovery support softened the return bill and sped up return-to-duty.",
+  },
+  "break_room:decompressed": {
+    label: "Private Reset",
+    tip: "The upstairs break room steadied stressed operators after the run instead of sending them back into public noise.",
+  },
+  "deck:aired_out": {
+    label: "Deck Air",
+    tip: "Waterfront downtime on the deck turned the return into a cleaner morale reset.",
+  },
+  "boss:weakness-exploited": {
+    label: "Weakness Exploited",
+    tip: "The team found and leaned on the boss's vulnerability.",
+  },
+  "boss:defeated": {
+    label: "Boss Defeated",
+    tip: "The decisive encounter was cleared.",
+  },
+} satisfies DisplayRegistry;
+
 export type NarrativeTagMeta = DisplayMeta;
 
 export function getIdentifierLabel(identifier: string): string {
@@ -595,6 +660,29 @@ export function getEffectTypeMeta(type: string): DisplayMeta {
 
 export function getIncidentCategoryMeta(category: string): DisplayMeta {
   return resolveDisplayMeta(category, INCIDENT_CATEGORY_META, titleCase);
+}
+
+export function getRaidContributingFactorMeta(factor: string): DisplayMeta | null {
+  const entry = RAID_CONTRIBUTING_FACTOR_META[factor];
+  return entry ? toDisplayMeta(entry) : null;
+}
+
+export interface ResolvedContributingFactor {
+  factor: string;
+  policyMeta: PolicyFactorMetadata | null;
+  factorMeta: DisplayMeta | null;
+}
+
+export function resolveContributingFactors(
+  factors: readonly string[],
+): ResolvedContributingFactor[] {
+  return factors
+    .map((factor) => ({
+      factor,
+      policyMeta: getPolicyFactorMetadata(factor),
+      factorMeta: getRaidContributingFactorMeta(factor),
+    }))
+    .filter((entry) => entry.policyMeta !== null || entry.factorMeta !== null);
 }
 
 export function getRequirementLabel(req: { type: string; [key: string]: unknown }): string {

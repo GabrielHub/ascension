@@ -132,6 +132,48 @@ function getRoomStaffingPercent(room: RoomViewModel): number {
 }
 
 function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly string[] {
+  if (room.templateId === "room/office:tier_1") {
+    return [
+      "Turns Porter's contract board into filed dossiers with cleaner risk reads, clearer site traits, and earlier boss names.",
+      `Keeps the business side of ${guildName} organized enough that better opportunities stay readable instead of speculative.`,
+    ];
+  }
+
+  if (room.templateId === "room/briefing_room:tier_1") {
+    return [
+      "Adds a real secured-contract briefing layer so active jobs expose site context before teams deploy.",
+      "Feeds boss prep and launch notes into raids so post-bid planning is visible instead of implied.",
+    ];
+  }
+
+  if (room.templateId === "room/infirmary:tier_1") {
+    return [
+      "Cuts injury recovery time and softens the post-raid medical bill so hurt operators return to duty cleaner.",
+      "Makes Porter's recovery feel clinical instead of improvised by turning treatment into real upstairs support.",
+    ];
+  }
+
+  if (room.templateId === "room/break_room:tier_1") {
+    return [
+      "Adds private decompression away from customers, which steadies morale and loyalty after rough shifts.",
+      "Gives stressed operators somewhere to reset that the public floor cannot replace.",
+    ];
+  }
+
+  if (room.templateId === "room/dock:tier_1") {
+    return [
+      "Turns the waterfront into real launch throughput by shortening departures and tightening raid staging.",
+      "Makes the Waterfront upgrade operational instead of decorative by changing how teams leave the building.",
+    ];
+  }
+
+  if (room.templateId === "room/deck:tier_1") {
+    return [
+      "Turns downtime into a waterfront morale reset that hits differently from generic bar noise or public seating.",
+      "Gives Porter's a real harbor-side decompression space, so returns feel better than just surviving the shift.",
+    ];
+  }
+
   const reasons: string[] = [];
 
   if (hasRoomReasonTag(room, ROOM_REASON_TAG.recruitment)) {
@@ -154,7 +196,9 @@ function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly s
     reasons.push("Supports morale and relationship stability between raids.");
   }
   if (hasRoomReasonTag(room, ROOM_REASON_TAG.training)) {
-    reasons.push("Improves combat readiness once training comes online.");
+    reasons.push(
+      "Builds bounded physical readiness for raids through drills, not attunement changes or rank ups.",
+    );
   }
   if (hasRoomReasonTag(room, ROOM_REASON_TAG.staffing)) {
     reasons.push(
@@ -246,6 +290,7 @@ export function RoomDetailPanel({
   const hasUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
   const whyItMatters = getRoomWhyItMatters(room, guildName);
   const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
+  const training = room.training;
 
   return (
     <div className="animate-enter">
@@ -415,6 +460,47 @@ export function RoomDetailPanel({
                     </Tooltip>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {training && (
+            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
+              <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
+                Training Program
+              </h4>
+              <div className="glass-card-inset space-y-2 p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-gold/60">Trainees</div>
+                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
+                      {room.isOperational ? training.currentTraineeCount : 0}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-gold/60">Roster Avg</div>
+                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
+                      {training.rosterAverageReadiness}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-gold/60">Rate Mod</div>
+                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
+                      {training.rateModifier >= 0 ? "+" : ""}
+                      {training.rateModifier}%
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed text-silver/60">
+                  {room.isOperational
+                    ? "Training raises Strength, Speed, Endurance, and Resilience on a bounded track that later feeds raid readiness and combat power."
+                    : "The drills only accrue while this room is active. Bodega runs stay training-free because no operational training room exists there."}
+                </p>
+                <p className="text-sm leading-relaxed text-gold/70">
+                  {training.currentTraineeNames.length > 0
+                    ? `${training.currentTraineeNames.join(", ")} ${training.currentTraineeNames.length === 1 ? "is" : "are"} on the current training block.`
+                    : "Nobody is on the current training block right now."}
+                </p>
               </div>
             </div>
           )}

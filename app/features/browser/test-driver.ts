@@ -16,6 +16,7 @@ import {
   createBootstrapWorldSnapshot,
   createNewGameWorldSnapshot,
 } from "sim";
+import { createPortersUpgradeCampaignSeedWorld } from "sim/tools/porters-upgrade-campaign";
 import { OPENING_BEAT_IDS } from "sim/systems/guidance-beats";
 
 type ActiveTab = "hq" | "operations";
@@ -57,6 +58,10 @@ export interface BrowserTestSnapshot {
   clock: RuntimeSession["phase1View"]["clock"];
   contracts: {
     activeRaidIds: string[];
+    contractBriefing: {
+      source: "briefing_room" | "briefing_room_and_prep";
+      status: "briefed" | "drilled";
+    } | null;
     contractLifecycle: RuntimeSession["phase1View"]["contractLifecycle"];
     contractResult: {
       contractSiteId: string;
@@ -65,6 +70,7 @@ export interface BrowserTestSnapshot {
     } | null;
     contractSiteId: string | null;
     contractSiteName: string | null;
+    latestRaidSummaryFactors: string[];
     postedContractIds: string[];
     postedContractNames: string[];
     raidSummaryCount: number;
@@ -261,6 +267,7 @@ function buildCompletedOpeningGuidanceState(world: WorldSnapshot): Record<string
       staffingActions: 12,
       upgradesPurchased: 3,
     },
+    lastPurchasedUpgradeId: null,
     openingTiming: {
       firstRaidReturnCompletedAtMinute: 540,
       firstIncidentSeededAtMinute: 720,
@@ -369,6 +376,25 @@ async function seedRelocationReadySave(slotId: SaveSlotId): Promise<void> {
   await saveStorage.writeSaveGame(save);
 }
 
+async function seedPortersUpgradeCampaignSave(slotId: SaveSlotId): Promise<void> {
+  const world = createPortersUpgradeCampaignSeedWorld();
+  const timestamp = new Date().toISOString();
+  const save: PersistedSaveGame = {
+    slotId,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+    compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+    metadata: {
+      guildName: world.guild.guildName,
+      playerName: world.guild.playerName,
+      createdAt: timestamp,
+      lastPlayedAt: timestamp,
+    },
+    world,
+  };
+
+  await saveStorage.writeSaveGame(save);
+}
+
 async function seedNewGameSave(slotId: SaveSlotId, seed: number): Promise<void> {
   const world = createNewGameWorldSnapshot(templateRegistry, undefined, { seed });
   const timestamp = new Date().toISOString();
@@ -396,6 +422,7 @@ declare global {
       resetSaveSlots(): Promise<void>;
       seedNewGameSave(slotId?: SaveSlotId, seed?: number): Promise<void>;
       seedRelocationReadySave(slotId?: SaveSlotId): Promise<void>;
+      seedPortersUpgradeCampaignSave(slotId?: SaveSlotId): Promise<void>;
     };
   }
 }
@@ -508,6 +535,12 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
     clock: session.phase1View.clock,
     contracts: {
       activeRaidIds: operations.activeRaids.map((raid) => raid.id),
+      contractBriefing: operations.contractSite?.briefing
+        ? {
+            source: operations.contractSite.briefing.source,
+            status: operations.contractSite.briefing.status,
+          }
+        : null,
       contractLifecycle: operations.contractLifecycle,
       contractResult: operations.contractResult
         ? {
@@ -518,6 +551,8 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
         : null,
       contractSiteId: operations.contractSite?.contractSiteId ?? null,
       contractSiteName: operations.contractSite?.siteConceptName ?? null,
+      latestRaidSummaryFactors:
+        operations.raidHistory[operations.raidHistory.length - 1]?.contributingFactors ?? [],
       postedContractIds: operations.postedContracts.map((contract) => contract.postingId),
       postedContractNames: operations.postedContracts.map((contract) => contract.siteConceptName),
       raidSummaryCount: operations.raidHistory.length,
@@ -673,6 +708,9 @@ export function registerBrowserTestDriver(): void {
     },
     async seedRelocationReadySave(slotId = "slot/1") {
       await seedRelocationReadySave(slotId);
+    },
+    async seedPortersUpgradeCampaignSave(slotId = "slot/1") {
+      await seedPortersUpgradeCampaignSave(slotId);
     },
     async seedNewGameSave(slotId = "slot/1", seed = 1) {
       await seedNewGameSave(slotId, seed);

@@ -22,8 +22,12 @@ import {
   RoomInstance,
   StaffState,
 } from "../components";
-import { clamp, pushRuntimeEvent } from "./commands";
+import { clamp, hasOperationalRoomTemplate, pushRuntimeEvent } from "./commands";
 import type { SimSystem } from "./types";
+
+const PORTERS_INFIRMARY_TEMPLATE_ID = "room/infirmary:tier_1";
+const PORTERS_BREAK_ROOM_TEMPLATE_ID = "room/break_room:tier_1";
+const PORTERS_DECK_TEMPLATE_ID = "room/deck:tier_1";
 
 export interface AutonomyFlags {
   refusalRisk: boolean;
@@ -165,6 +169,9 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
   const rosterFlow = getRosterFlowConfig(policies);
 
   const roomCulture = getRoomCultureModifiers(context);
+  const hasInfirmary = hasOperationalRoomTemplate(context, PORTERS_INFIRMARY_TEMPLATE_ID);
+  const hasBreakRoom = hasOperationalRoomTemplate(context, PORTERS_BREAK_ROOM_TEMPLATE_ID);
+  const hasDeck = hasOperationalRoomTemplate(context, PORTERS_DECK_TEMPLATE_ID);
 
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
     (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
@@ -183,6 +190,20 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
     },
   ) => {
     const prevFlags = computeAutonomyFlags(entity, autonomyThresholds);
+    const moraleGap = Math.max(0, MoraleState.baseline[entity] - MoraleState.current[entity]);
+    const breakRoomMoraleBonus = hasBreakRoom
+      ? NeedState.stress[entity] * 0.08 + moraleGap * 0.06
+      : 0;
+    const deckMoraleBonus = hasDeck ? NeedState.fatigue[entity] * 0.05 + moraleGap * 0.08 : 0;
+    const infirmaryReliefBonus =
+      hasInfirmary && InjuryState.severity[entity] > 0
+        ? 2 + InjuryState.severity[entity] * 0.03
+        : 0;
+    const breakRoomLoyaltyBonus = hasBreakRoom
+      ? Math.max(0, 60 - LoyaltyState.current[entity]) * 0.08 +
+        Math.max(0, 55 - MoraleState.current[entity]) * 0.05
+      : 0;
+    const deckLoyaltyBonus = hasDeck ? Math.max(0, 50 - MoraleState.current[entity]) * 0.04 : 0;
 
     const moraleTarget =
       MoraleState.baseline[entity] +
@@ -194,13 +215,18 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
       activeEventPenalty * 1.6 +
       roomCulture.comfortContribution +
       roomCulture.tensionContribution +
+      breakRoomMoraleBonus +
+      deckMoraleBonus +
+      infirmaryReliefBonus +
       options.griefPenalty;
     const loyaltyTarget =
       LoyaltyState.baseline[entity] +
       loyaltyModifier +
       (MoraleState.current[entity] - 50) * 0.15 -
       InjuryState.severity[entity] * 0.2 -
-      activeEventPenalty * 0.8;
+      activeEventPenalty * 0.8 +
+      breakRoomLoyaltyBonus +
+      deckLoyaltyBonus;
 
     MoraleState.current[entity] = clamp(
       MoraleState.current[entity] +

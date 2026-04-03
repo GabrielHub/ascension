@@ -183,6 +183,7 @@ function createPhase2TestContext(): SimSystemContext {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
       },
       kitRegistry: {
         regularAttacks: [],
@@ -526,6 +527,7 @@ describe("Phase 2 inventory system", () => {
             staffingActions: 0,
             upgradesPurchased: 0,
           },
+          lastPurchasedUpgradeId: null,
         },
         kitRegistry: {
           regularAttacks: [],

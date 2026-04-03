@@ -32,7 +32,7 @@ import type {
   WorldEffectsSnapshot,
 } from "render";
 
-import { DevMenuOverlay } from "./dev-menu";
+import { DevConsole } from "./dev-menu";
 import { EventLog } from "./event-log";
 import { HqPanel } from "./hq-panel";
 import { InventoryPanel } from "./inventory-panel";
@@ -1390,6 +1390,7 @@ export function GameShell() {
   const anchorRegistry = useAnchorRegistry();
   const contractBoardAnchorRef = useGuidanceAnchor("ui/ops/contract-board");
   const eventLogAnchorRef = useGuidanceAnchor("ui/shared/event-log");
+  const managementCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/management");
   const rosterCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/roster");
   const roomsCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/rooms");
   const marketCategoryAnchorRef = useGuidanceAnchor("ui/hq/category/market");
@@ -1419,6 +1420,10 @@ export function GameShell() {
         case "hq/open-roster":
           setActiveTab("hq");
           setHqCategory("roster");
+          return;
+        case "hq/open-management":
+          setActiveTab("hq");
+          setHqCategory("management");
           return;
         case "hq/open-rooms":
           setActiveTab("hq");
@@ -1848,13 +1853,15 @@ export function GameShell() {
                 {activeTab === "hq" &&
                   HQ_CATEGORIES.map((cat) => {
                     const anchorRef =
-                      cat.id === "roster"
-                        ? rosterCategoryAnchorRef
-                        : cat.id === "rooms"
-                          ? roomsCategoryAnchorRef
-                          : cat.id === "market"
-                            ? marketCategoryAnchorRef
-                            : undefined;
+                      cat.id === "management"
+                        ? managementCategoryAnchorRef
+                        : cat.id === "roster"
+                          ? rosterCategoryAnchorRef
+                          : cat.id === "rooms"
+                            ? roomsCategoryAnchorRef
+                            : cat.id === "market"
+                              ? marketCategoryAnchorRef
+                              : undefined;
                     return (
                       <div key={cat.id} ref={anchorRef}>
                         <CategoryPill
@@ -2049,6 +2056,8 @@ export function GameShell() {
                       contractLifecycle={hq.contractLifecycle}
                       building={hq.building}
                       rooms={hq.rooms}
+                      upgrades={hq.upgrades}
+                      operators={hq.operators}
                       relocationGate={hq.relocationGate}
                       callbacks={callbacks}
                     />
@@ -2164,7 +2173,7 @@ export function GameShell() {
         </div>
 
         {import.meta.env.DEV && devMenuOpen && session && (
-          <DevMenuOverlay
+          <DevConsole
             session={session}
             onClose={() => setDevMenuOpen(false)}
             debugOverlays={debugOverlays}

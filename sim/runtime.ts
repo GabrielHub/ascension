@@ -1,6 +1,11 @@
 import { addComponent, addEntity, createWorld } from "bitecs";
 
-import { type ActiveRaidSnapshot, type RaidSummarySnapshot, type WorldSnapshot } from "save";
+import {
+  type ActiveRaidSnapshot,
+  type OperatorTrainingSnapshot,
+  type RaidSummarySnapshot,
+  type WorldSnapshot,
+} from "save";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
 import { siteConceptById, type ContractRank } from "content/templates/site-concepts";
@@ -56,6 +61,7 @@ type GuidanceState = {
     staffingActions: number;
     upgradesPurchased: number;
   };
+  lastPurchasedUpgradeId: string | null;
   openingTiming?: {
     firstRaidReturnCompletedAtMinute: number | null;
     firstIncidentSeededAtMinute: number | null;
@@ -102,6 +108,7 @@ function lazyCreateGuidanceState(openingPathState = "completed"): GuidanceState 
       staffingActions: 0,
       upgradesPurchased: 0,
     },
+    lastPurchasedUpgradeId: null,
     openingTiming: {
       firstRaidReturnCompletedAtMinute: null,
       firstIncidentSeededAtMinute: null,
@@ -203,6 +210,7 @@ import {
   RoomInstance,
   ScheduleState,
   StaffState,
+  TrainingState,
   VisitorState,
   WorldTimeState,
 } from "./components";
@@ -230,6 +238,7 @@ import {
 } from "./systems/loot-automation";
 import type { RaidTeamGoal } from "lib/raid-team-goal";
 import {
+  buildActiveContractIntelSurface,
   describeAccessoryAssignment,
   describeAccessorySelectionReason,
   type RaidEncounterThreat,
@@ -243,6 +252,7 @@ import {
   deriveCompatibilityRelationships,
   ensurePhase2StateEntities,
   ensureDispositionDefaults,
+  getContractBriefingState,
   getRecommendedOperatorCountForMission,
   importLegacyRelationshipsIntoSocialState,
   selectTeamGoal,
@@ -257,6 +267,10 @@ import type { MarketItemView } from "./systems/market";
 import { computeAutonomyFlags } from "./systems/morale";
 import { computeNeedReadinessFlags } from "./systems/needs";
 import { getRecruitmentGateState } from "./systems/opening-envelope";
+import {
+  normalizeOperatorTrainingSnapshot,
+  readOperatorTrainingSnapshot,
+} from "./systems/training";
 
 export type Phase1OperatorPreferenceSnapshot = PreferenceProfileRecord;
 
@@ -333,6 +347,7 @@ export interface Phase1OperatorSnapshot {
       intelligence: number;
     };
   };
+  training: OperatorTrainingSnapshot;
 }
 
 export interface Phase1RelationshipSnapshot {
@@ -557,6 +572,7 @@ export interface Phase1RuntimeView {
     roomsUsed: number;
     operatorSlotCount: number;
     operatorCount: number;
+    trainingRateModifier: number;
     appliedUpgradeIds: string[];
     unlockedRoomTemplateIds: string[];
     availableBuildingUpgradeIds: string[];
@@ -637,6 +653,8 @@ export interface Phase1RuntimeView {
     missionId: string;
     siteConceptId: string;
     siteConceptName: string;
+    siteSummary: string;
+    neighborhoodLabel: string;
     location: string;
     rank: string;
     bossDefeated: boolean;
@@ -650,6 +668,25 @@ export interface Phase1RuntimeView {
     closureThreshold: number;
     requiresBossClear: boolean;
     bossAvailable: boolean;
+    boardIntel: {
+      source: "street" | "back_office" | "office";
+      quality: "rough" | "reviewed" | "dossier";
+    };
+    briefing: {
+      source: "briefing_room" | "briefing_room_and_prep";
+      status: "briefed" | "drilled";
+      opportunityIntelBonus: number;
+      bossIntelBonus: number;
+    } | null;
+    knownTraits: string[];
+    enemyHints: string[];
+    lootFamilyHints: string[];
+    bossName: string | null;
+    bossTags: string[];
+    bossWeaknesses: Array<{
+      kind: string;
+      target: string;
+    }>;
   } | null;
   contractResult: {
     contractSiteId: string;
@@ -683,6 +720,10 @@ export interface Phase1RuntimeView {
     lootFamilyHints: string[];
     bossHint: string | null;
     neighborhoodLabel: string;
+    boardIntel: {
+      source: "street" | "back_office" | "office";
+      quality: "rough" | "reviewed" | "dossier";
+    };
   }>;
   fogOfWar: {
     gridWidth: number;
@@ -856,6 +897,7 @@ function normalizeOperatorSnapshot(
       });
   const visibleGear = buildVisibleGearSnapshot(appearanceRecord?.visibleGear);
   const combat = normalizeOperatorCombatSnapshot(operator.combat, operator.identity.roleTag);
+  const training = normalizeOperatorTrainingSnapshot(operator.training);
 
   return {
     id: operator.id,
@@ -893,6 +935,7 @@ function normalizeOperatorSnapshot(
     },
     lifecycle: normalizeLifecycleSnapshot(operator.lifecycle),
     combat,
+    training,
   };
 }
 
@@ -1220,6 +1263,8 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
       intel: packet.intel ?? 40,
       reward: packet.reward ?? 60,
       cohesion: packet.cohesion ?? 50,
+      briefingSource: packet.briefingSource ?? null,
+      briefingStatus: packet.briefingStatus ?? null,
       resolutionPacket: packet.resolutionPacket ?? {
         result: "mixed",
         reputationDelta: 0,
@@ -1268,7 +1313,30 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
         visitor.projectedLoyalty ?? projectVisitorRecruitLoyalty(visitor.expectedLoyalty ?? 50),
     })),
     activeEvents: extendedSnapshot.activeEvents ?? [],
-    contractSite: extendedSnapshot.contractSite ?? null,
+    contractSite: extendedSnapshot.contractSite
+      ? {
+          ...extendedSnapshot.contractSite,
+          boardIntel: {
+            source: extendedSnapshot.contractSite.boardIntel?.source ?? "street",
+            quality: extendedSnapshot.contractSite.boardIntel?.quality ?? "rough",
+          },
+          briefing: extendedSnapshot.contractSite.briefing
+            ? {
+                ...extendedSnapshot.contractSite.briefing,
+              }
+            : null,
+        }
+      : null,
+    postedContracts: (extendedSnapshot.postedContracts ?? []).map((contract) => ({
+      ...contract,
+      knownTraits: [...(contract.knownTraits ?? [])],
+      hiddenTraitCount: contract.hiddenTraitCount ?? 0,
+      enemyHints: [...(contract.enemyHints ?? [])],
+      lootFamilyHints: [...(contract.lootFamilyHints ?? [])],
+      bossHint: contract.bossHint ?? null,
+      neighborhoodLabel: contract.neighborhoodLabel ?? "",
+      boardIntel: cloneContractBoardIntel(contract.boardIntel),
+    })),
     fogOfWar: extendedSnapshot.fogOfWar ?? null,
     scheduler: extendedSnapshot.scheduler,
     policies: normalizePolicyState(extendedSnapshot.policies),
@@ -1279,6 +1347,21 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     inventoryStacks: extendedSnapshot.inventoryStacks ?? [],
     equipmentAssignments: extendedSnapshot.equipmentAssignments ?? [],
     lootAutomation: normalizeLootAutomationSnapshot(extendedSnapshot.lootAutomation),
+  };
+}
+
+function cloneContractBoardIntel(
+  boardIntel:
+    | {
+        source: "street" | "back_office" | "office";
+        quality: "rough" | "reviewed" | "dossier";
+      }
+    | null
+    | undefined,
+) {
+  return {
+    source: boardIntel?.source ?? "street",
+    quality: boardIntel?.quality ?? "rough",
   };
 }
 
@@ -1490,6 +1573,8 @@ function restoreGuidanceStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot):
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+      lastPurchasedUpgradeId:
+        typeof data.lastPurchasedUpgradeId === "string" ? data.lastPurchasedUpgradeId : null,
       openingTiming:
         data.openingTiming && typeof data.openingTiming === "object"
           ? {
@@ -1887,6 +1972,7 @@ function applyWorldSnapshot(
     addComponent(world, entity, AssignmentState);
     addComponent(world, entity, RaidParticipationState);
     addComponent(world, entity, InjuryState);
+    addComponent(world, entity, TrainingState);
 
     OperatorIdentity.id[entity] = operator.id;
     OperatorIdentity.name[entity] = operator.identity.name;
@@ -1954,6 +2040,10 @@ function applyWorldSnapshot(
     InjuryState.severity[entity] = operator.injury.severity;
     InjuryState.recoveryHoursRemaining[entity] = operator.injury.recoveryHoursRemaining;
     InjuryState.treated[entity] = operator.injury.treated ? 1 : 0;
+    TrainingState.strength[entity] = operator.training.strength;
+    TrainingState.speed[entity] = operator.training.speed;
+    TrainingState.endurance[entity] = operator.training.endurance;
+    TrainingState.resilience[entity] = operator.training.resilience;
 
     runtimeState.operatorEntities.push(entity);
   });
@@ -2257,6 +2347,9 @@ function applyWorldSnapshot(
       const activeRaidPackets = (BuildingAuthority.activeRaidPackets[buildingEntity] ?? []).map(
         (packet) => ({
           ...packet,
+          operatorIds: [...packet.operatorIds],
+          briefingSource: packet.briefingSource ?? null,
+          briefingStatus: packet.briefingStatus ?? null,
         }),
       );
       const raidSummaries = (BuildingAuthority.raidSummaries[buildingEntity] ?? []).map(
@@ -2388,6 +2481,7 @@ function applyWorldSnapshot(
           }),
           lifecycle: buildLifecycleSnapshot(entity),
           combat: buildCombatSnapshot(entity),
+          training: readOperatorTrainingSnapshot(entity),
         })),
         operatorRelationships: deriveCompatibilityRelationships(context).map((relationship) => ({
           ...relationship,
@@ -2491,11 +2585,23 @@ function applyWorldSnapshot(
           };
         }),
         contractSite: BuildingAuthority.contractSite[buildingEntity]
-          ? { ...BuildingAuthority.contractSite[buildingEntity]! }
+          ? (() => {
+              const contractSite = BuildingAuthority.contractSite[buildingEntity]!;
+              return {
+                ...contractSite,
+                boardIntel: cloneContractBoardIntel(contractSite.boardIntel),
+                briefing:
+                  getContractBriefingState(context, contractSite) ?? contractSite.briefing ?? null,
+              };
+            })()
           : null,
         contractLifecycle: BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding",
         postedContracts: (BuildingAuthority.postedContracts[buildingEntity] ?? []).map((p) => ({
           ...p,
+          knownTraits: [...p.knownTraits],
+          enemyHints: [...p.enemyHints],
+          lootFamilyHints: [...p.lootFamilyHints],
+          boardIntel: cloneContractBoardIntel(p.boardIntel),
         })),
         contractResult: BuildingAuthority.contractResult[buildingEntity]
           ? { ...BuildingAuthority.contractResult[buildingEntity]! }
@@ -2629,6 +2735,7 @@ function applyWorldSnapshot(
                 openingPathState: runtimeState.guidanceState.openingPathState,
                 activeBeatProgressBaseline: runtimeState.guidanceState.activeBeatProgressBaseline,
                 interactionCounts: { ...runtimeState.guidanceState.interactionCounts },
+                lastPurchasedUpgradeId: runtimeState.guidanceState.lastPurchasedUpgradeId,
                 openingTiming: runtimeState.guidanceState.openingTiming
                   ? { ...runtimeState.guidanceState.openingTiming }
                   : {
@@ -2768,6 +2875,7 @@ function applyWorldSnapshot(
           operatorSlotCount: snapshot.building.operatorSlotCount,
           operatorCount: (snapshot.operators ?? []).filter((op) => op.lifecycle.status === "active")
             .length,
+          trainingRateModifier: BuildingAuthority.trainingRateModifier[buildingEntity] ?? 0,
           appliedUpgradeIds: snapshot.appliedUpgradeIds,
           unlockedRoomTemplateIds: [
             ...(BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] ?? []),
@@ -2930,11 +3038,23 @@ function applyWorldSnapshot(
           const cs = BuildingAuthority.contractSite[buildingEntity];
           if (!cs) return null;
           const concept = siteConceptById.get(cs.siteConceptId ?? "");
+          const briefing = getContractBriefingState(context, cs) ?? cs.briefing ?? null;
+          const intelSurface = buildActiveContractIntelSurface({
+            missionId: cs.missionId,
+            siteConceptId: cs.siteConceptId ?? "",
+            contractIntel: cs.intel,
+            boardIntel: cloneContractBoardIntel(cs.boardIntel),
+            briefing,
+            requiresBossClear: cs.requiresBossClear ?? false,
+            registry,
+          });
           return {
             contractSiteId: cs.contractSiteId,
             missionId: cs.missionId,
             siteConceptId: cs.siteConceptId ?? "",
             siteConceptName: concept?.name ?? "Unknown Site",
+            siteSummary: intelSurface.siteSummary,
+            neighborhoodLabel: intelSurface.neighborhoodLabel,
             location: cs.location,
             rank: cs.rank ?? "f",
             bossDefeated: cs.bossDefeated,
@@ -2948,6 +3068,14 @@ function applyWorldSnapshot(
             closureThreshold: cs.closureThreshold ?? 100,
             requiresBossClear: cs.requiresBossClear ?? false,
             bossAvailable: cs.bossAvailable ?? false,
+            boardIntel: cloneContractBoardIntel(cs.boardIntel),
+            briefing,
+            knownTraits: [...intelSurface.knownTraits],
+            enemyHints: [...intelSurface.enemyHints],
+            lootFamilyHints: [...intelSurface.lootFamilyHints],
+            bossName: intelSurface.bossName,
+            bossTags: [...intelSurface.bossTags],
+            bossWeaknesses: intelSurface.bossWeaknesses.map((weakness) => ({ ...weakness })),
           };
         })(),
         contractResult: (() => {
@@ -2994,6 +3122,7 @@ function applyWorldSnapshot(
               lootFamilyHints: [...p.lootFamilyHints],
               bossHint: p.bossHint,
               neighborhoodLabel: p.neighborhoodLabel,
+              boardIntel: cloneContractBoardIntel(p.boardIntel),
             };
           });
         })(),

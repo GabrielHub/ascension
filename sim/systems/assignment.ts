@@ -13,11 +13,19 @@ import {
   ScheduleState,
   StaffState,
 } from "../components";
-import { getCurrentAbsoluteMinute, getRoomTemplateForEntity } from "./commands";
+import {
+  getCurrentAbsoluteMinute,
+  getRoomTemplateForEntity,
+  hasOperationalRoomTemplate,
+} from "./commands";
 import { computeAutonomyFlags } from "./morale";
 import { computeNeedReadinessFlags } from "./needs";
 import { computeAverageSocialSignal } from "./social";
 import type { SimSystem } from "./types";
+
+const PORTERS_INFIRMARY_TEMPLATE_ID = "room/infirmary:tier_1";
+const PORTERS_BREAK_ROOM_TEMPLATE_ID = "room/break_room:tier_1";
+const PORTERS_DECK_TEMPLATE_ID = "room/deck:tier_1";
 
 function hasOperationalRoomForFunction(
   context: Parameters<SimSystem>[0],
@@ -70,12 +78,25 @@ export function scoreOperatorBlocks(
   const recoveryTriage = getRecoveryTriageConfig(policies);
   const staffingPriority = getStaffingPriorityConfig(policies);
   const needFlags = computeNeedReadinessFlags(entity, recoveryTriage);
+  const hasInfirmary = hasOperationalRoomTemplate(context, PORTERS_INFIRMARY_TEMPLATE_ID);
+  const hasBreakRoom = hasOperationalRoomTemplate(context, PORTERS_BREAK_ROOM_TEMPLATE_ID);
+  const hasDeck = hasOperationalRoomTemplate(context, PORTERS_DECK_TEMPLATE_ID);
 
   const injuryRecoveryUrgency = needFlags.injuryPreventsRaid ? 30 : 0;
   const quitRiskSocialBonus = autonomyFlags.quitRisk ? 25 : autonomyFlags.retentionRisk ? 12 : 0;
   const hungerTrainingPenalty = needFlags.hungerReducesTraining ? -18 : 0;
   const staffingRecoveryModifier =
     InjuryState.severity[entity] > 60 ? 0 : staffingPriority.recoveryBlockScoreModifier;
+  const infirmaryRecoveryBonus = hasInfirmary
+    ? InjuryState.recoveryHoursRemaining[entity] * 0.28 + InjuryState.severity[entity] * 0.22
+    : 0;
+  const privateRecoveryBonus = hasBreakRoom
+    ? NeedState.stress[entity] * 0.18 + PreferenceState.comfortBias[entity] * 0.14
+    : 0;
+  const waterfrontSocialBonus = hasDeck
+    ? Math.max(0, MoraleState.baseline[entity] - MoraleState.current[entity]) * 0.22 +
+      NeedState.fatigue[entity] * 0.12
+    : 0;
 
   const recovery =
     InjuryState.recoveryHoursRemaining[entity] * 2.6 +
@@ -85,14 +106,18 @@ export function scoreOperatorBlocks(
     PreferenceState.comfortBias[entity] * 0.14 +
     injuryRecoveryUrgency +
     recoveryTriage.recoveryBlockScoreModifier +
-    staffingRecoveryModifier;
+    staffingRecoveryModifier +
+    infirmaryRecoveryBonus +
+    privateRecoveryBonus;
   const social =
     PreferenceState.socialBias[entity] * 0.72 +
     Math.max(0, relationshipSignal) * 0.18 +
     Math.max(0, 70 - NeedState.stress[entity]) * 0.25 -
     NeedState.fatigue[entity] * 0.08 +
     quitRiskSocialBonus +
-    staffingPriority.socialBlockScoreModifier;
+    staffingPriority.socialBlockScoreModifier +
+    privateRecoveryBonus +
+    waterfrontSocialBonus;
   const training =
     PreferenceState.trainingBias[entity] * 0.7 +
     MoraleState.current[entity] * 0.2 +

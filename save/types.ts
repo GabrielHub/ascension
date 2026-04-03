@@ -3,7 +3,7 @@ import type { PolicyState } from "lib/policies";
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 16;
+export const CURRENT_SAVE_SCHEMA_VERSION = 18;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -100,6 +100,13 @@ export interface OperatorCombatSnapshot {
   };
 }
 
+export interface OperatorTrainingSnapshot {
+  strength: number;
+  speed: number;
+  endurance: number;
+  resilience: number;
+}
+
 export interface OperatorSnapshot {
   id: string;
   lifecycle: OperatorLifecycleSnapshot;
@@ -113,6 +120,7 @@ export interface OperatorSnapshot {
   assignment?: SaveStructuredRecord;
   appearance: OperatorAppearanceSnapshot;
   combat?: OperatorCombatSnapshot;
+  training?: OperatorTrainingSnapshot;
 }
 
 export interface OperatorRelationshipSnapshot {
@@ -272,6 +280,8 @@ export interface ActiveRaidSnapshot extends SaveStructuredRecord {
   operatorIds?: string[];
   returnTick?: number;
   durationHours?: number;
+  briefingSource?: string | null;
+  briefingStatus?: string | null;
   resolutionPacket?: SaveStructuredRecord;
   raidRun?: RaidRunSnapshot;
 }
@@ -318,6 +328,20 @@ export interface ContractSiteSnapshot {
   bossPressureProgress?: number;
   requiresBossClear?: boolean;
   bossAvailable?: boolean;
+  boardIntel?: ContractBoardIntelSnapshot;
+  briefing?: ContractBriefingSnapshot | null;
+}
+
+export interface ContractBoardIntelSnapshot {
+  source?: string;
+  quality?: string;
+}
+
+export interface ContractBriefingSnapshot {
+  source: string;
+  status: string;
+  opportunityIntelBonus: number;
+  bossIntelBonus: number;
 }
 
 export interface PostedContractSnapshot {
@@ -339,6 +363,7 @@ export interface PostedContractSnapshot {
   lootFamilyHints?: string[];
   bossHint?: string | null;
   neighborhoodLabel?: string;
+  boardIntel?: ContractBoardIntelSnapshot;
 }
 
 export interface ContractResultSnapshot {

@@ -48,10 +48,10 @@ import {
 import { forceSeedOpeningIncident, queueIncident } from "./incidents";
 import {
   FIRST_RAID_RETURN_BEAT_ID,
-  OPENING_BEATS,
-  OPENING_BEAT_BY_ID,
+  ALL_GUIDANCE_BEATS,
+  ALL_GUIDANCE_BEAT_BY_ID,
+  GUIDANCE_BEAT_COUNT_BY_TRACK,
   OPENING_BEAT_IDS,
-  OPENING_BEAT_COUNT,
 } from "./guidance-beats";
 
 const EVALUATION_INTERVAL_MINUTES = 5;
@@ -135,16 +135,28 @@ function hasAnyUpgradePurchased(context: SimSystemContext): boolean {
   );
 }
 
-function hasAffordableUpgrade(context: SimSystemContext): boolean {
+function getAllAppliedUpgradeIds(context: SimSystemContext): string[] {
+  const buildingEntity = context.singletonEntities.building;
+
+  return [
+    ...(BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? []),
+    ...context.runtimeState.roomEntities.flatMap(
+      (entity) => RoomInstance.appliedUpgradeIds[entity] ?? [],
+    ),
+  ];
+}
+
+function getAffordableUpgradeIds(context: SimSystemContext): string[] {
   const buildingEntity = context.singletonEntities.building;
   const activeBuilding =
     context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
   const buildingAppliedUpgradeIds = new Set(
     BuildingAuthority.appliedUpgradeIds[buildingEntity] ?? [],
   );
+  const affordableUpgradeIds: string[] = [];
 
   if (!activeBuilding) {
-    return false;
+    return affordableUpgradeIds;
   }
 
   const canAffordCosts = (costs: Map<string, number>) =>
@@ -192,53 +204,115 @@ function hasAffordableUpgrade(context: SimSystemContext): boolean {
     context.runtimeState.guidanceState.openingPathState === "active" &&
     !hasAnyUpgradePurchased(context)
   ) {
-    return isUpgradeAffordable("upgrade/room/register:records_wall");
+    return isUpgradeAffordable("upgrade/room/register:records_wall")
+      ? ["upgrade/room/register:records_wall"]
+      : [];
   }
 
-  const buildingUpgradeAffordable = context.registry.upgrades.some((upgrade) => {
+  for (const upgrade of context.registry.upgrades) {
     if (upgrade.target !== "building" || upgrade.targetId !== activeBuilding?.id) {
-      return false;
+      continue;
     }
     if (
       buildingAppliedUpgradeIds.has(upgrade.id) ||
       !meetsRequirements(context, upgrade.requirements)
     ) {
-      return false;
+      continue;
     }
-    return canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements));
-  });
-
-  if (buildingUpgradeAffordable) {
-    return true;
+    if (canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements))) {
+      affordableUpgradeIds.push(upgrade.id);
+    }
   }
 
-  return context.runtimeState.roomEntities.some((roomEntity) => {
+  for (const roomEntity of context.runtimeState.roomEntities) {
     const roomTemplate = context.registry.rooms[RoomInstance.templateIndex[roomEntity]];
     if (!roomTemplate) {
-      return false;
+      continue;
     }
     const appliedUpgradeIds = RoomInstance.appliedUpgradeIds[roomEntity] ?? [];
     const nextPendingIds = new Set(
       getNextPendingRoomUpgradeIds(roomTemplate.id, appliedUpgradeIds),
     );
 
-    return context.registry.upgrades.some((upgrade) => {
+    for (const upgrade of context.registry.upgrades) {
       if (upgrade.target !== "room" || upgrade.targetId !== roomTemplate.id) {
-        return false;
+        continue;
       }
       if (appliedUpgradeIds.includes(upgrade.id)) {
-        return false;
+        continue;
       }
       if (nextPendingIds.size > 0 && !nextPendingIds.has(upgrade.id)) {
-        return false;
+        continue;
       }
       if (!meetsRequirements(context, upgrade.requirements)) {
-        return false;
+        continue;
       }
 
-      return canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements));
-    });
+      if (canAffordCosts(getAdjustedUpgradeCosts(context, upgrade.requirements))) {
+        affordableUpgradeIds.push(upgrade.id);
+      }
+    }
+  }
+
+  return affordableUpgradeIds;
+}
+
+function hasOperationalRoomTemplate(context: SimSystemContext, templateId: string): boolean {
+  return context.runtimeState.roomEntities.some(
+    (entity) =>
+      context.registry.rooms[RoomInstance.templateIndex[entity]]?.id === templateId &&
+      RoomInstance.isOperational[entity] === 1,
+  );
+}
+
+function hasRecoveryPressure(context: SimSystemContext): boolean {
+  return context.runtimeState.operatorEntities.some((entity) => {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") {
+      return false;
+    }
+
+    return (
+      NeedState.fatigue[entity] >= 35 ||
+      NeedState.stress[entity] >= 35 ||
+      InjuryState.severity[entity] > 0 ||
+      MoraleState.current[entity] < MoraleState.baseline[entity] - 5
+    );
   });
+}
+
+function hasContractPrepGap(context: SimSystemContext): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const activeBuilding =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+
+  if (activeBuilding?.id !== "building/porters") {
+    return false;
+  }
+
+  const contractLifecycle = BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding";
+  const hasBriefingRoom = hasOperationalRoomTemplate(context, "room/briefing_room:tier_1");
+
+  return !hasBriefingRoom && contractLifecycle === "active";
+}
+
+function hasStagingPressure(context: SimSystemContext): boolean {
+  const buildingEntity = context.singletonEntities.building;
+  const activeBuilding =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+
+  if (activeBuilding?.id !== "building/porters") {
+    return false;
+  }
+
+  const contractLifecycle = BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding";
+  const raidSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
+  const hasDock = hasOperationalRoomTemplate(context, "room/dock:tier_1");
+  const hasDeck = hasOperationalRoomTemplate(context, "room/deck:tier_1");
+
+  return (
+    (!hasDock || !hasDeck) &&
+    (contractLifecycle === "active" || hasRecoveryPressure(context) || raidSummaries.length > 0)
+  );
 }
 
 function hasSignificantSetback(context: SimSystemContext): boolean {
@@ -333,7 +407,9 @@ function shouldAutoCompleteBeat(
   }
 
   if (beat.completion.kind === "upgrade_purchased") {
-    return evalContext.hasAnyUpgradePurchased;
+    return beat.completion.upgradeId
+      ? evalContext.appliedUpgradeIds.includes(beat.completion.upgradeId)
+      : evalContext.hasAnyUpgradePurchased;
   }
 
   return false;
@@ -341,11 +417,15 @@ function shouldAutoCompleteBeat(
 
 function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationContext {
   const buildingEntity = context.singletonEntities.building;
+  const activeBuilding =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
   const contractSite = BuildingAuthority.contractSite[buildingEntity];
   const contractLifecycle = BuildingAuthority.contractLifecycle[buildingEntity] ?? "bidding";
   const activeRaidPackets = BuildingAuthority.activeRaidPackets[buildingEntity] ?? [];
   const raidSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
   const incidentState = context.runtimeState.incidentState;
+  const affordableUpgradeIds = getAffordableUpgradeIds(context);
+  const appliedUpgradeIds = getAllAppliedUpgradeIds(context);
 
   // Check if there's an active boss commitment interruption in the queue
   const { interruptionQueue } = context.runtimeState;
@@ -366,11 +446,16 @@ function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationCo
   const setbackRecoveryTrigger =
     significantSetback ||
     (hasReachedContractFivePoint && hasSetbackRecoveryFallbackCondition(context));
+  const recoveryPressure = hasRecoveryPressure(context);
 
   return {
     currentMinute: getCurrentAbsoluteMinute(context),
+    activeBuildingId: activeBuilding?.id ?? "building/unknown",
+    activeBuildingTier: BuildingAuthority.activeBuildingTier[buildingEntity] ?? 1,
     contractLifecycle,
     securedContractCount: contractsSecuredCount,
+    affordableUpgradeIds,
+    appliedUpgradeIds,
     hasSecuredContract: contractSite !== null && contractSite !== undefined,
     hasActiveIncident: incidentState.pendingIncident !== null,
     hasCompletedRaid: raidSummaries.length > 0,
@@ -379,9 +464,12 @@ function buildEvaluationContext(context: SimSystemContext): GuidanceEvaluationCo
     hasRaidReturnWithLoot,
     hasOperatorWorn: hasOperatorWorn(context),
     hasUnassignedManagementAction: hasUnassignedManagementAction(context),
-    hasUpgradeAffordable: hasAffordableUpgrade(context),
+    hasUpgradeAffordable: affordableUpgradeIds.length > 0,
     hasSignificantSetback: significantSetback,
     hasSetbackRecoveryTrigger: setbackRecoveryTrigger,
+    hasRecoveryPressure: recoveryPressure,
+    hasContractPrepGap: hasContractPrepGap(context),
+    hasStagingPressure: hasStagingPressure(context),
     hasAnyUpgradePurchased: hasAnyUpgradePurchased(context),
     isPreview:
       context.runtimeState.guidanceState.openingPathState === "completed" &&
@@ -416,6 +504,7 @@ function buildCompletionContext(context: SimSystemContext): GuidanceCompletionCo
       context.runtimeState.guidanceState.activeBeatProgressBaseline !== null &&
       context.runtimeState.guidanceState.interactionCounts.upgradesPurchased >
         context.runtimeState.guidanceState.activeBeatProgressBaseline,
+    lastPurchasedUpgradeId: context.runtimeState.guidanceState.lastPurchasedUpgradeId,
   };
 }
 
@@ -487,7 +576,7 @@ function enqueueGuidanceInterruption(
       ctaLabel: copy.ctaLabel,
       deliveryMode: beat.delivery.mode,
       milestoneOrder: beat.milestoneOrder,
-      totalMilestones: OPENING_BEAT_COUNT,
+      totalMilestones: GUIDANCE_BEAT_COUNT_BY_TRACK[beat.track],
       completionKind: beat.completion.kind,
       fallbackBody: copy.fallbackBody,
       presenterId: beat.presenterId,
@@ -507,15 +596,10 @@ function enqueueGuidanceInterruption(
 export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: number): void {
   const { guidanceState, interruptionQueue } = context.runtimeState;
 
-  // Opening path not active → skip
-  if (guidanceState.openingPathState !== "active") {
-    return;
-  }
-
   // If a beat is active, always check for runtime-detectable completion
   // (must run even when world is frozen so contract_secured etc. can fire)
   if (guidanceState.activeBeatId) {
-    const activeBeat = OPENING_BEAT_BY_ID.get(guidanceState.activeBeatId);
+    const activeBeat = ALL_GUIDANCE_BEAT_BY_ID.get(guidanceState.activeBeatId);
     if (activeBeat) {
       const completionContext = buildCompletionContext(context);
       if (isCompletionMet(activeBeat.completion, completionContext)) {
@@ -536,10 +620,12 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
 
   // Find the next eligible beat
   const evalContext = buildEvaluationContext(context);
-  for (const beat of OPENING_BEATS) {
+  for (const beat of ALL_GUIDANCE_BEATS) {
     if (shouldAutoCompleteBeat(context, beat, evalContext)) {
       completeBeat(guidanceState, beat.id);
-      checkOpeningPathCompletion(guidanceState, OPENING_BEAT_IDS);
+      if (beat.track === "opening") {
+        checkOpeningPathCompletion(guidanceState, OPENING_BEAT_IDS);
+      }
       continue;
     }
 
@@ -551,7 +637,7 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
         continue;
       }
 
-      activateBeat(guidanceState, beat, OPENING_BEAT_COUNT);
+      activateBeat(guidanceState, beat, GUIDANCE_BEAT_COUNT_BY_TRACK[beat.track]);
       const formattedCopy = formatBeatCopy(context, beat);
       if (guidanceState.activeBeatView) {
         guidanceState.activeBeatView.copy = formattedCopy;
@@ -597,7 +683,9 @@ function completeActiveBeat(context: SimSystemContext, beat: GuidanceBeat): void
   guidanceState.lastEvaluationMinute = 0;
 
   // Check if opening path is complete
-  checkOpeningPathCompletion(guidanceState, OPENING_BEAT_IDS);
+  if (beat.track === "opening") {
+    checkOpeningPathCompletion(guidanceState, OPENING_BEAT_IDS);
+  }
 }
 
 export function handleGuidanceComplete(
@@ -608,7 +696,7 @@ export function handleGuidanceComplete(
   const { guidanceState } = context.runtimeState;
   if (guidanceState.activeBeatId !== beatId) return;
 
-  const beat = OPENING_BEAT_BY_ID.get(beatId);
+  const beat = ALL_GUIDANCE_BEAT_BY_ID.get(beatId);
   if (!beat) return;
 
   // Validate signal matches completion rule
@@ -622,7 +710,7 @@ export function handleGuidanceDismiss(context: SimSystemContext, beatId: string)
   const { guidanceState } = context.runtimeState;
   if (guidanceState.activeBeatId !== beatId) return;
 
-  const beat = OPENING_BEAT_BY_ID.get(beatId);
+  const beat = ALL_GUIDANCE_BEAT_BY_ID.get(beatId);
   if (!beat || !beat.delivery.allowSkip) return;
 
   guidanceState.activeBeatId = null;
@@ -645,8 +733,8 @@ export function recordGuidanceStaffingAction(context: SimSystemContext): void {
   recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
 }
 
-export function recordGuidanceUpgradePurchase(context: SimSystemContext): void {
-  recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase");
+export function recordGuidanceUpgradePurchase(context: SimSystemContext, upgradeId?: string): void {
+  recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase", upgradeId);
 }
 
 export function handleGuidanceRecordAnchorFailure(

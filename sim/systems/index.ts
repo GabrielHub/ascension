@@ -12,6 +12,7 @@ import { advanceNeedsSystem } from "./needs";
 import { resolveRaidSystem } from "./raids";
 import { updateRoomOperationsSystem } from "./room-operations";
 import { advanceWorldTimeSystem } from "./time";
+import { advanceTrainingSystem } from "./training";
 import { advanceVisitorPoolSystem } from "./visitors";
 import type { SimSystem, SimSystemContext, SimSystemGroup } from "./types";
 
@@ -69,6 +70,7 @@ export const simSystemSchedule: readonly SimSystemGroup[] = [
   { id: "rooms", systems: [updateRoomOperationsSystem] },
   { id: "planning", systems: [reconcileAssignmentsSystem] },
   { id: "needs", systems: [advanceNeedsSystem] },
+  { id: "training", systems: [advanceTrainingSystem] },
   { id: "pathfinding", systems: [noopSystem] },
   { id: "movement", systems: [noopSystem] },
   { id: "raids", systems: [resolveRaidSystem] },

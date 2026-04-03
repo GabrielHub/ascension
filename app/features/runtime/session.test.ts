@@ -398,6 +398,7 @@ describe("runtime session lifecycle", () => {
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+            lastPurchasedUpgradeId: null,
             openingTiming: {
               firstRaidReturnCompletedAtMinute: null,
               firstIncidentSeededAtMinute: null,
@@ -449,6 +450,7 @@ describe("runtime session lifecycle", () => {
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+            lastPurchasedUpgradeId: null,
             openingTiming: {
               firstRaidReturnCompletedAtMinute: null,
               firstIncidentSeededAtMinute: null,
@@ -511,6 +513,7 @@ describe("runtime session lifecycle", () => {
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+            lastPurchasedUpgradeId: null,
             openingTiming: {
               firstRaidReturnCompletedAtMinute: null,
               firstIncidentSeededAtMinute: null,
@@ -582,6 +585,7 @@ describe("runtime session lifecycle", () => {
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+            lastPurchasedUpgradeId: null,
             openingTiming: {
               firstRaidReturnCompletedAtMinute: null,
               firstIncidentSeededAtMinute: null,
@@ -609,6 +613,7 @@ describe("runtime session lifecycle", () => {
               staffingActions: 0,
               upgradesPurchased: 0,
             },
+            lastPurchasedUpgradeId: null,
             openingTiming: {
               firstRaidReturnCompletedAtMinute: 900,
               firstIncidentSeededAtMinute: 960,

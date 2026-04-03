@@ -1,21 +1,22 @@
-import { useEffect, type ReactNode } from "react";
-
-import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
-import type { HqDebugOverlays, HqWorldSnapshot } from "render";
+import { useEffect, useRef, useState } from "react";
+import type { HqDebugOverlays } from "render";
 
 import type { RuntimeSession } from "app/features/runtime";
+
 import type { EventLogEntry } from "./view-models";
+import {
+  executeConsoleCommand,
+  groupedCommandRegistry,
+  publishAgentDebugSnapshot,
+  type DevConsoleContext,
+  type DevConsoleResult,
+} from "./dev-console-commands";
 
-const HOUR_MS = 60 * 60 * 1000;
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-const PHASE_TARGETS: Record<HqTimeOfDayPhase, { label: string; minuteOfDay: number }> = {
-  sunrise: { label: "Sunrise", minuteOfDay: 390 },
-  day: { label: "Day", minuteOfDay: 720 },
-  sunset: { label: "Sunset", minuteOfDay: 1140 },
-  night: { label: "Night", minuteOfDay: 60 },
-};
-
-interface DevMenuOverlayProps {
+interface DevConsoleProps {
   session: RuntimeSession;
   onClose: () => void;
   debugOverlays: HqDebugOverlays;
@@ -23,310 +24,247 @@ interface DevMenuOverlayProps {
   eventLogEntries: readonly EventLogEntry[];
 }
 
-interface AgentDebugEventLogEntry {
-  id: string;
-  timestamp: string;
-  kind: string;
-  message: string;
-  accent?: string;
-  targetKind?: string;
-  targetId?: string;
+interface TranscriptEntry {
+  input: string;
+  result: DevConsoleResult;
 }
 
-interface AgentDebugRoomSummary {
-  id: string;
-  label: string;
-  roomStateId: string;
-  slotId: string;
-  floorIndex: number;
-  isOperational: boolean;
-  reservedFootprint: HqWorldSnapshot["rooms"][number]["reservedFootprint"];
-  activeFootprint: HqWorldSnapshot["rooms"][number]["activeFootprint"];
-  bounds: HqWorldSnapshot["rooms"][number]["bounds"];
-  activeBounds: HqWorldSnapshot["rooms"][number]["activeBounds"];
-}
+// ---------------------------------------------------------------------------
+// Status color mapping
+// ---------------------------------------------------------------------------
 
-interface AgentDebugActorSummary {
-  id: string;
-  kind: string;
-  label: string;
-  roomId: string;
-  roleTag?: string;
-  state: string;
-  moveProgress: number;
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-}
-
-interface AgentDebugCanvasGeometry {
-  roomCount: number;
-  expansionSlotCount: number;
-  actorCount: number;
-  floorTileCount: number;
-  wallSegmentCount: number;
-  perimeterTileCount: number;
-  navAnchorCount: number;
-  navConnectorCount: number;
-  rooms: AgentDebugRoomSummary[];
-  expansionSlots: HqWorldSnapshot["expansionSlots"];
-  actors: AgentDebugActorSummary[];
-  modular: HqWorldSnapshot["modular"];
-  navGraph: HqWorldSnapshot["navGraph"];
-  roomProps: HqWorldSnapshot["roomProps"];
-  scenery: HqWorldSnapshot["scenery"];
-}
-
-interface AgentDebugSnapshot {
-  generatedAt: string;
-  mode: RuntimeSession["mode"];
-  isPreview: boolean;
-  time: {
-    day: number;
-    minuteOfDay: number;
-    phase: HqTimeOfDayPhase;
-  };
-  resources: {
-    cash: number;
-    reputation: number;
-    intel: number;
-  };
-  building: {
-    id: string;
-    tier: number;
-    activeFloorIndex: number;
-    floorCount: number;
-    roomSlotCount: number;
-    operatorSlotCount: number;
-  };
-  debugOverlays: HqDebugOverlays;
-  eventLog: AgentDebugEventLogEntry[];
-  hqSnapshot: {
-    backdrop: HqWorldSnapshot["backdrop"];
-    effects: HqWorldSnapshot["effects"];
-    layout: HqWorldSnapshot["layout"];
-    canvasGeometry: AgentDebugCanvasGeometry;
-  } | null;
-}
-
-type DebugGlobal = typeof globalThis & {
-  __ASCENSION_DEBUG__?: AgentDebugSnapshot;
+const STATUS_CLASSES: Record<DevConsoleResult["status"], string> = {
+  ok: "text-[#6ec87a]",
+  error: "text-ember",
+  warn: "text-smolder",
+  info: "text-silver/80",
 };
 
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-gold/60">{children}</h3>
-  );
-}
+const STATUS_PREFIX: Record<DevConsoleResult["status"], string> = {
+  ok: "",
+  error: "error: ",
+  warn: "warn: ",
+  info: "",
+};
 
-function CheatButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button type="button" className="btn-ghost px-2.5 py-1 text-xs" onClick={onClick}>
-      {label}
-    </button>
-  );
-}
+// ---------------------------------------------------------------------------
+// Empty-state help listing
+// ---------------------------------------------------------------------------
 
-function ResourceRow({
-  label,
-  value,
-  onAdd,
-}: {
-  label: string;
-  value: number;
-  onAdd: (delta: number) => void;
-}) {
+function HelpListing() {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-baseline gap-2">
-        <span className="text-xs font-medium uppercase tracking-[0.15em] text-silver/70">
-          {label}
-        </span>
-        <span className="font-[family-name:var(--font-display)] text-sm font-light tabular-nums text-silver-bright">
-          {value}
-        </span>
-      </div>
-      <div className="flex gap-1">
-        <CheatButton label="+100" onClick={() => onAdd(100)} />
-        <CheatButton label="+1k" onClick={() => onAdd(1000)} />
-        <CheatButton label="+10k" onClick={() => onAdd(10000)} />
-      </div>
+    <div data-testid="dev-console-help" className="space-y-4 px-1 py-2">
+      <p className="text-xs text-silver/40 tracking-wide">
+        Type a command or browse the reference below. Prefix all commands with{" "}
+        <span className="text-gold/70 font-mono">/</span>
+      </p>
+
+      {[...groupedCommandRegistry.entries()].map(([family, cmds]) => (
+        <div key={family}>
+          <h4 className="text-xs font-medium uppercase tracking-[0.2em] text-gold/50 mb-1.5">
+            {family}
+          </h4>
+          <div className="space-y-0.5">
+            {cmds.map((cmd) => (
+              <div key={cmd.name} className="flex items-baseline gap-2 leading-relaxed">
+                <span className="font-mono text-xs text-gold/70 shrink-0">
+                  /{cmd.name}
+                  {cmd.args ? <span className="text-silver/30"> {cmd.args}</span> : null}
+                </span>
+                <span className="text-xs text-silver/35 truncate">{cmd.help}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function DebugToggle({
-  label,
-  active,
-  onToggle,
-}: {
-  label: string;
-  active: boolean;
-  onToggle: () => void;
-}) {
+// ---------------------------------------------------------------------------
+// Transcript entry row
+// ---------------------------------------------------------------------------
+
+function TranscriptRow({ entry }: { entry: TranscriptEntry }) {
+  const statusClass = STATUS_CLASSES[entry.result.status];
+  const prefix = STATUS_PREFIX[entry.result.status];
+
   return (
-    <button
-      type="button"
-      className={`px-2.5 py-1 text-xs rounded ${
-        active
-          ? "bg-[rgba(0,200,255,0.15)] text-[rgba(0,200,255,0.8)] border border-[rgba(0,200,255,0.3)]"
-          : "btn-ghost"
-      }`}
-      onClick={onToggle}
-    >
-      {label}
-    </button>
+    <div className="py-1.5 border-b border-[rgba(200,168,76,0.04)] last:border-b-0">
+      {/* Input echo */}
+      <div className="font-mono text-xs text-gold/60">
+        <span className="text-gold/30 select-none">{">"} </span>
+        {entry.input}
+      </div>
+
+      {/* Result message */}
+      {entry.result.message && (
+        <div className={`font-mono text-xs mt-0.5 ${statusClass}`}>
+          {prefix}
+          {entry.result.message}
+        </div>
+      )}
+
+      {/* Detail block */}
+      {entry.result.detail && (
+        <pre className="font-mono text-xs mt-1 text-silver/40 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+          {entry.result.detail}
+        </pre>
+      )}
+    </div>
   );
 }
 
-export function DevMenuOverlay({
+// ---------------------------------------------------------------------------
+// DevConsole
+// ---------------------------------------------------------------------------
+
+// Persist command history across open/close cycles within the same session
+const sessionHistory: string[] = [];
+
+export function DevConsole({
   session,
   onClose,
   debugOverlays,
   onDebugOverlaysChange,
   eventLogEntries,
-}: DevMenuOverlayProps) {
-  const { resources, clock } = session.phase1View;
-  const currentPhase = resolveTimeOfDayPhase(clock.minuteOfDay);
-  const { building } = session.phase1View;
+}: DevConsoleProps) {
+  const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
-  function setResource(
-    resourceId: "resource/cash" | "resource/reputation" | "resource/intel",
-    amount: number,
-  ) {
-    void session.commands.dispatch({ type: "sim/dev-set-resource", resourceId, amount });
-  }
+  const inputRef = useRef<HTMLInputElement>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const restoreAutoTickOnCloseRef = useRef(false);
+  const autoTickManuallyChangedRef = useRef(false);
 
-  function addResource(
-    resourceId: "resource/cash" | "resource/reputation" | "resource/intel",
-    currentValue: number,
-    delta: number,
-  ) {
-    setResource(resourceId, currentValue + delta);
-  }
+  const ctx: DevConsoleContext = {
+    session,
+    debugOverlays,
+    setDebugOverlays: onDebugOverlaysChange,
+    eventLogEntries,
+  };
 
-  function skipTime(hours: number) {
-    void session.commands.tick(hours * HOUR_MS);
-  }
+  // Publish agent debug snapshot on mount and state changes
+  useEffect(() => {
+    publishAgentDebugSnapshot(ctx);
+  }, [
+    session.phase1View.clock.day,
+    session.phase1View.clock.minuteOfDay,
+    debugOverlays,
+    eventLogEntries,
+    session.state,
+  ]);
 
-  function setTimePhase(minuteOfDay: number) {
-    void session.commands.dispatch({ type: "sim/dev-set-time", minuteOfDay });
-  }
+  // Auto-focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
-  function toggleFreeze() {
+  // Freeze auto-ticking while the console is open to keep keyboard interactions responsive.
+  useEffect(() => {
+    restoreAutoTickOnCloseRef.current = session.isAutoTicking;
+    autoTickManuallyChangedRef.current = false;
+
     if (session.isAutoTicking) {
       session.lifecycle.stopAutoTick();
-    } else {
-      session.lifecycle.startAutoTick();
+    }
+
+    return () => {
+      if (
+        restoreAutoTickOnCloseRef.current &&
+        !autoTickManuallyChangedRef.current &&
+        !session.isAutoTicking
+      ) {
+        session.lifecycle.startAutoTick();
+      }
+    };
+  }, [session]);
+
+  // Auto-scroll transcript to bottom when new entries are added
+  useEffect(() => {
+    if (transcript.length === 0) return;
+    const el = transcriptRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [transcript]);
+
+  function handleSubmit() {
+    const raw = inputValue.trim();
+    if (!raw) return;
+
+    // Push to session-level history
+    sessionHistory.push(raw);
+    setHistoryIndex(-1);
+    setInputValue("");
+
+    // Handle special UI-only commands
+    const normalized = raw.startsWith("/") ? raw.slice(1).trim() : raw;
+    const normalizedLower = normalized.toLowerCase();
+
+    if (normalizedLower === "freeze" || normalizedLower === "resume") {
+      autoTickManuallyChangedRef.current = true;
+    }
+
+    if (normalizedLower === "clear") {
+      setTranscript([]);
+      return;
+    }
+
+    if (normalizedLower === "history") {
+      const detail =
+        sessionHistory.length > 0
+          ? sessionHistory.map((cmd, i) => `  ${i + 1}. ${cmd}`).join("\n")
+          : "  (empty)";
+      setTranscript((prev) => [
+        ...prev,
+        {
+          input: raw,
+          result: { status: "info", message: `${sessionHistory.length} commands`, detail },
+        },
+      ]);
+      return;
+    }
+
+    const result = executeConsoleCommand(raw, ctx);
+    setTranscript((prev) => [...prev, { input: raw, result }]);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (sessionHistory.length === 0) return;
+      const nextIndex =
+        historyIndex === -1 ? sessionHistory.length - 1 : Math.max(0, historyIndex - 1);
+      setHistoryIndex(nextIndex);
+      setInputValue(sessionHistory[nextIndex]);
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyIndex === -1) return;
+      const nextIndex = historyIndex + 1;
+      if (nextIndex >= sessionHistory.length) {
+        setHistoryIndex(-1);
+        setInputValue("");
+      } else {
+        setHistoryIndex(nextIndex);
+        setInputValue(sessionHistory[nextIndex]);
+      }
     }
   }
-
-  function buildEventLogDebugEntries(): AgentDebugEventLogEntry[] {
-    return eventLogEntries.map((entry) => ({
-      id: entry.id,
-      timestamp: entry.timestamp,
-      kind: entry.kind,
-      message: entry.message,
-      ...(entry.accent ? { accent: entry.accent } : {}),
-      ...(entry.targetKind ? { targetKind: entry.targetKind } : {}),
-      ...(entry.targetId ? { targetId: entry.targetId } : {}),
-    }));
-  }
-
-  function buildCanvasGeometry(snapshot: HqWorldSnapshot): AgentDebugCanvasGeometry {
-    return {
-      roomCount: snapshot.rooms.length,
-      expansionSlotCount: snapshot.expansionSlots.length,
-      actorCount: snapshot.actors.length,
-      floorTileCount: snapshot.modular.floorTiles.length,
-      wallSegmentCount: snapshot.modular.wallSegments.length,
-      perimeterTileCount: snapshot.modular.perimeterTiles.length,
-      navAnchorCount: snapshot.navGraph.anchors.length,
-      navConnectorCount: snapshot.navGraph.connectors.length,
-      rooms: snapshot.rooms.map((room) => ({
-        id: room.id,
-        label: room.label,
-        roomStateId: room.roomStateId,
-        slotId: room.slotId,
-        floorIndex: room.floorIndex,
-        isOperational: room.isOperational,
-        reservedFootprint: room.reservedFootprint,
-        activeFootprint: room.activeFootprint,
-        bounds: room.bounds,
-        activeBounds: room.activeBounds,
-      })),
-      expansionSlots: snapshot.expansionSlots,
-      actors: snapshot.actors.map((actor) => ({
-        id: actor.id,
-        kind: actor.kind,
-        label: actor.label,
-        roomId: actor.roomId,
-        ...(actor.roleTag ? { roleTag: actor.roleTag } : {}),
-        state: actor.state,
-        moveProgress: actor.moveProgress,
-        x: actor.x,
-        y: actor.y,
-        targetX: actor.targetX,
-        targetY: actor.targetY,
-      })),
-      modular: snapshot.modular,
-      navGraph: snapshot.navGraph,
-      roomProps: snapshot.roomProps,
-      scenery: snapshot.scenery,
-    };
-  }
-
-  function buildAgentDebugSnapshot(): AgentDebugSnapshot {
-    const snapshot = session.state.hqWorldSnapshot;
-    return {
-      generatedAt: new Date().toISOString(),
-      mode: session.mode,
-      isPreview: session.isPreview,
-      time: {
-        day: clock.day,
-        minuteOfDay: clock.minuteOfDay,
-        phase: currentPhase,
-      },
-      resources: {
-        cash: resources.cash,
-        reputation: resources.reputation,
-        intel: resources.intel,
-      },
-      building: {
-        id: building.activeBuildingId,
-        tier: building.tier,
-        activeFloorIndex: building.activeFloorIndex,
-        floorCount: building.floorCount,
-        roomSlotCount: building.roomSlotCount,
-        operatorSlotCount: building.operatorSlotCount,
-      },
-      debugOverlays,
-      eventLog: buildEventLogDebugEntries(),
-      hqSnapshot: snapshot
-        ? {
-            backdrop: snapshot.backdrop,
-            effects: snapshot.effects,
-            layout: snapshot.layout,
-            canvasGeometry: buildCanvasGeometry(snapshot),
-          }
-        : null,
-    };
-  }
-
-  function publishAgentDebugSnapshot(): AgentDebugSnapshot {
-    const snapshot = buildAgentDebugSnapshot();
-    (globalThis as DebugGlobal).__ASCENSION_DEBUG__ = snapshot;
-    return snapshot;
-  }
-
-  function logStructuredDebug(label: string, value: unknown) {
-    console.log(`[dev-menu:${label}] ${JSON.stringify(value, null, 2)}`);
-  }
-
-  useEffect(() => {
-    publishAgentDebugSnapshot();
-  }, [clock.day, clock.minuteOfDay, currentPhase, debugOverlays, eventLogEntries, session.state]);
 
   return (
     <>
@@ -340,380 +278,64 @@ export function DevMenuOverlay({
         role="presentation"
       />
 
-      {/* Panel */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      {/* Console panel */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4">
         <div
-          className="glass-card pointer-events-auto w-full max-w-md p-6"
+          data-testid="dev-console"
+          className="pointer-events-auto flex flex-col w-full max-w-2xl rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(10,10,14,0.88)] shadow-[0_12px_56px_rgba(0,0,0,0.7)] backdrop-blur-[40px] backdrop-saturate-[1.15]"
+          style={{ maxHeight: "min(80vh, 680px)" }}
           role="dialog"
-          aria-label="Dev Menu"
+          aria-label="Dev Console"
         >
-          {/* Header */}
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-[0.15em] text-gold">
-              Dev Menu
-            </h2>
+          {/* ── Header ──────────────────────────────────────────────── */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-[rgba(200,168,76,0.06)]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-gold/40" />
+              <h2 className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.18em] text-gold/80 uppercase">
+                Command Console
+              </h2>
+            </div>
             <button type="button" className="btn-ghost px-2 py-0.5 text-xs" onClick={onClose}>
-              Close
+              esc
             </button>
           </div>
 
-          <div className="mb-5 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-
-          {/* Resources */}
-          <div className="space-y-4">
-            <SectionLabel>Resources</SectionLabel>
-            <div className="space-y-2.5">
-              <ResourceRow
-                label="Cash"
-                value={resources.cash}
-                onAdd={(d) => addResource("resource/cash", resources.cash, d)}
-              />
-              <ResourceRow
-                label="Reputation"
-                value={resources.reputation}
-                onAdd={(d) => addResource("resource/reputation", resources.reputation, d)}
-              />
-              <ResourceRow
-                label="Intel"
-                value={resources.intel}
-                onAdd={(d) => addResource("resource/intel", resources.intel, d)}
-              />
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Time */}
-          <div className="space-y-3">
-            <SectionLabel>Time</SectionLabel>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-silver/50">
-                Day {clock.day} &middot;{" "}
-                {String(Math.floor(clock.minuteOfDay / 60)).padStart(2, "0")}:
-                {String(clock.minuteOfDay % 60).padStart(2, "0")} ({currentPhase})
-              </span>
-              <div className="flex gap-1">
-                <CheatButton label="+1h" onClick={() => skipTime(1)} />
-                <CheatButton label="+6h" onClick={() => skipTime(6)} />
-                <CheatButton label="+1 day" onClick={() => skipTime(24)} />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className={`px-2.5 py-1 text-xs rounded ${
-                  session.isAutoTicking
-                    ? "btn-ghost"
-                    : "bg-volcanic/40 text-gold border border-volcanic/60"
-                }`}
-                onClick={toggleFreeze}
-              >
-                {session.isAutoTicking ? "Freeze" : "Frozen — Resume"}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-[0.15em] text-silver/40">Jump to</span>
-              <div className="flex gap-1">
-                {Object.entries(PHASE_TARGETS).map(([key, { label, minuteOfDay }]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`px-2 py-1 text-xs rounded ${
-                      currentPhase === key
-                        ? "bg-gold/20 text-gold border border-gold/30"
-                        : "btn-ghost"
-                    }`}
-                    onClick={() => setTimePhase(minuteOfDay)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Floor */}
-          <div className="space-y-3">
-            <SectionLabel>Floor</SectionLabel>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-silver/50">
-                Active floor {building.activeFloorIndex + 1}/{building.floorCount}
-              </span>
-              {building.floorCount > 1 && (
-                <div className="flex flex-wrap gap-1">
-                  {Array.from({ length: building.floorCount }, (_, floorIndex) => (
-                    <CheatButton
-                      key={floorIndex}
-                      label={`F${floorIndex + 1}`}
-                      onClick={() => {
-                        void session.commands.setActiveFloor({ floorIndex });
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Quick Actions */}
-          <div className="space-y-3">
-            <SectionLabel>Quick Actions</SectionLabel>
-            <div className="flex flex-wrap gap-1">
-              <CheatButton
-                label="Bankrupt (cash=0)"
-                onClick={() => setResource("resource/cash", 0)}
-              />
-              <CheatButton
-                label="Debt (cash=-100)"
-                onClick={() => setResource("resource/cash", -100)}
-              />
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Debug */}
-          <div className="space-y-3">
-            <SectionLabel>Debug</SectionLabel>
-            <p className="text-sm leading-relaxed text-silver/50">
-              Structured agent-inspection data is published to{" "}
-              <code className="text-gold/70">window.__ASCENSION_DEBUG__</code> while this menu is
-              open. Use the dumps below to push the same data into the browser console.
-            </p>
-            <CheatButton
-              label="Dump Raw Session"
-              onClick={() => {
-                console.log("[dev-menu] phase1View", session.phase1View);
-                console.log("[dev-menu] worldSnapshot", session.worldSnapshot);
-              }}
-            />
-            <div className="flex flex-wrap gap-1">
-              <CheatButton
-                label="Dump Event Log"
-                onClick={() => {
-                  const snapshot = publishAgentDebugSnapshot();
-                  logStructuredDebug("event-log", snapshot.eventLog);
-                }}
-              />
-              <CheatButton
-                label="Dump HQ Snapshot"
-                onClick={() => {
-                  const snapshot = publishAgentDebugSnapshot();
-                  logStructuredDebug("hq-snapshot", snapshot.hqSnapshot);
-                }}
-              />
-              <CheatButton
-                label="Dump Canvas Geometry"
-                onClick={() => {
-                  const snapshot = publishAgentDebugSnapshot();
-                  logStructuredDebug(
-                    "canvas-geometry",
-                    snapshot.hqSnapshot?.canvasGeometry ?? null,
-                  );
-                }}
-              />
-              <CheatButton
-                label="Dump Agent Snapshot"
-                onClick={() => {
-                  logStructuredDebug("agent-snapshot", publishAgentDebugSnapshot());
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Spatial Debug Overlays */}
-          <div className="space-y-3">
-            <SectionLabel>Spatial Debug</SectionLabel>
-            <div className="flex flex-wrap gap-1">
-              <DebugToggle
-                label="Room Bounds"
-                active={!!debugOverlays.showRoomBounds}
-                onToggle={() =>
-                  onDebugOverlaysChange({
-                    ...debugOverlays,
-                    showRoomBounds: !debugOverlays.showRoomBounds,
-                  })
-                }
-              />
-              <DebugToggle
-                label="Footprints"
-                active={!!debugOverlays.showFootprints}
-                onToggle={() =>
-                  onDebugOverlaysChange({
-                    ...debugOverlays,
-                    showFootprints: !debugOverlays.showFootprints,
-                  })
-                }
-              />
-              <DebugToggle
-                label="Nav Anchors"
-                active={!!debugOverlays.showAnchors}
-                onToggle={() =>
-                  onDebugOverlaysChange({
-                    ...debugOverlays,
-                    showAnchors: !debugOverlays.showAnchors,
-                  })
-                }
-              />
-              <DebugToggle
-                label="Pointer Coords"
-                active={!!debugOverlays.showPointerCoords}
-                onToggle={() =>
-                  onDebugOverlaysChange({
-                    ...debugOverlays,
-                    showPointerCoords: !debugOverlays.showPointerCoords,
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
-
-          {/* Encounter & Incidents */}
-          <div className="space-y-3">
-            <SectionLabel>Encounters & Incidents</SectionLabel>
-            <div className="flex flex-wrap gap-1">
-              <CheatButton
-                label="Trigger Boss Commitment"
-                onClick={() => {
-                  void session.commands.dispatch({ type: "sim/dev-trigger-boss-commitment" });
-                }}
-              />
-              <CheatButton
-                label="Trigger Random Incident"
-                onClick={() => {
-                  void session.commands.dispatch({ type: "sim/dev-trigger-incident" });
-                }}
-              />
-            </div>
-
-            <SectionLabel>Contract Lifecycle</SectionLabel>
-            <div className="flex flex-wrap gap-1">
-              <CheatButton
-                label={`Phase: ${session.phase1View.contractLifecycle}`}
-                onClick={() => {}}
-              />
-              <CheatButton
-                label="Force Boss Defeat"
-                onClick={() => {
-                  void session.commands.dispatch({
-                    type: "sim/dev-force-contract-end",
-                    outcome: "boss_defeated",
-                  });
-                }}
-              />
-              <CheatButton
-                label="Force Contract Loss"
-                onClick={() => {
-                  void session.commands.dispatch({
-                    type: "sim/dev-force-contract-end",
-                    outcome: "contract_lost",
-                  });
-                }}
-              />
-              <CheatButton
-                label="Advance Contract"
-                onClick={() => {
-                  void session.commands.dispatch({ type: "sim/advance-contract" });
-                }}
-              />
-            </div>
-
-            {session.phase1View.encounter && (
-              <div className="space-y-2">
-                <div className="text-xs text-silver/60">
-                  Encounter: {session.phase1View.encounter.bossName} &mdash; Round{" "}
-                  {session.phase1View.encounter.currentRound} &mdash; Phase{" "}
-                  {session.phase1View.encounter.currentPhaseIndex + 1}/
-                  {session.phase1View.encounter.phaseCount} &mdash; Status:{" "}
-                  {session.phase1View.encounter.status}
-                </div>
-                <div className="text-xs text-silver/50">
-                  Boss HP: {Math.round(session.phase1View.encounter.bossHpFraction * 100)}%
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <CheatButton
-                    label="Pause"
-                    onClick={() => void session.commands.dispatch({ type: "sim/encounter-pause" })}
-                  />
-                  <CheatButton
-                    label="Resume"
-                    onClick={() => void session.commands.dispatch({ type: "sim/encounter-resume" })}
-                  />
-                  <CheatButton
-                    label="Step"
-                    onClick={() => void session.commands.dispatch({ type: "sim/encounter-step" })}
-                  />
-                  <CheatButton
-                    label="Retreat"
-                    onClick={() =>
-                      void session.commands.dispatch({ type: "sim/encounter-retreat" })
-                    }
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <CheatButton
-                    label="Dump Encounter State"
-                    onClick={() => {
-                      console.log("[dev-menu] encounter", session.phase1View.encounter);
-                    }}
-                  />
-                  <CheatButton
-                    label="Dump Encounter Actors"
-                    onClick={() => {
-                      console.log(
-                        "[dev-menu] encounter actors",
-                        session.phase1View.encounter?.actors,
-                      );
-                    }}
-                  />
-                  <CheatButton
-                    label="Dump Encounter Log"
-                    onClick={() => {
-                      console.log(
-                        "[dev-menu] encounter log",
-                        session.phase1View.encounter?.recentLog,
-                      );
-                    }}
-                  />
-                </div>
-                <div className="text-xs text-silver/40 space-y-0.5 max-h-24 overflow-y-auto">
-                  {session.phase1View.encounter.actors.map((actor) => (
-                    <div key={actor.actorId}>
-                      [{actor.side}] {actor.label}: {actor.currentHp}/{actor.maxHp} HP
-                      {actor.shield > 0 ? ` +${actor.shield} shield` : ""}
-                      {actor.condition !== "alive" ? ` (${actor.condition})` : ""}
-                      {actor.activeStatuses.length > 0
-                        ? ` [${actor.activeStatuses.map((s) => s.statusId).join(",")}]`
-                        : ""}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-xs text-silver/40">
-                  Interventions:{" "}
-                  {session.phase1View.encounter.interventions
-                    .filter((i) => i.usesRemaining > 0)
-                    .map((i) => `${i.interventionId}(${i.usesRemaining})`)
-                    .join(", ") || "none available"}
-                </div>
-              </div>
+          {/* ── Transcript / Help ────────────────────────────────────── */}
+          <div
+            ref={transcriptRef}
+            data-testid="dev-console-transcript"
+            className="flex-1 overflow-y-auto px-5 py-3 min-h-0"
+          >
+            {transcript.length === 0 ? (
+              <HelpListing />
+            ) : (
+              transcript.map((entry, i) => <TranscriptRow key={i} entry={entry} />)
             )}
+          </div>
 
-            {session.phase1View.activeInterruption && (
-              <div className="text-xs text-silver/60">
-                Active Interruption: {session.phase1View.activeInterruption.type} (
-                {session.phase1View.activeInterruption.instanceId})
-              </div>
-            )}
+          {/* ── Input ────────────────────────────────────────────────── */}
+          <div className="relative border-t border-[rgba(200,168,76,0.06)]">
+            {/* Glow line */}
+            <div className="absolute top-0 left-5 right-5 h-px bg-gradient-to-r from-transparent via-gold/15 to-transparent" />
+
+            <div className="flex items-center px-5 py-3">
+              <span className="font-mono text-xs text-gold/40 select-none mr-1.5">/</span>
+              <input
+                ref={inputRef}
+                data-testid="dev-console-input"
+                type="text"
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setHistoryIndex(-1);
+                }}
+                onKeyDown={handleKeyDown}
+                className="flex-1 bg-transparent font-mono text-xs text-silver-bright placeholder:text-silver/20 outline-none caret-gold/60"
+                placeholder="type a command..."
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
       </div>

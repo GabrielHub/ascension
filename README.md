@@ -40,6 +40,7 @@ vp preview
 ```
 
 Use `vp dev` for ordinary gameplay and UI iteration. Browser mode remains the fastest development surface and keeps browser-backed saves for day-to-day work.
+In dev builds, the backtick key opens the in-game dev command console; use it for runtime-safe browser test setup instead of ad hoc browser-console mutation.
 
 Desktop-host workflows are separate because there is no `vp` equivalent for them:
 

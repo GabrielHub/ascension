@@ -94,6 +94,7 @@ function createFullContext(): SimSystemContext {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
       },
       kitRegistry: {
         regularAttacks: [],
@@ -178,6 +179,7 @@ describe("bidOnContract", () => {
         lootFamilyHints: ["Tunnel Salvage"],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 
@@ -222,6 +224,7 @@ describe("bidOnContract", () => {
         lootFamilyHints: [],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 
@@ -255,6 +258,7 @@ describe("bidOnContract", () => {
         lootFamilyHints: [],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 
@@ -289,6 +293,7 @@ describe("bidOnContract", () => {
         lootFamilyHints: [],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 
@@ -327,6 +332,7 @@ describe("bidOnContract", () => {
         lootFamilyHints: [],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 

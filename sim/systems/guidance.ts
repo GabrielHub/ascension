@@ -34,12 +34,18 @@ export interface GuidanceCompletionRule {
   targetAnchorId?: string;
   intentType?: string;
   requiresManualCompletion?: boolean;
+  upgradeId?: string;
 }
 
 export interface GuidanceBeatGating {
   requiredCompletedBeatIds: string[];
+  requiredBuildingId?: string;
+  minimumBuildingTier?: number;
   requiredContractLifecycle?: "idle" | "bidding" | "active" | "resolved";
   minimumSecuredContractCount?: number;
+  requiredAffordableUpgradeId?: string;
+  requiredAppliedUpgradeIds?: string[];
+  requiredMissingUpgradeId?: string;
   requireFirstContractSecured?: boolean;
   requireFirstIncidentEligible?: boolean;
   requireFirstRaidReturn?: boolean;
@@ -51,6 +57,9 @@ export interface GuidanceBeatGating {
   requireUpgradeAffordable?: boolean;
   requireSignificantSetback?: boolean;
   requireSetbackRecoveryTrigger?: boolean;
+  requireRecoveryPressure?: boolean;
+  requireContractPrepGap?: boolean;
+  requireStagingPressure?: boolean;
 }
 
 export interface GuidanceBeatCopy {
@@ -155,6 +164,7 @@ export interface GuidanceState {
     staffingActions: number;
     upgradesPurchased: number;
   };
+  lastPurchasedUpgradeId: string | null;
   openingTiming?: GuidanceOpeningTimingState;
 }
 
@@ -176,6 +186,7 @@ export function createGuidanceState(
       staffingActions: 0,
       upgradesPurchased: 0,
     },
+    lastPurchasedUpgradeId: null,
     openingTiming: createOpeningTimingState(),
   };
 }
@@ -197,6 +208,7 @@ export interface GuidanceStateSnapshot {
     staffingActions: number;
     upgradesPurchased: number;
   };
+  lastPurchasedUpgradeId: string | null;
   openingTiming?: GuidanceOpeningTimingState;
 }
 
@@ -215,6 +227,7 @@ export function snapshotGuidanceState(state: GuidanceState): GuidanceStateSnapsh
     anchorResolutionFailures: state.anchorResolutionFailures.map((f) => ({ ...f })),
     activeBeatProgressBaseline: state.activeBeatProgressBaseline,
     interactionCounts: { ...state.interactionCounts },
+    lastPurchasedUpgradeId: state.lastPurchasedUpgradeId,
     openingTiming: { ...openingTiming },
   };
 }
@@ -242,6 +255,8 @@ export function restoreGuidanceState(snapshot: GuidanceStateSnapshot | undefined
       staffingActions: snapshot.interactionCounts?.staffingActions ?? 0,
       upgradesPurchased: snapshot.interactionCounts?.upgradesPurchased ?? 0,
     },
+    lastPurchasedUpgradeId:
+      typeof snapshot.lastPurchasedUpgradeId === "string" ? snapshot.lastPurchasedUpgradeId : null,
     openingTiming: {
       firstRaidReturnCompletedAtMinute:
         typeof snapshot.openingTiming?.firstRaidReturnCompletedAtMinute === "number"
@@ -295,8 +310,12 @@ export function syncOpeningContractTracking(
 
 export interface GuidanceEvaluationContext {
   currentMinute: number;
+  activeBuildingId: string;
+  activeBuildingTier: number;
   contractLifecycle: string;
   securedContractCount: number;
+  affordableUpgradeIds: readonly string[];
+  appliedUpgradeIds: readonly string[];
   hasSecuredContract: boolean;
   hasActiveIncident: boolean;
   hasCompletedRaid: boolean;
@@ -308,6 +327,9 @@ export interface GuidanceEvaluationContext {
   hasUpgradeAffordable: boolean;
   hasSignificantSetback: boolean;
   hasSetbackRecoveryTrigger: boolean;
+  hasRecoveryPressure: boolean;
+  hasContractPrepGap: boolean;
+  hasStagingPressure: boolean;
   hasAnyUpgradePurchased: boolean;
   isPreview: boolean;
 }
@@ -330,6 +352,39 @@ export function isBeatEligible(
   // Required completed beats
   for (const requiredId of beat.gating.requiredCompletedBeatIds) {
     if (!state.completedBeatIds.includes(requiredId)) return false;
+  }
+
+  if (
+    beat.gating.requiredBuildingId &&
+    evalContext.activeBuildingId !== beat.gating.requiredBuildingId
+  ) {
+    return false;
+  }
+  if (
+    beat.gating.minimumBuildingTier !== undefined &&
+    evalContext.activeBuildingTier < beat.gating.minimumBuildingTier
+  ) {
+    return false;
+  }
+  if (
+    beat.gating.requiredAffordableUpgradeId &&
+    !evalContext.affordableUpgradeIds.includes(beat.gating.requiredAffordableUpgradeId)
+  ) {
+    return false;
+  }
+  if (
+    beat.gating.requiredAppliedUpgradeIds &&
+    !beat.gating.requiredAppliedUpgradeIds.every((upgradeId) =>
+      evalContext.appliedUpgradeIds.includes(upgradeId),
+    )
+  ) {
+    return false;
+  }
+  if (
+    beat.gating.requiredMissingUpgradeId &&
+    evalContext.appliedUpgradeIds.includes(beat.gating.requiredMissingUpgradeId)
+  ) {
+    return false;
   }
 
   // Contract lifecycle gate
@@ -364,6 +419,9 @@ export function isBeatEligible(
   if (beat.gating.requireSetbackRecoveryTrigger && !evalContext.hasSetbackRecoveryTrigger) {
     return false;
   }
+  if (beat.gating.requireRecoveryPressure && !evalContext.hasRecoveryPressure) return false;
+  if (beat.gating.requireContractPrepGap && !evalContext.hasContractPrepGap) return false;
+  if (beat.gating.requireStagingPressure && !evalContext.hasStagingPressure) return false;
 
   return true;
 }
@@ -475,12 +533,14 @@ export function resetOpeningPath(state: GuidanceState, openingBeatIds: readonly 
     staffingActions: 0,
     upgradesPurchased: 0,
   };
+  state.lastPurchasedUpgradeId = null;
   state.openingTiming = createOpeningTimingState();
 }
 
 export function recordGuidanceInteraction(
   state: GuidanceState,
   kind: "staffing_action" | "upgrade_purchase",
+  upgradeId?: string,
 ): void {
   if (kind === "staffing_action") {
     state.interactionCounts.staffingActions += 1;
@@ -488,6 +548,7 @@ export function recordGuidanceInteraction(
   }
 
   state.interactionCounts.upgradesPurchased += 1;
+  state.lastPurchasedUpgradeId = upgradeId ?? null;
 }
 
 // ── Completion checking ──────────────────────────────────────────────
@@ -503,6 +564,7 @@ export interface GuidanceCompletionContext {
   hasRaidReturnWithLoot: boolean;
   hasStaffingActionTaken: boolean;
   hasUpgradePurchased: boolean;
+  lastPurchasedUpgradeId: string | null;
 }
 
 export function isCompletionMet(
@@ -545,6 +607,8 @@ export function isCompletionMet(
     case "staffing_action_taken":
       return completionContext.hasStaffingActionTaken;
     case "upgrade_purchased":
-      return completionContext.hasUpgradePurchased;
+      return rule.upgradeId
+        ? completionContext.lastPurchasedUpgradeId === rule.upgradeId
+        : completionContext.hasUpgradePurchased;
   }
 }

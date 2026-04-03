@@ -106,6 +106,7 @@ function createGuidanceContext(completedOpeningBeatCount: number): SimSystemCont
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
         openingTiming: {
           firstRaidReturnCompletedAtMinute: null,
           firstIncidentSeededAtMinute: null,
@@ -142,6 +143,22 @@ function addActiveOperator(context: SimSystemContext, id: string, name: string):
   MoraleState.baseline[entity] = 60;
   InjuryState.severity[entity] = 0;
   context.runtimeState.operatorEntities.push(entity);
+}
+
+function configurePortersBuilding(
+  context: SimSystemContext,
+  tier: number,
+  appliedUpgradeIds: string[] = [],
+): void {
+  const buildingIndex = templateRegistry.buildingIndexById.get("building/porters");
+
+  if (buildingIndex === undefined) {
+    throw new Error("Missing building/porters in template registry.");
+  }
+
+  BuildingAuthority.activeBuildingTemplateIndex[context.singletonEntities.building] = buildingIndex;
+  BuildingAuthority.activeBuildingTier[context.singletonEntities.building] = tier;
+  BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building] = [...appliedUpgradeIds];
 }
 
 function createIncidentInterruption(): InterruptionInstance {
@@ -353,6 +370,7 @@ describe("guidance system", () => {
         lootFamilyHints: [],
         bossHint: null,
         neighborhoodLabel: "lower east side",
+        boardIntel: { source: "street", quality: "rough" },
       },
     ];
 
@@ -508,5 +526,117 @@ describe("guidance system", () => {
     });
     expect(context.runtimeState.interruptionQueue.active?.type).toBe("guidance");
     expect(context.runtimeState.interruptionQueue.queue[0]?.type).toBe("incident");
+  });
+
+  it("activates the first Porters campaign beat once the guild relocates with Kitchen Overhaul affordable", () => {
+    const context = createGuidanceContext(OPENING_BEAT_IDS.length);
+    context.runtimeState.guidanceState.openingPathState = "completed";
+    GuildState.treasury[context.singletonEntities.guild] = 600;
+    GuildState.reputation[context.singletonEntities.guild] = 80;
+    configurePortersBuilding(context, 1);
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe(
+      "guidance/porters/kitchen-overhaul",
+    );
+    expect(context.runtimeState.guidanceState.activeBeatView?.track).toBe("feature_intro");
+    expect(context.runtimeState.guidanceState.activeBeatView?.target).toBe(
+      "ui/hq/category/management",
+    );
+  });
+
+  it("waits for a live Porters contract before surfacing Upstairs Conversion", () => {
+    const context = createGuidanceContext(OPENING_BEAT_IDS.length);
+    context.runtimeState.guidanceState.openingPathState = "completed";
+    GuildState.treasury[context.singletonEntities.guild] = 1_200;
+    GuildState.reputation[context.singletonEntities.guild] = 120;
+    configurePortersBuilding(context, 2, ["upgrade/building/porters:kitchen_overhaul"]);
+    BuildingAuthority.contractLifecycle[context.singletonEntities.building] = "bidding";
+    context.runtimeState.guidanceState.completedBeatIds.push("guidance/porters/kitchen-overhaul");
+
+    advanceGuidanceSystem(context, 0);
+    expect(context.runtimeState.guidanceState.activeBeatId).toBeNull();
+
+    BuildingAuthority.contractLifecycle[context.singletonEntities.building] = "active";
+    BuildingAuthority.contractSite[context.singletonEntities.building] = {
+      contractSiteId: "contract/porters-test",
+      missionId: "mission/clearance",
+      siteConceptId: "site/flooded-subway-tunnel",
+      location: "district/red-hook-waterfront",
+      rank: "e",
+      threat: 48,
+      intel: 58,
+      reward: 140,
+      boardIntel: { source: "street", quality: "rough" },
+      briefing: null,
+      securedAtTick: 600,
+      explorationProgress: 0,
+      closureProgress: 0,
+      closureThreshold: 100,
+      bossIntelProgress: 0,
+      bossPressureProgress: 0,
+      bossDefeated: false,
+      missionCompleted: false,
+      contractLost: false,
+      requiresBossClear: false,
+      bossAvailable: false,
+    };
+    context.runtimeState.guidanceState.lastEvaluationMinute = 0;
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe(
+      "guidance/porters/upstairs-conversion",
+    );
+  });
+
+  it("surfaces The Remodel once upstairs work is done and Porters shows recovery pressure", () => {
+    const context = createGuidanceContext(OPENING_BEAT_IDS.length);
+    context.runtimeState.guidanceState.openingPathState = "completed";
+    GuildState.treasury[context.singletonEntities.guild] = 2_500;
+    GuildState.reputation[context.singletonEntities.guild] = 180;
+    configurePortersBuilding(context, 3, [
+      "upgrade/building/porters:kitchen_overhaul",
+      "upgrade/building/porters:upstairs_conversion",
+    ]);
+    context.runtimeState.guidanceState.completedBeatIds.push(
+      "guidance/porters/kitchen-overhaul",
+      "guidance/porters/upstairs-conversion",
+    );
+    addActiveOperator(context, "operator/recovery-pressure", "Tessa Vale");
+    const operatorEntity = context.runtimeState.operatorEntities[0];
+    if (operatorEntity === undefined) {
+      throw new Error("Expected an active operator for the Porters remodel guidance test.");
+    }
+    InjuryState.severity[operatorEntity] = 18;
+    MoraleState.current[operatorEntity] = 48;
+    MoraleState.baseline[operatorEntity] = 60;
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe("guidance/porters/remodel");
+  });
+
+  it("surfaces Waterfront once the remodel is done and Porters still lacks staging rooms", () => {
+    const context = createGuidanceContext(OPENING_BEAT_IDS.length);
+    context.runtimeState.guidanceState.openingPathState = "completed";
+    GuildState.treasury[context.singletonEntities.guild] = 4_000;
+    GuildState.reputation[context.singletonEntities.guild] = 220;
+    configurePortersBuilding(context, 4, [
+      "upgrade/building/porters:kitchen_overhaul",
+      "upgrade/building/porters:upstairs_conversion",
+      "upgrade/building/porters:remodel",
+    ]);
+    context.runtimeState.guidanceState.completedBeatIds.push(
+      "guidance/porters/kitchen-overhaul",
+      "guidance/porters/upstairs-conversion",
+      "guidance/porters/remodel",
+    );
+    BuildingAuthority.contractLifecycle[context.singletonEntities.building] = "active";
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe("guidance/porters/waterfront");
   });
 });

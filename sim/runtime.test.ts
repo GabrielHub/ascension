@@ -10,11 +10,19 @@ import {
 } from "./index";
 import { STABLE_SIM_COMMAND_TYPES } from "./commands";
 import { templateRegistry } from "content/templates";
-import { OperatorIdentity } from "./components";
+import {
+  InjuryState,
+  LoyaltyState,
+  MoraleState,
+  NeedState,
+  OperatorIdentity,
+  ScheduleState,
+} from "./components";
 import { computeDerivedStats } from "./systems/derived-stats";
 import { OPENING_BEAT_IDS } from "./systems/guidance-beats";
-import { markRaidBossCommitment } from "./systems/raids";
+import { computeOperatorRaidReadiness, markRaidBossCommitment } from "./systems/raids";
 import { deferredSimulationSystemsReady } from "./systems";
+import { readOperatorTrainingSnapshot } from "./systems/training";
 
 function createPolicyRaidSnapshot() {
   const snapshot = createPreviewWorldSnapshot(templateRegistry);
@@ -80,6 +88,522 @@ function createPolicyRaidSnapshot() {
   );
 
   return snapshot;
+}
+
+function createPortersOpsSnapshot(options: {
+  office?: boolean;
+  briefingRoom?: boolean;
+  prepRoom?: boolean;
+}) {
+  const snapshot = createPreviewWorldSnapshot(templateRegistry);
+  const baseRoom = snapshot.rooms[0];
+
+  if (!baseRoom) {
+    throw new Error("expected preview snapshot to include a room");
+  }
+
+  snapshot.building = {
+    activeBuildingId: "building/porters",
+    activeBuildingTier: 1,
+    activeFloorIndex: 0,
+    roomSlotCount: 7,
+    operatorSlotCount: 12,
+  };
+
+  const makeRoom = (
+    id: string,
+    templateId: string,
+    slotId: string,
+    footprint: { col: number; row: number; cols: number; rows: number },
+  ) => ({
+    ...baseRoom,
+    id,
+    templateId,
+    tier: 1,
+    floorIndex: 1,
+    slotId,
+    roomStateId: `${templateId.replace("room/", "room-state/").replace(":tier_1", "")}`,
+    capacity: templateRegistry.roomById.get(templateId)?.baseCapacity ?? 2,
+    occupancy: 0,
+    isActive: true,
+    reservedFootprint: footprint,
+    activeFootprint: footprint,
+  });
+
+  snapshot.rooms = [
+    ...(options.office
+      ? [
+          makeRoom("room-instance/office", "room/office:tier_1", "slot/office", {
+            col: 1,
+            row: 1,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+    ...(options.briefingRoom
+      ? [
+          makeRoom("room-instance/briefing", "room/briefing_room:tier_1", "slot/briefing", {
+            col: 5,
+            row: 1,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+    ...(options.prepRoom
+      ? [
+          makeRoom("room-instance/prep", "room/prep_room:tier_1", "slot/prep", {
+            col: 9,
+            row: 1,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+  ];
+
+  snapshot.staff = [
+    ...(options.office
+      ? [
+          {
+            id: "staff/admin-porter",
+            name: "Mae Hollis",
+            roleTag: "staff:admin",
+            status: "active",
+            wage: 25,
+            schedule: {
+              currentBlock: "work",
+              workStartMinute: 480,
+              workEndMinute: 1080,
+            },
+            needs: {
+              hunger: 12,
+              fatigue: 10,
+              stress: 14,
+            },
+            morale: {
+              current: 68,
+              baseline: 68,
+            },
+            loyalty: {
+              current: 70,
+              baseline: 70,
+            },
+            injury: {
+              severity: 0,
+              recoveryHoursRemaining: 0,
+              treated: false,
+            },
+            assignment: {
+              kind: "room",
+              targetId: "room-instance/office",
+            },
+          },
+        ]
+      : []),
+    ...(options.prepRoom
+      ? [
+          {
+            id: "staff/logistics-porter",
+            name: "Gus Vale",
+            roleTag: "staff:logistics",
+            status: "active",
+            wage: 22,
+            schedule: {
+              currentBlock: "work",
+              workStartMinute: 480,
+              workEndMinute: 1080,
+            },
+            needs: {
+              hunger: 10,
+              fatigue: 11,
+              stress: 12,
+            },
+            morale: {
+              current: 66,
+              baseline: 66,
+            },
+            loyalty: {
+              current: 69,
+              baseline: 69,
+            },
+            injury: {
+              severity: 0,
+              recoveryHoursRemaining: 0,
+              treated: false,
+            },
+            assignment: {
+              kind: "room",
+              targetId: "room-instance/prep",
+            },
+          },
+        ]
+      : []),
+  ];
+
+  return snapshot;
+}
+
+function createTrainingReadinessSnapshot(porters: boolean) {
+  const snapshot = createPreviewWorldSnapshot(templateRegistry);
+  const firstOperator = snapshot.operators?.[0];
+  if (!firstOperator) {
+    throw new Error("expected preview snapshot to include an operator");
+  }
+
+  snapshot.time = {
+    tick: 0,
+    day: 2,
+    minuteOfDay: 600,
+  };
+  snapshot.raidOpportunities = [
+    {
+      id: "opportunity/training-test",
+      missionId: snapshot.contractSite?.missionId ?? "mission/clearance",
+      location: snapshot.contractSite?.location ?? "district/lower-east-side",
+      threat: 44,
+      intel: 62,
+      reward: 132,
+      risk: 34,
+      status: "open",
+      interestedOperatorIds: [],
+      claimedOperatorIds: [],
+      createdTick: 1_900,
+      expiresAtTick: 2_500,
+    },
+  ];
+  snapshot.operators = [
+    {
+      ...firstOperator,
+      preferences: {
+        ...firstOperator.preferences,
+        trainingBias: 95,
+        comfortBias: 10,
+        recoveryBias: 10,
+      },
+      schedule: {
+        ...firstOperator.schedule,
+        currentBlock: "idle",
+        workStartMinute: 0,
+        workEndMinute: 1440,
+      },
+      needs: {
+        hunger: 10,
+        fatigue: 10,
+        stress: 5,
+      },
+      morale: {
+        current: 58,
+        baseline: 58,
+      },
+      loyalty: {
+        current: 56,
+        baseline: 56,
+      },
+    },
+    ...(snapshot.operators?.slice(1) ?? []),
+  ];
+
+  if (porters) {
+    const gym = templateRegistry.roomById.get("room/gym:tier_1");
+    if (!gym) {
+      throw new Error("expected room/gym:tier_1 to exist");
+    }
+
+    snapshot.building = {
+      activeBuildingId: "building/porters",
+      activeBuildingTier: 1,
+      activeFloorIndex: 1,
+      roomSlotCount: 7,
+      operatorSlotCount: 12,
+    };
+    snapshot.rooms = [
+      {
+        id: "room-instance/gym",
+        templateId: "room/gym:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/gym",
+        roomStateId: "room-state/gym",
+        capacity: gym.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
+        activeFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
+      },
+    ];
+  }
+
+  return { snapshot, operatorId: firstOperator.id };
+}
+
+function createPortersRecoverySnapshot(options: {
+  infirmary?: boolean;
+  breakRoom?: boolean;
+  dock?: boolean;
+  deck?: boolean;
+}) {
+  const snapshot = createPreviewWorldSnapshot(templateRegistry);
+  const [firstOperator, secondOperator, ...restOperators] = snapshot.operators ?? [];
+  const baseRoom = snapshot.rooms[0];
+
+  if (!firstOperator || !secondOperator || !baseRoom) {
+    throw new Error("expected preview snapshot to include base operators and rooms");
+  }
+
+  snapshot.time = {
+    tick: 0,
+    day: 2,
+    minuteOfDay: 600,
+  };
+  snapshot.building = {
+    activeBuildingId: "building/porters",
+    activeBuildingTier: 5,
+    activeFloorIndex: 1,
+    roomSlotCount: 11,
+    operatorSlotCount: 18,
+  };
+
+  const makeRoom = (
+    id: string,
+    templateId: string,
+    slotId: string,
+    floorIndex: number,
+    footprint: { col: number; row: number; cols: number; rows: number },
+  ) => ({
+    ...baseRoom,
+    id,
+    templateId,
+    tier: 1,
+    floorIndex,
+    slotId,
+    roomStateId: `${templateId.replace("room/", "room-state/").replace(":tier_1", "")}`,
+    capacity: templateRegistry.roomById.get(templateId)?.baseCapacity ?? 2,
+    occupancy: 0,
+    isActive: true,
+    reservedFootprint: footprint,
+    activeFootprint: footprint,
+  });
+
+  snapshot.rooms = [
+    makeRoom("room-instance/floor", "room/floor:tier_1", "slot/floor", 0, {
+      col: 1,
+      row: 1,
+      cols: 6,
+      rows: 4,
+    }),
+    ...(options.infirmary
+      ? [
+          makeRoom("room-instance/infirmary", "room/infirmary:tier_1", "slot/infirmary", 1, {
+            col: 1,
+            row: 6,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+    ...(options.breakRoom
+      ? [
+          makeRoom("room-instance/break", "room/break_room:tier_1", "slot/break", 1, {
+            col: 5,
+            row: 6,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+    makeRoom("room-instance/prep", "room/prep_room:tier_1", "slot/prep", 1, {
+      col: 9,
+      row: 6,
+      cols: 4,
+      rows: 3,
+    }),
+    ...(options.dock
+      ? [
+          makeRoom("room-instance/dock", "room/dock:tier_1", "slot/dock", 2, {
+            col: 1,
+            row: 10,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+    ...(options.deck
+      ? [
+          makeRoom("room-instance/deck", "room/deck:tier_1", "slot/deck", 2, {
+            col: 5,
+            row: 10,
+            cols: 4,
+            rows: 3,
+          }),
+        ]
+      : []),
+  ];
+
+  snapshot.staff = [
+    {
+      id: "staff/logistics-porter",
+      name: "Gus Vale",
+      roleTag: "staff:logistics",
+      status: "active",
+      wage: 22,
+      schedule: {
+        currentBlock: "work",
+        workStartMinute: 480,
+        workEndMinute: 1080,
+      },
+      needs: {
+        hunger: 10,
+        fatigue: 11,
+        stress: 12,
+      },
+      morale: {
+        current: 66,
+        baseline: 66,
+      },
+      loyalty: {
+        current: 69,
+        baseline: 69,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      assignment: {
+        kind: "room",
+        targetId: "room-instance/prep",
+      },
+    },
+    ...(options.infirmary
+      ? [
+          {
+            id: "staff/medic-porter",
+            name: "Tess Vale",
+            roleTag: "staff:medical",
+            status: "active",
+            wage: 24,
+            schedule: {
+              currentBlock: "work",
+              workStartMinute: 480,
+              workEndMinute: 1080,
+            },
+            needs: {
+              hunger: 10,
+              fatigue: 10,
+              stress: 10,
+            },
+            morale: {
+              current: 65,
+              baseline: 65,
+            },
+            loyalty: {
+              current: 67,
+              baseline: 67,
+            },
+            injury: {
+              severity: 0,
+              recoveryHoursRemaining: 0,
+              treated: false,
+            },
+            assignment: {
+              kind: "room",
+              targetId: "room-instance/infirmary",
+            },
+          },
+        ]
+      : []),
+  ];
+
+  snapshot.operators = [
+    {
+      ...firstOperator,
+      schedule: {
+        ...firstOperator.schedule,
+        currentBlock: "idle",
+        workStartMinute: 1200,
+        workEndMinute: 1260,
+      },
+      needs: {
+        hunger: 18,
+        fatigue: 34,
+        stress: 68,
+      },
+      morale: {
+        current: 45,
+        baseline: 58,
+      },
+      loyalty: {
+        current: 47,
+        baseline: 58,
+      },
+      injury: {
+        severity: 40,
+        recoveryHoursRemaining: 18,
+        treated: false,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    {
+      ...secondOperator,
+      schedule: {
+        ...secondOperator.schedule,
+        currentBlock: "idle",
+        workStartMinute: 1200,
+        workEndMinute: 1260,
+      },
+      needs: {
+        hunger: 12,
+        fatigue: 32,
+        stress: 74,
+      },
+      morale: {
+        current: 38,
+        baseline: 60,
+      },
+      loyalty: {
+        current: 42,
+        baseline: 56,
+      },
+      injury: {
+        severity: 0,
+        recoveryHoursRemaining: 0,
+        treated: false,
+      },
+      preferences: {
+        ...secondOperator.preferences,
+        socialBias: 90,
+        comfortBias: 85,
+      },
+      assignment: {
+        kind: "idle",
+        targetId: "",
+      },
+    },
+    ...restOperators,
+  ];
+  snapshot.raidOpportunities = [
+    {
+      id: "opportunity/recovery-waterfront",
+      missionId: snapshot.contractSite?.missionId ?? "mission/clearance",
+      location: snapshot.contractSite?.location ?? "district/red-hook-waterfront",
+      threat: 44,
+      intel: 62,
+      reward: 132,
+      risk: 34,
+      status: "open",
+      interestedOperatorIds: [],
+      claimedOperatorIds: [],
+      createdTick: (snapshot.time.day - 1) * 1_440 + snapshot.time.minuteOfDay - 30,
+      expiresAtTick: (snapshot.time.day - 1) * 1_440 + snapshot.time.minuteOfDay + 180,
+    },
+  ];
+
+  return { snapshot, injuredOperatorId: firstOperator.id, stressedOperatorId: secondOperator.id };
 }
 
 describe("time-unit contract", () => {
@@ -674,6 +1198,120 @@ describe("phase 1 runtime", () => {
     expect((supported?.enemyHints.length ?? 0) >= (baseline?.enemyHints.length ?? 0)).toBe(true);
     expect(
       (supported?.lootFamilyHints.length ?? 0) >= (baseline?.lootFamilyHints.length ?? 0),
+    ).toBe(true);
+  });
+
+  it("makes Porter's Office boards more informative than the street board", async () => {
+    await deferredSimulationSystemsReady;
+
+    const createBoard = (withOffice: boolean) => {
+      const snapshot = createPortersOpsSnapshot({ office: withOffice });
+      const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+      simulation.tick(0);
+      simulation.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/cash",
+        amount: 5000,
+      });
+      simulation.dispatch({
+        type: "sim/dev-set-resource",
+        resourceId: "resource/reputation",
+        amount: 300,
+      });
+      simulation.dispatch({
+        type: "sim/dev-force-contract-end",
+        outcome: "boss_defeated",
+      });
+      simulation.tick(60_000);
+      simulation.dispatch({
+        type: "sim/advance-contract",
+      });
+
+      return simulation.getPhase1View().postedContracts[0];
+    };
+
+    const streetBoard = createBoard(false);
+    const officeBoard = createBoard(true);
+
+    expect(streetBoard?.boardIntel).toEqual({ source: "street", quality: "rough" });
+    expect(officeBoard?.boardIntel).toEqual({ source: "office", quality: "dossier" });
+    expect((officeBoard?.hiddenTraitCount ?? 99) <= (streetBoard?.hiddenTraitCount ?? 99)).toBe(
+      true,
+    );
+    expect((officeBoard?.enemyHints.length ?? 0) >= (streetBoard?.enemyHints.length ?? 0)).toBe(
+      true,
+    );
+    expect(officeBoard?.bossHint ?? null).toBeTruthy();
+  });
+
+  it("keeps Porter's briefing state visible through save/load and leaves bodega contracts unbriefed", async () => {
+    await deferredSimulationSystemsReady;
+
+    const portersSimulation = createAscensionSimulation(
+      createPortersOpsSnapshot({ briefingRoom: true, prepRoom: true }),
+      templateRegistry,
+    );
+    portersSimulation.tick(0);
+
+    const briefedContract = portersSimulation.getPhase1View().contractSite;
+    expect(briefedContract?.briefing).toEqual(
+      expect.objectContaining({
+        source: "briefing_room_and_prep",
+        status: "drilled",
+      }),
+    );
+    expect((briefedContract?.knownTraits.length ?? 0) >= 1).toBe(true);
+
+    const restored = createAscensionSimulation(
+      portersSimulation.getWorldSnapshot(),
+      templateRegistry,
+    );
+    restored.tick(0);
+    expect(restored.getPhase1View().contractSite?.briefing).toEqual(
+      expect.objectContaining({
+        source: "briefing_room_and_prep",
+        status: "drilled",
+      }),
+    );
+
+    const bodegaSimulation = createAscensionSimulation(
+      createPreviewWorldSnapshot(templateRegistry),
+      templateRegistry,
+    );
+    bodegaSimulation.tick(0);
+    expect(bodegaSimulation.getPhase1View().contractSite?.briefing).toBeNull();
+  });
+
+  it("writes briefing factors into completed raid summaries when Porter's prep is online", async () => {
+    await deferredSimulationSystemsReady;
+
+    const snapshot = createPortersOpsSnapshot({ briefingRoom: true, prepRoom: true });
+    snapshot.raidOpportunities = [
+      {
+        id: "opportunity/briefing-factor",
+        missionId: snapshot.contractSite?.missionId ?? "mission/clearance",
+        location: snapshot.contractSite?.location ?? "district/red-hook-waterfront",
+        threat: 44,
+        intel: 62,
+        reward: 132,
+        risk: 34,
+        status: "open",
+        interestedOperatorIds: [],
+        claimedOperatorIds: [],
+        createdTick: 420,
+        expiresAtTick: 900,
+      },
+    ];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.tick(3_600_000);
+    simulation.tick(6 * 60 * 60 * 1000);
+
+    expect(
+      simulation
+        .getPhase1View()
+        .raidSummaries.some((summary) => summary.contributingFactors.includes("briefing:drilled")),
     ).toBe(true);
   });
 
@@ -2189,6 +2827,245 @@ describe("phase 1 runtime", () => {
     expect(restoredRose?.combat).toEqual(rose?.combat);
   });
 
+  it("keeps bodega runs training-free even when an operator wants to train", () => {
+    const { snapshot, operatorId } = createTrainingReadinessSnapshot(false);
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const operatorEntity = simulation.runtimeState.operatorEntities.find(
+      (entity) => OperatorIdentity.id[entity] === operatorId,
+    );
+
+    expect(operatorEntity).toBeDefined();
+    ScheduleState.currentBlock[operatorEntity!] = "training";
+
+    simulation.tick(4 * 60 * 60 * 1000);
+
+    expect(readOperatorTrainingSnapshot(operatorEntity!)).toEqual({
+      strength: 0,
+      speed: 0,
+      endurance: 0,
+      resilience: 0,
+    });
+  });
+
+  it("lets Porter's gym training accrue and improve raid readiness once the room is active", () => {
+    const { snapshot, operatorId } = createTrainingReadinessSnapshot(true);
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const operatorEntity = simulation.runtimeState.operatorEntities.find(
+      (entity) => OperatorIdentity.id[entity] === operatorId,
+    );
+    const opportunityEntity = simulation.runtimeState.raidOpportunityEntities[0];
+
+    expect(operatorEntity).toBeDefined();
+    expect(opportunityEntity).toBeDefined();
+
+    NeedState.hunger[operatorEntity!] = 45;
+    NeedState.fatigue[operatorEntity!] = 55;
+    NeedState.stress[operatorEntity!] = 25;
+    ScheduleState.currentBlock[operatorEntity!] = "idle";
+    const readinessBefore = computeOperatorRaidReadiness(
+      simulation,
+      operatorEntity!,
+      opportunityEntity!,
+    ).readinessScore;
+
+    NeedState.hunger[operatorEntity!] = 10;
+    NeedState.fatigue[operatorEntity!] = 10;
+    NeedState.stress[operatorEntity!] = 5;
+    ScheduleState.currentBlock[operatorEntity!] = "training";
+    simulation.tick(4 * 60 * 60 * 1000);
+
+    const training = readOperatorTrainingSnapshot(operatorEntity!);
+    expect(training.strength).toBeGreaterThan(0);
+    expect(training.endurance).toBeGreaterThan(0);
+
+    NeedState.hunger[operatorEntity!] = 45;
+    NeedState.fatigue[operatorEntity!] = 55;
+    NeedState.stress[operatorEntity!] = 25;
+    ScheduleState.currentBlock[operatorEntity!] = "idle";
+
+    const readinessAfter = computeOperatorRaidReadiness(
+      simulation,
+      operatorEntity!,
+      opportunityEntity!,
+    ).readinessScore;
+
+    expect(readinessAfter).toBeGreaterThan(readinessBefore);
+  });
+
+  it("makes Porter's infirmary and break room improve recovery and morale beyond the public floor", () => {
+    const base = createPortersRecoverySnapshot({});
+    const enhanced = createPortersRecoverySnapshot({ infirmary: true, breakRoom: true });
+    base.snapshot.raidOpportunities = [];
+    enhanced.snapshot.raidOpportunities = [];
+
+    const baseSimulation = createAscensionSimulation(base.snapshot, templateRegistry);
+    const enhancedSimulation = createAscensionSimulation(enhanced.snapshot, templateRegistry);
+
+    baseSimulation.tick(4 * 60 * 60 * 1000);
+    enhancedSimulation.tick(4 * 60 * 60 * 1000);
+
+    const findOperatorEntity = (
+      simulation: ReturnType<typeof createAscensionSimulation>,
+      operatorId: string,
+    ) =>
+      simulation.runtimeState.operatorEntities.find(
+        (entity) => OperatorIdentity.id[entity] === operatorId,
+      );
+
+    const baseInjured = findOperatorEntity(baseSimulation, base.injuredOperatorId);
+    const enhancedInjured = findOperatorEntity(enhancedSimulation, enhanced.injuredOperatorId);
+    const baseStressed = findOperatorEntity(baseSimulation, base.stressedOperatorId);
+    const enhancedStressed = findOperatorEntity(enhancedSimulation, enhanced.stressedOperatorId);
+
+    expect(baseInjured).toBeDefined();
+    expect(enhancedInjured).toBeDefined();
+    expect(baseStressed).toBeDefined();
+    expect(enhancedStressed).toBeDefined();
+    expect(InjuryState.recoveryHoursRemaining[enhancedInjured!]).toBeLessThan(
+      InjuryState.recoveryHoursRemaining[baseInjured!],
+    );
+    expect(InjuryState.severity[enhancedInjured!]).toBeLessThan(InjuryState.severity[baseInjured!]);
+    expect(MoraleState.current[enhancedStressed!]).toBeGreaterThan(
+      MoraleState.current[baseStressed!],
+    );
+    expect(LoyaltyState.current[enhancedStressed!]).toBeGreaterThan(
+      LoyaltyState.current[baseStressed!],
+    );
+  });
+
+  it("makes the waterfront rooms change staging and post-raid recovery, and keeps those factors absent before unlock", () => {
+    const base = createPortersRecoverySnapshot({});
+    const waterfront = createPortersRecoverySnapshot({ dock: true, deck: true });
+    const baseOperatorIds = [
+      base.injuredOperatorId,
+      base.stressedOperatorId,
+      base.snapshot.operators?.[2]?.id ?? "missing",
+    ];
+    const waterfrontOperatorIds = [
+      waterfront.injuredOperatorId,
+      waterfront.stressedOperatorId,
+      waterfront.snapshot.operators?.[2]?.id ?? "missing",
+    ];
+
+    base.snapshot.time.minuteOfDay = 600;
+    waterfront.snapshot.time.minuteOfDay = 600;
+    base.snapshot.raidOpportunities = [];
+    waterfront.snapshot.raidOpportunities = [];
+    base.snapshot.activeRaidPackets = [
+      {
+        id: "raid/recovery-waterfront-base",
+        contractSiteId:
+          base.snapshot.contractSite?.contractSiteId ?? "contract/recovery-waterfront",
+        opportunityId: "opportunity/recovery-waterfront-base",
+        missionId: base.snapshot.contractSite?.missionId ?? "mission/clearance",
+        location: base.snapshot.contractSite?.location ?? "district/red-hook-waterfront",
+        startedAt: "day-2 09:00",
+        startedTick: 3_000,
+        revealProgress: 100,
+        operatorIds: baseOperatorIds,
+        returnTick: (base.snapshot.time.day - 1) * 1_440 + 601,
+        durationHours: 6,
+        threat: 44,
+        intel: 62,
+        reward: 132,
+        cohesion: 58,
+        resolutionPacket: {
+          result: "mixed",
+          reputationDelta: 1,
+          cashDelta: 48,
+          operatorOutcomes: [
+            {
+              operatorId: base.injuredOperatorId,
+              injuryDelta: 10,
+              moraleDelta: -2,
+              loyaltyDelta: -1,
+              status: "hurt",
+            },
+            {
+              operatorId: base.stressedOperatorId,
+              injuryDelta: 0,
+              moraleDelta: -3,
+              loyaltyDelta: -2,
+              status: "shaken",
+            },
+            {
+              operatorId: base.snapshot.operators?.[2]?.id ?? "missing",
+              injuryDelta: 4,
+              moraleDelta: -1,
+              loyaltyDelta: 0,
+              status: "steady",
+            },
+          ],
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+    waterfront.snapshot.activeRaidPackets = [
+      {
+        id: "raid/recovery-waterfront-enhanced",
+        contractSiteId:
+          waterfront.snapshot.contractSite?.contractSiteId ?? "contract/recovery-waterfront",
+        opportunityId: "opportunity/recovery-waterfront-enhanced",
+        missionId: waterfront.snapshot.contractSite?.missionId ?? "mission/clearance",
+        location: waterfront.snapshot.contractSite?.location ?? "district/red-hook-waterfront",
+        startedAt: "day-2 09:00",
+        startedTick: 3_000,
+        revealProgress: 100,
+        operatorIds: waterfrontOperatorIds,
+        returnTick: (waterfront.snapshot.time.day - 1) * 1_440 + 601,
+        durationHours: 5,
+        threat: 44,
+        intel: 62,
+        reward: 132,
+        cohesion: 64,
+        resolutionPacket: {
+          result: "mixed",
+          reputationDelta: 1,
+          cashDelta: 48,
+          operatorOutcomes: [
+            {
+              operatorId: waterfront.injuredOperatorId,
+              injuryDelta: 10,
+              moraleDelta: -2,
+              loyaltyDelta: -1,
+              status: "hurt",
+            },
+            {
+              operatorId: waterfront.stressedOperatorId,
+              injuryDelta: 0,
+              moraleDelta: -3,
+              loyaltyDelta: -2,
+              status: "shaken",
+            },
+            {
+              operatorId: waterfront.snapshot.operators?.[2]?.id ?? "missing",
+              injuryDelta: 4,
+              moraleDelta: -1,
+              loyaltyDelta: 0,
+              status: "steady",
+            },
+          ],
+          narrativeTags: ["dock:staged"],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const baseSimulation = createAscensionSimulation(base.snapshot, templateRegistry);
+    baseSimulation.tick(60_000);
+    const baseSummary = baseSimulation.getPhase1View().raidSummaries[0];
+
+    const waterfrontSimulation = createAscensionSimulation(waterfront.snapshot, templateRegistry);
+    waterfrontSimulation.tick(60_000);
+    const waterfrontSummary = waterfrontSimulation.getPhase1View().raidSummaries[0];
+
+    expect(baseSummary?.contributingFactors ?? []).not.toContain("dock:staged");
+    expect(baseSummary?.contributingFactors ?? []).not.toContain("deck:aired_out");
+    expect(waterfrontSummary?.contributingFactors ?? []).toContain("dock:staged");
+    expect(waterfrontSummary?.contributingFactors ?? []).toContain("deck:aired_out");
+  });
+
   it("preserves unknown visible gear ids but drops malformed slot values", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
     snapshot.operators = snapshot.operators?.map((operator) =>
@@ -2405,6 +3282,7 @@ describe("phase 1 runtime", () => {
         staffingActions: 0,
         upgradesPurchased: 0,
       },
+      lastPurchasedUpgradeId: null,
       openingTiming: {
         firstRaidReturnCompletedAtMinute: null,
         firstIncidentSeededAtMinute: null,
@@ -2493,6 +3371,7 @@ describe("phase 1 runtime", () => {
         staffingActions: 0,
         upgradesPurchased: 0,
       },
+      lastPurchasedUpgradeId: null,
       openingTiming: {
         firstRaidReturnCompletedAtMinute: null,
         firstIncidentSeededAtMinute: null,
@@ -2580,6 +3459,7 @@ describe("phase 1 runtime", () => {
         staffingActions: 0,
         upgradesPurchased: 0,
       },
+      lastPurchasedUpgradeId: null,
       openingTiming: {
         firstRaidReturnCompletedAtMinute: 480,
         firstIncidentSeededAtMinute: null,
@@ -2801,6 +3681,7 @@ describe("relocation save/load through full pipeline", () => {
       openingPathState: "completed",
       activeBeatProgressBaseline: null,
       interactionCounts: { staffingActions: 6, upgradesPurchased: 3 },
+      lastPurchasedUpgradeId: null,
       anchorResolutionFailures: [],
       openingTiming: {
         firstRaidReturnCompletedAtMinute: 300,

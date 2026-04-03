@@ -1,12 +1,48 @@
 import { soa } from "bitecs";
 
 import type { ContractRank } from "content/templates/site-concepts";
+import type { BossWeaknessKind } from "content/templates/shared";
 import type { PolicyState } from "lib/policies";
 import type { RaidRunSnapshot } from "save/types";
 
 // ── Contract lifecycle ──────────────────────────────────────────────────
 
 export type ContractLifecyclePhase = "idle" | "bidding" | "active" | "resolved";
+
+export type ContractBoardIntelSource = "street" | "back_office" | "office";
+export type ContractBoardIntelQuality = "rough" | "reviewed" | "dossier";
+
+export interface ContractBoardIntelState {
+  /**
+   * Which operations room produced the current board read.
+   * This belongs to posted contracts only and should not be inferred in UI.
+   */
+  source: ContractBoardIntelSource;
+  /** How complete and trustworthy the posted-contract read is. */
+  quality: ContractBoardIntelQuality;
+}
+
+export type ContractBriefingSource = "briefing_room" | "briefing_room_and_prep";
+export type ContractBriefingStatus = "briefed" | "drilled";
+
+export interface ContractBriefingState {
+  /**
+   * Which Porter's prep layer is currently feeding the secured contract.
+   * This belongs to the active contract only and must remain runtime-owned.
+   */
+  source: ContractBriefingSource;
+  /** Whether the team only has the room briefing or a full drilled send-off. */
+  status: ContractBriefingStatus;
+  /** Added to each raid opportunity's effective intel while this prep state is active. */
+  opportunityIntelBonus: number;
+  /** Added to boss-read progress checks when a team launches under this prep state. */
+  bossIntelBonus: number;
+}
+
+export interface ContractBossWeaknessIntel {
+  kind: BossWeaknessKind;
+  target: string;
+}
 
 export interface PostedContract {
   postingId: string;
@@ -33,6 +69,8 @@ export interface PostedContract {
   bossHint: string | null;
   /** Neighborhood label for display. */
   neighborhoodLabel: string;
+  /** Runtime-owned board intel provenance for the current posting. */
+  boardIntel: ContractBoardIntelState;
 }
 
 export interface ContractResultSummary {
@@ -81,6 +119,8 @@ export interface ActiveRaidPacketRecord {
   intel: number;
   reward: number;
   cohesion: number;
+  briefingSource: ContractBriefingSource | null;
+  briefingStatus: ContractBriefingStatus | null;
   resolutionPacket: ActiveRaidResolutionPacket;
   raidRun?: RaidRunSnapshot;
 }
@@ -133,6 +173,10 @@ export interface ContractSiteState {
   intel: number;
   /** Reward baseline for runs into this site. */
   reward: number;
+  /** Runtime-owned board read copied from the secured posting. */
+  boardIntel: ContractBoardIntelState;
+  /** Runtime-owned secured-contract prep state. Null until the Briefing Room comes online. */
+  briefing: ContractBriefingState | null;
   /** Tick when the contract was secured. */
   securedAtTick: number;
   /** Site progress: exploration completion 0-100. */

@@ -49,6 +49,20 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
         intelligence: 6,
       },
     },
+    training: {
+      strength: 40,
+      speed: 35,
+      endurance: 45,
+      resilience: 30,
+      average: 38,
+      statusLabel: "Conditioning",
+      bonuses: {
+        strength: 1,
+        speed: 1,
+        endurance: 1,
+        resilience: 1,
+      },
+    },
     refusalRisk: false,
     quitRisk: false,
     retentionRisk: false,
@@ -242,6 +256,8 @@ describe("roster panel", () => {
     expect(html).toContain("Recovering");
     expect(html).toContain("Recovery Standards: Full Recovery.");
     expect(html).toContain("injury severity 42");
+    expect(html).toContain("Training Readiness");
+    expect(html).toContain("Conditioning (38)");
     expect(html).toContain("Combat Profile");
     expect(html).toContain("Standard Issue");
   });

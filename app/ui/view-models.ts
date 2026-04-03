@@ -26,6 +26,7 @@ import {
   type Phase2InventoryView,
   type Phase2View,
 } from "sim";
+import { getTrainingDerivedBonus, getTrainingStatusLabel } from "sim/systems/training";
 import { getBuildingFloors } from "content/building-layouts";
 import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
 import { visitorQualityToRank } from "lib/visitor-rank";
@@ -111,6 +112,13 @@ export interface RoomFootprintViewModel {
   rows: number;
 }
 
+export interface RoomTrainingViewModel {
+  currentTraineeCount: number;
+  currentTraineeNames: readonly string[];
+  rosterAverageReadiness: number;
+  rateModifier: number;
+}
+
 export interface RoomViewModel {
   id: string;
   templateId: string;
@@ -132,6 +140,7 @@ export interface RoomViewModel {
   reservedFootprint: RoomFootprintViewModel;
   activeFootprint: RoomFootprintViewModel;
   prepRecipes: readonly PrepRecipeViewModel[];
+  training: RoomTrainingViewModel | null;
 }
 
 export interface ExpansionSlotViewModel {
@@ -276,6 +285,23 @@ export interface OperatorCombatViewModel {
   baseStats: OperatorCombatStatsViewModel;
 }
 
+export interface OperatorTrainingBonusesViewModel {
+  strength: number;
+  speed: number;
+  endurance: number;
+  resilience: number;
+}
+
+export interface OperatorTrainingViewModel {
+  strength: number;
+  speed: number;
+  endurance: number;
+  resilience: number;
+  average: number;
+  statusLabel: string;
+  bonuses: OperatorTrainingBonusesViewModel;
+}
+
 export interface RosterPressureViewModel {
   operatorCapacity: number;
   livingOperatorCount: number;
@@ -312,6 +338,7 @@ export interface OperatorViewModel {
   visibleGear: VisibleGear;
   lifecycle: OperatorLifecycleViewModel;
   combat: OperatorCombatViewModel;
+  training: OperatorTrainingViewModel;
   /** Phase 2: operator may refuse raid assignments due to low morale. */
   refusalRisk: boolean;
   /** Phase 2: operator may quit due to critically low morale. */
@@ -568,6 +595,16 @@ export interface ContractSiteViewModel {
   closureThreshold: number;
   requiresBossClear: boolean;
   bossAvailable: boolean;
+  boardIntel: {
+    source: "street" | "back_office" | "office";
+    quality: "rough" | "reviewed" | "dossier";
+  };
+  briefing: {
+    source: "briefing_room" | "briefing_room_and_prep";
+    status: "briefed" | "drilled";
+    opportunityIntelBonus: number;
+    bossIntelBonus: number;
+  } | null;
   knownTraits: readonly string[];
   enemyHints: readonly string[];
   lootFamilyHints: readonly string[];
@@ -596,6 +633,10 @@ export interface PostedContractViewModel {
   lootFamilyHints: readonly string[];
   bossHint: string | null;
   neighborhoodLabel: string;
+  boardIntel: {
+    source: "street" | "back_office" | "office";
+    quality: "rough" | "reviewed" | "dossier";
+  };
 }
 
 export interface ContractBossWeaknessViewModel {
@@ -819,62 +860,77 @@ function mapCombatViewModel(combat: {
   };
 }
 
-function buildContractBossSurface(
-  missionId: string,
-  concept: { bossId?: string } | undefined,
-  registry: TemplateRegistry,
-): {
-  bossName: string | null;
-  bossTags: readonly string[];
-  bossWeaknesses: readonly ContractBossWeaknessViewModel[];
-} {
-  const missionBoss = registry.missionById.get(missionId)?.combatProfile?.boss ?? null;
-  const siteBossId = concept?.bossId ?? null;
-  const siteBoss = siteBossId ? (registry.bossById.get(siteBossId) ?? null) : null;
-  const boss = missionBoss ?? siteBoss;
-
-  if (!boss) {
-    return {
-      bossName: null,
-      bossTags: [],
-      bossWeaknesses: [],
-    };
-  }
+function buildOperatorTrainingViewModel(training?: {
+  strength?: number;
+  speed?: number;
+  endurance?: number;
+  resilience?: number;
+}): OperatorTrainingViewModel {
+  const strength = Math.round(training?.strength ?? 0);
+  const speed = Math.round(training?.speed ?? 0);
+  const endurance = Math.round(training?.endurance ?? 0);
+  const resilience = Math.round(training?.resilience ?? 0);
+  const average = Math.round((strength + speed + endurance + resilience) / 4);
 
   return {
-    bossName: boss.name,
-    bossTags: [...boss.tags],
-    bossWeaknesses: boss.weaknesses.map((weakness) => ({
-      kind: weakness.kind,
-      target: weakness.target,
-    })),
+    strength,
+    speed,
+    endurance,
+    resilience,
+    average,
+    statusLabel: getTrainingStatusLabel(average),
+    bonuses: {
+      strength: getTrainingDerivedBonus(strength),
+      speed: getTrainingDerivedBonus(speed),
+      endurance: getTrainingDerivedBonus(endurance),
+      resilience: getTrainingDerivedBonus(resilience),
+    },
   };
 }
 
-function buildContractSiteSurface(
-  missionId: string,
-  siteConceptId: string,
-  registry: TemplateRegistry,
-): {
-  siteSummary: string;
-  neighborhoodLabel: string;
-  knownTraits: readonly string[];
-  enemyHints: readonly string[];
-  lootFamilyHints: readonly string[];
-  bossName: string | null;
-  bossTags: readonly string[];
-  bossWeaknesses: readonly ContractBossWeaknessViewModel[];
-} {
-  const concept = siteConceptById.get(siteConceptId);
-  const bossSurface = buildContractBossSurface(missionId, concept, registry);
+function buildRoomTrainingViewModel(
+  room: {
+    tags: readonly string[];
+    isOperational?: boolean;
+  },
+  operators: ReadonlyArray<{
+    identity: { name: string };
+    lifecycle: { status: string };
+    schedule: { currentBlock: string };
+    training?: {
+      strength?: number;
+      speed?: number;
+      endurance?: number;
+      resilience?: number;
+    };
+  }>,
+  rateModifier: number,
+): RoomTrainingViewModel | null {
+  if (!room.tags.includes("room:training")) {
+    return null;
+  }
+
+  const activeOperators = operators.filter((operator) => operator.lifecycle.status === "active");
+  const trainees = activeOperators.filter(
+    (operator) => operator.schedule.currentBlock === "training",
+  );
+  const rosterAverageReadiness =
+    activeOperators.length === 0
+      ? 0
+      : Math.round(
+          activeOperators.reduce(
+            (total, operator) => total + buildOperatorTrainingViewModel(operator.training).average,
+            0,
+          ) / activeOperators.length,
+        );
 
   return {
-    siteSummary: concept?.conceptSummary ?? "Operational read pending.",
-    neighborhoodLabel: concept?.worldSpaceLabel ?? "",
-    knownTraits: [...(concept?.threatProfileTags ?? []), ...(concept?.hazardTags ?? [])],
-    enemyHints: [...(concept?.enemyFamilyIds ?? [])],
-    lootFamilyHints: [...(concept?.lootThemeLabels ?? [])],
-    ...bossSurface,
+    currentTraineeCount: room.isOperational ? trainees.length : 0,
+    currentTraineeNames: room.isOperational
+      ? trainees.map((operator) => operator.identity.name)
+      : [],
+    rosterAverageReadiness,
+    rateModifier: Math.round(rateModifier * 100),
   };
 }
 
@@ -979,6 +1035,11 @@ export function buildHqViewFromPhase1(
         inventory ?? [],
         registry,
       ),
+      training: buildRoomTrainingViewModel(
+        { tags: template.tags, isOperational: room.isOperational },
+        view.operators,
+        view.building.trainingRateModifier,
+      ),
     };
   });
 
@@ -1038,6 +1099,7 @@ export function buildHqViewFromPhase1(
     visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
     lifecycle: extractLifecycle(op.lifecycle),
     combat: mapCombatViewModel(op.combat),
+    training: buildOperatorTrainingViewModel(op.training),
     // Phase 2: defaults until enriched via enrichOperatorsWithAutonomy
     refusalRisk: false,
     quitRisk: false,
@@ -1286,18 +1348,13 @@ export function buildOpsViewFromPhase1(
 
   const contractSite: ContractSiteViewModel | null = view.contractSite
     ? (() => {
-        const siteSurface = buildContractSiteSurface(
-          view.contractSite.missionId,
-          view.contractSite.siteConceptId,
-          registry,
-        );
         return {
           contractSiteId: view.contractSite.contractSiteId,
           missionName: resolveMissionName(view.contractSite.missionId, registry),
           missionId: view.contractSite.missionId,
           siteConceptName: view.contractSite.siteConceptName ?? "Unknown Site",
-          siteSummary: siteSurface.siteSummary,
-          neighborhoodLabel: siteSurface.neighborhoodLabel,
+          siteSummary: view.contractSite.siteSummary,
+          neighborhoodLabel: view.contractSite.neighborhoodLabel,
           location: getLocationLabel(view.contractSite.location),
           rank: (view.contractSite.rank ?? "f").toUpperCase(),
           bossDefeated: view.contractSite.bossDefeated,
@@ -1311,12 +1368,14 @@ export function buildOpsViewFromPhase1(
           closureThreshold: view.contractSite.closureThreshold ?? 100,
           requiresBossClear: view.contractSite.requiresBossClear ?? false,
           bossAvailable: view.contractSite.bossAvailable ?? false,
-          knownTraits: siteSurface.knownTraits,
-          enemyHints: siteSurface.enemyHints,
-          lootFamilyHints: siteSurface.lootFamilyHints,
-          bossName: siteSurface.bossName,
-          bossTags: siteSurface.bossTags,
-          bossWeaknesses: siteSurface.bossWeaknesses,
+          boardIntel: view.contractSite.boardIntel,
+          briefing: view.contractSite.briefing,
+          knownTraits: view.contractSite.knownTraits ?? [],
+          enemyHints: view.contractSite.enemyHints ?? [],
+          lootFamilyHints: view.contractSite.lootFamilyHints ?? [],
+          bossName: view.contractSite.bossName ?? null,
+          bossTags: view.contractSite.bossTags ?? [],
+          bossWeaknesses: view.contractSite.bossWeaknesses ?? [],
         };
       })()
     : null;
@@ -1365,6 +1424,7 @@ export function buildOpsViewFromPhase1(
       lootFamilyHints: p.lootFamilyHints ?? [],
       bossHint: p.bossHint ?? null,
       neighborhoodLabel: p.neighborhoodLabel ?? concept?.worldSpaceLabel ?? "",
+      boardIntel: p.boardIntel ?? { source: "street", quality: "rough" },
     };
   });
 
@@ -1440,6 +1500,11 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       reservedFootprint,
       activeFootprint,
       prepRecipes: [],
+      training: buildRoomTrainingViewModel(
+        { tags: template.tags, isOperational: room.isActive ?? true },
+        snapshot.operators ?? [],
+        0,
+      ),
     };
   });
 
@@ -1522,6 +1587,14 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       ),
       lifecycle,
       combat: mapCombatViewModel(combat),
+      training: buildOperatorTrainingViewModel(
+        rec(op as Record<string, unknown>, "training") as {
+          strength?: number;
+          speed?: number;
+          endurance?: number;
+          resilience?: number;
+        } | null,
+      ),
       refusalRisk: false,
       quitRisk: false,
       retentionRisk: false,

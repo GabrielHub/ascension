@@ -73,6 +73,7 @@ function createMinimalContext(): SimSystemContext {
           staffingActions: 0,
           upgradesPurchased: 0,
         },
+        lastPurchasedUpgradeId: null,
       },
       kitRegistry: {
         regularAttacks: [],
