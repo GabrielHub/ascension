@@ -84,7 +84,7 @@ export const roomTemplates = [
     name: "The Floor",
     tags: ["room:social", "room:recovery"],
     description:
-      "The public dining room. Meals, decompression, and the kind of loud conversation that keeps people coming back.",
+      "Worn hardwood, mismatched chairs, and a ceiling fan that works when it feels like it. The public dining room where operators eat alongside regulars and nobody asks about the bruises.",
     tier: 1,
     baseCapacity: 4,
     availableInBuildings: ["building/porters"],
@@ -95,7 +95,7 @@ export const roomTemplates = [
     name: "The Bar",
     tags: ["room:social", "ops:recruitment"],
     description:
-      "Recruitment happens over drinks now. Prospects come for the atmosphere and stay for the pitch.",
+      "A long oak bar with too many taps and not enough stools. Prospects wander in for the drinks and leave with a business card and a vague sense of obligation.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -106,7 +106,7 @@ export const roomTemplates = [
     name: "The Office",
     tags: ["room:operations", "ops:intel", "staff:admin"],
     description:
-      "An upstairs room with a real desk, filing cabinets, and a door that closes. Admin, contracts, and intel live here now.",
+      "An upstairs room with a real desk, filing cabinets, and a door that actually closes. The first time admin work has had its own space instead of sharing a counter with sandwich orders.",
     tier: 1,
     baseCapacity: 2,
     availableInBuildings: ["building/porters"],
@@ -117,7 +117,7 @@ export const roomTemplates = [
     name: "The Stockroom",
     tags: ["room:staffing", "staff:logistics"],
     description:
-      "Proper shelving, labeled crates, and enough floor space to stage a loadout without tripping over mops.",
+      "Industrial shelving, labeled crates, and enough floor space to lay out a full loadout without knocking anything over. Smells like packing tape and old wood.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -128,7 +128,7 @@ export const roomTemplates = [
     name: "The Infirmary",
     tags: ["room:recovery", "staff:medical"],
     description:
-      "The first real recovery room. A cot, a cabinet of supplies, and someone who knows how to use them.",
+      "A cot with actual sheets, a locked supply cabinet, and overhead lighting that does not flicker. The first time someone getting patched up does not have to share the room with lunch.",
     tier: 1,
     baseCapacity: 2,
     availableInBuildings: ["building/porters"],
@@ -139,7 +139,7 @@ export const roomTemplates = [
     name: "The Gym",
     tags: ["room:training"],
     description:
-      "Scrappy but real. A heavy bag, a weight bench, and enough room to swing without hitting a wall.",
+      "A heavy bag bolted to the ceiling, a weight bench that wobbles on one side, and rubber mats taped to the floor. Scrappy, but the first place operators can actually train between jobs.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -150,7 +150,7 @@ export const roomTemplates = [
     name: "The Prep Room",
     tags: ["room:operations", "ops:staging", "staff:logistics"],
     description:
-      "Staging and lightweight consumable prep from monster drops. Not a workshop, but enough to send teams out ready.",
+      "A back room with a steel table, wall hooks, and bins of salvaged monster parts. Not a workshop — more like a field kitchen where someone who knows what they are doing can turn raw drops into something useful.",
     tier: 1,
     baseCapacity: 2,
     availableInBuildings: ["building/porters"],
@@ -161,7 +161,7 @@ export const roomTemplates = [
     name: "The Break Room",
     tags: ["room:social", "room:recovery"],
     description:
-      "A private upstairs space away from customers. Somewhere staff and operators can sit without performing.",
+      "A converted apartment with a secondhand couch, a coffee maker that runs all day, and no customers. The only room in the building where nobody has to smile at strangers.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -172,7 +172,7 @@ export const roomTemplates = [
     name: "The Briefing Room",
     tags: ["room:operations", "ops:intel"],
     description:
-      "A dedicated planning and review space with a board, a map, and enough chairs for the whole team.",
+      "A whiteboard, a corkboard covered in pinned photos, and a folding table big enough for the whole squad. The room where contracts stop being paperwork and start being plans.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -183,7 +183,7 @@ export const roomTemplates = [
     name: "The Dock",
     tags: ["room:operations", "ops:staging"],
     description:
-      "Waterfront staging and departure surface. Teams leave from here when the harbor route is faster.",
+      "Creosote pilings, a concrete apron, and enough clearance to stage a full squad at the water's edge. When the harbor route is faster, teams leave from here instead of hailing a cab.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/porters"],
@@ -194,7 +194,7 @@ export const roomTemplates = [
     name: "The Deck",
     tags: ["room:social"],
     description:
-      "An open waterfront platform with harbor air and industrial skyline. Downtime with a view.",
+      "An open platform over the water with salt air, industrial skyline, and the kind of quiet that only happens when the city is behind you. Downtime hits different out here.",
     tier: 1,
     baseCapacity: 4,
     availableInBuildings: ["building/porters"],

@@ -164,6 +164,7 @@ function createIncidentContext(options?: {
         passiveById: new Map(),
       },
       worldTimeFrozen: false,
+      deferIncidentPresentation: false,
     },
   };
 }
@@ -182,12 +183,17 @@ describe("incident interruption payloads", () => {
     const incident: PendingIncident = {
       instanceId: "incident-1",
       templateId: "incident/injury-complication",
+      templateName: template!.name,
+      category: template!.category,
+      tags: [...template!.tags],
       triggerFamily: "injury_setback",
       createdAtMinute: 120,
       boundContext: {
         operatorIds: ["operator/vera-santos"],
       },
       choices: template?.choices ?? [],
+      presenterId: template?.presenterId,
+      presenterExpression: template?.presenterExpression,
     };
 
     const payload = createIncidentInterruptionPayload(incident, template!, {
@@ -206,6 +212,9 @@ describe("incident interruption payloads", () => {
     const incident: PendingIncident = {
       instanceId: "incident-porters-1",
       templateId: "incident/kitchen-standards-slip",
+      templateName: template!.name,
+      category: template!.category,
+      tags: [...template!.tags],
       triggerFamily: "room_breakdown",
       createdAtMinute: 120,
       boundContext: {
@@ -213,6 +222,8 @@ describe("incident interruption payloads", () => {
         roomId: "room-instance/prep",
       },
       choices: template?.choices ?? [],
+      presenterId: template?.presenterId,
+      presenterExpression: template?.presenterExpression,
     };
 
     const payload = createIncidentInterruptionPayload(
@@ -333,12 +344,17 @@ describe("incident interruption payloads", () => {
       {
         instanceId: "incident-1",
         templateId: template!.id,
+        templateName: template!.name,
+        category: template!.category,
+        tags: [...template!.tags],
         triggerFamily: template!.triggerFamily,
         createdAtMinute: 600,
         boundContext: {
           operatorIds: ["operator/a", "operator/b"],
         },
         choices: template!.choices,
+        presenterId: template!.presenterId,
+        presenterExpression: template!.presenterExpression,
       },
       "incident-system",
     );

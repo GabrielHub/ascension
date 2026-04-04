@@ -1,3 +1,12 @@
+export type AiRuntimeKind = "ollama" | "lm-studio" | "llama-cpp";
+
+export interface AiSettings {
+  enabled: boolean;
+  runtimeKind: AiRuntimeKind;
+  baseUrl: string;
+  modelId: string;
+}
+
 export interface GameSettings {
   audio: {
     sfxVolumeDb: number;
@@ -5,6 +14,7 @@ export interface GameSettings {
   };
   wakeLockEnabled: boolean;
   tutorialEventsEnabled: boolean;
+  ai: AiSettings;
 }
 
 interface StorageLike {
@@ -18,6 +28,27 @@ export const DEFAULT_MUSIC_VOLUME_DB = -12;
 export const MIN_VOLUME_DB = -40;
 export const MAX_VOLUME_DB = 0;
 
+const VALID_AI_RUNTIME_KINDS: ReadonlySet<string> = new Set<AiRuntimeKind>([
+  "ollama",
+  "lm-studio",
+  "llama-cpp",
+]);
+export const RUNTIME_DEFAULT_URLS: Record<AiRuntimeKind, string> = {
+  ollama: "http://127.0.0.1:11434/v1",
+  "lm-studio": "http://127.0.0.1:1234/v1",
+  "llama-cpp": "http://127.0.0.1:8080/v1",
+};
+
+export const DEFAULT_AI_BASE_URL = RUNTIME_DEFAULT_URLS.ollama;
+export const DEFAULT_AI_MODEL_ID = "gemma4:26b";
+
+export const DEFAULT_AI_SETTINGS: AiSettings = {
+  enabled: false,
+  runtimeKind: "ollama",
+  baseUrl: DEFAULT_AI_BASE_URL,
+  modelId: DEFAULT_AI_MODEL_ID,
+};
+
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
   audio: {
     sfxVolumeDb: DEFAULT_SFX_VOLUME_DB,
@@ -25,6 +56,7 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
   },
   wakeLockEnabled: true,
   tutorialEventsEnabled: true,
+  ai: DEFAULT_AI_SETTINGS,
 };
 
 function getStorage(storage?: StorageLike): StorageLike | undefined {
@@ -47,6 +79,25 @@ function clampVolumeDb(value: unknown, fallback: number): number {
   return Math.max(MIN_VOLUME_DB, Math.min(MAX_VOLUME_DB, Math.round(value)));
 }
 
+function normalizeAiSettings(input: unknown): AiSettings {
+  const record = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  return {
+    enabled: typeof record.enabled === "boolean" ? record.enabled : DEFAULT_AI_SETTINGS.enabled,
+    runtimeKind:
+      typeof record.runtimeKind === "string" && VALID_AI_RUNTIME_KINDS.has(record.runtimeKind)
+        ? (record.runtimeKind as AiRuntimeKind)
+        : DEFAULT_AI_SETTINGS.runtimeKind,
+    baseUrl:
+      typeof record.baseUrl === "string" && record.baseUrl.trim().length > 0
+        ? record.baseUrl.trim()
+        : DEFAULT_AI_SETTINGS.baseUrl,
+    modelId:
+      typeof record.modelId === "string" && record.modelId.trim().length > 0
+        ? record.modelId.trim()
+        : DEFAULT_AI_SETTINGS.modelId,
+  };
+}
+
 export function normalizeGameSettings(input: unknown): GameSettings {
   const record = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   const audioRecord =
@@ -67,6 +118,7 @@ export function normalizeGameSettings(input: unknown): GameSettings {
       typeof record.tutorialEventsEnabled === "boolean"
         ? record.tutorialEventsEnabled
         : DEFAULT_GAME_SETTINGS.tutorialEventsEnabled,
+    ai: normalizeAiSettings(record.ai),
   };
 }
 

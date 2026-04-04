@@ -133,39 +133,30 @@ The first cross-building HQ day-night pass is no longer a standalone future mile
 
 Goal: prove that the second headquarters changes management decisions because its specialized rooms matter, not just because Porter's has more slots and bigger numbers.
 
-Status: final design closeout.
+Status: shipped.
 
-Shipped so far inside this milestone:
+Shipped inside this milestone:
 
 - Porter's gym and shared `room:training` tag now drive a real bounded readiness system instead of placeholder copy or schedule affinity alone.
 - Porter's Office and Briefing Room now change contract reading and raid preparation through board intel, briefing state, save-safe writeback, and player-facing contract surfaces.
 - Porter's Infirmary, Break Room, Dock, and Deck now change recovery, morale, decompression, and staging outcomes through simulation-owned room effects, post-raid factors, and room-detail feedback.
 - Porter's management guidance, deterministic campaign harness, and browser regression now exercise the canonical Kitchen Overhaul-through-Waterfront upgrade path and prove the unlocked rooms are actually used.
+- HQ panel now shows building name, floor zone badges (Public/Private/Waterfront), and atmospheric floor descriptions for both Porter's and the bodega.
+- All 11 Porter's rooms and all 7 bodega rooms have hardcoded building-aware "Why This Room Matters" copy instead of generic tag-based fallback text.
+- Staffing pressure cards use room-specific language explaining what each room needs staff for, instead of generic tag labels.
 
 Active execution plans:
 
-- `docs/plans/porters-design-revision-plan.md`
+- `docs/plans/ai-content-layer-plan.md`
 
-The Porter's baseline, systems passes, and campaign-validation pass are shipped. The remaining work is the follow-up design revision that keeps copy, UI hierarchy, and supporting assets aligned with what the runtime already does before the roadmap expands again into broader midgame pressure.
+The Porter's design revision pass is shipped. Copy, UI hierarchy, and floor-zone presentation now match the shipped room differentiation.
 
-Deliverables:
+AI content layer infrastructure is shipped: settings storage, project-owned AI module with OpenAI-compatible transport, runtime session AI commands with request registry and dedup, dev console AI commands (`/ai status`, `/ai probe`, `/ai generate`, `/ai regenerate`, `/ai inspect`), settings modal with local AI configuration, and a host-aware desktop adapter for the same local AI contract.
+The first shipped generation surfaces are now live behind that infrastructure:
 
-- keep the shipped training, contract-prep, recovery, and waterfront outputs readable in normal play through final UI/copy hierarchy work instead of debugger-only context
-- update roadmap, product, or world wording only where the shipped Porter's behavior materially changed future-facing language
-- use D-rank contract/site breadth and second-building staffing pressure as the validation context for the already-shipped Porter's room differences
-
-Execution framing:
-
-- treat the remaining pass as presentation, copy, and asset follow-through on the shipped systems and campaign work
-- do not reopen the finished training, contract-prep, recovery/waterfront, or upgrade-campaign passes unless verification exposes a concrete regression
-- keep this pass inside the shipped Porter's building instead of opening a third headquarters, full crafting, or city-institution pressure at the same time
-
-Exit criteria:
-
-- a Porter's run creates decisions that do not exist in the bodega because specialized rooms change outcomes, not just capacity
-- the shipped Porter's mechanics are readable in normal play without depending on debugger-only context, placeholder copy, or stale bodega wording
-- the player's reason to keep upgrading Porter's is operational differentiation, not only bigger numbers
-- this pass does not open full crafting, city-institution pressure, or a new headquarters tier early
+- `incident-framing` for interruption presentation
+- `operator-identity` for recruit identity packets
+  Both surfaces stay non-authoritative. The simulation still owns triggers, legal choices, numeric effects, role identity, and save-safe state transitions; AI only rewrites allowed presentation or constrained structured identity packets inside project-owned validation.
 
 ## Phase 4: Midgame Systems
 

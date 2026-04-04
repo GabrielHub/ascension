@@ -1,7 +1,7 @@
 /**
  * HQ environment parts metadata — typed asset index, tagged search, and validation.
  *
- * Design-owned. Consumes the shipped metadata index for the bodega HQ art set.
+ * Design-owned. Consumes the shipped metadata index for the HQ environment art sets.
  * Does not invent gameplay logic.
  */
 
@@ -429,10 +429,15 @@ export function defaultPresetId(): string {
 /** Resolve the retained building shell asset URL. */
 export function resolveShellAssetUrl(buildingId = "building/bodega"): string {
   const parts = getLoadedEnvParts(buildingId);
-  const { paths } =
+  const renderConfig =
     getHqEnvironmentRenderConfigForBuilding(buildingId) ?? getHqEnvironmentRenderConfig();
-  const shell = findEnvPartById(parts, "shell/iso-bodega-shell");
-  return shell
-    ? envPartSvgPath(shell, getLoadedEnvPartsIndex(buildingId))
-    : `${paths.partsRoot}/shell/iso-bodega-shell.svg`;
+  const shell = parts.find((part) => part.category === "shell");
+  if (shell) {
+    return envPartSvgPath(shell, getLoadedEnvPartsIndex(buildingId));
+  }
+
+  const buildingShellUrl = `${renderConfig.paths.partsRoot}/shell/iso-${renderConfig.building}-shell.svg`;
+  return renderConfig.building === "bodega"
+    ? buildingShellUrl
+    : `${renderConfig.paths.partsRoot}/shell/iso-bodega-shell.svg`;
 }

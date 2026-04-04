@@ -343,6 +343,91 @@ fn desktop_save_import_json(
   })
 }
 
+// ── AI runtime commands ────────────────────────────────────────────────
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AiProbeResult {
+  status: String,
+  available_models: Vec<String>,
+  error: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AiGenerateRequest {
+  base_url: String,
+  model_id: String,
+  system_prompt: String,
+  user_prompt: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AiGenerateResult {
+  content: String,
+}
+
+#[tauri::command]
+async fn desktop_ai_probe_runtime(
+  base_url: String,
+  model_id: String,
+) -> Result<AiProbeResult, String> {
+  let url = format!("{}/models", base_url);
+  let response = reqwest::get(&url)
+    .await
+    .map_err(|error| error.to_string())?
+    .error_for_status()
+    .map_err(|error| error.to_string())?;
+  let body: Value = response.json().await.map_err(|error| error.to_string())?;
+  let models: Vec<String> = body
+    .get("data")
+    .and_then(Value::as_array)
+    .map(|items| {
+      items
+        .iter()
+        .filter_map(|model| model.get("id").and_then(Value::as_str).map(String::from))
+        .collect()
+    })
+    .unwrap_or_default();
+  let found = models.iter().any(|id| id == &model_id || id.starts_with(&format!("{}:", model_id)));
+  Ok(AiProbeResult {
+    status: if found { "connected".into() } else { "model-missing".into() },
+    available_models: models,
+    error: if found { None } else { Some(format!("Model '{}' not found", model_id)) },
+  })
+}
+
+#[tauri::command]
+async fn desktop_ai_generate(request: AiGenerateRequest) -> Result<AiGenerateResult, String> {
+  let url = format!("{}/chat/completions", request.base_url);
+  let body = serde_json::json!({
+    "model": request.model_id,
+    "messages": [
+      { "role": "system", "content": request.system_prompt },
+      { "role": "user", "content": request.user_prompt },
+    ],
+    "temperature": 0.7,
+    "response_format": { "type": "json_object" },
+  });
+  let client = reqwest::Client::new();
+  let response = client
+    .post(&url)
+    .header("Content-Type", "application/json")
+    .json(&body)
+    .send()
+    .await
+    .map_err(|error| error.to_string())?
+    .error_for_status()
+    .map_err(|error| error.to_string())?;
+  let resp_body: Value = response.json().await.map_err(|error| error.to_string())?;
+  let content = resp_body["choices"][0]["message"]["content"]
+    .as_str()
+    .ok_or("No content in response")?
+    .to_string();
+  Ok(AiGenerateResult { content })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -359,7 +444,9 @@ pub fn run() {
       desktop_save_write_slot,
       desktop_save_delete_slot,
       desktop_save_export_json,
-      desktop_save_import_json
+      desktop_save_import_json,
+      desktop_ai_probe_runtime,
+      desktop_ai_generate
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

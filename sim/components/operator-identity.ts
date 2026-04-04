@@ -5,6 +5,8 @@ export const OperatorIdentity = soa({
   name: [] as string[],
   roleTag: [] as string[],
   specialtyTag: [] as string[],
+  personaSummary: [] as string[],
+  personaHooks: [] as string[][],
   appearancePresetId: [] as string[],
   appearanceWeaponPartId: [] as string[],
   appearanceOutfitOverlayPartId: [] as string[],

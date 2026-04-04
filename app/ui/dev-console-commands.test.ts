@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { saveStorage } from "save";
 
 import {
   executeConsoleCommand,
@@ -13,11 +15,20 @@ function createContext(): DevConsoleContext {
   const startAutoTick = vi.fn();
   const setActiveFloor = vi.fn(() => Promise.resolve());
   const setRoomActive = vi.fn(() => Promise.resolve());
+  const probeAiRuntime = vi.fn(() => Promise.resolve());
+  const generateAiSurface = vi.fn(() => Promise.resolve());
+  const regenerateAiSurface = vi.fn(() => Promise.resolve());
 
   return {
     session: {
       mode: "preview",
       isPreview: true,
+      slotId: undefined,
+      ai: {
+        connectionStatus: "unknown",
+        lastProbe: null,
+        requests: new Map(),
+      },
       commands: {
         dispatch,
         tick: vi.fn(() => Promise.resolve()),
@@ -42,16 +53,21 @@ function createContext(): DevConsoleContext {
         autoAssignAccessory: vi.fn(() => Promise.resolve()),
         unequipItem: vi.fn(() => Promise.resolve()),
         prepConsumable: vi.fn(() => Promise.resolve()),
+        probeAiRuntime,
+        generateAiSurface,
+        regenerateAiSurface,
       },
       lifecycle: {
         startAutoTick,
         stopAutoTick,
       },
       phase1View: {
+        identity: { guildName: "Testing Guild", playerName: "Test" },
         clock: { day: 2, minuteOfDay: 600 },
         resources: { cash: 500, reputation: 10, intel: 25 },
         building: {
           activeBuildingId: "building/bodega",
+          activeBuildingName: "Bodega HQ",
           tier: 1,
           activeFloorIndex: 0,
           floorCount: 2,
@@ -74,10 +90,73 @@ function createContext(): DevConsoleContext {
         contractLifecycle: "bidding",
         activeInterruption: null,
         encounter: null,
+        relationshipSignals: [
+          {
+            operatorAId: "operator/rose",
+            operatorBId: "operator/milo",
+            trust: 61,
+            friction: 16,
+            familiarity: 44,
+            recentSharedOutcome: 8,
+            historyTags: ["history:starting_roster", "bond:field_pair"],
+            cohesion: 45,
+          },
+        ],
         operators: [
           {
             id: "operator/rose",
-            identity: { name: "Rose Vega", roleTag: "role:scout" },
+            identity: {
+              name: "Rose Vega",
+              roleTag: "role:scout",
+              specialtyTag: "focus:extraction",
+            },
+            combat: {
+              attunementTag: "attunement:void",
+              rank: "f",
+              traits: ["trait:alert", "trait:evasive"],
+            },
+            morale: { current: 63, baseline: 63 },
+            loyalty: { current: 58, baseline: 58 },
+            needs: { stress: 14, fatigue: 22, hunger: 15 },
+            injury: { severity: 0, recoveryHoursRemaining: 0, treated: false },
+            preferences: {
+              riskTolerance: 61,
+              rewardFocus: 71,
+              recoveryBias: 42,
+              socialBias: 46,
+              trainingBias: 54,
+              comfortBias: 48,
+              preferredMissionTags: ["mission:retrieval", "objective:escort"],
+              preferredPartnerIds: ["operator/milo"],
+            },
+            lifecycle: { status: "active" },
+          },
+          {
+            id: "operator/milo",
+            identity: {
+              name: "Milo Hart",
+              roleTag: "role:field_lead",
+              specialtyTag: "focus:containment",
+            },
+            combat: {
+              attunementTag: "attunement:kinetic",
+              rank: "f",
+              traits: ["trait:steady", "trait:resolute"],
+            },
+            morale: { current: 67, baseline: 67 },
+            loyalty: { current: 62, baseline: 62 },
+            needs: { stress: 16, fatigue: 18, hunger: 12 },
+            injury: { severity: 0, recoveryHoursRemaining: 0, treated: false },
+            preferences: {
+              riskTolerance: 74,
+              rewardFocus: 66,
+              recoveryBias: 34,
+              socialBias: 58,
+              trainingBias: 72,
+              comfortBias: 40,
+              preferredMissionTags: ["mission:stability", "objective:hold"],
+              preferredPartnerIds: ["operator/rose"],
+            },
             lifecycle: { status: "active" },
           },
         ],
@@ -102,6 +181,11 @@ function createContext(): DevConsoleContext {
     eventLogEntries: [],
   };
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("dev console commands", () => {
   it("parses subcommands and quoted arguments deterministically", () => {
@@ -154,5 +238,86 @@ describe("dev console commands", () => {
 
   it("keeps the shipped /list command discoverable through the registry", () => {
     expect(getCommandRegistry().some((command) => command.name === "list")).toBe(true);
+  });
+
+  it("seeds a Porter's campaign save into an explicit slot", async () => {
+    const writeSaveGame = vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+    const locationAssign = vi.fn();
+    vi.stubGlobal("location", { assign: locationAssign });
+
+    const result = executeConsoleCommand("/seed porters slot/2", createContext());
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(result.status).toBe("ok");
+    expect(result.message).toContain("slot/2");
+    expect(writeSaveGame).toHaveBeenCalledTimes(1);
+    expect(writeSaveGame.mock.calls[0]?.[0].slotId).toBe("slot/2");
+    expect(writeSaveGame.mock.calls[0]?.[0].metadata.guildName).toBe("Testing Guild");
+    expect(writeSaveGame.mock.calls[0]?.[0].metadata.playerName).toBe("Test");
+    expect(locationAssign).toHaveBeenCalledWith("/game?mode=load&slot=slot%2F2");
+  });
+
+  it("rejects invalid seed slots before scheduling a save", () => {
+    const writeSaveGame = vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const result = executeConsoleCommand("/seed porters slot/99", createContext());
+
+    expect(result.status).toBe("error");
+    expect(result.message).toContain("Invalid slot: slot/99");
+    expect(writeSaveGame).not.toHaveBeenCalled();
+  });
+
+  it("uses the recorded payload when regenerating an AI request", () => {
+    const ctx = createContext();
+    ctx.session.ai.requests.set("incident-framing:test", {
+      requestKey: "incident-framing:test",
+      subjectId: "test",
+      surface: "incident-framing",
+      triggerSource: "dev-menu",
+      status: "succeeded",
+      runtimeKind: "ollama",
+      baseUrl: "http://127.0.0.1:11434/v1",
+      modelId: "gemma4:e4b",
+      payload: { incidentId: "incident/test", incidentKind: "morale-drop" },
+      payloadFingerprint: '{"incidentId":"incident/test","incidentKind":"morale-drop"}',
+      payloadVersion: 1,
+      startedAt: 1,
+      finishedAt: 2,
+      result: null,
+      error: null,
+    });
+
+    const result = executeConsoleCommand("/ai regenerate incident-framing:test", ctx);
+
+    expect(result.status).toBe("ok");
+    expect(ctx.session.commands.regenerateAiSurface).toHaveBeenCalledWith({
+      surface: "incident-framing",
+      subjectId: "test",
+      payload: { incidentId: "incident/test", incidentKind: "morale-drop" },
+      triggerSource: "dev-menu",
+    });
+  });
+
+  it("builds an operator identity request from the first visitor", () => {
+    const ctx = createContext();
+
+    const result = executeConsoleCommand("/ai generate operator-identity", ctx);
+
+    expect(result.status).toBe("ok");
+    expect(result.message).toContain("Generating operator-identity");
+    expect(ctx.session.commands.generateAiSurface).toHaveBeenCalledWith(
+      expect.objectContaining({
+        surface: "operator-identity",
+        subjectId: "visitor/rose",
+        triggerSource: "dev-menu",
+        payload: expect.objectContaining({
+          candidateId: "visitor/rose",
+          roleTag: "role:scout",
+          allowedSpecialtyTags: expect.arrayContaining(["focus:scout", "focus:extraction"]),
+          allowedRecipes: expect.any(Array),
+        }),
+      }),
+    );
   });
 });

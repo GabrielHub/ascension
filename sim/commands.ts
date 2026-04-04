@@ -30,6 +30,7 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/interruption-resolve",
   "sim/interruption-dismiss",
   "sim/incident-resolve",
+  "sim/incident-materialize",
   "sim/bid-contract",
   "sim/advance-contract",
   "sim/guidance-complete",
@@ -108,6 +109,30 @@ export type SimCommand =
       visitorId: string;
     }
   | {
+      type: "sim/visitor-update-identity";
+      visitorId: string;
+      specialtyTag: string;
+      appearance: {
+        presetId: string;
+        visibleGear?: {
+          weaponPartId?: string;
+          outfitOverlayPartId?: string;
+          accessoryPartId?: string;
+        };
+      };
+      preferences: {
+        riskTolerance: number;
+        rewardFocus: number;
+        recoveryBias: number;
+        socialBias: number;
+        trainingBias: number;
+        comfortBias: number;
+        preferredMissionTags: string[];
+      };
+      personaSummary: string;
+      personaHooks: string[];
+    }
+  | {
       type: "sim/hire-staff";
       roleTag: string;
     }
@@ -179,6 +204,23 @@ export type SimCommand =
   | {
       type: "sim/incident-resolve";
       choiceId: string;
+    }
+  | {
+      type: "sim/incident-materialize";
+      incidentInstanceId: string;
+      presentation?: {
+        title?: string;
+        briefing?: string;
+        subjectSummary?: string;
+        choices?: Array<{
+          choiceId: string;
+          label: string;
+          description: string;
+          consequenceSummary: string;
+          resolutionSummary?: string;
+        }>;
+        copySource?: "authored" | "generated";
+      };
     }
   | {
       type: "sim/bid-contract";

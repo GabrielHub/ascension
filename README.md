@@ -53,6 +53,125 @@ pnpm mcp:tauri-test
 
 Use those only when the change touches the Tauri host, file-backed saves, desktop import/export, packaging, or installed-app behavior.
 
+## Local AI Setup
+
+Ascension's AI features are local-first. The current runtime contract is an OpenAI-compatible localhost endpoint, with `Ollama` as the primary supported runtime.
+
+Current checked-in defaults:
+
+- runtime: `ollama`
+- base URL: `http://127.0.0.1:11434/v1`
+- model: `gemma4:e4b`
+
+If you have a high-end local GPU such as an RTX 5090, prefer `gemma4:26b` instead of the smaller checked-in default.
+
+### 1. Install Ollama
+
+Install Ollama for Windows from the official docs:
+
+- [Ollama Windows Install](https://docs.ollama.com/windows)
+
+Open a new PowerShell window and verify the CLI is available:
+
+```powershell
+ollama --version
+```
+
+### 2. Pull a model
+
+Default low-friction model:
+
+```powershell
+ollama pull gemma4:e4b
+```
+
+Recommended on stronger hardware such as RTX 5090:
+
+```powershell
+ollama pull gemma4:26b
+```
+
+### 3. Smoke-test the model locally
+
+You can run these commands from any directory; they do not need the repo root.
+
+```powershell
+ollama run gemma4:e4b
+```
+
+Or, if you are using the larger local model:
+
+```powershell
+ollama run gemma4:26b
+```
+
+The local API should also respond at:
+
+- [http://127.0.0.1:11434](http://127.0.0.1:11434)
+
+Optional API check:
+
+```powershell
+curl http://127.0.0.1:11434/v1/models
+```
+
+### 4. Start Ascension
+
+Run the web app from the repo root:
+
+```bash
+vp dev
+```
+
+### 5. Configure AI in-game
+
+Open `Settings` in the running app and set:
+
+- runtime: `Ollama`
+- base URL: `http://127.0.0.1:11434/v1`
+- model: `gemma4:e4b` or `gemma4:26b`
+
+Then:
+
+- enable `AI generation`
+- click `test connection`
+
+### 6. Verify from the dev console
+
+In dev builds, press the backtick key to open the in-game command console.
+
+Useful AI commands:
+
+```text
+/ai status
+/ai probe
+/ai generate incident-framing
+/ai generate operator-identity
+/ai inspect
+```
+
+Current active generation surfaces:
+
+- `incident-framing`
+- `operator-identity`
+
+`incident-framing` rewrites interruption copy on top of deterministic incident payloads.
+`operator-identity` rewrites recruit identity packets on top of deterministic role, recipe, gear, and preference constraints.
+
+The operator path is constrained by the shipped portrait source of truth:
+
+- `content/data/operator-recipes.json`
+- `content/data/operator-parts-index.json`
+
+The model does not invent arbitrary portrait structure. It must return approved recipe ids, approved compatible gear ids, approved specialty tags, bounded preferences, and short persona text.
+
+### 7. Troubleshooting
+
+- If `ollama --version` fails, the install or PATH setup is incomplete.
+- If `test connection` fails, confirm Ollama is still running and that the model tag in settings exactly matches the pulled model.
+- If `curl http://127.0.0.1:11434/v1/models` fails, the local runtime is not reachable yet.
+- If the browser blocks localhost requests, capture the exact error and treat that as an environment issue to fix before debugging app code.
+
 ## Project Shape
 
 - `app/` React Router shell, UI, browser/desktop wiring, and app-facing features

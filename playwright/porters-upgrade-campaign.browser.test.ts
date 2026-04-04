@@ -185,10 +185,12 @@ async function purchaseBuildingUpgrade(
 }
 
 async function setFloor(page: Page, floorNumber: number): Promise<void> {
-  await page
-    .getByRole("button", { exact: true, name: String(floorNumber) })
-    .first()
-    .click();
+  const portersLabels: Record<number, string> = { 1: "Ground", 2: "Upper", 3: "Waterfront" };
+  const namedLabel = portersLabels[floorNumber];
+  const button = namedLabel
+    ? page.getByRole("button", { exact: true, name: namedLabel })
+    : page.getByRole("button", { exact: true, name: String(floorNumber) });
+  await button.first().click();
   await page.waitForTimeout(200);
 }
 

@@ -12,6 +12,7 @@ export interface HqBackdropSnapshot {
   phase: HqTimeOfDayPhase;
   profileId: string;
   elevationBandId: string | null;
+  assetRoot: string;
   zones: Readonly<Record<HqBackdropZone, readonly string[]>>;
   ambientTint: string;
   fogColor: string;
@@ -100,6 +101,8 @@ export interface HqWorldLayout {
   tileHeight: number;
   wallHeight: number;
   activeFloorIndex: number;
+  visibleFloorIndexes: readonly number[];
+  floorOffsets: readonly HqFloorOffset[];
   originX: number;
   originY: number;
   worldWidth: number;
@@ -113,6 +116,7 @@ export interface HqWorldLayout {
 export interface HqSpritePlacement {
   id: string;
   assetUrl: string;
+  floorIndex?: number;
   x: number;
   y: number;
   width: number;
@@ -157,6 +161,7 @@ export interface HqExpansionSlotNode {
 // ── Modular tile geometry ─────────────────────────────────────────────────
 
 export interface HqFloorTile {
+  floorIndex: number;
   col: number;
   row: number;
   tint: string;
@@ -167,6 +172,7 @@ export type HqWallKind = "solid" | "opening" | "window";
 export type HqWallSide = "left" | "right";
 
 export interface HqWallSegment {
+  floorIndex: number;
   col: number;
   row: number;
   side: HqWallSide;
@@ -175,7 +181,14 @@ export interface HqWallSegment {
   roomId: string;
 }
 
-export type HqPerimeterKind = "sidewalk" | "street" | "alley" | "void";
+export interface HqFloorOffset {
+  floorIndex: number;
+  stackLayer: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+export type HqPerimeterKind = "sidewalk" | "street" | "alley" | "void" | "pier" | "water";
 
 export interface HqPerimeterTile {
   col: number;

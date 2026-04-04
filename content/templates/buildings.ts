@@ -25,7 +25,7 @@ export const buildingTemplates = [
     name: "Porter's",
     tags: ["phase:porter", "site:waterfront", "tier:second"],
     description:
-      "A neighborhood bar and restaurant on the Red Hook waterfront. Public downstairs, operations upstairs.",
+      "A waterfront bar and grill on the Red Hook cobblestones. Neon sign out front, harbor air through the back windows, and a second floor the guild converted from old apartments into real operational space.",
     baseTier: 1,
     baseRoomSlots: 7,
     baseOperatorSlots: 12,

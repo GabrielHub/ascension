@@ -127,4 +127,65 @@ describe("HQ world navigation", () => {
     expect(snapshot.effects.fogColor).toBe(snapshot.backdrop?.fogColor);
     expect(snapshot.effects.shadowIntensity).toBe(snapshot.backdrop?.shadowIntensity);
   });
+
+  it("stacks visible upper floors above the ground floor for multi-story buildings", () => {
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/ground",
+          floorIndex: 0,
+          reservedFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
+          activeFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
+        }),
+        createRoomSeed({
+          id: "room-instance/upper",
+          floorIndex: 1,
+          reservedFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
+          activeFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
+        }),
+      ],
+      {
+        buildingId: "building/porters",
+        buildingTier: 1,
+        floorIndex: 0,
+      },
+    );
+
+    const ground = geometry.rooms.find((room) => room.id === "room-instance/ground");
+    const upper = geometry.rooms.find((room) => room.id === "room-instance/upper");
+    const groundOffset = geometry.layout.floorOffsets.find((offset) => offset.floorIndex === 0);
+    const upperOffset = geometry.layout.floorOffsets.find((offset) => offset.floorIndex === 1);
+
+    expect(geometry.layout.visibleFloorIndexes).toEqual([0, 1]);
+    expect(groundOffset).toEqual(expect.objectContaining({ floorIndex: 0, stackLayer: 0 }));
+    expect(upperOffset).toEqual(expect.objectContaining({ floorIndex: 1, stackLayer: 1 }));
+    expect(upperOffset?.offsetY ?? 0).toBeLessThan(groundOffset?.offsetY ?? 1);
+    expect(upper).toBeTruthy();
+    expect(ground).toBeTruthy();
+    expect(upper!.bounds.y).toBeLessThan(ground!.bounds.y);
+  });
+
+  it("keeps the navigation graph scoped to the active floor even when multiple floors are visible", () => {
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/ground",
+          floorIndex: 0,
+        }),
+        createRoomSeed({
+          id: "room-instance/upper",
+          floorIndex: 1,
+        }),
+      ],
+      {
+        buildingId: "building/porters",
+        buildingTier: 1,
+        floorIndex: 0,
+      },
+    );
+
+    expect(new Set(geometry.navGraph.anchors.map((anchor) => anchor.roomId))).toEqual(
+      new Set(["room-instance/ground"]),
+    );
+  });
 });

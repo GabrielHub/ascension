@@ -22,6 +22,10 @@ export interface BuildingShellFootprint {
 export interface BuildingFloorLayout {
   floorIndex: number;
   elevationBandId: string | null;
+  /** Floors in the same group render together; floors in different groups swap views. */
+  stackGroupId?: string;
+  /** Vertical story order inside a rendered group. */
+  stackLayer?: number;
   shell: BuildingShellFootprint;
   slots: readonly BuildingRoomSlot[];
 }
@@ -116,6 +120,8 @@ export const BODEGA_LAYOUT: BuildingLayoutDefinition = {
 const PORTERS_GROUND: BuildingFloorLayout = {
   floorIndex: 0,
   elevationBandId: "ground-floor",
+  stackGroupId: "main-interior",
+  stackLayer: 0,
   shell: { col: 0, row: 0, cols: 12, rows: 18 },
   slots: [
     {
@@ -140,6 +146,8 @@ const PORTERS_GROUND: BuildingFloorLayout = {
 const PORTERS_UPPER: BuildingFloorLayout = {
   floorIndex: 1,
   elevationBandId: "upper-floor",
+  stackGroupId: "main-interior",
+  stackLayer: 1,
   shell: { col: 0, row: 0, cols: 12, rows: 18 },
   slots: [
     {
@@ -190,6 +198,8 @@ const PORTERS_UPPER: BuildingFloorLayout = {
 const PORTERS_WATERFRONT: BuildingFloorLayout = {
   floorIndex: 2,
   elevationBandId: "waterfront",
+  stackGroupId: "waterfront",
+  stackLayer: 0,
   shell: { col: 0, row: 0, cols: 12, rows: 8 },
   slots: [
     { slotId: "slot/dock", col: 0, row: 0, cols: 6, rows: 4 },
@@ -257,6 +267,37 @@ export function getBuildingFloors(
   buildingTier = 1,
 ): readonly BuildingFloorLayout[] {
   return getActiveStage(getBuildingLayoutDefinition(buildingId), buildingTier)?.floors ?? [];
+}
+
+function getFloorRenderGroupId(floor: BuildingFloorLayout): string {
+  return floor.stackGroupId ?? `floor:${floor.floorIndex}`;
+}
+
+export function getFloorStackLayer(floor: BuildingFloorLayout): number {
+  return floor.stackLayer ?? floor.floorIndex;
+}
+
+export function getVisibleBuildingFloors(
+  buildingId: string,
+  activeFloorIndex = 0,
+  buildingTier = 1,
+): readonly BuildingFloorLayout[] {
+  const floors = getBuildingFloors(buildingId, buildingTier);
+  const activeFloor = floors.find((floor) => floor.floorIndex === activeFloorIndex) ?? floors[0];
+
+  if (!activeFloor) {
+    return [];
+  }
+
+  const activeGroupId = getFloorRenderGroupId(activeFloor);
+  return floors
+    .filter((floor) => getFloorRenderGroupId(floor) === activeGroupId)
+    .slice()
+    .sort((left, right) => {
+      const leftLayer = getFloorStackLayer(left);
+      const rightLayer = getFloorStackLayer(right);
+      return leftLayer - rightLayer || left.floorIndex - right.floorIndex;
+    });
 }
 
 export function getBuildingLayout(

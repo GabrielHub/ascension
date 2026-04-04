@@ -497,6 +497,10 @@ function VisitorRow({
   const showDeferAction = visitor.queueState === "active";
   const metaLine =
     visitor.queueState === "deferred" ? "Deferred reserve" : `${patienceHours}h patience`;
+  const specialtyLabel = getSpecialtyMeta(
+    visitor.specialtyTag || `focus:${visitor.desiredRoleTag.replace(/^role:/, "")}`,
+  ).label;
+  const personaHooks = visitor.personaHooks ?? [];
 
   return (
     <div data-testid="visitor-row" data-visitor-id={visitor.id}>
@@ -512,12 +516,34 @@ function VisitorRow({
             </span>
           )}
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-silver/45">
+            <span>{specialtyLabel}</span>
+            <span className="opacity-30">&middot;</span>
             <span>Quality {Math.round(visitor.quality)}</span>
             <span className="opacity-30">&middot;</span>
             <span>{metaLine}</span>
             <span className="opacity-30">&middot;</span>
             <span>Loyalty {Math.round(visitor.projectedLoyalty)}</span>
           </div>
+          {visitor.personaSummary && (
+            <p className="mt-1 text-sm leading-relaxed text-silver/55">{visitor.personaSummary}</p>
+          )}
+          {personaHooks.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {personaHooks.slice(0, 2).map((hook) => (
+                <span
+                  key={hook}
+                  className="rounded-full border border-gold/10 bg-gold/5 px-1.5 py-0.5 text-xs text-gold/65"
+                >
+                  {hook}
+                </span>
+              ))}
+              {visitor.identitySource === "generated" && (
+                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/8 px-1.5 py-0.5 text-xs uppercase tracking-[0.12em] text-emerald-300/80">
+                  AI packet
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <Tooltip content={recruitTooltip} side="top">
           <button

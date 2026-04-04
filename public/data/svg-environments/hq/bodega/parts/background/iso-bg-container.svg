@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -5 150 115">
+  <!-- Shipping container — rust-streaked, isometric 2:1.
+       Uses exact same iso box structure as warehouse/building-tall.
+       Facade = left-facing wall (slope +0.5). Side = receding wall (slope -0.5).
+
+       Geometry:
+         Front corner base (110, 100). Facade width 100. Side depth 30. Height 35.
+         FC_base: (110, 100)   FL_base: ( 10,  50)   BR_base: (140,  85)
+         FC_top:  (110,  65)   FL_top:  ( 10,  15)   BR_top:  (140,  50)
+         BL_top:  ( 40,   0)
+  -->
+
+  <!-- Side face (door end, drawn first — behind facade) -->
+  <polygon points="110,65 140,50 140,85 110,100"
+    fill="#2a2018" stroke="#1e1810" stroke-width="0.8"/>
+
+  <!-- Facade (long corrugated side, slope +0.5) -->
+  <polygon points="10,15 110,65 110,100 10,50"
+    fill="#4a2020" stroke="#3a1818" stroke-width="1"/>
+
+  <!-- Top face -->
+  <polygon points="10,15 110,65 140,50 40,0"
+    fill="#3a1a1a" stroke="#2e1414" stroke-width="0.8"/>
+
+  <!-- ═══ FACADE DETAILS — matrix(1, 0.5, 0, 1, 10, 15) ═══
+       Local x: 0→100 (left to right along facade). Local y: 0→35 (top to bottom). -->
+  <g transform="matrix(1, 0.5, 0, 1, 10, 15)">
+    <!-- Corrugation ridges -->
+    <g stroke="#3a1818" stroke-width="0.5" opacity="0.35">
+      <line x1="8" y1="2" x2="8" y2="33"/>
+      <line x1="18" y1="2" x2="18" y2="33"/>
+      <line x1="28" y1="2" x2="28" y2="33"/>
+      <line x1="38" y1="2" x2="38" y2="33"/>
+      <line x1="48" y1="2" x2="48" y2="33"/>
+      <line x1="58" y1="2" x2="58" y2="33"/>
+      <line x1="68" y1="2" x2="68" y2="33"/>
+      <line x1="78" y1="2" x2="78" y2="33"/>
+      <line x1="88" y1="2" x2="88" y2="33"/>
+    </g>
+
+    <!-- Corner posts -->
+    <rect x="0" y="0" width="3" height="35" fill="#3a1818" opacity="0.3"/>
+    <rect x="97" y="0" width="3" height="35" fill="#3a1818" opacity="0.3"/>
+
+    <!-- Top / bottom rails -->
+    <rect x="0" y="0" width="100" height="2" fill="#3a1818" opacity="0.2"/>
+    <rect x="0" y="33" width="100" height="2" fill="#3a1818" opacity="0.2"/>
+
+    <!-- Rust streaks -->
+    <g opacity="0.18">
+      <line x1="25" y1="5" x2="23" y2="34" stroke="#6a4020" stroke-width="3" stroke-linecap="round"/>
+      <line x1="65" y1="3" x2="63" y2="34" stroke="#5a3818" stroke-width="4" stroke-linecap="round"/>
+    </g>
+
+    <!-- ID marking -->
+    <g opacity="0.1">
+      <text x="12" y="14" font-family="monospace" font-size="6" fill="#c8a84c">MAEU</text>
+      <text x="12" y="22" font-family="monospace" font-size="4" fill="#c8a84c">2847301</text>
+    </g>
+  </g>
+
+  <!-- ═══ SIDE FACE DETAILS — matrix(1, -0.5, 0, 1, 110, 65) ═══
+       Local x: 0→30 (depth). Local y: 0→35 (height). -->
+  <g transform="matrix(1, -0.5, 0, 1, 110, 65)">
+    <!-- Locking bars -->
+    <line x1="10" y1="2" x2="10" y2="33" stroke="#3a3838" stroke-width="1.5" opacity="0.25"/>
+    <line x1="20" y1="2" x2="20" y2="33" stroke="#3a3838" stroke-width="1.5" opacity="0.25"/>
+    <!-- Lock handle -->
+    <rect x="12" y="14" width="6" height="5" rx="1" fill="#3a3838" opacity="0.25"/>
+  </g>
+</svg>

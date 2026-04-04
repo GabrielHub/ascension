@@ -86,6 +86,25 @@ function PolicyOptionButton<P extends PolicyId>({
   );
 }
 
+const ROOM_STAFFING_FLAVOR: Record<string, string> = {
+  "room/infirmary:tier_1":
+    "The Infirmary needs medical specialists to deliver real recovery instead of improvised first aid.",
+  "room/stockroom:tier_1":
+    "The Stockroom needs logistics staff to keep inventory organized and loadouts staged cleanly.",
+  "room/prep_room:tier_1":
+    "The Prep Room needs logistics staff to turn salvaged drops into field consumables.",
+  "room/office:tier_1":
+    "The Office needs admin staff to keep contracts filed and risk reads current.",
+  "room/briefing_room:tier_1":
+    "The Briefing Room needs admin staff to turn active contracts into real pre-deploy briefings.",
+};
+
+function getStaffingFlavorText(room: HqViewModel["rooms"][number]): string {
+  const flavor = ROOM_STAFFING_FLAVOR[room.templateId];
+  if (flavor) return flavor;
+  return `${room.name} needs ${getTagMeta(room.requiredStaffTag).label.toLowerCase()} staffing to stay fully operational.`;
+}
+
 function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
   const bottlenecks = rooms.filter(
     (room) => room.isActive && room.requiredStaffTag && room.assignedStaffCount < room.capacity,
@@ -96,7 +115,7 @@ function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
       <div>
         <h4 className="text-sm font-medium text-silver-bright">Staffing Pressure</h4>
         <p className="mt-1 text-sm leading-relaxed text-silver/55">
-          Active rooms with staff tags only deliver full value when the matching workers are
+          Active rooms with staff requirements only deliver full value when the right workers are
           assigned.
         </p>
       </div>
@@ -117,8 +136,7 @@ function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
                   <div>
                     <p className="text-sm text-silver-bright">{room.name}</p>
                     <p className="mt-1 text-sm leading-relaxed text-silver/55">
-                      Needs {getTagMeta(room.requiredStaffTag).label} staffing to stay fully
-                      operational.
+                      {getStaffingFlavorText(room)}
                     </p>
                   </div>
                   <span className="badge badge-ember">
@@ -143,6 +161,13 @@ const PORTERS_BUILDING_UPGRADE_ORDER = [
   "upgrade/building/porters:remodel",
   "upgrade/building/porters:waterfront",
 ] as const;
+
+const PORTERS_UPGRADE_SHORT_NAMES: Record<string, string> = {
+  "upgrade/building/porters:kitchen_overhaul": "Kitchen",
+  "upgrade/building/porters:upstairs_conversion": "Upstairs",
+  "upgrade/building/porters:remodel": "Remodel",
+  "upgrade/building/porters:waterfront": "Waterfront",
+};
 
 function PortersCampaignCard({
   rooms,
@@ -206,6 +231,47 @@ function PortersCampaignCard({
         <span className={`badge ${nextUpgrade ? "badge-gold" : "badge-slate"}`}>
           {nextUpgrade ? `Step ${nextUpgradeIndex + 1} of ${orderedUpgrades.length}` : "Complete"}
         </span>
+      </div>
+
+      {/* Step progression indicator */}
+      <div className="flex items-center gap-0 px-2">
+        {orderedUpgrades.map((upgrade, index) => {
+          const isComplete = upgrade.isApplied;
+          const isCurrent = index === nextUpgradeIndex;
+          return (
+            <div key={upgrade.id} className="flex flex-1 items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors duration-300 ${
+                    isComplete
+                      ? "bg-gold shadow-[0_0_6px_rgba(200,168,76,0.4)]"
+                      : isCurrent
+                        ? "border border-gold bg-[rgba(200,168,76,0.15)]"
+                        : "border border-[rgba(200,168,76,0.15)] bg-[rgba(6,6,8,0.5)]"
+                  }`}
+                />
+                <span
+                  className={`text-xs tracking-[0.06em] ${
+                    isComplete
+                      ? "text-gold/80"
+                      : isCurrent
+                        ? "text-silver-bright"
+                        : "text-silver/35"
+                  }`}
+                >
+                  {PORTERS_UPGRADE_SHORT_NAMES[upgrade.id] ?? upgrade.name}
+                </span>
+              </div>
+              {index < orderedUpgrades.length - 1 && (
+                <div
+                  className={`mx-1 mt-[-1.125rem] h-px flex-1 ${
+                    isComplete ? "bg-gold/40" : "bg-[rgba(200,168,76,0.08)]"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">

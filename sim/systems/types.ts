@@ -135,6 +135,7 @@ export interface SimRuntimeState {
   guidanceState: GuidanceState;
   kitRegistry: KitTemplateRegistry;
   worldTimeFrozen: boolean;
+  deferIncidentPresentation: boolean;
 }
 
 export type VisitorQueueState = "active" | "deferred";

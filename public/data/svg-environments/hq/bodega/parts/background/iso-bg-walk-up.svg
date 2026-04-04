@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 20 330 375">
+  <!-- 3-story NYC brownstone/walk-up with ground-floor shop.
+       Brownish-red brick, fire escape, cornice, stoop entrance.
+       Different character from building-tall for visual variety.
+       2:1 isometric. Front corner base at (180, 380).
+       Facade: 180px wide. Side: 120px deep. Wall height: 200px. -->
+
+  <defs>
+    <linearGradient id="wu-facade" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#4a2a1c"/>
+      <stop offset="100%" stop-color="#3e2418"/>
+    </linearGradient>
+    <linearGradient id="wu-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2e1a14"/>
+      <stop offset="100%" stop-color="#382218"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STRUCTURAL FACES
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Side face (drawn first, behind facade) -->
+  <polygon points="180,180 300,120 300,320 180,380"
+    fill="url(#wu-side)" stroke="#2e1a14" stroke-width="1"/>
+
+  <!-- Facade wall -->
+  <polygon points="0,90 180,180 180,380 0,290"
+    fill="url(#wu-facade)" stroke="#2e1a14" stroke-width="1.5"/>
+
+  <!-- Roof -->
+  <polygon points="0,90 180,180 300,120 120,30"
+    fill="#1c1a18" stroke="#222" stroke-width="1.5"/>
+
+  <!-- Parapet/cornice — facade (decorative molding) -->
+  <polygon points="0,90 180,180 180,184 0,94"
+    fill="#5a3e2c" stroke="#3e2a1c" stroke-width="0.5" opacity="0.7"/>
+  <!-- Cornice dentil detail -->
+  <polygon points="0,94 180,184 180,188 0,98"
+    fill="#4a3220" stroke="#3a2418" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Cornice — side -->
+  <polygon points="180,180 300,120 300,124 180,184"
+    fill="#3a2a1e" stroke="#2e1e14" stroke-width="0.5" opacity="0.45"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FACADE DETAILS — matrix(1, 0.5, 0, 1, 0, 90)
+       Local: x 0→180, y 0→200. Floors at y=66, y=132.
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Brick texture lines -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)"
+     opacity="0.1" stroke="#3a1e14" stroke-width="0.4">
+    <line x1="5" y1="20" x2="175" y2="20"/>
+    <line x1="5" y1="45" x2="175" y2="45"/>
+    <line x1="5" y1="85" x2="175" y2="85"/>
+    <line x1="5" y1="110" x2="175" y2="110"/>
+    <line x1="5" y1="150" x2="175" y2="150"/>
+    <line x1="5" y1="175" x2="175" y2="175"/>
+  </g>
+
+  <!-- Floor cornice lines -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)"
+     opacity="0.2" stroke="#5a3e2c" stroke-width="0.8">
+    <line x1="3" y1="66" x2="177" y2="66"/>
+    <line x1="3" y1="132" x2="177" y2="132"/>
+  </g>
+
+  <!-- FACADE WINDOWS (3 cols × 3 floors) -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)"
+     fill="#0c0a08" stroke="#3a2818" stroke-width="0.6">
+    <!-- Floor 3 (top, y=14) -->
+    <rect x="20" y="14" width="26" height="32" rx="1"/>
+    <rect x="76" y="14" width="26" height="32" rx="1"/>
+    <rect x="132" y="14" width="26" height="32" rx="1"/>
+    <!-- Floor 2 (y=80) -->
+    <rect x="20" y="80" width="26" height="32" rx="1"/>
+    <rect x="76" y="80" width="26" height="32" rx="1"/>
+    <rect x="132" y="80" width="26" height="32" rx="1"/>
+    <!-- Floor 1 ground floor (y=144 — shorter, storefront type) -->
+    <rect x="15" y="142" width="45" height="42" rx="1"/>
+    <rect x="70" y="142" width="45" height="42" rx="1"/>
+    <rect x="130" y="142" width="40" height="42" rx="1"/>
+  </g>
+
+  <!-- Warm lit windows -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)" opacity="0.22">
+    <rect x="22" y="16" width="22" height="28" rx="1" fill="#c8a84c"/>
+    <rect x="134" y="82" width="22" height="28" rx="1" fill="#9a7a3c"/>
+    <rect x="78" y="16" width="22" height="28" rx="1" fill="#8a7040"/>
+    <rect x="22" y="82" width="22" height="28" rx="1" fill="#c8a84c"/>
+  </g>
+
+  <!-- Ground floor interior glow (shop is open) -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)" opacity="0.12">
+    <rect x="17" y="144" width="41" height="38" rx="1" fill="#c8a84c"/>
+    <rect x="72" y="144" width="41" height="38" rx="1" fill="#b89040"/>
+  </g>
+
+  <!-- Shop awning (ground floor, across facade) -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)">
+    <polygon points="10,138 170,138 175,148 5,148"
+      fill="#2a1a12" stroke="#221410" stroke-width="0.6" opacity="0.7"/>
+    <!-- Awning valance -->
+    <path d="M5,148 Q15,152 25,148 Q35,152 45,148 Q55,152 65,148 Q75,152 85,148 Q95,152 105,148 Q115,152 125,148 Q135,152 145,148 Q155,152 165,148 Q175,152 175,148"
+      fill="#2a1a12" stroke="#1e1210" stroke-width="0.4" opacity="0.5"/>
+  </g>
+
+  <!-- Doorway (center ground floor) -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)">
+    <rect x="120" y="150" width="24" height="48" rx="1"
+      fill="#0e0c0a" stroke="#3a2818" stroke-width="0.8"/>
+    <!-- Door handle -->
+    <circle cx="140" cy="174" r="1.2" fill="#4a4840" opacity="0.4"/>
+  </g>
+
+  <!-- Fire escape (facade, centered) -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)"
+     stroke="#3a3838" stroke-width="0.8" fill="none" opacity="0.4">
+    <!-- Platforms -->
+    <line x1="85" y1="66" x2="115" y2="66"/>
+    <line x1="85" y1="132" x2="115" y2="132"/>
+    <!-- Verticals -->
+    <line x1="85" y1="50" x2="85" y2="140"/>
+    <line x1="115" y1="50" x2="115" y2="140"/>
+    <!-- Stairs -->
+    <polyline points="88,70 112,85 88,100 112,115 88,128"
+      stroke-width="0.5" opacity="0.35"/>
+    <!-- Ladder to ground -->
+    <line x1="98" y1="132" x2="98" y2="192"/>
+    <line x1="102" y1="132" x2="102" y2="192"/>
+    <g stroke-width="0.4">
+      <line x1="98" y1="145" x2="102" y2="145"/>
+      <line x1="98" y1="158" x2="102" y2="158"/>
+      <line x1="98" y1="171" x2="102" y2="171"/>
+      <line x1="98" y1="184" x2="102" y2="184"/>
+    </g>
+  </g>
+
+  <!-- Water stain -->
+  <g transform="matrix(1, 0.5, 0, 1, 0, 90)">
+    <line x1="55" y1="0" x2="57" y2="200"
+      stroke="#2e1e14" stroke-width="3" opacity="0.08"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SIDE FACE DETAILS — matrix(1, -0.5, 0, 1, 180, 180)
+       Local: x 0→120, y 0→200.
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Brick texture -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)"
+     opacity="0.08" stroke="#2e1a14" stroke-width="0.4">
+    <line x1="5" y1="30" x2="115" y2="30"/>
+    <line x1="5" y1="55" x2="115" y2="55"/>
+    <line x1="5" y1="90" x2="115" y2="90"/>
+    <line x1="5" y1="120" x2="115" y2="120"/>
+    <line x1="5" y1="155" x2="115" y2="155"/>
+  </g>
+
+  <!-- Floor lines (side) -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)"
+     opacity="0.14" stroke="#3a2a1e" stroke-width="0.6">
+    <line x1="3" y1="66" x2="117" y2="66"/>
+    <line x1="3" y1="132" x2="117" y2="132"/>
+  </g>
+
+  <!-- Side windows (2 cols × 3 floors) -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)"
+     fill="#0c0a08" stroke="#3a2818" stroke-width="0.4" opacity="0.65">
+    <!-- Floor 3 -->
+    <rect x="25" y="16" width="20" height="28" rx="1"/>
+    <rect x="75" y="16" width="20" height="28" rx="1"/>
+    <!-- Floor 2 -->
+    <rect x="25" y="82" width="20" height="28" rx="1"/>
+    <rect x="75" y="82" width="20" height="28" rx="1"/>
+    <!-- Floor 1 -->
+    <rect x="25" y="148" width="20" height="28" rx="1"/>
+    <rect x="75" y="148" width="20" height="28" rx="1"/>
+  </g>
+
+  <!-- Side lit windows -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)" opacity="0.15">
+    <rect x="27" y="84" width="16" height="24" rx="1" fill="#c8a84c"/>
+    <rect x="77" y="18" width="16" height="24" rx="1" fill="#9a7a3c"/>
+  </g>
+
+  <!-- AC unit on side -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)" opacity="0.4">
+    <rect x="30" y="120" width="22" height="14" rx="2"
+      fill="#2a2a2a" stroke="#3a3838" stroke-width="0.5"/>
+  </g>
+
+  <!-- Downspout (side) -->
+  <g transform="matrix(1, -0.5, 0, 1, 180, 180)">
+    <line x1="3" y1="5" x2="3" y2="195"
+      stroke="#3a3838" stroke-width="1.2" opacity="0.25"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ROOFTOP ELEMENTS
+       ═══════════════════════════════════════════════════════ -->
+  <g opacity="0.3">
+    <!-- Satellite dish -->
+    <circle cx="80" cy="58" r="8" fill="none" stroke="#3a3838" stroke-width="0.8"/>
+    <line x1="80" y1="58" x2="80" y2="50" stroke="#3a3838" stroke-width="0.6"/>
+
+    <!-- Vent pipe -->
+    <rect x="220" y="95" width="8" height="14" rx="1" fill="#2a2828" stroke="#222" stroke-width="0.5"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STOOP (front entrance steps, extending from facade)
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Stoop steps (3 steps going down from doorway toward viewer) -->
+  <!-- Step 3 (top, closest to door) -->
+  <polygon points="135,372 155,382 175,372 155,362"
+    fill="#3a3430" stroke="#2e2a26" stroke-width="0.5"/>
+  <!-- Step 3 front face -->
+  <polygon points="135,372 155,382 155,386 135,376"
+    fill="#302c28" stroke="#2a2622" stroke-width="0.4"/>
+
+  <!-- Step 2 (middle) -->
+  <polygon points="130,376 155,389 180,376 155,363"
+    fill="#3a3430" stroke="#2e2a26" stroke-width="0.5"/>
+  <polygon points="130,376 155,389 155,393 130,380"
+    fill="#302c28" stroke="#2a2622" stroke-width="0.4"/>
+
+  <!-- Step 1 (bottom, at sidewalk level) -->
+  <polygon points="125,380 155,395 185,380 155,365"
+    fill="#3a3430" stroke="#2e2a26" stroke-width="0.5"/>
+  <polygon points="125,380 155,395 155,398 125,383"
+    fill="#302c28" stroke="#2a2622" stroke-width="0.4"/>
+
+  <!-- Stoop railing posts -->
+  <g stroke="#3a3838" stroke-width="1.5" stroke-linecap="round" opacity="0.45">
+    <line x1="130" y1="376" x2="130" y2="362"/>
+    <line x1="180" y1="376" x2="180" y2="362"/>
+  </g>
+</svg>

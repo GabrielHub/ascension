@@ -292,6 +292,8 @@ export interface Phase1OperatorSnapshot {
     name: string;
     roleTag: string;
     specialtyTag: string;
+    personaSummary?: string;
+    personaHooks?: string[];
   };
   preferences: Phase1OperatorPreferenceSnapshot;
   schedule: Phase1OperatorScheduleSnapshot;
@@ -399,9 +401,26 @@ export interface Phase1VisitorSnapshot {
   id: string;
   name: string;
   desiredRoleTag: string;
+  specialtyTag?: string;
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  appearance?: {
+    presetId: string;
+    visibleGear?: Phase1OperatorVisibleGearSnapshot;
+  };
+  preferences?: {
+    riskTolerance: number;
+    rewardFocus: number;
+    recoveryBias: number;
+    socialBias: number;
+    trainingBias: number;
+    comfortBias: number;
+    preferredMissionTags: string[];
+  };
+  personaSummary?: string;
+  personaHooks?: string[];
+  identitySource?: "deterministic" | "generated";
   queueState: VisitorQueueState;
   projectedMorale?: number;
   projectedLoyalty?: number;
@@ -1311,6 +1330,7 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
         visitor.projectedMorale ?? projectVisitorRecruitMorale(visitor.quality ?? 50),
       projectedLoyalty:
         visitor.projectedLoyalty ?? projectVisitorRecruitLoyalty(visitor.expectedLoyalty ?? 50),
+      identitySource: visitor.identitySource === "generated" ? "generated" : "deterministic",
     })),
     activeEvents: extendedSnapshot.activeEvents ?? [],
     contractSite: extendedSnapshot.contractSite
@@ -1394,6 +1414,7 @@ export function createBaseSimRuntimeState(
       | "interruptionQueue"
       | "incidentState"
       | "guidanceState"
+      | "deferIncidentPresentation"
     >
   > = {},
 ): SimRuntimeState {
@@ -1437,6 +1458,7 @@ export function createBaseSimRuntimeState(
       overrides.guidanceState ?? (lazyCreateGuidanceState() as SimRuntimeState["guidanceState"]),
     kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
     worldTimeFrozen: false,
+    deferIncidentPresentation: overrides.deferIncidentPresentation ?? false,
   };
 }
 
@@ -1978,6 +2000,8 @@ function applyWorldSnapshot(
     OperatorIdentity.name[entity] = operator.identity.name;
     OperatorIdentity.roleTag[entity] = operator.identity.roleTag;
     OperatorIdentity.specialtyTag[entity] = operator.identity.specialtyTag;
+    OperatorIdentity.personaSummary[entity] = operator.identity.personaSummary ?? "";
+    OperatorIdentity.personaHooks[entity] = [...(operator.identity.personaHooks ?? [])];
     OperatorIdentity.appearancePresetId[entity] = operator.appearance.presetId;
     OperatorIdentity.appearanceWeaponPartId[entity] =
       operator.appearance.visibleGear?.weaponPartId ?? "";
@@ -2088,14 +2112,35 @@ function applyWorldSnapshot(
 
   runtimeSnapshot.visitors?.forEach((visitor) => {
     const entity = addEntity(world);
+    const appearance = visitor.appearance;
+    const preferences = visitor.preferences;
 
     addComponent(world, entity, VisitorState);
     VisitorState.id[entity] = visitor.id;
     VisitorState.name[entity] = visitor.name;
     VisitorState.desiredRoleTag[entity] = visitor.desiredRoleTag;
+    VisitorState.specialtyTag[entity] = visitor.specialtyTag ?? "";
     VisitorState.patience[entity] = visitor.patience;
     VisitorState.quality[entity] = visitor.quality;
     VisitorState.expectedLoyalty[entity] = visitor.expectedLoyalty;
+    VisitorState.appearancePresetId[entity] = appearance?.presetId ?? "";
+    VisitorState.appearanceWeaponPartId[entity] = appearance?.visibleGear?.weaponPartId ?? "";
+    VisitorState.appearanceOutfitOverlayPartId[entity] =
+      appearance?.visibleGear?.outfitOverlayPartId ?? "";
+    VisitorState.appearanceAccessoryPartId[entity] = appearance?.visibleGear?.accessoryPartId ?? "";
+    VisitorState.personaSummary[entity] = visitor.personaSummary ?? "";
+    VisitorState.personaHooks[entity] = [...(visitor.personaHooks ?? [])];
+    VisitorState.preferenceRiskTolerance[entity] = preferences?.riskTolerance ?? 0;
+    VisitorState.preferenceRewardFocus[entity] = preferences?.rewardFocus ?? 0;
+    VisitorState.preferenceRecoveryBias[entity] = preferences?.recoveryBias ?? 0;
+    VisitorState.preferenceSocialBias[entity] = preferences?.socialBias ?? 0;
+    VisitorState.preferenceTrainingBias[entity] = preferences?.trainingBias ?? 0;
+    VisitorState.preferenceComfortBias[entity] = preferences?.comfortBias ?? 0;
+    VisitorState.preferencePreferredMissionTags[entity] = [
+      ...(preferences?.preferredMissionTags ?? []),
+    ];
+    VisitorState.identitySource[entity] =
+      visitor.identitySource === "generated" ? "generated" : "deterministic";
     VisitorState.queueState[entity] = visitor.queueState;
 
     runtimeState.visitorEntities.push(entity);
@@ -2435,6 +2480,12 @@ function applyWorldSnapshot(
             name: OperatorIdentity.name[entity],
             roleTag: OperatorIdentity.roleTag[entity],
             specialtyTag: OperatorIdentity.specialtyTag[entity],
+            ...(OperatorIdentity.personaSummary[entity]
+              ? { personaSummary: OperatorIdentity.personaSummary[entity] }
+              : {}),
+            ...(OperatorIdentity.personaHooks[entity]?.length
+              ? { personaHooks: [...OperatorIdentity.personaHooks[entity]] }
+              : {}),
           },
           preferences: {
             riskTolerance: PreferenceState.riskTolerance[entity],
@@ -2540,9 +2591,37 @@ function applyWorldSnapshot(
             id: VisitorState.id[entity],
             name: VisitorState.name[entity],
             desiredRoleTag: VisitorState.desiredRoleTag[entity],
+            ...(VisitorState.specialtyTag[entity]
+              ? { specialtyTag: VisitorState.specialtyTag[entity] }
+              : {}),
             patience: VisitorState.patience[entity],
             quality: VisitorState.quality[entity],
             expectedLoyalty: VisitorState.expectedLoyalty[entity],
+            appearance: buildOperatorAppearanceSnapshot({
+              presetId: VisitorState.appearancePresetId[entity],
+              weaponPartId: VisitorState.appearanceWeaponPartId[entity],
+              outfitOverlayPartId: VisitorState.appearanceOutfitOverlayPartId[entity],
+              accessoryPartId: VisitorState.appearanceAccessoryPartId[entity],
+            }),
+            preferences: {
+              riskTolerance: VisitorState.preferenceRiskTolerance[entity],
+              rewardFocus: VisitorState.preferenceRewardFocus[entity],
+              recoveryBias: VisitorState.preferenceRecoveryBias[entity],
+              socialBias: VisitorState.preferenceSocialBias[entity],
+              trainingBias: VisitorState.preferenceTrainingBias[entity],
+              comfortBias: VisitorState.preferenceComfortBias[entity],
+              preferredMissionTags: [
+                ...(VisitorState.preferencePreferredMissionTags[entity] ?? []),
+              ],
+            },
+            ...(VisitorState.personaSummary[entity]
+              ? { personaSummary: VisitorState.personaSummary[entity] }
+              : {}),
+            ...(VisitorState.personaHooks[entity]?.length
+              ? { personaHooks: [...VisitorState.personaHooks[entity]] }
+              : {}),
+            identitySource:
+              VisitorState.identitySource[entity] === "generated" ? "generated" : "deterministic",
             queueState,
             projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
             projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),

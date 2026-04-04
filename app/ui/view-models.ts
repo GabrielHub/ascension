@@ -364,12 +364,16 @@ export interface VisitorViewModel {
   id: string;
   name: string;
   desiredRoleTag: string;
+  specialtyTag: string;
   patience: number;
   quality: number;
   expectedLoyalty: number;
   projectedMorale: number;
   projectedLoyalty: number;
   presetId: string;
+  personaSummary: string | null;
+  personaHooks: readonly string[];
+  identitySource: "deterministic" | "generated";
   rank: string;
   queueState: "active" | "deferred";
   canAccept: boolean;
@@ -1125,6 +1129,7 @@ export function buildHqViewFromPhase1(
     id: v.id,
     name: v.name,
     desiredRoleTag: v.desiredRoleTag,
+    specialtyTag: v.specialtyTag ?? `focus:${v.desiredRoleTag.replace(/^role:/, "")}`,
     patience: v.patience,
     quality: v.quality,
     expectedLoyalty: v.expectedLoyalty,
@@ -1132,7 +1137,13 @@ export function buildHqViewFromPhase1(
     projectedLoyalty: Math.round(
       v.projectedLoyalty ?? projectVisitorRecruitLoyalty(v.expectedLoyalty),
     ),
-    presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+    presetId:
+      typeof v.appearance?.presetId === "string" && v.appearance.presetId.length > 0
+        ? v.appearance.presetId
+        : selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+    personaSummary: v.personaSummary ?? null,
+    personaHooks: [...(v.personaHooks ?? [])],
+    identitySource: v.identitySource === "generated" ? "generated" : "deterministic",
     rank: visitorQualityToRank(v.quality),
     queueState: v.queueState ?? "active",
     canAccept: v.canAccept ?? false,
@@ -1626,11 +1637,17 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
 
   const visitors: VisitorViewModel[] = (snapshot.visitors ?? []).map((v) => {
     const raw = v as Record<string, unknown>;
+    const appearance = rec(raw, "appearance");
     const quality = num(raw, "quality", 50);
     return {
       id: v.id,
       name: str(raw, "name", getIdentifierLabel(v.id)),
       desiredRoleTag: str(raw, "desiredRoleTag", "unknown"),
+      specialtyTag: str(
+        raw,
+        "specialtyTag",
+        `focus:${str(raw, "desiredRoleTag", "unknown").replace(/^role:/, "")}`,
+      ),
       patience: num(raw, "patience", 10),
       quality,
       expectedLoyalty: num(raw, "expectedLoyalty", 50),
@@ -1640,7 +1657,16 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       projectedLoyalty: Math.round(
         num(raw, "projectedLoyalty", projectVisitorRecruitLoyalty(num(raw, "expectedLoyalty", 50))),
       ),
-      presetId: selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+      presetId:
+        appearance && typeof appearance.presetId === "string" && appearance.presetId.length > 0
+          ? appearance.presetId
+          : selectOperatorAppearanceRecipeId({ stableKey: v.id }),
+      personaSummary: optionalStr(raw, "personaSummary"),
+      personaHooks: arr(raw, "personaHooks")
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value),
+      identitySource:
+        str(raw, "identitySource", "deterministic") === "generated" ? "generated" : "deterministic",
       rank: visitorQualityToRank(quality),
       queueState: str(raw, "queueState", "active") === "deferred" ? "deferred" : "active",
       canAccept: bool(raw, "canAccept", true),
@@ -1892,6 +1918,11 @@ function bool(rec: Record<string, unknown> | undefined, key: string, fallback: b
 function optionalStr(rec: Record<string, unknown> | undefined, key: string): string | null {
   const v = rec?.[key];
   return typeof v === "string" ? v : null;
+}
+
+function arr(rec: Record<string, unknown> | undefined, key: string): unknown[] {
+  const v = rec?.[key];
+  return Array.isArray(v) ? v : [];
 }
 
 function rec(

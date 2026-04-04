@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 56">
+  <!-- NYC wire-mesh public trash can. Green metal frame.
+       2:1 isometric. Anchor: center-bottom (18, 52). -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="18" cy="52" rx="14" ry="3.5" fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Body - left face (front-facing, lighter) -->
+  <polygon points="4,18 22,27 22,47 4,38"
+    fill="#1a2e24" stroke="#142820" stroke-width="0.8"/>
+
+  <!-- Body - right face (side, darker) -->
+  <polygon points="22,27 34,21 34,41 22,47"
+    fill="#142420" stroke="#0e1e18" stroke-width="0.6"/>
+
+  <!-- Rim ring (top edge, thicker) -->
+  <polygon points="4,18 22,27 34,21 16,12"
+    fill="#1e3428" stroke="#142820" stroke-width="0.8"/>
+
+  <!-- Inner rim (opening) -->
+  <polygon points="6,19 21,27 32,22 17,14"
+    fill="#0a0e0c" stroke="#142420" stroke-width="0.3" opacity="0.4"/>
+
+  <!-- Wire mesh - left face (horizontal bands) -->
+  <g stroke="#1e3828" stroke-width="0.35" opacity="0.45">
+    <line x1="5" y1="23" x2="21" y2="32"/>
+    <line x1="5" y1="28" x2="21" y2="37"/>
+    <line x1="5" y1="33" x2="21" y2="42"/>
+  </g>
+
+  <!-- Wire mesh - left face (vertical wires) -->
+  <g stroke="#1e3828" stroke-width="0.3" opacity="0.35">
+    <line x1="9" y1="20" x2="9" y2="40"/>
+    <line x1="14" y1="22" x2="14" y2="42"/>
+    <line x1="19" y1="25" x2="19" y2="45"/>
+  </g>
+
+  <!-- Wire mesh - right face (horizontal bands) -->
+  <g stroke="#0e2018" stroke-width="0.3" opacity="0.35">
+    <line x1="23" y1="32" x2="33" y2="27"/>
+    <line x1="23" y1="37" x2="33" y2="32"/>
+    <line x1="23" y1="42" x2="33" y2="37"/>
+  </g>
+
+  <!-- Wire mesh - right face (vertical wires) -->
+  <g stroke="#0e2018" stroke-width="0.25" opacity="0.3">
+    <line x1="26" y1="25" x2="26" y2="45"/>
+    <line x1="30" y1="23" x2="30" y2="43"/>
+  </g>
+
+  <!-- Base band (solid bottom ring) -->
+  <g opacity="0.6">
+    <polygon points="4,36 22,45 22,47 4,38"
+      fill="#142820" stroke="#0e2018" stroke-width="0.3"/>
+    <polygon points="22,45 34,39 34,41 22,47"
+      fill="#0e2018" stroke="#0a1814" stroke-width="0.3"/>
+  </g>
+
+  <!-- Support post (center, visible through mesh) -->
+  <line x1="13" y1="14" x2="13" y2="50" stroke="#1a2e24" stroke-width="1" opacity="0.2"/>
+
+  <!-- Trash peeking out of top -->
+  <g opacity="0.35">
+    <path d="M12,13 Q10,8 14,6" fill="#0e0e10" stroke="#1a1a1e" stroke-width="0.4"/>
+    <ellipse cx="22" cy="23" rx="4" ry="2.5" fill="#0e0e10" stroke="#16161a" stroke-width="0.3"/>
+    <path d="M20,14 Q18,10 22,9" fill="none" stroke="#1a1a1e" stroke-width="0.5"/>
+  </g>
+
+  <!-- Rust spots -->
+  <ellipse cx="12" cy="30" rx="3" ry="1.5" fill="#3a2818" opacity="0.08"/>
+  <ellipse cx="28" cy="34" rx="2" ry="1" fill="#3a2818" opacity="0.06"/>
+</svg>

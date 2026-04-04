@@ -428,6 +428,7 @@ declare global {
 }
 
 let latestSnapshot: BrowserTestSnapshot | null = null;
+let latestSnapshotSource: BrowserDriverPayload | null = null;
 
 function readGuidanceState(session: RuntimeSession): BrowserDriverGuidanceState {
   const raw = (session.worldSnapshot as Record<string, unknown>).guidanceState;
@@ -683,7 +684,10 @@ export function updateBrowserTestSnapshot(payload: BrowserDriverPayload | null):
     return;
   }
 
-  latestSnapshot = payload ? buildSnapshot(payload) : null;
+  latestSnapshotSource = payload;
+  if (!payload) {
+    latestSnapshot = null;
+  }
 }
 
 export function registerBrowserTestDriver(): void {
@@ -693,6 +697,10 @@ export function registerBrowserTestDriver(): void {
 
   window.__ASCENSION_BROWSER_TEST__ = {
     getSnapshot() {
+      if (latestSnapshotSource) {
+        latestSnapshot = buildSnapshot(latestSnapshotSource);
+        latestSnapshotSource = null;
+      }
       return latestSnapshot;
     },
     listSlots() {

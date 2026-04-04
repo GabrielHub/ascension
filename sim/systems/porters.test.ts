@@ -2,7 +2,11 @@ import { addComponent, addEntity } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry as registry } from "content/templates";
-import { getBuildingFloors, getBuildingLayout } from "content/building-layouts";
+import {
+  getBuildingFloors,
+  getBuildingLayout,
+  getVisibleBuildingFloors,
+} from "content/building-layouts";
 import {
   getHqBackdropManifestForBuilding,
   getHqEnvironmentRenderConfigForBuilding,
@@ -137,6 +141,21 @@ describe("Porter's multi-floor layout", () => {
     expect(floorsTier5).toHaveLength(3);
     expect(floorsTier5[2]!.floorIndex).toBe(2);
     expect(floorsTier5[2]!.elevationBandId).toBe("waterfront");
+  });
+
+  it("renders ground and upper floors together as one stacked interior group", () => {
+    expect(
+      getVisibleBuildingFloors("building/porters", 0, 1).map((floor) => floor.floorIndex),
+    ).toEqual([0, 1]);
+    expect(
+      getVisibleBuildingFloors("building/porters", 1, 1).map((floor) => floor.floorIndex),
+    ).toEqual([0, 1]);
+  });
+
+  it("keeps Waterfront as its own presented floor view", () => {
+    expect(
+      getVisibleBuildingFloors("building/porters", 2, 5).map((floor) => floor.floorIndex),
+    ).toEqual([2]);
   });
 });
 
@@ -625,7 +644,9 @@ describe("Porter's environment (data-driven)", () => {
   it("Porter's render config has correct asset roots", () => {
     const config = getHqEnvironmentRenderConfigForBuilding("building/porters");
     expect(config.building).toBe("porters");
-    expect(config.paths.partsRoot).toContain("porters");
+    expect(config.paths.partsRoot).toContain("bodega");
+    expect(config.paths.referenceRoot).toContain("bodega");
+    expect(config.paths.recipesRoot).toContain("bodega");
   });
 
   it("bodega backdrop still loads correctly", () => {

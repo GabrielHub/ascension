@@ -1,8 +1,14 @@
-import { getBuildingLayout, type BuildingFloorLayout } from "content/building-layouts";
+import {
+  getFloorStackLayer,
+  getVisibleBuildingFloors,
+  type BuildingFloorLayout,
+} from "content/building-layouts";
 import {
   getHqBackdropManifest,
   getHqBackdropManifestForBuilding,
   getHqEnvironmentRenderConfig,
+  getHqEnvironmentRenderConfigForBuilding,
+  type HqEnvironmentAssetRoots,
 } from "lib/hq-environment-manifest";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
@@ -13,6 +19,7 @@ import type {
   ActorMarker,
   HqBackdropSnapshot,
   HqExpansionSlotNode,
+  HqFloorOffset,
   HqFloorTile,
   HqFootprint,
   HqModularGeometry,
@@ -37,16 +44,21 @@ const HQ_TILE_HEIGHT = HQ_ENVIRONMENT.composition.tileHeight;
 const HQ_WALL_HEIGHT = HQ_ENVIRONMENT.composition.wallHeight;
 const WORLD_MARGIN_X = 100;
 const WORLD_MARGIN_Y = 80;
-const ASSET_ROOT = HQ_ENVIRONMENT.paths.partsRoot;
-const SCENE_ROOT = HQ_ENVIRONMENT.paths.recipesRoot;
 const SCENE_ORIGIN_X = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[0];
 const SCENE_ORIGIN_Y = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[1];
 const SCENE_VIEWBOX = HQ_ENVIRONMENT.composition.sceneSystem.canonicalViewBox;
+const STACKED_FLOOR_OFFSET_Y = HQ_WALL_HEIGHT + 12;
 
-/** Standard scene spec for a 4×3 bodega room. All use the same iso convention. */
-function bodegaScene(filename: string): SceneAssetSpec {
+function getBuildingRenderConfig(buildingId?: string) {
+  return (
+    (buildingId ? getHqEnvironmentRenderConfigForBuilding(buildingId) : null) ?? HQ_ENVIRONMENT
+  );
+}
+
+/** Standard scene spec for a 4×3 room using the shared HQ scene-system convention. */
+function sceneSpec(filename: string): SceneAssetSpec {
   return {
-    url: `${SCENE_ROOT}/${filename}`,
+    filename,
     svgOriginX: SCENE_ORIGIN_X,
     svgOriginY: SCENE_ORIGIN_Y,
     svgWidth: SCENE_VIEWBOX.width,
@@ -58,58 +70,58 @@ function bodegaScene(filename: string): SceneAssetSpec {
 
 // ── Prop / scenery asset URLs ─────────────────────────────────────────────
 
-const PROP_ASSETS = {
+const PROP_ASSET_PATHS = {
   // Furniture
-  desk: `${ASSET_ROOT}/props/iso-desk-reception.svg`,
-  chair: `${ASSET_ROOT}/props/iso-chair-office.svg`,
-  cabinet: `${ASSET_ROOT}/props/iso-cabinet-filing.svg`,
-  table: `${ASSET_ROOT}/props/iso-table-folding.svg`,
-  couch: `${ASSET_ROOT}/props/iso-couch-worn.svg`,
-  stool: `${ASSET_ROOT}/props/iso-stool-bar.svg`,
-  counter: `${ASSET_ROOT}/props/iso-counter-reception.svg`,
+  desk: "props/iso-desk-reception.svg",
+  chair: "props/iso-chair-office.svg",
+  cabinet: "props/iso-cabinet-filing.svg",
+  table: "props/iso-table-folding.svg",
+  couch: "props/iso-couch-worn.svg",
+  stool: "props/iso-stool-bar.svg",
+  counter: "props/iso-counter-reception.svg",
   // Medical
-  bed: `${ASSET_ROOT}/props/iso-bed-medical.svg`,
-  medCabinet: `${ASSET_ROOT}/props/iso-cabinet-medical.svg`,
-  ivStand: `${ASSET_ROOT}/props/iso-iv-stand.svg`,
-  curtain: `${ASSET_ROOT}/props/iso-curtain-medical.svg`,
-  trayMedical: `${ASSET_ROOT}/props/iso-tray-medical.svg`,
-  bandages: `${ASSET_ROOT}/props/iso-bandages-box.svg`,
+  bed: "props/iso-bed-medical.svg",
+  medCabinet: "props/iso-cabinet-medical.svg",
+  ivStand: "props/iso-iv-stand.svg",
+  curtain: "props/iso-curtain-medical.svg",
+  trayMedical: "props/iso-tray-medical.svg",
+  bandages: "props/iso-bandages-box.svg",
   // Wall-mounted
-  sign: `${ASSET_ROOT}/props/iso-sign-neon.svg`,
-  light: `${ASSET_ROOT}/props/iso-light-pendant.svg`,
-  shelf: `${ASSET_ROOT}/props/iso-shelf-wall.svg`,
-  corkboard: `${ASSET_ROOT}/props/iso-board-cork.svg`,
-  clock: `${ASSET_ROOT}/props/iso-clock-wall.svg`,
-  phone: `${ASSET_ROOT}/props/iso-phone-wall.svg`,
-  poster: `${ASSET_ROOT}/props/iso-poster-wanted.svg`,
-  monitor: `${ASSET_ROOT}/props/iso-screen-monitor.svg`,
+  sign: "props/iso-sign-neon.svg",
+  light: "props/iso-light-pendant.svg",
+  shelf: "props/iso-shelf-wall.svg",
+  corkboard: "props/iso-board-cork.svg",
+  clock: "props/iso-clock-wall.svg",
+  phone: "props/iso-phone-wall.svg",
+  poster: "props/iso-poster-wanted.svg",
+  monitor: "props/iso-screen-monitor.svg",
   // Floor items
-  plant: `${ASSET_ROOT}/props/iso-plant-potted.svg`,
-  mat: `${ASSET_ROOT}/props/iso-mat-floor.svg`,
-  rug: `${ASSET_ROOT}/props/iso-rug-floor.svg`,
-  box: `${ASSET_ROOT}/props/iso-box-cardboard.svg`,
-  bucket: `${ASSET_ROOT}/props/iso-bucket.svg`,
-  radio: `${ASSET_ROOT}/props/iso-radio-boombox.svg`,
-  waterCooler: `${ASSET_ROOT}/props/iso-cooler-water.svg`,
-  clipboard: `${ASSET_ROOT}/props/iso-clipboard-stack.svg`,
-  bottles: `${ASSET_ROOT}/props/iso-bottles-shelf.svg`,
-  register: `${ASSET_ROOT}/props/iso-register-cash.svg`,
-  punchBag: `${ASSET_ROOT}/props/iso-bag-punching.svg`,
-  bench: `${ASSET_ROOT}/background/iso-bg-bench.svg`,
+  plant: "props/iso-plant-potted.svg",
+  mat: "props/iso-mat-floor.svg",
+  rug: "props/iso-rug-floor.svg",
+  box: "props/iso-box-cardboard.svg",
+  bucket: "props/iso-bucket.svg",
+  radio: "props/iso-radio-boombox.svg",
+  waterCooler: "props/iso-cooler-water.svg",
+  clipboard: "props/iso-clipboard-stack.svg",
+  bottles: "props/iso-bottles-shelf.svg",
+  register: "props/iso-register-cash.svg",
+  punchBag: "props/iso-bag-punching.svg",
+  bench: "background/iso-bg-bench.svg",
   // Bodega-specific props
-  coffeeMachine: `${ASSET_ROOT}/props/iso-coffee-machine.svg`,
-  menuBoard: `${ASSET_ROOT}/props/iso-menu-board.svg`,
-  microwave: `${ASSET_ROOT}/props/iso-microwave.svg`,
-  mopBroom: `${ASSET_ROOT}/props/iso-mop-broom.svg`,
-  pickledEggs: `${ASSET_ROOT}/props/iso-jar-pickled-eggs.svg`,
-  deliCase: `${ASSET_ROOT}/props/iso-deli-case.svg`,
-  firstAid: `${ASSET_ROOT}/props/iso-firstaid-wall.svg`,
-  milkCrate: `${ASSET_ROOT}/props/iso-crate-milk.svg`,
-  gearCrate: `${ASSET_ROOT}/props/iso-crate-gear.svg`,
-  guildLicense: `${ASSET_ROOT}/props/iso-license-guild.svg`,
-  posterMotivational: `${ASSET_ROOT}/props/iso-poster-motivational.svg`,
-  ceilingFan: `${ASSET_ROOT}/props/iso-fan-ceiling.svg`,
-  foodDebris: `${ASSET_ROOT}/props/iso-food-debris.svg`,
+  coffeeMachine: "props/iso-coffee-machine.svg",
+  menuBoard: "props/iso-menu-board.svg",
+  microwave: "props/iso-microwave.svg",
+  mopBroom: "props/iso-mop-broom.svg",
+  pickledEggs: "props/iso-jar-pickled-eggs.svg",
+  deliCase: "props/iso-deli-case.svg",
+  firstAid: "props/iso-firstaid-wall.svg",
+  milkCrate: "props/iso-crate-milk.svg",
+  gearCrate: "props/iso-crate-gear.svg",
+  guildLicense: "props/iso-license-guild.svg",
+  posterMotivational: "props/iso-poster-motivational.svg",
+  ceilingFan: "props/iso-fan-ceiling.svg",
+  foodDebris: "props/iso-food-debris.svg",
 } as const;
 
 const PROP_SVG_VIEWBOX = {
@@ -159,9 +171,12 @@ const PROP_SVG_VIEWBOX = {
   table: [12, 24, 72, 66],
   trayMedical: [0, 0, 48, 56],
   waterCooler: [0, 0, 44, 72],
-} as const satisfies Record<keyof typeof PROP_ASSETS, readonly [number, number, number, number]>;
+} as const satisfies Record<
+  keyof typeof PROP_ASSET_PATHS,
+  readonly [number, number, number, number]
+>;
 
-function getPropSvgMeta(assetKey: keyof typeof PROP_ASSETS): HqSvgPlacementMeta {
+function getPropSvgMeta(assetKey: keyof typeof PROP_ASSET_PATHS): HqSvgPlacementMeta {
   const viewBox = PROP_SVG_VIEWBOX[assetKey];
   const [minX, minY, width, height] = viewBox;
   return {
@@ -172,7 +187,7 @@ function getPropSvgMeta(assetKey: keyof typeof PROP_ASSETS): HqSvgPlacementMeta 
 }
 
 function derivePropSpriteScale(
-  assetKey: keyof typeof PROP_ASSETS,
+  assetKey: keyof typeof PROP_ASSET_PATHS,
   legacyWidth: number,
   legacyHeight: number,
 ): number {
@@ -193,7 +208,7 @@ interface RoomPalette {
 }
 
 interface RecipePropPlacement {
-  assetKey: keyof typeof PROP_ASSETS;
+  assetKey: keyof typeof PROP_ASSET_PATHS;
   relCol: number;
   relRow: number;
   /** Sprite-box width used to derive svgMeta scale. */
@@ -207,7 +222,7 @@ interface RecipePropPlacement {
 
 /** Pre-composed scene SVG that replaces individual prop sprites for a room. */
 interface SceneAssetSpec {
-  url: string;
+  filename: string;
   /** X coordinate of the isometric origin inside the SVG's own coordinate space. */
   svgOriginX: number;
   /** Y coordinate of the isometric origin inside the SVG's own coordinate space. */
@@ -244,7 +259,7 @@ const REGISTER_RECIPE: RoomRecipe = {
   palette: { floor: "#3c2a16", wallLeft: "#2c2014", wallRight: "#352616" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: bodegaScene("scene-the-register.svg"),
+  sceneAsset: sceneSpec("scene-the-register.svg"),
   props: [
     // HERO: Reception counter — center, divides clerk from customer
     { assetKey: "counter", relCol: 0.5, relRow: 0.55, width: 120, height: 83, zIndex: 40 },
@@ -314,7 +329,7 @@ const COUNTER_RECIPE: RoomRecipe = {
   palette: { floor: "#3a2818", wallLeft: "#2c2014", wallRight: "#342416" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: bodegaScene("scene-the-counter.svg"),
+  sceneAsset: sceneSpec("scene-the-counter.svg"),
   props: [
     // HERO: Deli case — long glass-fronted counter, dominates the room
     { assetKey: "deliCase", relCol: 0.48, relRow: 0.55, width: 120, height: 82, zIndex: 40 },
@@ -409,7 +424,7 @@ const SUPPLY_CLOSET_RECIPE: RoomRecipe = {
   palette: { floor: "#302418", wallLeft: "#261e14", wallRight: "#2c2218" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: bodegaScene("scene-supply-closet.svg"),
+  sceneAsset: sceneSpec("scene-supply-closet.svg"),
   props: [
     // HERO: Shelf against back-right wall (packed with gear)
     { assetKey: "shelf", relCol: 0.75, relRow: 0.18, width: 52, height: 70, zIndex: 34 },
@@ -839,7 +854,7 @@ const ROOM_RECIPES: Record<string, RoomRecipe> = {
 function getRecipe(templateId: string, functionTag: string, roomStateId?: string): RoomRecipe {
   const base = TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
   if (roomStateId && ROOM_STATE_SCENES[roomStateId]) {
-    return { ...base, sceneAsset: bodegaScene(ROOM_STATE_SCENES[roomStateId]) };
+    return { ...base, sceneAsset: sceneSpec(ROOM_STATE_SCENES[roomStateId]) };
   }
   return base;
 }
@@ -903,6 +918,38 @@ function shiftPoints(points: readonly HqPoint[], dx: number, dy: number): HqPoin
   return points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
 }
 
+function buildFloorOffsetMap(
+  layouts: readonly BuildingFloorLayout[],
+): ReadonlyMap<number, HqFloorOffset> {
+  return new Map(
+    layouts.map((layout) => {
+      const stackLayer = getFloorStackLayer(layout);
+      return [
+        layout.floorIndex,
+        {
+          floorIndex: layout.floorIndex,
+          stackLayer,
+          offsetX: 0,
+          offsetY: -stackLayer * STACKED_FLOOR_OFFSET_Y,
+        },
+      ];
+    }),
+  );
+}
+
+function getFloorOrigin(
+  originX: number,
+  originY: number,
+  floorIndex: number,
+  floorOffsets: ReadonlyMap<number, HqFloorOffset>,
+): Readonly<{ x: number; y: number }> {
+  const offset = floorOffsets.get(floorIndex);
+  return {
+    x: originX + (offset?.offsetX ?? 0),
+    y: originY + (offset?.offsetY ?? 0),
+  };
+}
+
 function projectDoorCenter(
   footprint: HqFootprint,
   opening: { side: HqWallSide; cellOffset: number },
@@ -939,18 +986,29 @@ export function getBoundsFromPoints(points: readonly { x: number; y: number }[])
 
 // ── Room node (hit-test geometry) ─────────────────────────────────────────
 
-function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqRoomNode {
+function createRoomNode(
+  seed: HqRoomSeed,
+  originX: number,
+  originY: number,
+  floorOffsets: ReadonlyMap<number, HqFloorOffset>,
+): HqRoomNode {
+  const floorOrigin = getFloorOrigin(originX, originY, seed.floorIndex, floorOffsets);
   const reserved = seed.reservedFootprint;
   const active = seed.activeFootprint;
-  const top = projectIso(reserved.col, reserved.row, originX, originY);
-  const right = projectIso(reserved.col + reserved.cols, reserved.row, originX, originY);
+  const top = projectIso(reserved.col, reserved.row, floorOrigin.x, floorOrigin.y);
+  const right = projectIso(
+    reserved.col + reserved.cols,
+    reserved.row,
+    floorOrigin.x,
+    floorOrigin.y,
+  );
   const bottom = projectIso(
     reserved.col + reserved.cols,
     reserved.row + reserved.rows,
-    originX,
-    originY,
+    floorOrigin.x,
+    floorOrigin.y,
   );
-  const left = projectIso(reserved.col, reserved.row + reserved.rows, originX, originY);
+  const left = projectIso(reserved.col, reserved.row + reserved.rows, floorOrigin.x, floorOrigin.y);
   const topLift = { x: top.x, y: top.y - HQ_WALL_HEIGHT };
   const leftLift = { x: left.x, y: left.y - HQ_WALL_HEIGHT };
   const rightLift = { x: right.x, y: right.y - HQ_WALL_HEIGHT };
@@ -958,15 +1016,20 @@ function createRoomNode(seed: HqRoomSeed, originX: number, originY: number): HqR
   const floorPoints = [top, right, bottom, left];
   const leftWallPoints = [top, left, leftLift, topLift];
   const rightWallPoints = [top, right, rightLift, topLift];
-  const activeTop = projectIso(active.col, active.row, originX, originY);
-  const activeRight = projectIso(active.col + active.cols, active.row, originX, originY);
+  const activeTop = projectIso(active.col, active.row, floorOrigin.x, floorOrigin.y);
+  const activeRight = projectIso(
+    active.col + active.cols,
+    active.row,
+    floorOrigin.x,
+    floorOrigin.y,
+  );
   const activeBottom = projectIso(
     active.col + active.cols,
     active.row + active.rows,
-    originX,
-    originY,
+    floorOrigin.x,
+    floorOrigin.y,
   );
-  const activeLeft = projectIso(active.col, active.row + active.rows, originX, originY);
+  const activeLeft = projectIso(active.col, active.row + active.rows, floorOrigin.x, floorOrigin.y);
 
   return {
     id: seed.id,
@@ -993,12 +1056,14 @@ function createExpansionSlotNode(
   seed: HqExpansionSlotSeed,
   originX: number,
   originY: number,
+  floorOffsets: ReadonlyMap<number, HqFloorOffset>,
 ): HqExpansionSlotNode {
+  const floorOrigin = getFloorOrigin(originX, originY, seed.floorIndex, floorOffsets);
   const fp = seed.footprint;
-  const top = projectIso(fp.col, fp.row, originX, originY);
-  const right = projectIso(fp.col + fp.cols, fp.row, originX, originY);
-  const bottom = projectIso(fp.col + fp.cols, fp.row + fp.rows, originX, originY);
-  const left = projectIso(fp.col, fp.row + fp.rows, originX, originY);
+  const top = projectIso(fp.col, fp.row, floorOrigin.x, floorOrigin.y);
+  const right = projectIso(fp.col + fp.cols, fp.row, floorOrigin.x, floorOrigin.y);
+  const bottom = projectIso(fp.col + fp.cols, fp.row + fp.rows, floorOrigin.x, floorOrigin.y);
+  const left = projectIso(fp.col, fp.row + fp.rows, floorOrigin.x, floorOrigin.y);
   const topLift = { x: top.x, y: top.y - HQ_WALL_HEIGHT };
   const leftLift = { x: left.x, y: left.y - HQ_WALL_HEIGHT };
   const rightLift = { x: right.x, y: right.y - HQ_WALL_HEIGHT };
@@ -1038,7 +1103,13 @@ function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
     const fp = seed.reservedFootprint;
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
       for (let r = fp.row; r < fp.row + fp.rows; r++) {
-        tiles.push({ col: c, row: r, tint: palette.floor, roomId: seed.id });
+        tiles.push({
+          floorIndex: seed.floorIndex,
+          col: c,
+          row: r,
+          tint: palette.floor,
+          roomId: seed.id,
+        });
       }
     }
   }
@@ -1061,6 +1132,7 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
     for (let i = 0; i < fp.rows; i++) {
       const kind = openingSet.has(`left:${i}`) ? ("opening" as const) : ("solid" as const);
       segments.push({
+        floorIndex: seed.floorIndex,
         col: fp.col,
         row: fp.row + i,
         side: "left",
@@ -1074,6 +1146,7 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
     for (let j = 0; j < fp.cols; j++) {
       const kind = openingSet.has(`right:${j}`) ? ("opening" as const) : ("solid" as const);
       segments.push({
+        floorIndex: seed.floorIndex,
         col: fp.col + j,
         row: fp.row,
         side: "right",
@@ -1088,13 +1161,34 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
 
 // ── Perimeter tiles ───────────────────────────────────────────────────────
 
-function buildPerimeterTiles(footprints: readonly HqFootprint[]): HqPerimeterTile[] {
+/** Map distance from building edge to street zone for corner layouts. */
+function distToStreetZone(dist: number): HqPerimeterTile["kind"] {
+  if (dist < 4) return "sidewalk";
+  if (dist < 14) return "street";
+  if (dist < 17) return "sidewalk";
+  return "alley";
+}
+
+const ZONE_PRIORITY: Record<string, number> = {
+  street: 3,
+  sidewalk: 2,
+  alley: 1,
+  void: 0,
+};
+
+export function buildPerimeterTiles(
+  footprints: readonly HqFootprint[],
+  buildingId?: string,
+): HqPerimeterTile[] {
   if (footprints.length === 0) return [];
 
   const minCol = Math.min(...footprints.map((footprint) => footprint.col));
   const maxCol = Math.max(...footprints.map((footprint) => footprint.col + footprint.cols));
   const minRow = Math.min(...footprints.map((footprint) => footprint.row));
   const maxRow = Math.max(...footprints.map((footprint) => footprint.row + footprint.rows));
+
+  const isWaterfrontRear = buildingId === "building/porters";
+  const isCornerStreet = buildingId === "building/bodega";
 
   // Occupied cells set
   const occupied = new Set<string>();
@@ -1121,15 +1215,38 @@ function buildPerimeterTiles(footprints: readonly HqFootprint[]): HqPerimeterTil
 
       let kind: HqPerimeterTile["kind"];
       if (r < minRow) {
-        // Behind the building — alley/void
-        kind = "alley";
-      } else if (r >= maxRow && r < maxRow + 3) {
+        if (isWaterfrontRear) {
+          kind = r >= minRow - 4 ? "pier" : "water";
+        } else {
+          kind = "alley";
+        }
+      } else if (isCornerStreet) {
+        // Corner layout: L-shaped street wraps front + right side.
+        // Compute distance from each building edge to classify zones.
+        const dSouth = r >= maxRow ? r - maxRow : -1;
+        const dEast = c >= maxCol ? c - maxCol : -1;
+        const mainZone = dSouth >= 0 ? distToStreetZone(dSouth) : null;
+        const sideZone = dEast >= 0 ? distToStreetZone(dEast) : null;
+
+        if (mainZone && sideZone) {
+          // Intersection area — pick the more road-like zone
+          kind = ZONE_PRIORITY[mainZone] >= ZONE_PRIORITY[sideZone] ? mainZone : sideZone;
+        } else if (mainZone) {
+          kind = mainZone;
+        } else if (sideZone) {
+          kind = sideZone;
+        } else if (c < minCol || c >= maxCol) {
+          kind = "alley";
+        } else {
+          kind = "void";
+        }
+      } else if (r >= maxRow && r < maxRow + 4) {
         kind = "sidewalk";
-      } else if (r >= maxRow + 3 && r < maxRow + 9) {
+      } else if (r >= maxRow + 4 && r < maxRow + 14) {
         kind = "street";
-      } else if (r >= maxRow + 9) {
+      } else if (r >= maxRow + 14) {
         // Far side of street — more sidewalk then alley
-        kind = r < maxRow + 11 ? "sidewalk" : "alley";
+        kind = r < maxRow + 17 ? "sidewalk" : "alley";
       } else if (c < minCol || c >= maxCol) {
         kind = "alley";
       } else {
@@ -1212,18 +1329,28 @@ export function projectStaticPlacement(
   };
 }
 
+function resolvePropAssetUrl(
+  assetKey: keyof typeof PROP_ASSET_PATHS,
+  assetRoots: HqEnvironmentAssetRoots,
+): string {
+  return `${assetRoots.partsRoot}/${PROP_ASSET_PATHS[assetKey]}`;
+}
+
 function buildRoomProps(
   rooms: readonly HqRoomSeed[],
   originX: number,
   originY: number,
+  floorOffsets: ReadonlyMap<number, HqFloorOffset>,
+  assetRoots: HqEnvironmentAssetRoots,
 ): HqSpritePlacement[] {
   const props: HqSpritePlacement[] = [];
 
   for (const room of rooms) {
+    const floorOrigin = getFloorOrigin(originX, originY, room.floorIndex, floorOffsets);
     const recipe = getRecipe(room.templateId, room.functionTag, room.roomStateId);
     const reserved = room.reservedFootprint;
     const active = room.activeFootprint;
-    const activeTopCorner = projectIso(active.col, active.row, originX, originY);
+    const activeTopCorner = projectIso(active.col, active.row, floorOrigin.x, floorOrigin.y);
     const roomOpacity = room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35;
 
     if (recipe.sceneAsset) {
@@ -1232,7 +1359,7 @@ function buildRoomProps(
       const placement: HqStaticPlacementDef = {
         id: `${room.id}/scene`,
         assetId: "",
-        assetUrl: scene.url,
+        assetUrl: `${assetRoots.recipesRoot}/${scene.filename}`,
         kind: "room-scene",
         col: reserved.col,
         row: reserved.row,
@@ -1249,8 +1376,8 @@ function buildRoomProps(
           viewBoxMinY: scene.viewBoxMinY,
         },
       };
-      const sprite = projectStaticPlacement(placement, originX, originY);
-      props.push({ ...sprite, debugOrigin: activeTopCorner });
+      const sprite = projectStaticPlacement(placement, floorOrigin.x, floorOrigin.y);
+      props.push({ ...sprite, floorIndex: room.floorIndex, debugOrigin: activeTopCorner });
     } else {
       // Per-prop sprite placement routed through the same svgMeta projection contract.
       for (const propDef of recipe.props) {
@@ -1258,7 +1385,7 @@ function buildRoomProps(
         const placement: HqStaticPlacementDef = {
           id: `${room.id}/${propDef.assetKey}`,
           assetId: `prop/${String(propDef.assetKey)}`,
-          assetUrl: PROP_ASSETS[propDef.assetKey],
+          assetUrl: resolvePropAssetUrl(propDef.assetKey, assetRoots),
           kind: "decoration",
           col: active.col + active.cols * propDef.relCol,
           row: active.row + active.rows * propDef.relRow,
@@ -1272,8 +1399,8 @@ function buildRoomProps(
           offsetX: propDef.offsetX ?? 0,
           offsetY: propDef.offsetY ?? 0,
         };
-        const sprite = projectStaticPlacement(placement, originX, originY);
-        props.push({ ...sprite, debugOrigin: activeTopCorner });
+        const sprite = projectStaticPlacement(placement, floorOrigin.x, floorOrigin.y);
+        props.push({ ...sprite, floorIndex: room.floorIndex, debugOrigin: activeTopCorner });
       }
     }
   }
@@ -1305,7 +1432,13 @@ function buildCorridorTiles(layout: BuildingFloorLayout | undefined): HqFloorTil
   for (let c = sh.col; c < sh.col + sh.cols; c++) {
     for (let r = sh.row; r < sh.row + sh.rows; r++) {
       if (!slotCells.has(`${c},${r}`)) {
-        tiles.push({ col: c, row: r, tint: CORRIDOR_TINT, roomId: "corridor" });
+        tiles.push({
+          floorIndex: layout.floorIndex,
+          col: c,
+          row: r,
+          tint: CORRIDOR_TINT,
+          roomId: "corridor",
+        });
       }
     }
   }
@@ -1318,7 +1451,7 @@ function buildExpansionSlotTiles(expansionSlots: readonly HqExpansionSlotSeed[])
     const tint = slot.kind === "available" ? EMPTY_SLOT_TINT : LOCKED_SLOT_TINT;
     for (let c = slot.footprint.col; c < slot.footprint.col + slot.footprint.cols; c++) {
       for (let r = slot.footprint.row; r < slot.footprint.row + slot.footprint.rows; r++) {
-        tiles.push({ col: c, row: r, tint, roomId: slot.id });
+        tiles.push({ floorIndex: slot.floorIndex, col: c, row: r, tint, roomId: slot.id });
       }
     }
   }
@@ -1334,6 +1467,7 @@ function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWal
   // Left wall: back-left face along col = sh.col
   for (let r = sh.row; r < sh.row + sh.rows; r++) {
     segments.push({
+      floorIndex: layout.floorIndex,
       col: sh.col,
       row: r,
       side: "left",
@@ -1346,6 +1480,7 @@ function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWal
   // Right wall: back-right face along row = sh.row
   for (let c = sh.col; c < sh.col + sh.cols; c++) {
     segments.push({
+      floorIndex: layout.floorIndex,
       col: c,
       row: sh.row,
       side: "right",
@@ -1478,16 +1613,20 @@ export function composeHqWorldGeometry(
 ): HqWorldGeometry {
   const reservedSlots = options.reservedSlots ?? [];
   const activeFloorIndex = options.floorIndex ?? 0;
-  const buildingLayout = options.buildingId
-    ? getBuildingLayout(options.buildingId, activeFloorIndex, options.buildingTier ?? 1)
-    : undefined;
+  const visibleFloorLayouts = options.buildingId
+    ? getVisibleBuildingFloors(options.buildingId, activeFloorIndex, options.buildingTier ?? 1)
+    : [];
+  const floorOffsets = buildFloorOffsetMap(visibleFloorLayouts);
+  const baseFloorLayout = visibleFloorLayouts[0];
 
-  if (rooms.length === 0 && reservedSlots.length === 0 && !buildingLayout) {
+  if (rooms.length === 0 && reservedSlots.length === 0 && visibleFloorLayouts.length === 0) {
     const layout: HqWorldLayout = {
       tileWidth: HQ_TILE_WIDTH,
       tileHeight: HQ_TILE_HEIGHT,
       wallHeight: HQ_WALL_HEIGHT,
       activeFloorIndex,
+      visibleFloorIndexes: [activeFloorIndex],
+      floorOffsets: [],
       originX: WORLD_MARGIN_X,
       originY: WORLD_MARGIN_Y,
       minX: 0,
@@ -1509,8 +1648,8 @@ export function composeHqWorldGeometry(
 
   // When a building layout exists, use the full shell for perimeter/bounds
   // so the building size stays fixed regardless of how many rooms are placed.
-  const perimeterFootprints: HqFootprint[] = buildingLayout
-    ? [buildingLayout.shell]
+  const perimeterFootprints: HqFootprint[] = baseFloorLayout
+    ? [baseFloorLayout.shell]
     : [
         ...rooms.map((room) => room.reservedFootprint),
         ...reservedSlots.map((slot) => slot.footprint),
@@ -1522,20 +1661,27 @@ export function composeHqWorldGeometry(
   // Build modular geometry
   const floorTiles = [
     ...buildFloorTiles(rooms),
-    ...buildCorridorTiles(buildingLayout),
+    ...visibleFloorLayouts.flatMap((layout) => buildCorridorTiles(layout)),
     ...buildExpansionSlotTiles(reservedSlots),
   ];
-  const wallSegments = buildingLayout
-    ? buildBuildingShellWalls(buildingLayout)
-    : buildWallSegments(rooms);
-  const perimeterTiles = buildPerimeterTiles(perimeterFootprints);
+  const wallSegments =
+    visibleFloorLayouts.length > 0
+      ? visibleFloorLayouts.flatMap((layout) => buildBuildingShellWalls(layout))
+      : buildWallSegments(rooms);
+  const perimeterTiles = buildPerimeterTiles(perimeterFootprints, options.buildingId);
 
   // Build room nodes (for hit-testing), props, scenery, navGraph
-  const rawRooms = rooms.map((seed) => createRoomNode(seed, originX, originY));
+  const rawRooms = rooms.map((seed) => createRoomNode(seed, originX, originY, floorOffsets));
   const rawExpansionSlots = reservedSlots.map((slot) =>
-    createExpansionSlotNode(slot, originX, originY),
+    createExpansionSlotNode(slot, originX, originY, floorOffsets),
   );
-  const roomProps = buildRoomProps(rooms, originX, originY);
+  const roomProps = buildRoomProps(
+    rooms,
+    originX,
+    originY,
+    floorOffsets,
+    getBuildingRenderConfig(options.buildingId).paths,
+  );
   const scenery = buildExteriorScenery(options.buildingId, originX, originY);
 
   const rawBounds = computeWorldBounds(
@@ -1566,48 +1712,79 @@ export function composeHqWorldGeometry(
   );
 
   const navGraph = buildNavigationGraph(
-    shiftedRooms.map((room) => ({
-      id: room.id,
-      x: room.activeBounds.x,
-      y: room.activeBounds.y,
-      width: room.activeBounds.width,
-      height: room.activeBounds.height,
-      functionTag: room.functionTag,
-      ...(() => {
-        const seed = rooms.find((candidate) => candidate.id === room.id);
-        const opening = seed
-          ? getRecipe(seed.templateId, seed.functionTag, seed.roomStateId).openings[0]
-          : undefined;
-        if (!seed || !opening) {
-          return {};
-        }
+    shiftedRooms
+      .filter((room) => room.floorIndex === activeFloorIndex)
+      .map((room) => ({
+        id: room.id,
+        x: room.activeBounds.x,
+        y: room.activeBounds.y,
+        width: room.activeBounds.width,
+        height: room.activeBounds.height,
+        functionTag: room.functionTag,
+        ...(() => {
+          const seed = rooms.find((candidate) => candidate.id === room.id);
+          const opening = seed
+            ? getRecipe(seed.templateId, seed.functionTag, seed.roomStateId).openings[0]
+            : undefined;
+          if (!seed || !opening) {
+            return {};
+          }
 
-        const entry = projectDoorCenter(
-          seed.reservedFootprint,
-          opening,
-          originX + dx,
-          originY + dy,
-        );
-        return {
-          entryX: entry.x,
-          entryY: entry.y,
-        };
-      })(),
-    })),
+          const floorOrigin = getFloorOrigin(
+            originX + dx,
+            originY + dy,
+            seed.floorIndex,
+            floorOffsets,
+          );
+          const entry = projectDoorCenter(
+            seed.reservedFootprint,
+            opening,
+            floorOrigin.x,
+            floorOrigin.y,
+          );
+          return {
+            entryX: entry.x,
+            entryY: entry.y,
+          };
+        })(),
+      })),
   );
 
   // Compute building shell world-space size for camera zoom limits
   let buildingWorldSize: { width: number; height: number } | undefined;
-  if (buildingLayout) {
-    const shell = buildingLayout.shell;
-    const shellCorners = [
-      projectIso(shell.col, shell.row, originX + dx, originY + dy),
-      projectIso(shell.col + shell.cols, shell.row, originX + dx, originY + dy),
-      projectIso(shell.col + shell.cols, shell.row + shell.rows, originX + dx, originY + dy),
-      projectIso(shell.col, shell.row + shell.rows, originX + dx, originY + dy),
-    ];
-    const sxs = shellCorners.map((p) => p.x);
-    const sys = shellCorners.map((p) => p.y);
+  if (visibleFloorLayouts.length > 0) {
+    const shellPoints: HqPoint[] = [];
+    for (const layout of visibleFloorLayouts) {
+      const floorOrigin = getFloorOrigin(
+        originX + dx,
+        originY + dy,
+        layout.floorIndex,
+        floorOffsets,
+      );
+      shellPoints.push(
+        projectIso(layout.shell.col, layout.shell.row, floorOrigin.x, floorOrigin.y),
+        projectIso(
+          layout.shell.col + layout.shell.cols,
+          layout.shell.row,
+          floorOrigin.x,
+          floorOrigin.y,
+        ),
+        projectIso(
+          layout.shell.col + layout.shell.cols,
+          layout.shell.row + layout.shell.rows,
+          floorOrigin.x,
+          floorOrigin.y,
+        ),
+        projectIso(
+          layout.shell.col,
+          layout.shell.row + layout.shell.rows,
+          floorOrigin.x,
+          floorOrigin.y,
+        ),
+      );
+    }
+    const sxs = shellPoints.map((p) => p.x);
+    const sys = shellPoints.map((p) => p.y);
     buildingWorldSize = {
       width: (Math.max(...sxs) - Math.min(...sxs)) * 1.4,
       height: (Math.max(...sys) - Math.min(...sys) + HQ_WALL_HEIGHT) * 1.4,
@@ -1619,6 +1796,13 @@ export function composeHqWorldGeometry(
     tileHeight: HQ_TILE_HEIGHT,
     wallHeight: HQ_WALL_HEIGHT,
     activeFloorIndex,
+    visibleFloorIndexes:
+      visibleFloorLayouts.length > 0
+        ? visibleFloorLayouts.map((floor) => floor.floorIndex)
+        : [activeFloorIndex],
+    floorOffsets: visibleFloorLayouts
+      .map((floor) => floorOffsets.get(floor.floorIndex))
+      .filter((floor): floor is HqFloorOffset => floor !== undefined),
     originX: originX + dx,
     originY: originY + dy,
     minX: bounds.minX,
@@ -1645,6 +1829,7 @@ function buildBackdropSnapshot(
   minuteOfDay: number,
   buildingId?: string,
 ): HqBackdropSnapshot | null {
+  const renderConfig = getBuildingRenderConfig(buildingId);
   const manifest = buildingId
     ? getHqBackdropManifestForBuilding(buildingId)
     : getHqBackdropManifest();
@@ -1657,6 +1842,7 @@ function buildBackdropSnapshot(
     phase,
     profileId: manifest.profileId,
     elevationBandId: manifest.elevationBandId,
+    assetRoot: renderConfig.paths.partsRoot,
     zones: profile.zones,
     ambientTint: profile.ambientTint,
     fogColor: profile.fogColor,

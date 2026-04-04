@@ -49,6 +49,7 @@ function createRoomSnapshot(
     rows: number;
   },
   activeFootprint = getRoomActiveFootprint(templateId, reservedFootprint, []),
+  floorIndex = 0,
 ) {
   const template = templateRegistry.roomById.get(templateId);
   if (!template) {
@@ -59,7 +60,7 @@ function createRoomSnapshot(
     id,
     templateId: template.id,
     tier: template.tier,
-    floorIndex: 0,
+    floorIndex,
     slotId,
     roomStateId: getRoomStateId(template.id, []),
     capacity: template.baseCapacity,
@@ -1342,6 +1343,75 @@ describe("runtime session lifecycle", () => {
 
     await session.commands.setActiveFloor({ floorIndex: 1 });
     expect(session.drainPendingCues()).toEqual([]);
+
+    session.dispose();
+  });
+
+  it("renders stacked visible floors while keeping actor placement on the active floor", async () => {
+    const world = createBootstrapWorldSnapshot(templateRegistry);
+    world.building = {
+      activeBuildingId: "building/porters",
+      activeBuildingTier: 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 7,
+      operatorSlotCount: 12,
+    };
+    world.rooms = [
+      createRoomSnapshot(
+        "room/floor:tier_1",
+        "room-instance/floor",
+        "slot/floor",
+        {
+          col: 1,
+          row: 12,
+          cols: 10,
+          rows: 6,
+        },
+        undefined,
+        0,
+      ),
+      createRoomSnapshot(
+        "room/bar:tier_1",
+        "room-instance/bar",
+        "slot/bar",
+        {
+          col: 1,
+          row: 6,
+          cols: 10,
+          rows: 4,
+        },
+        undefined,
+        0,
+      ),
+      createRoomSnapshot(
+        "room/office:tier_1",
+        "room-instance/office",
+        "slot/office",
+        {
+          col: 0,
+          row: 12,
+          cols: 4,
+          rows: 3,
+        },
+        undefined,
+        1,
+      ),
+    ];
+
+    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue(createPersistedSave("slot/1", world));
+    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
+
+    const session = await resolveRuntimeSession({
+      mode: "load",
+      slotId: "slot/1",
+    });
+
+    const snapshot = session.state.hqWorldSnapshot;
+    const roomFloorById = new Map(snapshot?.rooms.map((room) => [room.id, room.floorIndex]) ?? []);
+
+    expect(snapshot?.layout.visibleFloorIndexes).toEqual([0, 1]);
+    expect(new Set(snapshot?.rooms.map((room) => room.floorIndex))).toEqual(new Set([0, 1]));
+    expect(snapshot?.actors.every((actor) => roomFloorById.get(actor.roomId) === 0)).toBe(true);
 
     session.dispose();
   });

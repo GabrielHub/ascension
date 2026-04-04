@@ -97,10 +97,23 @@ export interface IncidentTemplate {
 export interface PendingIncident {
   instanceId: string;
   templateId: string;
+  templateName: string;
+  category: string;
+  tags: readonly string[];
   triggerFamily: IncidentTriggerFamily;
   boundContext: IncidentBoundContext;
   choices: readonly IncidentChoice[];
+  presenterId?: string;
+  presenterExpression?: string;
   createdAtMinute: number;
+}
+
+export interface IncidentPresentationOverride {
+  title?: string;
+  briefing?: string;
+  subjectSummary?: string;
+  choices?: readonly IncidentChoiceView[];
+  copySource?: "authored" | "generated";
 }
 
 export interface IncidentHistoryEntry {
@@ -343,7 +356,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "contract_pressure",
     pressureTags: ["pressure:contract", "pressure:deadline"],
     pressureThreshold: 60,
-    requiredContext: [],
+    requiredContext: ["operator_a"],
     cooldownMinutes: 1440,
     noveltyWeight: 0.8,
     briefingTemplate:
@@ -431,7 +444,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "morale_opportunity",
     pressureTags: ["pressure:low"],
     pressureThreshold: 20,
-    requiredContext: [],
+    requiredContext: ["operator_a"],
     cooldownMinutes: 1440,
     noveltyWeight: 1.5,
     briefingTemplate:
@@ -520,7 +533,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "room_breakdown",
     pressureTags: ["pressure:social", "pressure:room"],
     pressureThreshold: 45,
-    requiredContext: ["room"],
+    requiredContext: ["room", "operator_a", "operator_b"],
     cooldownMinutes: 720,
     noveltyWeight: 1.1,
     briefingTemplate:
@@ -597,7 +610,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "room_breakdown",
     pressureTags: ["pressure:logistics", "pressure:morale"],
     pressureThreshold: 15,
-    requiredContext: ["room"],
+    requiredContext: ["room", "operator_a"],
     requiredBuildingIds: ["building/bodega"],
     cooldownMinutes: 600,
     noveltyWeight: 1.3,
@@ -791,7 +804,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "room_breakdown",
     pressureTags: ["pressure:room", "pressure:morale"],
     pressureThreshold: 20,
-    requiredContext: ["room"],
+    requiredContext: ["room", "operator_a"],
     requiredBuildingIds: ["building/bodega"],
     cooldownMinutes: 1440,
     noveltyWeight: 1.4,
@@ -838,7 +851,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "morale_opportunity",
     pressureTags: ["pressure:low"],
     pressureThreshold: 10,
-    requiredContext: [],
+    requiredContext: ["operator_a"],
     requiredBuildingIds: ["building/bodega"],
     cooldownMinutes: 2880,
     noveltyWeight: 1.6,
@@ -883,7 +896,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "contract_pressure",
     pressureTags: ["pressure:logistics", "pressure:economy"],
     pressureThreshold: 20,
-    requiredContext: [],
+    requiredContext: ["operator_a"],
     requiredBuildingIds: ["building/bodega"],
     cooldownMinutes: 480,
     noveltyWeight: 1.1,
@@ -1030,7 +1043,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     triggerFamily: "contract_pressure",
     pressureTags: ["pressure:logistics", "pressure:time"],
     pressureThreshold: 40,
-    requiredContext: [],
+    requiredContext: ["operator_a"],
     requiredBuildingIds: ["building/bodega"],
     cooldownMinutes: 2880,
     noveltyWeight: 1.5,
@@ -1202,6 +1215,24 @@ export function validateIncidentTemplates(
     if (template.presenterId && !registry.presenterById.has(template.presenterId)) {
       issues.push(`${template.id} references unknown presenter "${template.presenterId}".`);
     }
+
+    template.choices.forEach((choice) => {
+      choice.effects.forEach((effect) => {
+        if (effect.targetRef === "subject_a" && !template.requiredContext.includes("operator_a")) {
+          issues.push(
+            `${template.id}:${choice.choiceId} targets subject_a without requiring operator_a.`,
+          );
+        }
+        if (effect.targetRef === "subject_b" && !template.requiredContext.includes("operator_b")) {
+          issues.push(
+            `${template.id}:${choice.choiceId} targets subject_b without requiring operator_b.`,
+          );
+        }
+        if (effect.targetRef === "room" && !template.requiredContext.includes("room")) {
+          issues.push(`${template.id}:${choice.choiceId} targets room without requiring room.`);
+        }
+      });
+    });
   });
 
   if (issues.length > 0) {
@@ -1387,9 +1418,14 @@ export function selectIncidentCandidate(
   const incident: PendingIncident = {
     instanceId: `incident-${state.nextInstanceId++}`,
     templateId: template.id,
+    templateName: template.name,
+    category: template.category,
+    tags: [...template.tags],
     triggerFamily: template.triggerFamily,
     boundContext,
     choices: template.choices,
+    presenterId: template.presenterId,
+    presenterExpression: template.presenterExpression,
     createdAtMinute: currentMinute,
   };
 
@@ -1430,6 +1466,25 @@ function buildRoomNameMap(context: SimSystemContext): Record<string, string> {
   return roomNames;
 }
 
+function hasIncidentInterruptionForInstance(
+  context: SimSystemContext,
+  incidentInstanceId: string,
+): boolean {
+  const active = context.runtimeState.interruptionQueue.active;
+  if (
+    active?.payload.kind === "incident" &&
+    active.payload.incidentInstanceId === incidentInstanceId
+  ) {
+    return true;
+  }
+
+  return context.runtimeState.interruptionQueue.queue.some(
+    (instance) =>
+      instance.payload.kind === "incident" &&
+      instance.payload.incidentInstanceId === incidentInstanceId,
+  );
+}
+
 export function queueIncident(
   context: SimSystemContext,
   state: IncidentState,
@@ -1449,11 +1504,40 @@ export function queueIncident(
   state.pendingIncident = incident;
   state.lastEvaluationMinute = currentMinute;
 
+  if (context.runtimeState.deferIncidentPresentation) {
+    return true;
+  }
+
+  return materializePendingIncident(context, state, sourceSystem);
+}
+
+export function materializePendingIncident(
+  context: SimSystemContext,
+  state: IncidentState,
+  sourceSystem: string,
+  presentation?: IncidentPresentationOverride,
+): boolean {
+  const incident = state.pendingIncident;
+  if (!incident) {
+    return false;
+  }
+
+  if (hasIncidentInterruptionForInstance(context, incident.instanceId)) {
+    return false;
+  }
+
+  const template = INCIDENT_TEMPLATES.find((entry) => entry.id === incident.templateId);
+  if (!template) {
+    return false;
+  }
+
+  const currentMinute = getCurrentAbsoluteMinute(context);
   const payload = createIncidentInterruptionPayload(
     incident,
     template,
     buildOperatorNameMap(context),
     buildRoomNameMap(context),
+    presentation,
   );
   const subjectSummary = payload.subjectSummary.trim();
   const subjectSuffix = subjectSummary.length > 0 ? ` (${subjectSummary})` : "";
@@ -1533,6 +1617,7 @@ export function resolveIncident(
   context: SimSystemContext,
   state: IncidentState,
   choiceId: string,
+  payload?: IncidentPayload,
 ): boolean {
   if (!state.pendingIncident) return false;
 
@@ -1560,10 +1645,14 @@ export function resolveIncident(
     state.cooldowns[template.id] = getCurrentAbsoluteMinute(context);
   }
 
+  const resolutionSummary = payload?.choices.find(
+    (entry) => entry.choiceId === choiceId,
+  )?.resolutionSummary;
+
   // Emit event
   pushRuntimeEvent(context, {
     kind: "incident_resolved",
-    message: `Incident resolved: ${choice.label}`,
+    message: resolutionSummary?.trim() || `Incident resolved: ${choice.label}`,
     timestamp: `Day ${WorldTimeState.day[context.singletonEntities.time]}`,
     accent: "info",
   });
@@ -1721,6 +1810,7 @@ export function createIncidentInterruptionPayload(
   template: IncidentTemplate,
   operatorNames: Record<string, string>,
   roomNames: Record<string, string> = {},
+  presentation?: IncidentPresentationOverride,
 ): IncidentPayload {
   let briefing = template.briefingTemplate;
   if (incident.boundContext.operatorIds[0]) {
@@ -1749,19 +1839,28 @@ export function createIncidentInterruptionPayload(
     subjectSummaryParts.push(roomNames[incident.boundContext.roomId]);
   }
   const subjectSummary = subjectSummaryParts.join(", ");
+  const mergedChoices =
+    presentation?.choices?.map((choice) => ({
+      choiceId: choice.choiceId,
+      label: choice.label,
+      description: choice.description,
+      consequenceSummary: choice.consequenceSummary,
+      ...(choice.resolutionSummary ? { resolutionSummary: choice.resolutionSummary } : {}),
+    })) ?? choiceViews;
 
   return {
     kind: "incident",
     incidentInstanceId: incident.instanceId,
     templateId: incident.templateId,
     category: template.category,
-    title: template.name,
-    briefing,
-    subjectSummary,
-    choices: choiceViews,
+    title: presentation?.title?.trim() || template.name,
+    briefing: presentation?.briefing?.trim() || briefing,
+    subjectSummary: presentation?.subjectSummary?.trim() || subjectSummary,
+    choices: mergedChoices,
     boundContext: incident.boundContext,
     presenterId: template.presenterId ?? ASSISTANT_PRESENTER_ID,
     presenterExpression:
       template.presenterExpression ?? getDefaultIncidentPresenterExpression(template),
+    copySource: presentation?.copySource ?? "authored",
   };
 }

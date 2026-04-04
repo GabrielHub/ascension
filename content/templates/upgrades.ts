@@ -335,7 +335,7 @@ export const upgradeTemplates = [
     name: "Kitchen Overhaul",
     tags: ["upgrade:building", "progression:quality"],
     description:
-      "Rebuilds the kitchen into something a health inspector would survive. Better food means better reputation and steadier income.",
+      "Rips out the old line and puts in something a health inspector would not immediately shut down. The food gets better, the regulars start tipping, and word travels that Porter's is a place worth showing up to.",
     target: "building",
     targetId: "building/porters",
     requirements: [
@@ -356,7 +356,7 @@ export const upgradeTemplates = [
     name: "Upstairs Conversion",
     tags: ["upgrade:building", "progression:space"],
     description:
-      "Converts the remaining upstairs apartments into operational rooms. More space for planning and recovery.",
+      "Clears out the last of the old apartment furniture and frames in real operational rooms. The break room gets a door, the briefing room gets a whiteboard, and the guild finally has a floor the public cannot walk onto.",
     target: "building",
     targetId: "building/porters",
     requirements: [
@@ -378,7 +378,7 @@ export const upgradeTemplates = [
     name: "The Remodel",
     tags: ["upgrade:building", "progression:quality"],
     description:
-      "A proper renovation. New fixtures, better lighting, and the kind of attention that makes people stay longer.",
+      "Replaces the worst of the bar-and-grill wear with proper fixtures, better lighting, and paint that was not here when the previous owner left. People start staying longer, and the ones who stay start recovering faster.",
     target: "building",
     targetId: "building/porters",
     requirements: [
@@ -399,7 +399,7 @@ export const upgradeTemplates = [
     name: "The Waterfront",
     tags: ["upgrade:building", "progression:space"],
     description:
-      "Opens the harbor-side expansion. A dock for staging and a deck for downtime, both with water and sky.",
+      "Knocks through the back wall and builds out over the water. A concrete dock for staging departures and a weathered deck for the kind of downtime you cannot get indoors.",
     target: "building",
     targetId: "building/porters",
     requirements: [

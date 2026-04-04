@@ -65,6 +65,7 @@ export interface IncidentPayload extends PresenterBinding {
   subjectSummary: string;
   choices: readonly IncidentChoiceView[];
   boundContext: IncidentBoundContext;
+  copySource: "authored" | "generated";
 }
 
 export interface IncidentChoiceView {
@@ -72,6 +73,7 @@ export interface IncidentChoiceView {
   label: string;
   description: string;
   consequenceSummary: string;
+  resolutionSummary?: string;
 }
 
 export interface IncidentBoundContext {

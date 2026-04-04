@@ -5,10 +5,20 @@ import operatorRecipesManifest from "../content/data/operator-recipes.json";
 // Imported via content mirror; the canonical copy in public/ is served at runtime by URL.
 import operatorAppearancePartsIndex from "../content/data/operator-parts-index.json";
 
+interface OperatorRecipeEntry {
+  id: string;
+  name: string;
+  headShape: string;
+  hair: string;
+  eyes: string;
+  faceDetail: string;
+  bodySilhouette: string;
+  palette: string;
+  skinTone: string;
+}
+
 interface OperatorRecipeManifest {
-  recipes: Array<{
-    id: string;
-  }>;
+  recipes: OperatorRecipeEntry[];
 }
 
 export interface OperatorAppearancePartIndexEntry {
@@ -22,10 +32,17 @@ export interface OperatorAppearancePartIndexEntry {
   rarity: string;
 }
 
+export interface OperatorAppearanceProfileSelection {
+  presetId: string;
+  visibleGear?: OperatorAppearanceSnapshot["visibleGear"];
+}
+
 const manifest = operatorRecipesManifest as OperatorRecipeManifest;
 const recipeIds = manifest.recipes.map((recipe) => recipe.id);
+const recipeEntries = manifest.recipes ?? [];
 const fallbackRecipeId = recipeIds[0] ?? "kael-001";
 const recipeIdSet = new Set(recipeIds);
+const recipeEntryById = new Map(recipeEntries.map((recipe) => [recipe.id, recipe]));
 
 export const OPERATOR_VISIBLE_GEAR_SLOT_IDS = [
   "weaponPartId",
@@ -82,8 +99,32 @@ function parseOperatorAppearancePartEntries(value: unknown, path: string): unkno
 
 export const OPERATOR_APPEARANCE_RECIPE_IDS = [...recipeIds] as readonly string[];
 
+const BODY_SILHOUETTE_TO_BUILD: Record<string, string> = {
+  "armored-structured": "broad",
+  "elegant-light": "lean",
+  "clean-simple": "medium",
+  "lithe-agile": "lean",
+  "balanced-tailored": "medium",
+};
+
+const ROLE_TAG_TO_VISUAL_ARCHETYPE: Record<string, string> = {
+  "role:field_lead": "bruiser",
+  "role:scout": "infiltrator",
+  "role:medic": "strategist",
+};
+
 export function isOperatorAppearanceRecipeId(value: unknown): value is string {
   return typeof value === "string" && recipeIdSet.has(value);
+}
+
+export function getLoadedOperatorAppearanceRecipes(): readonly OperatorRecipeEntry[] {
+  return recipeEntries;
+}
+
+export function getOperatorAppearanceRecipeEntry(
+  recipeId: string,
+): OperatorRecipeEntry | undefined {
+  return recipeEntryById.get(recipeId);
 }
 
 export function selectOperatorAppearanceRecipeId(input: { stableKey?: string }): string {
@@ -101,6 +142,121 @@ export function getOperatorVisibleGearPartCategory(slot: OperatorVisibleGearSlot
 
 export function getDefaultOperatorAppearancePartsIndex(): unknown | undefined {
   return operatorAppearancePartsIndex;
+}
+
+function normalizeRoleTag(roleTag: string): string {
+  return roleTag.trim().toLowerCase();
+}
+
+function resolveRecipeBuild(recipeId: string): string {
+  const bodySilhouette = recipeEntryById.get(recipeId)?.bodySilhouette;
+  return BODY_SILHOUETTE_TO_BUILD[bodySilhouette ?? ""] ?? "medium";
+}
+
+function pickStableEntry<T>(entries: readonly T[], stableKey: string): T | undefined {
+  if (entries.length === 0) {
+    return undefined;
+  }
+
+  return entries[stableStringHash(stableKey) % entries.length];
+}
+
+function filterCompatibleGearParts(input: {
+  category: string;
+  roleTag: string;
+  recipeId: string;
+  maxRarity?: OperatorAppearancePartIndexEntry["rarity"];
+}): OperatorAppearancePartIndexEntry[] {
+  const visualArchetype =
+    ROLE_TAG_TO_VISUAL_ARCHETYPE[normalizeRoleTag(input.roleTag)] ?? "strategist";
+  const bodyBuild = resolveRecipeBuild(input.recipeId);
+  const rarityOrder: Record<OperatorAppearancePartIndexEntry["rarity"], number> = {
+    common: 0,
+    uncommon: 1,
+    rare: 2,
+  };
+  const maxRarityRank = input.maxRarity ? rarityOrder[input.maxRarity] : Infinity;
+
+  return Array.from(parseOperatorAppearancePartIndex(operatorAppearancePartsIndex).values()).filter(
+    (part) =>
+      part.category === input.category &&
+      part.roleTags.includes(visualArchetype) &&
+      part.bodyCompatibility.includes(bodyBuild) &&
+      rarityOrder[part.rarity] <= maxRarityRank,
+  );
+}
+
+export function getCompatibleOperatorGearOptions(input: {
+  category: string;
+  roleTag: string;
+  recipeId: string;
+  maxRarity?: OperatorAppearancePartIndexEntry["rarity"];
+}): readonly OperatorAppearancePartIndexEntry[] {
+  return filterCompatibleGearParts(input);
+}
+
+export function selectOperatorAppearanceProfile(input: {
+  stableKey?: string;
+  roleTag: string;
+  quality?: number;
+  presetId?: string;
+}): OperatorAppearanceProfileSelection {
+  const presetId = isOperatorAppearanceRecipeId(input.presetId)
+    ? input.presetId
+    : selectOperatorAppearanceRecipeId({ stableKey: input.stableKey });
+  const stableKey = input.stableKey?.trim() || presetId;
+  const quality = input.quality ?? 50;
+  const maxRarity: OperatorAppearancePartIndexEntry["rarity"] =
+    quality >= 72 ? "uncommon" : "common";
+
+  const includeOverlay = quality >= 62;
+  const includeAccessory = quality >= 56;
+  const includeWeapon = quality >= 68;
+
+  const visibleGear: NonNullable<OperatorAppearanceSnapshot["visibleGear"]> = {};
+  if (includeWeapon) {
+    visibleGear.weaponPartId = pickStableEntry(
+      filterCompatibleGearParts({
+        category: "weapon",
+        roleTag: input.roleTag,
+        recipeId: presetId,
+        maxRarity,
+      }).map((part) => part.id),
+      `${stableKey}:weapon`,
+    );
+  }
+  if (includeOverlay) {
+    visibleGear.outfitOverlayPartId = pickStableEntry(
+      filterCompatibleGearParts({
+        category: "outfit-overlay",
+        roleTag: input.roleTag,
+        recipeId: presetId,
+        maxRarity,
+      }).map((part) => part.id),
+      `${stableKey}:outfit-overlay`,
+    );
+  }
+  if (includeAccessory) {
+    visibleGear.accessoryPartId = pickStableEntry(
+      filterCompatibleGearParts({
+        category: "accessory",
+        roleTag: input.roleTag,
+        recipeId: presetId,
+        maxRarity,
+      }).map((part) => part.id),
+      `${stableKey}:accessory`,
+    );
+  }
+
+  const hasVisibleGear =
+    Boolean(visibleGear.weaponPartId) ||
+    Boolean(visibleGear.outfitOverlayPartId) ||
+    Boolean(visibleGear.accessoryPartId);
+
+  return {
+    presetId,
+    ...(hasVisibleGear ? { visibleGear } : {}),
+  };
 }
 
 export function parseOperatorAppearancePartIndex(

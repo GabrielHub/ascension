@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50">
+  <!-- Porter's neon bar sign — "works on the third try."
+       Wall-mounted neon tubing, isometric front-face alignment.
+       Warm amber glow, slightly flickery character. -->
+
+  <defs>
+    <radialGradient id="ns-glow" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0%" stop-color="rgba(200,140,60,0.25)"/>
+      <stop offset="50%" stop-color="rgba(200,140,60,0.08)"/>
+      <stop offset="100%" stop-color="rgba(200,140,60,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Glow halo -->
+  <ellipse cx="50" cy="24" rx="45" ry="20" fill="url(#ns-glow)"/>
+
+  <!-- Mounting bracket (wall plate) -->
+  <rect x="10" y="8" width="80" height="32" rx="2"
+    fill="#1e1a14" stroke="#2e2418" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- Bracket mounting bolts -->
+  <g fill="#3a3838" opacity="0.3">
+    <circle cx="16" cy="14" r="1.2"/>
+    <circle cx="84" cy="14" r="1.2"/>
+    <circle cx="16" cy="34" r="1.2"/>
+    <circle cx="84" cy="34" r="1.2"/>
+  </g>
+
+  <!-- Neon tubing: "PORTER'S" -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main text glow (blurred underlayer) -->
+    <text x="18" y="32" font-family="sans-serif" font-weight="bold" font-size="16"
+      fill="rgba(200,140,60,0.15)" stroke="rgba(200,140,60,0.1)" stroke-width="3">PORTER'S</text>
+
+    <!-- Main text (neon tubes) -->
+    <text x="18" y="32" font-family="sans-serif" font-weight="bold" font-size="16"
+      fill="rgba(220,160,70,0.7)" stroke="rgba(200,140,60,0.5)" stroke-width="0.8">PORTER'S</text>
+  </g>
+
+  <!-- Underline bar (neon accent) -->
+  <line x1="20" y1="38" x2="80" y2="38"
+    stroke="rgba(200,140,60,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Underline glow -->
+  <line x1="20" y1="38" x2="80" y2="38"
+    stroke="rgba(200,140,60,0.1)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Flicker artifact (one letter slightly dimmer) -->
+  <rect x="58" y="18" width="12" height="18" fill="rgba(0,0,0,0.15)" opacity="0.3"/>
+
+  <!-- Power wire -->
+  <path d="M88,20 Q94,18 96,12 Q98,8 96,4"
+    stroke="#2e2e2e" stroke-width="0.8" fill="none" opacity="0.3"/>
+</svg>

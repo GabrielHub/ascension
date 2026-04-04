@@ -21,6 +21,13 @@ import type {
   BuilderShell,
   SceneBuilderState,
 } from "./builder-types";
+import {
+  BUILDER_PERIMETER_FILLS,
+  BUILDER_PERIMETER_STROKES,
+  buildBuilderPreviewCenterLaneSets,
+  buildBuilderPreviewPerimeterKindMap,
+  buildBuilderPreviewPerimeterTiles,
+} from "./builder-preview-context";
 
 const ENV = getHqEnvironmentRenderConfig();
 const TILE_W = ENV.composition.tileWidth;
@@ -82,6 +89,20 @@ function isoRectPath(
   const br = projectIso(col + cols, row + rows, ox, oy);
   const bl = projectIso(col, row + rows, ox, oy);
   return `M${tl.x},${tl.y} L${tr.x},${tr.y} L${br.x},${br.y} L${bl.x},${bl.y} Z`;
+}
+
+function isoCellPoints(
+  col: number,
+  row: number,
+  ox: number,
+  oy: number,
+): readonly [HqPoint, HqPoint, HqPoint, HqPoint] {
+  return [
+    projectIso(col, row, ox, oy),
+    projectIso(col + 1, row, ox, oy),
+    projectIso(col + 1, row + 1, ox, oy),
+    projectIso(col, row + 1, ox, oy),
+  ];
 }
 
 function getIsoRectBounds(
@@ -500,6 +521,18 @@ export function BuilderCanvas({ state, dispatch }: BuilderCanvasProps) {
   const previewBackdrop = getHqBackdropManifestForBuilding(state.buildingId)?.phases[
     state.previewPhase
   ];
+  const previewPerimeterTiles = useMemo(
+    () => buildBuilderPreviewPerimeterTiles(shell, state.buildingId),
+    [shell, state.buildingId],
+  );
+  const previewPerimeterKindMap = useMemo(
+    () => buildBuilderPreviewPerimeterKindMap(previewPerimeterTiles),
+    [previewPerimeterTiles],
+  );
+  const previewCenterLanes = useMemo(
+    () => buildBuilderPreviewCenterLaneSets(previewPerimeterTiles),
+    [previewPerimeterTiles],
+  );
   const shellBounds = useMemo(
     () =>
       shell
@@ -804,6 +837,92 @@ export function BuilderCanvas({ state, dispatch }: BuilderCanvasProps) {
         fill={BACKDROP_BASE_FILLS[state.previewPhase]}
       />
       <rect x={viewX} y={viewY} width={vw} height={vh} fill={`url(#${skyGradientId})`} />
+
+      {previewPerimeterTiles.map((tile) => {
+        const points = isoCellPoints(tile.col, tile.row, originX, originY);
+        const centerX = (points[0].x + points[2].x) / 2;
+        const centerY = (points[0].y + points[2].y) / 2;
+        const belowKind = previewPerimeterKindMap.get(`${tile.col},${tile.row + 1}`);
+        const aboveKind = previewPerimeterKindMap.get(`${tile.col},${tile.row - 1}`);
+        const tileKey = `${tile.col},${tile.row}`;
+        const isRowCenter = previewCenterLanes.rowSet.has(tileKey);
+        const isColCenter = previewCenterLanes.colSet.has(tileKey);
+
+        return (
+          <g key={`perimeter-${tile.col}-${tile.row}`} opacity={0.92}>
+            <path
+              d={`M${points[0].x},${points[0].y} L${points[1].x},${points[1].y} L${points[2].x},${points[2].y} L${points[3].x},${points[3].y} Z`}
+              fill={BUILDER_PERIMETER_FILLS[state.previewPhase][tile.kind]}
+              stroke={BUILDER_PERIMETER_STROKES[state.previewPhase][tile.kind]}
+              strokeWidth={0.75}
+            />
+
+            {tile.kind === "street" && isRowCenter && (
+              <>
+                <line
+                  x1={centerX - 12}
+                  y1={centerY - 6 - 1.5}
+                  x2={centerX + 12}
+                  y2={centerY + 6 - 1.5}
+                  stroke="rgba(200, 180, 80, 0.22)"
+                  strokeWidth={1}
+                />
+                <line
+                  x1={centerX - 12}
+                  y1={centerY - 6 + 1.5}
+                  x2={centerX + 12}
+                  y2={centerY + 6 + 1.5}
+                  stroke="rgba(200, 180, 80, 0.22)"
+                  strokeWidth={1}
+                />
+              </>
+            )}
+
+            {tile.kind === "street" && isColCenter && (
+              <>
+                <line
+                  x1={centerX - 12}
+                  y1={centerY + 6 - 1.5}
+                  x2={centerX + 12}
+                  y2={centerY - 6 - 1.5}
+                  stroke="rgba(200, 180, 80, 0.22)"
+                  strokeWidth={1}
+                />
+                <line
+                  x1={centerX - 12}
+                  y1={centerY + 6 + 1.5}
+                  x2={centerX + 12}
+                  y2={centerY - 6 + 1.5}
+                  stroke="rgba(200, 180, 80, 0.22)"
+                  strokeWidth={1}
+                />
+              </>
+            )}
+
+            {tile.kind === "sidewalk" && belowKind === "street" && (
+              <line
+                x1={points[3].x}
+                y1={points[3].y}
+                x2={points[2].x}
+                y2={points[2].y}
+                stroke="rgba(120, 108, 80, 0.45)"
+                strokeWidth={1.5}
+              />
+            )}
+
+            {tile.kind === "sidewalk" && aboveKind === "street" && (
+              <line
+                x1={points[0].x}
+                y1={points[0].y}
+                x2={points[1].x}
+                y2={points[1].y}
+                stroke="rgba(120, 108, 80, 0.35)"
+                strokeWidth={1.25}
+              />
+            )}
+          </g>
+        );
+      })}
 
       {shellBounds && (
         <>

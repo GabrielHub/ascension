@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 20 330 375">
+  <!-- Right-facing 3-story brownstone. Facade slope -0.5, side slope +0.5.
+       Mirror of walk-up. Red-brown brick, fire escape, stoop, shop awning.
+       Front corner base at (130, 380). -->
+
+  <defs>
+    <linearGradient id="wur-facade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4a2a1c"/>
+      <stop offset="100%" stop-color="#3e2418"/>
+    </linearGradient>
+    <linearGradient id="wur-side" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#3e2c20"/>
+      <stop offset="100%" stop-color="#4a3428"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══ STRUCTURAL FACES ═══ -->
+
+  <!-- Side face (iso-left, lighter, drawn first) -->
+  <polygon points="10,120 130,180 130,380 10,320"
+    fill="url(#wur-side)" stroke="#2e1a14" stroke-width="1"/>
+
+  <!-- Facade (iso-right, main visible face) -->
+  <polygon points="130,180 310,90 310,290 130,380"
+    fill="url(#wur-facade)" stroke="#2e1a14" stroke-width="1.5"/>
+
+  <!-- Roof -->
+  <polygon points="10,120 130,180 310,90 190,30"
+    fill="#1c1a18" stroke="#222" stroke-width="1.5"/>
+
+  <!-- Parapet/cornice — facade -->
+  <polygon points="130,180 310,90 310,94 130,184"
+    fill="#5a3e2c" stroke="#3e2a1c" stroke-width="0.5" opacity="0.7"/>
+  <polygon points="130,184 310,94 310,98 130,188"
+    fill="#4a3220" stroke="#3a2418" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Cornice — side -->
+  <polygon points="10,120 130,180 130,184 10,124"
+    fill="#3a2a1e" stroke="#2e1e14" stroke-width="0.5" opacity="0.45"/>
+
+  <!-- ═══ FACADE DETAILS — matrix(1, -0.5, 0, 1, 130, 180) ═══ -->
+
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)"
+     opacity="0.1" stroke="#3a1e14" stroke-width="0.4">
+    <line x1="5" y1="20" x2="175" y2="20"/>
+    <line x1="5" y1="45" x2="175" y2="45"/>
+    <line x1="5" y1="85" x2="175" y2="85"/>
+    <line x1="5" y1="110" x2="175" y2="110"/>
+    <line x1="5" y1="150" x2="175" y2="150"/>
+    <line x1="5" y1="175" x2="175" y2="175"/>
+  </g>
+
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)"
+     opacity="0.2" stroke="#5a3e2c" stroke-width="0.8">
+    <line x1="3" y1="66" x2="177" y2="66"/>
+    <line x1="3" y1="132" x2="177" y2="132"/>
+  </g>
+
+  <!-- Facade windows (3 cols × 3 floors) -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)"
+     fill="#0c0a08" stroke="#3a2818" stroke-width="0.6">
+    <rect x="20" y="14" width="26" height="32" rx="1"/>
+    <rect x="76" y="14" width="26" height="32" rx="1"/>
+    <rect x="132" y="14" width="26" height="32" rx="1"/>
+    <rect x="20" y="80" width="26" height="32" rx="1"/>
+    <rect x="76" y="80" width="26" height="32" rx="1"/>
+    <rect x="132" y="80" width="26" height="32" rx="1"/>
+    <rect x="15" y="142" width="45" height="42" rx="1"/>
+    <rect x="70" y="142" width="45" height="42" rx="1"/>
+    <rect x="130" y="142" width="40" height="42" rx="1"/>
+  </g>
+
+  <!-- Lit windows -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)" opacity="0.22">
+    <rect x="134" y="16" width="22" height="28" rx="1" fill="#c8a84c"/>
+    <rect x="22" y="82" width="22" height="28" rx="1" fill="#9a7a3c"/>
+    <rect x="78" y="16" width="22" height="28" rx="1" fill="#8a7040"/>
+    <rect x="134" y="82" width="22" height="28" rx="1" fill="#c8a84c"/>
+  </g>
+
+  <!-- Ground floor glow -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)" opacity="0.12">
+    <rect x="17" y="144" width="41" height="38" rx="1" fill="#c8a84c"/>
+    <rect x="72" y="144" width="41" height="38" rx="1" fill="#b89040"/>
+  </g>
+
+  <!-- Shop awning -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)">
+    <polygon points="10,138 170,138 175,148 5,148"
+      fill="#2a1a12" stroke="#221410" stroke-width="0.6" opacity="0.7"/>
+    <path d="M5,148 Q15,152 25,148 Q35,152 45,148 Q55,152 65,148 Q75,152 85,148 Q95,152 105,148 Q115,152 125,148 Q135,152 145,148 Q155,152 165,148 Q175,152 175,148"
+      fill="#2a1a12" stroke="#1e1210" stroke-width="0.4" opacity="0.5"/>
+  </g>
+
+  <!-- Doorway -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)">
+    <rect x="120" y="150" width="24" height="48" rx="1"
+      fill="#0e0c0a" stroke="#3a2818" stroke-width="0.8"/>
+    <circle cx="140" cy="174" r="1.2" fill="#4a4840" opacity="0.4"/>
+  </g>
+
+  <!-- Fire escape -->
+  <g transform="matrix(1, -0.5, 0, 1, 130, 180)"
+     stroke="#3a3838" stroke-width="0.8" fill="none" opacity="0.4">
+    <line x1="65" y1="66" x2="95" y2="66"/>
+    <line x1="65" y1="132" x2="95" y2="132"/>
+    <line x1="65" y1="50" x2="65" y2="140"/>
+    <line x1="95" y1="50" x2="95" y2="140"/>
+    <polyline points="68,70 92,85 68,100 92,115 68,128" stroke-width="0.5" opacity="0.35"/>
+    <line x1="78" y1="132" x2="78" y2="192"/>
+    <line x1="82" y1="132" x2="82" y2="192"/>
+    <g stroke-width="0.4">
+      <line x1="78" y1="145" x2="82" y2="145"/>
+      <line x1="78" y1="158" x2="82" y2="158"/>
+      <line x1="78" y1="171" x2="82" y2="171"/>
+      <line x1="78" y1="184" x2="82" y2="184"/>
+    </g>
+  </g>
+
+  <!-- ═══ SIDE FACE — matrix(1, 0.5, 0, 1, 10, 120) ═══ -->
+
+  <g transform="matrix(1, 0.5, 0, 1, 10, 120)"
+     opacity="0.08" stroke="#2e1a14" stroke-width="0.4">
+    <line x1="5" y1="30" x2="115" y2="30"/>
+    <line x1="5" y1="55" x2="115" y2="55"/>
+    <line x1="5" y1="90" x2="115" y2="90"/>
+    <line x1="5" y1="120" x2="115" y2="120"/>
+    <line x1="5" y1="155" x2="115" y2="155"/>
+  </g>
+
+  <g transform="matrix(1, 0.5, 0, 1, 10, 120)"
+     fill="#0c0a08" stroke="#3a2818" stroke-width="0.4" opacity="0.65">
+    <rect x="25" y="16" width="20" height="28" rx="1"/>
+    <rect x="75" y="16" width="20" height="28" rx="1"/>
+    <rect x="25" y="82" width="20" height="28" rx="1"/>
+    <rect x="75" y="82" width="20" height="28" rx="1"/>
+    <rect x="25" y="148" width="20" height="28" rx="1"/>
+    <rect x="75" y="148" width="20" height="28" rx="1"/>
+  </g>
+
+  <g transform="matrix(1, 0.5, 0, 1, 10, 120)" opacity="0.15">
+    <rect x="27" y="84" width="16" height="24" rx="1" fill="#c8a84c"/>
+    <rect x="77" y="150" width="16" height="24" rx="1" fill="#9a7a3c"/>
+  </g>
+
+  <g transform="matrix(1, 0.5, 0, 1, 10, 120)" opacity="0.4">
+    <rect x="80" y="120" width="22" height="14" rx="2" fill="#2a2a2a" stroke="#3a3838" stroke-width="0.5"/>
+  </g>
+
+  <g transform="matrix(1, 0.5, 0, 1, 10, 120)">
+    <line x1="117" y1="5" x2="117" y2="195" stroke="#3a3838" stroke-width="1.2" opacity="0.25"/>
+  </g>
+
+  <!-- Rooftop -->
+  <g opacity="0.3">
+    <circle cx="230" cy="55" r="8" fill="none" stroke="#3a3838" stroke-width="0.8"/>
+    <line x1="230" y1="55" x2="230" y2="47" stroke="#3a3838" stroke-width="0.6"/>
+    <rect x="80" y="95" width="8" height="14" rx="1" fill="#2a2828" stroke="#222" stroke-width="0.5"/>
+  </g>
+
+  <!-- Stoop -->
+  <polygon points="105,372 130,385 155,372 130,359" fill="#3a3430" stroke="#2e2a26" stroke-width="0.5"/>
+  <polygon points="105,372 130,385 130,389 105,376" fill="#302c28" stroke="#2a2622" stroke-width="0.4"/>
+  <polygon points="100,376 130,392 160,376 130,360" fill="#3a3430" stroke="#2e2a26" stroke-width="0.5"/>
+  <polygon points="100,376 130,392 130,396 100,380" fill="#302c28" stroke="#2a2622" stroke-width="0.4"/>
+</svg>

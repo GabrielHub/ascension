@@ -62,7 +62,7 @@ Rules:
 - AI may phrase, assemble, or vary content on top of structured deterministic payloads.
 - Failed AI output must never break a run.
 - The first supported local runtime is `Ollama` on Windows desktop.
-- The first default model target for bring-up is `gemma4`, but model choice must stay configurable at the transport boundary.
+- The first default model target for bring-up is `gemma4:e4b`, but model choice must stay configurable at the transport boundary.
 - Keep the transport contract OpenAI-compatible so the runtime can be swapped later to LM Studio or `llama.cpp` without rewriting the gameplay-facing generation pipeline.
 - Implement the browser-local adapter first for development, tooling, and Playwright.
 - Implement the desktop-host adapter second against the same transport contract.
@@ -128,7 +128,7 @@ First default endpoint:
 
 First default model:
 
-- `gemma4`
+- `gemma4:e4b`
 
 Rules:
 
@@ -189,14 +189,14 @@ First supported setup path:
 
 1. Install Ollama on the Windows desktop.
 2. Pull the default model:
-   - `ollama pull gemma4`
+   - `ollama pull gemma4:e4b`
 3. Verify local inference manually:
-   - `ollama run gemma4`
+   - `ollama run gemma4:e4b`
 4. Verify the local API is reachable:
    - `http://127.0.0.1:11434`
 5. Point the Tauri host at:
    - base URL `http://127.0.0.1:11434/v1`
-   - model id `gemma4`
+   - model id `gemma4:e4b`
 
 Rules:
 
@@ -235,9 +235,9 @@ Owner: user
 Required actions:
 
 1. Pull the default model:
-   - `ollama pull gemma4`
+   - `ollama pull gemma4:e4b`
 2. Run a manual smoke test:
-   - `ollama run gemma4`
+   - `ollama run gemma4:e4b`
 3. If model quality or speed is poor, evaluate a different local model manually before asking the agent to lock a different default.
 
 Success check:
@@ -438,6 +438,26 @@ The parser already supports two-word command names. Follow the existing command 
 
 This section is the concrete build order another agent should follow.
 
+Implementation status as of April 3, 2026:
+
+- Steps 1 through 8 are shipped: settings storage, AI module, runtime session orchestration, dev console integration, settings modal integration, desktop bridge, save-boundary verification, and repo verification.
+- The browser-side and desktop-side local AI transport paths are both live behind the same project-owned contract.
+- The request registry, probe flow, dedup/regenerate flow, and settings UX are live and exercisable.
+- Two generation surfaces are now implemented:
+  - `incident-framing`
+  - `operator-identity`
+- `incident-framing` rewrites interruption presentation on top of deterministic incident templates, choices, and effect bundles.
+- `operator-identity` rewrites recruit identity packets on top of deterministic role, approved specialty tags, approved portrait recipes, approved compatible gear ids, bounded preferences, and short persona text.
+- AI failures log and fall back; they do not crash gameplay or make saves invalid.
+- AI host configuration remains outside save data.
+- `vp check`, `vp test`, and `vp build` all pass on the current implementation.
+
+Remaining work under this plan is now content-breadth and quality work, not transport bring-up:
+
+- deepen prompt grounding from additional world/product docs and eval fixtures
+- expand the authored incident library and trigger coverage
+- decide which later structured surfaces should be layered in next
+
 ### 1. Settings Storage
 
 Files:
@@ -453,7 +473,7 @@ Required changes:
    - `enabled: false`
    - `runtimeKind: "ollama"`
    - `baseUrl: "http://127.0.0.1:11434/v1"`
-   - `modelId: "gemma4"`
+   - `modelId: "gemma4:e4b"`
 3. Extend `normalizeGameSettings()` to clamp invalid AI settings back to safe defaults.
 4. Extend settings persistence tests to cover:
    - missing AI block
@@ -489,7 +509,7 @@ Required changes:
 Acceptance:
 
 - the browser adapter can probe the runtime
-- the browser adapter can submit a request for one test surface
+- the browser adapter can submit requests for shipped structured surfaces
 - schema validation and semantic failure return structured errors
 
 ### 3. Runtime Session Orchestration
@@ -513,9 +533,10 @@ Required changes:
 
 Acceptance:
 
-- duplicate dev-console triggers do not fire duplicate requests for the same key while pending
+- duplicate triggers do not fire duplicate requests for the same key while pending
 - successful results are reusable
 - failed results can be regenerated explicitly
+- background auto-generation may update visitor or incident presentation state without blocking the sim
 
 ### 4. Dev Console Integration
 
@@ -717,7 +738,7 @@ Tasks:
 6. Lock the first runtime profile:
    - runtime: `ollama`
    - endpoint: `http://127.0.0.1:11434/v1`
-   - default model: `gemma4`
+   - default model: `gemma4:e4b`
 7. Define the request keys, request statuses, cache or reuse rules, and regeneration rules for dev-mode, auto-mode, and tooling callers.
 8. Define the host-local configuration contract shared by Tauri commands, dev menu, and tooling surfaces.
 9. Write down the manual handoff expectations for Ollama installation, model pull, and browser-local verification so a later implementation pass knows exactly when to stop and ask the user.
@@ -835,7 +856,7 @@ Tasks:
    - operator identity packets
    - descriptive text for skills, items, and operators whose numeric payloads are already locked
 5. Keep structured outputs narrow and versioned. Prefer small purpose-built schemas over one large polymorphic schema for every AI feature.
-6. Keep the model binding configurable so a later better local model can replace `gemma4` without reopening gameplay contracts.
+6. Keep the model binding configurable so a later better local model can replace `gemma4:e4b` without reopening gameplay contracts.
 
 Done when:
 
@@ -871,7 +892,7 @@ Done when:
 - Do not use AI to invent unsupported assets, rank budgets, or numeric payloads.
 - Do not create one code path for dev-triggered AI and another separate code path for automatic runtime AI. Share the transport, request registry, validation, and result-writeback contracts.
 - Do not let the browser-first dev path turn into a browser-only architecture. Desktop support still needs to land on the same contract.
-- Do not hard-code `gemma4` deeply enough that a later local model swap becomes a refactor.
+- Do not hard-code `gemma4:e4b` deeply enough that a later local model swap becomes a refactor.
 - Do not treat local-runtime availability as guaranteed. It is an optional dependency.
 
 ## Verification

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 70">
+  <!-- Stacked wooden shipping crates with stenciled markings.
+       Isometric 2:1 box projection. Two crates stacked. -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="40" cy="66" rx="32" ry="5" fill="#060608" opacity="0.2"/>
+
+  <!-- Bottom crate — front face -->
+  <polygon points="8,38 58,38 58,62 8,62"
+    fill="#3e3424" stroke="#2e2418" stroke-width="0.8"/>
+  <!-- Bottom crate — top face -->
+  <polygon points="8,38 58,38 72,30 22,30"
+    fill="#4a4030" stroke="#2e2418" stroke-width="0.6"/>
+  <!-- Bottom crate — right face -->
+  <polygon points="58,38 72,30 72,54 58,62"
+    fill="#2e2418" stroke="#241c12" stroke-width="0.6"/>
+
+  <!-- Bottom crate plank lines -->
+  <g stroke="#2e2418" stroke-width="0.4" opacity="0.3">
+    <line x1="10" y1="46" x2="56" y2="46"/>
+    <line x1="10" y1="54" x2="56" y2="54"/>
+  </g>
+
+  <!-- Bottom crate stencil marking -->
+  <g transform="matrix(1, 0, 0, 1, 8, 38)" opacity="0.15">
+    <text x="14" y="16" font-family="monospace" font-size="8" fill="#8a7a5a">PORT</text>
+  </g>
+
+  <!-- Top crate (smaller, offset) — front face -->
+  <polygon points="12,14 52,14 52,36 12,36"
+    fill="#44382a" stroke="#2e2418" stroke-width="0.8"/>
+  <!-- Top crate — top face -->
+  <polygon points="12,14 52,14 64,7 24,7"
+    fill="#504430" stroke="#2e2418" stroke-width="0.6"/>
+  <!-- Top crate — right face -->
+  <polygon points="52,14 64,7 64,29 52,36"
+    fill="#302820" stroke="#241c12" stroke-width="0.6"/>
+
+  <!-- Top crate plank lines -->
+  <g stroke="#2e2418" stroke-width="0.4" opacity="0.3">
+    <line x1="14" y1="22" x2="50" y2="22"/>
+    <line x1="14" y1="30" x2="50" y2="30"/>
+  </g>
+
+  <!-- Top crate corner braces -->
+  <g stroke="#3a3838" stroke-width="0.6" opacity="0.25">
+    <polyline points="12,14 12,22 20,22" fill="none"/>
+    <polyline points="52,14 52,22 44,22" fill="none"/>
+  </g>
+
+  <!-- Wear / scuffs -->
+  <g opacity="0.1">
+    <ellipse cx="35" cy="50" rx="8" ry="3" fill="#5a3020"/>
+    <ellipse cx="30" cy="24" rx="5" ry="2" fill="#4a2818"/>
+  </g>
+</svg>

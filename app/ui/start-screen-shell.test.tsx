@@ -19,6 +19,19 @@ vi.mock("app/features/save-slots/use-save-slots", () => ({
   }),
 }));
 
+vi.mock("app/features/settings", async () => {
+  const actual =
+    await vi.importActual<typeof import("app/features/settings")>("app/features/settings");
+  return {
+    ...actual,
+    useGameSettings: () => ({
+      settings: actual.DEFAULT_GAME_SETTINGS,
+      updateSettings: vi.fn(),
+      resetSettings: vi.fn(),
+    }),
+  };
+});
+
 describe("start screen dev entrypoint", () => {
   it("renders the Sandbox link to preview mode", () => {
     const html = renderToStaticMarkup(
@@ -51,5 +64,16 @@ describe("start screen dev entrypoint", () => {
 
     expect(html).toContain(">Scene Builder<");
     expect(html).toContain('href="/scene-builder"');
+  });
+
+  it("renders the Settings button on the start screen footer", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <StartScreenShell />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">Settings<");
+    expect(html).toContain("<button");
   });
 });

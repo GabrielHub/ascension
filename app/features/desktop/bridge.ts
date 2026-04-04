@@ -79,4 +79,26 @@ export const desktopBridge = {
       sourcePath,
     });
   },
+
+  async probeAiRuntime(
+    baseUrl: string,
+    modelId: string,
+  ): Promise<{
+    status: string;
+    availableModels: string[];
+    error: string | null;
+  }> {
+    assertDesktopHost();
+    return invoke("desktop_ai_probe_runtime", { baseUrl, modelId });
+  },
+
+  async generateAi(request: {
+    baseUrl: string;
+    modelId: string;
+    systemPrompt: string;
+    userPrompt: string;
+  }): Promise<{ content: string }> {
+    assertDesktopHost();
+    return invoke("desktop_ai_generate", { request });
+  },
 };

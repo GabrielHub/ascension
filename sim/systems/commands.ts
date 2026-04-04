@@ -24,7 +24,7 @@ import {
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import { formatIdentityText, type GameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
-import { selectOperatorAppearanceRecipeId } from "save/appearance";
+import { selectOperatorAppearanceProfile } from "save/appearance";
 
 import type { SimCommand } from "../commands";
 import { projectVisitorRecruitLoyalty, projectVisitorRecruitMorale } from "../recruitment";
@@ -126,13 +126,85 @@ export const BODEGA_BACK_OFFICE_TEMPLATE_ID = "room/back_office:tier_1";
 export const BODEGA_BACKSTOCK_TEMPLATE_ID = "room/backstock:tier_1";
 export const BODEGA_ALLEY_STAGING_TEMPLATE_ID = "room/alley_staging:tier_1";
 export const BODEGA_DEFERRED_VISITOR_CAPACITY = 1;
-const PREFERRED_MISSION_TAGS = [
+export const PREFERRED_MISSION_TAGS = [
   ["mission:combat", "objective:clear"],
   ["mission:stability", "objective:hold"],
   ["mission:retrieval", "objective:escort"],
 ] as const;
+export const ROLE_SPECIALTY_OPTIONS: Record<string, readonly string[]> = {
+  "role:field_lead": ["focus:field_lead", "focus:frontline", "focus:containment"],
+  "role:scout": ["focus:scout", "focus:extraction", "focus:containment"],
+  "role:medic": ["focus:medic", "focus:containment", "focus:extraction"],
+};
+
+export function getSpecialtyOptionsForRole(roleTag: string): readonly string[] {
+  return ROLE_SPECIALTY_OPTIONS[roleTag] ?? [`focus:${roleTag.replace(ROLE_TAG_PREFIX, "")}`];
+}
+
+export function getAllowedPreferredMissionTags(): readonly string[] {
+  return [...new Set(PREFERRED_MISSION_TAGS.flat())];
+}
 
 export const scoreString = stableStringHash;
+
+function titleCase(raw: string): string {
+  return raw.replace(/[_-]/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function selectOperatorSpecialtyTag(input: {
+  stableKey: string;
+  roleTag: string;
+  specialtyTag?: string;
+}): string {
+  const provided = input.specialtyTag?.trim();
+  if (provided) {
+    return provided;
+  }
+
+  const options = getSpecialtyOptionsForRole(input.roleTag);
+  return options[scoreString(`${input.stableKey}:specialty`) % options.length] ?? options[0]!;
+}
+
+function buildVisitorPersonaSummary(input: {
+  roleTag: string;
+  specialtyTag: string;
+  quality: number;
+}): string {
+  const roleLabel = titleCase(input.roleTag.replace(ROLE_TAG_PREFIX, ""));
+  const specialtyLabel = titleCase(input.specialtyTag.replace("focus:", ""));
+  const qualityBand =
+    input.quality >= 74
+      ? "already reads like a high-upside hire"
+      : input.quality >= 62
+        ? "looks like a steady pickup"
+        : "feels green but workable";
+  return `${roleLabel} recruit with a ${specialtyLabel.toLowerCase()} lean who ${qualityBand}.`;
+}
+
+function buildVisitorPersonaHooks(input: {
+  stableKey: string;
+  roleTag: string;
+  specialtyTag: string;
+}): string[] {
+  const roleLabel = input.roleTag.replace(ROLE_TAG_PREFIX, "").replaceAll("_", " ");
+  const specialtyLabel = input.specialtyTag.replace("focus:", "").replaceAll("_", " ");
+  const hookSets = [
+    [
+      `Keeps talking shop around ${roleLabel} work.`,
+      `Frames problems through ${specialtyLabel} instincts.`,
+    ],
+    [
+      "Dry about paperwork, serious about the floor.",
+      "Treats avoidable chaos as a management failure.",
+    ],
+    [
+      "Reads like someone who has already worked inside licensed dungeon labor.",
+      "More comfortable with concrete tasks than grand speeches.",
+    ],
+  ] as const;
+
+  return [...hookSets[scoreString(`${input.stableKey}:persona`) % hookSets.length]!];
+}
 
 export interface VisitorSeed {
   id?: string;
@@ -141,6 +213,19 @@ export interface VisitorSeed {
   patience: number;
   quality: number;
   expectedLoyalty: number;
+  specialtyTag?: string;
+  appearance?: {
+    presetId: string;
+    visibleGear?: {
+      weaponPartId?: string;
+      outfitOverlayPartId?: string;
+      accessoryPartId?: string;
+    };
+  };
+  preferences?: PreferenceProfileRecord;
+  personaSummary?: string;
+  personaHooks?: string[];
+  identitySource?: "deterministic" | "generated";
 }
 
 export interface PreferenceProfileRecord {
@@ -213,15 +298,83 @@ function buildOperatorSeedFromVisitor(
 ): Parameters<typeof createOperatorEntity>[1] {
   const name = VisitorState.name[visitorEntity];
   const roleTag = VisitorState.desiredRoleTag[visitorEntity];
-  const specialtyTag = `focus:${roleTag.slice(ROLE_TAG_PREFIX.length)}`;
+  const specialtyTag =
+    VisitorState.specialtyTag[visitorEntity] ||
+    selectOperatorSpecialtyTag({
+      stableKey: VisitorState.id[visitorEntity],
+      roleTag,
+    });
+  const defaultPreferences = buildDefaultPreferenceProfile({ name, roleTag, specialtyTag });
+  const hasGeneratedIdentity = VisitorState.identitySource[visitorEntity] === "generated";
+  const appearanceProfile = selectOperatorAppearanceProfile({
+    stableKey: [VisitorState.id[visitorEntity], name, roleTag, specialtyTag].join(":"),
+    roleTag,
+    quality: VisitorState.quality[visitorEntity],
+    presetId: VisitorState.appearancePresetId[visitorEntity] || undefined,
+  });
+  const visibleGear = {
+    weaponPartId:
+      VisitorState.appearanceWeaponPartId[visitorEntity] ||
+      appearanceProfile.visibleGear?.weaponPartId,
+    outfitOverlayPartId:
+      VisitorState.appearanceOutfitOverlayPartId[visitorEntity] ||
+      appearanceProfile.visibleGear?.outfitOverlayPartId,
+    accessoryPartId:
+      VisitorState.appearanceAccessoryPartId[visitorEntity] ||
+      appearanceProfile.visibleGear?.accessoryPartId,
+  };
+  const hasVisibleGear =
+    Boolean(visibleGear.weaponPartId) ||
+    Boolean(visibleGear.outfitOverlayPartId) ||
+    Boolean(visibleGear.accessoryPartId);
+
   return {
     name,
     roleTag,
     specialtyTag,
-    appearancePresetId: selectOperatorAppearanceRecipeId({
-      stableKey: [VisitorState.id[visitorEntity], name, roleTag, specialtyTag].join(":"),
-    }),
-    preferences: buildDefaultPreferenceProfile({ name, roleTag, specialtyTag }),
+    personaSummary:
+      VisitorState.personaSummary[visitorEntity] ||
+      buildVisitorPersonaSummary({
+        roleTag,
+        specialtyTag,
+        quality: VisitorState.quality[visitorEntity],
+      }),
+    personaHooks:
+      VisitorState.personaHooks[visitorEntity]?.length > 0
+        ? [...VisitorState.personaHooks[visitorEntity]]
+        : buildVisitorPersonaHooks({
+            stableKey: VisitorState.id[visitorEntity],
+            roleTag,
+            specialtyTag,
+          }),
+    appearancePresetId:
+      VisitorState.appearancePresetId[visitorEntity] || appearanceProfile.presetId,
+    ...(hasVisibleGear ? { visibleGear } : {}),
+    preferences: {
+      riskTolerance: hasGeneratedIdentity
+        ? VisitorState.preferenceRiskTolerance[visitorEntity]
+        : VisitorState.preferenceRiskTolerance[visitorEntity] || defaultPreferences.riskTolerance,
+      rewardFocus: hasGeneratedIdentity
+        ? VisitorState.preferenceRewardFocus[visitorEntity]
+        : VisitorState.preferenceRewardFocus[visitorEntity] || defaultPreferences.rewardFocus,
+      recoveryBias: hasGeneratedIdentity
+        ? VisitorState.preferenceRecoveryBias[visitorEntity]
+        : VisitorState.preferenceRecoveryBias[visitorEntity] || defaultPreferences.recoveryBias,
+      socialBias: hasGeneratedIdentity
+        ? VisitorState.preferenceSocialBias[visitorEntity]
+        : VisitorState.preferenceSocialBias[visitorEntity] || defaultPreferences.socialBias,
+      trainingBias: hasGeneratedIdentity
+        ? VisitorState.preferenceTrainingBias[visitorEntity]
+        : VisitorState.preferenceTrainingBias[visitorEntity] || defaultPreferences.trainingBias,
+      comfortBias: hasGeneratedIdentity
+        ? VisitorState.preferenceComfortBias[visitorEntity]
+        : VisitorState.preferenceComfortBias[visitorEntity] || defaultPreferences.comfortBias,
+      preferredMissionTags:
+        VisitorState.preferencePreferredMissionTags[visitorEntity]?.length > 0
+          ? [...VisitorState.preferencePreferredMissionTags[visitorEntity]]
+          : [...defaultPreferences.preferredMissionTags],
+      preferredPartnerIds: [],
+    },
     morale: projectVisitorRecruitMorale(VisitorState.quality[visitorEntity]),
     loyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[visitorEntity]),
     hunger: 10,
@@ -759,6 +912,8 @@ function createOperatorEntity(
     name: string;
     roleTag: string;
     specialtyTag: string;
+    personaSummary?: string;
+    personaHooks?: string[];
     appearancePresetId: string;
     visibleGear?: {
       weaponPartId?: string;
@@ -803,6 +958,8 @@ function createOperatorEntity(
   OperatorIdentity.name[entity] = source.name;
   OperatorIdentity.roleTag[entity] = source.roleTag;
   OperatorIdentity.specialtyTag[entity] = source.specialtyTag;
+  OperatorIdentity.personaSummary[entity] = source.personaSummary ?? "";
+  OperatorIdentity.personaHooks[entity] = [...(source.personaHooks ?? [])];
   OperatorIdentity.appearancePresetId[entity] = source.appearancePresetId;
   OperatorIdentity.appearanceWeaponPartId[entity] = source.visibleGear?.weaponPartId ?? "";
   OperatorIdentity.appearanceOutfitOverlayPartId[entity] =
@@ -932,15 +1089,63 @@ function createStaffEntity(context: SimSystemContext, roleTag: string): boolean 
 
 export function spawnVisitorEntity(context: SimSystemContext, seed: VisitorSeed): void {
   const entity = addEntity(context.world);
+  const stableKey = seed.id ?? `visitor/${context.runtimeState.nextVisitorSequence}`;
+  const specialtyTag = selectOperatorSpecialtyTag({
+    stableKey,
+    roleTag: seed.desiredRoleTag,
+    specialtyTag: seed.specialtyTag,
+  });
+  const appearance =
+    seed.appearance ??
+    selectOperatorAppearanceProfile({
+      stableKey: [stableKey, seed.name, seed.desiredRoleTag, specialtyTag].join(":"),
+      roleTag: seed.desiredRoleTag,
+      quality: seed.quality,
+    });
+  const preferences =
+    seed.preferences ??
+    buildDefaultPreferenceProfile({
+      name: seed.name,
+      roleTag: seed.desiredRoleTag,
+      specialtyTag,
+    });
 
   addComponent(context.world, entity, VisitorState);
 
-  VisitorState.id[entity] = seed.id ?? `visitor/${context.runtimeState.nextVisitorSequence}`;
+  VisitorState.id[entity] = stableKey;
   VisitorState.name[entity] = seed.name;
   VisitorState.desiredRoleTag[entity] = seed.desiredRoleTag;
+  VisitorState.specialtyTag[entity] = specialtyTag;
   VisitorState.patience[entity] = seed.patience;
   VisitorState.quality[entity] = seed.quality;
   VisitorState.expectedLoyalty[entity] = seed.expectedLoyalty;
+  VisitorState.appearancePresetId[entity] = appearance.presetId;
+  VisitorState.appearanceWeaponPartId[entity] = appearance.visibleGear?.weaponPartId ?? "";
+  VisitorState.appearanceOutfitOverlayPartId[entity] =
+    appearance.visibleGear?.outfitOverlayPartId ?? "";
+  VisitorState.appearanceAccessoryPartId[entity] = appearance.visibleGear?.accessoryPartId ?? "";
+  VisitorState.personaSummary[entity] =
+    seed.personaSummary ??
+    buildVisitorPersonaSummary({
+      roleTag: seed.desiredRoleTag,
+      specialtyTag,
+      quality: seed.quality,
+    });
+  VisitorState.personaHooks[entity] = seed.personaHooks?.length
+    ? [...seed.personaHooks]
+    : buildVisitorPersonaHooks({
+        stableKey,
+        roleTag: seed.desiredRoleTag,
+        specialtyTag,
+      });
+  VisitorState.preferenceRiskTolerance[entity] = preferences.riskTolerance;
+  VisitorState.preferenceRewardFocus[entity] = preferences.rewardFocus;
+  VisitorState.preferenceRecoveryBias[entity] = preferences.recoveryBias;
+  VisitorState.preferenceSocialBias[entity] = preferences.socialBias;
+  VisitorState.preferenceTrainingBias[entity] = preferences.trainingBias;
+  VisitorState.preferenceComfortBias[entity] = preferences.comfortBias;
+  VisitorState.preferencePreferredMissionTags[entity] = [...preferences.preferredMissionTags];
+  VisitorState.identitySource[entity] = seed.identitySource ?? "deterministic";
   VisitorState.queueState[entity] = "active";
 
   context.runtimeState.visitorEntities.push(entity);
@@ -1394,6 +1599,34 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
             context.runtimeState.operatorEntities[context.runtimeState.operatorEntities.length - 1]
           ],
       });
+      return;
+    }
+    case "sim/visitor-update-identity": {
+      const visitorEntity = findVisitorEntityById(context, command.visitorId);
+      if (visitorEntity === undefined) {
+        return;
+      }
+
+      VisitorState.specialtyTag[visitorEntity] = command.specialtyTag;
+      VisitorState.appearancePresetId[visitorEntity] = command.appearance.presetId;
+      VisitorState.appearanceWeaponPartId[visitorEntity] =
+        command.appearance.visibleGear?.weaponPartId ?? "";
+      VisitorState.appearanceOutfitOverlayPartId[visitorEntity] =
+        command.appearance.visibleGear?.outfitOverlayPartId ?? "";
+      VisitorState.appearanceAccessoryPartId[visitorEntity] =
+        command.appearance.visibleGear?.accessoryPartId ?? "";
+      VisitorState.preferenceRiskTolerance[visitorEntity] = command.preferences.riskTolerance;
+      VisitorState.preferenceRewardFocus[visitorEntity] = command.preferences.rewardFocus;
+      VisitorState.preferenceRecoveryBias[visitorEntity] = command.preferences.recoveryBias;
+      VisitorState.preferenceSocialBias[visitorEntity] = command.preferences.socialBias;
+      VisitorState.preferenceTrainingBias[visitorEntity] = command.preferences.trainingBias;
+      VisitorState.preferenceComfortBias[visitorEntity] = command.preferences.comfortBias;
+      VisitorState.preferencePreferredMissionTags[visitorEntity] = [
+        ...command.preferences.preferredMissionTags,
+      ];
+      VisitorState.personaSummary[visitorEntity] = command.personaSummary;
+      VisitorState.personaHooks[visitorEntity] = [...command.personaHooks];
+      VisitorState.identitySource[visitorEntity] = "generated";
       return;
     }
     case "sim/defer-recruit": {

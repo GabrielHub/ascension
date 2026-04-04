@@ -79,7 +79,7 @@ describe("room detail panel", () => {
     expect(html).toContain("Roster Avg");
     expect(html).toContain("+20%");
     expect(html).toContain("Rose Vega, Ivo Mercer are on the current training block.");
-    expect(html).toContain("bounded physical readiness");
+    expect(html).toContain("physical readiness between contracts");
     expect(html).not.toContain("once training comes online");
   });
 

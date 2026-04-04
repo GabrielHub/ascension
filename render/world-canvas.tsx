@@ -22,6 +22,7 @@ import type {
   CameraState,
   FocusPayload,
   HqBackdropSnapshot,
+  HqFloorOffset,
   HqPerimeterTile,
   HqPoint,
   HqRoomNode,
@@ -45,10 +46,8 @@ import {
 import { getActorPortraitUrl } from "./actor-tokens";
 import { roundRect } from "./canvas-utils";
 import { projectIso } from "./hq-world";
-import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
 import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
 
-const ASSET_ROOT = getHqEnvironmentRenderConfig().paths.partsRoot;
 const FONT_FAMILY = "'Inter', sans-serif";
 const GOLD = "#c8a84c";
 const GOLD_DIM = "rgba(200, 168, 76, 0.28)";
@@ -274,24 +273,32 @@ const PERIMETER_FILLS: Record<HqTimeOfDayPhase, PerimeterPalette> = {
     street: "#3a3a44",
     alley: "#2e2e38",
     void: "#24242e",
+    pier: "#4a3e2e",
+    water: "#1a3d52",
   },
   sunrise: {
     sidewalk: "#5a4e3e",
     street: "#2e2824",
     alley: "#201c18",
     void: "#181410",
+    pier: "#3e3224",
+    water: "#2a3a3e",
   },
   sunset: {
     sidewalk: "#5a4430",
     street: "#2c2220",
     alley: "#1e1614",
     void: "#161010",
+    pier: "#3e2e20",
+    water: "#2a2e30",
   },
   night: {
     sidewalk: "#3c362a",
     street: "#1a1a20",
     alley: "#0e0e14",
     void: "#0a0a0e",
+    pier: "#1e1a14",
+    water: "#0c1a24",
   },
 };
 
@@ -301,24 +308,32 @@ const PERIMETER_STROKES: Record<HqTimeOfDayPhase, PerimeterPalette> = {
     street: "rgba(255, 255, 255, 0.04)",
     alley: "rgba(255, 255, 255, 0.03)",
     void: "rgba(255, 255, 255, 0.01)",
+    pier: "rgba(255, 255, 255, 0.06)",
+    water: "rgba(140, 200, 255, 0.08)",
   },
   sunrise: {
     sidewalk: "rgba(255, 220, 180, 0.08)",
     street: "rgba(255, 220, 180, 0.03)",
     alley: "rgba(255, 220, 180, 0.02)",
     void: "rgba(255, 220, 180, 0.005)",
+    pier: "rgba(255, 220, 180, 0.05)",
+    water: "rgba(255, 200, 140, 0.06)",
   },
   sunset: {
     sidewalk: "rgba(255, 180, 120, 0.10)",
     street: "rgba(255, 180, 120, 0.04)",
     alley: "rgba(255, 180, 120, 0.03)",
     void: "rgba(255, 180, 120, 0.01)",
+    pier: "rgba(255, 180, 120, 0.06)",
+    water: "rgba(255, 160, 80, 0.08)",
   },
   night: {
     sidewalk: "rgba(255, 255, 255, 0.05)",
     street: "rgba(255, 255, 255, 0.02)",
     alley: "rgba(255, 255, 255, 0.015)",
     void: "rgba(255, 255, 255, 0.005)",
+    pier: "rgba(255, 255, 255, 0.03)",
+    water: "rgba(100, 160, 220, 0.04)",
   },
 };
 
@@ -406,8 +421,55 @@ function drawPolygon(
   }
 }
 
-function hqProject(snapshot: HqWorldSnapshot, col: number, row: number): HqPoint {
-  return projectIso(col, row, snapshot.layout.originX, snapshot.layout.originY);
+const floorOffsetIndexCache = new WeakMap<readonly HqFloorOffset[], Map<number, HqFloorOffset>>();
+
+function getFloorOffsetIndex(offsets: readonly HqFloorOffset[]): Map<number, HqFloorOffset> {
+  let index = floorOffsetIndexCache.get(offsets);
+  if (!index) {
+    index = new Map(offsets.map((entry) => [entry.floorIndex, entry]));
+    floorOffsetIndexCache.set(offsets, index);
+  }
+  return index;
+}
+
+function getFloorOffset(
+  snapshot: HqWorldSnapshot,
+  floorIndex: number,
+): Readonly<{ x: number; y: number; stackLayer: number }> {
+  const offset = getFloorOffsetIndex(snapshot.layout.floorOffsets).get(floorIndex);
+  return {
+    x: offset?.offsetX ?? 0,
+    y: offset?.offsetY ?? 0,
+    stackLayer: offset?.stackLayer ?? 0,
+  };
+}
+
+function getFloorRenderAlpha(snapshot: HqWorldSnapshot, floorIndex: number): number {
+  if (snapshot.layout.visibleFloorIndexes.length <= 1) {
+    return 1;
+  }
+
+  return floorIndex === snapshot.layout.activeFloorIndex ? 1 : 0.42;
+}
+
+function compareFloorLayers(
+  snapshot: HqWorldSnapshot,
+  leftFloorIndex: number,
+  rightFloorIndex: number,
+): number {
+  const left = getFloorOffset(snapshot, leftFloorIndex);
+  const right = getFloorOffset(snapshot, rightFloorIndex);
+  return left.stackLayer - right.stackLayer || leftFloorIndex - rightFloorIndex;
+}
+
+function hqProject(snapshot: HqWorldSnapshot, col: number, row: number, floorIndex = 0): HqPoint {
+  const offset = getFloorOffset(snapshot, floorIndex);
+  return projectIso(
+    col,
+    row,
+    snapshot.layout.originX + offset.x,
+    snapshot.layout.originY + offset.y,
+  );
 }
 
 interface GridBounds {
@@ -421,7 +483,10 @@ interface PreparedPerimeterRenderData {
   bounds: GridBounds | null;
   sortedTiles: readonly HqPerimeterTile[];
   kindMap: ReadonlyMap<string, HqPerimeterTile["kind"]>;
+  /** Center lane tiles along the row axis (main street, iso-right direction). */
   centerLaneSet: ReadonlySet<string>;
+  /** Center lane tiles along the col axis (side street, iso-left direction). */
+  centerLaneColSet: ReadonlySet<string>;
 }
 
 const perimeterRenderPrepCache = new WeakMap<
@@ -446,11 +511,16 @@ function computeGridBounds(tiles: readonly { col: number; row: number }[]): Grid
 }
 
 /** Diamond for a single tile using grid vertex positions (not center). */
-function tileDiamond(snapshot: HqWorldSnapshot, col: number, row: number): HqPoint[] {
-  const p0 = hqProject(snapshot, col, row);
-  const p1 = hqProject(snapshot, col + 1, row);
-  const p2 = hqProject(snapshot, col + 1, row + 1);
-  const p3 = hqProject(snapshot, col, row + 1);
+function tileDiamond(
+  snapshot: HqWorldSnapshot,
+  col: number,
+  row: number,
+  floorIndex = 0,
+): HqPoint[] {
+  const p0 = hqProject(snapshot, col, row, floorIndex);
+  const p1 = hqProject(snapshot, col + 1, row, floorIndex);
+  const p2 = hqProject(snapshot, col + 1, row + 1, floorIndex);
+  const p3 = hqProject(snapshot, col, row + 1, floorIndex);
   return [p0, p1, p2, p3];
 }
 
@@ -485,20 +555,52 @@ export function preparePerimeterRenderData(
   }
 
   const centerLaneSet = new Set<string>();
+  const centerLaneColSet = new Set<string>();
   for (const tile of tiles) {
     if (tile.kind !== "street") continue;
+    // Row-direction: count contiguous street tiles above/below
     let streetsAbove = 0;
     let streetsBelow = 0;
-    for (let dr = 1; dr <= 8; dr++) {
+    for (let dr = 1; dr <= 16; dr++) {
       if (kindMap.get(`${tile.col},${tile.row - dr}`) === "street") streetsAbove++;
       else break;
     }
-    for (let dr = 1; dr <= 8; dr++) {
+    for (let dr = 1; dr <= 16; dr++) {
       if (kindMap.get(`${tile.col},${tile.row + dr}`) === "street") streetsBelow++;
       else break;
     }
-    if (streetsAbove >= 2 && streetsBelow >= 2) {
+    // True midpoint: counts on each side must be roughly equal, and the
+    // total width must be a plausible single-road width — not a wide
+    // intersection span where two roads overlap.
+    const MAX_ROAD_WIDTH = 14;
+    const isRowCenter =
+      streetsAbove >= 2 &&
+      streetsBelow >= 2 &&
+      Math.abs(streetsAbove - streetsBelow) <= 1 &&
+      streetsAbove + streetsBelow + 1 <= MAX_ROAD_WIDTH;
+
+    // Col-direction: count contiguous street tiles left/right
+    let streetsLeft = 0;
+    let streetsRight = 0;
+    for (let dc = 1; dc <= 16; dc++) {
+      if (kindMap.get(`${tile.col - dc},${tile.row}`) === "street") streetsLeft++;
+      else break;
+    }
+    for (let dc = 1; dc <= 16; dc++) {
+      if (kindMap.get(`${tile.col + dc},${tile.row}`) === "street") streetsRight++;
+      else break;
+    }
+    const isColCenter =
+      streetsLeft >= 2 &&
+      streetsRight >= 2 &&
+      Math.abs(streetsLeft - streetsRight) <= 1 &&
+      streetsLeft + streetsRight + 1 <= MAX_ROAD_WIDTH;
+
+    // Skip intersection tiles (both directions active = no marking)
+    if (isRowCenter && !isColCenter) {
       centerLaneSet.add(`${tile.col},${tile.row}`);
+    } else if (isColCenter && !isRowCenter) {
+      centerLaneColSet.add(`${tile.col},${tile.row}`);
     }
   }
 
@@ -507,6 +609,7 @@ export function preparePerimeterRenderData(
     sortedTiles,
     kindMap,
     centerLaneSet,
+    centerLaneColSet,
   };
   perimeterRenderPrepCache.set(tiles, prepared);
   return prepared;
@@ -557,22 +660,36 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
 
     // Street lane markings — double yellow center line
     if (tile.kind === "street") {
-      const isCenterLane = perimeterData.centerLaneSet.has(`${tile.col},${tile.row}`);
+      const tileKey = `${tile.col},${tile.row}`;
+      const isRowCenter = perimeterData.centerLaneSet.has(tileKey);
+      const isColCenter = perimeterData.centerLaneColSet.has(tileKey);
 
-      if (isCenterLane) {
+      if (isRowCenter || isColCenter) {
         const cx = (pts[0].x + pts[2].x) / 2;
         const cy = (pts[0].y + pts[2].y) / 2;
-        // Double yellow line — two parallel iso-aligned dashes
         ctx.strokeStyle = "rgba(200, 180, 80, 0.25)";
         ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx - 12, cy - 6 - 1.5);
-        ctx.lineTo(cx + 12, cy + 6 - 1.5);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(cx - 12, cy - 6 + 1.5);
-        ctx.lineTo(cx + 12, cy + 6 + 1.5);
-        ctx.stroke();
+        if (isRowCenter) {
+          // Main street: iso-right direction (slope +0.5)
+          ctx.beginPath();
+          ctx.moveTo(cx - 12, cy - 6 - 1.5);
+          ctx.lineTo(cx + 12, cy + 6 - 1.5);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx - 12, cy - 6 + 1.5);
+          ctx.lineTo(cx + 12, cy + 6 + 1.5);
+          ctx.stroke();
+        } else {
+          // Side street: iso-left direction (slope -0.5)
+          ctx.beginPath();
+          ctx.moveTo(cx - 12, cy + 6 - 1.5);
+          ctx.lineTo(cx + 12, cy - 6 - 1.5);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx - 12, cy + 6 + 1.5);
+          ctx.lineTo(cx + 12, cy - 6 + 1.5);
+          ctx.stroke();
+        }
       }
 
       // Sparse road texture on all street tiles
@@ -585,11 +702,14 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
       }
     }
 
-    // Curb line: where sidewalk meets street (either side)
+    // Curb line: where sidewalk meets street
     if (tile.kind === "sidewalk") {
       const belowKey = `${tile.col},${tile.row + 1}`;
       const aboveKey = `${tile.col},${tile.row - 1}`;
-      // Curb on near side (sidewalk above street)
+      const rightKey = `${tile.col + 1},${tile.row}`;
+      const leftKey = `${tile.col - 1},${tile.row}`;
+
+      // Row-direction curbs (main street, iso-right edges)
       if (perimeterData.kindMap.get(belowKey) === "street") {
         const p2 = hqProject(snapshot, tile.col + 1, tile.row + 1);
         const p3 = hqProject(snapshot, tile.col, tile.row + 1);
@@ -600,7 +720,6 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
       }
-      // Curb on far side (street above sidewalk)
       if (perimeterData.kindMap.get(aboveKey) === "street") {
         const p0 = hqProject(snapshot, tile.col, tile.row);
         const p1 = hqProject(snapshot, tile.col + 1, tile.row);
@@ -609,6 +728,28 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
         ctx.beginPath();
         ctx.moveTo(p0.x, p0.y);
         ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+      }
+
+      // Col-direction curbs (side street, iso-left edges)
+      if (perimeterData.kindMap.get(rightKey) === "street") {
+        const p1 = hqProject(snapshot, tile.col + 1, tile.row);
+        const p2 = hqProject(snapshot, tile.col + 1, tile.row + 1);
+        ctx.strokeStyle = "rgba(120, 108, 80, 0.45)";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      if (perimeterData.kindMap.get(leftKey) === "street") {
+        const p0 = hqProject(snapshot, tile.col, tile.row);
+        const p3 = hqProject(snapshot, tile.col, tile.row + 1);
+        ctx.strokeStyle = "rgba(120, 108, 80, 0.35)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p3.x, p3.y);
         ctx.stroke();
       }
 
@@ -626,6 +767,54 @@ function drawPerimeterTiles(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
         ctx.stroke();
       }
     }
+
+    // Water wave ripples
+    if (tile.kind === "water") {
+      const noise = tileNoise(tile.col, tile.row);
+      const cx = (pts[0].x + pts[2].x) / 2;
+      const cy = (pts[0].y + pts[2].y) / 2;
+      // Subtle wave line along col axis
+      if (noise > 0.3) {
+        ctx.strokeStyle = "rgba(140, 200, 255, 0.06)";
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        const waveY = cy + (noise - 0.5) * 6;
+        ctx.moveTo(cx - 16, waveY - 8);
+        ctx.quadraticCurveTo(cx, waveY - 8 + 3, cx + 16, waveY - 8);
+        ctx.stroke();
+      }
+      // Secondary ripple
+      if (noise > 0.55) {
+        ctx.strokeStyle = "rgba(140, 200, 255, 0.035)";
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, cy + 2);
+        ctx.quadraticCurveTo(cx, cy + 5, cx + 10, cy + 2);
+        ctx.stroke();
+      }
+    }
+
+    // Pier wood plank lines
+    if (tile.kind === "pier") {
+      const noise = tileNoise(tile.col, tile.row);
+      const cx = (pts[0].x + pts[2].x) / 2;
+      const cy = (pts[0].y + pts[2].y) / 2;
+      // Plank gap lines along col axis
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.lineWidth = 0.5;
+      for (let i = -1; i <= 1; i++) {
+        const offset = i * 7;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 + offset, cy - 9 + offset * 0.5);
+        ctx.lineTo(cx + 18 + offset, cy + 9 + offset * 0.5);
+        ctx.stroke();
+      }
+      // Weathering spots
+      if (noise > 0.6) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+        ctx.fillRect(cx - 4, cy - 2, 8, 4);
+      }
+    }
   }
 }
 
@@ -637,13 +826,16 @@ function drawModularFloorTiles(
 ): void {
   const sorted = snapshot.modular.floorTiles
     .slice()
-    .sort((a, b) => a.col + a.row - (b.col + b.row));
+    .sort(
+      (a, b) =>
+        compareFloorLayers(snapshot, a.floorIndex, b.floorIndex) || a.col + a.row - (b.col + b.row),
+    );
 
   for (const tile of sorted) {
     const noise = tileNoise(tile.col, tile.row);
-    const alpha = 0.94 + noise * 0.1;
+    const alpha = (0.94 + noise * 0.1) * getFloorRenderAlpha(snapshot, tile.floorIndex);
     const isHovered = tile.roomId === hoveredRoomId || tile.roomId === selectedRoomId;
-    const pts = tileDiamond(snapshot, tile.col, tile.row);
+    const pts = tileDiamond(snapshot, tile.col, tile.row, tile.floorIndex);
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -681,10 +873,16 @@ function drawModularFloorTiles(
 }
 
 function drawExpansionSlots(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
-  for (const slot of snapshot.expansionSlots) {
+  const slots = snapshot.expansionSlots
+    .slice()
+    .sort((a, b) => compareFloorLayers(snapshot, a.floorIndex, b.floorIndex));
+
+  for (const slot of slots) {
     ctx.save();
+    ctx.globalAlpha = getFloorRenderAlpha(snapshot, slot.floorIndex);
 
     const isLocked = slot.kind === "locked";
+    const isActiveFloor = slot.floorIndex === snapshot.layout.activeFloorIndex;
 
     if (isLocked) {
       // Locked slots: muted, closed-off treatment — owned but not yet usable
@@ -710,11 +908,13 @@ function drawExpansionSlots(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
       ctx.stroke();
 
       // Label (dimmed)
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(138, 112, 64, 0.3)";
-      ctx.font = `500 9px ${FONT_FAMILY}`;
-      ctx.fillText(slot.label, centerX, centerY + 16);
-      ctx.textAlign = "start";
+      if (isActiveFloor) {
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(138, 112, 64, 0.3)";
+        ctx.font = `500 12px ${FONT_FAMILY}`;
+        ctx.fillText(slot.label, centerX, centerY + 16);
+        ctx.textAlign = "start";
+      }
     } else {
       // Available slots: gold dashed outline with "+" icon
       ctx.setLineDash([8, 6]);
@@ -730,14 +930,16 @@ function drawExpansionSlots(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
 
       const centerX = slot.bounds.x + slot.bounds.width / 2;
       const centerY = slot.bounds.y + slot.bounds.height / 2;
-      ctx.textAlign = "center";
-      ctx.fillStyle = GOLD;
-      ctx.font = `500 18px ${FONT_FAMILY}`;
-      ctx.fillText("+", centerX, centerY - 6);
-      ctx.fillStyle = SILVER;
-      ctx.font = `500 10px ${FONT_FAMILY}`;
-      ctx.fillText(slot.label, centerX, centerY + 14);
-      ctx.textAlign = "start";
+      if (isActiveFloor) {
+        ctx.textAlign = "center";
+        ctx.fillStyle = GOLD;
+        ctx.font = `500 18px ${FONT_FAMILY}`;
+        ctx.fillText("+", centerX, centerY - 6);
+        ctx.fillStyle = SILVER;
+        ctx.font = `500 12px ${FONT_FAMILY}`;
+        ctx.fillText(slot.label, centerX, centerY + 14);
+        ctx.textAlign = "start";
+      }
     }
 
     ctx.restore();
@@ -753,7 +955,10 @@ function drawModularWallSegments(
   const wallH = snapshot.layout.wallHeight;
   const sorted = snapshot.modular.wallSegments
     .slice()
-    .sort((a, b) => a.col + a.row - (b.col + b.row));
+    .sort(
+      (a, b) =>
+        compareFloorLayers(snapshot, a.floorIndex, b.floorIndex) || a.col + a.row - (b.col + b.row),
+    );
 
   const roomMap = new Map<string, HqRoomNode>();
   for (const room of snapshot.rooms) {
@@ -770,11 +975,11 @@ function drawModularWallSegments(
     let p1: HqPoint;
 
     if (seg.side === "left") {
-      p0 = hqProject(snapshot, seg.col, seg.row);
-      p1 = hqProject(snapshot, seg.col, seg.row + 1);
+      p0 = hqProject(snapshot, seg.col, seg.row, seg.floorIndex);
+      p1 = hqProject(snapshot, seg.col, seg.row + 1, seg.floorIndex);
     } else {
-      p0 = hqProject(snapshot, seg.col, seg.row);
-      p1 = hqProject(snapshot, seg.col + 1, seg.row);
+      p0 = hqProject(snapshot, seg.col, seg.row, seg.floorIndex);
+      p1 = hqProject(snapshot, seg.col + 1, seg.row, seg.floorIndex);
     }
 
     const wallPoints: HqPoint[] = [
@@ -790,6 +995,7 @@ function drawModularWallSegments(
     const active = operational || (room?.isRequestedActive ?? false);
 
     ctx.save();
+    ctx.globalAlpha = getFloorRenderAlpha(snapshot, seg.floorIndex);
 
     // Wall body with gradient for depth
     const wallGrad = ctx.createLinearGradient(p0.x, p0.y - wallH, p0.x, p0.y);
@@ -876,11 +1082,11 @@ function drawWallOpening(
   let p1: HqPoint;
 
   if (seg.side === "left") {
-    p0 = hqProject(snapshot, seg.col, seg.row);
-    p1 = hqProject(snapshot, seg.col, seg.row + 1);
+    p0 = hqProject(snapshot, seg.col, seg.row, seg.floorIndex);
+    p1 = hqProject(snapshot, seg.col, seg.row + 1, seg.floorIndex);
   } else {
-    p0 = hqProject(snapshot, seg.col, seg.row);
-    p1 = hqProject(snapshot, seg.col + 1, seg.row);
+    p0 = hqProject(snapshot, seg.col, seg.row, seg.floorIndex);
+    p1 = hqProject(snapshot, seg.col + 1, seg.row, seg.floorIndex);
   }
 
   const lintelH = wallH * 0.2;
@@ -955,7 +1161,7 @@ function drawRoomHoverLabel(ctx: CanvasRenderingContext2D, room: HqRoomNode): vo
   // Measure text to size the backdrop dynamically
   ctx.font = `500 12px ${FONT_FAMILY}`;
   const titleW = ctx.measureText(room.label).width;
-  ctx.font = `400 10px ${FONT_FAMILY}`;
+  ctx.font = `400 12px ${FONT_FAMILY}`;
   const infoLines = [
     `T${room.tier}`,
     `F${room.floorIndex + 1} · ${formatSlotLabel(room.slotId)}`,
@@ -991,7 +1197,7 @@ function drawRoomHoverLabel(ctx: CanvasRenderingContext2D, room: HqRoomNode): vo
   ctx.font = `500 12px ${FONT_FAMILY}`;
   ctx.fillText(room.label, labelX, labelY);
   ctx.fillStyle = labelActive ? GOLD : GOLD_DIM;
-  ctx.font = `400 10px ${FONT_FAMILY}`;
+  ctx.font = `400 12px ${FONT_FAMILY}`;
   ctx.fillText(`T${room.tier}`, labelX, labelY + 16);
   ctx.fillStyle = SILVER;
   ctx.fillText(`F${room.floorIndex + 1} · ${formatSlotLabel(room.slotId)}`, labelX, labelY + 30);
@@ -1022,8 +1228,8 @@ function drawBackdrop(
 }
 
 /** Resolve a backdrop zone asset ID to a full URL. */
-function backdropAssetUrl(assetId: string): string {
-  return `${ASSET_ROOT}/${assetId}.svg`;
+function backdropAssetUrl(backdrop: HqBackdropSnapshot, assetId: string): string {
+  return `${backdrop.assetRoot}/${assetId}.svg`;
 }
 
 /** Collect all backdrop zone asset URLs for preloading. */
@@ -1031,7 +1237,7 @@ function collectBackdropAssetUrls(backdrop: HqBackdropSnapshot): string[] {
   const urls: string[] = [];
   for (const zone of Object.values(backdrop.zones)) {
     for (const id of zone) {
-      urls.push(backdropAssetUrl(id));
+      urls.push(backdropAssetUrl(backdrop, id));
     }
   }
   return urls;
@@ -1161,7 +1367,7 @@ function drawBackdropZone(
   if (!assetIds || assetIds.length === 0) return;
 
   for (let i = 0; i < assetIds.length; i++) {
-    const url = backdropAssetUrl(assetIds[i]);
+    const url = backdropAssetUrl(bd, assetIds[i]);
     const img = imageCache.get(url);
     if (!img) {
       imageCache.load(url);
@@ -1204,7 +1410,7 @@ function drawDofManagedBackdropZone(
   if (!assetIds || assetIds.length === 0) return;
 
   for (let i = 0; i < assetIds.length; i++) {
-    const url = backdropAssetUrl(assetIds[i]);
+    const url = backdropAssetUrl(bd, assetIds[i]);
     const img = imageCache.get(url);
     if (!img) {
       imageCache.load(url);
@@ -1765,83 +1971,95 @@ function drawFlankingBuildingsBand(
 function drawBuildingShell(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
   const tiles = snapshot.modular.floorTiles;
   if (tiles.length === 0) return;
-
-  const bounds = computeGridBounds(tiles);
-  if (!bounds) return;
-  const { minCol, maxCol: maxColRaw, minRow, maxRow: maxRowRaw } = bounds;
-  const maxCol = maxColRaw + 1;
-  const maxRow = maxRowRaw + 1;
+  const tilesByFloor = new Map<number, (typeof tiles)[number][]>();
+  for (const tile of tiles) {
+    let bucket = tilesByFloor.get(tile.floorIndex);
+    if (!bucket) {
+      bucket = [];
+      tilesByFloor.set(tile.floorIndex, bucket);
+    }
+    bucket.push(tile);
+  }
+  const floorIndexes = Array.from(tilesByFloor.keys()).sort((a, b) =>
+    compareFloorLayers(snapshot, a, b),
+  );
   const wallH = snapshot.layout.wallHeight;
-
-  const topCorner = hqProject(snapshot, minCol, minRow);
-  const leftCorner = hqProject(snapshot, minCol, maxRow);
-  const rightCorner = hqProject(snapshot, maxCol, minRow);
-  const frontCorner = hqProject(snapshot, maxCol, maxRow);
-
   const capH = 6;
 
-  // Roof cap strip — left (filled, visible)
-  const leftCap: HqPoint[] = [
-    { x: topCorner.x, y: topCorner.y - wallH },
-    { x: leftCorner.x, y: leftCorner.y - wallH },
-    { x: leftCorner.x, y: leftCorner.y - wallH - capH },
-    { x: topCorner.x, y: topCorner.y - wallH - capH },
-  ];
-  drawPolygon(ctx, leftCap, "#2a2416", "rgba(200, 168, 76, 0.2)");
+  for (const floorIndex of floorIndexes) {
+    const floorTiles = tilesByFloor.get(floorIndex)!;
+    const bounds = computeGridBounds(floorTiles);
+    if (!bounds) {
+      continue;
+    }
 
-  // Roof cap strip — right
-  const rightCap: HqPoint[] = [
-    { x: topCorner.x, y: topCorner.y - wallH },
-    { x: rightCorner.x, y: rightCorner.y - wallH },
-    { x: rightCorner.x, y: rightCorner.y - wallH - capH },
-    { x: topCorner.x, y: topCorner.y - wallH - capH },
-  ];
-  drawPolygon(ctx, rightCap, "#241e12", "rgba(200, 168, 76, 0.15)");
+    const { minCol, maxCol: maxColRaw, minRow, maxRow: maxRowRaw } = bounds;
+    const maxCol = maxColRaw + 1;
+    const maxRow = maxRowRaw + 1;
+    const topCorner = hqProject(snapshot, minCol, minRow, floorIndex);
+    const leftCorner = hqProject(snapshot, minCol, maxRow, floorIndex);
+    const rightCorner = hqProject(snapshot, maxCol, minRow, floorIndex);
+    const frontCorner = hqProject(snapshot, maxCol, maxRow, floorIndex);
 
-  // Cornice line (wall top edge — gold accent)
-  ctx.strokeStyle = "rgba(200, 168, 76, 0.45)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(leftCorner.x, leftCorner.y - wallH);
-  ctx.lineTo(topCorner.x, topCorner.y - wallH);
-  ctx.lineTo(rightCorner.x, rightCorner.y - wallH);
-  ctx.stroke();
+    ctx.save();
+    ctx.globalAlpha = getFloorRenderAlpha(snapshot, floorIndex);
 
-  // Corner posts (structural pillars)
-  ctx.lineWidth = 3;
-  for (const corner of [topCorner, leftCorner, rightCorner]) {
-    // Dark post body
-    ctx.strokeStyle = "#2a2416";
+    const leftCap: HqPoint[] = [
+      { x: topCorner.x, y: topCorner.y - wallH },
+      { x: leftCorner.x, y: leftCorner.y - wallH },
+      { x: leftCorner.x, y: leftCorner.y - wallH - capH },
+      { x: topCorner.x, y: topCorner.y - wallH - capH },
+    ];
+    drawPolygon(ctx, leftCap, "#2a2416", "rgba(200, 168, 76, 0.2)");
+
+    const rightCap: HqPoint[] = [
+      { x: topCorner.x, y: topCorner.y - wallH },
+      { x: rightCorner.x, y: rightCorner.y - wallH },
+      { x: rightCorner.x, y: rightCorner.y - wallH - capH },
+      { x: topCorner.x, y: topCorner.y - wallH - capH },
+    ];
+    drawPolygon(ctx, rightCap, "#241e12", "rgba(200, 168, 76, 0.15)");
+
+    ctx.strokeStyle = "rgba(200, 168, 76, 0.45)";
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(corner.x, corner.y);
-    ctx.lineTo(corner.x, corner.y - wallH - capH);
+    ctx.moveTo(leftCorner.x, leftCorner.y - wallH);
+    ctx.lineTo(topCorner.x, topCorner.y - wallH);
+    ctx.lineTo(rightCorner.x, rightCorner.y - wallH);
     ctx.stroke();
-    // Gold edge highlight
-    ctx.strokeStyle = "rgba(200, 168, 76, 0.22)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(corner.x + 1, corner.y);
-    ctx.lineTo(corner.x + 1, corner.y - wallH - capH);
-    ctx.stroke();
+
     ctx.lineWidth = 3;
+    for (const corner of [topCorner, leftCorner, rightCorner]) {
+      ctx.strokeStyle = "#2a2416";
+      ctx.beginPath();
+      ctx.moveTo(corner.x, corner.y);
+      ctx.lineTo(corner.x, corner.y - wallH - capH);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(200, 168, 76, 0.22)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(corner.x + 1, corner.y);
+      ctx.lineTo(corner.x + 1, corner.y - wallH - capH);
+      ctx.stroke();
+      ctx.lineWidth = 3;
+    }
+
+    ctx.strokeStyle = "rgba(200, 168, 76, 0.35)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(leftCorner.x, leftCorner.y);
+    ctx.lineTo(frontCorner.x, frontCorner.y);
+    ctx.lineTo(rightCorner.x, rightCorner.y);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#2a2416";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(frontCorner.x, frontCorner.y);
+    ctx.lineTo(frontCorner.x, frontCorner.y - wallH * 0.3);
+    ctx.stroke();
+    ctx.restore();
   }
-
-  // Front edge (building footprint line — visible bottom boundary)
-  ctx.strokeStyle = "rgba(200, 168, 76, 0.35)";
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(leftCorner.x, leftCorner.y);
-  ctx.lineTo(frontCorner.x, frontCorner.y);
-  ctx.lineTo(rightCorner.x, rightCorner.y);
-  ctx.stroke();
-
-  // Front corner post
-  ctx.strokeStyle = "#2a2416";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(frontCorner.x, frontCorner.y);
-  ctx.lineTo(frontCorner.x, frontCorner.y - wallH * 0.3);
-  ctx.stroke();
 }
 
 // ── Sprite rendering ──────────────────────────────────────────────────────
@@ -1854,7 +2072,7 @@ function drawSprite(
   const img = imageCache.load(sprite.assetUrl);
   if (!img) return;
   ctx.save();
-  ctx.globalAlpha = sprite.opacity;
+  ctx.globalAlpha *= sprite.opacity;
   ctx.drawImage(img, sprite.x, sprite.y, sprite.width, sprite.height);
   ctx.restore();
 }
@@ -2024,7 +2242,7 @@ function drawActorLabel(
   color?: string,
 ): void {
   ctx.textAlign = "center";
-  ctx.font = `${weight} 10px ${FONT_FAMILY}`;
+  ctx.font = `${weight} 12px ${FONT_FAMILY}`;
   ctx.fillStyle = "rgba(6, 6, 8, 0.85)";
   ctx.fillText(label, x + 0.5, y + 0.5);
   ctx.fillText(label, x - 0.5, y + 0.5);
@@ -2129,6 +2347,7 @@ function drawRoomFloorEdges(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
 
     // Room floor border — thin gold/silver line around the room perimeter
     ctx.save();
+    ctx.globalAlpha = getFloorRenderAlpha(snapshot, room.floorIndex);
     ctx.strokeStyle = edgeColor;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -2156,6 +2375,7 @@ function drawRoomFloorEdges(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
 
 function drawRoomFunctionMarker(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnapshot): void {
   for (const room of snapshot.rooms) {
+    if (room.floorIndex !== snapshot.layout.activeFloorIndex) continue;
     if (!room.isOperational) continue;
     const fp = room.floorPoints;
     if (fp.length < 4) continue;
@@ -2400,8 +2620,11 @@ function drawHqWorld(
     glow.addColorStop(0, "rgba(200, 168, 76, 0.06)");
     glow.addColorStop(0.5, "rgba(200, 168, 76, 0.03)");
     glow.addColorStop(1, "rgba(200, 168, 76, 0)");
+    ctx.save();
+    ctx.globalAlpha = getFloorRenderAlpha(snapshot, room.floorIndex);
     ctx.fillStyle = glow;
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
   }
 
   // 4. Modular wall segments (back to front, drawn behind floor)
@@ -2423,8 +2646,18 @@ function drawHqWorld(
   // 7. Room props (by zIndex)
   snapshot.roomProps
     .slice()
-    .sort((a, b) => a.zIndex - b.zIndex)
-    .forEach((sprite) => drawSprite(ctx, sprite, imageCache));
+    .sort(
+      (a, b) =>
+        compareFloorLayers(snapshot, a.floorIndex ?? 0, b.floorIndex ?? 0) || a.zIndex - b.zIndex,
+    )
+    .forEach((sprite) => {
+      ctx.save();
+      if (typeof sprite.floorIndex === "number") {
+        ctx.globalAlpha = getFloorRenderAlpha(snapshot, sprite.floorIndex);
+      }
+      drawSprite(ctx, sprite, imageCache);
+      ctx.restore();
+    });
 
   // 7. Actors
   snapshot.actors.forEach((actor) => {
@@ -2515,20 +2748,42 @@ function hitTestHqRoom(
   worldX: number,
   worldY: number,
 ): HqRoomNode | null {
-  const { originX, originY, tileWidth, tileHeight } = snapshot.layout;
-  // Inverse isometric projection: world → grid
-  const dx = worldX - originX;
-  const dy = worldY - originY;
-  const col = (dx / (tileWidth / 2) + dy / (tileHeight / 2)) / 2;
-  const row = (dy / (tileHeight / 2) - dx / (tileWidth / 2)) / 2;
+  const activeFloorRooms = snapshot.rooms
+    .filter((room) => room.floorIndex === snapshot.layout.activeFloorIndex)
+    .slice()
+    .sort(
+      (left, right) => right.bounds.y + right.bounds.height - (left.bounds.y + left.bounds.height),
+    );
 
-  for (const room of snapshot.rooms) {
-    const fp = room.reservedFootprint;
-    if (col >= fp.col && col < fp.col + fp.cols && row >= fp.row && row < fp.row + fp.rows) {
+  for (const room of activeFloorRooms) {
+    if (pointInPolygon(room.floorPoints, worldX, worldY)) {
       return room;
     }
   }
+
   return null;
+}
+
+function pointInPolygon(points: readonly HqPoint[], x: number, y: number): boolean {
+  let inside = false;
+
+  for (
+    let current = 0, previous = points.length - 1;
+    current < points.length;
+    previous = current++
+  ) {
+    const xi = points[current].x;
+    const yi = points[current].y;
+    const xj = points[previous].x;
+    const yj = points[previous].y;
+    const intersects =
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi || Number.EPSILON) + xi;
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
 }
 
 function hitTestActor(

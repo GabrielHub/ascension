@@ -30,6 +30,7 @@ export function VolumeSlider({
         />
         <input
           type="range"
+          aria-label={label}
           min={min}
           max={max}
           step={1}

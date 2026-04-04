@@ -358,12 +358,12 @@ describe("shipped index style", () => {
     expect(index.style).toBe("bodega-angled-isometric");
   });
 
-  it("returns empty parts for buildings without a shipped asset pack", () => {
+  it("returns parts for Porter's waterfront building", () => {
     const index = getLoadedEnvPartsIndex("building/porters");
 
     expect(index.style).toBe("porters-waterfront-isometric");
-    expect(index.parts).toEqual([]);
-    expect(getLoadedEnvParts("building/porters")).toEqual([]);
+    expect(index.parts.length).toBeGreaterThan(0);
+    expect(getLoadedEnvParts("building/porters").length).toBeGreaterThan(0);
   });
 
   it("contains no flat/cross-section or room-kit entries", () => {
@@ -507,6 +507,11 @@ describe("promoted asset status", () => {
 describe("resolveShellAssetUrl", () => {
   it("returns a valid parts URL for the bodega shell", () => {
     const url = resolveShellAssetUrl();
+    expect(url).toContain("/parts/shell/iso-bodega-shell.svg");
+  });
+
+  it("falls back to the shared shell when a building does not ship its own shell asset yet", () => {
+    const url = resolveShellAssetUrl("building/porters");
     expect(url).toContain("/parts/shell/iso-bodega-shell.svg");
   });
 });

@@ -1,11 +1,15 @@
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
+import { localAiClient, type AiConnectionStatus } from "app/features/ai";
 import { buildGameShellHref } from "app/features/runtime";
+import { useGameSettings, type AiRuntimeKind } from "app/features/settings";
 import { formatSaveSlotTimestamp, type StartScreenSaveSlot } from "app/features/save-slots";
 import { useSaveSlots } from "app/features/save-slots/use-save-slots";
 import { DEFAULT_PLAYER_NAME, normalizeGameIdentity } from "lib/game-identity";
 import { CURRENT_SAVE_SCHEMA_VERSION, type SaveSlotId } from "save";
+
+import { SettingsModal } from "./settings-modal";
 
 const P = {
   void: "#060608",
@@ -635,7 +639,7 @@ function EmptyCard({
   );
 }
 
-function FooterLink({ label, to }: { label: string; to?: string }) {
+function FooterLink({ label, to, onClick }: { label: string; to?: string; onClick?: () => void }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const active = hovered || focused;
@@ -674,6 +678,7 @@ function FooterLink({ label, to }: { label: string; to?: string }) {
       type="button"
       className="cursor-pointer rounded-md px-2.5 py-1 transition-all duration-300"
       style={sharedStyle}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setFocused(true)}
@@ -686,6 +691,7 @@ function FooterLink({ label, to }: { label: string; to?: string }) {
 
 export function StartScreenShell() {
   const navigate = useNavigate();
+  const { settings, updateSettings, resetSettings } = useGameSettings();
   const {
     slots,
     status,
@@ -701,10 +707,107 @@ export function StartScreenShell() {
   const topRowSlots = slots.slice(0, 2);
   const bottomRowSlots = slots.slice(2);
   const [pendingNewSlot, setPendingNewSlot] = useState<StartScreenSaveSlot | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aiConnectionStatus, setAiConnectionStatus] = useState<AiConnectionStatus>("unknown");
   const [playerName, setPlayerName] = useState(DEFAULT_PLAYER_NAME);
   const [guildName, setGuildName] = useState("Guild Slot 1");
   const statusLabel =
     status === "loading" ? "Syncing local save slots" : (errorMessage ?? "Local save slots ready");
+
+  const openSettingsModal = useCallback(() => {
+    setSettingsOpen(true);
+  }, []);
+
+  const closeSettingsModal = useCallback(() => {
+    setSettingsOpen(false);
+  }, []);
+
+  const handleSfxVolumeChange = useCallback(
+    (db: number) => {
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        audio: { ...currentSettings.audio, sfxVolumeDb: db },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const handleMusicVolumeChange = useCallback(
+    (db: number) => {
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        audio: { ...currentSettings.audio, musicVolumeDb: db },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const toggleWakeLock = useCallback(() => {
+    setAiConnectionStatus("unknown");
+    updateSettings((currentSettings) => ({
+      ...currentSettings,
+      wakeLockEnabled: !currentSettings.wakeLockEnabled,
+    }));
+  }, [updateSettings]);
+
+  const toggleTutorialEvents = useCallback(() => {
+    updateSettings((currentSettings) => ({
+      ...currentSettings,
+      tutorialEventsEnabled: !currentSettings.tutorialEventsEnabled,
+    }));
+  }, [updateSettings]);
+
+  const toggleAiEnabled = useCallback(() => {
+    setAiConnectionStatus("unknown");
+    updateSettings((currentSettings) => ({
+      ...currentSettings,
+      ai: { ...currentSettings.ai, enabled: !currentSettings.ai.enabled },
+    }));
+  }, [updateSettings]);
+
+  const setAiRuntimeKind = useCallback(
+    (runtimeKind: AiRuntimeKind) => {
+      setAiConnectionStatus("unknown");
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        ai: { ...currentSettings.ai, runtimeKind },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const setAiBaseUrl = useCallback(
+    (baseUrl: string) => {
+      setAiConnectionStatus("unknown");
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        ai: { ...currentSettings.ai, baseUrl },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const setAiModelId = useCallback(
+    (modelId: string) => {
+      setAiConnectionStatus("unknown");
+      updateSettings((currentSettings) => ({
+        ...currentSettings,
+        ai: { ...currentSettings.ai, modelId },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const handleResetDefaults = useCallback(() => {
+    setAiConnectionStatus("unknown");
+    resetSettings();
+  }, [resetSettings]);
+
+  const probeAiRuntime = useCallback(() => {
+    void localAiClient.probe(settings.ai).then((result) => {
+      setAiConnectionStatus(result.status);
+    });
+  }, [settings.ai]);
 
   const openNewGameModal = (slot: StartScreenSaveSlot) => {
     setPendingNewSlot(slot);
@@ -961,7 +1064,7 @@ export function StartScreenShell() {
           <footer className="relative mt-auto pb-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-5">
-                <FooterLink label="Settings" />
+                <FooterLink label="Settings" onClick={openSettingsModal} />
                 <span
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
@@ -1012,6 +1115,26 @@ export function StartScreenShell() {
             </div>
           </footer>
         </div>
+
+        {settingsOpen && (
+          <SettingsModal
+            settings={settings}
+            audioState="suspended"
+            wakeLock={{ status: "idle" }}
+            aiConnectionStatus={aiConnectionStatus}
+            onClose={closeSettingsModal}
+            onSfxVolumeChange={handleSfxVolumeChange}
+            onMusicVolumeChange={handleMusicVolumeChange}
+            onWakeLockToggle={toggleWakeLock}
+            onTutorialEventsToggle={toggleTutorialEvents}
+            onResetDefaults={handleResetDefaults}
+            onAiEnabledToggle={toggleAiEnabled}
+            onAiRuntimeKindChange={setAiRuntimeKind}
+            onAiBaseUrlChange={setAiBaseUrl}
+            onAiModelIdChange={setAiModelId}
+            onAiProbe={probeAiRuntime}
+          />
+        )}
 
         {pendingNewSlot && (
           <div className="absolute inset-0 z-20 flex items-center justify-center px-6">

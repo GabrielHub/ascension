@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -114,6 +114,7 @@ const TAB_ORDER: readonly ShellTab[] = ["hq", "operations"];
 
 // Manual advancement stays aligned with the simulation's hour-based tick contract.
 const TICK_HOUR_MS = 60 * 60 * 1000;
+const PORTERS_FLOOR_LABELS: Record<number, string> = { 0: "Ground", 1: "Upper", 2: "Waterfront" };
 const PERSISTENT_GUIDANCE_COMPLETION_KINDS = new Set([
   "incident_resolved",
   "boss_commitment_resolved",
@@ -596,6 +597,7 @@ function FocusedVisitorOverlay({
   const patienceFraction = Math.max(0, Math.min(1, visitor.patience / 120));
   const patienceUrgent = patienceFraction <= 0.25;
   const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
+  const personaHooks = visitor.personaHooks ?? [];
 
   return (
     <div className="glass-card pointer-events-auto animate-enter w-72 border-[rgba(232,170,60,0.1)] p-4">
@@ -676,8 +678,44 @@ function FocusedVisitorOverlay({
           <span>Quality {Math.round(visitor.quality)}</span>
         </Tooltip>
         <span className="opacity-30">&middot;</span>
+        <span>
+          {
+            getSpecialtyMeta(
+              visitor.specialtyTag || `focus:${visitor.desiredRoleTag.replace(/^role:/, "")}`,
+            ).label
+          }
+        </span>
+        <span className="opacity-30">&middot;</span>
         <span>Patience {patienceDisplay}</span>
       </div>
+
+      {visitor.personaSummary && (
+        <div className="mt-3 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(10,10,14,0.45)] px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs uppercase tracking-[0.12em] text-[rgba(232,170,60,0.62)]">
+              Recruit Read
+            </span>
+            {visitor.identitySource === "generated" && (
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/8 px-2 py-0.5 text-xs uppercase tracking-[0.12em] text-emerald-300/80">
+                AI packet
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-silver/65">{visitor.personaSummary}</p>
+          {personaHooks.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {personaHooks.slice(0, 3).map((hook) => (
+                <span
+                  key={hook}
+                  className="rounded-full border border-[rgba(200,168,76,0.12)] bg-[rgba(200,168,76,0.06)] px-2 py-0.5 text-xs text-gold/70"
+                >
+                  {hook}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.06)] px-3 py-2">
         <div className="flex items-center justify-between gap-2">
@@ -1059,6 +1097,39 @@ export function GameShell() {
     void session.commands.dispatch({ type: "sim/guidance-reset-opening" });
   }, [session]);
 
+  const toggleAiEnabled = useCallback(() => {
+    updateSettings((s) => ({ ...s, ai: { ...s.ai, enabled: !s.ai.enabled } }));
+  }, [updateSettings]);
+
+  const setAiRuntimeKind = useCallback(
+    (runtimeKind: string) => {
+      updateSettings((s) => ({
+        ...s,
+        ai: { ...s.ai, runtimeKind: runtimeKind as "ollama" | "lm-studio" | "llama-cpp" },
+      }));
+    },
+    [updateSettings],
+  );
+
+  const setAiBaseUrl = useCallback(
+    (baseUrl: string) => {
+      updateSettings((s) => ({ ...s, ai: { ...s.ai, baseUrl } }));
+    },
+    [updateSettings],
+  );
+
+  const setAiModelId = useCallback(
+    (modelId: string) => {
+      updateSettings((s) => ({ ...s, ai: { ...s.ai, modelId } }));
+    },
+    [updateSettings],
+  );
+
+  const probeAiRuntime = useCallback(() => {
+    if (!session) return;
+    void session.commands.probeAiRuntime();
+  }, [session]);
+
   const callbacks: GameCallbacks | null = useMemo(() => buildGameCallbacks(session), [session]);
 
   const advanceHour = useCallback(() => {
@@ -1207,23 +1278,27 @@ export function GameShell() {
   }, [activeEncounter]);
 
   const phase1View = session?.state.phase1View ?? null;
+  const deferredPhase1View = useDeferredValue(phase1View);
   const registry = session?.registry ?? null;
 
   const phase2 = useMemo(
-    () => (session ? session.simulation.getPhase2View() : null),
-    [phase1View, session],
+    () => (session && deferredPhase1View ? session.simulation.getPhase2View() : null),
+    [deferredPhase1View, session],
   );
 
   const hqBase = useMemo(
     () =>
-      session && phase1View && registry
-        ? buildHqViewFromPhase1(phase1View, registry, phase2?.inventory)
+      session && deferredPhase1View && registry
+        ? buildHqViewFromPhase1(deferredPhase1View, registry, phase2?.inventory)
         : null,
-    [phase1View, registry, session, phase2],
+    [deferredPhase1View, registry, session, phase2],
   );
   const operations = useMemo(
-    () => (session && phase1View && registry ? buildOpsViewFromPhase1(phase1View, registry) : null),
-    [phase1View, registry, session],
+    () =>
+      session && deferredPhase1View && registry
+        ? buildOpsViewFromPhase1(deferredPhase1View, registry)
+        : null,
+    [deferredPhase1View, registry, session],
   );
 
   const hq = useMemo(() => {
@@ -1302,22 +1377,27 @@ export function GameShell() {
 
   const rawHqWorld: HqWorldSnapshot | null = session?.state.hqWorldSnapshot ?? null;
   const rawRaidWorld: RaidWorldSnapshot | null = session?.state.raidWorldSnapshot ?? null;
+  const deferredRawHqWorld = useDeferredValue(rawHqWorld);
+  const deferredRawRaidWorld = useDeferredValue(rawRaidWorld);
   const hqWorldSnapshot = useMemo<HqWorldSnapshot | null>(
     () =>
-      rawHqWorld
-        ? { ...rawHqWorld, effects: buildContextEffects(rawHqWorld.effects, "hq", focus !== null) }
+      deferredRawHqWorld
+        ? {
+            ...deferredRawHqWorld,
+            effects: buildContextEffects(deferredRawHqWorld.effects, "hq", focus !== null),
+          }
         : null,
-    [rawHqWorld, focus],
+    [deferredRawHqWorld, focus],
   );
   const raidWorldSnapshot = useMemo<RaidWorldSnapshot | null>(
     () =>
-      rawRaidWorld
+      deferredRawRaidWorld
         ? {
-            ...rawRaidWorld,
-            effects: buildContextEffects(rawRaidWorld.effects, "raid", focus !== null),
+            ...deferredRawRaidWorld,
+            effects: buildContextEffects(deferredRawRaidWorld.effects, "raid", focus !== null),
           }
         : null,
-    [rawRaidWorld, focus],
+    [deferredRawRaidWorld, focus],
   );
 
   const handleFocusChange = useCallback(
@@ -1697,20 +1777,26 @@ export function GameShell() {
                   <div className="flex items-center gap-1">
                     <span className="text-xs uppercase tracking-[0.15em] text-gold/60">Floor</span>
                     <div className="flex items-center gap-1">
-                      {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => (
-                        <button
-                          key={floorIndex}
-                          type="button"
-                          className={`rounded-full border px-2 py-1 text-xs uppercase tracking-[0.12em] transition-colors ${
-                            hq.building.activeFloorIndex === floorIndex
-                              ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
-                              : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
-                          }`}
-                          onClick={() => callbacks.setActiveFloor(floorIndex)}
-                        >
-                          {floorIndex + 1}
-                        </button>
-                      ))}
+                      {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => {
+                        const label =
+                          hq.building.id === "building/porters"
+                            ? (PORTERS_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
+                            : String(floorIndex + 1);
+                        return (
+                          <button
+                            key={floorIndex}
+                            type="button"
+                            className={`rounded-full border px-2 py-1 text-xs uppercase tracking-[0.12em] transition-colors ${
+                              hq.building.activeFloorIndex === floorIndex
+                                ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
+                                : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
+                            }`}
+                            onClick={() => callbacks.setActiveFloor(floorIndex)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2224,6 +2310,7 @@ export function GameShell() {
             settings={settings}
             audioState={audioState}
             wakeLock={wakeLock}
+            aiConnectionStatus={session?.ai.connectionStatus}
             onClose={closeActiveModal}
             onSfxVolumeChange={handleSfxVolumeChange}
             onMusicVolumeChange={handleMusicVolumeChange}
@@ -2231,6 +2318,11 @@ export function GameShell() {
             onTutorialEventsToggle={toggleTutorialEvents}
             onReplayOpeningGuidance={resetOpeningGuidance}
             onResetDefaults={resetSettings}
+            onAiEnabledToggle={toggleAiEnabled}
+            onAiRuntimeKindChange={setAiRuntimeKind}
+            onAiBaseUrlChange={setAiBaseUrl}
+            onAiModelIdChange={setAiModelId}
+            onAiProbe={probeAiRuntime}
           />
         )}
       </div>

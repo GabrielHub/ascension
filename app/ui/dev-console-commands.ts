@@ -1,8 +1,29 @@
 import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { isPolicyId, isValidPolicyValue, type PolicyId, type PolicyValue } from "lib/policies";
 import type { HqDebugOverlays, HqWorldSnapshot } from "render";
+import { buildGameShellHref } from "app/features/runtime";
+import { listStartScreenSaveSlots } from "app/features/save-slots";
+import {
+  getCompatibleOperatorGearOptions,
+  getLoadedOperatorAppearanceRecipes,
+} from "save/appearance";
+import {
+  CURRENT_CONTENT_COMPATIBILITY,
+  CURRENT_SAVE_SCHEMA_VERSION,
+  SAVE_SLOT_IDS,
+  saveStorage,
+  type PersistedSaveGame,
+  type SaveSlotId,
+  type WorldSnapshot,
+} from "save";
+import {
+  createPortersUpgradeCampaignSeedWorld,
+  createRelocationReadyWorld,
+} from "sim/tools/porters-upgrade-campaign";
+import { getAllowedPreferredMissionTags, getSpecialtyOptionsForRole } from "sim/systems/commands";
 
 import type { RuntimeSession } from "app/features/runtime";
+import { readGameSettings } from "app/features/settings/storage";
 import type { EventLogEntry } from "./view-models";
 
 // ---------------------------------------------------------------------------
@@ -17,7 +38,15 @@ export interface DevConsoleResult {
 
 type DevConsoleSession = Pick<
   RuntimeSession,
-  "commands" | "isPreview" | "lifecycle" | "mode" | "phase1View" | "state" | "worldSnapshot"
+  | "ai"
+  | "commands"
+  | "isPreview"
+  | "lifecycle"
+  | "mode"
+  | "phase1View"
+  | "slotId"
+  | "state"
+  | "worldSnapshot"
 >;
 
 export interface DevConsoleContext {
@@ -60,6 +89,101 @@ function err(message: string): DevConsoleResult {
 
 function info(message: string, detail?: string): DevConsoleResult {
   return { status: "info", message, detail };
+}
+
+function getOperatorIdentityMaxRarity(quality: number): "common" | "uncommon" | "rare" {
+  if (quality >= 82) return "rare";
+  if (quality >= 72) return "uncommon";
+  return "common";
+}
+
+function buildOperatorIdentityPayload(
+  ctx: DevConsoleContext,
+  visitor: DevConsoleContext["session"]["phase1View"]["visitors"][number],
+): Record<string, unknown> {
+  const allowedRecipes = getLoadedOperatorAppearanceRecipes().map((recipe) => ({
+    id: recipe.id,
+    name: recipe.name,
+    bodySilhouette: recipe.bodySilhouette,
+    palette: recipe.palette,
+    skinTone: recipe.skinTone,
+  }));
+  const maxRarity = getOperatorIdentityMaxRarity(visitor.quality ?? 50);
+  const allowedVisibleGearByRecipe = allowedRecipes.map((recipe) => ({
+    recipeId: recipe.id,
+    weaponPartIds: getCompatibleOperatorGearOptions({
+      category: "weapon",
+      roleTag: visitor.desiredRoleTag,
+      recipeId: recipe.id,
+      maxRarity,
+    }).map((part) => part.id),
+    outfitOverlayPartIds: getCompatibleOperatorGearOptions({
+      category: "outfit-overlay",
+      roleTag: visitor.desiredRoleTag,
+      recipeId: recipe.id,
+      maxRarity,
+    }).map((part) => part.id),
+    accessoryPartIds: getCompatibleOperatorGearOptions({
+      category: "accessory",
+      roleTag: visitor.desiredRoleTag,
+      recipeId: recipe.id,
+      maxRarity,
+    }).map((part) => part.id),
+  }));
+
+  const toCatalog = (category: "weapon" | "outfit-overlay" | "accessory") => [
+    ...new Map(
+      allowedRecipes.flatMap((recipe) =>
+        getCompatibleOperatorGearOptions({
+          category,
+          roleTag: visitor.desiredRoleTag,
+          recipeId: recipe.id,
+          maxRarity,
+        }).map((part) => [part.id, { id: part.id, tags: [...part.tags], rarity: part.rarity }]),
+      ),
+    ).values(),
+  ];
+
+  return {
+    candidateId: visitor.id,
+    guildName: ctx.session.phase1View.identity.guildName,
+    buildingName: ctx.session.phase1View.building.activeBuildingName,
+    dayNumber: ctx.session.phase1View.clock.day,
+    name: visitor.name,
+    roleTag: visitor.desiredRoleTag,
+    quality: visitor.quality ?? 50,
+    expectedLoyalty: visitor.expectedLoyalty ?? 50,
+    allowedSpecialtyTags: [...getSpecialtyOptionsForRole(visitor.desiredRoleTag)],
+    allowedPreferredMissionTags: [...getAllowedPreferredMissionTags()],
+    allowedRecipes,
+    allowedVisibleGearByRecipe,
+    gearCatalog: {
+      weapon: toCatalog("weapon"),
+      outfitOverlay: toCatalog("outfit-overlay"),
+      accessory: toCatalog("accessory"),
+    },
+    fallbackIdentity: {
+      specialtyTag: visitor.specialtyTag ?? `focus:${visitor.desiredRoleTag.replace(/^role:/, "")}`,
+      appearance: {
+        presetId: visitor.presetId ?? allowedRecipes[0]?.id ?? "kael-001",
+      },
+      preferences: {
+        riskTolerance: 50,
+        rewardFocus: 50,
+        recoveryBias: 50,
+        socialBias: 50,
+        trainingBias: 50,
+        comfortBias: 50,
+        preferredMissionTags: ["mission:stability"],
+      },
+      personaSummary:
+        visitor.personaSummary ??
+        `${visitor.name} reads like a plausible ${visitor.desiredRoleTag.replace(/^role:/, "").replaceAll("_", " ")} hire.`,
+      personaHooks: visitor.personaHooks?.length
+        ? [...visitor.personaHooks]
+        : ["Dry under pressure.", "Treats chaos like a management problem."],
+    },
+  };
 }
 
 function getCommandFamilies(): readonly string[] {
@@ -128,6 +252,78 @@ function formatTime(minuteOfDay: number): string {
   const h = String(Math.floor(minuteOfDay / 60)).padStart(2, "0");
   const m = String(minuteOfDay % 60).padStart(2, "0");
   return `${h}:${m}`;
+}
+
+function isSaveSlotId(raw: string): raw is SaveSlotId {
+  return SAVE_SLOT_IDS.some((slotId) => slotId === raw);
+}
+
+async function resolveSeedSlotId(
+  currentSlotId?: SaveSlotId,
+  requestedSlotId?: string,
+): Promise<SaveSlotId> {
+  if (requestedSlotId) {
+    if (!isSaveSlotId(requestedSlotId)) {
+      throw new Error(`Invalid slot: ${requestedSlotId}. Use ${SAVE_SLOT_IDS.join(", ")}.`);
+    }
+    return requestedSlotId;
+  }
+
+  if (currentSlotId) {
+    return currentSlotId;
+  }
+
+  const slots = await listStartScreenSaveSlots();
+  const firstEmptySlot = slots.find((slot) => slot.state === "empty")?.slotId;
+  return firstEmptySlot ?? "slot/1";
+}
+
+function createTestingSave(slotId: SaveSlotId, world: WorldSnapshot): PersistedSaveGame {
+  const timestamp = new Date().toISOString();
+  const seededWorld: WorldSnapshot = {
+    ...world,
+    guild: {
+      ...world.guild,
+      guildName: "Testing Guild",
+      playerName: "Test",
+    },
+  };
+
+  return {
+    slotId,
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+    compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
+    metadata: {
+      guildName: seededWorld.guild.guildName,
+      playerName: seededWorld.guild.playerName,
+      createdAt: timestamp,
+      lastPlayedAt: timestamp,
+    },
+    world: seededWorld,
+  };
+}
+
+function queueSeededRun(
+  seedName: string,
+  createWorld: () => WorldSnapshot,
+  ctx: DevConsoleContext,
+  requestedSlotId?: string,
+): Promise<SaveSlotId> {
+  return (async () => {
+    const slotId = await resolveSeedSlotId(ctx.session.slotId, requestedSlotId);
+    const save = createTestingSave(slotId, createWorld());
+    await saveStorage.writeSaveGame(save);
+    globalThis.location.assign(
+      buildGameShellHref({
+        mode: "load",
+        slotId,
+      }),
+    );
+    return slotId;
+  })().catch((error) => {
+    console.error(`[dev-console] failed to seed ${seedName}`, error);
+    throw error;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -646,6 +842,43 @@ const COMMANDS: DevConsoleCommand[] = [
     execute: (_args, ctx) => {
       void ctx.session.commands.initiateRelocation();
       return ok("Relocation initiated");
+    },
+  },
+  {
+    name: "seed relocation",
+    family: "Debug",
+    args: "[slot]",
+    help: "Write a relocation-ready Testing save and reload into it",
+    examples: ["/seed relocation", "/seed relocation slot/2"],
+    execute: (args, ctx) => {
+      const requestedSlotId = args[0];
+      if (requestedSlotId && !isSaveSlotId(requestedSlotId)) {
+        return err(`Invalid slot: ${requestedSlotId}. Use ${SAVE_SLOT_IDS.join(", ")}.`);
+      }
+      void queueSeededRun("relocation-ready", createRelocationReadyWorld, ctx, requestedSlotId);
+      const slotLabel = requestedSlotId ?? "target slot";
+      return ok(`Seeding relocation-ready run into ${slotLabel} and reloading...`);
+    },
+  },
+  {
+    name: "seed porters",
+    family: "Debug",
+    args: "[slot]",
+    help: "Write a Porter's campaign Testing save and reload into it",
+    examples: ["/seed porters", "/seed porters slot/2"],
+    execute: (args, ctx) => {
+      const requestedSlotId = args[0];
+      if (requestedSlotId && !isSaveSlotId(requestedSlotId)) {
+        return err(`Invalid slot: ${requestedSlotId}. Use ${SAVE_SLOT_IDS.join(", ")}.`);
+      }
+      void queueSeededRun(
+        "porters campaign",
+        createPortersUpgradeCampaignSeedWorld,
+        ctx,
+        requestedSlotId,
+      );
+      const slotLabel = requestedSlotId ?? "target slot";
+      return ok(`Seeding Porter's campaign into ${slotLabel} and reloading...`);
     },
   },
 
@@ -1193,6 +1426,251 @@ const COMMANDS: DevConsoleCommand[] = [
             `Unknown category: ${category}. Use rooms, operators, visitors, staff, contracts, encounter, or raids.`,
           );
       }
+    },
+  },
+
+  // ── AI ───────────────────────────────────────────────────────────────
+
+  {
+    name: "ai status",
+    family: "AI",
+    args: "",
+    help: "Show AI runtime configuration and connection state",
+    examples: ["/ai status"],
+    execute: (_args, ctx) => {
+      const settings = readGameSettings().ai;
+      const probe = ctx.session.ai.lastProbe;
+      const lines = [
+        `  Enabled: ${settings.enabled}`,
+        `  Runtime: ${settings.runtimeKind}`,
+        `  Base URL: ${settings.baseUrl}`,
+        `  Model: ${settings.modelId}`,
+        `  Connection: ${ctx.session.ai.connectionStatus}`,
+        `  Pending requests: ${[...ctx.session.ai.requests.values()].filter((r) => r.status === "pending").length}`,
+      ];
+      if (probe) {
+        lines.push(`  Last probe: ${new Date(probe.probedAt).toLocaleTimeString()}`);
+        if (probe.availableModels.length > 0) {
+          lines.push(`  Available models: ${probe.availableModels.join(", ")}`);
+        }
+        if (probe.error) {
+          lines.push(`  Probe error: ${probe.error}`);
+        }
+      }
+      return info("AI Runtime Status", lines.join("\n"));
+    },
+  },
+  {
+    name: "ai probe",
+    family: "AI",
+    args: "",
+    help: "Probe the local AI runtime for availability",
+    examples: ["/ai probe"],
+    execute: (_args, ctx) => {
+      void ctx.session.commands.probeAiRuntime().then((result) => {
+        // eslint-disable-next-line no-console
+        console.log("[ai probe]", result);
+      });
+      return ok("Probing AI runtime...");
+    },
+  },
+  {
+    name: "ai generate",
+    family: "AI",
+    args: "<surface>",
+    help: "Trigger an AI generation for a surface (e.g. incident-framing)",
+    examples: ["/ai generate incident-framing"],
+    execute: (args, ctx) => {
+      if (args.length < 1) return err("Usage: /ai generate <surface>");
+      const surface = args[0];
+      if (surface !== "incident-framing" && surface !== "operator-identity") {
+        return err(`Unknown surface: ${surface}. Use incident-framing or operator-identity.`);
+      }
+      const pv = ctx.session.phase1View;
+      if (surface === "operator-identity") {
+        const visitor = pv.visitors?.[0];
+        if (!visitor) {
+          return err("No visitor available. Spawn or wait for a recruit first.");
+        }
+
+        void ctx.session.commands
+          .generateAiSurface({
+            surface,
+            subjectId: visitor.id,
+            payload: buildOperatorIdentityPayload(ctx, visitor),
+            triggerSource: "dev-menu",
+          })
+          .then((record) => {
+            // eslint-disable-next-line no-console
+            console.log("[ai generate]", record);
+          });
+
+        return ok(`Generating ${surface} for ${visitor.name}...`);
+      }
+
+      const primaryOperator = pv.operators?.[0];
+      const secondaryOperator = pv.operators?.[1];
+      const relationship =
+        primaryOperator && secondaryOperator
+          ? pv.relationshipSignals.find((signal) => {
+              const ids = [signal.operatorAId, signal.operatorBId];
+              return ids.includes(primaryOperator.id) && ids.includes(secondaryOperator.id);
+            })
+          : undefined;
+      void ctx.session.commands
+        .generateAiSurface({
+          surface,
+          subjectId: `dev-test:${Date.now()}`,
+          payload: {
+            incidentId: "incident/dev-test",
+            templateId: "incident/dev-test",
+            templateName: "Personnel Friction Report",
+            category: "personnel_conflict",
+            tags: ["conflict", "morale", "dev-test"],
+            triggerFamily: "operator_conflict",
+            guildName: pv.identity.guildName,
+            buildingId: pv.building.activeBuildingId,
+            buildingName: pv.building.activeBuildingName,
+            dayNumber: pv.clock.day,
+            minuteOfDay: pv.clock.minuteOfDay,
+            subjectSummary:
+              [primaryOperator?.identity.name, secondaryOperator?.identity.name]
+                .filter(Boolean)
+                .join(", ") || "Unknown subject",
+            operators: [primaryOperator, secondaryOperator]
+              .filter((operator): operator is NonNullable<typeof primaryOperator> =>
+                Boolean(operator),
+              )
+              .map((operator) => ({
+                id: operator.id,
+                name: operator.identity.name,
+                roleTag: operator.identity.roleTag,
+                specialtyTag: operator.identity.specialtyTag,
+                attunementTag: operator.combat?.attunementTag ?? "",
+                rank: operator.combat?.rank ?? "f",
+                traits: [...(operator.combat?.traits ?? [])],
+                morale: { ...operator.morale },
+                loyalty: { ...operator.loyalty },
+                needs: { ...operator.needs },
+                injury: { ...operator.injury },
+                preferences: {
+                  ...operator.preferences,
+                  preferredMissionTags: [...operator.preferences.preferredMissionTags],
+                  preferredPartnerIds: [...operator.preferences.preferredPartnerIds],
+                },
+              })),
+            ...(relationship
+              ? {
+                  relationship: {
+                    operatorAId: relationship.operatorAId,
+                    operatorBId: relationship.operatorBId,
+                    trust: relationship.trust,
+                    friction: relationship.friction,
+                    familiarity: relationship.familiarity,
+                    recentSharedOutcome: relationship.recentSharedOutcome,
+                    historyTags: [...relationship.historyTags],
+                  },
+                }
+              : {}),
+            choices: [
+              {
+                choiceId: "mediate",
+                defaultLabel: "Mediate Directly",
+                defaultDescription: "Sit both operators down and work through the friction point.",
+                defaultConsequenceSummary: "Minor morale boost for both, slight loyalty increase.",
+                deterministicEffects: [
+                  { kind: "morale_delta", targetRef: "subject_a", value: 5 },
+                  { kind: "morale_delta", targetRef: "subject_b", value: 5 },
+                  { kind: "loyalty_delta", targetRef: "subject_a", value: 3 },
+                  { kind: "loyalty_delta", targetRef: "subject_b", value: 3 },
+                ],
+              },
+              {
+                choiceId: "ignore",
+                defaultLabel: "File and Move On",
+                defaultDescription: "Document the incident and let them sort it out.",
+                defaultConsequenceSummary: "No immediate cost, but unresolved tension persists.",
+                deterministicEffects: [
+                  { kind: "morale_delta", targetRef: "subject_a", value: -2 },
+                  { kind: "morale_delta", targetRef: "subject_b", value: -2 },
+                ],
+              },
+            ],
+          },
+          triggerSource: "dev-menu",
+        })
+        .then((record) => {
+          // eslint-disable-next-line no-console
+          console.log("[ai generate]", record);
+        });
+      return ok(`Generating ${surface}...`);
+    },
+  },
+  {
+    name: "ai regenerate",
+    family: "AI",
+    args: "<request-key>",
+    help: "Regenerate a previously completed or failed AI request",
+    examples: ["/ai regenerate incident-framing:dev-test"],
+    execute: (args, ctx) => {
+      if (args.length < 1) return err("Usage: /ai regenerate <request-key>");
+      const key = args[0];
+      const existing = ctx.session.ai.requests.get(key);
+      if (!existing) return err(`No request found for key: ${key}`);
+      void ctx.session.commands
+        .regenerateAiSurface({
+          surface: existing.surface,
+          subjectId: existing.subjectId,
+          payload: existing.payload,
+          triggerSource: "dev-menu",
+        })
+        .then((record) => {
+          // eslint-disable-next-line no-console
+          console.log("[ai regenerate]", record);
+        });
+      return ok(`Regenerating ${key}...`);
+    },
+  },
+  {
+    name: "ai inspect",
+    family: "AI",
+    args: "<request-key>",
+    help: "Inspect an AI request record by key",
+    examples: ["/ai inspect incident-framing:dev-test"],
+    execute: (args, ctx) => {
+      if (args.length < 1) {
+        // List all request keys
+        const keys = [...ctx.session.ai.requests.keys()];
+        if (keys.length === 0) return info("AI Requests", "  No requests recorded.");
+        const lines = keys.map((k) => {
+          const r = ctx.session.ai.requests.get(k)!;
+          return `  ${k} [${r.status}] ${r.surface}`;
+        });
+        return info(`AI Requests (${keys.length})`, lines.join("\n"));
+      }
+      const key = args[0];
+      const record = ctx.session.ai.requests.get(key);
+      if (!record) return err(`No request found for key: ${key}`);
+      const lines = [
+        `  Key: ${record.requestKey}`,
+        `  Surface: ${record.surface}`,
+        `  Subject: ${record.subjectId}`,
+        `  Status: ${record.status}`,
+        `  Trigger: ${record.triggerSource}`,
+        `  Runtime: ${record.runtimeKind}`,
+        `  Model: ${record.modelId}`,
+        `  Payload v${record.payloadVersion}`,
+        `  Payload: ${JSON.stringify(record.payload).slice(0, 200)}`,
+        record.startedAt
+          ? `  Started: ${new Date(record.startedAt).toLocaleTimeString()}`
+          : "  Started: -",
+        record.finishedAt
+          ? `  Finished: ${new Date(record.finishedAt).toLocaleTimeString()}`
+          : "  Finished: -",
+        record.error ? `  Error: ${record.error}` : null,
+        record.result ? `  Output: ${JSON.stringify(record.result.output).slice(0, 200)}` : null,
+      ].filter(Boolean);
+      return info(`AI Request: ${key}`, lines.join("\n"));
     },
   },
 ];

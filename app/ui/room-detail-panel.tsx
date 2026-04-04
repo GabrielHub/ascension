@@ -174,6 +174,91 @@ function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly s
     ];
   }
 
+  if (room.templateId === "room/floor:tier_1") {
+    return [
+      "The public dining room keeps regulars coming through the door, which means steady income and a social buffer between operators and the street.",
+      `Doubles as low-key recovery space — operators decompress over food without needing a medical room or a private conversation.`,
+    ];
+  }
+
+  if (room.templateId === "room/bar:tier_1") {
+    return [
+      "The bar is Porter's recruitment engine. Prospects show up for the atmosphere and leave having met the guild.",
+      `Keeps ${guildName}'s public face active so the recruit pipeline does not depend on cold outreach or word of mouth alone.`,
+    ];
+  }
+
+  if (room.templateId === "room/gym:tier_1") {
+    return [
+      "The first real training room in the guild's history. Operators build physical readiness between contracts instead of showing up cold.",
+      "Training gains feed directly into raid performance — stronger, faster, and more durable operators survive what the bodega crew could not.",
+    ];
+  }
+
+  if (room.templateId === "room/stockroom:tier_1") {
+    return [
+      "Proper logistics space means loadouts get staged cleanly and inventory stops disappearing into unorganized piles.",
+      `Keeps ${guildName}'s supply chain from bottlenecking growth as the roster and contract volume scale up.`,
+    ];
+  }
+
+  if (room.templateId === "room/prep_room:tier_1") {
+    return [
+      "Turns salvaged monster drops into field consumables that give deployed teams a real edge — stat buffs before the fight starts.",
+      "The prep room is where Porter's consumable pipeline lives. Without it, loot drops stay raw and teams go out unbuffed.",
+    ];
+  }
+
+  // ── Bodega rooms ─────────────────────────────────────────────────────
+  if (room.templateId === "room/register:tier_1") {
+    return [
+      "The checkout counter doubles as the intake desk. Contracts, recruits, and daily walk-ins all come through the same register.",
+      `Keeps ${guildName}'s administrative pipeline running even when the space is shared with actual customers buying sandwiches.`,
+    ];
+  }
+
+  if (room.templateId === "room/counter:tier_1") {
+    return [
+      "The deli counter is where foot traffic turns into recruit prospects. People come in for lunch and leave knowing the guild exists.",
+      "Low-key recruitment that works because the bodega is already a neighborhood fixture, not because anyone is pitching.",
+    ];
+  }
+
+  if (room.templateId === "room/dining_area:tier_1") {
+    return [
+      "The dining area is recovery, social space, and medical overflow all in one. Operators decompress over food because there is nowhere else.",
+      "Every function shares the same folding chairs and fluorescent light. It works, but nothing here is dedicated.",
+    ];
+  }
+
+  if (room.templateId === "room/supply_closet:tier_1") {
+    return [
+      "One closet for all the gear, consumables, and paperwork that does not fit behind the counter.",
+      `Keeps ${guildName}'s logistics from spilling into the customer-facing floor, barely.`,
+    ];
+  }
+
+  if (room.templateId === "room/back_office:tier_1") {
+    return [
+      "A real desk behind a door that closes. Contract details stay private and the filing gets slightly more organized.",
+      `Gives ${guildName} an admin space that is not also a lunch counter or a storage shelf.`,
+    ];
+  }
+
+  if (room.templateId === "room/backstock:tier_1") {
+    return [
+      "Extra storage that used to be part of the neighboring unit. Gear and supplies finally have room to breathe.",
+      "Reduces the bottleneck where everything was crammed into the original supply closet.",
+    ];
+  }
+
+  if (room.templateId === "room/alley_staging:tier_1") {
+    return [
+      "The back alley turned into a staging area. Teams assemble and check loadouts before heading out.",
+      "Not glamorous, but it is the first space where raid prep is not competing with lunch service.",
+    ];
+  }
+
   const reasons: string[] = [];
 
   if (hasRoomReasonTag(room, ROOM_REASON_TAG.recruitment)) {

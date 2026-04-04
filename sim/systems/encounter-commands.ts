@@ -28,6 +28,7 @@ import {
 import {
   resolveIncident,
   createBossCommitmentPayload,
+  materializePendingIncident,
   selectIncidentCandidate,
   queueIncident,
 } from "./incidents";
@@ -252,7 +253,12 @@ export function applyEncounterCommand(
     case "sim/interruption-resolve": {
       const resolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
       if (resolved?.payload?.kind === "incident" && payload.choiceId) {
-        resolveIncident(context, context.runtimeState.incidentState, payload.choiceId as string);
+        resolveIncident(
+          context,
+          context.runtimeState.incidentState,
+          payload.choiceId as string,
+          resolved.payload,
+        );
         const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
         if (activeBeatId) {
           lazyHandleGuidanceComplete?.(context, activeBeatId, "incident_resolved");
@@ -295,12 +301,30 @@ export function applyEncounterCommand(
       return true;
     }
     case "sim/incident-resolve": {
-      resolveIncident(context, context.runtimeState.incidentState, payload.choiceId as string);
+      const activePayload =
+        context.runtimeState.interruptionQueue.active?.payload.kind === "incident"
+          ? context.runtimeState.interruptionQueue.active.payload
+          : undefined;
+      resolveIncident(
+        context,
+        context.runtimeState.incidentState,
+        payload.choiceId as string,
+        activePayload,
+      );
       resolveActiveInterruption(context.runtimeState.interruptionQueue);
       const activeBeatId = context.runtimeState.guidanceState.activeBeatId;
       if (activeBeatId) {
         lazyHandleGuidanceComplete?.(context, activeBeatId, "incident_resolved");
       }
+      return true;
+    }
+    case "sim/incident-materialize": {
+      materializePendingIncident(
+        context,
+        context.runtimeState.incidentState,
+        "runtime-ai",
+        payload.presentation as Parameters<typeof materializePendingIncident>[3],
+      );
       return true;
     }
     case "sim/dev-trigger-boss-commitment": {

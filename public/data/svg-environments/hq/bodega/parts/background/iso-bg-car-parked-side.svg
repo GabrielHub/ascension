@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 85">
+  <!-- Isometric parked sedan, oriented along iso-left axis (slope -0.5).
+       Runs from lower-left (front) to upper-right (rear). 2:1 iso.
+       Right face visible (darker, main detail). Left end visible (lighter).
+       For side-street parking. Anchor: center-bottom at (65, 80). -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="68" cy="78" rx="48" ry="8" fill="rgba(0,0,0,0.18)"/>
+
+  <!-- ═══ Lower body box ═══ -->
+  <!-- Right face (long visible side) -->
+  <polygon points="38,72 118,32 118,40 38,80"
+    fill="#1e1c2e" stroke="#181628" stroke-width="0.8"/>
+
+  <!-- Left end face (front of car, lighter) -->
+  <polygon points="10,58 38,72 38,80 10,66"
+    fill="#28263a" stroke="#1e1c2e" stroke-width="0.6"/>
+
+  <!-- Top face (hood/roof/trunk surface) -->
+  <polygon points="10,58 38,72 118,32 90,18"
+    fill="#302e44" stroke="#28263a" stroke-width="0.6"/>
+
+  <!-- ═══ Cabin (raised middle section) ═══ -->
+  <!-- Cabin right face (windows visible here) -->
+  <polygon points="58,52 98,32 98,40 58,60"
+    fill="#1c1a2e" stroke="#161428" stroke-width="0.5"/>
+
+  <!-- Cabin top (roof) -->
+  <polygon points="32,38 58,52 98,32 72,18"
+    fill="#343250" stroke="#2a2840" stroke-width="0.5"/>
+
+  <!-- Cabin left face -->
+  <polygon points="32,38 58,52 58,60 32,46"
+    fill="#282640" stroke="#201e34" stroke-width="0.4"/>
+
+  <!-- ═══ Windows ═══ -->
+  <!-- Right side windows (on cabin right face, split by B-pillar) -->
+  <!-- Front window -->
+  <polygon points="60,51 80,41 80,46 60,56"
+    fill="#0c0c16" opacity="0.8"/>
+  <!-- Rear window -->
+  <polygon points="83,39 96,33 96,38 83,44"
+    fill="#0c0c16" opacity="0.8"/>
+
+  <!-- Front windshield (cabin front end face, visible) -->
+  <polygon points="32,38 58,52 58,58 32,44"
+    fill="#0c0c16" opacity="0.55"/>
+
+  <!-- Left side window (on cabin left face, partial) -->
+  <polygon points="36,40 56,50 56,55 36,45"
+    fill="#0c0c16" opacity="0.5"/>
+
+  <!-- ═══ Car details ═══ -->
+  <!-- Hood line (on top face) -->
+  <line x1="32" y1="38" x2="58" y2="52"
+    stroke="#28263a" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Trunk line (on top face) -->
+  <line x1="72" y1="18" x2="98" y2="32"
+    stroke="#28263a" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Headlights (front, on left end face) -->
+  <polygon points="12,59 16,61 16,63 12,61"
+    fill="#4a4440" opacity="0.5"/>
+  <polygon points="26,66 30,68 30,70 26,68"
+    fill="#4a4440" opacity="0.4"/>
+
+  <!-- Taillights (rear, on right face at the rear end) -->
+  <polygon points="116,33 118,34 118,36 116,35"
+    fill="#5a1818" opacity="0.4"/>
+
+  <!-- Door handle hint (right face) -->
+  <line x1="76" y1="44" x2="80" y2="42"
+    stroke="#2a283e" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Side mirror (right) -->
+  <polygon points="100,36 103,35 103,37 100,38"
+    fill="#1e1c2e" stroke="#181628" stroke-width="0.3"/>
+
+  <!-- ═══ Wheels ═══ -->
+  <!-- Front wheel (right face, at bottom) -->
+  <ellipse cx="50" cy="78" rx="7" ry="2.5" fill="#0e0e12" stroke="#1a1a1e" stroke-width="0.5"/>
+  <!-- Rear wheel (right face, at bottom) -->
+  <ellipse cx="106" cy="40" rx="7" ry="2.5" fill="#0e0e12" stroke="#1a1a1e" stroke-width="0.5"/>
+
+  <!-- Wheel well shadows -->
+  <path d="M43,77 Q50,75 57,77" stroke="#0a0a0e" stroke-width="0.5" fill="none" opacity="0.4"/>
+  <path d="M99,39 Q106,37 113,39" stroke="#0a0a0e" stroke-width="0.5" fill="none" opacity="0.4"/>
+
+  <!-- Roof highlight -->
+  <polygon points="52,26 72,36 92,26 72,16"
+    fill="#3a3858" opacity="0.08"/>
+</svg>
