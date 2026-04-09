@@ -118,7 +118,6 @@ describe("roster panel", () => {
         ]}
         staff={[]}
         visitors={[]}
-        relationships={[]}
         rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
@@ -168,7 +167,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        relationships={[]}
         rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
@@ -224,7 +222,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        relationships={[]}
         rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
@@ -253,13 +250,9 @@ describe("roster panel", () => {
     expect(html).toContain("Visitor volume is lower than usual.");
     expect(html).toContain("Quality 61");
     expect(html).toContain("2h patience");
-    expect(html).toContain("Recovering");
-    expect(html).toContain("Recovery Standards: Full Recovery.");
-    expect(html).toContain("injury severity 42");
-    expect(html).toContain("Training Readiness");
-    expect(html).toContain("Conditioning (38)");
-    expect(html).toContain("Combat Profile");
-    expect(html).toContain("Standard Issue");
+    expect(html).toContain("Injured (7h)");
+    expect(html).toContain('data-operator-id="operator/recovering"');
+    expect(html).toContain("shadow-[inset_2px_0_0_var(--color-gold)]");
   });
 
   it("renders deferred reserve actions when overflow is being curated", () => {
@@ -288,7 +281,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        relationships={[]}
         rooms={[]}
         callbacks={callbacks}
         rosterPressure={{

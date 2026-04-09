@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="cu-aura" cx="50%" cy="48%" r="58%">
+      <stop offset="0%" stop-color="#8aaa4a" stop-opacity="0.10"/>
+      <stop offset="55%" stop-color="#2a3a1a" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060806" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cu-iron" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a5236"/>
+      <stop offset="55%" stop-color="#343a25"/>
+      <stop offset="100%" stop-color="#1f2416"/>
+    </linearGradient>
+    <linearGradient id="cu-vine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a7a32"/>
+      <stop offset="100%" stop-color="#2e4418"/>
+    </linearGradient>
+    <radialGradient id="cu-bloom" cx="50%" cy="45%" r="52%">
+      <stop offset="0%" stop-color="#d4c85a" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#8a9a32" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#3a4a18" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cu-petal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8d260"/>
+      <stop offset="60%" stop-color="#b09a28"/>
+      <stop offset="100%" stop-color="#6a5814"/>
+    </linearGradient>
+    <filter id="cu-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="cu-soft">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="95" ry="132" fill="url(#cu-aura)"/>
+
+  <!-- Pollen drift — slow floating motes -->
+  <circle cx="30" cy="60" r="1.4" fill="#e8d260" opacity="0.28" filter="url(#cu-soft)"/>
+  <circle cx="168" cy="48" r="1" fill="#e8d260" opacity="0.22" filter="url(#cu-soft)"/>
+  <circle cx="22" cy="140" r="1.2" fill="#d4c85a" opacity="0.20" filter="url(#cu-soft)"/>
+  <circle cx="178" cy="120" r="1" fill="#d4c85a" opacity="0.24" filter="url(#cu-soft)"/>
+  <circle cx="40" cy="205" r="1.3" fill="#c8ba40" opacity="0.18" filter="url(#cu-soft)"/>
+  <circle cx="158" cy="220" r="1.1" fill="#c8ba40" opacity="0.18" filter="url(#cu-soft)"/>
+  <circle cx="110" cy="22" r="1.2" fill="#e8d260" opacity="0.25" filter="url(#cu-soft)"/>
+  <circle cx="88" cy="258" r="1" fill="#d4c85a" opacity="0.16" filter="url(#cu-soft)"/>
+
+  <!-- Root system reaching into floor — the Curator has taken permanent residence -->
+  <path d="M 60 268 Q 55 248 72 230 Q 86 215 85 200" fill="none" stroke="#2e4418" stroke-width="2.2" opacity="0.45"/>
+  <path d="M 140 270 Q 145 248 128 230 Q 114 215 115 200" fill="none" stroke="#2e4418" stroke-width="2.2" opacity="0.45"/>
+  <path d="M 82 272 Q 88 250 96 234" fill="none" stroke="#3a5420" stroke-width="1.4" opacity="0.35"/>
+  <path d="M 118 272 Q 112 250 104 234" fill="none" stroke="#3a5420" stroke-width="1.4" opacity="0.35"/>
+  <path d="M 14 270 Q 28 252 50 240" fill="none" stroke="#2e4418" stroke-width="1.5" opacity="0.3"/>
+  <path d="M 186 270 Q 172 252 150 240" fill="none" stroke="#2e4418" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Victorian greenhouse iron frame — the Curator's skeleton is the garden's forgotten architecture -->
+  <!-- Central vertical spine (iron upright) -->
+  <rect x="98" y="52" width="4" height="200" fill="url(#cu-iron)" stroke="#1f2416" stroke-width="0.5"/>
+  <!-- Rib arches flanking spine — greenhouse arches -->
+  <path d="M 100 58 Q 62 82 56 150 Q 56 208 78 250" fill="none" stroke="url(#cu-iron)" stroke-width="3.5"/>
+  <path d="M 100 58 Q 138 82 144 150 Q 144 208 122 250" fill="none" stroke="url(#cu-iron)" stroke-width="3.5"/>
+  <!-- Second rib arches -->
+  <path d="M 100 66 Q 72 90 66 148 Q 68 200 86 240" fill="none" stroke="url(#cu-iron)" stroke-width="2.2" opacity="0.8"/>
+  <path d="M 100 66 Q 128 90 134 148 Q 132 200 114 240" fill="none" stroke="url(#cu-iron)" stroke-width="2.2" opacity="0.8"/>
+  <!-- Cross braces — iron bandings around the body -->
+  <path d="M 56 120 Q 100 110 144 120" fill="none" stroke="#343a25" stroke-width="1.2" opacity="0.7"/>
+  <path d="M 58 156 Q 100 148 142 156" fill="none" stroke="#343a25" stroke-width="1.4" opacity="0.7"/>
+  <path d="M 62 192 Q 100 184 138 192" fill="none" stroke="#343a25" stroke-width="1.2" opacity="0.65"/>
+  <path d="M 70 224 Q 100 216 130 224" fill="none" stroke="#343a25" stroke-width="1" opacity="0.55"/>
+  <!-- Iron rivets on the frame -->
+  <circle cx="56" cy="120" r="1.2" fill="#1f2416"/>
+  <circle cx="144" cy="120" r="1.2" fill="#1f2416"/>
+  <circle cx="58" cy="156" r="1.3" fill="#1f2416"/>
+  <circle cx="142" cy="156" r="1.3" fill="#1f2416"/>
+  <circle cx="62" cy="192" r="1.1" fill="#1f2416"/>
+  <circle cx="138" cy="192" r="1.1" fill="#1f2416"/>
+
+  <!-- Overgrowth — the body is mostly vines now, iron barely visible -->
+  <!-- Primary trunk of vines climbing the frame -->
+  <path d="M 88 250 Q 86 230 90 205 Q 94 178 92 150 Q 90 120 96 90 Q 98 72 100 60" fill="none" stroke="url(#cu-vine)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 112 250 Q 114 230 110 205 Q 106 178 108 150 Q 110 120 104 90 Q 102 72 100 60" fill="none" stroke="url(#cu-vine)" stroke-width="5.5" stroke-linecap="round"/>
+  <!-- Secondary twining vines -->
+  <path d="M 78 240 Q 68 215 74 180 Q 80 150 72 120 Q 68 95 80 75" fill="none" stroke="#5a7a32" stroke-width="3.5" opacity="0.85"/>
+  <path d="M 122 240 Q 132 215 126 180 Q 120 150 128 120 Q 132 95 120 75" fill="none" stroke="#5a7a32" stroke-width="3.5" opacity="0.85"/>
+  <!-- Tertiary thin vines -->
+  <path d="M 82 218 Q 78 198 84 178 Q 88 158 82 140" fill="none" stroke="#6a8a3a" stroke-width="1.4" opacity="0.7"/>
+  <path d="M 118 218 Q 122 198 116 178 Q 112 158 118 140" fill="none" stroke="#6a8a3a" stroke-width="1.4" opacity="0.7"/>
+  <path d="M 92 200 Q 96 180 94 160" fill="none" stroke="#6a8a3a" stroke-width="1.1" opacity="0.6"/>
+  <path d="M 108 200 Q 104 180 106 160" fill="none" stroke="#6a8a3a" stroke-width="1.1" opacity="0.6"/>
+
+  <!-- Leaves scattered along vines -->
+  <path d="M 80 210 Q 72 208 68 214 Q 72 218 80 214 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 122 210 Q 130 208 134 214 Q 130 218 122 214 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 86 180 Q 78 176 74 182 Q 80 188 88 184 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 116 180 Q 124 176 128 182 Q 122 188 114 184 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 78 146 Q 70 144 66 150 Q 72 154 80 150 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 124 146 Q 132 144 136 150 Q 130 154 122 150 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 90 110 Q 82 106 78 112 Q 84 118 92 114 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+  <path d="M 112 110 Q 120 106 124 112 Q 118 118 110 114 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+
+  <!-- Thorns studding the vines — the Curator is patient but armed -->
+  <path d="M 84 220 L 82 224 L 86 223 Z" fill="#3a4a18"/>
+  <path d="M 116 220 L 118 224 L 114 223 Z" fill="#3a4a18"/>
+  <path d="M 88 176 L 86 180 L 90 179 Z" fill="#3a4a18"/>
+  <path d="M 112 176 L 114 180 L 110 179 Z" fill="#3a4a18"/>
+  <path d="M 92 132 L 90 136 L 94 135 Z" fill="#3a4a18"/>
+  <path d="M 108 132 L 110 136 L 106 135 Z" fill="#3a4a18"/>
+
+  <!-- Head — an enormous carnivorous bloom where a skull should be, facing forward -->
+  <!-- Backing leaves -->
+  <path d="M 66 52 Q 58 30 70 22 Q 84 24 88 42 Z" fill="#4a6228" stroke="#2e4418" stroke-width="0.6" opacity="0.85"/>
+  <path d="M 134 52 Q 142 30 130 22 Q 116 24 112 42 Z" fill="#4a6228" stroke="#2e4418" stroke-width="0.6" opacity="0.85"/>
+  <path d="M 76 30 Q 72 14 90 12 Q 96 20 92 36 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.5" opacity="0.8"/>
+  <path d="M 124 30 Q 128 14 110 12 Q 104 20 108 36 Z" fill="#5a7a32" stroke="#2e4418" stroke-width="0.5" opacity="0.8"/>
+
+  <!-- Bloom halo — soft yellow glow -->
+  <circle cx="100" cy="52" r="30" fill="url(#cu-bloom)" filter="url(#cu-glow)"/>
+
+  <!-- Outer petal ring -->
+  <path d="M 100 20 Q 114 26 118 42 Q 112 48 100 44 Q 88 48 82 42 Q 86 26 100 20 Z" fill="url(#cu-petal)" stroke="#6a5814" stroke-width="0.5"/>
+  <path d="M 72 36 Q 80 30 90 38 Q 92 50 80 56 Q 68 54 66 44 Q 66 38 72 36 Z" fill="url(#cu-petal)" stroke="#6a5814" stroke-width="0.5" opacity="0.92"/>
+  <path d="M 128 36 Q 120 30 110 38 Q 108 50 120 56 Q 132 54 134 44 Q 134 38 128 36 Z" fill="url(#cu-petal)" stroke="#6a5814" stroke-width="0.5" opacity="0.92"/>
+  <path d="M 72 58 Q 82 56 90 64 Q 90 74 82 78 Q 70 74 66 66 Q 66 60 72 58 Z" fill="url(#cu-petal)" stroke="#6a5814" stroke-width="0.5" opacity="0.88"/>
+  <path d="M 128 58 Q 118 56 110 64 Q 110 74 118 78 Q 130 74 134 66 Q 134 60 128 58 Z" fill="url(#cu-petal)" stroke="#6a5814" stroke-width="0.5" opacity="0.88"/>
+
+  <!-- Inner petal ring -->
+  <path d="M 100 34 Q 108 42 100 52 Q 92 42 100 34 Z" fill="#e8d260" stroke="#8a7018" stroke-width="0.4"/>
+  <path d="M 82 48 Q 90 44 92 54 Q 88 60 82 58 Q 78 54 82 48 Z" fill="#e8d260" stroke="#8a7018" stroke-width="0.4"/>
+  <path d="M 118 48 Q 110 44 108 54 Q 112 60 118 58 Q 122 54 118 48 Z" fill="#e8d260" stroke="#8a7018" stroke-width="0.4"/>
+
+  <!-- Bloom throat — dark, toothy, the actual maw -->
+  <ellipse cx="100" cy="54" rx="9" ry="11" fill="#1a1508" stroke="#3a2e0a" stroke-width="0.6"/>
+  <!-- Stamen teeth — the throat has small hooked protrusions -->
+  <path d="M 95 48 L 94 52 L 96 50 Z" fill="#d4c85a"/>
+  <path d="M 100 46 L 99 50 L 101 50 Z" fill="#d4c85a"/>
+  <path d="M 105 48 L 106 52 L 104 50 Z" fill="#d4c85a"/>
+  <path d="M 95 62 L 96 58 L 94 60 Z" fill="#d4c85a"/>
+  <path d="M 100 64 L 101 60 L 99 60 Z" fill="#d4c85a"/>
+  <path d="M 105 62 L 104 58 L 106 60 Z" fill="#d4c85a"/>
+  <!-- Pistil — the thing watching from inside the mouth -->
+  <circle cx="100" cy="54" r="2.2" fill="#8a1818" opacity="0.75" filter="url(#cu-glow)"/>
+  <circle cx="100" cy="54" r="1" fill="#e8d260" opacity="0.8"/>
+
+  <!-- Arm vines — long, thorn-studded, reaching outward -->
+  <!-- Left arm -->
+  <path d="M 62 110 Q 42 128 28 160 Q 20 188 26 212 Q 30 224 38 226" fill="none" stroke="url(#cu-vine)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 62 110 Q 44 125 34 152 Q 28 178 30 204" fill="none" stroke="#4a6228" stroke-width="2" opacity="0.6"/>
+  <!-- Thorns on left arm -->
+  <path d="M 36 168 L 30 172 L 34 174 Z" fill="#3a4a18"/>
+  <path d="M 30 192 L 24 196 L 28 198 Z" fill="#3a4a18"/>
+  <path d="M 42 146 L 36 148 L 40 152 Z" fill="#3a4a18"/>
+  <!-- Leaf on left arm -->
+  <path d="M 36 130 Q 26 126 22 134 Q 28 140 38 136 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+  <!-- Claw / pruning shear hand -->
+  <path d="M 38 226 L 30 238 L 26 246 L 30 252 L 36 248 L 40 238 Z" fill="#5a5036" stroke="#2e2818" stroke-width="0.5"/>
+  <path d="M 36 248 L 24 256 L 22 260" fill="none" stroke="#3a3222" stroke-width="1.2"/>
+  <path d="M 40 238 L 48 248 L 52 256" fill="none" stroke="#3a3222" stroke-width="1.2"/>
+
+  <!-- Right arm -->
+  <path d="M 138 110 Q 158 128 172 160 Q 180 188 174 212 Q 170 224 162 226" fill="none" stroke="url(#cu-vine)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 138 110 Q 156 125 166 152 Q 172 178 170 204" fill="none" stroke="#4a6228" stroke-width="2" opacity="0.6"/>
+  <!-- Thorns on right arm -->
+  <path d="M 164 168 L 170 172 L 166 174 Z" fill="#3a4a18"/>
+  <path d="M 170 192 L 176 196 L 172 198 Z" fill="#3a4a18"/>
+  <path d="M 158 146 L 164 148 L 160 152 Z" fill="#3a4a18"/>
+  <!-- Leaf on right arm -->
+  <path d="M 164 130 Q 174 126 178 134 Q 172 140 162 136 Z" fill="#6a8a3a" stroke="#2e4418" stroke-width="0.4"/>
+  <!-- Pruning shear hand -->
+  <path d="M 162 226 L 170 238 L 174 246 L 170 252 L 164 248 L 160 238 Z" fill="#5a5036" stroke="#2e2818" stroke-width="0.5"/>
+  <path d="M 164 248 L 176 256 L 178 260" fill="none" stroke="#3a3222" stroke-width="1.2"/>
+  <path d="M 160 238 L 152 248 L 148 256" fill="none" stroke="#3a3222" stroke-width="1.2"/>
+
+  <!-- Secondary small blooms along the body -->
+  <circle cx="74" cy="176" r="3" fill="#e8d260" opacity="0.55"/>
+  <circle cx="74" cy="176" r="1.2" fill="#8a1818" opacity="0.6"/>
+  <circle cx="126" cy="176" r="3" fill="#e8d260" opacity="0.55"/>
+  <circle cx="126" cy="176" r="1.2" fill="#8a1818" opacity="0.6"/>
+  <circle cx="100" cy="210" r="3.2" fill="#e8d260" opacity="0.48"/>
+  <circle cx="100" cy="210" r="1.2" fill="#8a1818" opacity="0.55"/>
+  <circle cx="86" cy="138" r="2.5" fill="#e8d260" opacity="0.45"/>
+  <circle cx="86" cy="138" r="1" fill="#8a1818" opacity="0.5"/>
+  <circle cx="114" cy="138" r="2.5" fill="#e8d260" opacity="0.45"/>
+  <circle cx="114" cy="138" r="1" fill="#8a1818" opacity="0.5"/>
+
+  <!-- Moss growing on iron frame joints -->
+  <ellipse cx="56" cy="120" rx="5" ry="2.5" fill="#3a5420" opacity="0.5"/>
+  <ellipse cx="144" cy="120" rx="5" ry="2.5" fill="#3a5420" opacity="0.5"/>
+  <ellipse cx="58" cy="156" rx="6" ry="3" fill="#3a5420" opacity="0.55"/>
+  <ellipse cx="142" cy="156" rx="6" ry="3" fill="#3a5420" opacity="0.55"/>
+  <ellipse cx="62" cy="192" rx="5" ry="2" fill="#3a5420" opacity="0.5"/>
+  <ellipse cx="138" cy="192" rx="5" ry="2" fill="#3a5420" opacity="0.5"/>
+</svg>

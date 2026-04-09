@@ -25,6 +25,7 @@ interface RoomDetailPanelProps {
   roomUpgrades: readonly UpgradeViewModel[];
   callbacks: GameCallbacks;
   roomCulture?: RoomCultureViewModel | null;
+  onClose?: () => void;
 }
 
 const ROOM_REASON_TAG = {
@@ -53,19 +54,19 @@ function UpgradeCard({
   onPurchase: () => void;
 }) {
   return (
-    <div className={`glass-card-inset p-3 ${upgrade.isApplied ? "opacity-50" : ""}`}>
-      <div className="flex items-start justify-between gap-2">
-        <h4 className="text-xs font-medium text-silver-bright">{upgrade.name}</h4>
-        {upgrade.isApplied && <span className="badge badge-gold">Applied</span>}
+    <div className={`glass-card-inset space-y-3 p-4 ${upgrade.isApplied ? "opacity-50" : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <h4 className="text-sm font-medium text-silver-bright">{upgrade.name}</h4>
+        {upgrade.isApplied && <span className="badge badge-gold shrink-0">Applied</span>}
       </div>
-      <p className="mt-1 text-xs leading-relaxed text-silver/60">{upgrade.description}</p>
+      <p className="text-sm leading-relaxed text-silver/65">{upgrade.description}</p>
 
       {upgrade.requirements.length > 0 && (
-        <div className="mt-2">
-          <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">
             Requires
           </span>
-          <div className="mt-0.5 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1">
             {upgrade.requirements.map((req) => (
               <Tooltip
                 key={req.type + req.label}
@@ -74,7 +75,7 @@ function UpgradeCard({
                 }
                 side="top"
               >
-                <span className="rounded bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/60">
+                <span className="rounded bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/70">
                   {req.label}
                 </span>
               </Tooltip>
@@ -84,18 +85,18 @@ function UpgradeCard({
       )}
 
       {upgrade.effects.length > 0 && (
-        <div className="mt-2">
-          <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">
             Effects
           </span>
-          <div className="mt-0.5 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1">
             {upgrade.effects.map((eff) => (
               <Tooltip
                 key={eff.type + eff.label}
                 content={getEffectTypeMeta(eff.type).tip || getEffectTypeMeta(eff.type).label}
                 side="top"
               >
-                <span className="rounded bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-xs text-gold">
+                <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-xs text-gold">
                   {eff.label}
                 </span>
               </Tooltip>
@@ -108,12 +109,37 @@ function UpgradeCard({
         <button
           type="button"
           disabled={!upgrade.isAffordable}
-          className="btn-primary mt-3 w-full text-xs"
+          className="btn-primary w-full text-xs"
           onClick={onPurchase}
         >
           {upgrade.isAffordable ? "Purchase" : "Not affordable"}
         </button>
       )}
+    </div>
+  );
+}
+
+export function RoomCultureBadges({
+  culture,
+  className = "flex flex-wrap gap-1.5",
+}: {
+  culture: Pick<RoomCultureViewModel, "tone" | "signals">;
+  className?: string;
+}) {
+  const toneMeta = getToneMeta(culture.tone || "neutral");
+  return (
+    <div className={className}>
+      <Tooltip content={toneMeta.tip}>
+        <span className="badge badge-slate">{toneMeta.label}</span>
+      </Tooltip>
+      {culture.signals.map((signal) => {
+        const meta = getSignalMeta(signal);
+        return (
+          <Tooltip key={signal} content={meta.tip}>
+            <span className="badge badge-slate">{meta.label}</span>
+          </Tooltip>
+        );
+      })}
     </div>
   );
 }
@@ -305,11 +331,11 @@ function PrepRecipeCard({
   onProduce: () => void;
 }) {
   return (
-    <div className="glass-card-inset p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h4 className="text-xs font-medium text-silver-bright">{recipe.name}</h4>
-          <p className="mt-0.5 text-sm leading-relaxed text-silver/60">{recipe.description}</p>
+    <div className="glass-card-inset space-y-3 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h4 className="text-sm font-medium text-silver-bright">{recipe.name}</h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/65">{recipe.description}</p>
         </div>
         <Tooltip content={`+${recipe.outputBuffValue} ${recipe.outputBuffStat} for deployed team`}>
           <span className="badge badge-gold shrink-0">
@@ -318,9 +344,9 @@ function PrepRecipeCard({
         </Tooltip>
       </div>
 
-      <div className="mt-2">
-        <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">Inputs</span>
-        <div className="mt-1 flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">Inputs</span>
+        <div className="flex flex-wrap gap-1.5">
           {recipe.inputs.map((input) => (
             <Tooltip
               key={input.itemId}
@@ -329,7 +355,7 @@ function PrepRecipeCard({
               <span
                 className={`rounded px-1.5 py-0.5 text-xs ${
                   input.isSatisfied
-                    ? "bg-[rgba(200,168,76,0.06)] text-gold"
+                    ? "bg-[rgba(200,168,76,0.08)] text-gold"
                     : "bg-[rgba(180,60,60,0.08)] text-ember"
                 }`}
               >
@@ -342,13 +368,13 @@ function PrepRecipeCard({
       </div>
 
       {!recipe.isRoomStaffed && (
-        <p className="mt-2 text-sm text-ember/80">Requires assigned logistics staff to produce.</p>
+        <p className="text-sm text-ember/80">Requires assigned logistics staff to produce.</p>
       )}
 
       <button
         type="button"
         disabled={!recipe.canProduce}
-        className="btn-primary mt-2 w-full text-xs"
+        className="btn-primary w-full text-xs"
         onClick={onProduce}
       >
         {!recipe.isRoomStaffed
@@ -368,40 +394,53 @@ export function RoomDetailPanel({
   roomUpgrades,
   callbacks,
   roomCulture,
+  onClose,
 }: RoomDetailPanelProps) {
   if (!room) return null;
 
   const occupancyPct = getRoomStaffingPercent(room);
-  const hasUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
   const whyItMatters = getRoomWhyItMatters(room, guildName);
   const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
   const training = room.training;
 
+  const stateBadge = room.isOperational
+    ? { label: "Operational", cls: "badge badge-gold", tip: getRoomStatusTip(room) }
+    : room.isActive
+      ? {
+          label: "Understaffed",
+          cls: "badge badge-slate",
+          tip: "Active, but not yet staffed enough to operate",
+        }
+      : {
+          label: "Inactive",
+          cls: "badge badge-slate",
+          tip: "Shut down — activate to begin staffing",
+        };
+
+  const loadDisplay = room.requiredStaffTag
+    ? `${Math.round(occupancyPct)}%`
+    : room.isOperational
+      ? "Online"
+      : room.isActive
+        ? "Opening"
+        : "Offline";
+
+  const dividerColor = "rgba(200,168,76,0.06)";
+
   return (
-    <div className="animate-enter">
-      {/* Header row: name + badge + description | activate button */}
-      <div className="flex items-start gap-4">
+    <div className="animate-enter space-y-5">
+      <header className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="font-[family-name:var(--font-display)] text-lg font-light tracking-wide text-silver-bright">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h3 className="font-[family-name:var(--font-display)] text-xl font-light tracking-wide text-silver-bright">
               {room.name}
             </h3>
-            {room.isOperational ? (
-              <Tooltip content={getRoomStatusTip(room)}>
-                <span className="badge badge-gold">Operational</span>
-              </Tooltip>
-            ) : room.isActive ? (
-              <Tooltip content="Active, but not yet staffed enough to operate">
-                <span className="badge badge-slate">Understaffed</span>
-              </Tooltip>
-            ) : (
-              <Tooltip content="Shut down — activate to begin staffing">
-                <span className="badge badge-slate">Inactive</span>
-              </Tooltip>
-            )}
+            <Tooltip content={stateBadge.tip}>
+              <span className={stateBadge.cls}>{stateBadge.label}</span>
+            </Tooltip>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-silver/60">{room.description}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-silver/60">
+          <p className="mt-2 text-sm leading-relaxed text-silver/65">{room.description}</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
             <span className="badge badge-slate">{getRoomStateLabel(room.roomStateId)}</span>
             <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
             <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
@@ -409,240 +448,251 @@ export function RoomDetailPanel({
               content={`Reserved ${formatFootprintLabel(room.reservedFootprint)}; active ${formatFootprintLabel(room.activeFootprint)}`}
             >
               <span className="badge badge-slate">
-                {room.reservedFootprint.cols}x{room.reservedFootprint.rows} /{" "}
-                {room.activeFootprint.cols}x{room.activeFootprint.rows}
+                {room.reservedFootprint.cols}×{room.reservedFootprint.rows} /{" "}
+                {room.activeFootprint.cols}×{room.activeFootprint.rows}
               </span>
             </Tooltip>
           </div>
         </div>
-        <button
-          type="button"
-          className={`shrink-0 ${room.isActive ? "btn-ghost text-xs" : "btn-primary text-xs"}`}
-          onClick={() => callbacks.setRoomActive(room.id, !room.isActive)}
-        >
-          {room.isActive ? "Deactivate room" : "Activate room"}
-        </button>
-      </div>
-
-      {/* Body: stats column + upgrades columns */}
-      <div className="mt-4 flex gap-6">
-        {/* Stats */}
-        <div className={`space-y-3 ${hasUpgrades ? "w-56 shrink-0" : "w-full max-w-xs"}`}>
-          <div className="grid grid-cols-3 gap-2">
-            <Tooltip content="Room tier — higher tiers unlock better upgrades">
-              <div className="glass-card-inset p-2 text-center">
-                <div className="text-xs uppercase tracking-wider text-gold/70">Tier</div>
-                <div className="mt-0.5 text-sm font-medium text-silver-bright">{room.tier}</div>
-              </div>
-            </Tooltip>
-            <Tooltip
-              content={
-                room.requiredStaffTag
-                  ? "Assigned staff / staffing needed for full output"
-                  : "This room runs without dedicated staff"
-              }
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            className={room.isActive ? "btn-ghost text-xs" : "btn-primary text-xs"}
+            onClick={() => callbacks.setRoomActive(room.id, !room.isActive)}
+          >
+            {room.isActive ? "Deactivate room" : "Activate room"}
+          </button>
+          {onClose && (
+            <button
+              type="button"
+              className="btn-ghost shrink-0 px-1.5 py-1 text-sm leading-none text-silver/40 hover:text-silver-bright"
+              onClick={onClose}
+              aria-label="Close room detail"
             >
-              <div className="glass-card-inset p-2 text-center">
-                <div className="text-xs uppercase tracking-wider text-gold/70">
-                  {room.requiredStaffTag ? "Staff" : "Type"}
-                </div>
-                <div className="mt-0.5 text-sm font-medium tabular-nums text-silver-bright">
-                  {room.requiredStaffTag
-                    ? `${room.assignedStaffCount}/${room.capacity}`
-                    : "Passive"}
-                </div>
-              </div>
-            </Tooltip>
-            <Tooltip
-              content={
-                room.requiredStaffTag
-                  ? "Staffing level — 100% means fully operational"
-                  : "Whether the room is active and able to provide its room benefits"
-              }
-            >
-              <div className="glass-card-inset p-2 text-center">
-                <div className="text-xs uppercase tracking-wider text-gold/70">
-                  {room.requiredStaffTag ? "Load" : "Status"}
-                </div>
-                <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                  {room.requiredStaffTag
-                    ? `${Math.round(occupancyPct)}%`
-                    : room.isOperational
-                      ? "Online"
-                      : room.isActive
-                        ? "Opening"
-                        : "Offline"}
-                </div>
-              </div>
-            </Tooltip>
-          </div>
-
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
-            <div className={progressBarFillClass} style={{ width: `${occupancyPct}%` }} />
-          </div>
-
-          <div className="text-xs text-gold/70">
-            {room.requiredStaffTag && requiredStaffMeta ? (
-              <>
-                Requires{" "}
-                <Tooltip
-                  content={requiredStaffMeta.tip || "Staff role needed to operate this room"}
-                  side="top"
-                >
-                  <span className="text-gold/80">{requiredStaffMeta.label}</span>
-                </Tooltip>{" "}
-                staff to reach full output.
-              </>
-            ) : (
-              "No dedicated staff required. Activate the room and its benefits become available."
-            )}
-          </div>
-
-          {whyItMatters.length > 0 && (
-            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
-              <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
-                Why This Room Matters
-              </h4>
-              {whyItMatters.map((reason) => (
-                <p key={reason} className="text-sm leading-relaxed text-silver/60">
-                  {reason}
-                </p>
-              ))}
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-1">
-            {room.tags.map((tag) => (
-              <Tooltip key={tag} content={getTagMeta(tag).tip}>
-                <span className="badge badge-slate">{getTagMeta(tag).label}</span>
-              </Tooltip>
-            ))}
-          </div>
-
-          {roomCulture && (
-            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
-              <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
-                <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
-                  Room Culture
-                </h4>
-              </Tooltip>
-              <div className="glass-card-inset space-y-2 p-3">
-                <div>
-                  <div className="text-xs uppercase tracking-wider text-gold/60">Tone</div>
-                  <div className="mt-0.5 text-xs text-silver-bright">
-                    {getCultureSummaryLabel(roomCulture.summary)}
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <Tooltip content={getToneMeta(roomCulture.tone || "neutral").tip}>
-                    <span className="badge badge-slate">
-                      {getToneMeta(roomCulture.tone || "neutral").label}
-                    </span>
-                  </Tooltip>
-                  {roomCulture.signals.map((signal) => (
-                    <Tooltip key={signal} content={getSignalMeta(signal).tip}>
-                      <span className="badge badge-slate">{getSignalMeta(signal).label}</span>
-                    </Tooltip>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {training && (
-            <div className="space-y-1.5 border-t border-[rgba(200,168,76,0.06)] pt-3">
-              <h4 className="text-sm font-medium uppercase tracking-[0.12em] text-gold/70">
-                Training Program
-              </h4>
-              <div className="glass-card-inset space-y-2 p-3">
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <div className="text-xs uppercase tracking-wider text-gold/60">Trainees</div>
-                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                      {room.isOperational ? training.currentTraineeCount : 0}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wider text-gold/60">Roster Avg</div>
-                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                      {training.rosterAverageReadiness}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wider text-gold/60">Rate Mod</div>
-                    <div className="mt-0.5 text-sm font-medium text-silver-bright">
-                      {training.rateModifier >= 0 ? "+" : ""}
-                      {training.rateModifier}%
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm leading-relaxed text-silver/60">
-                  {room.isOperational
-                    ? "Training raises Strength, Speed, Endurance, and Resilience on a bounded track that later feeds raid readiness and combat power."
-                    : "The drills only accrue while this room is active. Bodega runs stay training-free because no operational training room exists there."}
-                </p>
-                <p className="text-sm leading-relaxed text-gold/70">
-                  {training.currentTraineeNames.length > 0
-                    ? `${training.currentTraineeNames.join(", ")} ${training.currentTraineeNames.length === 1 ? "is" : "are"} on the current training block.`
-                    : "Nobody is on the current training block right now."}
-                </p>
-              </div>
-            </div>
+              &times;
+            </button>
           )}
         </div>
+      </header>
 
-        {/* Upgrades — fill remaining width */}
-        {hasUpgrades && (
-          <div className="min-w-0 flex-1">
-            <div className="grid auto-cols-fr grid-flow-col gap-4">
-              {buildingUpgrades.length > 0 && (
-                <div>
-                  <Tooltip content="Upgrades that improve the whole building" side="top">
-                    <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                      Building Upgrades
-                    </h4>
-                  </Tooltip>
-                  <div className="space-y-2">
-                    {buildingUpgrades.map((u) => (
-                      <UpgradeCard
-                        key={u.id}
-                        upgrade={u}
-                        onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {roomUpgrades.length > 0 && (
-                <div>
-                  <Tooltip content="Upgrades specific to this room" side="top">
-                    <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                      Room Upgrades
-                    </h4>
-                  </Tooltip>
-                  <div className="space-y-2">
-                    {roomUpgrades.map((u) => (
-                      <UpgradeCard
-                        key={u.id}
-                        upgrade={u}
-                        onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+      <section className="space-y-2">
+        <div
+          className="glass-card-inset grid grid-cols-3 overflow-hidden divide-x"
+          style={{ borderColor: dividerColor }}
+        >
+          <Tooltip content="Room tier — higher tiers unlock better upgrades" side="top">
+            <div className="flex w-full flex-col items-center justify-center px-3 py-3">
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Tier</div>
+              <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                {room.tier}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          </Tooltip>
+          <Tooltip
+            content={
+              room.requiredStaffTag
+                ? "Assigned staff / staffing needed for full output"
+                : "This room runs without dedicated staff"
+            }
+            side="top"
+          >
+            <div
+              className="flex w-full flex-col items-center justify-center border-l px-3 py-3"
+              style={{ borderColor: dividerColor }}
+            >
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
+                {room.requiredStaffTag ? "Staff" : "Type"}
+              </div>
+              <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                {room.requiredStaffTag ? `${room.assignedStaffCount}/${room.capacity}` : "Passive"}
+              </div>
+            </div>
+          </Tooltip>
+          <Tooltip
+            content={
+              room.requiredStaffTag
+                ? "Staffing level — 100% means fully operational"
+                : "Whether the room is active and providing its benefits"
+            }
+            side="top"
+          >
+            <div
+              className="flex w-full flex-col items-center justify-center border-l px-3 py-3"
+              style={{ borderColor: dividerColor }}
+            >
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
+                {room.requiredStaffTag ? "Load" : "Status"}
+              </div>
+              <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                {loadDisplay}
+              </div>
+            </div>
+          </Tooltip>
+        </div>
 
-      {/* Prep Recipes — shown for staging rooms */}
+        <div className="h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
+          <div className={progressBarFillClass} style={{ width: `${occupancyPct}%` }} />
+        </div>
+
+        <p className="text-xs leading-relaxed text-gold/70">
+          {room.requiredStaffTag && requiredStaffMeta ? (
+            <>
+              Requires{" "}
+              <Tooltip
+                content={requiredStaffMeta.tip || "Staff role needed to operate this room"}
+                side="top"
+              >
+                <span className="text-gold/90">{requiredStaffMeta.label}</span>
+              </Tooltip>{" "}
+              staff to reach full output.
+            </>
+          ) : (
+            "No dedicated staff required. Activate the room and its benefits become available."
+          )}
+        </p>
+      </section>
+
+      {whyItMatters.length > 0 && (
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+            Why This Room Matters
+          </h4>
+          <div className="space-y-2">
+            {whyItMatters.map((reason) => (
+              <p key={reason} className="text-sm leading-relaxed text-silver/70">
+                {reason}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {room.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {room.tags.map((tag) => {
+            const meta = getTagMeta(tag);
+            return (
+              <Tooltip key={tag} content={meta.tip}>
+                <span className="badge badge-slate">{meta.label}</span>
+              </Tooltip>
+            );
+          })}
+        </div>
+      )}
+
+      {roomCulture && (
+        <section className="space-y-2.5">
+          <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
+            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+              Room Culture
+            </h4>
+          </Tooltip>
+          <div className="glass-card-inset space-y-2.5 p-4">
+            <div className="flex items-baseline gap-3">
+              <span className="text-xs uppercase tracking-[0.12em] text-gold/60">Tone</span>
+              <span className="text-sm text-silver-bright">
+                {getCultureSummaryLabel(roomCulture.summary)}
+              </span>
+            </div>
+            <RoomCultureBadges culture={roomCulture} />
+          </div>
+        </section>
+      )}
+
+      {training && (
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+            Training Program
+          </h4>
+          <div className="glass-card-inset space-y-3 p-4">
+            <div
+              className="grid grid-cols-3 overflow-hidden rounded-md border bg-[rgba(6,6,8,0.35)]"
+              style={{ borderColor: dividerColor }}
+            >
+              <div className="flex flex-col items-center justify-center px-2 py-2.5">
+                <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Trainees</div>
+                <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                  {room.isOperational ? training.currentTraineeCount : 0}
+                </div>
+              </div>
+              <div
+                className="flex flex-col items-center justify-center border-l px-2 py-2.5"
+                style={{ borderColor: dividerColor }}
+              >
+                <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Roster Avg</div>
+                <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                  {training.rosterAverageReadiness}
+                </div>
+              </div>
+              <div
+                className="flex flex-col items-center justify-center border-l px-2 py-2.5"
+                style={{ borderColor: dividerColor }}
+              >
+                <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Rate Mod</div>
+                <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
+                  {training.rateModifier >= 0 ? "+" : ""}
+                  {training.rateModifier}%
+                </div>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-silver/70">
+              {room.isOperational
+                ? "Training raises Strength, Speed, Endurance, and Resilience on a bounded track that later feeds raid readiness and combat power."
+                : "The drills only accrue while this room is active. Bodega runs stay training-free because no operational training room exists there."}
+            </p>
+            <p className="text-sm leading-relaxed text-gold/75">
+              {training.currentTraineeNames.length > 0
+                ? `${training.currentTraineeNames.join(", ")} ${training.currentTraineeNames.length === 1 ? "is" : "are"} on the current training block.`
+                : "Nobody is on the current training block right now."}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {buildingUpgrades.length > 0 && (
+        <section className="space-y-2.5">
+          <Tooltip content="Upgrades that improve the whole building" side="top">
+            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+              Building Upgrades
+            </h4>
+          </Tooltip>
+          <div className="space-y-2.5">
+            {buildingUpgrades.map((u) => (
+              <UpgradeCard
+                key={u.id}
+                upgrade={u}
+                onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {roomUpgrades.length > 0 && (
+        <section className="space-y-2.5">
+          <Tooltip content="Upgrades specific to this room" side="top">
+            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+              Room Upgrades
+            </h4>
+          </Tooltip>
+          <div className="space-y-2.5">
+            {roomUpgrades.map((u) => (
+              <UpgradeCard
+                key={u.id}
+                upgrade={u}
+                onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       {room.prepRecipes.length > 0 && (
-        <div className="mt-4 border-t border-[rgba(200,168,76,0.06)] pt-4">
-          <h4 className="mb-2 text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
             Consumable Prep
           </h4>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-2.5">
             {room.prepRecipes.map((recipe) => (
               <PrepRecipeCard
                 key={recipe.recipeId}
@@ -651,7 +701,7 @@ export function RoomDetailPanel({
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

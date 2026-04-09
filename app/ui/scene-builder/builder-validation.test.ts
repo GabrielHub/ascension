@@ -55,7 +55,7 @@ describe("validatePlacements", () => {
       [
         {
           id: "placement/inside-shell",
-          assetId: "background/iso-bg-awning",
+          assetId: "background/iso-bg-bench",
           assetUrl: "/test.svg",
           kind: "decoration",
           col: 2,
@@ -73,9 +73,9 @@ describe("validatePlacements", () => {
       ],
       [
         {
-          id: "background/iso-bg-awning",
+          id: "background/iso-bg-bench",
           category: "prop",
-          tags: ["awning"],
+          tags: ["bench"],
           scale: "prop",
           roomFamily: null,
           status: "approved",

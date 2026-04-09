@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="rf-aura" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#d4541e" stop-opacity="0.10"/>
+      <stop offset="55%" stop-color="#2a1a10" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060406" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rf-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#e8dcb0"/>
+      <stop offset="40%" stop-color="#b8a882"/>
+      <stop offset="100%" stop-color="#6a5a38"/>
+    </linearGradient>
+    <linearGradient id="rf-backboard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8b888"/>
+      <stop offset="100%" stop-color="#8a7a48"/>
+    </linearGradient>
+    <linearGradient id="rf-scoreboard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a1008"/>
+      <stop offset="100%" stop-color="#0a0604"/>
+    </linearGradient>
+    <filter id="rf-glow">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="rf-flicker">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="rf-stripes" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(15)">
+      <rect width="5" height="10" fill="#0a0604" opacity="0.55"/>
+      <rect x="5" width="5" height="10" fill="#e8dcb0" opacity="0.25"/>
+    </pattern>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="138" rx="92" ry="130" fill="url(#rf-aura)"/>
+
+  <!-- Empty pool echo below — a pale rectangular outline, drained, suggests the diving board stance -->
+  <rect x="30" y="258" width="140" height="14" rx="1" fill="none" stroke="#6a5a38" stroke-width="0.6" opacity="0.32"/>
+  <line x1="30" y1="268" x2="170" y2="268" stroke="#6a5a38" stroke-width="0.4" opacity="0.2"/>
+  <!-- Pool tile grid -->
+  <line x1="60" y1="258" x2="60" y2="272" stroke="#6a5a38" stroke-width="0.3" opacity="0.2"/>
+  <line x1="100" y1="258" x2="100" y2="272" stroke="#6a5a38" stroke-width="0.3" opacity="0.2"/>
+  <line x1="140" y1="258" x2="140" y2="272" stroke="#6a5a38" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Court painted circles echoing behind the figure — free-throw lines, key -->
+  <circle cx="100" cy="230" r="46" fill="none" stroke="#c4a840" stroke-width="0.6" opacity="0.22"/>
+  <circle cx="100" cy="230" r="34" fill="none" stroke="#c4a840" stroke-width="0.5" opacity="0.18"/>
+  <path d="M 68 230 L 132 230" stroke="#c4a840" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- Body — backboard torso, rectangular, painted lines, scored with hoop at belly -->
+  <rect x="60" y="104" width="80" height="110" rx="2" fill="url(#rf-backboard)" stroke="#4a3a18" stroke-width="1"/>
+  <!-- Backboard inner square frame -->
+  <rect x="84" y="148" width="32" height="24" rx="0.5" fill="none" stroke="#4a3a18" stroke-width="1.2"/>
+  <rect x="84" y="148" width="32" height="24" rx="0.5" fill="none" stroke="#d4541e" stroke-width="0.4" opacity="0.5"/>
+  <!-- Backboard brackets -->
+  <rect x="58" y="110" width="4" height="6" fill="#3a2e18"/>
+  <rect x="138" y="110" width="4" height="6" fill="#3a2e18"/>
+  <rect x="58" y="200" width="4" height="6" fill="#3a2e18"/>
+  <rect x="138" y="200" width="4" height="6" fill="#3a2e18"/>
+
+  <!-- Striped referee uniform — painted over the backboard, not worn -->
+  <rect x="62" y="106" width="76" height="106" rx="1" fill="url(#rf-stripes)" opacity="0.45"/>
+
+  <!-- Hoop where the heart should be — a basketball rim growing from the torso -->
+  <ellipse cx="100" cy="172" rx="18" ry="5" fill="none" stroke="#d4541e" stroke-width="2"/>
+  <ellipse cx="100" cy="172" rx="16" ry="4" fill="none" stroke="#8a2808" stroke-width="0.8" opacity="0.6"/>
+  <!-- Tangled net hanging from rim — knotted wrong -->
+  <path d="M 84 174 Q 82 184 84 194 Q 88 204 86 212" fill="none" stroke="#c8b888" stroke-width="0.6" opacity="0.75"/>
+  <path d="M 90 174 Q 88 186 92 198 Q 94 208 92 214" fill="none" stroke="#c8b888" stroke-width="0.6" opacity="0.75"/>
+  <path d="M 100 176 Q 100 190 98 204 Q 100 214 98 218" fill="none" stroke="#c8b888" stroke-width="0.6" opacity="0.75"/>
+  <path d="M 110 174 Q 112 186 108 198 Q 106 208 108 214" fill="none" stroke="#c8b888" stroke-width="0.6" opacity="0.75"/>
+  <path d="M 116 174 Q 118 184 116 194 Q 112 204 114 212" fill="none" stroke="#c8b888" stroke-width="0.6" opacity="0.75"/>
+  <!-- Net cross weaves -->
+  <path d="M 86 184 L 92 188 L 100 186 L 108 188 L 114 184" fill="none" stroke="#b8a882" stroke-width="0.4" opacity="0.6"/>
+  <path d="M 86 198 L 94 202 L 104 200 L 112 202" fill="none" stroke="#b8a882" stroke-width="0.4" opacity="0.6"/>
+
+  <!-- A basketball lodged halfway through the hoop — forever falling -->
+  <circle cx="100" cy="180" r="8" fill="#8a4818" stroke="#4a2008" stroke-width="0.6" opacity="0.9"/>
+  <path d="M 100 172 Q 100 188 100 188" stroke="#4a2008" stroke-width="0.5"/>
+  <path d="M 92 180 Q 108 180 108 180" stroke="#4a2008" stroke-width="0.5"/>
+  <path d="M 94 174 Q 106 186 106 186" stroke="#4a2008" stroke-width="0.4" opacity="0.7"/>
+  <path d="M 106 174 Q 94 186 94 186" stroke="#4a2008" stroke-width="0.4" opacity="0.7"/>
+
+  <!-- Scoreboard head — flickering, displaying wrong numbers -->
+  <rect x="66" y="30" width="68" height="72" rx="2" fill="url(#rf-scoreboard)" stroke="#6a5a38" stroke-width="1.2"/>
+  <!-- Scoreboard inner bezel -->
+  <rect x="70" y="34" width="60" height="64" rx="1" fill="#050302" stroke="#3a2e18" stroke-width="0.5"/>
+  <!-- HOME label -->
+  <rect x="74" y="38" width="22" height="7" rx="0.5" fill="#1a1008"/>
+  <text x="85" y="44" text-anchor="middle" fill="#d4541e" font-size="4.5" font-family="monospace" opacity="0.85">HOME</text>
+  <!-- AWAY label -->
+  <rect x="104" y="38" width="22" height="7" rx="0.5" fill="#1a1008"/>
+  <text x="115" y="44" text-anchor="middle" fill="#d4541e" font-size="4.5" font-family="monospace" opacity="0.85">AWAY</text>
+  <!-- Score digits — wrong, impossibly large -->
+  <rect x="74" y="48" width="22" height="22" rx="0.5" fill="#0a0604" stroke="#3a2e18" stroke-width="0.4"/>
+  <text x="85" y="66" text-anchor="middle" fill="#d4541e" font-size="18" font-family="monospace" font-weight="bold" opacity="0.9" filter="url(#rf-flicker)">88</text>
+  <rect x="104" y="48" width="22" height="22" rx="0.5" fill="#0a0604" stroke="#3a2e18" stroke-width="0.4"/>
+  <text x="115" y="66" text-anchor="middle" fill="#d4541e" font-size="18" font-family="monospace" font-weight="bold" opacity="0.9" filter="url(#rf-flicker)">00</text>
+  <!-- Period and clock -->
+  <rect x="82" y="74" width="36" height="12" rx="0.5" fill="#0a0604" stroke="#3a2e18" stroke-width="0.4"/>
+  <text x="100" y="84" text-anchor="middle" fill="#d4541e" font-size="9" font-family="monospace" opacity="0.85" filter="url(#rf-flicker)">0:00</text>
+  <!-- Period indicator — QTR 13 impossible -->
+  <text x="100" y="94" text-anchor="middle" fill="#d4541e" font-size="4" font-family="monospace" opacity="0.7">QTR 13</text>
+
+  <!-- Flicker bars across scoreboard -->
+  <rect x="66" y="52" width="68" height="1" fill="#e8dcb0" opacity="0.12"/>
+  <rect x="66" y="68" width="68" height="0.6" fill="#e8dcb0" opacity="0.08"/>
+  <rect x="66" y="82" width="68" height="1.2" fill="#e8dcb0" opacity="0.10"/>
+
+  <!-- Scoreboard mounting struts to the body -->
+  <line x1="76" y1="102" x2="76" y2="108" stroke="#3a2e18" stroke-width="2"/>
+  <line x1="100" y1="102" x2="100" y2="108" stroke="#3a2e18" stroke-width="2"/>
+  <line x1="124" y1="102" x2="124" y2="108" stroke="#3a2e18" stroke-width="2"/>
+
+  <!-- Left arm — diving board plank, springy, bent outward -->
+  <path d="M 60 124 Q 46 128 32 138 Q 18 150 10 168 L 4 184 Q 2 192 8 194 L 16 188 Q 24 172 34 158 Q 46 144 60 140 Z" fill="#c8b888" stroke="#6a5a38" stroke-width="0.8"/>
+  <!-- Diving board grip tread -->
+  <line x1="42" y1="150" x2="36" y2="158" stroke="#6a5a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="48" y1="144" x2="42" y2="152" stroke="#6a5a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="54" y1="138" x2="48" y2="146" stroke="#6a5a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="28" y1="164" x2="22" y2="172" stroke="#6a5a38" stroke-width="0.4" opacity="0.5"/>
+  <line x1="18" y1="176" x2="12" y2="184" stroke="#6a5a38" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Right arm — extension of a whistle chain; a metal chain descending to a massive whistle -->
+  <path d="M 142 124 Q 156 136 168 152 Q 180 168 182 184" fill="none" stroke="#8a8070" stroke-width="1.2"/>
+  <!-- Chain links -->
+  <circle cx="150" cy="134" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <circle cx="156" cy="140" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <circle cx="162" cy="148" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <circle cx="168" cy="156" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <circle cx="174" cy="166" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <circle cx="178" cy="176" r="1.8" fill="none" stroke="#b8a882" stroke-width="0.8"/>
+  <!-- Whistle at end — the massive silver whistle -->
+  <ellipse cx="182" cy="196" rx="12" ry="7" fill="#c8c0a8" stroke="#6a5a38" stroke-width="0.8"/>
+  <rect x="176" y="189" width="10" height="6" rx="1" fill="#a89878" stroke="#6a5a38" stroke-width="0.5"/>
+  <circle cx="190" cy="196" r="2" fill="#1a1008"/>
+  <!-- Whistle mouthpiece -->
+  <rect x="172" y="192" width="4" height="4" rx="0.8" fill="#8a7a48"/>
+  <!-- Whistle sound lines — an echo bursting from it -->
+  <path d="M 184 186 Q 186 182 188 180" fill="none" stroke="#d4541e" stroke-width="0.5" opacity="0.35"/>
+  <path d="M 188 192 Q 192 192 194 190" fill="none" stroke="#d4541e" stroke-width="0.5" opacity="0.35"/>
+  <path d="M 188 200 Q 192 202 194 204" fill="none" stroke="#d4541e" stroke-width="0.5" opacity="0.35"/>
+
+  <!-- Court-line legs — painted lines that descend to feet, thin and geometric -->
+  <path d="M 82 214 L 70 250 L 66 264" fill="none" stroke="#c4a840" stroke-width="2" opacity="0.7"/>
+  <path d="M 118 214 L 130 250 L 134 264" fill="none" stroke="#c4a840" stroke-width="2" opacity="0.7"/>
+  <path d="M 82 214 L 70 250 L 66 264" fill="none" stroke="#e8dcb0" stroke-width="0.6" opacity="0.5"/>
+  <path d="M 118 214 L 130 250 L 134 264" fill="none" stroke="#e8dcb0" stroke-width="0.6" opacity="0.5"/>
+  <!-- Sneaker tread feet -->
+  <ellipse cx="66" cy="266" rx="9" ry="3" fill="#1a1008" stroke="#3a2e18" stroke-width="0.5"/>
+  <ellipse cx="134" cy="266" rx="9" ry="3" fill="#1a1008" stroke="#3a2e18" stroke-width="0.5"/>
+  <line x1="60" y1="266" x2="72" y2="266" stroke="#e8dcb0" stroke-width="0.4" opacity="0.4"/>
+  <line x1="128" y1="266" x2="140" y2="266" stroke="#e8dcb0" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Gym lights casting down — two small flickering fluorescents above -->
+  <rect x="22" y="8" width="28" height="3" rx="0.5" fill="#d4c08a" opacity="0.35" filter="url(#rf-glow)"/>
+  <rect x="150" y="8" width="28" height="3" rx="0.5" fill="#d4c08a" opacity="0.35" filter="url(#rf-glow)"/>
+  <path d="M 36 11 L 32 28 L 40 28 Z" fill="#d4c08a" opacity="0.08"/>
+  <path d="M 164 11 L 160 28 L 168 28 Z" fill="#d4c08a" opacity="0.08"/>
+
+  <!-- Small score tick marks hovering — chalk echoes of past tallies -->
+  <line x1="24" y1="100" x2="24" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="27" y1="100" x2="27" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="30" y1="100" x2="30" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="28" y1="103" x2="34" y2="97" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="172" y1="100" x2="172" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="175" y1="100" x2="175" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+  <line x1="178" y1="100" x2="178" y2="106" stroke="#e8dcb0" stroke-width="0.4" opacity="0.25"/>
+
+  <!-- Old sweat stain watermarks on the backboard body -->
+  <ellipse cx="76" cy="132" rx="6" ry="9" fill="#5a4818" opacity="0.15"/>
+  <ellipse cx="124" cy="200" rx="7" ry="5" fill="#5a4818" opacity="0.12"/>
+  <ellipse cx="80" cy="198" rx="4" ry="6" fill="#5a4818" opacity="0.10"/>
+</svg>

@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="mn-aura" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#d840a0" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#2a1028" stroke-opacity="0.06"/>
+      <stop offset="100%" stop-color="#080408" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mn-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4e0f0"/>
+      <stop offset="55%" stop-color="#d4a8c8"/>
+      <stop offset="100%" stop-color="#6a3a5a"/>
+    </linearGradient>
+    <linearGradient id="mn-nail" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff4aa8"/>
+      <stop offset="100%" stop-color="#6a0a3a"/>
+    </linearGradient>
+    <linearGradient id="mn-nail2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#aa40ff"/>
+      <stop offset="100%" stop-color="#3a0a6a"/>
+    </linearGradient>
+    <radialGradient id="mn-uv" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f4a8f0" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#a848d4" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#4a1060" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="mn-glow">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="mn-fume">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="138" rx="94" ry="134" fill="url(#mn-aura)"/>
+
+  <!-- Chemical fume plumes billowing upward -->
+  <path d="M 40 268 Q 34 220 48 180 Q 58 148 40 112 Q 30 82 48 50" fill="none" stroke="#a848d4" stroke-width="2" opacity="0.12" filter="url(#mn-fume)"/>
+  <path d="M 160 268 Q 166 220 152 180 Q 142 148 160 112 Q 170 82 152 50" fill="none" stroke="#a848d4" stroke-width="2" opacity="0.12" filter="url(#mn-fume)"/>
+  <path d="M 20 250 Q 28 200 18 160 Q 10 120 24 80" fill="none" stroke="#d840a0" stroke-width="1.4" opacity="0.08" filter="url(#mn-fume)"/>
+  <path d="M 180 250 Q 172 200 182 160 Q 190 120 176 80" fill="none" stroke="#d840a0" stroke-width="1.4" opacity="0.08" filter="url(#mn-fume)"/>
+  <!-- Lower fume pool -->
+  <ellipse cx="100" cy="268" rx="84" ry="8" fill="#a848d4" opacity="0.08" filter="url(#mn-fume)"/>
+  <ellipse cx="100" cy="272" rx="60" ry="5" fill="#d840a0" opacity="0.06" filter="url(#mn-fume)"/>
+
+  <!-- Body — narrow, elegant, perfectly posed, almost a mannequin -->
+  <path d="
+    M 100 64
+    L 114 70 L 122 84 L 124 104
+    L 122 130 L 118 158 L 114 184
+    L 110 210 L 106 234 L 104 252
+    L 100 258 L 96 252 L 94 234
+    L 90 210 L 86 184 L 82 158
+    L 78 130 L 76 104 L 78 84
+    L 86 70 Z
+  " fill="url(#mn-body)" stroke="rgba(106,58,90,0.7)" stroke-width="0.8"/>
+
+  <!-- Salon smock — draped over shoulders, purple, crinkled -->
+  <path d="
+    M 68 88 Q 72 80 82 78 L 100 82 L 118 78 Q 128 80 132 88
+    L 138 120 L 142 160 L 140 200 L 138 230 L 132 250
+    L 100 252 L 68 250 L 62 230 L 60 200 L 62 160 L 66 120 Z
+  " fill="#4a1860" stroke="#2a0838" stroke-width="0.8" opacity="0.92"/>
+  <!-- Smock folds -->
+  <path d="M 70 130 Q 76 160 72 200 Q 70 230 68 248" fill="none" stroke="#2a0838" stroke-width="0.5" opacity="0.6"/>
+  <path d="M 130 130 Q 124 160 128 200 Q 130 230 132 248" fill="none" stroke="#2a0838" stroke-width="0.5" opacity="0.6"/>
+  <path d="M 100 88 Q 96 140 98 200 Q 100 230 100 252" fill="none" stroke="#2a0838" stroke-width="0.4" opacity="0.5"/>
+  <path d="M 85 100 Q 82 150 84 200" fill="none" stroke="#2a0838" stroke-width="0.4" opacity="0.5"/>
+  <path d="M 115 100 Q 118 150 116 200" fill="none" stroke="#2a0838" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Smock highlight — faint magenta sheen -->
+  <path d="M 78 100 Q 100 90 122 100" fill="none" stroke="#d840a0" stroke-width="0.4" opacity="0.3"/>
+  <path d="M 70 170 Q 100 160 130 170" fill="none" stroke="#d840a0" stroke-width="0.3" opacity="0.25"/>
+
+  <!-- Lacquer spill staining the lower smock — drips -->
+  <path d="M 84 228 Q 82 240 84 252 L 86 256 L 82 258" fill="#ff4aa8" opacity="0.35"/>
+  <path d="M 116 232 Q 118 244 116 256" fill="none" stroke="#aa40ff" stroke-width="1.2" opacity="0.35"/>
+  <circle cx="86" cy="258" r="1.5" fill="#ff4aa8" opacity="0.5"/>
+  <circle cx="116" cy="258" r="1.5" fill="#aa40ff" opacity="0.5"/>
+
+  <!-- Head — porcelain mask, featureless except UV lamp eyes -->
+  <path d="
+    M 100 22
+    L 116 28 L 124 42 L 124 60 L 118 70
+    L 100 74 L 82 70 L 76 60
+    L 76 42 L 84 28 Z
+  " fill="#f4e8ec" stroke="#8a5a6a" stroke-width="0.8"/>
+  <!-- Hair — slicked back, tight, black with violet highlights -->
+  <path d="M 78 40 Q 76 20 90 14 Q 100 10 110 14 Q 124 20 122 40 L 124 46 L 120 38 Q 118 22 100 18 Q 82 22 80 38 L 76 46 Z" fill="#1a0820" stroke="#3a1438" stroke-width="0.5"/>
+  <!-- Hair highlight -->
+  <path d="M 92 18 Q 100 14 108 18" fill="none" stroke="#a848d4" stroke-width="0.4" opacity="0.6"/>
+  <path d="M 82 32 Q 86 24 92 22" fill="none" stroke="#a848d4" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- Cheek contour -->
+  <path d="M 82 50 Q 80 58 84 66" fill="none" stroke="#c48090" stroke-width="0.4" opacity="0.5"/>
+  <path d="M 118 50 Q 120 58 116 66" fill="none" stroke="#c48090" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- UV lamp eyes — glowing violet circles set deep in the mask -->
+  <circle cx="90" cy="50" r="5.5" fill="#2a0a40" stroke="#6a1a80" stroke-width="0.6"/>
+  <circle cx="90" cy="50" r="4.2" fill="url(#mn-uv)" filter="url(#mn-glow)"/>
+  <circle cx="90" cy="50" r="2.2" fill="#f4c4ec" opacity="0.85"/>
+  <circle cx="90" cy="50" r="0.8" fill="#ffffff" opacity="0.9"/>
+  <circle cx="110" cy="50" r="5.5" fill="#2a0a40" stroke="#6a1a80" stroke-width="0.6"/>
+  <circle cx="110" cy="50" r="4.2" fill="url(#mn-uv)" filter="url(#mn-glow)"/>
+  <circle cx="110" cy="50" r="2.2" fill="#f4c4ec" opacity="0.85"/>
+  <circle cx="110" cy="50" r="0.8" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Fine lip line — red, precisely drawn -->
+  <path d="M 94 64 Q 100 66 106 64" fill="none" stroke="#8a1848" stroke-width="0.8"/>
+  <path d="M 94 64 Q 100 60 106 64" fill="none" stroke="#8a1848" stroke-width="0.5"/>
+
+  <!-- Neck — slender, long -->
+  <path d="M 94 74 L 94 84 L 106 84 L 106 74" fill="#f4e8ec" stroke="#8a5a6a" stroke-width="0.5"/>
+
+  <!-- Left arm — elegant, thin, raised slightly, with absurdly long polished nails -->
+  <path d="M 68 92 Q 56 110 48 136 Q 42 160 44 180" fill="none" stroke="url(#mn-body)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Wrist bracelet — metallic -->
+  <path d="M 42 176 L 48 182" stroke="#d4a0c4" stroke-width="1.5"/>
+  <!-- Palm -->
+  <ellipse cx="44" cy="186" rx="4" ry="5" fill="#f4d8e4" stroke="#8a5a6a" stroke-width="0.5"/>
+  <!-- Five finger nails — each a long razor blade of a different lacquer color -->
+  <path d="M 40 190 L 30 212 L 24 224 L 26 228 L 32 222 L 40 200 Z" fill="url(#mn-nail)" stroke="#4a0820" stroke-width="0.4"/>
+  <path d="M 42 192 L 34 218 L 30 232 L 32 234 L 38 226 L 44 202 Z" fill="url(#mn-nail2)" stroke="#2a0840" stroke-width="0.4"/>
+  <path d="M 45 193 L 40 222 L 38 238 L 40 240 L 44 230 L 48 204 Z" fill="#ff4aa8" stroke="#4a0820" stroke-width="0.4"/>
+  <path d="M 48 192 L 46 222 L 46 240 L 48 242 L 50 232 L 52 202 Z" fill="#d840a0" stroke="#4a0820" stroke-width="0.4"/>
+  <path d="M 50 190 L 52 220 L 54 238 L 56 238 L 56 226 L 56 200 Z" fill="#8a1888" stroke="#2a0828" stroke-width="0.4"/>
+  <!-- Lacquer shine on each nail -->
+  <line x1="32" y1="200" x2="28" y2="218" stroke="#f4c4ec" stroke-width="0.3" opacity="0.75"/>
+  <line x1="38" y1="202" x2="34" y2="226" stroke="#f4c4ec" stroke-width="0.3" opacity="0.75"/>
+  <line x1="44" y1="202" x2="42" y2="230" stroke="#f4c4ec" stroke-width="0.3" opacity="0.75"/>
+  <line x1="49" y1="202" x2="49" y2="228" stroke="#f4c4ec" stroke-width="0.3" opacity="0.75"/>
+  <line x1="54" y1="200" x2="54" y2="224" stroke="#f4c4ec" stroke-width="0.3" opacity="0.75"/>
+
+  <!-- Right arm — holding a polish bottle, draped slightly -->
+  <path d="M 132 92 Q 144 110 152 136 Q 158 156 156 174" fill="none" stroke="url(#mn-body)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 154 170 L 160 176" stroke="#d4a0c4" stroke-width="1.5"/>
+  <ellipse cx="156" cy="180" rx="4" ry="5" fill="#f4d8e4" stroke="#8a5a6a" stroke-width="0.5"/>
+
+  <!-- Right hand fingers — also with long nails, gripping a polish bottle -->
+  <path d="M 151 184 L 146 200 L 144 212 L 146 214 L 150 206 L 153 192 Z" fill="#ff4aa8" stroke="#4a0820" stroke-width="0.4"/>
+  <path d="M 155 184 L 154 202 L 154 216 L 156 216 L 158 206 L 158 192 Z" fill="url(#mn-nail2)" stroke="#2a0840" stroke-width="0.4"/>
+  <path d="M 160 184 L 164 200 L 166 214 L 164 216 L 160 208 L 158 192 Z" fill="url(#mn-nail)" stroke="#4a0820" stroke-width="0.4"/>
+
+  <!-- Polish bottle — small, dark, gripped against the palm -->
+  <rect x="150" y="186" width="10" height="14" rx="1" fill="#1a0420" stroke="#3a0838" stroke-width="0.6"/>
+  <rect x="153" y="183" width="4" height="4" rx="0.5" fill="#4a0840" stroke="#6a1060" stroke-width="0.4"/>
+  <!-- Bottle label -->
+  <rect x="151" y="190" width="8" height="5" rx="0.3" fill="#f4e8ec" opacity="0.7"/>
+  <text x="155" y="194" text-anchor="middle" fill="#8a1848" font-size="3" font-family="serif">13</text>
+  <!-- Drip trail from bottle -->
+  <path d="M 155 202 Q 153 216 155 228 L 157 240" fill="none" stroke="#ff4aa8" stroke-width="0.7" opacity="0.7"/>
+  <circle cx="157" cy="242" r="1.5" fill="#ff4aa8" opacity="0.7"/>
+  <circle cx="157" cy="248" r="1" fill="#ff4aa8" opacity="0.5"/>
+
+  <!-- Cuticle scraper — tiny silver implement tucked in smock -->
+  <line x1="112" y1="130" x2="116" y2="154" stroke="#c8c0d8" stroke-width="0.8"/>
+  <circle cx="116" cy="155" r="1" fill="#e8e0f0"/>
+  <circle cx="112" cy="129" r="0.8" fill="#a89aa8"/>
+
+  <!-- Belt — a thin dark sash -->
+  <rect x="72" y="160" width="56" height="3" rx="0.5" fill="#1a0420" stroke="#3a0838" stroke-width="0.3"/>
+  <circle cx="100" cy="161.5" r="1.2" fill="#d840a0" opacity="0.7"/>
+
+  <!-- UV glow halo around head -->
+  <circle cx="100" cy="50" r="28" fill="none" stroke="#a848d4" stroke-width="0.4" opacity="0.25" filter="url(#mn-glow)"/>
+  <circle cx="100" cy="50" r="18" fill="none" stroke="#d840a0" stroke-width="0.3" opacity="0.20" filter="url(#mn-glow)"/>
+
+  <!-- Fume motes rising around the body -->
+  <circle cx="54" cy="92" r="1.2" fill="#a848d4" opacity="0.45" filter="url(#mn-glow)"/>
+  <circle cx="146" cy="104" r="1" fill="#d840a0" opacity="0.4" filter="url(#mn-glow)"/>
+  <circle cx="38" cy="146" r="1.3" fill="#a848d4" opacity="0.4" filter="url(#mn-glow)"/>
+  <circle cx="164" cy="152" r="1.1" fill="#d840a0" opacity="0.4" filter="url(#mn-glow)"/>
+  <circle cx="60" cy="240" r="1" fill="#8a48d4" opacity="0.35" filter="url(#mn-glow)"/>
+  <circle cx="142" cy="244" r="1.2" fill="#d840a0" opacity="0.35" filter="url(#mn-glow)"/>
+  <circle cx="26" cy="112" r="0.9" fill="#d840a0" opacity="0.3" filter="url(#mn-glow)"/>
+  <circle cx="176" cy="188" r="1" fill="#a848d4" opacity="0.35" filter="url(#mn-glow)"/>
+
+  <!-- Lacquer puddle signature below feet — pink and purple mixing -->
+  <ellipse cx="92" cy="262" rx="10" ry="2.5" fill="#ff4aa8" opacity="0.4"/>
+  <ellipse cx="108" cy="264" rx="8" ry="2" fill="#aa40ff" opacity="0.4"/>
+  <ellipse cx="100" cy="266" rx="16" ry="1.5" fill="#d840a0" opacity="0.25"/>
+</svg>

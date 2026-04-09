@@ -3,7 +3,6 @@ import { useCallback, useMemo } from "react";
 import { buildFocusHighlight, type FocusPayload } from "render";
 
 import { BodegaFloor } from "./bodega-floor";
-import { RoomDetailPanel } from "./room-detail-panel";
 import type { GameCallbacks, HqViewModel, RoomCultureViewModel } from "./view-models";
 
 /** Build a lookup from roomId → culture for efficient access in the floor strip. */
@@ -20,21 +19,12 @@ interface HqPanelProps {
   callbacks: GameCallbacks;
   focus: FocusPayload | null;
   onFocusChange?: (focus: FocusPayload | null) => void;
-  onClearFocus?: () => void;
   roomCultures?: readonly RoomCultureViewModel[];
 }
 
-export function HqPanel({
-  hq,
-  callbacks,
-  focus,
-  onFocusChange,
-  onClearFocus,
-  roomCultures = [],
-}: HqPanelProps) {
+export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = [] }: HqPanelProps) {
   const cultureMap = useMemo(() => buildCultureMap(roomCultures), [roomCultures]);
   const selectedRoomId = focus?.targetKind === "room" ? focus.targetId : null;
-  const selectedRoom = hq.rooms.find((r) => r.id === selectedRoomId) ?? null;
   const currentFloorRooms = hq.rooms.filter(
     (room) => room.floorIndex === hq.building.activeFloorIndex,
   );
@@ -42,12 +32,6 @@ export function HqPanel({
     (slot) => slot.floorIndex === hq.building.activeFloorIndex,
   );
   const currentFloorTotalSlots = currentFloorRooms.length + currentFloorExpansionSlots.length;
-
-  const selectedRoomUpgrades = selectedRoom
-    ? hq.roomUpgrades.filter((u) => u.targetId === selectedRoom.templateId)
-    : [];
-
-  const selectedRoomCulture = selectedRoom ? (cultureMap.get(selectedRoom.id) ?? null) : null;
   const handleSelectRoom = useCallback(
     (roomId: string) => {
       if (!onFocusChange) return;
@@ -55,13 +39,6 @@ export function HqPanel({
     },
     [onFocusChange, selectedRoomId],
   );
-  const handleClearRoom = useCallback(() => {
-    if (onFocusChange) {
-      onFocusChange(null);
-      return;
-    }
-    onClearFocus?.();
-  }, [onClearFocus, onFocusChange]);
 
   return (
     <div className="animate-enter space-y-4">
@@ -100,7 +77,7 @@ export function HqPanel({
         </p>
         <BodegaFloor
           rooms={currentFloorRooms}
-          expansionSlots={hq.expansionSlots}
+          expansionSlots={currentFloorExpansionSlots}
           placeableTemplates={hq.placeableRoomTemplates}
           selectedRoomId={selectedRoomId}
           onSelectRoom={handleSelectRoom}
@@ -108,32 +85,6 @@ export function HqPanel({
           cultureMap={cultureMap}
         />
       </div>
-
-      {/* Room detail — full width below room strip */}
-      {selectedRoom && (
-        <div className="border-t border-[rgba(200,168,76,0.06)] pt-4">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0 flex-1">
-              <RoomDetailPanel
-                guildName={hq.guild.guildName}
-                room={selectedRoom}
-                buildingUpgrades={hq.upgrades}
-                roomUpgrades={selectedRoomUpgrades}
-                callbacks={callbacks}
-                roomCulture={selectedRoomCulture}
-              />
-            </div>
-            <button
-              type="button"
-              className="btn-ghost ml-3 shrink-0 px-1.5 py-1 text-sm leading-none text-silver/40 hover:text-silver-bright"
-              onClick={handleClearRoom}
-              aria-label="Close room detail"
-            >
-              &times;
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

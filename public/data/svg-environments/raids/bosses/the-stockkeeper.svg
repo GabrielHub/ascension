@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="sk-aura" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#b8d4e0" stop-opacity="0.12"/>
+      <stop offset="55%" stop-color="#1e2830" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060808" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sk-paper" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#d8d0b8"/>
+      <stop offset="50%" stop-color="#a89c78"/>
+      <stop offset="100%" stop-color="#5a5038"/>
+    </linearGradient>
+    <linearGradient id="sk-frost" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8f0f6"/>
+      <stop offset="100%" stop-color="#8aa8c0" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="sk-flesh" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#6a2830"/>
+      <stop offset="100%" stop-color="#3a1218"/>
+    </linearGradient>
+    <filter id="sk-mist">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sk-glow">
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="138" rx="92" ry="132" fill="url(#sk-aura)"/>
+
+  <!-- Cold-breath mist pooling at the bottom -->
+  <ellipse cx="100" cy="268" rx="78" ry="6" fill="#b8d4e0" opacity="0.10" filter="url(#sk-mist)"/>
+  <ellipse cx="100" cy="272" rx="60" ry="4" fill="#d4e4ec" opacity="0.08" filter="url(#sk-mist)"/>
+
+  <!-- Overhead walk-in cooler strip-curtain — thick plastic ribbons hanging behind the figure -->
+  <rect x="22" y="6" width="6" height="72" rx="1" fill="#c4d4dc" opacity="0.25"/>
+  <rect x="34" y="6" width="6" height="66" rx="1" fill="#c4d4dc" opacity="0.22"/>
+  <rect x="46" y="6" width="6" height="58" rx="1" fill="#c4d4dc" opacity="0.20"/>
+  <rect x="58" y="6" width="6" height="52" rx="1" fill="#c4d4dc" opacity="0.18"/>
+  <rect x="70" y="6" width="6" height="48" rx="1" fill="#c4d4dc" opacity="0.16"/>
+  <rect x="124" y="6" width="6" height="48" rx="1" fill="#c4d4dc" opacity="0.16"/>
+  <rect x="136" y="6" width="6" height="52" rx="1" fill="#c4d4dc" opacity="0.18"/>
+  <rect x="148" y="6" width="6" height="58" rx="1" fill="#c4d4dc" opacity="0.20"/>
+  <rect x="160" y="6" width="6" height="66" rx="1" fill="#c4d4dc" opacity="0.22"/>
+  <rect x="172" y="6" width="6" height="72" rx="1" fill="#c4d4dc" opacity="0.25"/>
+
+  <!-- Meat hook hanging above — connecting the body to the ceiling rail -->
+  <line x1="100" y1="8" x2="100" y2="22" stroke="#8a9098" stroke-width="1.5"/>
+  <path d="M 100 22 Q 95 30 100 38 Q 105 34 103 28" fill="none" stroke="#8a9098" stroke-width="1.8"/>
+  <!-- Frost on the chain -->
+  <circle cx="100" cy="14" r="1" fill="#e8f0f6" opacity="0.7"/>
+  <circle cx="100" cy="20" r="0.8" fill="#e8f0f6" opacity="0.7"/>
+
+  <!-- Body — wrapped in butcher paper, bound with twine, hunched -->
+  <path d="
+    M 100 42
+    L 128 48 L 146 58 L 152 78 L 154 102
+    L 158 130 L 160 160 L 158 188 L 152 215
+    L 144 240 L 132 258
+    L 100 262 L 68 258 L 56 240
+    L 48 215 L 42 188 L 40 160 L 42 130
+    L 46 102 L 48 78 L 54 58 L 72 48 Z
+  " fill="url(#sk-paper)" stroke="#3a3220" stroke-width="1"/>
+
+  <!-- Butcher paper crinkle lines -->
+  <path d="M 56 70 L 72 76 L 68 90" fill="none" stroke="#6a5a38" stroke-width="0.4" opacity="0.6"/>
+  <path d="M 144 70 L 128 76 L 132 90" fill="none" stroke="#6a5a38" stroke-width="0.4" opacity="0.6"/>
+  <path d="M 58 120 L 72 128 L 66 148" fill="none" stroke="#6a5a38" stroke-width="0.35" opacity="0.55"/>
+  <path d="M 142 120 L 128 128 L 134 148" fill="none" stroke="#6a5a38" stroke-width="0.35" opacity="0.55"/>
+  <path d="M 54 180 L 72 192 L 68 216" fill="none" stroke="#6a5a38" stroke-width="0.4" opacity="0.55"/>
+  <path d="M 146 180 L 128 192 L 132 216" fill="none" stroke="#6a5a38" stroke-width="0.4" opacity="0.55"/>
+  <path d="M 62 98 L 138 98" fill="none" stroke="#6a5a38" stroke-width="0.3" opacity="0.4"/>
+  <path d="M 58 158 L 142 158" fill="none" stroke="#6a5a38" stroke-width="0.3" opacity="0.4"/>
+
+  <!-- Torn gap in the paper — revealing preserved flesh underneath at the chest -->
+  <path d="M 86 118 L 92 114 L 102 118 L 112 114 L 118 120 L 114 138 L 104 142 L 92 138 Z" fill="url(#sk-flesh)" stroke="#2a0810" stroke-width="0.8"/>
+  <!-- Exposed rib-like ridges -->
+  <path d="M 90 124 Q 100 122 110 126" fill="none" stroke="#8a3838" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 90 130 Q 100 128 110 132" fill="none" stroke="#8a3838" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 90 136 Q 100 134 110 138" fill="none" stroke="#8a3838" stroke-width="0.5" opacity="0.7"/>
+  <!-- Frost crystals forming on exposed flesh -->
+  <path d="M 96 124 L 94 120 L 98 122 Z" fill="#e8f0f6" opacity="0.75"/>
+  <path d="M 106 126 L 108 122 L 104 124 Z" fill="#e8f0f6" opacity="0.65"/>
+  <path d="M 100 134 L 98 130 L 102 132 Z" fill="#e8f0f6" opacity="0.7"/>
+
+  <!-- Twine bindings — three loops around the body -->
+  <path d="M 48 108 Q 100 102 152 108" fill="none" stroke="#6a5a38" stroke-width="1.4"/>
+  <path d="M 44 164 Q 100 158 156 164" fill="none" stroke="#6a5a38" stroke-width="1.4"/>
+  <path d="M 50 220 Q 100 214 150 220" fill="none" stroke="#6a5a38" stroke-width="1.4"/>
+  <!-- Twine knot details -->
+  <circle cx="100" cy="105" r="1.4" fill="#3a3020"/>
+  <path d="M 97 104 L 103 106 M 97 106 L 103 104" stroke="#3a3020" stroke-width="0.4"/>
+  <circle cx="100" cy="161" r="1.4" fill="#3a3020"/>
+  <path d="M 97 160 L 103 162 M 97 162 L 103 160" stroke="#3a3020" stroke-width="0.4"/>
+  <circle cx="100" cy="217" r="1.4" fill="#3a3020"/>
+  <path d="M 97 216 L 103 218 M 97 218 L 103 216" stroke="#3a3020" stroke-width="0.4"/>
+
+  <!-- Price tags dangling all over the body — yellowed, curled, numbered -->
+  <g opacity="0.9">
+    <path d="M 66 112 L 62 124 L 56 122 L 58 110 Z" fill="#e8dc88" stroke="#6a5a38" stroke-width="0.4"/>
+    <circle cx="62" cy="112" r="0.8" fill="#6a5a38"/>
+    <text x="62" y="120" text-anchor="middle" fill="#3a3020" font-size="4" font-family="monospace">$??</text>
+  </g>
+  <g opacity="0.9">
+    <path d="M 136 110 L 132 98 L 140 96 L 144 108 Z" fill="#d4c478" stroke="#6a5a38" stroke-width="0.4"/>
+    <circle cx="138" cy="100" r="0.8" fill="#6a5a38"/>
+    <text x="138" y="108" text-anchor="middle" fill="#3a3020" font-size="4" font-family="monospace">0.00</text>
+  </g>
+  <g opacity="0.85">
+    <path d="M 60 180 L 56 194 L 48 192 L 52 178 Z" fill="#e8dc88" stroke="#6a5a38" stroke-width="0.4"/>
+    <circle cx="54" cy="182" r="0.7" fill="#6a5a38"/>
+    <text x="54" y="190" text-anchor="middle" fill="#3a3020" font-size="3.8" font-family="monospace">LB</text>
+  </g>
+  <g opacity="0.85">
+    <path d="M 142 180 L 150 192 L 156 186 L 148 176 Z" fill="#d4c478" stroke="#6a5a38" stroke-width="0.4"/>
+    <circle cx="146" cy="180" r="0.7" fill="#6a5a38"/>
+  </g>
+  <g opacity="0.8">
+    <path d="M 84 230 L 78 242 L 72 240 L 78 228 Z" fill="#e8dc88" stroke="#6a5a38" stroke-width="0.4"/>
+    <circle cx="80" cy="232" r="0.7" fill="#6a5a38"/>
+  </g>
+  <g opacity="0.8">
+    <path d="M 118 230 L 124 242 L 130 238 L 124 226 Z" fill="#d4c478" stroke="#6a5a38" stroke-width="0.4"/>
+  </g>
+
+  <!-- Head — frost-burned face under a deli cap, eyes frosted opaque -->
+  <!-- Skull base wrapped -->
+  <path d="
+    M 100 24
+    L 118 30 L 126 44 L 124 60 L 118 70
+    L 100 74 L 82 70 L 76 60
+    L 74 44 L 82 30 Z
+  " fill="#c0b898" stroke="#3a3220" stroke-width="0.8"/>
+  <!-- Paper cap -->
+  <path d="M 76 36 Q 82 20 100 18 Q 118 20 124 36 L 122 40 Q 118 30 100 28 Q 82 30 78 40 Z" fill="#e8e0c4" stroke="#6a5a38" stroke-width="0.5"/>
+  <path d="M 82 32 L 84 22" stroke="#6a5a38" stroke-width="0.3" opacity="0.6"/>
+  <path d="M 118 32 L 116 22" stroke="#6a5a38" stroke-width="0.3" opacity="0.6"/>
+  <!-- Frost crusted brow -->
+  <path d="M 78 46 Q 100 42 122 46" fill="none" stroke="#b8d4e0" stroke-width="1.2" opacity="0.75"/>
+  <path d="M 80 44 L 82 42 L 84 44" stroke="#e8f0f6" stroke-width="0.4" opacity="0.8"/>
+  <path d="M 96 40 L 98 38 L 100 40" stroke="#e8f0f6" stroke-width="0.4" opacity="0.8"/>
+  <path d="M 116 42 L 118 40 L 120 42" stroke="#e8f0f6" stroke-width="0.4" opacity="0.8"/>
+
+  <!-- Eyes — frosted over, pale blue, no pupils -->
+  <ellipse cx="90" cy="52" rx="4.5" ry="3" fill="#e8f0f6" stroke="#6a8090" stroke-width="0.5"/>
+  <ellipse cx="110" cy="52" rx="4.5" ry="3" fill="#e8f0f6" stroke="#6a8090" stroke-width="0.5"/>
+  <!-- Frost crack across one eye -->
+  <path d="M 87 52 L 93 52 M 89 50 L 91 54" stroke="#8aa8c0" stroke-width="0.4" opacity="0.8"/>
+  <path d="M 108 52 L 112 52" stroke="#8aa8c0" stroke-width="0.4" opacity="0.7"/>
+  <!-- Faint glow behind the frost -->
+  <circle cx="90" cy="52" r="1.6" fill="#b8d4e0" opacity="0.5" filter="url(#sk-glow)"/>
+  <circle cx="110" cy="52" r="1.6" fill="#b8d4e0" opacity="0.5" filter="url(#sk-glow)"/>
+
+  <!-- Mouth — lips blue, slightly agape, frozen mid-sentence -->
+  <path d="M 94 62 Q 100 64 106 62 L 104 66 Q 100 67 96 66 Z" fill="#4a6278" stroke="#2a3848" stroke-width="0.4"/>
+  <!-- Frost icicle hanging from lip -->
+  <path d="M 100 66 L 99 72 L 100 74 L 101 72 Z" fill="#d4e4ec" opacity="0.8"/>
+
+  <!-- Left arm — holding a clipboard with inventory ledger -->
+  <path d="M 48 100 L 32 130 Q 24 156 30 178 L 38 176 Q 42 154 48 132 Z" fill="url(#sk-paper)" stroke="#3a3220" stroke-width="0.7"/>
+  <!-- Twine on arm -->
+  <path d="M 34 140 Q 44 136 50 140" fill="none" stroke="#6a5a38" stroke-width="0.8"/>
+  <!-- Hand emerging — frost-blue fingers -->
+  <path d="M 30 176 L 24 184 L 22 194 L 28 196 L 32 188 L 36 178 Z" fill="#6a8090" stroke="#2a3848" stroke-width="0.5"/>
+  <path d="M 24 184 L 20 194 M 28 186 L 24 196 M 30 188 L 26 198" stroke="#4a6278" stroke-width="0.5"/>
+  <!-- Clipboard -->
+  <rect x="6" y="198" width="32" height="44" rx="1" fill="#c8b888" stroke="#3a3220" stroke-width="0.8"/>
+  <rect x="8" y="200" width="28" height="40" rx="0.5" fill="#e8e0c4" stroke="#6a5a38" stroke-width="0.3"/>
+  <!-- Clipboard clip -->
+  <rect x="14" y="196" width="16" height="4" rx="0.8" fill="#6a6850" stroke="#3a3220" stroke-width="0.4"/>
+  <!-- Ledger rows — wrong, crossed out -->
+  <line x1="10" y1="206" x2="34" y2="206" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="10" y1="212" x2="34" y2="212" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="10" y1="218" x2="34" y2="218" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="10" y1="224" x2="34" y2="224" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="10" y1="230" x2="34" y2="230" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="10" y1="236" x2="34" y2="236" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <!-- Scribbled tally marks -->
+  <line x1="12" y1="208" x2="12" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="14" y1="208" x2="14" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="16" y1="208" x2="16" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="18" y1="208" x2="18" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="12" y1="210" x2="19" y2="208" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="22" y1="208" x2="22" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <line x1="24" y1="208" x2="24" y2="211" stroke="#3a3020" stroke-width="0.5"/>
+  <!-- Red pen strike-through across one row -->
+  <line x1="9" y1="220" x2="35" y2="215" stroke="#8a1818" stroke-width="0.6" opacity="0.7"/>
+  <line x1="9" y1="226" x2="35" y2="221" stroke="#8a1818" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Right arm — holding a large steel meat hook -->
+  <path d="M 152 100 L 168 130 Q 176 156 170 178 L 162 176 Q 158 154 152 132 Z" fill="url(#sk-paper)" stroke="#3a3220" stroke-width="0.7"/>
+  <path d="M 156 140 Q 166 136 170 140" fill="none" stroke="#6a5a38" stroke-width="0.8"/>
+  <!-- Hand -->
+  <path d="M 170 176 L 176 184 L 178 194 L 172 196 L 168 188 L 164 178 Z" fill="#6a8090" stroke="#2a3848" stroke-width="0.5"/>
+  <path d="M 176 184 L 180 194 M 172 186 L 176 196 M 170 188 L 174 198" stroke="#4a6278" stroke-width="0.5"/>
+  <!-- Meat hook — curved steel, wrapped handle -->
+  <rect x="170" y="196" width="6" height="14" rx="1" fill="#6a5a38" stroke="#3a2e18" stroke-width="0.5"/>
+  <line x1="171" y1="198" x2="175" y2="208" stroke="#3a2e18" stroke-width="0.3"/>
+  <path d="M 173 210 L 172 222 Q 170 238 180 248 Q 190 254 188 240 Q 184 228 180 220 L 179 210 Z" fill="#b8c0c8" stroke="#4a5058" stroke-width="0.8"/>
+  <!-- Hook highlight -->
+  <path d="M 175 216 Q 172 232 182 246" fill="none" stroke="#e8f0f6" stroke-width="0.4" opacity="0.6"/>
+  <!-- Frozen drop at hook tip -->
+  <circle cx="186" cy="246" r="1.5" fill="#8a1818" opacity="0.6"/>
+  <circle cx="186" cy="246" r="0.8" fill="#d4e4ec" opacity="0.5"/>
+
+  <!-- Frost accumulation on shoulders and paper edges -->
+  <path d="M 50 80 Q 58 78 66 82" fill="none" stroke="#e8f0f6" stroke-width="1.5" opacity="0.6"/>
+  <path d="M 150 80 Q 142 78 134 82" fill="none" stroke="#e8f0f6" stroke-width="1.5" opacity="0.6"/>
+  <path d="M 46 100 Q 40 105 42 112" fill="none" stroke="#e8f0f6" stroke-width="1" opacity="0.5"/>
+  <path d="M 154 100 Q 160 105 158 112" fill="none" stroke="#e8f0f6" stroke-width="1" opacity="0.5"/>
+
+  <!-- Frost crystal bursts scattered on body -->
+  <g opacity="0.75">
+    <path d="M 68 146 L 66 142 M 68 146 L 70 142 M 68 146 L 66 150 M 68 146 L 70 150" stroke="#e8f0f6" stroke-width="0.4"/>
+  </g>
+  <g opacity="0.75">
+    <path d="M 132 146 L 130 142 M 132 146 L 134 142 M 132 146 L 130 150 M 132 146 L 134 150" stroke="#e8f0f6" stroke-width="0.4"/>
+  </g>
+  <g opacity="0.7">
+    <path d="M 84 196 L 82 192 M 84 196 L 86 192 M 84 196 L 82 200 M 84 196 L 86 200" stroke="#e8f0f6" stroke-width="0.4"/>
+  </g>
+  <g opacity="0.7">
+    <path d="M 116 196 L 114 192 M 116 196 L 118 192 M 116 196 L 114 200 M 116 196 L 118 200" stroke="#e8f0f6" stroke-width="0.4"/>
+  </g>
+  <g opacity="0.65">
+    <path d="M 98 96 L 96 92 M 98 96 L 100 92 M 98 96 L 96 100 M 98 96 L 100 100" stroke="#e8f0f6" stroke-width="0.4"/>
+  </g>
+
+  <!-- Breath mist rising from the head -->
+  <path d="M 94 70 Q 88 64 84 56 Q 82 48 86 42" fill="none" stroke="#b8d4e0" stroke-width="1.2" opacity="0.25" filter="url(#sk-mist)"/>
+  <path d="M 106 70 Q 112 64 116 56" fill="none" stroke="#b8d4e0" stroke-width="1" opacity="0.22" filter="url(#sk-mist)"/>
+
+  <!-- Frozen dripping blood trail on apron — stopped mid-flow -->
+  <path d="M 96 138 Q 94 154 96 170 L 98 184" fill="none" stroke="#5a1818" stroke-width="0.6" opacity="0.55"/>
+  <circle cx="98" cy="186" r="1" fill="#5a1818" opacity="0.55"/>
+  <path d="M 104 140 Q 106 152 104 162" fill="none" stroke="#5a1818" stroke-width="0.5" opacity="0.5"/>
+</svg>

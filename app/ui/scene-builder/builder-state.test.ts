@@ -19,7 +19,7 @@ describe("builderReducer decoration shell guards", () => {
       ...INITIAL_STATE,
       shell: { col: 0, row: 0, cols: 10, rows: 18, dirty: false },
     };
-    const placement = createPlacement("background/iso-bg-awning", "/test.svg", "decoration", 5, 9, {
+    const placement = createPlacement("background/iso-bg-bench", "/test.svg", "decoration", 5, 9, {
       footprintCols: 2,
       footprintRows: 1,
     });
@@ -32,7 +32,7 @@ describe("builderReducer decoration shell guards", () => {
   it("keeps decoration moves outside the shell but still allows exterior placements inside it", () => {
     const shell = { col: 0, row: 0, cols: 10, rows: 18, dirty: false };
     const decoration = {
-      ...createPlacement("background/iso-bg-awning", "/test.svg", "decoration", 12, 19, {
+      ...createPlacement("background/iso-bg-bench", "/test.svg", "decoration", 12, 19, {
         footprintCols: 2,
         footprintRows: 1,
       }),

@@ -2582,6 +2582,10 @@ export function resolveRaidBossRetreat(context: SimSystemContext, activeRaidId: 
   BuildingAuthority.activeRaidPackets[buildingEntity] = packets.filter(
     (candidate) => candidate.id !== activeRaidId,
   );
+  updateSummaryDerivedProgress(context);
+  checkDungeonClosure(context);
+  updateContractLifecycle(context);
+  reconcileAssignmentsSystem(context, 0);
   return true;
 }
 
@@ -2635,6 +2639,10 @@ export function resolveRaidBossEncounter(
   BuildingAuthority.activeRaidPackets[buildingEntity] = packets.filter(
     (candidate) => candidate.id !== encounter.activeRaidId,
   );
+  updateSummaryDerivedProgress(context);
+  checkDungeonClosure(context);
+  updateContractLifecycle(context);
+  reconcileAssignmentsSystem(context, 0);
   return true;
 }
 

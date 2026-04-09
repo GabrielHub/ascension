@@ -366,6 +366,64 @@ describe("encounter simulation", () => {
     expect(simulation.runtimeState.activeEncounter).toBeNull();
   });
 
+  it("restores a focused guidance freeze after the encounter resolves", async () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    simulation.runtimeState.guidanceState.openingPathState = "active";
+    simulation.runtimeState.guidanceState.activeBeatId = "guidance/opening/staffing-and-rooms";
+    simulation.runtimeState.guidanceState.activeBeatView = {
+      beatId: "guidance/opening/staffing-and-rooms",
+      track: "opening",
+      deliveryMode: "focused",
+      target: "ui/hq/category/rooms",
+      fallbackIntent: "hq/open-rooms",
+      copy: {
+        title: "Staffing and Rooms",
+        body: "Make one Rooms improvement.",
+        ctaLabel: "Make one Rooms change",
+      },
+      milestoneOrder: 10,
+      totalMilestones: 13,
+      completionKind: "staffing_action_taken",
+      pauseWorld: true,
+      allowSkip: false,
+    };
+    simulation.runtimeState.worldTimeFrozen = true;
+    simulation.runtimeState.interruptionQueue.active = null;
+    simulation.runtimeState.interruptionQueue.queue = [];
+    await deferredSimulationSystemsReady;
+
+    simulation.dispatch({ type: "sim/dev-trigger-boss-commitment" });
+    const activeInterruption = simulation.getPhase1View().activeInterruption;
+
+    simulation.dispatch({
+      type: "sim/interruption-resolve",
+      instanceId: activeInterruption?.instanceId ?? "missing",
+      choiceId: "commit",
+    });
+
+    const encounter = simulation.runtimeState.activeEncounter;
+    expect(encounter).not.toBeNull();
+    if (!encounter) {
+      return;
+    }
+
+    const boss = Object.values(encounter.actors).find((actor) => actor.kind === "boss");
+    expect(boss).toBeDefined();
+    if (!boss) {
+      return;
+    }
+
+    boss.currentHp = 0;
+    boss.condition = "incapacitated";
+    simulation.dispatch({ type: "sim/encounter-step" });
+
+    expect(simulation.runtimeState.activeEncounter?.status).toBe("victory");
+    expect(simulation.runtimeState.guidanceState.activeBeatId).toBe(
+      "guidance/opening/staffing-and-rooms",
+    );
+    expect(simulation.runtimeState.worldTimeFrozen).toBe(true);
+  });
+
   it("supports managerial interventions", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);

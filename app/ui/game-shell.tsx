@@ -40,19 +40,25 @@ import { ManagementPanel } from "./management-panel";
 import { MarketPanel } from "./market-panel";
 import { OperatorPortrait } from "./operator-portrait";
 import { OperatorCombatSummary } from "./operator-combat-summary";
+import { RoomCultureBadges, RoomDetailPanel } from "./room-detail-panel";
 import { OperationsPanel } from "./raid-panel";
 import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
 import { RaidWorldView } from "./raid-world-view";
 import { RosterPanel } from "./roster-panel";
 import { SettingsModal } from "./settings-modal";
+import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
 import { useEventLog } from "./use-event-log";
-import { getRecoveryStateSummary, getRosterFlowSurfaceSummary } from "./policy-summaries";
+import {
+  getRecoveryStateSummary,
+  getRetentionPressureLine,
+  getRosterFlowSurfaceSummary,
+} from "./policy-summaries";
 import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
 import { GuidanceHost } from "./guidance-host";
 import { AnchorRegistryProvider, useAnchorRegistry, useGuidanceAnchor } from "./guidance-anchor";
-import { getRoleMeta, getSpecialtyMeta } from "./_glossary";
+import { getCultureSummaryLabel, getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import {
   emptyStateClass,
   emptyStateIconClass,
@@ -78,8 +84,11 @@ import type {
   LootAutomationViewModel,
   MarketItemViewModel,
   OperatorViewModel,
+  RelationshipViewModel,
   RoomCultureViewModel,
+  RoomViewModel,
   TeamViewModel,
+  UpgradeViewModel,
   VisitorViewModel,
 } from "./view-models";
 
@@ -128,6 +137,22 @@ export function isTutorialSuppressibleGuidanceBeat(
   }
 
   return !PERSISTENT_GUIDANCE_COMPLETION_KINDS.has(beat.completionKind);
+}
+
+type GuidanceBeatSnapshot = RuntimeSession["phase1View"]["guidance"]["activeBeat"];
+
+export function isFocusedGuidanceBeatSuspended(
+  beat: Pick<NonNullable<GuidanceBeatSnapshot>, "deliveryMode"> | null | undefined,
+  activeInterruption: RuntimeSession["phase1View"]["activeInterruption"],
+  hasActiveEncounter: boolean,
+): boolean {
+  if (!beat || beat.deliveryMode !== "focused") {
+    return false;
+  }
+
+  return (
+    hasActiveEncounter || (activeInterruption !== null && activeInterruption.type !== "guidance")
+  );
 }
 
 export function getDefaultShellNavigation(request: RuntimeRouteRequest): ShellNavigationState {
@@ -431,17 +456,35 @@ function ErrorShell({ message }: { message: string }) {
 function FocusedOperatorOverlay({
   operator,
   policies,
+  relationships,
+  teams,
+  roomCultures,
   onDismiss,
 }: {
   operator: OperatorViewModel;
   policies: PolicyState;
+  relationships: readonly RelationshipViewModel[];
+  teams: readonly TeamViewModel[];
+  roomCultures: readonly RoomCultureViewModel[];
   onDismiss: () => void;
 }) {
   const recoverySummary = getRecoveryStateSummary(operator, policies);
+  const retentionLine =
+    operator.retentionRisk || operator.lifecycle.status === "departed"
+      ? getRetentionPressureLine(policies.rosterFlow, operator.lifecycle.status)
+      : null;
+  const operatorTeam = teams.find((team) => team.memberIds.includes(operator.id)) ?? null;
+  const assignedRoomCulture =
+    operator.assignmentKind === "room" && operator.assignmentTargetId
+      ? (roomCultures.find((rc) => rc.roomId === operator.assignmentTargetId) ?? null)
+      : null;
+  const bonds = relationships.filter(
+    (r) => r.operatorAId === operator.id || r.operatorBId === operator.id,
+  );
 
   return (
-    <div className="glass-card pointer-events-auto animate-enter w-72 p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="glass-card pointer-events-auto animate-enter flex max-h-[calc(100vh-120px)] w-[26rem] flex-col overflow-hidden">
+      <div className="flex items-start justify-between gap-3 border-b border-[rgba(200,168,76,0.08)] p-4 pb-3">
         <div className="flex items-start gap-3">
           <OperatorPortrait
             name={operator.name}
@@ -459,6 +502,11 @@ function FocusedOperatorOverlay({
                 {getSpecialtyMeta(operator.specialtyTag).label}
               </p>
             )}
+            {operator.availableForRaid && (
+              <Tooltip content="Healthy and unassigned — can join a raid" side="top">
+                <span className="mt-1 inline-block text-sm text-gold/70">Raid-ready</span>
+              </Tooltip>
+            )}
           </div>
         </div>
         <button
@@ -471,94 +519,238 @@ function FocusedOperatorOverlay({
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-        <Tooltip content="What this operator wants to do right now">
-          <div className="glass-card-inset p-2">
-            <p className="uppercase tracking-[0.12em] text-gold/60">Intent</p>
-            <p className="mt-1 text-silver-bright">{operator.intent}</p>
-          </div>
-        </Tooltip>
-        <Tooltip content="Overall combat readiness score">
-          <div className="glass-card-inset p-2">
-            <p className="uppercase tracking-[0.12em] text-gold/60">Readiness</p>
-            <p className="mt-1 tabular-nums text-silver-bright">
-              {Math.round(operator.readinessScore)}
-            </p>
-          </div>
-        </Tooltip>
-        <Tooltip content="Low morale risks task refusal or departure">
-          <div className="glass-card-inset p-2">
-            <p className="uppercase tracking-[0.12em] text-gold/60">Morale</p>
-            <p className="mt-1 tabular-nums text-silver-bright">
-              {Math.round(operator.moraleCurrent)}
-            </p>
-          </div>
-        </Tooltip>
-        <Tooltip content="Low loyalty increases the chance of quitting">
-          <div className="glass-card-inset p-2">
-            <p className="uppercase tracking-[0.12em] text-gold/60">Loyalty</p>
-            <p className="mt-1 tabular-nums text-silver-bright">
-              {Math.round(operator.loyaltyCurrent)}
-            </p>
-          </div>
-        </Tooltip>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2 text-sm text-silver/60">
-        <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
-          <span>Fatigue {Math.round(operator.needFatigue)}</span>
-        </Tooltip>
-        <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
-          <span>Stress {Math.round(operator.needStress)}</span>
-        </Tooltip>
-        {operator.injurySeverity > 0 && (
-          <Tooltip content="Time remaining until fully recovered" side="top">
-            <span className="text-ember">Injured ({Math.ceil(operator.injuryRecoveryHours)}h)</span>
+      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <Tooltip content="What this operator wants to do right now">
+            <div className="glass-card-inset p-2">
+              <p className="uppercase tracking-[0.12em] text-gold/60">Intent</p>
+              <p className="mt-1 text-sm text-silver-bright">{operator.intent}</p>
+            </div>
           </Tooltip>
-        )}
-        {operator.availableForRaid && (
-          <Tooltip content="Healthy and unassigned — can join a raid" side="top">
-            <span className="text-gold/70">Raid-ready</span>
+          <Tooltip content="Overall combat readiness score">
+            <div className="glass-card-inset p-2">
+              <p className="uppercase tracking-[0.12em] text-gold/60">Readiness</p>
+              <p className="mt-1 text-sm tabular-nums text-silver-bright">
+                {Math.round(operator.readinessScore)}
+              </p>
+            </div>
           </Tooltip>
-        )}
-      </div>
-
-      <div className="mt-3 border-t border-[rgba(200,168,76,0.06)] pt-3">
-        <OperatorCombatSummary combat={operator.combat} title="Field Kit" />
-      </div>
-
-      {/* Phase 2: Autonomy risk warnings */}
-      {(operator.refusalRisk || operator.quitRisk || operator.retentionRisk) && (
-        <div className="mt-2 space-y-1 border-t border-[rgba(200,168,76,0.06)] pt-2">
-          {operator.autonomyReasons.map((reason) => (
-            <p
-              key={reason}
-              className={`text-sm ${operator.quitRisk ? "text-magma" : "text-ember"}`}
-            >
-              {reason}
-            </p>
-          ))}
         </div>
-      )}
 
-      {recoverySummary && (
-        <div className="mt-2 space-y-1 rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2">
+        <div className="space-y-2">
+          <StatBar
+            label="Morale"
+            value={Math.round(operator.moraleCurrent)}
+            max={100}
+            tip="How the operator feels. Low morale risks refusal or departure"
+          />
+          <StatBar
+            label="Loyalty"
+            value={Math.round(operator.loyaltyCurrent)}
+            max={100}
+            tip="Commitment to the team. Low loyalty increases quit risk"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-sm text-silver/60">
+          <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
+            <span>Fatigue {Math.round(operator.needFatigue)}</span>
+          </Tooltip>
+          <span className="opacity-30">&middot;</span>
+          <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
+            <span>Stress {Math.round(operator.needStress)}</span>
+          </Tooltip>
+          {operator.injurySeverity > 0 && (
+            <>
+              <span className="opacity-30">&middot;</span>
+              <Tooltip content="Time remaining until fully recovered" side="top">
+                <span className="text-ember">
+                  Injured ({Math.ceil(operator.injuryRecoveryHours)}h)
+                </span>
+              </Tooltip>
+            </>
+          )}
+        </div>
+
+        {(operator.refusalRisk || operator.quitRisk || operator.retentionRisk) &&
+          operator.autonomyReasons.length > 0 && (
+            <div className="space-y-1">
+              {operator.autonomyReasons.map((reason) => (
+                <div
+                  key={reason}
+                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm shadow-[inset_2px_0_0_currentColor] ${
+                    operator.quitRisk ? "bg-magma/8 text-magma" : "bg-ember/8 text-ember"
+                  }`}
+                >
+                  {reason}
+                </div>
+              ))}
+            </div>
+          )}
+
+        {recoverySummary && (
+          <div className="glass-card-inset space-y-1.5 px-2 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs uppercase tracking-[0.12em] text-gold/55">
+                {recoverySummary.statusLabel}
+              </span>
+              <span className="text-xs text-ember">
+                {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed text-silver/60">{recoverySummary.reason}</p>
+            {recoverySummary.policyLines.map((line) => (
+              <p key={line} className="text-sm leading-relaxed text-gold/70">
+                {line}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {retentionLine && (
+          <div className="glass-card-inset px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
+                Retention Pressure
+              </span>
+              <span className="text-xs text-ember">
+                {getPolicyOptionLabel("rosterFlow", policies.rosterFlow)}
+              </span>
+            </div>
+            <p className="mt-0.5 text-sm leading-relaxed text-silver/60">{retentionLine}</p>
+          </div>
+        )}
+
+        <div className="glass-card-inset px-2 py-1.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs uppercase tracking-[0.12em] text-gold/55">
-              {recoverySummary.statusLabel}
+            <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
+              Training Readiness
             </span>
-            <span className="text-xs text-ember">
-              {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
+            <span className="text-sm text-gold">
+              {operator.training.statusLabel} ({operator.training.average})
             </span>
           </div>
-          <p className="text-sm leading-relaxed text-silver/60">{recoverySummary.reason}</p>
-          {recoverySummary.policyLines.map((line) => (
-            <p key={line} className="text-sm leading-relaxed text-gold/70">
-              {line}
-            </p>
-          ))}
+          <div className="mt-1 flex flex-wrap gap-2 text-sm text-silver/55">
+            <span>STR +{operator.training.bonuses.strength}</span>
+            <span>SPD +{operator.training.bonuses.speed}</span>
+            <span>END +{operator.training.bonuses.endurance}</span>
+            <span>RES +{operator.training.bonuses.resilience}</span>
+          </div>
         </div>
-      )}
+
+        <div className="border-t border-[rgba(200,168,76,0.06)] pt-3">
+          <OperatorCombatSummary combat={operator.combat} title="Field Kit" />
+        </div>
+
+        {operatorTeam && (
+          <div className="glass-card-inset px-2 py-1.5">
+            <div className="text-xs uppercase tracking-[0.12em] text-gold/50">Team</div>
+            <div className="mt-0.5 text-sm text-silver/60">{operatorTeam.statusSummary}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-silver/50">
+              <span>{operatorTeam.memberNames.join(", ")}</span>
+              <span className="opacity-30">&middot;</span>
+              <Tooltip content="Team coordination. Builds through shared missions" side="top">
+                <span>Cohesion {Math.round(operatorTeam.cohesion)}</span>
+              </Tooltip>
+            </div>
+            {operatorTeam.explanationReasons.slice(0, 2).map((reason) => (
+              <div key={reason} className="mt-1 text-sm text-silver/50">
+                {reason}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {assignedRoomCulture && (
+          <div className="glass-card-inset px-2 py-1.5">
+            <div className="text-xs uppercase tracking-[0.12em] text-gold/50">
+              Room: {assignedRoomCulture.roomName}
+            </div>
+            <div className="mt-0.5 text-sm text-silver/55">
+              {getCultureSummaryLabel(assignedRoomCulture.summary)}
+            </div>
+            <RoomCultureBadges
+              culture={assignedRoomCulture}
+              className="mt-1 flex flex-wrap gap-1"
+            />
+          </div>
+        )}
+
+        {bonds.length > 0 && (
+          <div>
+            <Tooltip content="Interpersonal relationships formed through shared work" side="top">
+              <div className="mb-1 text-sm uppercase tracking-[0.12em] text-gold/50">Bonds</div>
+            </Tooltip>
+            {bonds.map((rel) => {
+              const partnerName =
+                rel.operatorAId === operator.id ? rel.operatorBName : rel.operatorAName;
+              const cohesion =
+                rel.cohesion >= 50
+                  ? {
+                      label: "Strong",
+                      className: "text-gold/70",
+                      tip: "Close bond — strong mutual trust",
+                    }
+                  : rel.cohesion >= 20
+                    ? {
+                        label: "Fair",
+                        className: "text-silver/50",
+                        tip: "Developing bond — building rapport",
+                      }
+                    : {
+                        label: "Fragile",
+                        className: "text-ember",
+                        tip: "Fragile bond — may weaken further",
+                      };
+              return (
+                <div
+                  key={`${rel.operatorAId}-${rel.operatorBId}`}
+                  className="flex items-center justify-between py-0.5 text-sm"
+                >
+                  <span className="text-silver/70">{partnerName}</span>
+                  <Tooltip content={cohesion.tip} side="top">
+                    <span className={cohesion.className}>{cohesion.label}</span>
+                  </Tooltip>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FocusedRoomOverlay({
+  guildName,
+  room,
+  buildingUpgrades,
+  roomUpgrades,
+  callbacks,
+  roomCulture,
+  onDismiss,
+}: {
+  guildName: string;
+  room: RoomViewModel;
+  buildingUpgrades: readonly UpgradeViewModel[];
+  roomUpgrades: readonly UpgradeViewModel[];
+  callbacks: GameCallbacks;
+  roomCulture: RoomCultureViewModel | null;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="glass-card pointer-events-auto animate-enter flex max-h-[calc(100vh-120px)] w-[36rem] flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto px-5 py-4">
+        <RoomDetailPanel
+          guildName={guildName}
+          room={room}
+          buildingUpgrades={buildingUpgrades}
+          roomUpgrades={roomUpgrades}
+          callbacks={callbacks}
+          roomCulture={roomCulture}
+          onClose={onDismiss}
+        />
+      </div>
     </div>
   );
 }
@@ -1434,6 +1626,11 @@ export function GameShell() {
     : { current: 0, total: 13 };
   const activeGuidanceInterruption =
     phase1View?.activeInterruption?.type === "guidance" ? phase1View.activeInterruption : null;
+  const suspendFocusedGuidanceBeat = isFocusedGuidanceBeatSuspended(
+    guidanceBeat,
+    phase1View?.activeInterruption ?? null,
+    phase1View?.encounter != null,
+  );
   const suppressTutorialInterruption =
     !settings.tutorialEventsEnabled &&
     isTutorialSuppressibleGuidanceBeat(activeGuidanceInterruption?.payload);
@@ -1524,6 +1721,7 @@ export function GameShell() {
     if (
       !guidanceBeat ||
       !session ||
+      suspendFocusedGuidanceBeat ||
       guidanceBeat.deliveryMode === "blocking" ||
       !guidanceBeat.target
     ) {
@@ -1551,7 +1749,13 @@ export function GameShell() {
       anchorId: guidanceBeat.target,
       fallbackUsed: true,
     });
-  }, [applyGuidanceFallbackIntent, guidanceAnchorBounds, guidanceBeat, session]);
+  }, [
+    applyGuidanceFallbackIntent,
+    guidanceAnchorBounds,
+    guidanceBeat,
+    session,
+    suspendFocusedGuidanceBeat,
+  ]);
 
   // Handle UI-signaled guidance completion (target_opened, market_opened)
   useEffect(() => {
@@ -1570,7 +1774,7 @@ export function GameShell() {
   }, [guidanceBeat, session, suppressTutorialBeat]);
 
   useEffect(() => {
-    if (!guidanceBeat || !session) {
+    if (!guidanceBeat || !session || suspendFocusedGuidanceBeat) {
       return;
     }
 
@@ -1584,15 +1788,11 @@ export function GameShell() {
         beatId: guidanceBeat.beatId,
         signal: "market_opened",
       });
-      return;
     }
-
-    // Beats with requiresManualCompletion need the user to click the CTA button.
-    if (guidanceBeat.requiresManualCompletion) return;
-  }, [activeTab, guidanceBeat, hqCategory, session]);
+  }, [activeTab, guidanceBeat, hqCategory, session, suspendFocusedGuidanceBeat]);
 
   useEffect(() => {
-    if (!guidanceBeat || !session || !focus) {
+    if (!guidanceBeat || !session || !focus || suspendFocusedGuidanceBeat) {
       return;
     }
 
@@ -1603,11 +1803,21 @@ export function GameShell() {
         signal: "room_inspected",
       });
     }
-  }, [focus, guidanceBeat, session]);
+  }, [focus, guidanceBeat, session, suspendFocusedGuidanceBeat]);
 
-  const handleInspectOperator = useCallback(
-    (_operatorId: string) => {
-      if (!session || guidanceBeat?.completionKind !== "operator_inspected") {
+  const handleSelectOperator = useCallback(
+    (operatorId: string) => {
+      setFocus((prev) =>
+        prev?.targetKind === "operator" && prev.targetId === operatorId
+          ? null
+          : { targetKind: "operator", targetId: operatorId, highlightBounds: null },
+      );
+
+      if (
+        !session ||
+        suspendFocusedGuidanceBeat ||
+        guidanceBeat?.completionKind !== "operator_inspected"
+      ) {
         return;
       }
 
@@ -1617,7 +1827,7 @@ export function GameShell() {
         signal: "operator_inspected",
       });
     },
-    [guidanceBeat, session],
+    [guidanceBeat, session, suspendFocusedGuidanceBeat],
   );
 
   useEffect(() => {
@@ -1687,6 +1897,31 @@ export function GameShell() {
     [focusedRaidState],
   );
 
+  const focusedOperator = useMemo(() => {
+    if (!hq || activeTab !== "hq" || focus?.targetKind !== "operator") return null;
+    return hq.operators.find((operator) => operator.id === focus.targetId) ?? null;
+  }, [hq, activeTab, focus]);
+  const focusedRoom = useMemo(() => {
+    if (!hq || activeTab !== "hq" || focus?.targetKind !== "room") return null;
+    return hq.rooms.find((room) => room.id === focus.targetId) ?? null;
+  }, [hq, activeTab, focus]);
+  const focusedVisitor = useMemo(() => {
+    if (!hq || activeTab !== "hq" || focus?.targetKind !== "visitor") return null;
+    return hq.visitors.find((v) => v.id === focus.targetId) ?? null;
+  }, [hq, activeTab, focus]);
+  const focusedRaidTeam = useMemo(() => {
+    if (activeTab !== "operations" || focus?.targetKind !== "team") return null;
+    return raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null;
+  }, [raidWorldSnapshot, activeTab, focus]);
+  const focusedRoomUpgrades = useMemo(() => {
+    if (!hq || !focusedRoom) return [];
+    return hq.roomUpgrades.filter((upgrade) => upgrade.targetId === focusedRoom.templateId);
+  }, [hq, focusedRoom]);
+  const focusedRoomCulture = useMemo(() => {
+    if (!focusedRoom) return null;
+    return roomCultures.find((roomCulture) => roomCulture.roomId === focusedRoom.id) ?? null;
+  }, [roomCultures, focusedRoom]);
+
   if (status === "error") {
     return (
       <ErrorShell message={errorMessage ?? "The requested runtime session could not be opened."} />
@@ -1697,25 +1932,7 @@ export function GameShell() {
     return <LoadingShell />;
   }
 
-  const focusedOperator =
-    activeTab === "hq" && focus?.targetKind === "operator"
-      ? (hq.operators.find((operator) => operator.id === focus.targetId) ?? null)
-      : null;
-  const focusedVisitor =
-    activeTab === "hq" && focus?.targetKind === "visitor"
-      ? (hq.visitors.find((v) => v.id === focus.targetId) ?? null)
-      : null;
-  const focusedRaidTeam =
-    activeTab === "operations" && focus?.targetKind === "team"
-      ? (raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null)
-      : null;
-
-  const focusedOperatorId =
-    focus?.targetKind === "operator" ||
-    focus?.targetKind === "staff" ||
-    focus?.targetKind === "visitor"
-      ? focus.targetId
-      : null;
+  const focusedOperatorId = focus?.targetKind === "operator" ? focus.targetId : null;
   const persistenceTimestamp = formatPersistenceTimestamp(session.persistence.lastSavedAt);
   const persistenceLabel =
     session.isPreview || !session.isSaveBacked
@@ -2036,10 +2253,25 @@ export function GameShell() {
               <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
             </div>
 
+            {focusedRoom && (
+              <FocusedRoomOverlay
+                guildName={hq.guild.guildName}
+                room={focusedRoom}
+                buildingUpgrades={hq.upgrades}
+                roomUpgrades={focusedRoomUpgrades}
+                callbacks={callbacks}
+                roomCulture={focusedRoomCulture}
+                onDismiss={() => setFocus(null)}
+              />
+            )}
+
             {focusedOperator && (
               <FocusedOperatorOverlay
                 operator={focusedOperator}
                 policies={hq.policies}
+                relationships={hq.relationships}
+                teams={teams}
+                roomCultures={roomCultures}
                 onDismiss={() => setFocus(null)}
               />
             )}
@@ -2115,7 +2347,6 @@ export function GameShell() {
                       callbacks={callbacks}
                       focus={focus}
                       onFocusChange={handleFocusChange}
-                      onClearFocus={() => setFocus(null)}
                       roomCultures={roomCultures}
                     />
                   )}
@@ -2124,15 +2355,12 @@ export function GameShell() {
                       operators={hq.operators}
                       staff={hq.staff}
                       visitors={hq.visitors}
-                      relationships={hq.relationships}
                       rooms={hq.rooms}
                       callbacks={callbacks}
                       rosterPressure={hq.rosterPressure}
                       policies={hq.policies}
                       focusedOperatorId={focusedOperatorId}
-                      roomCultures={roomCultures}
-                      teams={teams}
-                      onInspectOperator={handleInspectOperator}
+                      onSelectOperator={handleSelectOperator}
                     />
                   )}
                   {activeTab === "hq" && hqCategory === "management" && (
@@ -2283,7 +2511,7 @@ export function GameShell() {
         )}
 
         {/* ── Guidance host (focused beats with spotlight/coachmark) ── */}
-        {guidanceBeat && !suppressTutorialBeat && (
+        {guidanceBeat && !suppressTutorialBeat && !suspendFocusedGuidanceBeat && (
           <GuidanceHost
             activeBeat={guidanceBeat}
             anchorBounds={guidanceAnchorBounds}

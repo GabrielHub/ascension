@@ -186,4 +186,19 @@ describe("room detail panel", () => {
     expect(dockHtml).toContain("shortening departures");
     expect(deckHtml).toContain("waterfront morale reset");
   });
+
+  it("renders a close control when the detail surface is hosted in the shell overlay", () => {
+    const html = renderToStaticMarkup(
+      <RoomDetailPanel
+        guildName="Porter's"
+        room={makeTrainingRoom()}
+        buildingUpgrades={[]}
+        roomUpgrades={[]}
+        callbacks={callbacks}
+        onClose={() => {}}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Close room detail"');
+  });
 });

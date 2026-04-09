@@ -1,50 +1,29 @@
 import { useEffect, useState } from "react";
 
-import { getPolicyOptionLabel, type PolicyState } from "lib/policies";
+import { type PolicyState } from "lib/policies";
 
 import type {
   GameCallbacks,
   OperatorViewModel,
-  RelationshipViewModel,
-  RoomCultureViewModel,
   RoomViewModel,
   RosterPressureViewModel,
   StaffViewModel,
-  TeamViewModel,
   VisitorViewModel,
 } from "./view-models";
-import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
-import {
-  getRecoveryStateSummary,
-  getRetentionPressureLine,
-  getRosterFlowSurfaceSummary,
-  getStaffingPrioritySurfaceSummary,
-} from "./policy-summaries";
-import {
-  getCultureSummaryLabel,
-  getRoleMeta,
-  getSignalMeta,
-  getSpecialtyMeta,
-  getTagMeta,
-  getToneMeta,
-} from "./_glossary";
-import { OperatorPortrait } from "./operator-portrait";
-import { OperatorCombatSummary } from "./operator-combat-summary";
+import { getRosterFlowSurfaceSummary, getStaffingPrioritySurfaceSummary } from "./policy-summaries";
+import { getRoleMeta, getSpecialtyMeta, getTagMeta } from "./_glossary";
 
 interface RosterPanelProps {
   operators: readonly OperatorViewModel[];
   staff: readonly StaffViewModel[];
   visitors: readonly VisitorViewModel[];
-  relationships: readonly RelationshipViewModel[];
   rooms: readonly RoomViewModel[];
   callbacks: GameCallbacks;
   rosterPressure: RosterPressureViewModel;
   policies: PolicyState;
   focusedOperatorId?: string | null;
-  roomCultures?: readonly RoomCultureViewModel[];
-  teams?: readonly TeamViewModel[];
-  onInspectOperator?: (operatorId: string) => void;
+  onSelectOperator?: (operatorId: string) => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -83,42 +62,20 @@ function statusLabelClass(op: OperatorViewModel): string {
 
 function OperatorRow({
   op,
-  isExpanded,
-  onToggle,
-  bonds,
-  roomCultures,
-  teams,
-  policies,
+  isFocused,
+  onSelect,
 }: {
   op: OperatorViewModel;
-  isExpanded: boolean;
-  onToggle: () => void;
-  bonds: readonly RelationshipViewModel[];
-  roomCultures: readonly RoomCultureViewModel[];
-  teams: readonly TeamViewModel[];
-  policies: PolicyState;
+  isFocused: boolean;
+  onSelect: () => void;
 }) {
-  // Find room culture if assigned to a room
-  const assignedRoomCulture =
-    op.assignmentKind === "room" && op.assignmentTargetId
-      ? (roomCultures.find((rc) => rc.roomId === op.assignmentTargetId) ?? null)
-      : null;
-
-  // Find team membership
-  const operatorTeam = teams.find((team) => team.memberIds.includes(op.id)) ?? null;
-  const recoverySummary = getRecoveryStateSummary(op, policies);
-  const retentionLine =
-    op.retentionRisk || op.lifecycle.status === "departed"
-      ? getRetentionPressureLine(policies.rosterFlow, op.lifecycle.status)
-      : null;
-
   return (
     <div data-testid="operator-row" data-operator-id={op.id}>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={onSelect}
         className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 ${
-          isExpanded
+          isFocused
             ? "bg-[rgba(200,168,76,0.06)] shadow-[inset_2px_0_0_var(--color-gold)]"
             : "hover:bg-[rgba(200,168,76,0.03)]"
         }`}
@@ -139,220 +96,6 @@ function OperatorRow({
         <span className="badge badge-gold ml-auto shrink-0">{getRoleMeta(op.roleTag).label}</span>
         <span className={`shrink-0 text-sm ${statusLabelClass(op)}`}>{statusLabel(op)}</span>
       </button>
-
-      {isExpanded && (
-        <div className="animate-enter ml-4 mt-1.5 space-y-2.5 border-l border-gold/10 pl-3 pb-2">
-          {/* Portrait + identity */}
-          <div className="flex items-start gap-3">
-            <OperatorPortrait
-              name={op.name}
-              roleTag={op.roleTag}
-              presetId={op.appearancePresetId}
-              size="card"
-            />
-            <div className="min-w-0 flex-1 pt-0.5">
-              <div className="text-xs text-silver-bright">{op.name}</div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="badge badge-gold">{getRoleMeta(op.roleTag).label}</span>
-                {op.specialtyTag && (
-                  <span className="text-sm text-gold/60">
-                    {getSpecialtyMeta(op.specialtyTag).label}
-                  </span>
-                )}
-                <span className="badge badge-slate">Rank {op.combat.rank.toUpperCase()}</span>
-              </div>
-              {op.availableForRaid && (
-                <Tooltip content="Healthy and unassigned — can join a raid" side="top">
-                  <span className="mt-1 inline-block text-sm text-gold/70">Raid-ready</span>
-                </Tooltip>
-              )}
-            </div>
-          </div>
-
-          {/* Stat bars */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-            <StatBar
-              label="Morale"
-              value={Math.round(op.moraleCurrent)}
-              max={100}
-              tip="How the operator feels. Low morale risks refusal or departure"
-            />
-            <StatBar
-              label="Loyalty"
-              value={Math.round(op.loyaltyCurrent)}
-              max={100}
-              tip="Commitment to the team. Low loyalty increases quit risk"
-            />
-          </div>
-
-          {/* Needs */}
-          <div className="flex items-center gap-2 text-sm text-silver/50">
-            <Tooltip content="Physical tiredness. Builds on duty, recovers at rest" side="top">
-              <span>Fatigue {Math.round(op.needFatigue)}</span>
-            </Tooltip>
-            <span className="opacity-30">&middot;</span>
-            <Tooltip content="Mental strain. Reduces effectiveness when high" side="top">
-              <span>Stress {Math.round(op.needStress)}</span>
-            </Tooltip>
-          </div>
-
-          <div className="glass-card-inset px-2 py-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
-                Training Readiness
-              </span>
-              <span className="text-sm text-gold">
-                {op.training.statusLabel} ({op.training.average})
-              </span>
-            </div>
-            <div className="mt-1 flex flex-wrap gap-2 text-sm text-silver/55">
-              <span>STR +{op.training.bonuses.strength}</span>
-              <span>SPD +{op.training.bonuses.speed}</span>
-              <span>END +{op.training.bonuses.endurance}</span>
-              <span>RES +{op.training.bonuses.resilience}</span>
-            </div>
-            <p className="mt-1 text-sm leading-relaxed text-silver/50">
-              Bounded physical prep from gym time. It improves raid readiness without changing role,
-              attunement, or rank.
-            </p>
-          </div>
-
-          <div className="border-t border-gold/10 pt-2">
-            <OperatorCombatSummary combat={op.combat} />
-          </div>
-
-          {/* ── Phase 2: Explanation surfaces ──────────────────── */}
-          {(op.refusalRisk || op.quitRisk || op.retentionRisk) && (
-            <div className="space-y-1">
-              {op.autonomyReasons.map((reason) => (
-                <div
-                  key={reason}
-                  className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm shadow-[inset_2px_0_0_currentColor] ${
-                    op.quitRisk ? "bg-magma/8 text-magma" : "bg-ember/8 text-ember"
-                  }`}
-                >
-                  {reason}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {recoverySummary && (
-            <div className="glass-card-inset space-y-1.5 px-2 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
-                  {recoverySummary.statusLabel}
-                </span>
-                <span className="text-xs text-ember">
-                  {getPolicyOptionLabel("recoveryTriage", policies.recoveryTriage)}
-                </span>
-              </div>
-              <p className="text-sm leading-relaxed text-silver/60">{recoverySummary.reason}</p>
-              {recoverySummary.policyLines.map((line) => (
-                <p key={line} className="text-sm leading-relaxed text-gold/70">
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {retentionLine && (
-            <div className="glass-card-inset px-2 py-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs uppercase tracking-[0.12em] text-gold/50">
-                  Retention Pressure
-                </span>
-                <span className="text-xs text-ember">
-                  {getPolicyOptionLabel("rosterFlow", policies.rosterFlow)}
-                </span>
-              </div>
-              <p className="mt-0.5 text-sm leading-relaxed text-silver/60">{retentionLine}</p>
-            </div>
-          )}
-
-          {/* Phase 2: Room culture summary if assigned to a room */}
-          {assignedRoomCulture && (
-            <div className="glass-card-inset px-2 py-1.5">
-              <div className="text-xs uppercase tracking-[0.12em] text-gold/50">
-                Room: {assignedRoomCulture.roomName}
-              </div>
-              <div className="mt-0.5 text-sm text-silver/55">
-                {getCultureSummaryLabel(assignedRoomCulture.summary)}
-              </div>
-              <div className="mt-1 flex flex-wrap gap-1">
-                <Tooltip content={getToneMeta(assignedRoomCulture.tone || "neutral").tip}>
-                  <span className="badge badge-slate">
-                    {getToneMeta(assignedRoomCulture.tone || "neutral").label}
-                  </span>
-                </Tooltip>
-                {assignedRoomCulture.signals.map((signal) => (
-                  <Tooltip key={signal} content={getSignalMeta(signal).tip}>
-                    <span className="badge badge-slate">{getSignalMeta(signal).label}</span>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Phase 2: Team affiliation */}
-          {operatorTeam && (
-            <div className="glass-card-inset px-2 py-1.5">
-              <div className="text-xs uppercase tracking-[0.12em] text-gold/50">Team</div>
-              <div className="mt-0.5 text-sm text-silver/60">{operatorTeam.statusSummary}</div>
-              <div className="mt-1 flex items-center gap-2 text-sm text-silver/50">
-                <span>{operatorTeam.memberNames.join(", ")}</span>
-                <span className="opacity-30">&middot;</span>
-                <Tooltip content="Team coordination. Builds through shared missions" side="top">
-                  <span>Cohesion {Math.round(operatorTeam.cohesion)}</span>
-                </Tooltip>
-              </div>
-              {operatorTeam.explanationReasons.slice(0, 2).map((reason) => (
-                <div key={reason} className="mt-1 text-sm text-silver/50">
-                  {reason}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Bonds for this operator */}
-          {bonds.length > 0 && (
-            <div>
-              <Tooltip content="Interpersonal relationships formed through shared work" side="top">
-                <div className="mb-1 text-sm uppercase tracking-[0.12em] text-gold/50">Bonds</div>
-              </Tooltip>
-              {bonds.map((rel) => {
-                const partnerName =
-                  rel.operatorAId === op.id ? rel.operatorBName : rel.operatorAName;
-                const cohesionLabel =
-                  rel.cohesion >= 50 ? "Strong" : rel.cohesion >= 20 ? "Fair" : "Fragile";
-                const cohesionClass =
-                  rel.cohesion >= 50
-                    ? "text-gold/70"
-                    : rel.cohesion >= 20
-                      ? "text-silver/50"
-                      : "text-ember";
-                const cohesionTip =
-                  rel.cohesion >= 50
-                    ? "Close bond — strong mutual trust"
-                    : rel.cohesion >= 20
-                      ? "Developing bond — building rapport"
-                      : "Fragile bond — may weaken further";
-                return (
-                  <div
-                    key={`${rel.operatorAId}-${rel.operatorBId}`}
-                    className="flex items-center justify-between py-0.5 text-sm"
-                  >
-                    <span className="text-silver/70">{partnerName}</span>
-                    <Tooltip content={cohesionTip} side="top">
-                      <span className={cohesionClass}>{cohesionLabel}</span>
-                    </Tooltip>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -699,17 +442,14 @@ export function RosterPanel({
   operators,
   staff,
   visitors,
-  relationships,
   rooms,
   callbacks,
   rosterPressure,
   policies,
   focusedOperatorId = null,
-  roomCultures = [],
-  teams = [],
-  onInspectOperator,
+  onSelectOperator,
 }: RosterPanelProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(focusedOperatorId ?? null);
+  const [expandedStaffId, setExpandedStaffId] = useState<string | null>(null);
   const [replacementVisitorId, setReplacementVisitorId] = useState<string | null>(null);
 
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
@@ -720,19 +460,7 @@ export function RosterPanel({
   const staffingSummary = getStaffingPrioritySurfaceSummary(policies.staffingPriority);
   const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
 
-  useEffect(() => {
-    if (!focusedOperatorId) return;
-    setExpandedId(focusedOperatorId);
-  }, [focusedOperatorId]);
-
-  const toggle = (id: string) =>
-    setExpandedId((prev) => {
-      const nextId = prev === id ? null : id;
-      if (nextId === id) {
-        onInspectOperator?.(id);
-      }
-      return nextId;
-    });
+  const toggleStaff = (id: string) => setExpandedStaffId((prev) => (prev === id ? null : id));
 
   useEffect(() => {
     if (!replacementVisitorId) return;
@@ -805,14 +533,8 @@ export function RosterPanel({
               <OperatorRow
                 key={op.id}
                 op={op}
-                isExpanded={expandedId === op.id}
-                onToggle={() => toggle(op.id)}
-                bonds={relationships.filter(
-                  (r) => r.operatorAId === op.id || r.operatorBId === op.id,
-                )}
-                roomCultures={roomCultures}
-                teams={teams}
-                policies={policies}
+                isFocused={focusedOperatorId === op.id}
+                onSelect={() => onSelectOperator?.(op.id)}
               />
             ))}
           </div>
@@ -856,8 +578,8 @@ export function RosterPanel({
                 key={s.id}
                 member={s}
                 rooms={rooms}
-                isExpanded={expandedId === s.id}
-                onToggle={() => toggle(s.id)}
+                isExpanded={expandedStaffId === s.id}
+                onToggle={() => toggleStaff(s.id)}
                 onAssign={(roomId) => callbacks.assignStaff(s.id, roomId)}
               />
             ))}

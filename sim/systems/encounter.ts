@@ -36,6 +36,7 @@ import {
   WorldTimeState,
 } from "../components";
 import { pushRuntimeEvent } from "./commands";
+import { hasActiveFocusedGuidancePause } from "./guidance";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import { seedFromSimulationKey } from "./seed-utils";
 
@@ -1148,8 +1149,10 @@ export function writeEncounterOutcome(
     });
   }
 
-  // Unfreeze world time
-  context.runtimeState.worldTimeFrozen = false;
+  // Restore shell-owned guidance freezes after the encounter resolves.
+  context.runtimeState.worldTimeFrozen = hasActiveFocusedGuidancePause(
+    context.runtimeState.guidanceState,
+  );
 }
 
 // ── Save/load ────────────────────────────────────────────────────────────

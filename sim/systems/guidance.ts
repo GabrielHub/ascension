@@ -168,6 +168,12 @@ export interface GuidanceState {
   openingTiming?: GuidanceOpeningTimingState;
 }
 
+export function hasActiveFocusedGuidancePause(
+  state: Pick<GuidanceState, "activeBeatView">,
+): boolean {
+  return state.activeBeatView?.deliveryMode === "focused" && state.activeBeatView.pauseWorld;
+}
+
 export function createGuidanceState(
   openingPathState: OpeningPathState = "completed",
 ): GuidanceState {
@@ -547,6 +553,9 @@ export function recordGuidanceInteraction(
     return;
   }
 
+  // Opening beat 10 should clear on any meaningful Rooms management action,
+  // including upgrades, not just staffing-specific changes.
+  state.interactionCounts.staffingActions += 1;
   state.interactionCounts.upgradesPurchased += 1;
   state.lastPurchasedUpgradeId = upgradeId ?? null;
 }

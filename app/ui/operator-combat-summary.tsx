@@ -7,7 +7,8 @@ import {
   ULTIMATES,
 } from "content/templates/kits";
 
-import { getIdentifierLabel } from "./_glossary";
+import { getAttunementMeta, getRankMeta, getTraitMeta } from "./_glossary";
+import { Tooltip } from "./_tooltip";
 import { STAT_LABELS as STAT_LABEL_MAP } from "./item-surface";
 import type { OperatorCombatViewModel } from "./view-models";
 
@@ -42,9 +43,8 @@ export function OperatorCombatSummary({
   combat: OperatorCombatViewModel;
   title?: string;
 }) {
-  const attunementLabel = combat.attunementTag
-    ? getIdentifierLabel(combat.attunementTag)
-    : "Unattuned";
+  const rankMeta = getRankMeta(combat.rank);
+  const attunementMeta = getAttunementMeta(combat.attunementTag);
   const resolvedKit = resolveOperatorKit(kitRegistry, {
     regularAttackId: combat.regularAttackId,
     skillId: combat.skillId,
@@ -57,18 +57,25 @@ export function OperatorCombatSummary({
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs uppercase tracking-[0.12em] text-gold/50">{title}</span>
         <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
-          <span className="badge badge-gold">Rank {combat.rank.toUpperCase()}</span>
-          <span className="badge badge-slate">{attunementLabel}</span>
+          <Tooltip content={rankMeta.tip} side="top">
+            <span className="badge badge-gold">{rankMeta.label}</span>
+          </Tooltip>
+          <Tooltip content={attunementMeta.tip} side="top">
+            <span className="badge badge-slate">{attunementMeta.label}</span>
+          </Tooltip>
         </div>
       </div>
 
       {combat.traits.length > 0 && (
         <div className="flex flex-wrap gap-1.5 text-xs">
-          {combat.traits.map((trait) => (
-            <span key={trait} className="badge badge-slate">
-              {getIdentifierLabel(trait)}
-            </span>
-          ))}
+          {combat.traits.map((trait) => {
+            const traitMeta = getTraitMeta(trait);
+            return (
+              <Tooltip key={trait} content={traitMeta.tip} side="top">
+                <span className="badge badge-slate">{traitMeta.label}</span>
+              </Tooltip>
+            );
+          })}
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getBossArtPath } from "./boss-art";
-import { missionTemplates } from "../../content/templates/missions";
+import { siteConceptTemplates } from "../../content/templates/site-concepts";
 
 describe("boss art resolver", () => {
   it("resolves authored SVG paths for all bodega-era bosses", () => {
@@ -19,6 +19,9 @@ describe("boss art resolver", () => {
     expect(getBossArtPath("boss/the-dispatcher")).toBe(
       "/data/svg-environments/raids/bosses/the-dispatcher.svg",
     );
+    expect(getBossArtPath("boss/the-super")).toBe(
+      "/data/svg-environments/raids/bosses/the-superintendent.svg",
+    );
     expect(getBossArtPath("boss/the-superintendent")).toBe(
       "/data/svg-environments/raids/bosses/the-superintendent.svg",
     );
@@ -29,9 +32,10 @@ describe("boss art resolver", () => {
     expect(getBossArtPath("")).toBeNull();
   });
 
-  it("every shipped mission boss has authored art", () => {
-    for (const mission of missionTemplates) {
-      const bossId = mission.combatProfile.boss.bossId;
+  it("every site concept boss has authored art", () => {
+    const uniqueBossIds = [...new Set(siteConceptTemplates.map((site) => site.bossId))];
+
+    for (const bossId of uniqueBossIds) {
       const path = getBossArtPath(bossId);
       expect(path, `missing art for ${bossId}`).not.toBeNull();
     }

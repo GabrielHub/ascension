@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="in-aura" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#c87430" stop-opacity="0.10"/>
+      <stop offset="55%" stop-color="#2a1a0c" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#080604" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="in-rust" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a4018"/>
+      <stop offset="50%" stop-color="#6a2e12"/>
+      <stop offset="100%" stop-color="#3a180a"/>
+    </linearGradient>
+    <linearGradient id="in-iron" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a3a28"/>
+      <stop offset="100%" stop-color="#2a1e10"/>
+    </linearGradient>
+    <linearGradient id="in-paper" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#e8dcb0"/>
+      <stop offset="100%" stop-color="#a89870"/>
+    </linearGradient>
+    <filter id="in-glow">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="in-grate" patternUnits="userSpaceOnUse" width="6" height="6">
+      <path d="M 0 0 L 6 6 M 6 0 L 0 6" stroke="#3a1e0c" stroke-width="0.5"/>
+    </pattern>
+    <pattern id="in-diamond-tread" patternUnits="userSpaceOnUse" width="5" height="5">
+      <path d="M 0 2.5 L 2.5 0 L 5 2.5 L 2.5 5 Z" fill="none" stroke="#5a2e18" stroke-width="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="94" ry="132" fill="url(#in-aura)"/>
+
+  <!-- Rust flakes drifting down -->
+  <rect x="22" y="58" width="1.5" height="1.5" fill="#8a4018" opacity="0.45" transform="rotate(22 22.75 58.75)"/>
+  <rect x="172" y="72" width="1.2" height="1.2" fill="#8a4018" opacity="0.4" transform="rotate(35 172.6 72.6)"/>
+  <rect x="38" y="144" width="1.5" height="1.5" fill="#6a2e12" opacity="0.5" transform="rotate(-15 38.75 144.75)"/>
+  <rect x="160" y="168" width="1.3" height="1.3" fill="#6a2e12" opacity="0.45" transform="rotate(48 160.65 168.65)"/>
+  <rect x="28" y="210" width="1.4" height="1.4" fill="#8a4018" opacity="0.4" transform="rotate(8 28.7 210.7)"/>
+  <rect x="176" y="224" width="1.2" height="1.2" fill="#8a4018" opacity="0.38" transform="rotate(-22 176.6 224.6)"/>
+  <rect x="80" y="30" width="1.2" height="1.2" fill="#6a2e12" opacity="0.35" transform="rotate(60 80.6 30.6)"/>
+  <rect x="118" y="22" width="1" height="1" fill="#6a2e12" opacity="0.35" transform="rotate(-40 118.5 22.5)"/>
+
+  <!-- Stair landing grid lines suggesting impossible geometry behind the figure -->
+  <line x1="10" y1="100" x2="40" y2="72" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+  <line x1="10" y1="120" x2="40" y2="92" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+  <line x1="160" y1="72" x2="190" y2="100" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+  <line x1="160" y1="92" x2="190" y2="120" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+  <line x1="10" y1="200" x2="40" y2="222" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+  <line x1="160" y1="222" x2="190" y2="200" stroke="#5a3220" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Body skeleton — riveted iron L-brackets forming a tall narrow vertical figure, slightly tilted -->
+  <!-- Primary vertical rail -->
+  <rect x="94" y="78" width="5" height="176" fill="url(#in-iron)" stroke="#1a0e08" stroke-width="0.5" transform="rotate(-3 96.5 166)"/>
+  <rect x="101" y="78" width="5" height="176" fill="url(#in-iron)" stroke="#1a0e08" stroke-width="0.5" transform="rotate(-3 103.5 166)"/>
+  <!-- Rivets along the vertical rails -->
+  <circle cx="96" cy="98" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="103" cy="98" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="96" cy="128" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="103" cy="128" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="96" cy="158" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="103" cy="158" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="96" cy="188" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="103" cy="188" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="96" cy="218" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+  <circle cx="103" cy="218" r="1.3" fill="#1a0e08" stroke="#5a3220" stroke-width="0.3"/>
+
+  <!-- Horizontal cross-bars — shoulder, chest, waist, hip, knee, ankle -->
+  <rect x="58" y="100" width="84" height="4" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.4" transform="rotate(-2 100 102)"/>
+  <rect x="62" y="130" width="76" height="3" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.3" transform="rotate(-2 100 131.5)"/>
+  <rect x="60" y="160" width="80" height="5" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.4" transform="rotate(-2 100 162.5)"/>
+  <rect x="64" y="192" width="72" height="3" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.3" transform="rotate(-2 100 193.5)"/>
+  <rect x="68" y="222" width="64" height="3" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.3" transform="rotate(-2 100 223.5)"/>
+
+  <!-- Diamond tread stair body-plate across chest and belly -->
+  <rect x="72" y="106" width="56" height="22" rx="1" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.8"/>
+  <rect x="72" y="106" width="56" height="22" rx="1" fill="url(#in-diamond-tread)"/>
+  <!-- Another tread plate at belly -->
+  <rect x="76" y="166" width="48" height="24" rx="1" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.8"/>
+  <rect x="76" y="166" width="48" height="24" rx="1" fill="url(#in-diamond-tread)"/>
+  <!-- Tread plate at hip -->
+  <rect x="78" y="196" width="44" height="22" rx="1" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.8"/>
+  <rect x="78" y="196" width="44" height="22" rx="1" fill="url(#in-diamond-tread)"/>
+
+  <!-- L-bracket shoulders — right angle corner brackets -->
+  <path d="M 50 80 L 66 80 L 66 86 L 56 86 L 56 106 L 50 106 Z" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.6"/>
+  <path d="M 150 80 L 134 80 L 134 86 L 144 86 L 144 106 L 150 106 Z" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.6"/>
+  <!-- Shoulder bracket rivets -->
+  <circle cx="58" cy="83" r="1" fill="#1a0e08"/>
+  <circle cx="64" cy="83" r="1" fill="#1a0e08"/>
+  <circle cx="52" cy="90" r="1" fill="#1a0e08"/>
+  <circle cx="52" cy="100" r="1" fill="#1a0e08"/>
+  <circle cx="142" cy="83" r="1" fill="#1a0e08"/>
+  <circle cx="136" cy="83" r="1" fill="#1a0e08"/>
+  <circle cx="148" cy="90" r="1" fill="#1a0e08"/>
+  <circle cx="148" cy="100" r="1" fill="#1a0e08"/>
+
+  <!-- Grating panels layered over the plates for texture -->
+  <rect x="72" y="106" width="56" height="22" rx="1" fill="url(#in-grate)" opacity="0.35"/>
+  <rect x="76" y="166" width="48" height="24" rx="1" fill="url(#in-grate)" opacity="0.3"/>
+
+  <!-- Stamped CONDEMNED red marking across chest plate -->
+  <rect x="76" y="112" width="48" height="10" rx="0.5" fill="none" stroke="#b82818" stroke-width="1.5" opacity="0.75"/>
+  <text x="100" y="120" text-anchor="middle" fill="#b82818" font-size="7" font-weight="bold" font-family="sans-serif" opacity="0.85">CONDEMNED</text>
+
+  <!-- Head — hard hat with headlamp eye and stamped notice -->
+  <!-- Hard hat dome -->
+  <path d="M 80 40 Q 84 22 100 18 Q 116 22 120 40 L 120 50 L 80 50 Z" fill="#c87430" stroke="#3a180a" stroke-width="0.8"/>
+  <!-- Hard hat brim -->
+  <rect x="74" y="48" width="52" height="4" rx="0.5" fill="#8a4018" stroke="#3a180a" stroke-width="0.5"/>
+  <!-- Hat ridge -->
+  <path d="M 82 42 L 118 42" stroke="#3a180a" stroke-width="0.6" opacity="0.7"/>
+  <path d="M 84 32 L 116 32" stroke="#3a180a" stroke-width="0.5" opacity="0.6"/>
+  <!-- Rust streaks on the helmet -->
+  <path d="M 90 24 L 88 40" stroke="#3a180a" stroke-width="0.4" opacity="0.5"/>
+  <path d="M 110 26 L 112 40" stroke="#3a180a" stroke-width="0.4" opacity="0.5"/>
+  <!-- Stamped VIOLATION notice pasted on the hat side -->
+  <rect x="82" y="28" width="14" height="10" rx="0.3" fill="#e8dcb0" stroke="#6a2e12" stroke-width="0.4" opacity="0.9" transform="rotate(-8 89 33)"/>
+  <text x="89" y="34" text-anchor="middle" fill="#b82818" font-size="3" font-weight="bold" font-family="sans-serif" transform="rotate(-8 89 33)">NOTICE</text>
+  <text x="89" y="37" text-anchor="middle" fill="#3a180a" font-size="2" font-family="sans-serif" transform="rotate(-8 89 33)">CODE 413</text>
+
+  <!-- Face — recessed behind hat, mostly dark, one headlamp eye -->
+  <path d="M 82 52 L 80 68 L 88 72 L 100 74 L 112 72 L 120 68 L 118 52 Z" fill="#1a0e08" stroke="#3a180a" stroke-width="0.5"/>
+  <!-- Headlamp eye — bright circle -->
+  <circle cx="92" cy="62" r="4" fill="#3a1808" stroke="#8a4018" stroke-width="0.6"/>
+  <circle cx="92" cy="62" r="2.8" fill="#e8a048" opacity="0.85" filter="url(#in-glow)"/>
+  <circle cx="92" cy="62" r="1.4" fill="#f4dc88" opacity="0.95"/>
+  <!-- Other eye — void/dark cavity -->
+  <circle cx="110" cy="62" r="3" fill="#0a0404" stroke="#3a180a" stroke-width="0.4"/>
+  <circle cx="110" cy="62" r="1" fill="#1a0e08"/>
+  <!-- Mouth — thin line -->
+  <line x1="96" y1="70" x2="104" y2="70" stroke="#3a180a" stroke-width="0.5"/>
+  <!-- Stubble / wear lines -->
+  <line x1="88" y1="68" x2="90" y2="68" stroke="#3a180a" stroke-width="0.3"/>
+  <line x1="110" y1="68" x2="112" y2="68" stroke="#3a180a" stroke-width="0.3"/>
+
+  <!-- Chin strap — visible below hat -->
+  <line x1="84" y1="50" x2="88" y2="70" stroke="#6a3a18" stroke-width="0.6"/>
+  <line x1="116" y1="50" x2="112" y2="70" stroke="#6a3a18" stroke-width="0.6"/>
+
+  <!-- Left arm — measuring tape unspooling, rusted body holding it -->
+  <rect x="50" y="106" width="6" height="70" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.5" transform="rotate(-15 53 141)"/>
+  <rect x="46" y="168" width="14" height="10" rx="1" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.6" transform="rotate(-15 53 173)"/>
+  <!-- Forearm rivet -->
+  <circle cx="53" cy="135" r="1" fill="#1a0e08"/>
+  <circle cx="53" cy="155" r="1" fill="#1a0e08"/>
+  <!-- Tape measure case -->
+  <rect x="22" y="174" width="18" height="16" rx="2" fill="#e8a048" stroke="#6a2e12" stroke-width="0.7"/>
+  <rect x="24" y="176" width="14" height="10" rx="0.5" fill="#8a4018" stroke="#3a180a" stroke-width="0.3"/>
+  <circle cx="31" cy="181" r="2.5" fill="#1a0e08" stroke="#5a2e18" stroke-width="0.4"/>
+  <circle cx="31" cy="181" r="0.6" fill="#e8dcb0"/>
+  <!-- Tape tongue extending out -->
+  <path d="M 40 186 L 46 194 L 52 198 L 58 200 L 66 198 L 72 192 L 76 184" fill="none" stroke="#e8dcb0" stroke-width="1.8"/>
+  <path d="M 40 186 L 46 194 L 52 198 L 58 200 L 66 198 L 72 192 L 76 184" fill="none" stroke="#6a2e12" stroke-width="0.4" opacity="0.7"/>
+  <!-- Tape tick marks -->
+  <line x1="46" y1="192" x2="46" y2="195" stroke="#1a0e08" stroke-width="0.3"/>
+  <line x1="52" y1="196" x2="52" y2="199" stroke="#1a0e08" stroke-width="0.3"/>
+  <line x1="58" y1="198" x2="58" y2="201" stroke="#1a0e08" stroke-width="0.3"/>
+  <line x1="64" y1="198" x2="64" y2="201" stroke="#1a0e08" stroke-width="0.3"/>
+  <line x1="70" y1="195" x2="70" y2="192" stroke="#1a0e08" stroke-width="0.3"/>
+  <!-- Tape tip -->
+  <rect x="74" y="182" width="4" height="4" fill="#1a0e08"/>
+
+  <!-- Right arm — holding an enormous clipboard with condemnation papers impaling outward -->
+  <rect x="144" y="106" width="6" height="68" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.5" transform="rotate(12 147 140)"/>
+  <rect x="140" y="168" width="14" height="10" rx="1" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.6" transform="rotate(12 147 173)"/>
+  <circle cx="147" cy="130" r="1" fill="#1a0e08"/>
+  <circle cx="147" cy="150" r="1" fill="#1a0e08"/>
+  <!-- Clipboard body -->
+  <rect x="158" y="172" width="34" height="46" rx="1" fill="#6a3a18" stroke="#1a0e08" stroke-width="0.8"/>
+  <rect x="160" y="174" width="30" height="42" rx="0.5" fill="url(#in-paper)" stroke="#3a180a" stroke-width="0.4"/>
+  <!-- Clipboard clip -->
+  <rect x="168" y="168" width="14" height="5" rx="1" fill="#4a3a28" stroke="#1a0e08" stroke-width="0.4"/>
+  <!-- Paper lines — tallied violations -->
+  <line x1="162" y1="180" x2="188" y2="180" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="184" x2="184" y2="184" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="188" x2="186" y2="188" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="192" x2="180" y2="192" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="196" x2="185" y2="196" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="200" x2="182" y2="200" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="204" x2="186" y2="204" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <line x1="162" y1="208" x2="178" y2="208" stroke="#3a180a" stroke-width="0.3" opacity="0.7"/>
+  <!-- Red X marks — violations -->
+  <path d="M 182 180 L 186 184 M 186 180 L 182 184" stroke="#b82818" stroke-width="0.6"/>
+  <path d="M 182 188 L 186 192 M 186 188 L 182 192" stroke="#b82818" stroke-width="0.6"/>
+  <path d="M 182 196 L 186 200 M 186 196 L 182 200" stroke="#b82818" stroke-width="0.6"/>
+  <!-- Stamped FINAL NOTICE diagonal -->
+  <rect x="164" y="186" width="22" height="6" rx="0.3" fill="none" stroke="#b82818" stroke-width="0.8" opacity="0.8" transform="rotate(-12 175 189)"/>
+  <text x="175" y="191" text-anchor="middle" fill="#b82818" font-size="3" font-weight="bold" font-family="sans-serif" transform="rotate(-12 175 189)">FINAL</text>
+  <!-- Stray papers fluttering out of the clipboard — condemnation notices as projectiles -->
+  <rect x="150" y="146" width="10" height="13" rx="0.3" fill="url(#in-paper)" stroke="#3a180a" stroke-width="0.3" transform="rotate(-25 155 152.5)"/>
+  <line x1="151" y1="150" x2="159" y2="150" stroke="#3a180a" stroke-width="0.2" transform="rotate(-25 155 152.5)"/>
+  <line x1="151" y1="153" x2="157" y2="153" stroke="#3a180a" stroke-width="0.2" transform="rotate(-25 155 152.5)"/>
+  <rect x="166" y="140" width="9" height="12" rx="0.3" fill="url(#in-paper)" stroke="#3a180a" stroke-width="0.3" transform="rotate(18 170.5 146)"/>
+  <line x1="167" y1="144" x2="174" y2="144" stroke="#3a180a" stroke-width="0.2" transform="rotate(18 170.5 146)"/>
+  <rect x="140" y="118" width="8" height="11" rx="0.3" fill="url(#in-paper)" stroke="#3a180a" stroke-width="0.3" transform="rotate(-40 144 123.5)"/>
+
+  <!-- Fire escape legs — thin rusted posts with ankle angles -->
+  <rect x="80" y="228" width="4" height="34" fill="url(#in-iron)" stroke="#1a0e08" stroke-width="0.4"/>
+  <rect x="116" y="228" width="4" height="34" fill="url(#in-iron)" stroke="#1a0e08" stroke-width="0.4"/>
+  <!-- Angle brackets at the feet -->
+  <path d="M 74 262 L 90 262 L 90 268 L 74 268 Z" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.5"/>
+  <path d="M 110 262 L 126 262 L 126 268 L 110 268 Z" fill="url(#in-rust)" stroke="#1a0e08" stroke-width="0.5"/>
+  <circle cx="78" cy="265" r="0.8" fill="#1a0e08"/>
+  <circle cx="88" cy="265" r="0.8" fill="#1a0e08"/>
+  <circle cx="114" cy="265" r="0.8" fill="#1a0e08"/>
+  <circle cx="124" cy="265" r="0.8" fill="#1a0e08"/>
+
+  <!-- Rust corrosion patches -->
+  <ellipse cx="68" cy="138" rx="6" ry="4" fill="#3a1808" opacity="0.5"/>
+  <ellipse cx="132" cy="148" rx="5" ry="4" fill="#3a1808" opacity="0.5"/>
+  <ellipse cx="74" cy="204" rx="5" ry="3" fill="#3a1808" opacity="0.45"/>
+  <ellipse cx="126" cy="214" rx="6" ry="3" fill="#3a1808" opacity="0.45"/>
+  <ellipse cx="100" cy="172" rx="4" ry="2" fill="#3a1808" opacity="0.4"/>
+  <ellipse cx="58" cy="180" rx="4" ry="6" fill="#2a0e04" opacity="0.35"/>
+  <ellipse cx="142" cy="180" rx="4" ry="6" fill="#2a0e04" opacity="0.35"/>
+
+  <!-- Small Inspector badge pinned to lapel -->
+  <circle cx="68" cy="108" r="3" fill="#6a3a18" stroke="#1a0e08" stroke-width="0.5"/>
+  <text x="68" y="110" text-anchor="middle" fill="#e8dcb0" font-size="3" font-family="serif">I</text>
+</svg>

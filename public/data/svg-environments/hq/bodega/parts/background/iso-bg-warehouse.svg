@@ -1,18 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -20 500 440">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 10 500 410">
   <!-- Low industrial warehouse building — Red Hook style.
        Brick with corrugated metal roof, loading dock, industrial character.
        Canonical 2:1 isometric. Facade slope +0.5, side slope -0.5.
 
+       Tile-aligned footprint: facade 4 tiles (192px), side 5 tiles (240px).
+       viewBox bottom-center sits on front corner base for placement anchor.
+
        Geometry:
-         Front corner base (220, 400). Facade width 200. Side depth 260. Wall height 180.
-         Front base:      (220, 400)
-         Front-left base: ( 20, 300)
-         Back-right base: (480, 270)
-         Front top:       (220, 220)
-         Front-left top:  ( 20, 120)
-         Back-right top:  (480,  90)
-         Back-left top:   (280, -10)
-  -->
+         Front corner base: (240, 420)
+         Front corner top:  (240, 240)
+         FL base:           ( 48, 324)   FL top: ( 48, 144)
+         BR base:           (480, 300)   BR top: (480, 120)
+         BL top:            (288,  24)
+         Wall height: 180
+         Facade width: 192 (4 tiles × 48)
+         Side depth:   240 (5 tiles × 48) -->
 
   <defs>
     <linearGradient id="wh-facade" x1="1" y1="0" x2="0" y2="0">
@@ -26,36 +28,36 @@
   </defs>
 
   <!-- Side face (drawn first, behind facade) -->
-  <polygon points="220,220 480,90 480,270 220,400"
+  <polygon points="240,240 480,120 480,300 240,420"
     fill="url(#wh-side)" stroke="#2e1e16" stroke-width="1"/>
 
   <!-- Facade wall -->
-  <polygon points="20,120 220,220 220,400 20,300"
+  <polygon points="48,144 240,240 240,420 48,324"
     fill="url(#wh-facade)" stroke="#2e1e16" stroke-width="1.5"/>
 
   <!-- Roof -->
-  <polygon points="20,120 220,220 480,90 280,-10"
+  <polygon points="48,144 240,240 480,120 288,24"
     fill="#2a2828" stroke="#222" stroke-width="1.5"/>
 
   <!-- Roof corrugation lines (parallel to side edges, slope -0.5) -->
   <g stroke="#1e1e1e" stroke-width="0.5" opacity="0.3">
-    <line x1="70" y1="145" x2="330" y2="15"/>
-    <line x1="120" y1="170" x2="380" y2="40"/>
-    <line x1="170" y1="195" x2="430" y2="65"/>
+    <line x1="96" y1="168" x2="336" y2="48"/>
+    <line x1="144" y1="192" x2="384" y2="72"/>
+    <line x1="192" y1="216" x2="432" y2="96"/>
   </g>
 
   <!-- Roof edge / gutter — facade -->
-  <polygon points="20,120 220,220 220,226 20,126"
+  <polygon points="48,144 240,240 240,246 48,150"
     fill="#3a3838" stroke="#2a2828" stroke-width="0.5" opacity="0.5"/>
 
   <!-- Roof edge — side -->
-  <polygon points="220,220 480,90 480,96 220,226"
+  <polygon points="240,240 480,120 480,126 240,246"
     fill="#2e2e2e" stroke="#2a2828" stroke-width="0.5" opacity="0.4"/>
 
-  <!-- ═══ FACADE DETAILS — matrix(1, 0.5, 0, 1, 20, 120) ═══
-       Local x: 0→200 (left to right along facade)
+  <!-- ═══ FACADE DETAILS — matrix(0.96, 0.48, 0, 1, 48, 144) ═══
+       Local x: 0→200 (left to right along facade, scales to 192 world units)
        Local y: 0→180 (top to bottom, wall height) -->
-  <g transform="matrix(1, 0.5, 0, 1, 20, 120)">
+  <g transform="matrix(0.96, 0.48, 0, 1, 48, 144)">
     <!-- Brick texture -->
     <g stroke="#3a2418" stroke-width="0.5" opacity="0.12">
       <line x1="5" y1="25" x2="195" y2="25"/>
@@ -103,10 +105,10 @@
     <circle cx="155" cy="135" r="1.5" fill="#4a4848" opacity="0.4"/>
   </g>
 
-  <!-- ═══ SIDE FACE DETAILS — matrix(1, -0.5, 0, 1, 220, 220) ═══
-       Local x: 0→260 (front corner toward back)
+  <!-- ═══ SIDE FACE DETAILS — matrix(0.9230769, -0.4615385, 0, 1, 240, 240) ═══
+       Local x: 0→260 (front corner toward back, scales to 240 world units)
        Local y: 0→180 (top to bottom, wall height) -->
-  <g transform="matrix(1, -0.5, 0, 1, 220, 220)">
+  <g transform="matrix(0.9230769, -0.4615385, 0, 1, 240, 240)">
     <!-- Brick texture -->
     <g stroke="#2a1e14" stroke-width="0.4" opacity="0.1">
       <line x1="5" y1="25" x2="255" y2="25"/>
@@ -131,13 +133,13 @@
   </g>
 
   <!-- Water stain on facade -->
-  <g transform="matrix(1, 0.5, 0, 1, 20, 120)">
+  <g transform="matrix(0.96, 0.48, 0, 1, 48, 144)">
     <line x1="110" y1="0" x2="112" y2="180"
       stroke="#30281e" stroke-width="3" opacity="0.08"/>
   </g>
 
   <!-- Graffiti hint (abstract shape) -->
-  <g transform="matrix(1, 0.5, 0, 1, 20, 120)" opacity="0.06">
+  <g transform="matrix(0.96, 0.48, 0, 1, 48, 144)" opacity="0.06">
     <rect x="120" y="110" width="40" height="15" rx="2" fill="#5a8a5a"/>
   </g>
 </svg>

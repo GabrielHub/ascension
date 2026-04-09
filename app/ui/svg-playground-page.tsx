@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import type { BuildType } from "./_svg-shared";
@@ -15,6 +15,7 @@ import {
   type EnvLightingPreset,
   buildSceneReviewGroups,
   getLoadedEnvParts,
+  getLoadedEnvPartsIndex,
   getSceneReviewContract,
   envPartSvgPath,
   ENV_LIGHTING_PRESETS,
@@ -41,7 +42,7 @@ const ASSET_CLASS_DESCRIPTIONS: Record<AssetClass, string> = {
   operators:
     "Recipe-driven modular portraits — one builder and one appearance contract for authored and future generated operators",
   "hq-environment":
-    "Scene-first bodega HQ review — approved room scenes in recipes/ plus shell, structural, prop, and background support assets",
+    "Scene-first HQ review — approved room scenes in recipes/ plus shell, structural, prop, and background support assets",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -457,6 +458,11 @@ const ENV_CATEGORY_ORDER: EnvPartCategory[] = [
   "actor-marker",
 ];
 
+const HQ_BUILDINGS = [
+  { id: "building/bodega", label: "Bodega" },
+  { id: "building/porters", label: "Porter's" },
+] as const;
+
 /** Scale presets for each asset category */
 const SCALE_PRESETS: Record<
   EnvPartCategory,
@@ -559,14 +565,16 @@ const SCALE_PRESETS: Record<
 function EnvAssetCard({
   part,
   index,
+  partsIndex,
   preset,
 }: {
   part: EnvPartMeta;
   index: number;
+  partsIndex: ReturnType<typeof getLoadedEnvPartsIndex>;
   preset: EnvLightingPreset;
 }) {
   const name = part.id.split("/").pop() ?? part.id;
-  const src = envPartSvgPath(part);
+  const src = envPartSvgPath(part, partsIndex);
   const scales = SCALE_PRESETS[part.category];
   return (
     <div
@@ -627,17 +635,25 @@ function EnvAssetCard({
 
 function EnvCategorySection({
   category,
-  parts,
+  categoryParts,
   startIndex,
+  partsIndex,
   preset,
 }: {
   category: EnvPartCategory;
-  parts: readonly EnvPartMeta[];
+  categoryParts: readonly EnvPartMeta[];
   startIndex: number;
+  partsIndex: ReturnType<typeof getLoadedEnvPartsIndex>;
   preset: EnvLightingPreset;
 }) {
-  const categoryParts = parts.filter((p) => p.category === category);
   if (categoryParts.length === 0) return null;
+
+  let approvedCount = 0;
+  let explorationCount = 0;
+  for (const part of categoryParts) {
+    if (part.status === "approved") approvedCount += 1;
+    else if (part.status === "exploration") explorationCount += 1;
+  }
 
   return (
     <section className="glass-card overflow-hidden">
@@ -648,13 +664,18 @@ function EnvCategorySection({
         <p className="mt-1 text-xs text-silver/60">{ENV_CATEGORY_DESCRIPTIONS[category]}</p>
         <p className="mt-2 text-sm text-silver/40">
           {categoryParts.length} asset{categoryParts.length !== 1 ? "s" : ""} &mdash;{" "}
-          {categoryParts.filter((p) => p.status === "approved").length} approved,{" "}
-          {categoryParts.filter((p) => p.status === "exploration").length} exploration
+          {approvedCount} approved, {explorationCount} exploration
         </p>
       </div>
       <div className="space-y-6 px-6 py-6">
         {categoryParts.map((part, i) => (
-          <EnvAssetCard key={part.id} part={part} index={startIndex + i} preset={preset} />
+          <EnvAssetCard
+            key={part.id}
+            part={part}
+            index={startIndex + i}
+            partsIndex={partsIndex}
+            preset={preset}
+          />
         ))}
       </div>
     </section>
@@ -772,15 +793,33 @@ function EnvPresetSelector({
 }
 
 function SceneReviewBoard({
+  buildingId,
   parts,
+  partsIndex,
   preset,
 }: {
+  buildingId: string;
   parts: readonly EnvPartMeta[];
+  partsIndex: ReturnType<typeof getLoadedEnvPartsIndex>;
   preset: EnvLightingPreset;
 }) {
-  const shellSrc = resolveShellAssetUrl();
-  const contract = getSceneReviewContract();
+  const shellSrc = resolveShellAssetUrl(buildingId);
+  const contract = getSceneReviewContract(buildingId);
   const sceneGroups = buildSceneReviewGroups(parts);
+  const supportAssets = [
+    parts.find((part) => part.category === "prop" && part.status === "approved"),
+    parts.find((part) => part.category === "structure" && part.status === "approved"),
+  ]
+    .filter((part): part is EnvPartMeta => part !== undefined)
+    .map((part) => ({
+      label: part.category === "prop" ? "Featured Prop" : "Featured Structure",
+      detail: part.id,
+      description:
+        part.category === "prop"
+          ? "Standalone prop review stays available alongside the scene-first room workflow."
+          : "Structural geometry remains visible so shell-adjacent support checks stay in the same tool.",
+      previewSrc: envPartSvgPath(part, partsIndex),
+    }));
 
   return (
     <section className="glass-card overflow-hidden">
@@ -812,7 +851,7 @@ function SceneReviewBoard({
             >
               <LazySvgPreview
                 src={shellSrc}
-                alt="Bodega shell"
+                alt={`${contract.building} shell`}
                 className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
               />
               {preset.overlay && (
@@ -896,7 +935,7 @@ function SceneReviewBoard({
                       );
                     }
 
-                    const src = envPartSvgPath(part);
+                    const src = envPartSvgPath(part, partsIndex);
                     const name = part.id.split("/").pop() ?? part.id;
                     return (
                       <div
@@ -949,21 +988,7 @@ function SceneReviewBoard({
           Supporting Assets
         </p>
         <div className="grid gap-6 sm:grid-cols-2">
-          {[
-            {
-              label: "Reception Prop",
-              detail: "props/iso-desk-reception",
-              description:
-                "Reception furniture still reviews as a standalone prop outside the room scene.",
-              previewSrc: "/data/svg-environments/hq/bodega/parts/props/iso-desk-reception.svg",
-            },
-            {
-              label: "Structural Corner",
-              detail: "structure/iso-wall-corner",
-              description: "Reusable structural geometry remains available for support checks.",
-              previewSrc: "/data/svg-environments/hq/bodega/parts/structure/iso-wall-corner.svg",
-            },
-          ].map((asset) => {
+          {supportAssets.map((asset) => {
             return (
               <div
                 key={asset.detail}
@@ -1005,9 +1030,23 @@ function SceneReviewBoard({
 }
 
 function HqEnvironmentPlayground() {
-  const parts = getLoadedEnvParts();
+  const [buildingId, setBuildingId] = useState<string>(HQ_BUILDINGS[0].id);
+  const parts = getLoadedEnvParts(buildingId);
+  const partsIndex = getLoadedEnvPartsIndex(buildingId);
+  const buildingLabel =
+    HQ_BUILDINGS.find((building) => building.id === buildingId)?.label ?? buildingId;
   const [presetId, setPresetId] = useState("neutral");
   const preset = getEnvLightingPreset(presetId);
+
+  const partsByCategory = useMemo(() => {
+    const map = new Map<EnvPartCategory, EnvPartMeta[]>();
+    for (const part of parts) {
+      const bucket = map.get(part.category);
+      if (bucket) bucket.push(part);
+      else map.set(part.category, [part]);
+    }
+    return map;
+  }, [parts]);
 
   let runningIndex = 0;
 
@@ -1019,8 +1058,27 @@ function HqEnvironmentPlayground() {
         style={{ animationDelay: "60ms" }}
       >
         <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
-          Bodega HQ Scene Language
+          HQ Scene Language
         </h2>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-[0.15em] text-gold/50">
+            Building
+          </span>
+          {HQ_BUILDINGS.map((building) => (
+            <button
+              key={building.id}
+              type="button"
+              onClick={() => setBuildingId(building.id)}
+              className={`rounded-md border px-2.5 py-1 text-sm transition-colors ${
+                buildingId === building.id
+                  ? "border-gold/40 bg-[rgba(200,168,76,0.12)] text-gold"
+                  : "border-[rgba(200,168,76,0.08)] text-silver/60 hover:border-gold/20 hover:text-silver/80"
+              }`}
+            >
+              {building.label}
+            </button>
+          ))}
+        </div>
         <div className="mt-3 space-y-2 text-xs leading-relaxed text-silver/70">
           <p>
             Approved room scenes are the first-class HQ review surface &mdash;{" "}
@@ -1029,14 +1087,14 @@ function HqEnvironmentPlayground() {
             geometry contract.
           </p>
           <p>
-            The shell remains separate, while structure, props, and background elements continue to
-            provide support coverage for the scene review workflow. Actor markers are still in-world
-            operator tokens at HQ zoom scales.
+            {buildingLabel} uses the same review shell: scenes stay primary, while structure, props,
+            and background elements remain searchable support inventory. Actor markers are still
+            in-world operator tokens at HQ zoom scales.
           </p>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {ENV_CATEGORY_ORDER.map((cat) => {
-            const count = parts.filter((p) => p.category === cat).length;
+            const count = partsByCategory.get(cat)?.length ?? 0;
             return (
               <div
                 key={cat}
@@ -1059,22 +1117,28 @@ function HqEnvironmentPlayground() {
 
       {/* Category sections */}
       {ENV_CATEGORY_ORDER.map((cat) => {
-        const catParts = parts.filter((p) => p.category === cat);
+        const catParts = partsByCategory.get(cat) ?? [];
         const si = runningIndex;
         runningIndex += catParts.length;
         return (
           <EnvCategorySection
             key={cat}
             category={cat}
-            parts={parts}
+            categoryParts={catParts}
             startIndex={si}
+            partsIndex={partsIndex}
             preset={preset}
           />
         );
       })}
 
       {/* Room-scene review */}
-      <SceneReviewBoard parts={parts} preset={preset} />
+      <SceneReviewBoard
+        buildingId={buildingId}
+        parts={parts}
+        partsIndex={partsIndex}
+        preset={preset}
+      />
 
       {/* Recipe-colorized actor marker grid */}
       <ActorMarkerGrid />
@@ -1114,7 +1178,7 @@ function HqEnvironmentPlayground() {
         <div className="mt-5 flex items-center gap-3">
           <span className="badge badge-gold">assets promoted</span>
           <span className="text-xs text-silver/60">
-            Approved assets in public/data/svg-environments/hq/bodega/parts/
+            Approved assets in {partsIndex.paths.partsRoot}
           </span>
         </div>
       </section>

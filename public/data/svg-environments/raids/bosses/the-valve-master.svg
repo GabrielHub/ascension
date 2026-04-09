@@ -1,0 +1,268 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="vm-aura" cx="50%" cy="45%" r="58%">
+      <stop offset="0%" stop-color="#5aaa78" stop-opacity="0.12"/>
+      <stop offset="55%" stop-color="#1a2818" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060808" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vm-cedar" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#6a4828"/>
+      <stop offset="50%" stop-color="#4a3018"/>
+      <stop offset="100%" stop-color="#2a1808"/>
+    </linearGradient>
+    <linearGradient id="vm-iron" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a3228"/>
+      <stop offset="100%" stop-color="#1a1408"/>
+    </linearGradient>
+    <linearGradient id="vm-pipe" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a4238"/>
+      <stop offset="50%" stop-color="#3a3228"/>
+      <stop offset="100%" stop-color="#2a2218"/>
+    </linearGradient>
+    <linearGradient id="vm-copper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d47a3a"/>
+      <stop offset="50%" stop-color="#8a4818"/>
+      <stop offset="100%" stop-color="#4a2808"/>
+    </linearGradient>
+    <radialGradient id="vm-algae" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8aea88" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="#3a8a48" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#1a3a28" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="vm-glow">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="vm-drip">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="142" rx="95" ry="130" fill="url(#vm-aura)"/>
+
+  <!-- Water puddle beneath -->
+  <ellipse cx="100" cy="266" rx="82" ry="6" fill="#2a3a48" opacity="0.45"/>
+  <ellipse cx="100" cy="268" rx="70" ry="4" fill="#5a8ab0" opacity="0.35"/>
+  <ellipse cx="100" cy="269" rx="56" ry="2.5" fill="#8acacc" opacity="0.25"/>
+  <!-- Algae tinged reflection -->
+  <ellipse cx="80" cy="268" rx="18" ry="2" fill="#5aaa78" opacity="0.25"/>
+  <ellipse cx="120" cy="268" rx="16" ry="2" fill="#5aaa78" opacity="0.25"/>
+
+  <!-- Dripping rivulets from lower body -->
+  <path d="M 62 224 L 60 240 L 62 256 L 64 264" fill="none" stroke="#5a8ab0" stroke-width="0.8" opacity="0.65" filter="url(#vm-drip)"/>
+  <path d="M 138 226 L 140 242 L 138 258 L 136 264" fill="none" stroke="#5a8ab0" stroke-width="0.8" opacity="0.65" filter="url(#vm-drip)"/>
+  <path d="M 82 236 L 82 252 L 84 262" fill="none" stroke="#5a8ab0" stroke-width="0.6" opacity="0.6" filter="url(#vm-drip)"/>
+  <path d="M 118 236 L 118 252 L 116 262" fill="none" stroke="#5a8ab0" stroke-width="0.6" opacity="0.6" filter="url(#vm-drip)"/>
+  <path d="M 100 238 L 100 258 L 101 264" fill="none" stroke="#5a8ab0" stroke-width="0.7" opacity="0.55" filter="url(#vm-drip)"/>
+
+  <!-- Body — a massive cylindrical water-tower torso made of cedar slats -->
+  <!-- Body outline -->
+  <path d="
+    M 50 90
+    Q 50 80 62 80 L 138 80 Q 150 80 150 90
+    L 152 220 Q 150 240 138 248 L 62 248 Q 50 240 48 220 Z
+  " fill="url(#vm-cedar)" stroke="#1a0e04" stroke-width="1"/>
+
+  <!-- Cedar slat vertical lines -->
+  <line x1="60" y1="84" x2="60" y2="244" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="68" y1="82" x2="68" y2="246" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="76" y1="81" x2="76" y2="247" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="84" y1="80" x2="84" y2="248" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="92" y1="80" x2="92" y2="248" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="100" y1="80" x2="100" y2="248" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="108" y1="80" x2="108" y2="248" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="116" y1="80" x2="116" y2="248" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="124" y1="81" x2="124" y2="247" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="132" y1="82" x2="132" y2="246" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+  <line x1="140" y1="84" x2="140" y2="244" stroke="#2a1808" stroke-width="0.6" opacity="0.85"/>
+
+  <!-- Grain highlight on slats (light falling from left) -->
+  <line x1="62" y1="100" x2="62" y2="230" stroke="#8a6038" stroke-width="0.4" opacity="0.4"/>
+  <line x1="70" y1="100" x2="70" y2="230" stroke="#8a6038" stroke-width="0.4" opacity="0.35"/>
+  <line x1="78" y1="100" x2="78" y2="230" stroke="#8a6038" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Algae glow seeping through cracks between slats -->
+  <rect x="63" y="130" width="1.2" height="30" fill="#8aea88" opacity="0.85" filter="url(#vm-glow)"/>
+  <rect x="85" y="154" width="1.2" height="24" fill="#8aea88" opacity="0.8" filter="url(#vm-glow)"/>
+  <rect x="109" y="140" width="1.2" height="28" fill="#8aea88" opacity="0.82" filter="url(#vm-glow)"/>
+  <rect x="131" y="160" width="1.2" height="22" fill="#8aea88" opacity="0.75" filter="url(#vm-glow)"/>
+  <rect x="77" y="200" width="1.2" height="20" fill="#8aea88" opacity="0.75" filter="url(#vm-glow)"/>
+  <rect x="117" y="200" width="1.2" height="20" fill="#8aea88" opacity="0.8" filter="url(#vm-glow)"/>
+  <rect x="95" y="180" width="1.2" height="16" fill="#6aca68" opacity="0.7" filter="url(#vm-glow)"/>
+
+  <!-- Algae stains creeping out of cracks -->
+  <path d="M 64 130 Q 66 134 68 132" fill="none" stroke="#4a8a48" stroke-width="0.8" opacity="0.55"/>
+  <path d="M 86 156 Q 90 160 88 164" fill="none" stroke="#4a8a48" stroke-width="0.8" opacity="0.55"/>
+  <path d="M 110 140 Q 112 144 110 148" fill="none" stroke="#4a8a48" stroke-width="0.8" opacity="0.55"/>
+  <path d="M 132 160 Q 136 164 130 168" fill="none" stroke="#4a8a48" stroke-width="0.8" opacity="0.55"/>
+
+  <!-- Iron bands — three wrapping horizontal bands around the tower body -->
+  <rect x="48" y="108" width="104" height="8" fill="url(#vm-iron)" stroke="#0a0604" stroke-width="0.8"/>
+  <rect x="48" y="170" width="104" height="10" fill="url(#vm-iron)" stroke="#0a0604" stroke-width="0.8"/>
+  <rect x="48" y="226" width="104" height="8" fill="url(#vm-iron)" stroke="#0a0604" stroke-width="0.8"/>
+  <!-- Band rivets -->
+  <circle cx="56" cy="112" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="80" cy="112" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="100" cy="112" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="120" cy="112" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="144" cy="112" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="56" cy="175" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="80" cy="175" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="100" cy="175" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="120" cy="175" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="144" cy="175" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="56" cy="230" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="80" cy="230" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="100" cy="230" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="120" cy="230" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+  <circle cx="144" cy="230" r="1.4" fill="#6a5030" stroke="#0a0604" stroke-width="0.3"/>
+
+  <!-- Rust staining around the bands -->
+  <path d="M 58 116 Q 56 122 58 128" fill="none" stroke="#6a2818" stroke-width="0.5" opacity="0.55"/>
+  <path d="M 142 116 Q 144 122 142 128" fill="none" stroke="#6a2818" stroke-width="0.5" opacity="0.55"/>
+  <path d="M 60 180 Q 58 192 60 200" fill="none" stroke="#6a2818" stroke-width="0.5" opacity="0.5"/>
+  <path d="M 140 180 Q 142 192 140 200" fill="none" stroke="#6a2818" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Main central valve wheel — the "chest valve" -->
+  <circle cx="100" cy="146" r="22" fill="#3a3228" stroke="#1a0e04" stroke-width="1.2"/>
+  <circle cx="100" cy="146" r="19" fill="none" stroke="url(#vm-copper)" stroke-width="2"/>
+  <circle cx="100" cy="146" r="16" fill="none" stroke="#6a4828" stroke-width="1"/>
+  <!-- Valve wheel spokes -->
+  <circle cx="100" cy="146" r="4" fill="url(#vm-copper)" stroke="#3a1808" stroke-width="0.5"/>
+  <circle cx="100" cy="146" r="1.5" fill="#1a0e04"/>
+  <line x1="100" y1="128" x2="100" y2="164" stroke="url(#vm-copper)" stroke-width="1.8"/>
+  <line x1="82" y1="146" x2="118" y2="146" stroke="url(#vm-copper)" stroke-width="1.8"/>
+  <line x1="88" y1="134" x2="112" y2="158" stroke="url(#vm-copper)" stroke-width="1.5"/>
+  <line x1="88" y1="158" x2="112" y2="134" stroke="url(#vm-copper)" stroke-width="1.5"/>
+  <!-- Valve rim grip notches -->
+  <circle cx="100" cy="126" r="0.8" fill="#d47a3a"/>
+  <circle cx="114" cy="132" r="0.8" fill="#d47a3a"/>
+  <circle cx="120" cy="146" r="0.8" fill="#d47a3a"/>
+  <circle cx="114" cy="160" r="0.8" fill="#d47a3a"/>
+  <circle cx="100" cy="166" r="0.8" fill="#d47a3a"/>
+  <circle cx="86" cy="160" r="0.8" fill="#d47a3a"/>
+  <circle cx="80" cy="146" r="0.8" fill="#d47a3a"/>
+  <circle cx="86" cy="132" r="0.8" fill="#d47a3a"/>
+
+  <!-- Secondary valve wheels scattered across the body — eyes and accessories -->
+  <circle cx="68" cy="100" r="6" fill="none" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <circle cx="68" cy="100" r="2" fill="url(#vm-copper)"/>
+  <line x1="68" y1="94" x2="68" y2="106" stroke="url(#vm-copper)" stroke-width="0.6"/>
+  <line x1="62" y1="100" x2="74" y2="100" stroke="url(#vm-copper)" stroke-width="0.6"/>
+
+  <circle cx="132" cy="100" r="6" fill="none" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <circle cx="132" cy="100" r="2" fill="url(#vm-copper)"/>
+  <line x1="132" y1="94" x2="132" y2="106" stroke="url(#vm-copper)" stroke-width="0.6"/>
+  <line x1="126" y1="100" x2="138" y2="100" stroke="url(#vm-copper)" stroke-width="0.6"/>
+
+  <circle cx="68" cy="200" r="5" fill="none" stroke="url(#vm-copper)" stroke-width="1"/>
+  <circle cx="68" cy="200" r="1.5" fill="url(#vm-copper)"/>
+  <line x1="64" y1="200" x2="72" y2="200" stroke="url(#vm-copper)" stroke-width="0.5"/>
+  <line x1="68" y1="196" x2="68" y2="204" stroke="url(#vm-copper)" stroke-width="0.5"/>
+
+  <circle cx="132" cy="200" r="5" fill="none" stroke="url(#vm-copper)" stroke-width="1"/>
+  <circle cx="132" cy="200" r="1.5" fill="url(#vm-copper)"/>
+  <line x1="128" y1="200" x2="136" y2="200" stroke="url(#vm-copper)" stroke-width="0.5"/>
+  <line x1="132" y1="196" x2="132" y2="204" stroke="url(#vm-copper)" stroke-width="0.5"/>
+
+  <!-- Pressure gauges embedded in the slats -->
+  <circle cx="82" cy="124" r="4" fill="#e8dcb0" stroke="url(#vm-copper)" stroke-width="0.7"/>
+  <circle cx="82" cy="124" r="3" fill="none" stroke="#3a2008" stroke-width="0.3"/>
+  <line x1="82" y1="124" x2="85" y2="122" stroke="#8a1818" stroke-width="0.6"/>
+  <text x="82" y="128" text-anchor="middle" fill="#3a2008" font-size="2.5" font-family="sans-serif">PSI</text>
+
+  <circle cx="118" cy="124" r="4" fill="#e8dcb0" stroke="url(#vm-copper)" stroke-width="0.7"/>
+  <circle cx="118" cy="124" r="3" fill="none" stroke="#3a2008" stroke-width="0.3"/>
+  <line x1="118" y1="124" x2="116" y2="122" stroke="#8a1818" stroke-width="0.6"/>
+  <text x="118" y="128" text-anchor="middle" fill="#3a2008" font-size="2.5" font-family="sans-serif">PSI</text>
+
+  <!-- Small pipe stubs poking out between slats -->
+  <rect x="74" y="188" width="4" height="6" fill="url(#vm-pipe)" stroke="#0a0604" stroke-width="0.4"/>
+  <rect x="122" y="188" width="4" height="6" fill="url(#vm-pipe)" stroke="#0a0604" stroke-width="0.4"/>
+
+  <!-- Head — the water tower's conical roof cupola -->
+  <!-- Cone -->
+  <path d="M 58 82 L 100 22 L 142 82 Z" fill="url(#vm-cedar)" stroke="#0a0604" stroke-width="1"/>
+  <!-- Cone slats -->
+  <line x1="66" y1="82" x2="94" y2="30" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="74" y1="82" x2="96" y2="26" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="82" y1="82" x2="98" y2="24" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="90" y1="82" x2="100" y2="22" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="100" y1="82" x2="100" y2="22" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="110" y1="82" x2="102" y2="24" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="118" y1="82" x2="104" y2="26" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="126" y1="82" x2="106" y2="30" stroke="#2a1808" stroke-width="0.6"/>
+  <line x1="134" y1="82" x2="108" y2="34" stroke="#2a1808" stroke-width="0.6"/>
+
+  <!-- Cupola base copper ring -->
+  <rect x="56" y="78" width="88" height="6" rx="0.5" fill="url(#vm-copper)" stroke="#0a0604" stroke-width="0.7"/>
+  <!-- Verdigris on copper -->
+  <rect x="60" y="80" width="20" height="1.5" fill="#5aaa78" opacity="0.75"/>
+  <rect x="120" y="80" width="20" height="1.5" fill="#5aaa78" opacity="0.75"/>
+
+  <!-- Cone cap finial -->
+  <rect x="98" y="14" width="4" height="10" fill="url(#vm-copper)" stroke="#0a0604" stroke-width="0.4"/>
+  <circle cx="100" cy="12" r="2.5" fill="url(#vm-copper)" stroke="#0a0604" stroke-width="0.4"/>
+  <!-- Steam puffing out of the finial -->
+  <path d="M 100 8 Q 96 4 98 0" fill="none" stroke="#b8d4c0" stroke-width="1.2" opacity="0.45" filter="url(#vm-drip)"/>
+  <path d="M 102 8 Q 106 4 104 0" fill="none" stroke="#b8d4c0" stroke-width="1.2" opacity="0.45" filter="url(#vm-drip)"/>
+
+  <!-- The "face" of the head — a giant circular valve wheel mounted on the front of the cone -->
+  <circle cx="100" cy="58" r="14" fill="#3a3228" stroke="#0a0604" stroke-width="1"/>
+  <circle cx="100" cy="58" r="11" fill="none" stroke="url(#vm-copper)" stroke-width="1.5"/>
+  <circle cx="100" cy="58" r="8" fill="none" stroke="#8a5818" stroke-width="0.8"/>
+  <circle cx="100" cy="58" r="2.5" fill="url(#vm-copper)" stroke="#0a0604" stroke-width="0.4"/>
+  <line x1="100" y1="46" x2="100" y2="70" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <line x1="88" y1="58" x2="112" y2="58" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <line x1="92" y1="50" x2="108" y2="66" stroke="url(#vm-copper)" stroke-width="0.9"/>
+  <line x1="92" y1="66" x2="108" y2="50" stroke="url(#vm-copper)" stroke-width="0.9"/>
+  <!-- Algae inside the valve — suggesting an eye through it -->
+  <circle cx="100" cy="58" r="1.4" fill="#8aea88" opacity="0.9" filter="url(#vm-glow)"/>
+
+  <!-- Left arm — a thick pipe arm extending from the body -->
+  <path d="M 48 116 Q 32 130 22 154 Q 16 178 22 196 L 28 198 L 34 188 Q 40 168 48 148 Z" fill="url(#vm-pipe)" stroke="#0a0604" stroke-width="0.7"/>
+  <!-- Pipe segments along the arm -->
+  <line x1="42" y1="130" x2="36" y2="140" stroke="#1a1408" stroke-width="0.5"/>
+  <line x1="32" y1="148" x2="26" y2="158" stroke="#1a1408" stroke-width="0.5"/>
+  <line x1="24" y1="170" x2="22" y2="182" stroke="#1a1408" stroke-width="0.5"/>
+  <!-- Elbow joint with bolts -->
+  <circle cx="30" cy="148" r="3.5" fill="#3a3228" stroke="#0a0604" stroke-width="0.5"/>
+  <circle cx="30" cy="148" r="1.5" fill="#6a5030"/>
+  <!-- Fist — a valve wheel clenched as a weapon -->
+  <circle cx="24" cy="202" r="12" fill="#3a3228" stroke="#0a0604" stroke-width="0.8"/>
+  <circle cx="24" cy="202" r="9" fill="none" stroke="url(#vm-copper)" stroke-width="1.5"/>
+  <circle cx="24" cy="202" r="2.5" fill="url(#vm-copper)" stroke="#0a0604" stroke-width="0.4"/>
+  <line x1="24" y1="192" x2="24" y2="212" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <line x1="14" y1="202" x2="34" y2="202" stroke="url(#vm-copper)" stroke-width="1.2"/>
+  <line x1="17" y1="195" x2="31" y2="209" stroke="url(#vm-copper)" stroke-width="0.8"/>
+  <line x1="17" y1="209" x2="31" y2="195" stroke="url(#vm-copper)" stroke-width="0.8"/>
+  <!-- Water spurting from the edge of the valve wheel -->
+  <path d="M 34 200 L 44 200 L 48 202" fill="none" stroke="#5a8ab0" stroke-width="1.2" opacity="0.7" filter="url(#vm-drip)"/>
+  <path d="M 34 204 L 44 208" fill="none" stroke="#5a8ab0" stroke-width="1" opacity="0.6" filter="url(#vm-drip)"/>
+
+  <!-- Right arm — pipe arm with pressure release valve -->
+  <path d="M 152 116 Q 168 130 178 154 Q 184 178 178 196 L 172 198 L 166 188 Q 160 168 152 148 Z" fill="url(#vm-pipe)" stroke="#0a0604" stroke-width="0.7"/>
+  <line x1="158" y1="130" x2="164" y2="140" stroke="#1a1408" stroke-width="0.5"/>
+  <line x1="168" y1="148" x2="174" y2="158" stroke="#1a1408" stroke-width="0.5"/>
+  <line x1="176" y1="170" x2="178" y2="182" stroke="#1a1408" stroke-width="0.5"/>
+  <circle cx="170" cy="148" r="3.5" fill="#3a3228" stroke="#0a0604" stroke-width="0.5"/>
+  <circle cx="170" cy="148" r="1.5" fill="#6a5030"/>
+  <!-- Right fist — pressure release pipe with T-valve -->
+  <rect x="168" y="196" width="16" height="10" rx="1" fill="#3a3228" stroke="#0a0604" stroke-width="0.6"/>
+  <rect x="172" y="188" width="8" height="8" fill="#3a3228" stroke="#0a0604" stroke-width="0.5"/>
+  <!-- T-valve lever -->
+  <line x1="164" y1="192" x2="188" y2="192" stroke="url(#vm-copper)" stroke-width="1.8"/>
+  <circle cx="164" cy="192" r="1.2" fill="url(#vm-copper)"/>
+  <circle cx="188" cy="192" r="1.2" fill="url(#vm-copper)"/>
+  <!-- Steam release burst -->
+  <path d="M 180 190 Q 186 182 192 184" fill="none" stroke="#c4dcd4" stroke-width="1.5" opacity="0.45" filter="url(#vm-drip)"/>
+  <path d="M 184 188 Q 192 180 198 182" fill="none" stroke="#c4dcd4" stroke-width="1.2" opacity="0.4" filter="url(#vm-drip)"/>
+  <path d="M 178 194 Q 184 190 190 192" fill="none" stroke="#c4dcd4" stroke-width="1" opacity="0.35" filter="url(#vm-drip)"/>
+
+  <!-- Mineral deposit buildup at base -->
+  <ellipse cx="70" cy="252" rx="8" ry="3" fill="#c4b090" opacity="0.5"/>
+  <ellipse cx="130" cy="252" rx="8" ry="3" fill="#c4b090" opacity="0.5"/>
+  <ellipse cx="100" cy="254" rx="10" ry="2.5" fill="#c4b090" opacity="0.4"/>
+</svg>

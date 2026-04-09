@@ -5,6 +5,7 @@ import type { RuntimeSession } from "app/features/runtime";
 import {
   buildGameCallbacks,
   getDefaultShellNavigation,
+  isFocusedGuidanceBeatSuspended,
   isTutorialSuppressibleGuidanceBeat,
   resolveInterruptionAction,
 } from "./game-shell";
@@ -183,5 +184,28 @@ describe("isTutorialSuppressibleGuidanceBeat", () => {
         completionKind: "boss_commitment_resolved",
       }),
     ).toBe(false);
+  });
+});
+
+describe("isFocusedGuidanceBeatSuspended", () => {
+  it("suspends focused guidance while an encounter surface is active", () => {
+    expect(isFocusedGuidanceBeatSuspended({ deliveryMode: "focused" }, null, true)).toBe(true);
+  });
+
+  it("suspends focused guidance under non-guidance interruptions", () => {
+    expect(
+      isFocusedGuidanceBeatSuspended(
+        { deliveryMode: "focused" },
+        createBossCommitmentInterruption(),
+        false,
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps blocking beats and empty state out of the suspension path", () => {
+    expect(isFocusedGuidanceBeatSuspended({ deliveryMode: "blocking" }, null, true)).toBe(false);
+    expect(isFocusedGuidanceBeatSuspended(null, createBossCommitmentInterruption(), true)).toBe(
+      false,
+    );
   });
 });

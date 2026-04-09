@@ -292,11 +292,12 @@ const OPENING_BEATS_MUTABLE = [
     bindings: {},
     copy: {
       title: "Staffing and Rooms",
-      subtitle: "Payroll should buy labor",
-      body: "Idle staff and unused rooms are wasted overhead. Assign operators where they help, and bring dormant rooms online when {guildName} needs the capacity. Everyone is on the clock either way.",
-      ctaLabel: "Assign staff or activate a room",
-      fallbackBody: "Open the Rooms tab, then assign a staff member or activate an idle room.",
-      eventLogSummary: "Guidance: staffing and room activation explained",
+      subtitle: "Make the bodega pull its weight",
+      body: "Open Rooms and make one practical improvement. Assign an existing staff member, switch on an idle room, or buy an upgrade that helps the operation run cleaner. The goal is progress, not a specific button.",
+      ctaLabel: "Make one Rooms change",
+      fallbackBody:
+        "Open the Rooms tab and make one improvement: assign existing staff, activate an idle room, or buy an upgrade. You do not need to recruit someone new for this step.",
+      eventLogSummary: "Guidance: rooms can be improved through staffing, activation, or upgrades",
     },
     completion: { kind: "staffing_action_taken" },
   },

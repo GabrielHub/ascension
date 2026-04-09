@@ -1,0 +1,248 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="di-aura" cx="50%" cy="40%" r="62%">
+      <stop offset="0%" stop-color="#d4a838" stop-opacity="0.12"/>
+      <stop offset="50%" stop-color="#2a1018" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#060204" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="di-velvet" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#8a0818"/>
+      <stop offset="50%" stop-color="#4a0408"/>
+      <stop offset="100%" stop-color="#1a0204"/>
+    </linearGradient>
+    <linearGradient id="di-mask-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4d860"/>
+      <stop offset="50%" stop-color="#c8a038"/>
+      <stop offset="100%" stop-color="#6a4a08"/>
+    </linearGradient>
+    <linearGradient id="di-rope" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#a08048"/>
+      <stop offset="100%" stop-color="#4a3418"/>
+    </linearGradient>
+    <radialGradient id="di-spotlight" cx="50%" cy="10%" r="70%">
+      <stop offset="0%" stop-color="#fff4c8" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#f4d860" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#6a4a08" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="di-glow">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="di-dust">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="136" rx="96" ry="132" fill="url(#di-aura)"/>
+
+  <!-- Spotlight beam coming in from upper right — narrow warm cone -->
+  <path d="M 190 4 L 40 260 L 14 272 L 200 40 Z" fill="url(#di-spotlight)" opacity="0.85"/>
+  <path d="M 192 8 L 60 252 L 50 260 L 196 20 Z" fill="#fff4c8" opacity="0.12"/>
+
+  <!-- Catwalk rigging pipes across the top — horizontal -->
+  <rect x="8" y="18" width="184" height="3" rx="0.4" fill="#3a2a18" stroke="#1a0e04" stroke-width="0.5"/>
+  <rect x="8" y="22" width="184" height="1" fill="#6a4828" opacity="0.5"/>
+  <!-- Catwalk support lines connecting the pipe to upper edge -->
+  <line x1="30" y1="0" x2="30" y2="18" stroke="#3a2a18" stroke-width="1"/>
+  <line x1="80" y1="0" x2="80" y2="18" stroke="#3a2a18" stroke-width="1"/>
+  <line x1="130" y1="0" x2="130" y2="18" stroke="#3a2a18" stroke-width="1"/>
+  <line x1="170" y1="0" x2="170" y2="18" stroke="#3a2a18" stroke-width="1"/>
+  <!-- Second pipe below -->
+  <rect x="8" y="32" width="184" height="2.5" rx="0.4" fill="#3a2a18" stroke="#1a0e04" stroke-width="0.4"/>
+
+  <!-- Ropes descending from the catwalk — various tensions, tangled -->
+  <!-- Left rope running to the body -->
+  <path d="M 50 22 Q 52 40 56 60 Q 58 80 60 96" fill="none" stroke="url(#di-rope)" stroke-width="1.6"/>
+  <!-- Right rope -->
+  <path d="M 150 22 Q 148 40 144 60 Q 142 80 140 96" fill="none" stroke="url(#di-rope)" stroke-width="1.6"/>
+  <!-- Center-left rope -->
+  <path d="M 80 22 Q 82 44 84 68 Q 86 88 88 104" fill="none" stroke="url(#di-rope)" stroke-width="1.2"/>
+  <!-- Center-right rope -->
+  <path d="M 120 22 Q 118 44 116 68 Q 114 88 112 104" fill="none" stroke="url(#di-rope)" stroke-width="1.2"/>
+  <!-- Tangled knot shape that "hurts to look at" -->
+  <path d="M 96 30 Q 102 28 108 32 Q 110 36 106 40 Q 102 42 100 38 Q 98 34 96 30 Z" fill="none" stroke="url(#di-rope)" stroke-width="1.2"/>
+  <path d="M 100 30 Q 106 36 102 42" fill="none" stroke="url(#di-rope)" stroke-width="0.8"/>
+  <path d="M 104 32 Q 98 38 104 44" fill="none" stroke="url(#di-rope)" stroke-width="0.8"/>
+
+  <!-- Sandbag hanging via rope on the left side -->
+  <path d="M 30 22 Q 28 60 26 100 Q 24 120 28 140" fill="none" stroke="url(#di-rope)" stroke-width="1.4"/>
+  <path d="M 14 140 L 40 140 L 44 158 L 42 176 L 38 188 L 20 188 L 14 176 L 12 158 Z" fill="#6a5838" stroke="#2a1e10" stroke-width="0.7"/>
+  <!-- Sandbag stitching -->
+  <line x1="14" y1="150" x2="42" y2="150" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="16" y1="164" x2="40" y2="164" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="18" y1="178" x2="38" y2="178" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="28" y1="140" x2="28" y2="188" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <!-- Sandbag tag -->
+  <rect x="24" y="142" width="8" height="4" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <text x="28" y="145" text-anchor="middle" fill="#3a2808" font-size="3" font-family="serif">250</text>
+  <!-- Rope knotted at top of sandbag -->
+  <circle cx="28" cy="138" r="1.8" fill="#4a3418" stroke="#1a0e04" stroke-width="0.3"/>
+  <path d="M 25 138 L 31 138 L 28 135 Z" fill="#4a3418"/>
+
+  <!-- Sandbag hanging on the right side -->
+  <path d="M 172 22 Q 174 60 176 98" fill="none" stroke="url(#di-rope)" stroke-width="1.4"/>
+  <path d="M 158 98 L 184 98 L 188 116 L 186 134 L 182 146 L 164 146 L 158 134 L 156 116 Z" fill="#6a5838" stroke="#2a1e10" stroke-width="0.7"/>
+  <line x1="158" y1="108" x2="186" y2="108" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="160" y1="122" x2="184" y2="122" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="162" y1="136" x2="182" y2="136" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <line x1="172" y1="98" x2="172" y2="146" stroke="#2a1e10" stroke-width="0.4" opacity="0.7"/>
+  <circle cx="172" cy="96" r="1.8" fill="#4a3418" stroke="#1a0e04" stroke-width="0.3"/>
+
+  <!-- DIRECTOR BODY — suspended in the middle of the frame, legs hanging slightly -->
+  <!-- Velvet robe/cape -->
+  <path d="
+    M 70 98
+    L 74 92 L 86 88 L 100 84 L 114 88 L 126 92 L 130 98
+    L 138 130 L 144 170 L 148 210 L 146 240 L 140 256
+    L 100 260 L 60 256 L 54 240 L 52 210 L 56 170 L 62 130 Z
+  " fill="url(#di-velvet)" stroke="#1a0204" stroke-width="1.2"/>
+
+  <!-- Velvet folds and drape highlights -->
+  <path d="M 66 130 Q 70 170 68 210 Q 66 240 62 252" fill="none" stroke="#2a0608" stroke-width="0.6" opacity="0.7"/>
+  <path d="M 134 130 Q 130 170 132 210 Q 134 240 138 252" fill="none" stroke="#2a0608" stroke-width="0.6" opacity="0.7"/>
+  <path d="M 100 90 Q 96 150 98 210 Q 100 240 100 258" fill="none" stroke="#2a0608" stroke-width="0.5" opacity="0.6"/>
+  <path d="M 84 96 Q 80 150 82 200 Q 84 230 86 252" fill="none" stroke="#2a0608" stroke-width="0.5" opacity="0.6"/>
+  <path d="M 116 96 Q 120 150 118 200 Q 116 230 114 252" fill="none" stroke="#2a0608" stroke-width="0.5" opacity="0.6"/>
+  <!-- Highlight sheen -->
+  <path d="M 78 100 Q 100 92 122 100" fill="none" stroke="#c84848" stroke-width="0.4" opacity="0.45"/>
+  <path d="M 68 160 Q 100 150 132 160" fill="none" stroke="#c84848" stroke-width="0.3" opacity="0.35"/>
+  <path d="M 64 220 Q 100 212 136 220" fill="none" stroke="#c84848" stroke-width="0.3" opacity="0.3"/>
+
+  <!-- Gold brocade cuffs at the base of the robe -->
+  <path d="M 54 248 Q 100 254 146 248 L 146 256 Q 100 262 54 256 Z" fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="0.5" opacity="0.85"/>
+  <!-- Brocade pattern -->
+  <path d="M 58 252 L 62 254 L 66 252 L 70 254 L 74 252 L 78 254 L 82 252 L 86 254 L 90 252 L 94 254 L 98 252 L 102 254 L 106 252 L 110 254 L 114 252 L 118 254 L 122 252 L 126 254 L 130 252 L 134 254 L 138 252 L 142 254" fill="none" stroke="#4a3408" stroke-width="0.5" opacity="0.85"/>
+
+  <!-- Gold brocade collar -->
+  <path d="M 74 92 Q 86 88 100 86 Q 114 88 126 92 L 126 100 L 74 100 Z" fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="0.6"/>
+  <path d="M 76 94 L 80 96 L 84 94 L 88 96 L 92 94 L 96 96 L 100 94 L 104 96 L 108 94 L 112 96 L 116 94 L 120 96 L 124 94" fill="none" stroke="#4a3408" stroke-width="0.4"/>
+  <!-- Collar chain -->
+  <path d="M 80 100 Q 100 112 120 100" fill="none" stroke="url(#di-mask-gold)" stroke-width="1"/>
+  <circle cx="100" cy="112" r="2" fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="0.3"/>
+  <path d="M 98 110 L 102 110 L 100 114 Z" fill="#8a1818"/>
+
+  <!-- HEAD — a large theatrical comedy/tragedy mask fused to the body -->
+  <!-- Mask backing -->
+  <path d="
+    M 100 24
+    Q 74 26 70 58
+    Q 68 84 82 92
+    L 100 96
+    L 118 92
+    Q 132 84 130 58
+    Q 126 26 100 24 Z
+  " fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="1.2"/>
+
+  <!-- Left half — comedy: laughing, exaggerated smile, raised eyebrow -->
+  <!-- Left eye — wide laughing crescent -->
+  <path d="M 80 56 Q 86 50 92 56 Q 88 62 80 58 Z" fill="#1a0e04" stroke="#4a3408" stroke-width="0.5"/>
+  <path d="M 82 56 Q 86 54 90 56" fill="none" stroke="#f4f4d8" stroke-width="0.4"/>
+  <!-- Left eyebrow — arched high -->
+  <path d="M 78 50 Q 84 44 92 48" fill="none" stroke="#4a3408" stroke-width="1"/>
+  <!-- Left half smile -->
+  <path d="M 78 76 Q 84 86 98 86" fill="none" stroke="#4a3408" stroke-width="1.5"/>
+  <path d="M 80 78 Q 86 84 96 84" fill="#1a0e04"/>
+  <!-- Teeth hint -->
+  <path d="M 86 82 L 90 82 M 92 82 L 96 82" stroke="#e8dcb0" stroke-width="0.5"/>
+
+  <!-- Right half — tragedy: downturned, weeping, heavy brow -->
+  <!-- Right eye — closed/weeping -->
+  <path d="M 108 56 Q 114 52 120 58" fill="none" stroke="#4a3408" stroke-width="1"/>
+  <path d="M 108 60 Q 114 62 120 60" fill="none" stroke="#4a3408" stroke-width="0.6"/>
+  <!-- Right eyebrow — low, heavy -->
+  <path d="M 108 50 Q 114 52 120 50" fill="none" stroke="#4a3408" stroke-width="1"/>
+  <!-- Tear streak from right eye -->
+  <path d="M 116 60 Q 118 68 116 76" fill="none" stroke="#6a88d4" stroke-width="0.6" opacity="0.8"/>
+  <circle cx="116" cy="78" r="0.8" fill="#8aa8d4" opacity="0.8"/>
+  <!-- Right half frown -->
+  <path d="M 102 86 Q 114 84 122 76" fill="none" stroke="#4a3408" stroke-width="1.5"/>
+  <path d="M 104 84 Q 114 82 120 76" fill="#1a0e04"/>
+
+  <!-- Central dividing line of the mask — gold ridge -->
+  <line x1="100" y1="28" x2="100" y2="96" stroke="#6a4a08" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Nose — slim theatrical ridge -->
+  <path d="M 100 60 L 98 72 L 100 76 L 102 72 Z" fill="#8a6a18" stroke="#4a3408" stroke-width="0.4"/>
+
+  <!-- Mask ornate decorations — laurel / flourish around the top -->
+  <path d="M 70 40 Q 68 32 76 28 M 74 36 Q 72 30 80 26" fill="none" stroke="#6a4a08" stroke-width="0.5" opacity="0.8"/>
+  <path d="M 130 40 Q 132 32 124 28 M 126 36 Q 128 30 120 26" fill="none" stroke="#6a4a08" stroke-width="0.5" opacity="0.8"/>
+  <!-- Crown-like top -->
+  <path d="M 84 28 L 86 20 L 90 24 L 94 18 L 98 22 L 100 16 L 102 22 L 106 18 L 110 24 L 114 20 L 116 28" fill="none" stroke="#6a4a08" stroke-width="0.8"/>
+  <path d="M 86 22 L 88 18 L 90 22" fill="#f4d860" stroke="#4a3408" stroke-width="0.3"/>
+  <path d="M 110 22 L 112 18 L 114 22" fill="#f4d860" stroke="#4a3408" stroke-width="0.3"/>
+
+  <!-- Left arm — raised, gesturing, holding a conductor's baton -->
+  <path d="M 60 100 L 44 120 L 32 144 L 22 164 L 20 180 Q 20 188 26 188 L 32 180 L 42 160 L 52 138 Z" fill="url(#di-velvet)" stroke="#1a0204" stroke-width="0.7"/>
+  <!-- Gold cuff -->
+  <rect x="20" y="182" width="12" height="4" rx="0.5" fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="0.3"/>
+  <!-- Gloved hand -->
+  <ellipse cx="26" cy="192" rx="6" ry="4.5" fill="#1a0e04" stroke="#0a0404" stroke-width="0.5"/>
+  <!-- Fingers gripping baton -->
+  <path d="M 22 194 L 18 200 L 16 208" stroke="#0a0404" stroke-width="0.6"/>
+  <path d="M 26 196 L 24 204 L 22 212" stroke="#0a0404" stroke-width="0.6"/>
+  <!-- Baton — thin white rod with black handle -->
+  <rect x="24" y="190" width="2.5" height="6" rx="0.4" fill="#0a0404" stroke="#3a1e08" stroke-width="0.3"/>
+  <rect x="25" y="170" width="1.2" height="20" fill="#e8dcb0" stroke="#6a5838" stroke-width="0.2"/>
+  <circle cx="25.6" cy="168" r="0.8" fill="#f4e8c8" stroke="#6a5838" stroke-width="0.2"/>
+  <!-- Baton motion trail -->
+  <path d="M 25 170 Q 20 160 22 148" fill="none" stroke="#e8dcb0" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- Right arm — lowered, gripping puppet strings that descend -->
+  <path d="M 140 100 L 156 120 L 168 144 L 176 162 L 178 178 Q 178 188 172 188 L 166 178 L 156 158 L 148 138 Z" fill="url(#di-velvet)" stroke="#1a0204" stroke-width="0.7"/>
+  <rect x="166" y="182" width="12" height="4" rx="0.5" fill="url(#di-mask-gold)" stroke="#4a3408" stroke-width="0.3"/>
+  <!-- Gloved hand -->
+  <ellipse cx="172" cy="192" rx="6" ry="4.5" fill="#1a0e04" stroke="#0a0404" stroke-width="0.5"/>
+  <!-- Fingers splayed — each controls a puppet string -->
+  <line x1="168" y1="196" x2="164" y2="204" stroke="#0a0404" stroke-width="0.5"/>
+  <line x1="172" y1="198" x2="172" y2="208" stroke="#0a0404" stroke-width="0.5"/>
+  <line x1="176" y1="196" x2="180" y2="204" stroke="#0a0404" stroke-width="0.5"/>
+
+  <!-- Puppet strings descending from the right hand — taut, going down out of frame -->
+  <path d="M 166 198 Q 160 222 158 250 L 156 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+  <path d="M 172 200 Q 170 230 170 258 L 170 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+  <path d="M 178 198 Q 182 222 184 250 L 186 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+  <path d="M 180 204 Q 188 226 192 250 L 196 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+
+  <!-- Puppet strings going to the LEFT as well (from the baton hand) -->
+  <path d="M 18 198 Q 10 220 8 250 L 6 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+  <path d="M 24 208 Q 20 232 18 256 L 16 272" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.85"/>
+
+  <!-- Strings ATTACHED to the Director himself — he's also being puppeted -->
+  <path d="M 70 94 Q 60 60 50 22" fill="none" stroke="#e8dcb0" stroke-width="0.4" opacity="0.75"/>
+  <path d="M 130 94 Q 140 60 150 22" fill="none" stroke="#e8dcb0" stroke-width="0.4" opacity="0.75"/>
+  <path d="M 100 22 Q 100 18 100 12 L 100 6" fill="none" stroke="#e8dcb0" stroke-width="0.5" opacity="0.8"/>
+
+  <!-- The director is not standing — he is suspended. Lower body trails off into shadow -->
+  <path d="M 70 254 Q 100 264 130 254 L 132 268 Q 100 274 68 268 Z" fill="#0a0204" opacity="0.75"/>
+  <!-- Dangling feet in shadow -->
+  <ellipse cx="86" cy="266" rx="5" ry="2" fill="#1a0204"/>
+  <ellipse cx="114" cy="266" rx="5" ry="2" fill="#1a0204"/>
+
+  <!-- Proscenium curtain edge peeking in from the left side -->
+  <path d="M 0 20 L 6 22 L 4 50 L 6 80 L 2 110 L 6 140 L 2 170 L 6 200 L 2 230 L 6 260 L 0 260 Z" fill="url(#di-velvet)" stroke="#1a0204" stroke-width="0.5" opacity="0.85"/>
+  <!-- Curtain fold shadows -->
+  <line x1="3" y1="30" x2="3" y2="260" stroke="#2a0608" stroke-width="0.4" opacity="0.6"/>
+  <line x1="5" y1="40" x2="5" y2="258" stroke="#2a0608" stroke-width="0.3" opacity="0.5"/>
+  <!-- Curtain gold tassels -->
+  <circle cx="4" cy="110" r="1" fill="#c8a038"/>
+  <circle cx="4" cy="170" r="1" fill="#c8a038"/>
+  <circle cx="4" cy="230" r="1" fill="#c8a038"/>
+
+  <!-- Dust motes floating in the spotlight beam -->
+  <circle cx="100" cy="104" r="0.6" fill="#f4d860" opacity="0.65" filter="url(#di-dust)"/>
+  <circle cx="86" cy="140" r="0.7" fill="#f4d860" opacity="0.55" filter="url(#di-dust)"/>
+  <circle cx="112" cy="162" r="0.6" fill="#f4d860" opacity="0.55" filter="url(#di-dust)"/>
+  <circle cx="76" cy="196" r="0.5" fill="#f4d860" opacity="0.5" filter="url(#di-dust)"/>
+  <circle cx="122" cy="212" r="0.6" fill="#f4d860" opacity="0.5" filter="url(#di-dust)"/>
+  <circle cx="94" cy="240" r="0.5" fill="#f4d860" opacity="0.45" filter="url(#di-dust)"/>
+  <circle cx="150" cy="100" r="0.6" fill="#f4d860" opacity="0.55" filter="url(#di-dust)"/>
+  <circle cx="60" cy="72" r="0.5" fill="#f4d860" opacity="0.5" filter="url(#di-dust)"/>
+
+  <!-- Stage flash — the curtain call, a small ember over the Director's shoulder -->
+  <circle cx="140" cy="80" r="1.5" fill="#f4d860" opacity="0.85" filter="url(#di-glow)"/>
+  <circle cx="140" cy="80" r="0.8" fill="#fff4c8"/>
+  <circle cx="60" cy="86" r="1.3" fill="#f4d860" opacity="0.8" filter="url(#di-glow)"/>
+</svg>

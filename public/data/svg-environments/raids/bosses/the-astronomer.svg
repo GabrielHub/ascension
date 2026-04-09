@@ -1,0 +1,280 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="as-aura" cx="50%" cy="42%" r="62%">
+      <stop offset="0%" stop-color="#6a88d4" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#1a1830" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#040608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="as-coat" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a3a"/>
+      <stop offset="55%" stop-color="#0a0a20"/>
+      <stop offset="100%" stop-color="#040410"/>
+    </linearGradient>
+    <linearGradient id="as-dome" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#c8ccd8"/>
+      <stop offset="50%" stop-color="#6a7088"/>
+      <stop offset="100%" stop-color="#3a3e58"/>
+    </linearGradient>
+    <linearGradient id="as-brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c8a438"/>
+      <stop offset="50%" stop-color="#8a7018"/>
+      <stop offset="100%" stop-color="#4a3808"/>
+    </linearGradient>
+    <radialGradient id="as-void" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0a0410" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#1a0a28" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#6a488a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="as-star" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#c8d8ff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#6a88d4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="as-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="as-starglow">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="96" ry="134" fill="url(#as-aura)"/>
+
+  <!-- Wrong star field behind the figure — scattered distant stars -->
+  <circle cx="20" cy="30" r="0.8" fill="#c8d8ff" opacity="0.85" filter="url(#as-starglow)"/>
+  <circle cx="34" cy="18" r="0.6" fill="#c8d8ff" opacity="0.75" filter="url(#as-starglow)"/>
+  <circle cx="52" cy="36" r="0.7" fill="#c8d8ff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="172" cy="22" r="0.8" fill="#c8d8ff" opacity="0.85" filter="url(#as-starglow)"/>
+  <circle cx="180" cy="42" r="0.7" fill="#c8d8ff" opacity="0.75" filter="url(#as-starglow)"/>
+  <circle cx="158" cy="32" r="0.6" fill="#c8d8ff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="14" cy="72" r="0.7" fill="#c8d8ff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="24" cy="100" r="0.6" fill="#c8d8ff" opacity="0.65" filter="url(#as-starglow)"/>
+  <circle cx="186" cy="78" r="0.7" fill="#c8d8ff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="180" cy="108" r="0.5" fill="#c8d8ff" opacity="0.6" filter="url(#as-starglow)"/>
+  <circle cx="10" cy="160" r="0.6" fill="#c8d8ff" opacity="0.65" filter="url(#as-starglow)"/>
+  <circle cx="190" cy="168" r="0.7" fill="#c8d8ff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="8" cy="220" r="0.5" fill="#c8d8ff" opacity="0.55" filter="url(#as-starglow)"/>
+  <circle cx="192" cy="212" r="0.6" fill="#c8d8ff" opacity="0.6" filter="url(#as-starglow)"/>
+  <!-- Larger feature stars -->
+  <circle cx="44" cy="58" r="1.3" fill="#ffffff" opacity="0.95" filter="url(#as-starglow)"/>
+  <path d="M 44 52 L 44 64 M 38 58 L 50 58" stroke="#c8d8ff" stroke-width="0.25" opacity="0.6"/>
+  <circle cx="160" cy="64" r="1.2" fill="#ffffff" opacity="0.95" filter="url(#as-starglow)"/>
+  <path d="M 160 58 L 160 70 M 154 64 L 166 64" stroke="#c8d8ff" stroke-width="0.25" opacity="0.6"/>
+  <circle cx="28" cy="128" r="1.1" fill="#ffffff" opacity="0.9" filter="url(#as-starglow)"/>
+  <circle cx="170" cy="138" r="1" fill="#ffffff" opacity="0.9" filter="url(#as-starglow)"/>
+
+  <!-- Constellation lines sketched faintly across the background -->
+  <path d="M 44 58 L 68 42 L 52 36 L 44 58 Z" fill="none" stroke="#6a88d4" stroke-width="0.25" opacity="0.4"/>
+  <path d="M 160 64 L 172 42 L 158 32 L 160 64" fill="none" stroke="#6a88d4" stroke-width="0.25" opacity="0.4"/>
+
+  <!-- Observatory dome — enclosing upper body, opened -->
+  <!-- Dome outer curve -->
+  <path d="
+    M 32 98
+    Q 32 48 100 36
+    Q 168 48 168 98
+  " fill="url(#as-dome)" stroke="#1a1a28" stroke-width="1.2" opacity="0.92"/>
+  <!-- Dome slit — the observatory shutter is open, showing inside -->
+  <path d="
+    M 90 40 L 90 98
+    Q 90 102 100 102
+    Q 110 102 110 98
+    L 110 40
+    Q 110 36 100 36
+    Q 90 36 90 40 Z
+  " fill="#0a0410" stroke="#1a1a28" stroke-width="0.8"/>
+  <!-- Star inside the slit — a bright wrong star hovering -->
+  <circle cx="100" cy="68" r="2.5" fill="url(#as-star)" filter="url(#as-starglow)"/>
+  <circle cx="100" cy="68" r="1.2" fill="#ffffff"/>
+  <path d="M 100 60 L 100 76 M 92 68 L 108 68" stroke="#c8d8ff" stroke-width="0.3" opacity="0.75"/>
+  <path d="M 94 62 L 106 74 M 106 62 L 94 74" stroke="#c8d8ff" stroke-width="0.2" opacity="0.5"/>
+
+  <!-- Dome panel lines -->
+  <path d="M 32 98 Q 34 62 56 46" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.8"/>
+  <path d="M 50 98 Q 50 66 66 48" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 68 98 Q 68 60 82 44" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 168 98 Q 166 62 144 46" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.8"/>
+  <path d="M 150 98 Q 150 66 134 48" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 132 98 Q 132 60 118 44" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.7"/>
+  <!-- Horizontal dome bands -->
+  <path d="M 32 76 Q 100 62 168 76" fill="none" stroke="#1a1a28" stroke-width="0.5" opacity="0.65"/>
+  <path d="M 32 98 Q 100 92 168 98" fill="none" stroke="#1a1a28" stroke-width="0.7" opacity="0.75"/>
+  <!-- Dome rivet studs -->
+  <circle cx="60" cy="80" r="0.7" fill="#3a3e58"/>
+  <circle cx="80" cy="70" r="0.7" fill="#3a3e58"/>
+  <circle cx="140" cy="80" r="0.7" fill="#3a3e58"/>
+  <circle cx="120" cy="70" r="0.7" fill="#3a3e58"/>
+
+  <!-- Small star flickering in the dome panels (leaking in) -->
+  <circle cx="48" cy="70" r="0.5" fill="#ffffff" opacity="0.8" filter="url(#as-starglow)"/>
+  <circle cx="152" cy="74" r="0.5" fill="#ffffff" opacity="0.8" filter="url(#as-starglow)"/>
+  <circle cx="70" cy="62" r="0.4" fill="#ffffff" opacity="0.7" filter="url(#as-starglow)"/>
+  <circle cx="130" cy="58" r="0.4" fill="#ffffff" opacity="0.7" filter="url(#as-starglow)"/>
+
+  <!-- Astronomer body — long coat under the dome, bending forward at the eyepiece -->
+  <path d="
+    M 62 104
+    L 72 100 L 84 98 L 100 98 L 116 98 L 128 100 L 138 104
+    L 144 120 L 148 150 L 148 180 L 144 210 L 138 234 L 132 250
+    L 114 258 L 100 260 L 86 258 L 68 250 L 62 234 L 56 210
+    L 52 180 L 52 150 L 56 120 Z
+  " fill="url(#as-coat)" stroke="#0a0a20" stroke-width="1"/>
+
+  <!-- Coat lapels with silver brocade -->
+  <path d="M 88 102 L 78 130 L 82 170 L 86 200 L 92 230" fill="none" stroke="#6a88d4" stroke-width="0.6" opacity="0.6"/>
+  <path d="M 112 102 L 122 130 L 118 170 L 114 200 L 108 230" fill="none" stroke="#6a88d4" stroke-width="0.6" opacity="0.6"/>
+  <!-- Buttons on the coat -->
+  <circle cx="100" cy="118" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+  <circle cx="100" cy="138" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+  <circle cx="100" cy="158" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+  <circle cx="100" cy="178" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+  <circle cx="100" cy="198" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+  <circle cx="100" cy="218" r="1.4" fill="url(#as-brass)" stroke="#1a1a28" stroke-width="0.3"/>
+
+  <!-- Constellation embroidery on the coat — silver star points connected by silver threads -->
+  <g opacity="0.75">
+    <!-- Cassiopeia-like on the chest -->
+    <circle cx="72" cy="134" r="0.7" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="78" cy="126" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="86" cy="130" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="92" cy="122" r="0.7" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <line x1="72" y1="134" x2="78" y2="126" stroke="#6a88d4" stroke-width="0.2"/>
+    <line x1="78" y1="126" x2="86" y2="130" stroke="#6a88d4" stroke-width="0.2"/>
+    <line x1="86" y1="130" x2="92" y2="122" stroke="#6a88d4" stroke-width="0.2"/>
+    <!-- Another group on the belly -->
+    <circle cx="108" cy="160" r="0.7" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="116" cy="168" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="122" cy="158" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="128" cy="166" r="0.7" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <line x1="108" y1="160" x2="116" y2="168" stroke="#6a88d4" stroke-width="0.2"/>
+    <line x1="116" y1="168" x2="122" y2="158" stroke="#6a88d4" stroke-width="0.2"/>
+    <line x1="122" y1="158" x2="128" y2="166" stroke="#6a88d4" stroke-width="0.2"/>
+    <!-- Side stars -->
+    <circle cx="72" cy="190" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="76" cy="200" r="0.5" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="68" cy="220" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="124" cy="192" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="130" cy="208" r="0.5" fill="#c8d8ff" filter="url(#as-starglow)"/>
+    <circle cx="126" cy="228" r="0.6" fill="#c8d8ff" filter="url(#as-starglow)"/>
+  </g>
+
+  <!-- Astrolabe pendant hanging on chest -->
+  <line x1="100" y1="102" x2="100" y2="148" stroke="url(#as-brass)" stroke-width="0.5" opacity="0.7"/>
+  <circle cx="100" cy="150" r="9" fill="#1a1a28" stroke="url(#as-brass)" stroke-width="1"/>
+  <circle cx="100" cy="150" r="6" fill="none" stroke="url(#as-brass)" stroke-width="0.5"/>
+  <circle cx="100" cy="150" r="3" fill="none" stroke="url(#as-brass)" stroke-width="0.4"/>
+  <line x1="91" y1="150" x2="109" y2="150" stroke="url(#as-brass)" stroke-width="0.4"/>
+  <line x1="100" y1="141" x2="100" y2="159" stroke="url(#as-brass)" stroke-width="0.4"/>
+  <line x1="94" y1="144" x2="106" y2="156" stroke="url(#as-brass)" stroke-width="0.3"/>
+  <line x1="94" y1="156" x2="106" y2="144" stroke="url(#as-brass)" stroke-width="0.3"/>
+  <!-- Astrolabe pointer -->
+  <line x1="100" y1="150" x2="104" y2="144" stroke="#c8a438" stroke-width="0.6"/>
+
+  <!-- Head — partially eclipsed by the dome slit, with one visible eye being pressed to the telescope -->
+  <!-- Face shadow behind the dome -->
+  <ellipse cx="100" cy="88" rx="12" ry="14" fill="#0a0410" stroke="#1a1a28" stroke-width="0.4"/>
+  <!-- Cheek highlights — pale starlit skin -->
+  <path d="M 92 92 Q 94 100 100 102" fill="none" stroke="#4a4a6a" stroke-width="0.6" opacity="0.8"/>
+  <path d="M 108 92 Q 106 100 100 102" fill="none" stroke="#4a4a6a" stroke-width="0.6" opacity="0.8"/>
+  <!-- Chin -->
+  <path d="M 94 102 L 100 106 L 106 102" fill="none" stroke="#4a4a6a" stroke-width="0.6" opacity="0.8"/>
+  <!-- Mouth — thin, open slightly, whispering star-math -->
+  <path d="M 96 98 L 104 98" stroke="#3a2a4a" stroke-width="0.6"/>
+  <!-- Visible eye — singular bright pinpoint -->
+  <circle cx="106" cy="90" r="1.6" fill="#ffffff" filter="url(#as-starglow)"/>
+  <circle cx="106" cy="90" r="0.8" fill="#c8d8ff"/>
+  <!-- The other "eye" is hidden behind the telescope eyepiece (coming later) -->
+
+  <!-- Left arm — long sleeve reaching up to hold the telescope barrel -->
+  <path d="M 58 108 L 44 130 L 34 158 L 28 184 L 24 206 L 30 212 L 38 198 L 48 174 L 58 148 Z" fill="url(#as-coat)" stroke="#0a0a20" stroke-width="0.7"/>
+  <!-- Silver braid cuff -->
+  <rect x="24" y="208" width="12" height="3" rx="0.3" fill="#6a88d4" opacity="0.55"/>
+  <!-- Left hand gloved — gripping a rolled star chart -->
+  <ellipse cx="30" cy="220" rx="6" ry="4" fill="#1a1a28" stroke="#0a0a20" stroke-width="0.5"/>
+  <path d="M 26 220 L 22 226 L 20 232" stroke="#0a0a20" stroke-width="0.5"/>
+  <path d="M 30 222 L 28 230 L 26 236" stroke="#0a0a20" stroke-width="0.5"/>
+  <path d="M 34 222 L 34 230 L 36 236" stroke="#0a0a20" stroke-width="0.5"/>
+  <!-- Rolled star chart in the left hand -->
+  <rect x="10" y="224" width="30" height="6" rx="1" fill="#c8b888" stroke="#6a5020" stroke-width="0.5"/>
+  <line x1="14" y1="226" x2="38" y2="226" stroke="#4a3808" stroke-width="0.3" opacity="0.75"/>
+  <line x1="14" y1="228" x2="36" y2="228" stroke="#4a3808" stroke-width="0.3" opacity="0.75"/>
+  <!-- Constellation dots on the chart -->
+  <circle cx="18" cy="227" r="0.5" fill="#1a1408"/>
+  <circle cx="24" cy="227" r="0.5" fill="#1a1408"/>
+  <circle cx="30" cy="227" r="0.5" fill="#1a1408"/>
+  <line x1="18" y1="227" x2="24" y2="227" stroke="#1a1408" stroke-width="0.2"/>
+  <line x1="24" y1="227" x2="30" y2="227" stroke="#1a1408" stroke-width="0.2"/>
+  <!-- Chart ends curling -->
+  <path d="M 10 224 Q 6 227 10 230" fill="#c8b888" stroke="#6a5020" stroke-width="0.5"/>
+  <path d="M 40 224 Q 44 227 40 230" fill="#c8b888" stroke="#6a5020" stroke-width="0.5"/>
+
+  <!-- Right arm and HAND — raised to the telescope eyepiece, pressed to the face -->
+  <path d="M 140 108 L 152 122 L 162 140 L 168 152" fill="none" stroke="url(#as-coat)" stroke-width="7" stroke-linecap="round"/>
+  <!-- Silver cuff at the wrist -->
+  <rect x="164" y="148" width="10" height="3" rx="0.3" fill="#6a88d4" opacity="0.6"/>
+  <ellipse cx="170" cy="154" rx="5" ry="3.5" fill="#1a1a28" stroke="#0a0a20" stroke-width="0.4"/>
+
+  <!-- TELESCOPE — the star feature. Pointed upward-right from the hand up through the dome slit into the sky -->
+  <!-- Main barrel -->
+  <rect x="130" y="82" width="56" height="14" rx="2" fill="#2a2e48" stroke="#0a0410" stroke-width="1" transform="rotate(-32 158 89)"/>
+  <!-- Barrel bands -->
+  <rect x="138" y="82" width="3" height="14" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.3" transform="rotate(-32 139.5 89)"/>
+  <rect x="152" y="82" width="3" height="14" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.3" transform="rotate(-32 153.5 89)"/>
+  <rect x="166" y="82" width="3" height="14" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.3" transform="rotate(-32 167.5 89)"/>
+  <rect x="178" y="82" width="3" height="14" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.3" transform="rotate(-32 179.5 89)"/>
+
+  <!-- Objective lens at the far (top-right) end -->
+  <circle cx="176" cy="52" r="10" fill="#0a0410" stroke="url(#as-brass)" stroke-width="1.5"/>
+  <circle cx="176" cy="52" r="7" fill="#1a1a40" stroke="#4a4a6a" stroke-width="0.4"/>
+  <circle cx="176" cy="52" r="4" fill="url(#as-void)" filter="url(#as-glow)"/>
+  <circle cx="176" cy="52" r="1" fill="#ffffff"/>
+  <path d="M 172 48 L 180 56" stroke="#6a88d4" stroke-width="0.3" opacity="0.7"/>
+
+  <!-- Eyepiece at the near (bottom-left) end — pressed to the face -->
+  <rect x="112" y="92" width="12" height="14" rx="1" fill="#0a0410" stroke="url(#as-brass)" stroke-width="0.8" transform="rotate(-32 118 99)"/>
+  <circle cx="118" cy="99" r="3" fill="#1a1a28" stroke="url(#as-brass)" stroke-width="0.6"/>
+  <circle cx="118" cy="99" r="1.8" fill="url(#as-void)"/>
+
+  <!-- Tripod mount at the center of the telescope, attached to the body -->
+  <rect x="150" y="110" width="6" height="8" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.4"/>
+  <circle cx="153" cy="106" r="2" fill="url(#as-brass)" stroke="#0a0410" stroke-width="0.4"/>
+
+  <!-- Light streaming from the objective lens — starlight being captured -->
+  <path d="M 176 52 L 170 38 L 186 32 Z" fill="#c8d8ff" opacity="0.15"/>
+  <path d="M 176 52 L 172 36" stroke="#ffffff" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 176 52 L 184 34" stroke="#ffffff" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 176 52 L 180 32" stroke="#c8d8ff" stroke-width="0.4" opacity="0.55"/>
+
+  <!-- Stars caught in the lens flare -->
+  <circle cx="176" cy="40" r="0.8" fill="#ffffff" filter="url(#as-starglow)"/>
+  <circle cx="182" cy="44" r="0.6" fill="#ffffff" filter="url(#as-starglow)"/>
+  <circle cx="170" cy="46" r="0.6" fill="#ffffff" filter="url(#as-starglow)"/>
+
+  <!-- Stars visible THROUGH the astronomer's body — he's become translucent to the cosmos -->
+  <circle cx="80" cy="170" r="0.8" fill="#ffffff" opacity="0.9" filter="url(#as-starglow)"/>
+  <circle cx="90" cy="182" r="0.7" fill="#ffffff" opacity="0.85" filter="url(#as-starglow)"/>
+  <circle cx="112" cy="178" r="0.8" fill="#ffffff" opacity="0.9" filter="url(#as-starglow)"/>
+  <circle cx="122" cy="168" r="0.6" fill="#ffffff" opacity="0.8" filter="url(#as-starglow)"/>
+  <circle cx="86" cy="212" r="0.7" fill="#ffffff" opacity="0.85" filter="url(#as-starglow)"/>
+  <circle cx="114" cy="218" r="0.6" fill="#ffffff" opacity="0.8" filter="url(#as-starglow)"/>
+  <circle cx="100" cy="236" r="0.8" fill="#ffffff" opacity="0.9" filter="url(#as-starglow)"/>
+  <circle cx="78" cy="156" r="0.5" fill="#ffffff" opacity="0.75" filter="url(#as-starglow)"/>
+  <circle cx="122" cy="146" r="0.5" fill="#ffffff" opacity="0.75" filter="url(#as-starglow)"/>
+
+  <!-- Subtle void tear in the coat — a black hole eating the fabric -->
+  <ellipse cx="100" cy="188" rx="4" ry="3" fill="url(#as-void)" filter="url(#as-glow)"/>
+  <circle cx="100" cy="188" r="0.6" fill="#ffffff" opacity="0.95"/>
+
+  <!-- Long coat hem and shadow at the feet -->
+  <path d="M 68 250 Q 100 260 132 250 L 138 260 Q 100 268 62 260 Z" fill="#040410" stroke="#0a0a20" stroke-width="0.5"/>
+  <!-- Boot tips peeking out -->
+  <ellipse cx="84" cy="262" rx="7" ry="2.5" fill="#1a1a28" stroke="#0a0a20" stroke-width="0.4"/>
+  <ellipse cx="116" cy="262" rx="7" ry="2.5" fill="#1a1a28" stroke="#0a0a20" stroke-width="0.4"/>
+
+  <!-- Accretion ring — a faint ring encircling the entire figure, showing the warped spacetime -->
+  <ellipse cx="100" cy="148" rx="70" ry="108" fill="none" stroke="#6a88d4" stroke-width="0.25" opacity="0.25"/>
+  <ellipse cx="100" cy="148" rx="56" ry="96" fill="none" stroke="#6a88d4" stroke-width="0.2" opacity="0.2"/>
+</svg>

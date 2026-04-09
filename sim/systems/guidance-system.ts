@@ -35,6 +35,7 @@ import {
   completeBeat,
   checkOpeningPathCompletion,
   ensureOpeningTimingState,
+  hasActiveFocusedGuidancePause,
   isBeatEligible,
   isCompletionMet,
   recordAnchorFailure,
@@ -403,7 +404,7 @@ function shouldAutoCompleteBeat(
   }
 
   if (beat.completion.kind === "staffing_action_taken") {
-    return !evalContext.hasUnassignedManagementAction;
+    return !evalContext.hasUnassignedManagementAction || evalContext.hasAnyUpgradePurchased;
   }
 
   if (beat.completion.kind === "upgrade_purchased") {
@@ -649,7 +650,7 @@ export function advanceGuidanceSystem(context: SimSystemContext, _deltaMs: numbe
       }
       // Focused beats that pause world freeze simulation directly
       else if (beat.delivery.pauseWorld) {
-        context.runtimeState.worldTimeFrozen = true;
+        context.runtimeState.worldTimeFrozen = hasActiveFocusedGuidancePause(guidanceState);
       }
 
       // Log to event log
@@ -676,7 +677,7 @@ function completeActiveBeat(context: SimSystemContext, beat: GuidanceBeat): void
 
   // Unfreeze world if this beat was pausing it
   if (beat.delivery.pauseWorld && beat.delivery.mode === "focused") {
-    context.runtimeState.worldTimeFrozen = false;
+    context.runtimeState.worldTimeFrozen = hasActiveFocusedGuidancePause(guidanceState);
   }
 
   // Reset evaluation throttle so the next beat can activate promptly
@@ -721,7 +722,7 @@ export function handleGuidanceDismiss(context: SimSystemContext, beatId: string)
 
   // Unfreeze world
   if (beat.delivery.pauseWorld && beat.delivery.mode === "focused") {
-    context.runtimeState.worldTimeFrozen = false;
+    context.runtimeState.worldTimeFrozen = hasActiveFocusedGuidancePause(guidanceState);
   }
 }
 

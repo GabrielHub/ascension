@@ -12,7 +12,11 @@ import {
   OperatorIdentity,
   WorldTimeState,
 } from "../components";
-import { advanceGuidanceSystem, handleGuidanceRecordAnchorFailure } from "./guidance-system";
+import {
+  advanceGuidanceSystem,
+  handleGuidanceRecordAnchorFailure,
+  recordGuidanceUpgradePurchase,
+} from "./guidance-system";
 import { OPENING_BEAT_BY_ID, OPENING_BEAT_IDS } from "./guidance-beats";
 import { applyContractCommand } from "./contract-commands";
 import { applyEncounterCommand, registerGuidanceCommandHandlers } from "./encounter-commands";
@@ -460,6 +464,50 @@ describe("guidance system", () => {
     expect(context.runtimeState.guidanceState.activeBeatId).toBe(
       "guidance/opening/staffing-and-rooms",
     );
+  });
+
+  it("completes staffing-and-rooms when the player buys an upgrade instead", () => {
+    const context = createGuidanceContext(7);
+    const idleStaff = addEntity(context.world);
+    addComponent(context.world, idleStaff, AssignmentState);
+    AssignmentState.kind[idleStaff] = "idle";
+    AssignmentState.targetId[idleStaff] = "";
+    context.runtimeState.staffEntities.push(idleStaff);
+    context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
+    context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+
+    advanceGuidanceSystem(context, 0);
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe(
+      "guidance/opening/staffing-and-rooms",
+    );
+
+    recordGuidanceUpgradePurchase(context, "upgrade/room/register:records_wall");
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.completedBeatIds).toContain(
+      "guidance/opening/staffing-and-rooms",
+    );
+  });
+
+  it("auto-completes staffing-and-rooms if the player already upgraded before the beat fires", () => {
+    const context = createGuidanceContext(7);
+    const idleStaff = addEntity(context.world);
+    addComponent(context.world, idleStaff, AssignmentState);
+    AssignmentState.kind[idleStaff] = "idle";
+    AssignmentState.targetId[idleStaff] = "";
+    context.runtimeState.staffEntities.push(idleStaff);
+    context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
+    context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+    BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building] = [
+      "upgrade/building/bodega:frontage",
+    ];
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.completedBeatIds).toContain(
+      "guidance/opening/staffing-and-rooms",
+    );
+    expect(context.runtimeState.guidanceState.activeBeatId).toBeNull();
   });
 
   it("activates setback-recovery from the contract-5 fallback when low morale appears without a major setback", () => {

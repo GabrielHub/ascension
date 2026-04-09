@@ -4,8 +4,14 @@ import { createWorld, addEntity, addComponent } from "bitecs";
 import { templateRegistry } from "content/templates";
 import { siteConceptTemplates, siteConceptById } from "content/templates/site-concepts";
 import { BuildingAuthority, GuildState, WorldTimeState } from "../components";
+import type { BossEncounterInstance } from "./encounter-types";
 import type { SimSystemContext } from "./types";
-import { advanceContractPhase, bidOnContract, resolveRaidSystem } from "./raids";
+import {
+  advanceContractPhase,
+  bidOnContract,
+  resolveRaidBossEncounter,
+  resolveRaidSystem,
+} from "./raids";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
 
@@ -449,5 +455,117 @@ describe("resolved contract handoff", () => {
     expect(BuildingAuthority.contractSite[buildingEntity]).toBeNull();
     expect(BuildingAuthority.contractResult[buildingEntity]).not.toBeNull();
     expect(BuildingAuthority.postedContracts[buildingEntity]).toHaveLength(0);
+  });
+
+  it("resolves the contract immediately after a boss encounter victory writes back", () => {
+    const context = createFullContext();
+    const buildingEntity = context.singletonEntities.building;
+
+    BuildingAuthority.contractLifecycle[buildingEntity] = "active";
+    BuildingAuthority.contractSite[buildingEntity] = {
+      contractSiteId: "contract/test",
+      missionId: "mission/clearance",
+      siteConceptId: "site/flooded-subway-tunnel",
+      location: "district/lower-east-side",
+      rank: "f",
+      bossDefeated: false,
+      missionCompleted: false,
+      contractLost: false,
+      threat: 40,
+      intel: 55,
+      reward: 90,
+      boardIntel: { source: "street", quality: "rough" },
+      briefing: null,
+      securedAtTick: 1200,
+      explorationProgress: 84,
+      closureProgress: 92,
+      closureThreshold: 100,
+      bossIntelProgress: 60,
+      bossPressureProgress: 75,
+      requiresBossClear: true,
+      bossAvailable: true,
+    };
+    BuildingAuthority.activeRaidPackets[buildingEntity] = [
+      {
+        id: "raid/test",
+        contractSiteId: "contract/test",
+        opportunityId: "opportunity/test",
+        missionId: "mission/clearance",
+        location: "district/lower-east-side",
+        startedAt: "Day 1 11:00",
+        startedTick: 1380,
+        revealProgress: 100,
+        operatorIds: [],
+        returnTick: 1500,
+        durationHours: 2,
+        threat: 40,
+        intel: 55,
+        reward: 90,
+        cohesion: 60,
+        briefingSource: null,
+        briefingStatus: null,
+        resolutionPacket: {
+          result: "mixed",
+          reputationDelta: 0,
+          cashDelta: 0,
+          operatorOutcomes: [],
+          narrativeTags: [],
+          intelMismatchTags: [],
+        },
+      },
+    ];
+
+    const encounter: BossEncounterInstance = {
+      encounterId: "encounter/test",
+      contractSiteId: "contract/test",
+      activeRaidId: "raid/test",
+      missionId: "mission/clearance",
+      teamId: "team/test",
+      participatingOperatorIds: [],
+      bossDefinitionId: "boss/tunneler-brood-mother",
+      currentRound: 3,
+      currentPhaseIndex: 0,
+      status: "victory",
+      elapsedMinutes: 12,
+      rngSeed: 1,
+      rngCursor: 0,
+      initiativeQueue: [],
+      pendingRoundStart: false,
+      actors: {
+        "actor:boss:test": {
+          actorId: "actor:boss:test",
+          side: "enemy",
+          kind: "boss",
+          label: "Tunneler Brood-Mother",
+          sourceEntityId: "boss/tunneler-brood-mother",
+          currentHp: 0,
+          maxHp: 100,
+          shield: 0,
+          initiative: 10,
+          baseAttack: 20,
+          baseDefense: 12,
+          baseSpeed: 8,
+          baseThreat: 50,
+          condition: "incapacitated",
+          activeStatuses: [],
+          cooldowns: [],
+          temporaryStatModifiers: {},
+          actionHistory: [],
+          bossDefinitionId: "boss/tunneler-brood-mother",
+          encounterActions: [],
+        },
+      },
+      interventions: [],
+      encounterLog: [],
+      debugTraceEnabled: false,
+      autoplayEnabled: false,
+      autoplayIntervalMs: 800,
+    };
+
+    expect(resolveRaidBossEncounter(context, encounter)).toBe(true);
+    expect(BuildingAuthority.contractLifecycle[buildingEntity]).toBe("resolved");
+    expect(BuildingAuthority.contractSite[buildingEntity]).toBeNull();
+    expect(BuildingAuthority.contractResult[buildingEntity]?.outcome).toBe("boss_defeated");
+    expect(BuildingAuthority.raidSummaries[buildingEntity]).toHaveLength(1);
   });
 });

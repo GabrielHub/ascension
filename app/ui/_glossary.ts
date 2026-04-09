@@ -189,6 +189,91 @@ const SPECIALTY_META = {
   },
 } satisfies DisplayRegistry;
 
+const ATTUNEMENT_META = {
+  "attunement:kinetic": {
+    label: "Kinetic",
+    tip: "Channels attunement-enhanced physical force. Strong against direct confrontation and unarmored targets.",
+  },
+  "attunement:void": {
+    label: "Void",
+    tip: "Manipulates spatial gaps to bypass armor and disrupt position. Effective against fortified targets.",
+  },
+  "attunement:vital": {
+    label: "Vital",
+    tip: "Disrupts and restores biological processes. Strong sustain and support, weaker upfront damage.",
+  },
+  "attunement:none": {
+    label: "Unattuned",
+    tip: "No innate attunement. Relies on training and equipment rather than supernatural ability.",
+  },
+} satisfies DisplayRegistry;
+
+const TRAIT_META = {
+  "trait:steady": {
+    label: "Steady",
+    tip: "Composed under pressure. Resists panic and morale loss in extended fights.",
+  },
+  "trait:aggressive": {
+    label: "Aggressive",
+    tip: "Pushes the fight forward. Higher damage output but takes more risks.",
+  },
+  "trait:resolute": {
+    label: "Resolute",
+    tip: "Refuses to break. Holds the line longer when situations turn bad.",
+  },
+  "trait:alert": {
+    label: "Alert",
+    tip: "Always watching the surroundings. Spots threats early and avoids ambushes.",
+  },
+  "trait:evasive": {
+    label: "Evasive",
+    tip: "Skilled at slipping attacks. Reduces incoming damage and ambush risk.",
+  },
+  "trait:resilient": {
+    label: "Resilient",
+    tip: "Bounces back from injury and fatigue faster than most.",
+  },
+  "trait:composed": {
+    label: "Composed",
+    tip: "Steady mind. Stress builds slower and decision-making stays sharp.",
+  },
+  "trait:tenacious": {
+    label: "Tenacious",
+    tip: "Refuses to quit. Sees difficult contracts through to the end.",
+  },
+} satisfies DisplayRegistry;
+
+const RANK_META = {
+  s: {
+    label: "Rank S",
+    tip: "Legendary. Industry celebrities. Endgame caliber operators with unique presence.",
+  },
+  a: {
+    label: "Rank A",
+    tip: "Exceptional. Near the top of human attunement. Known in the industry by name.",
+  },
+  b: {
+    label: "Rank B",
+    tip: "Elite. Anchors raid teams against major threats. Retention is a real problem.",
+  },
+  c: {
+    label: "Rank C",
+    tip: "Seriously powerful. High-tier dungeon capable. Other guilds want them.",
+  },
+  d: {
+    label: "Rank D",
+    tip: "Genuinely dangerous. Mid-tier dungeon work. Starts to get expensive to retain.",
+  },
+  e: {
+    label: "Rank E",
+    tip: "Noticeably above human limits. Reliable for routine clearance work.",
+  },
+  f: {
+    label: "Rank F",
+    tip: "Barely superhuman. Lowest-threat dungeons only. The bulk of the early labor market.",
+  },
+} satisfies DisplayRegistry;
+
 const INTEL_META = {
   low: { label: "Low", tip: RAID_TIPS.intelLow },
   moderate: { label: "Moderate", tip: RAID_TIPS.intelModerate },
@@ -566,6 +651,23 @@ export function getRoleMeta(roleTag: string): DisplayMeta {
 
 export function getSpecialtyMeta(specialtyTag: string): DisplayMeta {
   return resolveDisplayMeta(specialtyTag, SPECIALTY_META);
+}
+
+export function getAttunementMeta(attunementTag: string): DisplayMeta {
+  if (!attunementTag) return toDisplayMeta(ATTUNEMENT_META["attunement:none"]);
+  return resolveDisplayMeta(attunementTag, ATTUNEMENT_META);
+}
+
+export function getTraitMeta(traitTag: string): DisplayMeta {
+  return resolveDisplayMeta(traitTag, TRAIT_META);
+}
+
+export function getRankMeta(rank: string): DisplayMeta {
+  return resolveDisplayMeta(
+    rank.toLowerCase(),
+    RANK_META,
+    (value) => `Rank ${value.toUpperCase()}`,
+  );
 }
 
 export function getIntelMeta(confidence: string): DisplayMeta {

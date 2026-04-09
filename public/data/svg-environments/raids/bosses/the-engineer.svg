@@ -1,0 +1,339 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="en-aura" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#2a5a68" stop-opacity="0.16"/>
+      <stop offset="55%" stop-color="#081218" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#040608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="en-suit" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#5a6058"/>
+      <stop offset="50%" stop-color="#3a4038"/>
+      <stop offset="100%" stop-color="#1a2218"/>
+    </linearGradient>
+    <linearGradient id="en-bronze" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a87838"/>
+      <stop offset="50%" stop-color="#6a4a18"/>
+      <stop offset="100%" stop-color="#3a2808"/>
+    </linearGradient>
+    <linearGradient id="en-helmet" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#c48a38"/>
+      <stop offset="30%" stop-color="#8a5a18"/>
+      <stop offset="100%" stop-color="#4a2e08"/>
+    </linearGradient>
+    <radialGradient id="en-porthole" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8aeaa8" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#3aaa58" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0a3a1a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="en-pipe" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a5248"/>
+      <stop offset="100%" stop-color="#1a2218"/>
+    </linearGradient>
+    <filter id="en-glow">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="en-murk">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Murky aura -->
+  <ellipse cx="100" cy="142" rx="96" ry="132" fill="url(#en-aura)"/>
+
+  <!-- Deep water column lines — suggesting the boss is submerged -->
+  <path d="M 12 20 L 16 260" stroke="#1a3a48" stroke-width="0.4" opacity="0.35"/>
+  <path d="M 28 40 L 26 268" stroke="#1a3a48" stroke-width="0.3" opacity="0.3"/>
+  <path d="M 184 24 L 182 268" stroke="#1a3a48" stroke-width="0.4" opacity="0.35"/>
+  <path d="M 172 44 L 170 260" stroke="#1a3a48" stroke-width="0.3" opacity="0.3"/>
+
+  <!-- Air bubbles rising -->
+  <circle cx="38" cy="66" r="1.2" fill="#8acacc" opacity="0.45" filter="url(#en-glow)"/>
+  <circle cx="34" cy="50" r="0.9" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="42" cy="32" r="1" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="162" cy="58" r="1.2" fill="#8acacc" opacity="0.45" filter="url(#en-glow)"/>
+  <circle cx="166" cy="42" r="0.8" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="160" cy="24" r="1.1" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="60" cy="18" r="0.9" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="140" cy="16" r="1" fill="#8acacc" opacity="0.4" filter="url(#en-glow)"/>
+  <circle cx="76" cy="28" r="0.7" fill="#a8dade" opacity="0.5" filter="url(#en-glow)"/>
+  <circle cx="126" cy="30" r="0.8" fill="#a8dade" opacity="0.5" filter="url(#en-glow)"/>
+  <!-- Larger bubble columns from helmet -->
+  <circle cx="82" cy="46" r="1.5" fill="#a8dade" opacity="0.55" filter="url(#en-glow)"/>
+  <circle cx="118" cy="40" r="1.4" fill="#a8dade" opacity="0.55" filter="url(#en-glow)"/>
+  <circle cx="78" cy="58" r="1.2" fill="#a8dade" opacity="0.5" filter="url(#en-glow)"/>
+  <circle cx="122" cy="52" r="1.3" fill="#a8dade" opacity="0.5" filter="url(#en-glow)"/>
+
+  <!-- Silt clouds drifting at the bottom -->
+  <ellipse cx="100" cy="260" rx="92" ry="10" fill="#1a2a28" opacity="0.5" filter="url(#en-murk)"/>
+  <ellipse cx="100" cy="268" rx="78" ry="6" fill="#0a1a18" opacity="0.7" filter="url(#en-murk)"/>
+  <ellipse cx="100" cy="272" rx="60" ry="3" fill="#000808" opacity="0.85"/>
+
+  <!-- Feet — heavy lead weighted boots sunk into silt -->
+  <path d="M 66 244 L 58 260 L 58 266 L 86 266 L 86 244 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.8"/>
+  <path d="M 114 244 L 114 266 L 142 266 L 142 260 L 134 244 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.8"/>
+  <!-- Boot bolts -->
+  <circle cx="64" cy="252" r="1" fill="#1a0e04"/>
+  <circle cx="80" cy="252" r="1" fill="#1a0e04"/>
+  <circle cx="64" cy="262" r="1" fill="#1a0e04"/>
+  <circle cx="80" cy="262" r="1" fill="#1a0e04"/>
+  <circle cx="120" cy="252" r="1" fill="#1a0e04"/>
+  <circle cx="136" cy="252" r="1" fill="#1a0e04"/>
+  <circle cx="120" cy="262" r="1" fill="#1a0e04"/>
+  <circle cx="136" cy="262" r="1" fill="#1a0e04"/>
+  <!-- Boot tread -->
+  <line x1="58" y1="265" x2="86" y2="265" stroke="#6a4818" stroke-width="0.4"/>
+  <line x1="114" y1="265" x2="142" y2="265" stroke="#6a4818" stroke-width="0.4"/>
+
+  <!-- Legs — thick armored pipe legs -->
+  <rect x="70" y="214" width="22" height="32" rx="1" fill="url(#en-suit)" stroke="#0a1008" stroke-width="0.8"/>
+  <rect x="108" y="214" width="22" height="32" rx="1" fill="url(#en-suit)" stroke="#0a1008" stroke-width="0.8"/>
+  <!-- Leg bronze joint rings -->
+  <rect x="68" y="220" width="26" height="3" rx="0.5" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <rect x="68" y="234" width="26" height="3" rx="0.5" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <rect x="106" y="220" width="26" height="3" rx="0.5" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <rect x="106" y="234" width="26" height="3" rx="0.5" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+
+  <!-- Main body — heavy pressure suit torso, barrel-chested, hunched -->
+  <path d="
+    M 60 110
+    L 60 96 L 72 88 L 100 84 L 128 88 L 140 96
+    L 140 110 L 146 130 L 150 160 L 148 190 L 142 214
+    L 60 214 L 52 190 L 50 160 L 54 130 Z
+  " fill="url(#en-suit)" stroke="#0a1008" stroke-width="1.2"/>
+
+  <!-- Chest plate — bronze heavy armor -->
+  <rect x="66" y="104" width="68" height="54" rx="3" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="1"/>
+  <!-- Chest rivets -->
+  <circle cx="70" cy="108" r="1.2" fill="#1a0e04"/>
+  <circle cx="130" cy="108" r="1.2" fill="#1a0e04"/>
+  <circle cx="70" cy="154" r="1.2" fill="#1a0e04"/>
+  <circle cx="130" cy="154" r="1.2" fill="#1a0e04"/>
+  <circle cx="70" cy="120" r="1" fill="#1a0e04"/>
+  <circle cx="130" cy="120" r="1" fill="#1a0e04"/>
+  <circle cx="70" cy="142" r="1" fill="#1a0e04"/>
+  <circle cx="130" cy="142" r="1" fill="#1a0e04"/>
+
+  <!-- PRESSURE GAUGE mounted on the chest — the face plate -->
+  <circle cx="100" cy="130" r="18" fill="#0a1008" stroke="#1a0e04" stroke-width="1.2"/>
+  <circle cx="100" cy="130" r="15" fill="#e8dcb0" stroke="url(#en-bronze)" stroke-width="1.5"/>
+  <circle cx="100" cy="130" r="12" fill="none" stroke="#3a2008" stroke-width="0.3"/>
+  <!-- Gauge tick marks -->
+  <line x1="100" y1="116" x2="100" y2="118" stroke="#1a0e04" stroke-width="0.6"/>
+  <line x1="94" y1="117" x2="94.5" y2="119" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="106" y1="117" x2="105.5" y2="119" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="88" y1="121" x2="89" y2="122.5" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="112" y1="121" x2="111" y2="122.5" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="86" y1="130" x2="88" y2="130" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="112" y1="130" x2="114" y2="130" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="88" y1="138" x2="89.5" y2="137" stroke="#1a0e04" stroke-width="0.5"/>
+  <line x1="112" y1="138" x2="110.5" y2="137" stroke="#1a0e04" stroke-width="0.5"/>
+  <!-- Number labels -->
+  <text x="100" y="123" text-anchor="middle" fill="#1a0e04" font-size="2.5" font-family="serif">0</text>
+  <text x="88" y="131" text-anchor="middle" fill="#1a0e04" font-size="2.5" font-family="serif">L</text>
+  <text x="112" y="131" text-anchor="middle" fill="#1a0e04" font-size="2.5" font-family="serif">H</text>
+  <!-- Needle — wildly pegged past the max -->
+  <line x1="100" y1="130" x2="114" y2="140" stroke="#8a1818" stroke-width="1.2"/>
+  <circle cx="100" cy="130" r="1.8" fill="#3a1808" stroke="#8a1818" stroke-width="0.4"/>
+  <!-- "IMPOSSIBLE" warning stripe -->
+  <path d="M 110 140 L 116 146" stroke="#8a1818" stroke-width="0.6"/>
+  <path d="M 112 138 L 118 144" stroke="#8a1818" stroke-width="0.5"/>
+  <!-- PSI label -->
+  <text x="100" y="144" text-anchor="middle" fill="#3a2008" font-size="2.2" font-family="sans-serif">PSI</text>
+
+  <!-- Shoulder pauldrons — heavy bronze armored plates -->
+  <path d="M 42 100 Q 42 86 54 84 L 70 88 L 70 114 L 48 116 Q 42 112 42 100 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.8"/>
+  <path d="M 158 100 Q 158 86 146 84 L 130 88 L 130 114 L 152 116 Q 158 112 158 100 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.8"/>
+  <!-- Pauldron rivet rings -->
+  <circle cx="50" cy="92" r="0.8" fill="#1a0e04"/>
+  <circle cx="58" cy="88" r="0.8" fill="#1a0e04"/>
+  <circle cx="66" cy="92" r="0.8" fill="#1a0e04"/>
+  <circle cx="50" cy="108" r="0.8" fill="#1a0e04"/>
+  <circle cx="66" cy="108" r="0.8" fill="#1a0e04"/>
+  <circle cx="150" cy="92" r="0.8" fill="#1a0e04"/>
+  <circle cx="142" cy="88" r="0.8" fill="#1a0e04"/>
+  <circle cx="134" cy="92" r="0.8" fill="#1a0e04"/>
+  <circle cx="150" cy="108" r="0.8" fill="#1a0e04"/>
+  <circle cx="134" cy="108" r="0.8" fill="#1a0e04"/>
+
+  <!-- Barnacles and coral encrustations on the shoulder plates -->
+  <circle cx="48" cy="96" r="1.2" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="48" cy="96" r="0.4" fill="#1a0e04"/>
+  <circle cx="54" cy="102" r="1" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="60" cy="98" r="1.1" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="60" cy="98" r="0.4" fill="#1a0e04"/>
+  <circle cx="152" cy="96" r="1.2" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="152" cy="96" r="0.4" fill="#1a0e04"/>
+  <circle cx="146" cy="102" r="1" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="140" cy="98" r="1.1" fill="#c4b090" stroke="#6a5838" stroke-width="0.3"/>
+  <circle cx="140" cy="98" r="0.4" fill="#1a0e04"/>
+
+  <!-- Coral/kelp tufts on shoulders -->
+  <path d="M 44 88 Q 42 82 46 78 M 46 86 Q 44 80 50 78" fill="none" stroke="#5a8a68" stroke-width="0.8" opacity="0.8"/>
+  <path d="M 156 88 Q 158 82 154 78 M 154 86 Q 156 80 150 78" fill="none" stroke="#5a8a68" stroke-width="0.8" opacity="0.8"/>
+
+  <!-- Air hoses rising from the back behind the shoulders -->
+  <path d="M 62 92 Q 48 70 58 48 Q 66 28 56 12" fill="none" stroke="url(#en-pipe)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 62 92 Q 48 70 58 48 Q 66 28 56 12" fill="none" stroke="#1a2218" stroke-width="1" opacity="0.6"/>
+  <!-- Hose ribbing -->
+  <circle cx="58" cy="80" r="0.6" fill="#1a2218"/>
+  <circle cx="54" cy="70" r="0.6" fill="#1a2218"/>
+  <circle cx="54" cy="60" r="0.6" fill="#1a2218"/>
+  <circle cx="58" cy="50" r="0.6" fill="#1a2218"/>
+  <circle cx="62" cy="36" r="0.6" fill="#1a2218"/>
+  <circle cx="60" cy="24" r="0.6" fill="#1a2218"/>
+
+  <path d="M 138 92 Q 152 70 142 48 Q 134 28 144 12" fill="none" stroke="url(#en-pipe)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 138 92 Q 152 70 142 48 Q 134 28 144 12" fill="none" stroke="#1a2218" stroke-width="1" opacity="0.6"/>
+  <circle cx="142" cy="80" r="0.6" fill="#1a2218"/>
+  <circle cx="146" cy="70" r="0.6" fill="#1a2218"/>
+  <circle cx="146" cy="60" r="0.6" fill="#1a2218"/>
+  <circle cx="142" cy="50" r="0.6" fill="#1a2218"/>
+  <circle cx="138" cy="36" r="0.6" fill="#1a2218"/>
+  <circle cx="140" cy="24" r="0.6" fill="#1a2218"/>
+
+  <!-- Head — enormous brass diving helmet, the signature element -->
+  <!-- Helmet dome -->
+  <circle cx="100" cy="62" r="28" fill="url(#en-helmet)" stroke="#2a1808" stroke-width="1.2"/>
+  <!-- Helmet back shadow -->
+  <path d="M 78 62 Q 80 50 88 42" fill="none" stroke="#f4c860" stroke-width="1.2" opacity="0.6"/>
+  <path d="M 122 62 Q 120 50 112 42" fill="none" stroke="#6a4818" stroke-width="1" opacity="0.7"/>
+
+  <!-- Helmet collar ring bolted to the chest -->
+  <rect x="74" y="84" width="52" height="12" rx="1" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="1"/>
+  <circle cx="78" cy="90" r="1.2" fill="#1a0e04"/>
+  <circle cx="86" cy="90" r="1.2" fill="#1a0e04"/>
+  <circle cx="94" cy="90" r="1.2" fill="#1a0e04"/>
+  <circle cx="106" cy="90" r="1.2" fill="#1a0e04"/>
+  <circle cx="114" cy="90" r="1.2" fill="#1a0e04"/>
+  <circle cx="122" cy="90" r="1.2" fill="#1a0e04"/>
+
+  <!-- Main front porthole — a large circular window in the helmet -->
+  <circle cx="100" cy="60" r="12" fill="#0a1008" stroke="#2a1808" stroke-width="1.5"/>
+  <circle cx="100" cy="60" r="10" fill="none" stroke="url(#en-bronze)" stroke-width="1.2"/>
+  <circle cx="100" cy="60" r="8" fill="url(#en-porthole)" filter="url(#en-glow)"/>
+  <!-- Porthole glass highlight streak -->
+  <path d="M 94 54 Q 100 52 104 56" fill="none" stroke="#e8f4d4" stroke-width="0.6" opacity="0.7"/>
+  <!-- Something visible INSIDE — a tightly compressed, inhuman eye -->
+  <ellipse cx="100" cy="60" rx="3" ry="4" fill="#3a5a38" stroke="#1a2a18" stroke-width="0.3"/>
+  <circle cx="100" cy="60" r="1.8" fill="#0a1808"/>
+  <circle cx="100" cy="60" r="0.8" fill="#8aeaa8" filter="url(#en-glow)"/>
+  <!-- Porthole rivet studs -->
+  <circle cx="90" cy="50" r="0.7" fill="#1a0e04"/>
+  <circle cx="110" cy="50" r="0.7" fill="#1a0e04"/>
+  <circle cx="90" cy="70" r="0.7" fill="#1a0e04"/>
+  <circle cx="110" cy="70" r="0.7" fill="#1a0e04"/>
+  <circle cx="100" cy="46" r="0.7" fill="#1a0e04"/>
+  <circle cx="100" cy="74" r="0.7" fill="#1a0e04"/>
+  <circle cx="84" cy="60" r="0.7" fill="#1a0e04"/>
+  <circle cx="116" cy="60" r="0.7" fill="#1a0e04"/>
+
+  <!-- Side portholes — smaller, on the sides of the helmet -->
+  <circle cx="78" cy="62" r="3" fill="#0a1008" stroke="url(#en-bronze)" stroke-width="0.6"/>
+  <circle cx="78" cy="62" r="2" fill="#3a5a38" stroke="#1a2a18" stroke-width="0.3"/>
+  <circle cx="78" cy="62" r="0.8" fill="#8aeaa8" opacity="0.8" filter="url(#en-glow)"/>
+  <circle cx="122" cy="62" r="3" fill="#0a1008" stroke="url(#en-bronze)" stroke-width="0.6"/>
+  <circle cx="122" cy="62" r="2" fill="#3a5a38" stroke="#1a2a18" stroke-width="0.3"/>
+  <circle cx="122" cy="62" r="0.8" fill="#8aeaa8" opacity="0.8" filter="url(#en-glow)"/>
+
+  <!-- Helmet air valve on top -->
+  <rect x="96" y="32" width="8" height="6" rx="1" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <circle cx="100" cy="30" r="2.5" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <line x1="100" y1="27" x2="100" y2="33" stroke="#1a0e04" stroke-width="0.4"/>
+  <line x1="97" y1="30" x2="103" y2="30" stroke="#1a0e04" stroke-width="0.4"/>
+
+  <!-- Small bubble leak from the helmet top valve -->
+  <circle cx="100" cy="24" r="1" fill="#a8dade" opacity="0.55" filter="url(#en-glow)"/>
+  <circle cx="103" cy="20" r="0.8" fill="#a8dade" opacity="0.5" filter="url(#en-glow)"/>
+
+  <!-- Helmet bolts around the collar ring -->
+  <circle cx="82" cy="78" r="0.8" fill="#1a0e04"/>
+  <circle cx="90" cy="82" r="0.8" fill="#1a0e04"/>
+  <circle cx="100" cy="84" r="0.8" fill="#1a0e04"/>
+  <circle cx="110" cy="82" r="0.8" fill="#1a0e04"/>
+  <circle cx="118" cy="78" r="0.8" fill="#1a0e04"/>
+
+  <!-- Verdigris streaks on the helmet -->
+  <path d="M 76 56 Q 72 64 74 72" fill="none" stroke="#5aaa78" stroke-width="0.5" opacity="0.55"/>
+  <path d="M 124 56 Q 128 64 126 72" fill="none" stroke="#5aaa78" stroke-width="0.5" opacity="0.55"/>
+  <path d="M 84 74 Q 88 80 92 78" fill="none" stroke="#5aaa78" stroke-width="0.4" opacity="0.5"/>
+  <path d="M 116 74 Q 112 80 108 78" fill="none" stroke="#5aaa78" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Left arm — pipe-lance weapon: a massive iron pipe held forward like a lance -->
+  <path d="M 40 116 L 28 128 L 18 150 Q 14 170 20 188 L 28 190 L 36 170 L 46 150 L 56 130 Z" fill="url(#en-suit)" stroke="#0a1008" stroke-width="0.7"/>
+  <!-- Bronze bracers -->
+  <rect x="16" y="184" width="14" height="5" rx="1" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <!-- Gauntlet grip hand -->
+  <path d="M 14 190 L 10 198 L 10 210 L 22 210 L 26 198 L 22 190 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.6"/>
+  <circle cx="12" cy="194" r="0.6" fill="#1a0e04"/>
+  <circle cx="22" cy="194" r="0.6" fill="#1a0e04"/>
+  <circle cx="12" cy="206" r="0.6" fill="#1a0e04"/>
+  <circle cx="22" cy="206" r="0.6" fill="#1a0e04"/>
+  <!-- PIPE-LANCE weapon — a long iron shaft with a flanged tip -->
+  <rect x="16" y="210" width="10" height="48" rx="1" fill="url(#en-pipe)" stroke="#0a1008" stroke-width="0.7"/>
+  <!-- Pipe bands -->
+  <rect x="15" y="216" width="12" height="2" fill="#6a5038" stroke="#1a0e04" stroke-width="0.3"/>
+  <rect x="15" y="232" width="12" height="2" fill="#6a5038" stroke="#1a0e04" stroke-width="0.3"/>
+  <rect x="15" y="248" width="12" height="2" fill="#6a5038" stroke="#1a0e04" stroke-width="0.3"/>
+  <!-- Pipe tip — flared and dripping -->
+  <path d="M 14 258 L 28 258 L 30 266 L 12 266 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.6"/>
+  <circle cx="21" cy="262" r="1.8" fill="#0a1008" stroke="#1a0e04" stroke-width="0.3"/>
+  <!-- Drip from pipe tip -->
+  <path d="M 21 266 L 20 272 L 22 272 Z" fill="#5a8ab0" opacity="0.75"/>
+
+  <!-- Right arm — bent, holding a wrench-like pipe-key -->
+  <path d="M 160 116 L 172 128 L 180 150 Q 184 170 178 188 L 170 190 L 164 170 L 154 150 L 144 130 Z" fill="url(#en-suit)" stroke="#0a1008" stroke-width="0.7"/>
+  <rect x="170" y="184" width="14" height="5" rx="1" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.4"/>
+  <!-- Gauntlet hand -->
+  <path d="M 186 190 L 190 198 L 190 210 L 178 210 L 174 198 L 178 190 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.6"/>
+  <circle cx="188" cy="194" r="0.6" fill="#1a0e04"/>
+  <circle cx="178" cy="194" r="0.6" fill="#1a0e04"/>
+  <circle cx="188" cy="206" r="0.6" fill="#1a0e04"/>
+  <circle cx="178" cy="206" r="0.6" fill="#1a0e04"/>
+  <!-- Huge pipe wrench -->
+  <rect x="177" y="210" width="8" height="38" rx="0.5" fill="url(#en-pipe)" stroke="#0a1008" stroke-width="0.6"/>
+  <!-- Wrench head -->
+  <path d="M 170 244 L 192 244 L 192 258 L 184 262 L 178 262 L 170 258 Z" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.8"/>
+  <!-- Wrench jaws -->
+  <rect x="172" y="248" width="8" height="10" fill="#0a1008" stroke="#1a0e04" stroke-width="0.4"/>
+  <rect x="182" y="248" width="8" height="10" fill="#0a1008" stroke="#1a0e04" stroke-width="0.4"/>
+  <!-- Wrench teeth -->
+  <path d="M 180 250 L 178 252 L 180 254 L 178 256" stroke="#c48a38" stroke-width="0.3"/>
+  <path d="M 184 250 L 186 252 L 184 254 L 186 256" stroke="#c48a38" stroke-width="0.3"/>
+  <!-- Wrench adjustment knob -->
+  <circle cx="181" cy="240" r="1.8" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.3"/>
+  <line x1="181" y1="238" x2="181" y2="242" stroke="#1a0e04" stroke-width="0.3"/>
+
+  <!-- Pressure release pipes protruding from the hip -->
+  <rect x="60" y="170" width="6" height="14" fill="url(#en-pipe)" stroke="#0a1008" stroke-width="0.4"/>
+  <rect x="134" y="170" width="6" height="14" fill="url(#en-pipe)" stroke="#0a1008" stroke-width="0.4"/>
+  <circle cx="63" cy="184" r="1.5" fill="#0a1008" stroke="#6a5038" stroke-width="0.3"/>
+  <circle cx="137" cy="184" r="1.5" fill="#0a1008" stroke="#6a5038" stroke-width="0.3"/>
+  <!-- Small water jet burst -->
+  <path d="M 63 186 L 63 192 L 61 196" fill="none" stroke="#5a8ab0" stroke-width="0.7" opacity="0.6"/>
+  <path d="M 137 186 L 137 192 L 139 196" fill="none" stroke="#5a8ab0" stroke-width="0.7" opacity="0.6"/>
+
+  <!-- Pipe network on torso around the gauge -->
+  <path d="M 68 118 Q 64 128 68 140 L 74 144" fill="none" stroke="#3a2008" stroke-width="2" opacity="0.7"/>
+  <path d="M 132 118 Q 136 128 132 140 L 126 144" fill="none" stroke="#3a2008" stroke-width="2" opacity="0.7"/>
+  <circle cx="68" cy="118" r="1.8" fill="#1a0e04" stroke="#6a4818" stroke-width="0.3"/>
+  <circle cx="132" cy="118" r="1.8" fill="#1a0e04" stroke="#6a4818" stroke-width="0.3"/>
+
+  <!-- Belt — heavy with tool loops -->
+  <rect x="60" y="160" width="80" height="6" rx="1" fill="url(#en-bronze)" stroke="#1a0e04" stroke-width="0.5"/>
+  <circle cx="68" cy="163" r="0.6" fill="#1a0e04"/>
+  <circle cx="80" cy="163" r="0.6" fill="#1a0e04"/>
+  <circle cx="92" cy="163" r="0.6" fill="#1a0e04"/>
+  <circle cx="108" cy="163" r="0.6" fill="#1a0e04"/>
+  <circle cx="120" cy="163" r="0.6" fill="#1a0e04"/>
+  <circle cx="132" cy="163" r="0.6" fill="#1a0e04"/>
+
+  <!-- Kelp strands swaying around the lower body -->
+  <path d="M 40 230 Q 36 240 40 250 Q 44 260 42 268" fill="none" stroke="#3a6a48" stroke-width="1.2" opacity="0.7"/>
+  <path d="M 45 234 Q 42 246 46 256 Q 48 264 46 268" fill="none" stroke="#2a5a38" stroke-width="1" opacity="0.65"/>
+  <path d="M 160 232 Q 164 242 160 252 Q 156 262 158 268" fill="none" stroke="#3a6a48" stroke-width="1.2" opacity="0.7"/>
+  <path d="M 155 236 Q 158 248 154 258 Q 152 266 154 268" fill="none" stroke="#2a5a38" stroke-width="1" opacity="0.65"/>
+  <path d="M 52 244 Q 50 254 52 264" fill="none" stroke="#3a6a48" stroke-width="0.9" opacity="0.6"/>
+  <path d="M 148 244 Q 150 254 148 264" fill="none" stroke="#3a6a48" stroke-width="0.9" opacity="0.6"/>
+</svg>

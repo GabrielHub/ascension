@@ -11,6 +11,7 @@
 import type { RuntimeCueId, SimSystemContext } from "./types";
 import { OperatorIdentity } from "../components";
 import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
+import { hasActiveFocusedGuidancePause } from "./guidance";
 import {
   createBossEncounter,
   startEncounter,
@@ -132,7 +133,9 @@ function finalizeEncounterResolution(
   if (!resolvedRaid) {
     writeEncounterOutcome(context, encounter);
   } else {
-    context.runtimeState.worldTimeFrozen = false;
+    context.runtimeState.worldTimeFrozen = hasActiveFocusedGuidancePause(
+      context.runtimeState.guidanceState,
+    );
   }
 }
 
