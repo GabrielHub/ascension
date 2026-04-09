@@ -4,6 +4,7 @@ export default [
   index("routes/start-screen.tsx"),
   route("game", "routes/game.tsx"),
   route("scene-builder", "routes/scene-builder.tsx"),
+  route("ai-playground", "routes/ai-playground.tsx"),
   route("svg-playground", "routes/svg-playground.tsx"),
   route("svg-assets", "routes/svg-assets.tsx"),
   route("audio-playground", "routes/audio-playground.tsx"),

@@ -1,12 +1,12 @@
 import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { isPolicyId, isValidPolicyValue, type PolicyId, type PolicyValue } from "lib/policies";
 import type { HqDebugOverlays, HqWorldSnapshot } from "render";
+import {
+  buildIncidentFramingPreviewPayload,
+  buildOperatorIdentityPreviewPayload,
+} from "app/features/ai";
 import { buildGameShellHref } from "app/features/runtime";
 import { listStartScreenSaveSlots } from "app/features/save-slots";
-import {
-  getCompatibleOperatorGearOptions,
-  getLoadedOperatorAppearanceRecipes,
-} from "save/appearance";
 import {
   CURRENT_CONTENT_COMPATIBILITY,
   CURRENT_SAVE_SCHEMA_VERSION,
@@ -20,7 +20,6 @@ import {
   createPortersUpgradeCampaignSeedWorld,
   createRelocationReadyWorld,
 } from "sim/tools/porters-upgrade-campaign";
-import { getAllowedPreferredMissionTags, getSpecialtyOptionsForRole } from "sim/systems/commands";
 
 import type { RuntimeSession } from "app/features/runtime";
 import { readGameSettings } from "app/features/settings/storage";
@@ -89,101 +88,6 @@ function err(message: string): DevConsoleResult {
 
 function info(message: string, detail?: string): DevConsoleResult {
   return { status: "info", message, detail };
-}
-
-function getOperatorIdentityMaxRarity(quality: number): "common" | "uncommon" | "rare" {
-  if (quality >= 82) return "rare";
-  if (quality >= 72) return "uncommon";
-  return "common";
-}
-
-function buildOperatorIdentityPayload(
-  ctx: DevConsoleContext,
-  visitor: DevConsoleContext["session"]["phase1View"]["visitors"][number],
-): Record<string, unknown> {
-  const allowedRecipes = getLoadedOperatorAppearanceRecipes().map((recipe) => ({
-    id: recipe.id,
-    name: recipe.name,
-    bodySilhouette: recipe.bodySilhouette,
-    palette: recipe.palette,
-    skinTone: recipe.skinTone,
-  }));
-  const maxRarity = getOperatorIdentityMaxRarity(visitor.quality ?? 50);
-  const allowedVisibleGearByRecipe = allowedRecipes.map((recipe) => ({
-    recipeId: recipe.id,
-    weaponPartIds: getCompatibleOperatorGearOptions({
-      category: "weapon",
-      roleTag: visitor.desiredRoleTag,
-      recipeId: recipe.id,
-      maxRarity,
-    }).map((part) => part.id),
-    outfitOverlayPartIds: getCompatibleOperatorGearOptions({
-      category: "outfit-overlay",
-      roleTag: visitor.desiredRoleTag,
-      recipeId: recipe.id,
-      maxRarity,
-    }).map((part) => part.id),
-    accessoryPartIds: getCompatibleOperatorGearOptions({
-      category: "accessory",
-      roleTag: visitor.desiredRoleTag,
-      recipeId: recipe.id,
-      maxRarity,
-    }).map((part) => part.id),
-  }));
-
-  const toCatalog = (category: "weapon" | "outfit-overlay" | "accessory") => [
-    ...new Map(
-      allowedRecipes.flatMap((recipe) =>
-        getCompatibleOperatorGearOptions({
-          category,
-          roleTag: visitor.desiredRoleTag,
-          recipeId: recipe.id,
-          maxRarity,
-        }).map((part) => [part.id, { id: part.id, tags: [...part.tags], rarity: part.rarity }]),
-      ),
-    ).values(),
-  ];
-
-  return {
-    candidateId: visitor.id,
-    guildName: ctx.session.phase1View.identity.guildName,
-    buildingName: ctx.session.phase1View.building.activeBuildingName,
-    dayNumber: ctx.session.phase1View.clock.day,
-    name: visitor.name,
-    roleTag: visitor.desiredRoleTag,
-    quality: visitor.quality ?? 50,
-    expectedLoyalty: visitor.expectedLoyalty ?? 50,
-    allowedSpecialtyTags: [...getSpecialtyOptionsForRole(visitor.desiredRoleTag)],
-    allowedPreferredMissionTags: [...getAllowedPreferredMissionTags()],
-    allowedRecipes,
-    allowedVisibleGearByRecipe,
-    gearCatalog: {
-      weapon: toCatalog("weapon"),
-      outfitOverlay: toCatalog("outfit-overlay"),
-      accessory: toCatalog("accessory"),
-    },
-    fallbackIdentity: {
-      specialtyTag: visitor.specialtyTag ?? `focus:${visitor.desiredRoleTag.replace(/^role:/, "")}`,
-      appearance: {
-        presetId: visitor.presetId ?? allowedRecipes[0]?.id ?? "kael-001",
-      },
-      preferences: {
-        riskTolerance: 50,
-        rewardFocus: 50,
-        recoveryBias: 50,
-        socialBias: 50,
-        trainingBias: 50,
-        comfortBias: 50,
-        preferredMissionTags: ["mission:stability"],
-      },
-      personaSummary:
-        visitor.personaSummary ??
-        `${visitor.name} reads like a plausible ${visitor.desiredRoleTag.replace(/^role:/, "").replaceAll("_", " ")} hire.`,
-      personaHooks: visitor.personaHooks?.length
-        ? [...visitor.personaHooks]
-        : ["Dry under pressure.", "Treats chaos like a management problem."],
-    },
-  };
 }
 
 function getCommandFamilies(): readonly string[] {
@@ -1492,12 +1396,16 @@ const COMMANDS: DevConsoleCommand[] = [
         if (!visitor) {
           return err("No visitor available. Spawn or wait for a recruit first.");
         }
+        const payload = buildOperatorIdentityPreviewPayload(ctx.session, visitor);
+        if (!payload) {
+          return err("No operator appearance recipes loaded; cannot build identity payload.");
+        }
 
         void ctx.session.commands
           .generateAiSurface({
             surface,
             subjectId: visitor.id,
-            payload: buildOperatorIdentityPayload(ctx, visitor),
+            payload,
             triggerSource: "dev-menu",
           })
           .then((record) => {
@@ -1508,95 +1416,15 @@ const COMMANDS: DevConsoleCommand[] = [
         return ok(`Generating ${surface} for ${visitor.name}...`);
       }
 
-      const primaryOperator = pv.operators?.[0];
-      const secondaryOperator = pv.operators?.[1];
-      const relationship =
-        primaryOperator && secondaryOperator
-          ? pv.relationshipSignals.find((signal) => {
-              const ids = [signal.operatorAId, signal.operatorBId];
-              return ids.includes(primaryOperator.id) && ids.includes(secondaryOperator.id);
-            })
-          : undefined;
       void ctx.session.commands
         .generateAiSurface({
           surface,
           subjectId: `dev-test:${Date.now()}`,
-          payload: {
+          payload: buildIncidentFramingPreviewPayload(ctx.session, {
             incidentId: "incident/dev-test",
             templateId: "incident/dev-test",
-            templateName: "Personnel Friction Report",
-            category: "personnel_conflict",
-            tags: ["conflict", "morale", "dev-test"],
-            triggerFamily: "operator_conflict",
-            guildName: pv.identity.guildName,
-            buildingId: pv.building.activeBuildingId,
-            buildingName: pv.building.activeBuildingName,
-            dayNumber: pv.clock.day,
-            minuteOfDay: pv.clock.minuteOfDay,
-            subjectSummary:
-              [primaryOperator?.identity.name, secondaryOperator?.identity.name]
-                .filter(Boolean)
-                .join(", ") || "Unknown subject",
-            operators: [primaryOperator, secondaryOperator]
-              .filter((operator): operator is NonNullable<typeof primaryOperator> =>
-                Boolean(operator),
-              )
-              .map((operator) => ({
-                id: operator.id,
-                name: operator.identity.name,
-                roleTag: operator.identity.roleTag,
-                specialtyTag: operator.identity.specialtyTag,
-                attunementTag: operator.combat?.attunementTag ?? "",
-                rank: operator.combat?.rank ?? "f",
-                traits: [...(operator.combat?.traits ?? [])],
-                morale: { ...operator.morale },
-                loyalty: { ...operator.loyalty },
-                needs: { ...operator.needs },
-                injury: { ...operator.injury },
-                preferences: {
-                  ...operator.preferences,
-                  preferredMissionTags: [...operator.preferences.preferredMissionTags],
-                  preferredPartnerIds: [...operator.preferences.preferredPartnerIds],
-                },
-              })),
-            ...(relationship
-              ? {
-                  relationship: {
-                    operatorAId: relationship.operatorAId,
-                    operatorBId: relationship.operatorBId,
-                    trust: relationship.trust,
-                    friction: relationship.friction,
-                    familiarity: relationship.familiarity,
-                    recentSharedOutcome: relationship.recentSharedOutcome,
-                    historyTags: [...relationship.historyTags],
-                  },
-                }
-              : {}),
-            choices: [
-              {
-                choiceId: "mediate",
-                defaultLabel: "Mediate Directly",
-                defaultDescription: "Sit both operators down and work through the friction point.",
-                defaultConsequenceSummary: "Minor morale boost for both, slight loyalty increase.",
-                deterministicEffects: [
-                  { kind: "morale_delta", targetRef: "subject_a", value: 5 },
-                  { kind: "morale_delta", targetRef: "subject_b", value: 5 },
-                  { kind: "loyalty_delta", targetRef: "subject_a", value: 3 },
-                  { kind: "loyalty_delta", targetRef: "subject_b", value: 3 },
-                ],
-              },
-              {
-                choiceId: "ignore",
-                defaultLabel: "File and Move On",
-                defaultDescription: "Document the incident and let them sort it out.",
-                defaultConsequenceSummary: "No immediate cost, but unresolved tension persists.",
-                deterministicEffects: [
-                  { kind: "morale_delta", targetRef: "subject_a", value: -2 },
-                  { kind: "morale_delta", targetRef: "subject_b", value: -2 },
-                ],
-              },
-            ],
-          },
+            originTag: "dev-test",
+          }),
           triggerSource: "dev-menu",
         })
         .then((record) => {

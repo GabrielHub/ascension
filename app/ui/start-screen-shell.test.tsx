@@ -66,6 +66,17 @@ describe("start screen dev entrypoint", () => {
     expect(html).toContain('href="/scene-builder"');
   });
 
+  it("renders the AI Playground link", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <StartScreenShell />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">AI Playground<");
+    expect(html).toContain('href="/ai-playground"');
+  });
+
   it("renders the Settings button on the start screen footer", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>

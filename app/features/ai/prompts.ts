@@ -1,156 +1,166 @@
 import type { AiGenerationSurface } from "./types";
 import type { IncidentFramingPayload, OperatorIdentityPayload } from "./schemas";
-
-function formatTag(tag: string): string {
-  return tag.includes(":") ? tag.slice(tag.indexOf(":") + 1).replaceAll("_", " ") : tag;
-}
-
-function formatMinuteOfDay(minuteOfDay: number): string {
-  const hours = String(Math.floor(minuteOfDay / 60)).padStart(2, "0");
-  const minutes = String(minuteOfDay % 60).padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
+import {
+  INCIDENT_PROMPT_SECTIONS,
+  OPERATOR_IDENTITY_PROMPT_SECTIONS,
+  SHARED_PROMPT_SECTIONS,
+} from "./prompt-grounding";
 
 export function buildSystemPrompt(surface: AiGenerationSurface): string {
   switch (surface) {
     case "incident-framing":
       return [
         "ROLE",
-        "You write interruption copy for Ascension, a management sim set in New York City in 2026.",
+        "You write structured interruption copy for Ascension, a workplace comedy about running a licensed dungeon-clearance guild out of a bodega in 2026 New York City.",
         "",
-        "WORLD",
-        "- Dungeons appeared in 2020 and are now a dangerous licensed industry.",
-        "- Guilds are small businesses, not armies, heroes, or government units.",
-        "- The tone is workplace comedy under supernatural pressure.",
-        "- Humor comes from bureaucracy, labor friction, logistics, and dry institutional framing.",
-        "- Death and serious injury are treated plainly and without jokes.",
-        "",
+        ...SHARED_PROMPT_SECTIONS,
+        ...INCIDENT_PROMPT_SECTIONS,
         "TASK",
-        "- Use the provided structured gameplay context to invent a specific narrative incident.",
-        "- You may invent the precipitating office drama, operational absurdity, and social texture.",
-        "- You must not invent new operators, new gameplay outcomes, or hidden modifiers.",
-        "- Keep the deterministic consequences aligned with the provided effect bundles.",
+        "- Write one grounded incident packet on top of the provided structured gameplay context.",
+        "- Keep every deterministic consequence aligned with the provided effect bundles and choice ids.",
+        "- Make the room, workplace pressure, and social texture feel specific without inventing hidden facts.",
         "",
-        "STYLE",
-        "- Write in grounded present-tense managerial language.",
-        "- Avoid epic, military, prophecy, fantasy-RPG, or anime framing.",
-        "- Prefer incident-report language, small-business pressure, and NYC workplace specificity.",
-        "- Operators are employees with powers, not adventurers.",
+        "STEP ORDER",
+        "1. Absorb the deterministic facts: incident template, operators, relationship, room, building, choice ids, and effects.",
+        "2. Pick one grounded workplace angle (staffing tension, compliance friction, room culture, scheduling pressure, or relationship static).",
+        "3. Anchor the framing in small-business operations. Reference concrete physical detail when the room or building is named.",
+        "4. Rewrite each provided choice so it reads like a management action while preserving its deterministic meaning. Produce exactly one choice object per provided choiceId.",
+        "5. Check the comedy-vs-tragedy mode against the incident category and tags, and adjust the register accordingly.",
+        "6. Run the self-check before emitting.",
         "",
-        "OUTPUT RULES",
-        "- Return valid JSON only.",
-        "- Do not include markdown, commentary, or extra keys.",
-        "- Keep the title short and report-like.",
-        "- Keep the briefing to 2-4 sentences.",
-        "- Return exactly one choice object for each provided choiceId.",
+        "SELF-CHECK BEFORE EMITTING",
+        "- No forbidden word appears anywhere in the output, even inside quotes or denials.",
+        "- Title is short, report-like, and does not end with ! or ?.",
+        "- Briefing is 2 to 4 sentences, present tense unless recapping.",
+        "- Every provided choiceId appears exactly once. No extra choiceIds.",
+        "- No prose, markdown, code fences, or commentary outside the JSON object.",
+        "",
+        "OUTPUT CONTRACT",
+        "- Emit exactly one JSON object matching the requested shape. Nothing else.",
+        "- Do not prepend or append explanations, apologies, markdown, or code fences.",
+        "- Do not invent, rename, or omit keys. Do not duplicate choiceIds.",
       ].join("\n");
     case "operator-identity":
       return [
         "ROLE",
-        "You generate structured recruit identity packets for Ascension.",
+        "You generate structured recruit identity packets for Ascension, a workplace comedy about running a licensed dungeon-clearance guild out of a bodega in 2026 New York City.",
         "",
-        "WORLD",
-        "- The game is set in New York City in 2026 after dungeons became a licensed labor industry.",
-        "- Operators are employees first: skilled, pressured, and shaped by workplace reality.",
-        "- Guilds are scrappy businesses dealing with staffing, paperwork, risk, and dungeon logistics.",
-        "- The tone is grounded workplace drama with dry humor, not epic heroism or destiny fiction.",
-        "- Operators should read as authored people, not random anime archetypes or rarity gimmicks.",
-        "",
+        ...SHARED_PROMPT_SECTIONS,
+        ...OPERATOR_IDENTITY_PROMPT_SECTIONS,
         "TASK",
-        "- Starting from the provided deterministic fallback packet, produce a stronger recruit identity packet.",
-        "- Keep the fixed role exactly as provided.",
-        "- Choose only approved specialty tags, appearance recipe ids, and visible gear ids from the supplied catalogs.",
-        "- Use preferences and persona text to make the recruit feel specific, employable, and socially legible.",
-        "- The output must remain safe for deterministic simulation and rendering.",
+        "- Starting from the deterministic fallback packet, produce a stronger but still safe recruit identity packet.",
+        "- Keep the fixed role, approved catalogs, and bounded preference model exactly within the provided contract.",
+        "- Make the recruit feel like someone a stressed guild manager might realistically hire in 2026 NYC.",
         "",
-        "STYLE",
-        "- Ground the recruit in labor-market realism, small-business pressure, and NYC workplace texture.",
-        "- Keep persona writing concise, specific, and human.",
-        "- Avoid prophecy, chosen-one language, military hero framing, or exaggerated JRPG diction.",
+        "STEP ORDER",
+        "1. Anchor on the fixed name, role, fallback packet, and approved catalogs.",
+        "2. Pick one coherent workplace read on the candidate instead of a pile of disconnected traits.",
+        "3. Select only approved specialty, recipe, and gear ids that fit that read.",
+        "4. Tune preferences and persona text so the packet is concrete, employable, and concise.",
+        "5. Run the self-check before emitting.",
         "",
         "HARD CONSTRAINTS",
         "- Do not invent ids, tags, parts, recipes, roles, ranks, powers, or mechanics.",
         "- Do not change the recruit name or role.",
-        "- Do not output explanations, prose outside JSON, or keys not requested.",
         "- Persona hooks must be short, concrete, and usable by future narrative systems.",
         "",
-        "OUTPUT RULES",
-        "- Return valid JSON only.",
-        "- Keep personaSummary to one sentence.",
-        "- Keep personaHooks short.",
+        "SELF-CHECK BEFORE EMITTING",
+        "- No forbidden word appears anywhere in the output, even inside quotes or denials.",
+        "- specialtyTag is drawn from allowedSpecialtyTags.",
+        "- appearance.presetId is drawn from allowedRecipes, and any visible gear id is drawn from the matching recipe's allowed list.",
+        "- Every preferredMissionTags entry is drawn from allowedPreferredMissionTags.",
+        "- personaSummary is exactly one sentence.",
+        "- personaHooks contain 2 to 4 short hooks.",
+        "- No prose, markdown, code fences, or commentary outside the JSON object.",
+        "",
+        "OUTPUT CONTRACT",
+        "- Emit exactly one JSON object matching the requested shape. Nothing else.",
+        "- Do not prepend or append explanations, apologies, markdown, or code fences.",
+        "- Do not invent, rename, or omit keys.",
       ].join("\n");
     default:
-      return "Respond with valid JSON only.";
+      return "Respond with one JSON object only. No prose, no markdown, no code fences.";
   }
 }
 
-function buildIncidentOperatorLines(payload: IncidentFramingPayload): string[] {
-  return payload.operators.map((operator) => {
-    const preferenceSummary = [
-      `risk ${Math.round(operator.preferences.riskTolerance)}`,
-      `reward ${Math.round(operator.preferences.rewardFocus)}`,
-      `recovery ${Math.round(operator.preferences.recoveryBias)}`,
-      `social ${Math.round(operator.preferences.socialBias)}`,
-      `training ${Math.round(operator.preferences.trainingBias)}`,
-      `comfort ${Math.round(operator.preferences.comfortBias)}`,
-    ].join(", ");
-
-    return [
-      `- ${operator.name} (${formatTag(operator.roleTag)}, ${formatTag(operator.attunementTag)}, rank ${operator.rank.toUpperCase()})`,
-      `  specialty: ${formatTag(operator.specialtyTag)}`,
-      `  traits: ${operator.traits.map((trait) => formatTag(trait)).join(", ") || "none"}`,
-      `  morale ${Math.round(operator.morale.current)}/${Math.round(operator.morale.baseline)}, loyalty ${Math.round(operator.loyalty.current)}/${Math.round(operator.loyalty.baseline)}`,
-      `  needs: stress ${Math.round(operator.needs.stress)}, fatigue ${Math.round(operator.needs.fatigue)}, hunger ${Math.round(operator.needs.hunger)}`,
-      `  injury: severity ${Math.round(operator.injury.severity)}, recovery ${Math.round(operator.injury.recoveryHoursRemaining)}h, treated ${operator.injury.treated ? "yes" : "no"}`,
-      `  preferences: ${preferenceSummary}`,
-      `  preferred missions: ${operator.preferences.preferredMissionTags.map((tag) => formatTag(tag)).join(", ") || "none"}`,
-    ].join("\n");
-  });
-}
-
-function buildIncidentChoiceLines(payload: IncidentFramingPayload): string[] {
-  return payload.choices.map((choice) => {
-    const effects =
-      choice.deterministicEffects.length > 0
-        ? choice.deterministicEffects
-            .map(
-              (effect) =>
-                `${effect.kind} ${effect.targetRef} ${effect.value > 0 ? "+" : ""}${effect.value}`,
-            )
-            .join("; ")
-        : "no immediate deterministic effect";
-
-    return [
-      `- choiceId: ${choice.choiceId}`,
-      `  current label: ${choice.defaultLabel}`,
-      `  current description: ${choice.defaultDescription}`,
-      `  current consequence summary: ${choice.defaultConsequenceSummary}`,
-      `  deterministic effects: ${effects}`,
-    ].join("\n");
-  });
-}
-
-function buildOperatorIdentityRecipeLines(payload: OperatorIdentityPayload): string[] {
-  return payload.allowedRecipes.map((recipe) => {
-    const visibleGear = payload.allowedVisibleGearByRecipe.find(
-      (entry) => entry.recipeId === recipe.id,
-    );
-    return [
-      `- ${recipe.id} (${recipe.name})`,
-      `  silhouette: ${recipe.bodySilhouette}`,
-      `  palette: ${recipe.palette}`,
-      `  skin tone: ${recipe.skinTone}`,
-      `  approved weapon ids: ${visibleGear?.weaponPartIds.join(", ") || "none"}`,
-      `  approved outfit overlay ids: ${visibleGear?.outfitOverlayPartIds.join(", ") || "none"}`,
-      `  approved accessory ids: ${visibleGear?.accessoryPartIds.join(", ") || "none"}`,
-    ].join("\n");
-  });
-}
-
-function buildOperatorIdentityGearLines(
-  parts: OperatorIdentityPayload["gearCatalog"]["weapon"],
-): string[] {
-  return parts.map((part) => `- ${part.id} (${part.rarity}; ${part.tags.join(", ")})`);
+function buildIncidentPromptPayload(payload: IncidentFramingPayload): Record<string, unknown> {
+  return {
+    guild: payload.guildName,
+    building: payload.buildingName,
+    day: payload.dayNumber,
+    minuteOfDay: payload.minuteOfDay,
+    incident: {
+      id: payload.incidentId,
+      templateId: payload.templateId,
+      templateName: payload.templateName,
+      category: payload.category,
+      triggerFamily: payload.triggerFamily,
+      tags: payload.tags,
+      subjectSummary: payload.subjectSummary,
+    },
+    operators: payload.operators.map((operator) => ({
+      id: operator.id,
+      name: operator.name,
+      roleTag: operator.roleTag,
+      specialtyTag: operator.specialtyTag,
+      attunementTag: operator.attunementTag,
+      rank: operator.rank,
+      traits: operator.traits,
+      morale: {
+        current: Math.round(operator.morale.current),
+        baseline: Math.round(operator.morale.baseline),
+      },
+      loyalty: {
+        current: Math.round(operator.loyalty.current),
+        baseline: Math.round(operator.loyalty.baseline),
+      },
+      needs: {
+        stress: Math.round(operator.needs.stress),
+        fatigue: Math.round(operator.needs.fatigue),
+        hunger: Math.round(operator.needs.hunger),
+      },
+      injury: {
+        severity: Math.round(operator.injury.severity),
+        recoveryHoursRemaining: Math.round(operator.injury.recoveryHoursRemaining),
+        treated: operator.injury.treated,
+      },
+    })),
+    ...(payload.relationship
+      ? {
+          relationship: {
+            operatorAId: payload.relationship.operatorAId,
+            operatorBId: payload.relationship.operatorBId,
+            trust: Math.round(payload.relationship.trust),
+            friction: Math.round(payload.relationship.friction),
+            familiarity: Math.round(payload.relationship.familiarity),
+            recentSharedOutcome: Math.round(payload.relationship.recentSharedOutcome),
+            historyTags: payload.relationship.historyTags,
+          },
+        }
+      : {}),
+    ...(payload.room
+      ? {
+          room: {
+            id: payload.room.id,
+            name: payload.room.name,
+            functionTag: payload.room.functionTag,
+            cultureSummary: payload.room.cultureSummary,
+            cultureSignals: payload.room.cultureSignals,
+          },
+        }
+      : {}),
+    choices: payload.choices.map((choice) => ({
+      choiceId: choice.choiceId,
+      label: choice.defaultLabel,
+      description: choice.defaultDescription,
+      consequenceSummary: choice.defaultConsequenceSummary,
+      deterministicEffects: choice.deterministicEffects.map((effect) => ({
+        kind: effect.kind,
+        targetRef: effect.targetRef,
+        value: effect.value,
+      })),
+    })),
+  };
 }
 
 export function buildUserPrompt(
@@ -160,108 +170,53 @@ export function buildUserPrompt(
   switch (surface) {
     case "incident-framing": {
       const p = payload as IncidentFramingPayload;
-      const relationshipLines = p.relationship
-        ? [
-            "RELATIONSHIP",
-            `- ${p.relationship.operatorAId} <> ${p.relationship.operatorBId}`,
-            `- trust ${Math.round(p.relationship.trust)}, friction ${Math.round(p.relationship.friction)}, familiarity ${Math.round(p.relationship.familiarity)}, recent shared outcome ${Math.round(p.relationship.recentSharedOutcome)}`,
-            `- history tags: ${p.relationship.historyTags.map((tag) => formatTag(tag)).join(", ") || "none"}`,
-            "",
-          ]
-        : [];
-      const roomLines = p.room
-        ? [
-            "ROOM",
-            `- ${p.room.name} (${p.room.templateId}, ${formatTag(p.room.functionTag)})`,
-            ...(p.room.cultureSummary ? [`- culture summary: ${p.room.cultureSummary}`] : []),
-            ...(p.room.cultureSignals && p.room.cultureSignals.length > 0
-              ? [`- culture signals: ${p.room.cultureSignals.join(", ")}`]
-              : []),
-            "",
-          ]
-        : [];
 
       return [
-        "CONTEXT",
-        `Guild: ${p.guildName}`,
-        `Building: ${p.buildingName} (${p.buildingId})`,
-        `Time: day ${p.dayNumber}, ${formatMinuteOfDay(p.minuteOfDay)}`,
+        "AUTHORITATIVE INCIDENT PAYLOAD",
+        "- Treat the JSON below as the complete deterministic context. It is the only source of truth.",
+        "- Do not invent hidden state, new operators, new rooms, or new outcomes.",
         "",
-        "INCIDENT",
-        `- incident id: ${p.incidentId}`,
-        `- template id: ${p.templateId}`,
-        `- template name: ${p.templateName}`,
-        `- category: ${formatTag(p.category)}`,
-        `- trigger family: ${formatTag(p.triggerFamily)}`,
-        `- tags: ${p.tags.map((tag) => formatTag(tag)).join(", ") || "none"}`,
-        `- subject summary: ${p.subjectSummary}`,
+        JSON.stringify(buildIncidentPromptPayload(p), null, 2),
         "",
-        "OPERATORS",
-        ...buildIncidentOperatorLines(p),
-        "",
-        ...relationshipLines,
-        ...roomLines,
-        "CHOICES",
-        ...buildIncidentChoiceLines(p),
+        "WRITING TARGET",
+        "- Make the incident feel like a plausible workplace escalation in a supernatural small business.",
+        "- Keep the comedy dry and institutional, never whimsical, epic, or heroic.",
+        "- Match each choice to the deterministic effect bundle already supplied.",
+        "- If the incident category or tags signal death, catastrophic injury, or permanent loss, drop the comedy entirely.",
         "",
         "RETURN THIS JSON SHAPE",
         `{
-  "title": "short incident title",
-  "briefing": "2-4 sentence briefing",
+  "title": "short incident title, 80 characters or fewer, no trailing ! or ?",
+  "briefing": "2 to 4 sentences, 520 characters or fewer",
   "choices": [
     {
       "choiceId": "must exactly match provided choiceId",
-      "label": "short label",
+      "label": "short label, 60 characters or fewer",
       "description": "one sentence describing the managerial action",
       "consequenceSummary": "one sentence matching the deterministic effects",
       "resolutionSummary": "one sentence in past tense describing the aftermath if that choice is taken"
     }
   ]
 }`,
+        "",
+        "FINAL INSTRUCTION",
+        "- Emit exactly one JSON object matching that shape. Nothing before it, nothing after it.",
       ].join("\n");
     }
     case "operator-identity": {
       const p = payload as OperatorIdentityPayload;
 
       return [
-        "CONTEXT",
-        `Guild: ${p.guildName}`,
-        `Building: ${p.buildingName}`,
-        `Day: ${p.dayNumber}`,
+        "AUTHORITATIVE RECRUIT PAYLOAD",
+        "- Treat the JSON below as the complete deterministic contract and approved catalog. It is the only source of truth.",
+        "- Improve specificity without inventing ids, tags, parts, or mechanics outside the payload.",
         "",
-        "RECRUIT",
-        `- candidate id: ${p.candidateId}`,
-        `- name: ${p.name}`,
-        `- fixed role: ${formatTag(p.roleTag)}`,
-        `- quality: ${Math.round(p.quality)}`,
-        `- expected loyalty: ${Math.round(p.expectedLoyalty)}`,
+        JSON.stringify(p, null, 2),
         "",
-        "DETERMINISTIC FALLBACK PACKET",
-        `- specialty: ${formatTag(p.fallbackIdentity.specialtyTag)}`,
-        `- recipe: ${p.fallbackIdentity.appearance.presetId}`,
-        `- visible gear: ${JSON.stringify(p.fallbackIdentity.appearance.visibleGear ?? {})}`,
-        `- preferences: ${JSON.stringify(p.fallbackIdentity.preferences)}`,
-        `- persona summary: ${p.fallbackIdentity.personaSummary}`,
-        `- persona hooks: ${p.fallbackIdentity.personaHooks.join(" | ")}`,
-        "",
-        "APPROVED SPECIALTY TAGS",
-        ...p.allowedSpecialtyTags.map((tag) => `- ${tag}`),
-        "",
-        "APPROVED PREFERRED MISSION TAGS",
-        ...p.allowedPreferredMissionTags.map((tag) => `- ${tag}`),
-        "",
-        "APPROVED RECIPES AND COMPATIBLE VISIBLE GEAR",
-        ...buildOperatorIdentityRecipeLines(p),
-        "",
-        "VISIBLE GEAR CATALOG",
-        "WEAPONS",
-        ...buildOperatorIdentityGearLines(p.gearCatalog.weapon),
-        "",
-        "OUTFIT OVERLAYS",
-        ...buildOperatorIdentityGearLines(p.gearCatalog.outfitOverlay),
-        "",
-        "ACCESSORIES",
-        ...buildOperatorIdentityGearLines(p.gearCatalog.accessory),
+        "WRITING TARGET",
+        "- Favor a coherent, workplace-legible candidate over a flashy or melodramatic one.",
+        "- Treat the fallback packet as the safe baseline; improve specificity without changing the fixed identity contract.",
+        "- Lead the persona summary with a concrete workplace read, not a dramatic backstory.",
         "",
         "RETURN THIS JSON SHAPE",
         `{
@@ -283,9 +238,12 @@ export function buildUserPrompt(
     "comfortBias": 0,
     "preferredMissionTags": ["approved mission tag"]
   },
-  "personaSummary": "one sentence",
+  "personaSummary": "one sentence, 220 characters or fewer",
   "personaHooks": ["short hook", "short hook"]
 }`,
+        "",
+        "FINAL INSTRUCTION",
+        "- Emit exactly one JSON object matching that shape. Nothing before it, nothing after it.",
       ].join("\n");
     }
     default:

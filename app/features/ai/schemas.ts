@@ -178,6 +178,36 @@ function readNonEmptyString(record: Record<string, unknown>, key: string): strin
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
+const FORBIDDEN_TONE_PATTERNS = [
+  /\bmana\b/i,
+  /\baether\b/i,
+  /\bspell(?:s)?\b/i,
+  /\bquest(?:s)?\b/i,
+  /\bchosen one\b/i,
+  /\bprophe(?:cy|sied|sies|t|ts|tic)\b/i,
+  /\bdestiny\b/i,
+  /\bhero(?:es|ic)?\b/i,
+  /\bwarrior(?:s)?\b/i,
+  /\badventurer(?:s)?\b/i,
+  /\bdungeon master(?:s)?\b/i,
+  /\bbattalion\b/i,
+  /\bplatoon\b/i,
+  /\banime\b/i,
+] as const;
+
+function containsForbiddenTone(value: string): boolean {
+  return FORBIDDEN_TONE_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function countSentences(value: string): number {
+  // Require whitespace (or end of string) after terminal punctuation so
+  // abbreviations like "Dr. Smith" or "e.g." do not inflate the count.
+  return value
+    .split(/[.!?]+(?:\s+|$)/)
+    .map((segment) => segment.trim())
+    .filter(Boolean).length;
+}
+
 function readStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) {
     return null;
@@ -206,20 +236,44 @@ function validateIncidentChoiceOutput(
   if (!label) {
     return `Missing or empty label for ${choiceId}`;
   }
+  if (label.length > 60) {
+    return `label for ${choiceId} must be 60 characters or fewer`;
+  }
+  if (containsForbiddenTone(label)) {
+    return `label for ${choiceId} contains forbidden tone`;
+  }
 
   const description = readNonEmptyString(record, "description");
   if (!description) {
     return `Missing or empty description for ${choiceId}`;
+  }
+  if (description.length > 220) {
+    return `description for ${choiceId} must be 220 characters or fewer`;
+  }
+  if (containsForbiddenTone(description)) {
+    return `description for ${choiceId} contains forbidden tone`;
   }
 
   const consequenceSummary = readNonEmptyString(record, "consequenceSummary");
   if (!consequenceSummary) {
     return `Missing or empty consequenceSummary for ${choiceId}`;
   }
+  if (consequenceSummary.length > 220) {
+    return `consequenceSummary for ${choiceId} must be 220 characters or fewer`;
+  }
+  if (containsForbiddenTone(consequenceSummary)) {
+    return `consequenceSummary for ${choiceId} contains forbidden tone`;
+  }
 
   const resolutionSummary = readNonEmptyString(record, "resolutionSummary");
   if (!resolutionSummary) {
     return `Missing or empty resolutionSummary for ${choiceId}`;
+  }
+  if (resolutionSummary.length > 220) {
+    return `resolutionSummary for ${choiceId} must be 220 characters or fewer`;
+  }
+  if (containsForbiddenTone(resolutionSummary)) {
+    return `resolutionSummary for ${choiceId} contains forbidden tone`;
   }
 
   return {
@@ -253,12 +307,14 @@ function validateOperatorIdentityAppearance(
   appearanceValue: unknown,
   payload: OperatorIdentityPayload,
 ): OperatorIdentityAppearancePayload | string {
-  if (!appearanceValue || typeof appearanceValue !== "object") {
-    return "Missing appearance object";
-  }
+  const fallbackAppearance = payload.fallbackIdentity.appearance;
+  const fallbackVisibleGear = fallbackAppearance.visibleGear;
+  const appearanceRecord =
+    appearanceValue && typeof appearanceValue === "object"
+      ? (appearanceValue as Record<string, unknown>)
+      : {};
 
-  const appearanceRecord = appearanceValue as Record<string, unknown>;
-  const presetId = readNonEmptyString(appearanceRecord, "presetId");
+  const presetId = readNonEmptyString(appearanceRecord, "presetId") ?? fallbackAppearance.presetId;
   if (!presetId) {
     return "Missing or empty appearance.presetId";
   }
@@ -272,17 +328,14 @@ function validateOperatorIdentityAppearance(
     (entry) => entry.recipeId === presetId,
   );
   const visibleGearValue = appearanceRecord.visibleGear;
-  if (!visibleGearValue) {
-    return { presetId };
-  }
-  if (typeof visibleGearValue !== "object") {
-    return "appearance.visibleGear must be an object when present";
-  }
   if (!allowedVisibleGear) {
     return `No approved visible gear catalog found for recipe "${presetId}"`;
   }
 
-  const visibleGearRecord = visibleGearValue as Record<string, unknown>;
+  const visibleGearRecord =
+    visibleGearValue && typeof visibleGearValue === "object"
+      ? (visibleGearValue as Record<string, unknown>)
+      : {};
   const visibleGear: NonNullable<OperatorIdentityAppearancePayload["visibleGear"]> = {};
   const slotEntries = [
     ["weaponPartId", allowedVisibleGear.weaponPartIds],
@@ -291,7 +344,7 @@ function validateOperatorIdentityAppearance(
   ] as const;
 
   for (const [slotKey, allowedIds] of slotEntries) {
-    const value = visibleGearRecord[slotKey];
+    const value = visibleGearRecord[slotKey] ?? fallbackVisibleGear?.[slotKey];
     if (value === undefined || value === null || value === "") {
       continue;
     }
@@ -311,37 +364,48 @@ function validateOperatorIdentityPreferences(
   preferencesValue: unknown,
   payload: OperatorIdentityPayload,
 ): OperatorIdentityPreferencesPayload | string {
-  if (!preferencesValue || typeof preferencesValue !== "object") {
-    return "Missing preferences object";
-  }
+  const fallbackPreferences = payload.fallbackIdentity.preferences;
+  const preferencesRecord =
+    preferencesValue && typeof preferencesValue === "object"
+      ? (preferencesValue as Record<string, unknown>)
+      : {};
+  const mergedPreferences = {
+    riskTolerance: preferencesRecord.riskTolerance ?? fallbackPreferences.riskTolerance,
+    rewardFocus: preferencesRecord.rewardFocus ?? fallbackPreferences.rewardFocus,
+    recoveryBias: preferencesRecord.recoveryBias ?? fallbackPreferences.recoveryBias,
+    socialBias: preferencesRecord.socialBias ?? fallbackPreferences.socialBias,
+    trainingBias: preferencesRecord.trainingBias ?? fallbackPreferences.trainingBias,
+    comfortBias: preferencesRecord.comfortBias ?? fallbackPreferences.comfortBias,
+    preferredMissionTags:
+      preferencesRecord.preferredMissionTags ?? fallbackPreferences.preferredMissionTags,
+  } satisfies Record<string, unknown>;
 
-  const preferencesRecord = preferencesValue as Record<string, unknown>;
-  const riskTolerance = readBoundedNumber(preferencesRecord, "riskTolerance", 0, 100);
+  const riskTolerance = readBoundedNumber(mergedPreferences, "riskTolerance", 0, 100);
   if (typeof riskTolerance === "string") {
     return riskTolerance;
   }
-  const rewardFocus = readBoundedNumber(preferencesRecord, "rewardFocus", 0, 100);
+  const rewardFocus = readBoundedNumber(mergedPreferences, "rewardFocus", 0, 100);
   if (typeof rewardFocus === "string") {
     return rewardFocus;
   }
-  const recoveryBias = readBoundedNumber(preferencesRecord, "recoveryBias", 0, 100);
+  const recoveryBias = readBoundedNumber(mergedPreferences, "recoveryBias", 0, 100);
   if (typeof recoveryBias === "string") {
     return recoveryBias;
   }
-  const socialBias = readBoundedNumber(preferencesRecord, "socialBias", 0, 100);
+  const socialBias = readBoundedNumber(mergedPreferences, "socialBias", 0, 100);
   if (typeof socialBias === "string") {
     return socialBias;
   }
-  const trainingBias = readBoundedNumber(preferencesRecord, "trainingBias", 0, 100);
+  const trainingBias = readBoundedNumber(mergedPreferences, "trainingBias", 0, 100);
   if (typeof trainingBias === "string") {
     return trainingBias;
   }
-  const comfortBias = readBoundedNumber(preferencesRecord, "comfortBias", 0, 100);
+  const comfortBias = readBoundedNumber(mergedPreferences, "comfortBias", 0, 100);
   if (typeof comfortBias === "string") {
     return comfortBias;
   }
 
-  const preferredMissionTagsRaw = readStringArray(preferencesRecord.preferredMissionTags);
+  const preferredMissionTagsRaw = readStringArray(mergedPreferences.preferredMissionTags);
   if (!preferredMissionTagsRaw || preferredMissionTagsRaw.length === 0) {
     return "preferences.preferredMissionTags must contain at least one approved mission tag";
   }
@@ -372,7 +436,8 @@ function validateOperatorIdentityOutput(
   record: Record<string, unknown>,
   payload: OperatorIdentityPayload,
 ): OperatorIdentityOutput | string {
-  const specialtyTag = readNonEmptyString(record, "specialtyTag");
+  const specialtyTag =
+    readNonEmptyString(record, "specialtyTag") ?? payload.fallbackIdentity.specialtyTag;
   if (!specialtyTag) {
     return "Missing or empty specialtyTag";
   }
@@ -392,22 +457,36 @@ function validateOperatorIdentityOutput(
     return preferences;
   }
 
-  const personaSummary = readNonEmptyString(record, "personaSummary");
+  const personaSummary =
+    readNonEmptyString(record, "personaSummary") ?? payload.fallbackIdentity.personaSummary;
   if (!personaSummary) {
     return "Missing or empty personaSummary";
   }
   if (personaSummary.length > 220) {
     return "personaSummary must be 220 characters or fewer";
   }
+  if (countSentences(personaSummary) > 1) {
+    return "personaSummary must stay to one sentence";
+  }
+  if (containsForbiddenTone(personaSummary)) {
+    return "personaSummary contains forbidden tone";
+  }
 
-  const personaHooksRaw = readStringArray(record.personaHooks);
+  const personaHooksRaw = readStringArray(record.personaHooks) ?? [
+    ...payload.fallbackIdentity.personaHooks,
+  ];
   if (!personaHooksRaw || personaHooksRaw.length < 2) {
     return "personaHooks must contain at least 2 short hooks";
   }
 
-  const personaHooks = [...new Set(personaHooksRaw)].slice(0, 4);
+  const personaHooks = [
+    ...new Set([...personaHooksRaw, ...payload.fallbackIdentity.personaHooks]),
+  ].slice(0, 4);
   if (personaHooks.some((hook) => hook.length > 120)) {
     return "personaHooks entries must be 120 characters or fewer";
+  }
+  if (personaHooks.some((hook) => containsForbiddenTone(hook))) {
+    return "personaHooks entries contain forbidden tone";
   }
 
   return {
@@ -438,10 +517,26 @@ export function validateGenerationOutput(
       if (!title) {
         return { ok: false, error: "Missing or empty title" };
       }
+      if (title.length > 80) {
+        return { ok: false, error: "title must be 80 characters or fewer" };
+      }
+      if (/[!?]$/.test(title) || containsForbiddenTone(title)) {
+        return { ok: false, error: "title contains forbidden tone or punctuation" };
+      }
 
       const briefing = readNonEmptyString(record, "briefing");
       if (!briefing) {
         return { ok: false, error: "Missing or empty briefing" };
+      }
+      if (briefing.length > 520) {
+        return { ok: false, error: "briefing must be 520 characters or fewer" };
+      }
+      const sentenceCount = countSentences(briefing);
+      if (sentenceCount < 2 || sentenceCount > 4) {
+        return { ok: false, error: "briefing must contain 2 to 4 sentences" };
+      }
+      if (containsForbiddenTone(briefing)) {
+        return { ok: false, error: "briefing contains forbidden tone" };
       }
 
       if (!Array.isArray(record.choices) || record.choices.length === 0) {

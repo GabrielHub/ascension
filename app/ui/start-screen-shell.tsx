@@ -1081,6 +1081,11 @@ export function StartScreenShell() {
                   className="inline-block h-0.5 w-0.5 rounded-full"
                   style={{ background: P.dimGold, opacity: 0.3 }}
                 />
+                <FooterLink label="AI Playground" to="/ai-playground" />
+                <span
+                  className="inline-block h-0.5 w-0.5 rounded-full"
+                  style={{ background: P.dimGold, opacity: 0.3 }}
+                />
                 <FooterLink label="SVG Tools" to="/svg-assets" />
               </div>
 

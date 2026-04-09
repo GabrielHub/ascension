@@ -1742,9 +1742,9 @@ function createRuntimeSession(
   function getAiPayloadVersion(surface: AiGenerationSurface): number {
     switch (surface) {
       case "incident-framing":
-        return 2;
+        return 3;
       case "operator-identity":
-        return 2;
+        return 3;
       default:
         return 1;
     }
@@ -1787,6 +1787,7 @@ function createRuntimeSession(
   const autoIncidentPresentationRequests = new Set<string>();
   const autoVisitorIdentityAttempts = new Map<string, string>();
   const autoVisitorIdentityInFlight = new Set<string>();
+  let autoVisitorIdentityQueueActive = false;
 
   function hasQueuedIncidentPresentation(incidentInstanceId: string): boolean {
     const active = simulation.runtimeState.interruptionQueue.active;
@@ -1822,99 +1823,108 @@ function createRuntimeSession(
         autoVisitorIdentityInFlight.delete(id);
       }
     }
-    for (const visitor of session.phase1View.visitors) {
+    if (autoVisitorIdentityQueueActive) {
+      return;
+    }
+
+    const nextVisitor = session.phase1View.visitors.find((visitor) => {
       if (visitor.identitySource === "generated") {
         autoVisitorIdentityAttempts.delete(visitor.id);
         autoVisitorIdentityInFlight.delete(visitor.id);
-        continue;
+        return false;
       }
 
       if (autoVisitorIdentityInFlight.has(visitor.id)) {
-        continue;
+        return false;
       }
 
-      if (autoVisitorIdentityAttempts.get(visitor.id) === configFingerprint) {
-        continue;
-      }
+      return autoVisitorIdentityAttempts.get(visitor.id) !== configFingerprint;
+    });
 
-      autoVisitorIdentityAttempts.set(visitor.id, configFingerprint);
-      autoVisitorIdentityInFlight.add(visitor.id);
-
-      void (async () => {
-        try {
-          const latestVisitor = session.phase1View.visitors.find(
-            (entry) => entry.id === visitor.id,
-          );
-          if (!latestVisitor || latestVisitor.identitySource === "generated") {
-            return;
-          }
-
-          const generationResult = await commands.generateAiSurface({
-            surface: "operator-identity",
-            subjectId: visitor.id,
-            payload: buildOperatorIdentityPayload(latestVisitor),
-            triggerSource: "auto",
-          });
-
-          if (generationResult.status !== "succeeded" || !generationResult.result) {
-            console.error("[ai operator identity] generation failed", {
-              visitorId: visitor.id,
-              roleTag: visitor.desiredRoleTag,
-              error: generationResult.error,
-            });
-            return;
-          }
-
-          const output = generationResult.result.output as {
-            specialtyTag: string;
-            appearance: {
-              presetId: string;
-              visibleGear?: {
-                weaponPartId?: string;
-                outfitOverlayPartId?: string;
-                accessoryPartId?: string;
-              };
-            };
-            preferences: {
-              riskTolerance: number;
-              rewardFocus: number;
-              recoveryBias: number;
-              socialBias: number;
-              trainingBias: number;
-              comfortBias: number;
-              preferredMissionTags: string[];
-            };
-            personaSummary: string;
-            personaHooks: string[];
-          };
-
-          const currentVisitor = session.phase1View.visitors.find(
-            (entry) => entry.id === visitor.id,
-          );
-          if (!currentVisitor || currentVisitor.identitySource === "generated") {
-            return;
-          }
-
-          await commands.dispatch({
-            type: "sim/visitor-update-identity",
-            visitorId: visitor.id,
-            specialtyTag: output.specialtyTag,
-            appearance: output.appearance,
-            preferences: output.preferences,
-            personaSummary: output.personaSummary,
-            personaHooks: output.personaHooks,
-          });
-        } catch (error) {
-          console.error("[ai operator identity] unexpected generation error", {
-            visitorId: visitor.id,
-            roleTag: visitor.desiredRoleTag,
-            error,
-          });
-        } finally {
-          autoVisitorIdentityInFlight.delete(visitor.id);
-        }
-      })();
+    if (!nextVisitor) {
+      return;
     }
+
+    autoVisitorIdentityAttempts.set(nextVisitor.id, configFingerprint);
+    autoVisitorIdentityInFlight.add(nextVisitor.id);
+    autoVisitorIdentityQueueActive = true;
+
+    void (async () => {
+      try {
+        const latestVisitor = session.phase1View.visitors.find(
+          (entry) => entry.id === nextVisitor.id,
+        );
+        if (!latestVisitor || latestVisitor.identitySource === "generated") {
+          return;
+        }
+
+        const generationResult = await commands.generateAiSurface({
+          surface: "operator-identity",
+          subjectId: nextVisitor.id,
+          payload: buildOperatorIdentityPayload(latestVisitor),
+          triggerSource: "auto",
+        });
+
+        if (generationResult.status !== "succeeded" || !generationResult.result) {
+          console.error("[ai operator identity] generation failed", {
+            visitorId: nextVisitor.id,
+            roleTag: nextVisitor.desiredRoleTag,
+            error: generationResult.error,
+          });
+          return;
+        }
+
+        const output = generationResult.result.output as {
+          specialtyTag: string;
+          appearance: {
+            presetId: string;
+            visibleGear?: {
+              weaponPartId?: string;
+              outfitOverlayPartId?: string;
+              accessoryPartId?: string;
+            };
+          };
+          preferences: {
+            riskTolerance: number;
+            rewardFocus: number;
+            recoveryBias: number;
+            socialBias: number;
+            trainingBias: number;
+            comfortBias: number;
+            preferredMissionTags: string[];
+          };
+          personaSummary: string;
+          personaHooks: string[];
+        };
+
+        const currentVisitor = session.phase1View.visitors.find(
+          (entry) => entry.id === nextVisitor.id,
+        );
+        if (!currentVisitor || currentVisitor.identitySource === "generated") {
+          return;
+        }
+
+        await commands.dispatch({
+          type: "sim/visitor-update-identity",
+          visitorId: nextVisitor.id,
+          specialtyTag: output.specialtyTag,
+          appearance: output.appearance,
+          preferences: output.preferences,
+          personaSummary: output.personaSummary,
+          personaHooks: output.personaHooks,
+        });
+      } catch (error) {
+        console.error("[ai operator identity] unexpected generation error", {
+          visitorId: nextVisitor.id,
+          roleTag: nextVisitor.desiredRoleTag,
+          error,
+        });
+      } finally {
+        autoVisitorIdentityInFlight.delete(nextVisitor.id);
+        autoVisitorIdentityQueueActive = false;
+        schedulePendingVisitorIdentityGeneration();
+      }
+    })();
   }
 
   function buildIncidentFramingPayload() {

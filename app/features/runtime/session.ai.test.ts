@@ -237,7 +237,7 @@ describe("runtime session AI request registry", () => {
     vi.mocked(localAiClient.generate).mockResolvedValue({
       surface: "operator-identity",
       subjectId: "candidate/test",
-      payloadVersion: 2,
+      payloadVersion: 3,
       output: {
         specialtyTag: "focus:extraction",
         appearance: {
@@ -457,6 +457,97 @@ describe("runtime session AI request registry", () => {
     ]);
   });
 
+  it("queues visitor identity generation one at a time for local AI runtimes", async () => {
+    vi.mocked(readGameSettings).mockReturnValue({
+      audio: {
+        sfxVolumeDb: -6,
+        musicVolumeDb: -12,
+      },
+      wakeLockEnabled: true,
+      tutorialEventsEnabled: true,
+      ai: {
+        enabled: true,
+        runtimeKind: "ollama",
+        baseUrl: "http://127.0.0.1:11434/v1",
+        modelId: "gemma4:26b",
+      },
+    });
+
+    const pendingRequests: Array<{
+      subjectId: string;
+      resolve: (value: Awaited<ReturnType<typeof localAiClient.generate>>) => void;
+    }> = [];
+
+    vi.mocked(localAiClient.generate).mockImplementation(
+      (request) =>
+        new Promise((resolve) => {
+          pendingRequests.push({
+            subjectId: request.subjectId,
+            resolve: (value) => resolve(value),
+          });
+        }),
+    );
+
+    const session = await resolveRuntimeSession({ mode: "preview" });
+
+    await waitForAssertion(() => {
+      expect(vi.mocked(localAiClient.generate)).toHaveBeenCalledTimes(1);
+      expect(pendingRequests).toHaveLength(1);
+    });
+
+    const completeRequest = (subjectId: string) => ({
+      surface: "operator-identity" as const,
+      subjectId,
+      payloadVersion: 3,
+      output: {
+        specialtyTag: "focus:extraction",
+        appearance: {
+          presetId: "mira-002",
+        },
+        preferences: {
+          riskTolerance: 66,
+          rewardFocus: 69,
+          recoveryBias: 34,
+          socialBias: 44,
+          trainingBias: 63,
+          comfortBias: 39,
+          preferredMissionTags: ["mission:retrieval", "objective:escort"],
+        },
+        personaSummary:
+          "Moves like a competent scout who already knows how licensed chaos behaves.",
+        personaHooks: [
+          "Talks like the route matters more than the story.",
+          "Keeps a private list of preventable mistakes.",
+        ],
+      },
+      runtimeKind: "ollama" as const,
+      modelId: "gemma4:26b",
+      generatedAt: 1,
+    });
+
+    pendingRequests.shift()!.resolve(completeRequest(session.phase1View.visitors[0]!.id));
+
+    await waitForAssertion(() => {
+      expect(vi.mocked(localAiClient.generate)).toHaveBeenCalledTimes(2);
+      expect(pendingRequests).toHaveLength(1);
+    });
+
+    pendingRequests.shift()!.resolve(completeRequest(session.phase1View.visitors[1]!.id));
+
+    await waitForAssertion(() => {
+      expect(vi.mocked(localAiClient.generate)).toHaveBeenCalledTimes(3);
+      expect(pendingRequests).toHaveLength(1);
+    });
+
+    pendingRequests.shift()!.resolve(completeRequest(session.phase1View.visitors[2]!.id));
+
+    await waitForAssertion(() => {
+      expect(
+        session.phase1View.visitors.every((visitor) => visitor.identitySource === "generated"),
+      ).toBe(true);
+    });
+  });
+
   it("materializes pending incidents with generated copy when AI is enabled", async () => {
     vi.mocked(readGameSettings).mockReturnValue({
       audio: {
@@ -475,7 +566,7 @@ describe("runtime session AI request registry", () => {
     vi.mocked(localAiClient.generate).mockResolvedValue({
       surface: "incident-framing",
       subjectId: "incident-1",
-      payloadVersion: 2,
+      payloadVersion: 3,
       output: {
         title: "Dock Discipline Notice",
         briefing:
