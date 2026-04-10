@@ -335,8 +335,10 @@ Multi-floor headquarters direction:
 - Crafting should deepen through authored recipe families, resource families, rare site-specific materials, and tag-driven quality rules rather than through an exhaustive part-by-part manufacturing sim.
 - Room and staff quality rules should stay legible and tiered. Favor authored packages, tags, thresholds, and a few strong modifiers over sprawling hidden formula stacks.
 
-## AI Content Layer Defaults
+## AI Content Layer Direction
 
+- The local-first AI infrastructure is already shipped: host-local settings, OpenAI-compatible localhost transport, browser and desktop adapters, runtime request tracking with reuse and regeneration, dev-console commands, and the first two narrow surfaces (`incident-framing` and `operator-identity`).
+- Future AI work should extend grounded payload quality, incident and recap breadth, and later narrow descriptive surfaces. Do not reopen transport or settings bring-up unless the host/runtime contract itself changes.
 - AI can phrase, contextualize, and vary structured deterministic gameplay payloads, but it must not become the authority for triggers, hidden modifiers, or consequence application.
 - Incident generation should work from simulation-owned structured inputs such as subjects, trigger family, tags, available choices, and deterministic effect bundles. The model may write the briefing, option phrasing, and recap. The simulation still decides what happened.
 - Operator generation should use structured outputs that select from approved prefab appearance parts, recipe slots, names, personality hooks, social flavor, and descriptive text. The model may assemble and flavor the operator identity, but it must not invent unsupported asset types or bypass the approved part registry.

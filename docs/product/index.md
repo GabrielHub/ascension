@@ -4,6 +4,11 @@ This folder is the canonical product-plan source for future gameplay, system, pr
 
 Use the roadmap for rollout order and deferred-depth staging. Use the world foundation for setting, tone, copy, and content identity guidance.
 
+## Current Planning State
+
+- The repo already ships the baseline game loop through the bodega arc, relocation into Porter's, multi-floor HQ support, management/onboarding/interruption surfaces, and the initial optional local-first AI runtime contract.
+- The next product work is midgame depth, not foundation bring-up: more external pressure, richer encounter and incident breadth, stronger later-building differentiation, and only then wider optional AI presentation layers where the deterministic system contract is already stable.
+
 ## File Map
 
 - [Asset Production Contract](./asset-production.md)

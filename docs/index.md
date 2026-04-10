@@ -9,6 +9,18 @@ Documentation is intentionally narrow.
 - Repo workflow and development rules live in [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md), not under `docs/`.
 - Ascension now has two runtime surfaces with different jobs: browser mode for fast development and regression, Tauri desktop mode for shipped-host validation.
 
+## Status Snapshot
+
+- The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
+- The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
+- There are currently no active checked-in execution plans under `docs/plans/`. The next execution pass should start from the roadmap's planned milestones rather than from a stale implementation plan doc.
+
+## Planned Work
+
+- Start the next roadmap phase with midgame external pressure: reputation fallout, city and institutional pressure, richer incident coverage, and deeper boss and encounter breadth.
+- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and later-building reuse.
+- Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
+
 ## Current Docs
 
 ### Core Canon
@@ -26,7 +38,7 @@ Documentation is intentionally narrow.
 
 ### Research
 
-- No active research docs are checked in right now. Historical shipped specs may remain under `docs/research/shipped-plans/` when they add implementation context without changing current project state.
+- No active research docs or shipped-plan archives are checked in right now. If a future design question needs preserved research context, add it deliberately instead of treating old plan files as standing canon.
 
 ## How To Use
 

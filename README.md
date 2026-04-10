@@ -2,6 +2,12 @@
 
 Ascension is a web-first management sim about running a dungeon-clearing guild in near-future New York City. The gameplay runtime, ECS simulation, rendering, UI intents, and save codec remain web-owned; the shipped playtest host is a Windows Tauri desktop app.
 
+## Status Snapshot
+
+- The current shipped baseline covers the full bodega arc, relocation into Porter's, multi-floor HQ support, onboarding, runtime-owned incidents and encounter handoff, browser and desktop save hosts, and optional local-first AI generation.
+- The AI content layer is not an active bring-up plan anymore. The shipped baseline already includes localhost transport, settings, browser and desktop adapters, runtime request tracking, dev-console commands, and two live surfaces: `incident-framing` and `operator-identity`.
+- The next planned work is midgame external pressure and content breadth, not another foundation pass for the already-shipped systems above.
+
 ## What This README Is For
 
 This file is the top-level project guide:
@@ -183,7 +189,7 @@ The model does not invent arbitrary portrait structure. It must return approved 
 - `src-tauri/` Windows desktop host and packaging config
 - `playwright/` browser automation artifacts and tests
 - `tauri-test/` desktop automation harness and artifacts
-- `docs/` roadmap, future-facing product docs, world canon, and active execution plans
+- `docs/` roadmap, future-facing product docs, world canon, and any active execution plans
 
 ## Documentation
 
