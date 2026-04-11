@@ -1,0 +1,17 @@
+<!-- Operator Part: Breach Hammer — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, heavy breach hammer across back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Long handle -->
+  <line x1="76" y1="100" x2="32" y2="30" stroke="#5a4030" stroke-width="3" stroke-linecap="round" />
+  <!-- Handle grip -->
+  <line x1="76" y1="100" x2="68" y2="84" stroke="#3d2c20" stroke-width="3.5" stroke-linecap="round" />
+  <!-- Hammer head block -->
+  <rect x="22" y="22" width="18" height="10" rx="1.5" fill="#b8b0a0" opacity="0.8" stroke="#e0ddd6" stroke-width="0.4" transform="rotate(-60 31 27)" />
+  <!-- Striking face -->
+  <line x1="22" y1="18" x2="18" y2="22" stroke="#e0ddd6" stroke-width="1" opacity="0.5" stroke-linecap="round" />
+  <!-- Head reinforcement -->
+  <line x1="26" y1="32" x2="36" y2="22" stroke="#c8a84c" stroke-width="0.5" opacity="0.4" />
+  <!-- Wrist lanyard -->
+  <path d="M76 100 Q80 104 78 108" stroke="#5a4030" stroke-width="0.8" fill="none" opacity="0.4" />
+</svg>

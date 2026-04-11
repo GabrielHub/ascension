@@ -5,6 +5,8 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type PluginOption, type UserConfig } from "vite-plus";
 
+import { createSvgCatalogWatcherPlugin } from "./vite-plugins/svg-catalog-watcher.ts";
+
 function stripDeprecatedEsbuildConfig(
   config: UserConfig | null | undefined,
 ): UserConfig | null | undefined {
@@ -310,5 +312,10 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [tailwindcss(), reactRouterWithoutDeprecatedEsbuild(), createTauriStaticEntryPlugin()],
+  plugins: [
+    tailwindcss(),
+    reactRouterWithoutDeprecatedEsbuild(),
+    createTauriStaticEntryPlugin(),
+    createSvgCatalogWatcherPlugin(),
+  ],
 });

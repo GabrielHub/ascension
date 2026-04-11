@@ -1,0 +1,13 @@
+<!-- Operator Part: Crowbar — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, crowbar hooked over shoulder -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Main shaft -->
+  <line x1="82" y1="95" x2="36" y2="30" stroke="#b8b0a0" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Metal highlight -->
+  <line x1="80" y1="92" x2="38" y2="32" stroke="#e0ddd6" stroke-width="0.5" opacity="0.35" />
+  <!-- Curved hook end -->
+  <path d="M36 30 Q30 22 28 18 Q26 14 30 12" stroke="#b8b0a0" stroke-width="2.5" fill="none" stroke-linecap="round" />
+  <!-- Flat chisel end -->
+  <line x1="82" y1="95" x2="86" y2="100" stroke="#b8b0a0" stroke-width="3.5" stroke-linecap="round" />
+</svg>

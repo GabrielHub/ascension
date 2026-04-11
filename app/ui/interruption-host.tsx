@@ -42,6 +42,64 @@ function NarrativeLayout({
   );
 }
 
+export function IncidentContent({
+  briefing,
+  choices,
+  onChoiceSelect,
+}: {
+  briefing: string;
+  choices: ReadonlyArray<{
+    choiceId: string;
+    label: string;
+    description: string;
+    consequenceSummary?: string;
+  }>;
+  onChoiceSelect?: (choiceId: string) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed text-silver/80">{briefing}</p>
+      <div className="space-y-2">
+        {choices.map((choice) => {
+          const inner = (
+            <>
+              <span
+                className={`text-sm font-medium text-silver-bright${onChoiceSelect ? " transition-colors duration-200 group-hover:text-gold group-focus-visible:text-gold" : ""}`}
+              >
+                {choice.label}
+              </span>
+              <span className="text-sm leading-relaxed text-silver/60">{choice.description}</span>
+              {choice.consequenceSummary && (
+                <span className="mt-0.5 text-sm uppercase tracking-[0.1em] text-gold-dim">
+                  {choice.consequenceSummary}
+                </span>
+              )}
+            </>
+          );
+
+          return onChoiceSelect ? (
+            <button
+              key={choice.choiceId}
+              type="button"
+              className="glass-card-inset group flex w-full flex-col items-start gap-1 rounded-lg px-4 py-3 text-left transition-[background,border-color,box-shadow,color,transform] duration-200 hover:-translate-y-px hover:border-[rgba(200,168,76,0.22)] hover:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] hover:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:-translate-y-px focus-visible:border-[rgba(200,168,76,0.22)] focus-visible:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] focus-visible:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[rgba(200,168,76,0.35)]"
+              onClick={() => onChoiceSelect(choice.choiceId)}
+            >
+              {inner}
+            </button>
+          ) : (
+            <div
+              key={choice.choiceId}
+              className="glass-card-inset flex w-full flex-col items-start gap-1 rounded-lg px-4 py-3"
+            >
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Incident modal ────────────────────────────────────────────────────────
 
 function IncidentModal({
@@ -64,30 +122,11 @@ function IncidentModal({
         presenterId={payload.presenterId}
         presenterExpression={payload.presenterExpression}
       >
-        <div className="space-y-5">
-          <p className="text-sm leading-relaxed text-silver/80">{payload.briefing}</p>
-
-          <div className="space-y-2">
-            {payload.choices.map((choice) => (
-              <button
-                key={choice.choiceId}
-                type="button"
-                className="glass-card-inset group flex w-full flex-col items-start gap-1 rounded-lg px-4 py-3 text-left transition-[background,border-color,box-shadow,color,transform] duration-200 hover:-translate-y-px hover:border-[rgba(200,168,76,0.22)] hover:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] hover:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:-translate-y-px focus-visible:border-[rgba(200,168,76,0.22)] focus-visible:bg-[linear-gradient(180deg,rgba(200,168,76,0.08)_0%,rgba(200,168,76,0.03)_100%),rgba(6,6,8,0.72)] focus-visible:shadow-[inset_0_1px_0_rgba(240,236,228,0.04),0_10px_28px_rgba(0,0,0,0.28)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[rgba(200,168,76,0.35)]"
-                onClick={() => onResolve(instance.instanceId, choice.choiceId)}
-              >
-                <span className="text-sm font-medium text-silver-bright transition-colors duration-200 group-hover:text-gold group-focus-visible:text-gold">
-                  {choice.label}
-                </span>
-                <span className="text-sm leading-relaxed text-silver/60">{choice.description}</span>
-                {choice.consequenceSummary && (
-                  <span className="mt-0.5 text-sm uppercase tracking-[0.1em] text-gold-dim">
-                    {choice.consequenceSummary}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <IncidentContent
+          briefing={payload.briefing}
+          choices={payload.choices}
+          onChoiceSelect={(choiceId) => onResolve(instance.instanceId, choiceId)}
+        />
       </NarrativeLayout>
     </GameModal>
   );

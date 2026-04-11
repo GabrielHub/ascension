@@ -1,0 +1,20 @@
+<!-- Operator Part: Rift Compass — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: rare | Body: medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, rift-attuned compass clipped at hip -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Compass housing -->
+  <circle cx="80" cy="86" r="6" fill="#1a2440" opacity="0.6" stroke="#2a3555" stroke-width="0.6" />
+  <!-- Compass face -->
+  <circle cx="80" cy="86" r="4" fill="#2a3555" opacity="0.3" />
+  <!-- Rift glow needle -->
+  <line x1="80" y1="83" x2="80" y2="89" stroke="#6a5fcf" stroke-width="0.8" opacity="0.7" />
+  <line x1="77" y1="86" x2="83" y2="86" stroke="#6a5fcf" stroke-width="0.4" opacity="0.4" />
+  <!-- Rift glow aura -->
+  <circle cx="80" cy="86" r="7" fill="#6a5fcf" opacity="0.06" />
+  <!-- Glass glint -->
+  <path d="M77 84 Q78 83 79 84" stroke="#4a6888" stroke-width="0.3" fill="none" opacity="0.5" />
+  <!-- Chain/clip -->
+  <path d="M80 80 Q82 76 84 74" stroke="#b8b0a0" stroke-width="0.5" fill="none" opacity="0.4" />
+  <!-- Belt clip -->
+  <rect x="83" y="72" width="3" height="3" rx="0.5" fill="#1a2440" opacity="0.4" stroke="#2a3555" stroke-width="0.3" />
+</svg>

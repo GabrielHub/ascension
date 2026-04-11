@@ -28,6 +28,21 @@ export interface AiGenerationResult {
   generatedAt: number;
 }
 
+export type AiGenerationPhase = "queued" | "requesting" | "streaming" | "validating" | "repairing";
+
+export interface AiGenerationProgress {
+  phase: AiGenerationPhase;
+  attempt: 1 | 2;
+  message: string;
+  receivedCharacters: number;
+  partialText: string | null;
+  updatedAt: number;
+}
+
+export interface AiGenerationOptions {
+  onProgress?: (progress: AiGenerationProgress) => void;
+}
+
 export type AiConnectionStatus = "unknown" | "connected" | "unavailable" | "model-missing";
 
 export interface AiRuntimeProbeResult {
@@ -60,6 +75,7 @@ export interface AiRequestRecord {
   payloadVersion: number;
   startedAt: number | null;
   finishedAt: number | null;
+  progress: AiGenerationProgress | null;
   result: AiGenerationResult | null;
   error: string | null;
 }
@@ -72,5 +88,8 @@ export interface AiRequestRegistry {
 
 export interface AiTransportClient {
   probe(config: LocalAiTransportConfig): Promise<AiRuntimeProbeResult>;
-  generate(request: AiGenerationRequest): Promise<AiGenerationResult>;
+  generate(
+    request: AiGenerationRequest,
+    options?: AiGenerationOptions,
+  ): Promise<AiGenerationResult>;
 }

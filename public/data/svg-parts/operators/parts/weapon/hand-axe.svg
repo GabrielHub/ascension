@@ -1,0 +1,15 @@
+<!-- Operator Part: Hand Axe — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: uncommon | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, hand axe tucked into belt -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Handle -->
+  <line x1="22" y1="100" x2="22" y2="72" stroke="#5a4030" stroke-width="2.2" stroke-linecap="round" />
+  <!-- Handle grip wrap -->
+  <line x1="22" y1="98" x2="22" y2="88" stroke="#3d2c20" stroke-width="2.8" stroke-linecap="round" />
+  <!-- Axe head -->
+  <path d="M22 72 L14 66 Q12 70 14 76 L22 76" fill="#b8b0a0" opacity="0.8" stroke="#e0ddd6" stroke-width="0.4" />
+  <!-- Edge highlight -->
+  <path d="M14 66 Q12 70 14 76" stroke="#e0ddd6" stroke-width="0.5" fill="none" opacity="0.5" />
+  <!-- Poll (back of head) -->
+  <line x1="22" y1="72" x2="26" y2="71" stroke="#b8b0a0" stroke-width="2" stroke-linecap="round" />
+</svg>

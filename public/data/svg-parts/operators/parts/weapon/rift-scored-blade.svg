@@ -1,0 +1,23 @@
+<!-- Operator Part: Rift-Scored Blade — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, rift-etched blade behind left shoulder -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Blade -->
+  <line x1="28" y1="12" x2="32" y2="58" stroke="#b8b0a0" stroke-width="2" stroke-linecap="round" />
+  <!-- Edge highlight -->
+  <line x1="27" y1="14" x2="31" y2="56" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <!-- Rift scoring (glowing etched lines) -->
+  <line x1="29" y1="18" x2="30" y2="32" stroke="#6a5fcf" stroke-width="0.7" opacity="0.7" />
+  <line x1="30" y1="36" x2="31" y2="50" stroke="#6a5fcf" stroke-width="0.7" opacity="0.5" />
+  <!-- Rift glow aura -->
+  <line x1="28" y1="12" x2="32" y2="58" stroke="#6a5fcf" stroke-width="5" opacity="0.08" />
+  <!-- Guard -->
+  <line x1="26" y1="60" x2="36" y2="58" stroke="#1a2440" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Handle -->
+  <line x1="32" y1="60" x2="34" y2="80" stroke="#2a1f18" stroke-width="3" stroke-linecap="round" />
+  <!-- Rift wrap glow -->
+  <line x1="32.5" y1="64" x2="33" y2="68" stroke="#6a5fcf" stroke-width="0.4" opacity="0.5" />
+  <line x1="33" y1="72" x2="33.5" y2="76" stroke="#6a5fcf" stroke-width="0.4" opacity="0.5" />
+  <!-- Pommel crystal -->
+  <circle cx="34.5" cy="81" r="2.2" fill="#6a5fcf" opacity="0.35" stroke="#1a2440" stroke-width="0.5" />
+</svg>

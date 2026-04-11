@@ -1,0 +1,17 @@
+<!-- Operator Part: Compact Crossbow — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: uncommon | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, compact crossbow strapped across upper back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Stock/rail -->
+  <line x1="80" y1="55" x2="36" y2="35" stroke="#3d2c20" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Limb left -->
+  <path d="M44 38 Q30 30 24 22" stroke="#5a4030" stroke-width="2" fill="none" stroke-linecap="round" />
+  <!-- Limb right -->
+  <path d="M44 38 Q38 24 36 16" stroke="#5a4030" stroke-width="2" fill="none" stroke-linecap="round" />
+  <!-- String -->
+  <line x1="24" y1="22" x2="36" y2="16" stroke="#b8b0a0" stroke-width="0.6" opacity="0.5" />
+  <!-- Trigger mechanism -->
+  <rect x="58" y="42" width="6" height="4" rx="1" fill="#1a2440" opacity="0.6" stroke="#2a3555" stroke-width="0.4" />
+  <!-- Scope dot -->
+  <circle cx="50" cy="36" r="1.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.4" opacity="0.6" />
+</svg>

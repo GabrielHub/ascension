@@ -1,0 +1,21 @@
+<!-- Operator Part: Signal-Dampening Coat — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: rare | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, long tech-fabric coat with circuit pattern -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Coat body (long) -->
+  <path d="M32 64 Q48 56 60 56 Q72 56 88 64 L90 145 Q72 150 60 150 Q48 150 30 145 Z"
+    fill="#1a1a20" opacity="0.4" stroke="#2a3555" stroke-width="0.6" />
+  <!-- High collar -->
+  <path d="M40 64 Q50 58 60 58 Q70 58 80 64" stroke="#2a3555" stroke-width="1.5" fill="none" opacity="0.5" />
+  <!-- Tech circuit lines -->
+  <path d="M44 80 L48 80 L48 88 L52 88" stroke="#4a6888" stroke-width="0.3" fill="none" opacity="0.25" />
+  <path d="M68 82 L72 82 L72 90 L76 90" stroke="#4a6888" stroke-width="0.3" fill="none" opacity="0.25" />
+  <!-- Signal-dampening indicator -->
+  <circle cx="74" cy="68" r="1.5" fill="#4a6888" opacity="0.3" />
+  <circle cx="74" cy="68" r="3" fill="none" stroke="#4a6888" stroke-width="0.2" opacity="0.15" />
+  <!-- Closure line -->
+  <line x1="60" y1="62" x2="60" y2="148" stroke="#2a3555" stroke-width="0.3" opacity="0.25" />
+  <!-- Deep pockets -->
+  <line x1="36" y1="110" x2="50" y2="110" stroke="#2a3555" stroke-width="0.5" opacity="0.3" />
+  <line x1="70" y1="110" x2="84" y2="110" stroke="#2a3555" stroke-width="0.5" opacity="0.3" />
+</svg>

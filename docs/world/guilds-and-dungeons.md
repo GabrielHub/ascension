@@ -34,6 +34,16 @@ Dungeons are localized supernatural intrusions. They occupy real physical space 
 - Dungeons have geography. They are not abstract encounter lists. Rooms, corridors, hazards, and points of interest exist spatially.
 - Dungeons vary in scale and difficulty. Early dungeons are small, claustrophobic, and local. Later dungeons are larger, stranger, and more architecturally distorted.
 
+## Rank Escalation For Dungeons
+
+Dungeon rank should also mark a tonal and visual climb:
+
+- F and E dungeons should still feel anchored to recognizable city spaces. They are wrong, hostile, and supernatural, but still clearly built from schools, storefronts, garages, tunnels, labs, parks, and similar places.
+- D and C dungeons can become more impossible in geometry, scale, and internal logic. This is where a real place starts giving way to a place that should not physically exist.
+- B and A dungeons can become genuinely spectacular and institutionally alarming. They should feel like major city events, not just harder versions of a basement problem.
+- S-rank dungeons are allowed to become world-class anomalies: the kind of thing that makes national news, rewrites the skyline, or introduces concepts the early game would have wasted.
+- The climb should be deliberate. Do not jump straight from a warped school hallway to a floating city without the intermediate escalation earning it.
+
 ## Dungeon Ranking
 
 Dungeons use the same F-S rank scale as everything else.
@@ -71,3 +81,4 @@ The concept is the creative seed. When designing a dungeon, start with the conce
 - Enemies should look and behave like corrupted extensions of the concept, not like generic fantasy creatures dropped into a themed backdrop.
 - The boss should feel like the concept's ultimate expression - the thing the space became when it stopped being normal.
 - Two dungeons of the same rank should feel completely different because their concepts are different. Rank determines difficulty. Concept determines identity.
+- Rank should also determine how far the concept can depart from ordinary reality. Lower ranks should stay closer to the city the player knows. Higher ranks can become more extravagant, impossible, and singular.

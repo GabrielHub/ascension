@@ -1,0 +1,16 @@
+<!-- Operator Part: Baseball Bat — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, bat slung diagonally across back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Bat barrel (thick end) -->
+  <line x1="30" y1="22" x2="48" y2="55" stroke="#5a4030" stroke-width="5" stroke-linecap="round" />
+  <!-- Bat taper -->
+  <line x1="48" y1="55" x2="62" y2="80" stroke="#5a4030" stroke-width="3.5" stroke-linecap="round" />
+  <!-- Handle -->
+  <line x1="62" y1="80" x2="72" y2="98" stroke="#3d2c20" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Grip tape -->
+  <line x1="64" y1="84" x2="66" y2="88" stroke="#1a1a20" stroke-width="0.5" opacity="0.5" />
+  <line x1="67" y1="90" x2="69" y2="94" stroke="#1a1a20" stroke-width="0.5" opacity="0.5" />
+  <!-- Knob -->
+  <circle cx="73" cy="99" r="2" fill="#2a1f18" />
+</svg>

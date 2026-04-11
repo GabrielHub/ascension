@@ -1,0 +1,16 @@
+<!-- Operator Part: Kitchen Knife — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, knife tucked at right hip -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Blade -->
+  <path d="M88 70 L92 100 L86 100 Z" fill="#b8b0a0" opacity="0.8" stroke="#e0ddd6" stroke-width="0.4" />
+  <!-- Blade edge highlight -->
+  <line x1="92" y1="100" x2="88" y2="70" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <!-- Bolster -->
+  <rect x="85" y="67" width="8" height="4" rx="0.5" fill="#1a2440" opacity="0.7" />
+  <!-- Handle -->
+  <line x1="89" y1="67" x2="89" y2="56" stroke="#3d2c20" stroke-width="3" stroke-linecap="round" />
+  <!-- Handle rivets -->
+  <circle cx="89" cy="60" r="0.8" fill="#b8b0a0" opacity="0.6" />
+  <circle cx="89" cy="64" r="0.8" fill="#b8b0a0" opacity="0.6" />
+</svg>

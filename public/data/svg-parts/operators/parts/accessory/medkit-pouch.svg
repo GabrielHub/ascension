@@ -1,0 +1,16 @@
+<!-- Operator Part: Medkit Pouch — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: uncommon | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, small medical pouch at right hip -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Pouch body -->
+  <rect x="78" y="92" width="14" height="12" rx="2" fill="#3d2c20" opacity="0.6" stroke="#5a4030" stroke-width="0.6" />
+  <!-- Pouch flap -->
+  <path d="M78 92 L92 92 L92 96 Q85 98 78 96 Z" fill="#5a4030" opacity="0.4" />
+  <!-- Cross emblem -->
+  <line x1="85" y1="98" x2="85" y2="102" stroke="#c8a84c" stroke-width="1.2" opacity="0.6" />
+  <line x1="83" y1="100" x2="87" y2="100" stroke="#c8a84c" stroke-width="1.2" opacity="0.6" />
+  <!-- Belt loop -->
+  <line x1="80" y1="90" x2="90" y2="90" stroke="#5a4030" stroke-width="0.8" opacity="0.5" />
+  <!-- Snap closure -->
+  <circle cx="85" cy="93" r="0.8" fill="#b8b0a0" opacity="0.5" />
+</svg>

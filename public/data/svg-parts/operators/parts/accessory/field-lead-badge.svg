@@ -1,0 +1,13 @@
+<!-- Operator Part: Field Lead Badge — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: uncommon | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, badge pinned on upper chest -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Badge backing -->
+  <path d="M68 72 L74 68 L80 72 L78 80 L70 80 Z" fill="#1a2440" opacity="0.7" stroke="#c8a84c" stroke-width="0.8" />
+  <!-- Inner shield shape -->
+  <path d="M70 73 L74 70 L78 73 L76 78 L72 78 Z" fill="#2a3555" opacity="0.4" />
+  <!-- Star emblem -->
+  <circle cx="74" cy="75" r="1.5" fill="#c8a84c" opacity="0.6" />
+  <!-- Pin clasp -->
+  <line x1="74" y1="68" x2="74" y2="66" stroke="#b8b0a0" stroke-width="0.5" opacity="0.5" />
+</svg>

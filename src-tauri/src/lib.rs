@@ -1,13 +1,16 @@
+use futures_util::StreamExt;
 use serde::Serialize;
 use serde_json::Value;
 use std::{
   fs,
   path::{Path, PathBuf},
+  time::Duration,
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_dialog::{DialogExt, FilePath};
 
 const SLOT_IDS: [&str; 3] = ["slot/1", "slot/2", "slot/3"];
+const AI_GENERATE_TIMEOUT_SECS: u64 = 180;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -358,14 +361,118 @@ struct AiProbeResult {
 struct AiGenerateRequest {
   base_url: String,
   model_id: String,
+  runtime_kind: String,
+  max_tokens: Option<u32>,
   system_prompt: String,
   user_prompt: String,
+  request_id: Option<String>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AiGenerateResult {
   content: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AiGenerateProgressEvent {
+  phase: String,
+  attempt: u8,
+  message: String,
+  received_characters: usize,
+  partial_text: Option<String>,
+  updated_at: u64,
+}
+
+fn ai_now_ms() -> u64 {
+  std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|duration| duration.as_millis() as u64)
+    .unwrap_or(0)
+}
+
+fn emit_ai_generate_progress(
+  app: &AppHandle,
+  request_id: &Option<String>,
+  phase: &str,
+  attempt: u8,
+  message: String,
+  received_characters: usize,
+  partial_text: Option<String>,
+) -> Result<(), String> {
+  let Some(request_id) = request_id else {
+    return Ok(());
+  };
+
+  app
+    .emit(
+      &format!("ai-generate-progress:{request_id}"),
+      AiGenerateProgressEvent {
+        phase: phase.to_string(),
+        attempt,
+        message,
+        received_characters,
+        partial_text,
+        updated_at: ai_now_ms(),
+      },
+    )
+    .map_err(|error| error.to_string())
+}
+
+fn parse_stream_delta_content(payload: &Value) -> Option<String> {
+  payload
+    .get("choices")
+    .and_then(Value::as_array)
+    .and_then(|choices| choices.first())
+    .and_then(|choice| {
+      choice
+        .get("delta")
+        .and_then(|delta| delta.get("content"))
+        .and_then(Value::as_str)
+        .or_else(|| {
+          choice
+            .get("message")
+            .and_then(|message| message.get("content"))
+            .and_then(Value::as_str)
+        })
+    })
+    .map(String::from)
+}
+
+fn extract_stream_event_data(buffer: &mut String) -> Vec<String> {
+  let mut events = Vec::new();
+  *buffer = buffer.replace("\r\n", "\n");
+
+  while let Some(separator_index) = buffer.find("\n\n") {
+    let block = buffer[..separator_index].trim().to_string();
+    *buffer = buffer[separator_index + 2..].to_string();
+
+    if block.is_empty() {
+      continue;
+    }
+
+    let data = block
+      .lines()
+      .filter_map(|line| line.strip_prefix("data:").map(str::trim))
+      .collect::<Vec<_>>()
+      .join("\n");
+
+    if !data.is_empty() {
+      events.push(data);
+    }
+  }
+
+  events
+}
+
+fn summarize_stream_event(data: &str) -> String {
+  let normalized = data.split_whitespace().collect::<Vec<_>>().join(" ");
+  if normalized.len() > 180 {
+    format!("{}...", &normalized[..177])
+  } else {
+    normalized
+  }
 }
 
 #[tauri::command]
@@ -399,7 +506,10 @@ async fn desktop_ai_probe_runtime(
 }
 
 #[tauri::command]
-async fn desktop_ai_generate(request: AiGenerateRequest) -> Result<AiGenerateResult, String> {
+async fn desktop_ai_generate(
+  app: AppHandle,
+  request: AiGenerateRequest,
+) -> Result<AiGenerateResult, String> {
   let url = format!("{}/chat/completions", request.base_url);
   let body = serde_json::json!({
     "model": request.model_id,
@@ -407,10 +517,32 @@ async fn desktop_ai_generate(request: AiGenerateRequest) -> Result<AiGenerateRes
       { "role": "system", "content": request.system_prompt },
       { "role": "user", "content": request.user_prompt },
     ],
-    "temperature": 0.7,
+    "stream": true,
+    "temperature": 0.2,
     "response_format": { "type": "json_object" },
   });
-  let client = reqwest::Client::new();
+  let mut body = body;
+  if let Some(max_tokens) = request.max_tokens {
+    body["max_tokens"] = serde_json::json!(max_tokens);
+  }
+  if request.runtime_kind == "ollama" {
+    body["reasoning_effort"] = serde_json::json!("none");
+  }
+
+  emit_ai_generate_progress(
+    &app,
+    &request.request_id,
+    "requesting",
+    1,
+    "Sending request to the AI runtime…".into(),
+    0,
+    None,
+  )?;
+
+  let client = reqwest::Client::builder()
+    .timeout(Duration::from_secs(AI_GENERATE_TIMEOUT_SECS))
+    .build()
+    .map_err(|error| error.to_string())?;
   let response = client
     .post(&url)
     .header("Content-Type", "application/json")
@@ -420,11 +552,102 @@ async fn desktop_ai_generate(request: AiGenerateRequest) -> Result<AiGenerateRes
     .map_err(|error| error.to_string())?
     .error_for_status()
     .map_err(|error| error.to_string())?;
-  let resp_body: Value = response.json().await.map_err(|error| error.to_string())?;
-  let content = resp_body["choices"][0]["message"]["content"]
-    .as_str()
-    .ok_or("No content in response")?
+
+  emit_ai_generate_progress(
+    &app,
+    &request.request_id,
+    "streaming",
+    1,
+    "Runtime accepted the request. Waiting for output…".into(),
+    0,
+    None,
+  )?;
+
+  let content_type = response
+    .headers()
+    .get(reqwest::header::CONTENT_TYPE)
+    .and_then(|value| value.to_str().ok())
+    .unwrap_or("")
     .to_string();
+
+  let content = if content_type.contains("text/event-stream") {
+    let mut stream = response.bytes_stream();
+    let mut buffer = String::new();
+    let mut content = String::new();
+    let mut event_count = 0usize;
+    let mut non_content_event_count = 0usize;
+    let mut last_event_data: Option<String> = None;
+
+    while let Some(chunk) = stream.next().await {
+      let bytes = chunk.map_err(|error| error.to_string())?;
+      buffer.push_str(&String::from_utf8_lossy(&bytes));
+
+      for event_data in extract_stream_event_data(&mut buffer) {
+        event_count += 1;
+        last_event_data = Some(event_data.clone());
+        if event_data == "[DONE]" {
+          continue;
+        }
+
+        let payload: Value = serde_json::from_str(&event_data).map_err(|error| error.to_string())?;
+        if let Some(delta) = parse_stream_delta_content(&payload) {
+          content.push_str(&delta);
+          emit_ai_generate_progress(
+            &app,
+            &request.request_id,
+            "streaming",
+            1,
+            format!("Streaming response… {} chars received.", content.len()),
+            content.len(),
+            Some(content.clone()),
+          )?;
+        } else {
+          non_content_event_count += 1;
+        }
+      }
+    }
+
+    if content.is_empty() {
+      let stream_summary = if event_count > 0 {
+        format!(
+          "Received {} stream events ({} without content).",
+          event_count, non_content_event_count
+        )
+      } else {
+        "Received no stream events.".to_string()
+      };
+      let last_event_summary = last_event_data
+        .as_deref()
+        .filter(|event| *event != "[DONE]")
+        .map(|event| format!(" Last event: {}", summarize_stream_event(event)))
+        .unwrap_or_default();
+      return Err(format!(
+        "No content in streamed chat completion response. {}{}",
+        stream_summary, last_event_summary
+      ));
+    }
+
+    content
+  } else {
+    let resp_body: Value = response.json().await.map_err(|error| error.to_string())?;
+    let content = resp_body["choices"][0]["message"]["content"]
+      .as_str()
+      .ok_or("No content in response")?
+      .to_string();
+
+    emit_ai_generate_progress(
+      &app,
+      &request.request_id,
+      "streaming",
+      1,
+      "Received full response.".into(),
+      content.len(),
+      Some(content.clone()),
+    )?;
+
+    content
+  };
+
   Ok(AiGenerateResult { content })
 }
 

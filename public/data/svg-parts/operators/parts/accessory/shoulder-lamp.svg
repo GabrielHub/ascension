@@ -1,0 +1,15 @@
+<!-- Operator Part: Shoulder Lamp — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: uncommon | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, small lamp mounted on left shoulder -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Mount bracket -->
+  <rect x="24" y="60" width="6" height="4" rx="1" fill="#1a2440" opacity="0.6" stroke="#2a3555" stroke-width="0.4" />
+  <!-- Lamp housing -->
+  <rect x="22" y="56" width="8" height="5" rx="2" fill="#2a3555" opacity="0.7" stroke="#1a2440" stroke-width="0.5" />
+  <!-- Lens -->
+  <ellipse cx="22" cy="58" rx="2" ry="2" fill="#c8a84c" opacity="0.3" />
+  <!-- Light glow -->
+  <circle cx="22" cy="58" r="4" fill="#c8a84c" opacity="0.08" />
+  <!-- Strap clip -->
+  <line x1="30" y1="58" x2="34" y2="60" stroke="#b8b0a0" stroke-width="0.6" opacity="0.4" />
+</svg>

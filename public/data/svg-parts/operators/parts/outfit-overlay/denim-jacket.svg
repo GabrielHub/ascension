@@ -1,0 +1,23 @@
+<!-- Operator Part: Denim Jacket — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, casual denim jacket over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Jacket body -->
+  <path d="M36 66 Q48 62 60 62 Q72 62 84 66 L86 110 Q72 114 60 114 Q48 114 34 110 Z"
+    fill="none" stroke="#2a3555" stroke-width="0.7" opacity="0.5" />
+  <!-- Collar fold left -->
+  <path d="M44 66 L50 62 L54 66" fill="#2a3555" opacity="0.25" />
+  <!-- Collar fold right -->
+  <path d="M76 66 L70 62 L66 66" fill="#2a3555" opacity="0.25" />
+  <!-- Yoke seam -->
+  <path d="M36 74 Q60 70 84 74" stroke="#1a2440" stroke-width="0.4" fill="none" opacity="0.3" />
+  <!-- Button placket -->
+  <line x1="60" y1="66" x2="60" y2="112" stroke="#1a2440" stroke-width="0.3" opacity="0.3" />
+  <!-- Buttons -->
+  <circle cx="60" cy="74" r="0.8" fill="#b8b0a0" opacity="0.4" />
+  <circle cx="60" cy="84" r="0.8" fill="#b8b0a0" opacity="0.4" />
+  <circle cx="60" cy="94" r="0.8" fill="#b8b0a0" opacity="0.4" />
+  <circle cx="60" cy="104" r="0.8" fill="#b8b0a0" opacity="0.4" />
+  <!-- Chest pocket -->
+  <rect x="66" y="78" width="8" height="6" rx="1" fill="#2a3555" opacity="0.15" stroke="#1a2440" stroke-width="0.3" />
+</svg>

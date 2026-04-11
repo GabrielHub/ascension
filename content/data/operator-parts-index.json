@@ -95,6 +95,496 @@
       "rarity": "common"
     },
     {
+      "id": "weapon/pipe-wrench",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "heavy"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/kitchen-knife",
+      "category": "weapon",
+      "tags": ["melee", "blade", "improvised", "light"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/baseball-bat",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "swing"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/crowbar",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "pry"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/box-cutter",
+      "category": "weapon",
+      "tags": ["melee", "blade", "improvised", "concealed"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/tire-iron",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "tool"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/claw-hammer",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "tool"],
+      "paletteTags": ["bruiser", "infiltrator"],
+      "roleTags": ["bruiser", "infiltrator"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/chain-length",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "improvised", "flexible"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "weapon/tactical-knife",
+      "category": "weapon",
+      "tags": ["melee", "blade", "combat", "tactical"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/machete",
+      "category": "weapon",
+      "tags": ["melee", "blade", "slashing", "heavy"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/compact-crossbow",
+      "category": "weapon",
+      "tags": ["ranged", "crossbow", "precision", "compact"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/nail-bat",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "modified", "piercing"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/stun-baton",
+      "category": "weapon",
+      "tags": ["melee", "electric", "tactical", "stun"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/rebar-spike",
+      "category": "weapon",
+      "tags": ["melee", "piercing", "improvised", "construction"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/hand-axe",
+      "category": "weapon",
+      "tags": ["melee", "blade", "chopping", "tactical"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "weapon/reinforced-bat",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "reinforced", "heavy"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "weapon/sidearm",
+      "category": "weapon",
+      "tags": ["ranged", "firearm", "sidearm", "tactical"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "weapon/rift-scored-blade",
+      "category": "weapon",
+      "tags": ["melee", "blade", "rift", "energy"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "weapon/pulse-baton",
+      "category": "weapon",
+      "tags": ["melee", "energy", "rift", "stun"],
+      "paletteTags": ["strategist"],
+      "roleTags": ["strategist"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "weapon/breach-hammer",
+      "category": "weapon",
+      "tags": ["melee", "blunt", "heavy", "breach"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "weapon/focused-carbine",
+      "category": "weapon",
+      "tags": ["ranged", "firearm", "precision", "carbine"],
+      "paletteTags": ["strategist", "infiltrator"],
+      "roleTags": ["strategist", "infiltrator"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/medkit-pouch",
+      "category": "accessory",
+      "tags": ["medical", "pouch", "utility", "healing"],
+      "paletteTags": ["strategist"],
+      "roleTags": ["strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/scout-binocs",
+      "category": "accessory",
+      "tags": ["optics", "reconnaissance", "utility", "tactical"],
+      "paletteTags": ["strategist", "infiltrator"],
+      "roleTags": ["strategist", "infiltrator"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/field-lead-badge",
+      "category": "accessory",
+      "tags": ["badge", "rank", "leadership", "chest"],
+      "paletteTags": ["bruiser", "strategist"],
+      "roleTags": ["bruiser", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/reinforced-gloves",
+      "category": "accessory",
+      "tags": ["gloves", "armored", "hands", "protection"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/wrist-brace",
+      "category": "accessory",
+      "tags": ["brace", "wrist", "support", "simple"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "accessory/knee-pads",
+      "category": "accessory",
+      "tags": ["pads", "knee", "protection", "simple"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "accessory/work-gloves",
+      "category": "accessory",
+      "tags": ["gloves", "work", "hands", "simple"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "accessory/respirator-mask",
+      "category": "accessory",
+      "tags": ["mask", "respirator", "breathing", "tactical"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/ankle-holster",
+      "category": "accessory",
+      "tags": ["holster", "ankle", "concealed", "tactical"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/shoulder-lamp",
+      "category": "accessory",
+      "tags": ["lamp", "shoulder", "light", "utility"],
+      "paletteTags": ["strategist", "infiltrator"],
+      "roleTags": ["strategist", "infiltrator"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "accessory/utility-belt",
+      "category": "accessory",
+      "tags": ["belt", "utility", "pouches", "tactical"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/trauma-kit",
+      "category": "accessory",
+      "tags": ["medical", "kit", "trauma", "advanced"],
+      "paletteTags": ["strategist"],
+      "roleTags": ["strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/rift-compass",
+      "category": "accessory",
+      "tags": ["compass", "rift", "navigation", "tech"],
+      "paletteTags": ["strategist"],
+      "roleTags": ["strategist"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/dampening-earbuds",
+      "category": "accessory",
+      "tags": ["earbuds", "dampening", "tech", "rift"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "accessory/stabilizer-gauntlet",
+      "category": "accessory",
+      "tags": ["gauntlet", "tech", "rift", "stabilizer"],
+      "paletteTags": ["bruiser", "strategist"],
+      "roleTags": ["bruiser", "strategist"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "outfit-overlay/padded-jacket",
+      "category": "outfit-overlay",
+      "tags": ["jacket", "padded", "quilted", "casual"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/leather-vest",
+      "category": "outfit-overlay",
+      "tags": ["vest", "leather", "simple", "casual"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/work-coveralls",
+      "category": "outfit-overlay",
+      "tags": ["coveralls", "work", "utility", "simple"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/denim-jacket",
+      "category": "outfit-overlay",
+      "tags": ["jacket", "denim", "casual", "simple"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/hi-vis-vest",
+      "category": "outfit-overlay",
+      "tags": ["vest", "safety", "high-vis", "work"],
+      "paletteTags": ["bruiser", "infiltrator", "strategist"],
+      "roleTags": ["bruiser", "infiltrator", "strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "common"
+    },
+    {
+      "id": "outfit-overlay/insulated-parka",
+      "category": "outfit-overlay",
+      "tags": ["parka", "insulated", "heavy", "cold-weather"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "outfit-overlay/courier-jacket",
+      "category": "outfit-overlay",
+      "tags": ["jacket", "courier", "fitted", "tactical"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "outfit-overlay/reinforced-hoodie",
+      "category": "outfit-overlay",
+      "tags": ["hoodie", "reinforced", "casual-tactical", "padded"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "uncommon"
+    },
+    {
+      "id": "outfit-overlay/field-medic-coat",
+      "category": "outfit-overlay",
+      "tags": ["coat", "medic", "field", "professional"],
+      "paletteTags": ["strategist"],
+      "roleTags": ["strategist"],
+      "bodyCompatibility": ["broad", "medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "outfit-overlay/ballistic-vest",
+      "category": "outfit-overlay",
+      "tags": ["vest", "ballistic", "heavy", "protective"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "outfit-overlay/rift-lined-jacket",
+      "category": "outfit-overlay",
+      "tags": ["jacket", "rift", "energy", "lined"],
+      "paletteTags": ["infiltrator", "strategist"],
+      "roleTags": ["infiltrator", "strategist"],
+      "bodyCompatibility": ["medium", "lean"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "outfit-overlay/signal-dampening-coat",
+      "category": "outfit-overlay",
+      "tags": ["coat", "dampening", "stealth", "tech"],
+      "paletteTags": ["infiltrator"],
+      "roleTags": ["infiltrator"],
+      "bodyCompatibility": ["lean", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
+      "id": "outfit-overlay/composite-plate-carrier",
+      "category": "outfit-overlay",
+      "tags": ["plate-carrier", "composite", "heavy", "tactical"],
+      "paletteTags": ["bruiser"],
+      "roleTags": ["bruiser"],
+      "bodyCompatibility": ["broad", "medium"],
+      "poseCompatibility": ["standing"],
+      "rarity": "rare"
+    },
+    {
       "id": "head-shape/angular-jaw",
       "category": "head-shape",
       "tags": ["angular", "masculine", "strong-jaw", "sharp"],

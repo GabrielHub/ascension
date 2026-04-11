@@ -1,0 +1,19 @@
+<!-- Operator Part: Stabilizer Gauntlet — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: rare | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, rift-tech gauntlet on right forearm -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Gauntlet base -->
+  <path d="M88 100 L92 100 L94 116 L86 116 Z" fill="#1a2440" opacity="0.6" stroke="#2a3555" stroke-width="0.5" />
+  <!-- Plate segments -->
+  <line x1="86" y1="104" x2="94" y2="104" stroke="#2a3555" stroke-width="0.6" opacity="0.5" />
+  <line x1="86" y1="108" x2="94" y2="108" stroke="#2a3555" stroke-width="0.6" opacity="0.5" />
+  <line x1="86" y1="112" x2="94" y2="112" stroke="#2a3555" stroke-width="0.6" opacity="0.5" />
+  <!-- Rift energy channel -->
+  <line x1="90" y1="101" x2="90" y2="115" stroke="#6a5fcf" stroke-width="0.8" opacity="0.5" />
+  <!-- Rift glow -->
+  <line x1="90" y1="101" x2="90" y2="115" stroke="#6a5fcf" stroke-width="3" opacity="0.08" />
+  <!-- Wrist emitter -->
+  <circle cx="90" cy="100" r="2" fill="#1a2440" stroke="#6a5fcf" stroke-width="0.6" opacity="0.6" />
+  <!-- Emitter core -->
+  <circle cx="90" cy="100" r="0.8" fill="#6a5fcf" opacity="0.4" />
+</svg>

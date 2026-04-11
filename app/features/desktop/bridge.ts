@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
+import type { AiGenerationOptions, AiGenerationProgress } from "app/features/ai/types";
 import type { SaveSlotId } from "save/types";
 
 import { isDesktopHostEnvironment } from "./environment";
@@ -92,13 +94,35 @@ export const desktopBridge = {
     return invoke("desktop_ai_probe_runtime", { baseUrl, modelId });
   },
 
-  async generateAi(request: {
-    baseUrl: string;
-    modelId: string;
-    systemPrompt: string;
-    userPrompt: string;
-  }): Promise<{ content: string }> {
+  async generateAi(
+    request: {
+      baseUrl: string;
+      modelId: string;
+      runtimeKind: string;
+      maxTokens?: number;
+      systemPrompt: string;
+      userPrompt: string;
+    },
+    options?: AiGenerationOptions,
+  ): Promise<{ content: string }> {
     assertDesktopHost();
-    return invoke("desktop_ai_generate", { request });
+    const requestId = options?.onProgress ? crypto.randomUUID() : null;
+    const eventName = requestId ? `ai-generate-progress:${requestId}` : null;
+    const unlisten = eventName
+      ? await listen<AiGenerationProgress>(eventName, (event) => {
+          options?.onProgress?.(event.payload);
+        })
+      : null;
+
+    try {
+      return await invoke("desktop_ai_generate", {
+        request: {
+          ...request,
+          requestId,
+        },
+      });
+    } finally {
+      await unlisten?.();
+    }
   },
 };

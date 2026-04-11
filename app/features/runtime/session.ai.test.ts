@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("app/features/ai", () => ({
-  localAiClient: {
-    probe: vi.fn(),
-    generate: vi.fn(),
-  },
-}));
+vi.mock("app/features/ai", async () => {
+  const actual = await vi.importActual<typeof import("app/features/ai")>("app/features/ai");
+  return {
+    ...actual,
+    localAiClient: {
+      probe: vi.fn(),
+      generate: vi.fn(),
+    },
+  };
+});
 
 vi.mock("app/features/settings/storage", async () => {
   const actual = await vi.importActual<typeof import("app/features/settings/storage")>(

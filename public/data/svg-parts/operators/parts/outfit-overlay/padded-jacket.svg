@@ -1,0 +1,17 @@
+<!-- Operator Part: Padded Jacket — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, quilted padded jacket over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Jacket outline -->
+  <path d="M36 66 Q48 60 60 60 Q72 60 84 66 L86 108 Q72 114 60 114 Q48 114 34 108 Z"
+    fill="none" stroke="#5a4030" stroke-width="0.7" opacity="0.55" />
+  <!-- Quilted horizontal lines -->
+  <path d="M38 72 Q60 70 82 72" stroke="#5a4030" stroke-width="0.4" fill="none" opacity="0.3" />
+  <path d="M36 80 Q60 78 84 80" stroke="#5a4030" stroke-width="0.4" fill="none" opacity="0.3" />
+  <path d="M36 88 Q60 86 84 88" stroke="#5a4030" stroke-width="0.4" fill="none" opacity="0.3" />
+  <path d="M36 96 Q60 94 84 96" stroke="#5a4030" stroke-width="0.4" fill="none" opacity="0.3" />
+  <!-- Collar -->
+  <path d="M42 64 Q52 60 60 60 Q68 60 78 64" stroke="#3d2c20" stroke-width="1.2" fill="none" opacity="0.5" />
+  <!-- Center zipper -->
+  <line x1="60" y1="64" x2="60" y2="112" stroke="#b8b0a0" stroke-width="0.3" opacity="0.3" />
+</svg>

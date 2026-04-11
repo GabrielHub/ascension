@@ -1,0 +1,23 @@
+<!-- Operator Part: Focused Carbine — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, short precision carbine slung across back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Barrel -->
+  <line x1="24" y1="26" x2="14" y2="10" stroke="#2a3555" stroke-width="2" stroke-linecap="round" />
+  <!-- Suppressor -->
+  <rect x="10" y="4" width="6" height="10" rx="2.5" fill="#1a2440" stroke="#2a3555" stroke-width="0.5" opacity="0.7" transform="rotate(-60 13 9)" />
+  <!-- Receiver -->
+  <rect x="22" y="24" width="22" height="7" rx="2" fill="#2a3555" stroke="#1a2440" stroke-width="0.8" transform="rotate(-55 33 27.5)" />
+  <!-- Optic -->
+  <rect x="28" y="22" width="8" height="4" rx="1.5" fill="#1a2440" stroke="#2a3555" stroke-width="0.5" opacity="0.7" transform="rotate(-55 32 24)" />
+  <!-- Optic lens glint -->
+  <circle cx="30" cy="24" r="1" fill="#4a6888" opacity="0.4" />
+  <!-- Stock -->
+  <line x1="72" y1="78" x2="84" y2="95" stroke="#1a2440" stroke-width="3" stroke-linecap="round" />
+  <!-- Stock hinge -->
+  <circle cx="72" cy="78" r="1.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.4" />
+  <!-- Sling -->
+  <path d="M18 18 Q36 54 76 82" stroke="#5a4030" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="3 2" />
+  <!-- Grip -->
+  <line x1="56" y1="52" x2="60" y2="62" stroke="#3d2c20" stroke-width="2.5" stroke-linecap="round" />
+</svg>

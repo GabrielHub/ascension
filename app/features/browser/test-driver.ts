@@ -86,6 +86,7 @@ export interface BrowserTestSnapshot {
   incident: BrowserDriverIncidentState;
   interruption: {
     choiceLabels: string[];
+    copySource: string | null;
     ctaLabel: string | null;
     instanceId: string;
     payloadKind: string | null;
@@ -115,6 +116,7 @@ export interface BrowserTestSnapshot {
     visible: boolean;
   };
   roster: {
+    generatedVisitorIds: string[];
     livingOperatorIds: string[];
     operatorCapacity: number;
     operatorIds: string[];
@@ -509,6 +511,7 @@ function readInterruption(session: RuntimeSession): BrowserTestSnapshot["interru
 
   return {
     choiceLabels: choices,
+    copySource: typeof payload.copySource === "string" ? payload.copySource : null,
     ctaLabel: typeof payload.ctaLabel === "string" ? payload.ctaLabel : null,
     instanceId: interruption.instanceId,
     payloadKind: typeof payload.kind === "string" ? payload.kind : null,
@@ -620,6 +623,9 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
       };
     })(),
     roster: {
+      generatedVisitorIds: hq.visitors
+        .filter((visitor) => visitor.identitySource === "generated")
+        .map((visitor) => visitor.id),
       livingOperatorIds,
       operatorCapacity: hq.rosterPressure.operatorCapacity,
       operatorIds: hq.operators.map((operator) => operator.id),

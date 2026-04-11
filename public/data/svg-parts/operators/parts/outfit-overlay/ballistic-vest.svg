@@ -1,0 +1,20 @@
+<!-- Operator Part: Ballistic Vest — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: rare | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, heavy ballistic vest with MOLLE webbing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Vest body -->
+  <path d="M34 66 L38 62 Q48 58 60 58 Q72 58 82 62 L86 66
+           L88 104 Q84 112 78 114 L60 116 L42 114 Q36 112 32 104 Z"
+    fill="#1a2440" opacity="0.35" stroke="#2a3555" stroke-width="0.7" />
+  <!-- MOLLE webbing -->
+  <line x1="38" y1="74" x2="82" y2="74" stroke="#2a3555" stroke-width="0.4" opacity="0.3" />
+  <line x1="38" y1="80" x2="82" y2="80" stroke="#2a3555" stroke-width="0.4" opacity="0.3" />
+  <line x1="38" y1="86" x2="82" y2="86" stroke="#2a3555" stroke-width="0.4" opacity="0.3" />
+  <!-- Front plate carrier -->
+  <rect x="46" y="68" width="28" height="30" rx="2" fill="none" stroke="#2a3555" stroke-width="0.5" opacity="0.4" />
+  <!-- Velcro patch area -->
+  <rect x="50" y="70" width="20" height="8" rx="1" fill="#2a3555" opacity="0.15" />
+  <!-- Side straps -->
+  <line x1="34" y1="78" x2="30" y2="78" stroke="#5a4030" stroke-width="0.6" opacity="0.4" />
+  <line x1="86" y1="78" x2="90" y2="78" stroke="#5a4030" stroke-width="0.6" opacity="0.4" />
+</svg>

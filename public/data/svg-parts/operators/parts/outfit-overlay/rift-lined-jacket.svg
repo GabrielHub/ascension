@@ -1,0 +1,22 @@
+<!-- Operator Part: Rift-Lined Jacket — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: rare | Body: medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, jacket with rift energy trim along edges -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Jacket body -->
+  <path d="M36 64 Q48 60 60 60 Q72 60 84 64 L86 112 Q72 116 60 116 Q48 116 34 112 Z"
+    fill="none" stroke="#2a3555" stroke-width="0.7" opacity="0.55" />
+  <!-- Rift energy trim -->
+  <path d="M36 64 L34 112" stroke="#6a5fcf" stroke-width="0.8" opacity="0.4" />
+  <path d="M84 64 L86 112" stroke="#6a5fcf" stroke-width="0.8" opacity="0.4" />
+  <!-- Rift glow -->
+  <path d="M36 64 L34 112" stroke="#6a5fcf" stroke-width="3" opacity="0.06" />
+  <path d="M84 64 L86 112" stroke="#6a5fcf" stroke-width="3" opacity="0.06" />
+  <!-- Collar -->
+  <path d="M42 64 Q52 60 60 60 Q68 60 78 64" stroke="#1a2440" stroke-width="1.2" fill="none" opacity="0.5" />
+  <!-- Rift-lined hem -->
+  <path d="M34 112 Q60 114 86 112" stroke="#6a5fcf" stroke-width="0.6" opacity="0.35" />
+  <!-- Center closure -->
+  <line x1="60" y1="64" x2="60" y2="114" stroke="#2a3555" stroke-width="0.3" opacity="0.3" />
+  <!-- Rift node -->
+  <circle cx="60" cy="78" r="1.5" fill="#6a5fcf" opacity="0.3" stroke="#1a2440" stroke-width="0.3" />
+</svg>

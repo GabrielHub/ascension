@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+type SvgCatalogView = "hq-rooms" | "hq-parts" | "raids" | "equipment" | "reference";
+
 interface SvgCatalogAsset {
   id: string;
   url: string;
@@ -12,6 +14,10 @@ interface SvgCatalogAsset {
   pack: string;
   stage: string;
   section: string | null;
+  view: SvgCatalogView;
+  subGroup: string | null;
+  roomBaseName: string | null;
+  tier: number | null;
 }
 
 interface SvgAssetCatalog {
@@ -68,6 +74,15 @@ function buildAssetLabel(stem: string): string {
     .join(" ");
 }
 
+function parseRecipeTier(stem: string): { roomBaseName: string; tier: number } {
+  const stripped = stem.replace(/^scene-/, "");
+  const match = stripped.match(/^(.+?)-(\d+)$/);
+  if (match) {
+    return { roomBaseName: match[1], tier: Number(match[2]) };
+  }
+  return { roomBaseName: stripped, tier: 1 };
+}
+
 function classifyAsset(urlPath: string): SvgCatalogAsset {
   const normalizedPath = urlPath.replace(/\\/g, "/");
   const segments = normalizedPath.replace(/^\//, "").split("/");
@@ -80,22 +95,71 @@ function classifyAsset(urlPath: string): SvgCatalogAsset {
   let pack = segments[1] ?? "other";
   let stage = segments[2] ?? "root";
   let section: string | null = segments[3] ?? null;
+  let view: SvgCatalogView = "reference";
+  let subGroup: string | null = null;
+  let roomBaseName: string | null = null;
+  let tier: number | null = null;
 
   if (segments[1] === "svg-parts" && segments[2] === "operators") {
     family = "operators";
     pack = "operators";
     stage = segments[3] ?? "parts";
     section = segments[4] ?? null;
+    view = "equipment";
+    subGroup = section;
   } else if (segments[1] === "svg-environments" && segments[2] === "hq") {
     family = "hq";
     pack = segments[3] ?? "unknown";
-    stage = segments[4] ?? "unknown";
-    section = segments[5] ?? null;
+    const hqStage = segments[4] ?? "unknown";
+    stage = hqStage;
+
+    if (hqStage === "recipes") {
+      section = null;
+      view = "hq-rooms";
+      subGroup = pack;
+      const parsed = parseRecipeTier(stem);
+      roomBaseName = parsed.roomBaseName;
+      tier = parsed.tier;
+    } else if (hqStage === "parts") {
+      section = segments[5] ?? null;
+      view = "hq-parts";
+      subGroup = section;
+    } else if (hqStage === "reference") {
+      section = segments[5] ?? null;
+      view = "reference";
+      subGroup = "hq";
+    } else {
+      section = segments[5] ?? null;
+      view = "hq-parts";
+      subGroup = hqStage;
+    }
   } else if (segments[1] === "svg-environments" && segments[2] === "raids") {
     family = "raids";
     pack = "raids";
-    stage = segments[3] ?? "unknown";
-    section = stage === "parts" ? (segments[4] ?? null) : null;
+    const raidStage = segments[3] ?? "unknown";
+    stage = raidStage;
+
+    if (raidStage === "bosses") {
+      section = null;
+      view = "raids";
+      subGroup = "bosses";
+    } else if (raidStage === "enemies") {
+      section = null;
+      view = "raids";
+      subGroup = "enemies";
+    } else if (raidStage === "parts") {
+      section = segments[4] ?? null;
+      view = "raids";
+      subGroup = section;
+    } else if (raidStage === "reference") {
+      section = null;
+      view = "reference";
+      subGroup = "raids";
+    } else {
+      section = null;
+      view = "raids";
+      subGroup = raidStage;
+    }
   }
 
   return {
@@ -109,6 +173,10 @@ function classifyAsset(urlPath: string): SvgCatalogAsset {
     pack,
     stage,
     section,
+    view,
+    subGroup,
+    roomBaseName,
+    tier,
   };
 }
 

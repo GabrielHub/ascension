@@ -1,0 +1,20 @@
+<!-- Operator Part: Courier Jacket — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: uncommon | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, fitted courier jacket over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Jacket body (slim fit) -->
+  <path d="M38 64 Q48 60 60 60 Q72 60 82 64 L82 108 Q72 112 60 112 Q48 112 38 108 Z"
+    fill="none" stroke="#2a3555" stroke-width="0.7" opacity="0.55" />
+  <!-- Asymmetric zip -->
+  <path d="M52 64 L48 108" stroke="#b8b0a0" stroke-width="0.4" opacity="0.3" />
+  <!-- Stand collar -->
+  <path d="M42 64 Q52 60 60 60 Q68 60 78 64" stroke="#1a2440" stroke-width="1.2" fill="none" opacity="0.5" />
+  <!-- Shoulder epaulette left -->
+  <line x1="36" y1="66" x2="42" y2="64" stroke="#2a3555" stroke-width="1" opacity="0.4" />
+  <!-- Shoulder epaulette right -->
+  <line x1="84" y1="66" x2="78" y2="64" stroke="#2a3555" stroke-width="1" opacity="0.4" />
+  <!-- Arm pocket -->
+  <rect x="82" y="76" width="4" height="10" rx="1" fill="#2a3555" opacity="0.2" stroke="#1a2440" stroke-width="0.3" />
+  <!-- Reflective piping -->
+  <path d="M38 90 Q60 88 82 90" stroke="#4a6888" stroke-width="0.3" fill="none" opacity="0.3" />
+</svg>

@@ -1,0 +1,20 @@
+<!-- Operator Part: Pulse Baton — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, energy baton at right side -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Baton shaft -->
+  <line x1="92" y1="65" x2="92" y2="110" stroke="#2a3555" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Shaft glow -->
+  <line x1="92" y1="65" x2="92" y2="85" stroke="#6a5fcf" stroke-width="4" opacity="0.1" />
+  <!-- Energy head -->
+  <ellipse cx="92" cy="64" rx="3" ry="4" fill="#2a3555" stroke="#6a5fcf" stroke-width="0.8" opacity="0.8" />
+  <!-- Energy core -->
+  <circle cx="92" cy="64" r="1.5" fill="#6a5fcf" opacity="0.5" />
+  <!-- Pulse rings -->
+  <circle cx="92" cy="64" r="6" fill="none" stroke="#6a5fcf" stroke-width="0.3" opacity="0.2" />
+  <circle cx="92" cy="64" r="9" fill="none" stroke="#6a5fcf" stroke-width="0.2" opacity="0.1" />
+  <!-- Grip -->
+  <line x1="92" y1="92" x2="92" y2="108" stroke="#1a2440" stroke-width="3" stroke-linecap="round" />
+  <!-- Control inlay -->
+  <rect x="90.5" y="88" width="3" height="2" rx="0.5" fill="#6a5fcf" opacity="0.3" />
+</svg>

@@ -1,0 +1,19 @@
+<!-- Operator Part: Insulated Parka — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: uncommon | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, heavy insulated parka over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Parka body (bulky) -->
+  <path d="M30 64 Q48 56 60 56 Q72 56 90 64 L92 130 Q72 136 60 136 Q48 136 28 130 Z"
+    fill="#3d2c20" opacity="0.3" stroke="#5a4030" stroke-width="0.7" />
+  <!-- Hood (collapsed) -->
+  <path d="M40 60 Q50 54 60 54 Q70 54 80 60" stroke="#5a4030" stroke-width="1.5" fill="none" opacity="0.5" />
+  <!-- Fur-lined hood edge -->
+  <path d="M40 60 Q50 56 60 56 Q70 56 80 60" stroke="#b8b0a0" stroke-width="0.6" fill="none" opacity="0.3" />
+  <!-- Center zipper -->
+  <line x1="60" y1="62" x2="60" y2="134" stroke="#b8b0a0" stroke-width="0.4" opacity="0.3" />
+  <!-- Pocket flaps -->
+  <line x1="36" y1="100" x2="50" y2="100" stroke="#5a4030" stroke-width="0.6" opacity="0.4" />
+  <line x1="70" y1="100" x2="84" y2="100" stroke="#5a4030" stroke-width="0.6" opacity="0.4" />
+  <!-- Drawstring at waist -->
+  <path d="M42 92 Q60 90 78 92" stroke="#5a4030" stroke-width="0.4" fill="none" opacity="0.3" stroke-dasharray="2 1" />
+</svg>

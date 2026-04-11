@@ -13,7 +13,7 @@ Documentation is intentionally narrow.
 
 - The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
 - The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
-- There are currently no active checked-in execution plans under `docs/plans/`. The next execution pass should start from the roadmap's planned milestones rather than from a stale implementation plan doc.
+- Active checked-in execution plans now exist under `docs/plans/` for the Phase 4 midgame pass: contract lock, city pressure, Porter's content remediation, crafting, social fallout, and encounter breadth.
 
 ## Planned Work
 
@@ -34,7 +34,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  This index may intentionally contain no active checked-in plan docs between execution passes.
+  The current active queue is the ordered Phase 4 midgame plan set.
 
 ### Research
 

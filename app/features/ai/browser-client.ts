@@ -1,4 +1,5 @@
 import type {
+  AiGenerationOptions,
   AiGenerationRequest,
   AiGenerationResult,
   AiRuntimeProbeResult,
@@ -15,7 +16,10 @@ export const browserAiClient: AiTransportClient = {
   probe(config: LocalAiTransportConfig): Promise<AiRuntimeProbeResult> {
     return probeRuntime(config);
   },
-  generate(request: AiGenerationRequest): Promise<AiGenerationResult> {
-    return generate(request);
+  generate(
+    request: AiGenerationRequest,
+    options?: AiGenerationOptions,
+  ): Promise<AiGenerationResult> {
+    return generate(request, options);
   },
 };

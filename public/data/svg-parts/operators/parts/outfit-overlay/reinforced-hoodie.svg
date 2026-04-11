@@ -1,0 +1,20 @@
+<!-- Operator Part: Reinforced Hoodie — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: uncommon | Body: medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, armored hoodie with reinforced shoulders -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Hoodie body -->
+  <path d="M34 66 Q48 60 60 60 Q72 60 86 66 L88 114 Q72 118 60 118 Q48 118 32 114 Z"
+    fill="none" stroke="#5a4030" stroke-width="0.7" opacity="0.5" />
+  <!-- Hood (behind head) -->
+  <path d="M36 62 Q40 44 60 40 Q80 44 84 62"
+    stroke="#5a4030" stroke-width="1" fill="#3d2c20" fill-opacity="0.2" />
+  <!-- Hood opening -->
+  <path d="M40 58 Q50 50 60 48 Q70 50 80 58" stroke="#3d2c20" stroke-width="0.6" fill="none" opacity="0.4" />
+  <!-- Kangaroo pocket -->
+  <path d="M44 96 L76 96 L78 110 L42 110 Z" fill="#3d2c20" opacity="0.15" stroke="#5a4030" stroke-width="0.4" />
+  <!-- Pocket opening -->
+  <line x1="48" y1="96" x2="72" y2="96" stroke="#5a4030" stroke-width="0.5" opacity="0.4" />
+  <!-- Reinforcement panels -->
+  <path d="M36 66 Q42 64 48 66 L46 76 L34 76 Z" fill="#3d2c20" opacity="0.2" />
+  <path d="M84 66 Q78 64 72 66 L74 76 L86 76 Z" fill="#3d2c20" opacity="0.2" />
+</svg>
