@@ -284,6 +284,7 @@ describe("dev console commands", () => {
       payloadVersion: 1,
       startedAt: 1,
       finishedAt: 2,
+      progress: null,
       result: null,
       error: null,
     });

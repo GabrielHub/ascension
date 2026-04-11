@@ -1,0 +1,19 @@
+<!-- Operator Part: Scout Binocs — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: uncommon | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, binoculars hanging from neck -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Neck strap -->
+  <path d="M44 56 Q52 64 60 72 Q68 64 76 56" stroke="#5a4030" stroke-width="0.8" fill="none" opacity="0.5" />
+  <!-- Left barrel -->
+  <ellipse cx="55" cy="76" rx="4" ry="5" fill="#1a2440" stroke="#2a3555" stroke-width="0.6" />
+  <!-- Right barrel -->
+  <ellipse cx="65" cy="76" rx="4" ry="5" fill="#1a2440" stroke="#2a3555" stroke-width="0.6" />
+  <!-- Bridge -->
+  <rect x="58" y="73" width="4" height="4" rx="1" fill="#2a3555" opacity="0.6" />
+  <!-- Left lens -->
+  <ellipse cx="55" cy="73" rx="2.5" ry="2.5" fill="#2a3555" opacity="0.4" stroke="#4a6888" stroke-width="0.4" />
+  <!-- Right lens -->
+  <ellipse cx="65" cy="73" rx="2.5" ry="2.5" fill="#2a3555" opacity="0.4" stroke="#4a6888" stroke-width="0.4" />
+  <!-- Lens glint -->
+  <circle cx="54" cy="72" r="0.8" fill="#4a6888" opacity="0.3" />
+</svg>

@@ -132,13 +132,14 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
-- There are no active checked-in execution plans right now. The next work should come from the planned milestones below, starting with Phase 4.
+- Active checked-in execution plans now cover the Phase 4 midgame pass. The next work should come from those milestones, starting with shared contract lock, city pressure, and Porter's content remediation.
 
 ## Next Steps
 
 1. Start Phase 4 with external pressure that pushes back on the shipped Porter's baseline: reputation fallout, institutions, factional or contract pressure, and richer social consequences.
-2. Deepen content breadth around the existing systems before adding another large foundation pass: more incident coverage, more boss and mixed-roster encounter breadth, and stronger authored mission and loot variety where repetition shows up in play.
-3. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+2. Deepen content breadth around the existing systems before adding another large foundation pass: more incident coverage, more boss and mixed-roster encounter breadth, stronger authored mission and loot variety where repetition shows up in play, and a real Porter's-era operator and dungeon pool instead of isolated higher-tier footholds.
+3. Lock the rank-escalation contract across content and presentation: F and E stay grounded and local, D and C become stranger and more visibly rift-touched, B and A become institutionally famous and physically implausible, and S becomes fully spectacular and world-defining.
+4. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Phase 4: Midgame Systems
 
@@ -148,6 +149,7 @@ Deliverables:
 
 - reputation-based threat escalation
 - better district-level city map logic
+- Porter's content remediation across higher-rank site packets, operator breadth, event coverage, and loot families
 - richer gear and crafting built around authored recipe families, resource families, and rare site-specific materials
 - additional economic resources beyond the current cash, reputation, intel, and Phase 2 loot-market baseline if needed
 - faction or contract pressure
@@ -155,6 +157,7 @@ Deliverables:
 - richer social fallout from guild reputation, contract performance, operator death, and room/team culture
 - expand the shipped incident library with more authored subject bindings, consequence bundles, and higher-pressure institutional scenarios
 - deepen boss-encounter content breadth with additional bosses, mixed enemy rosters, phase behaviors, and longer-form intervention design
+- lock the tonal and visual climb in authored content so grounded F/E content gives way to stranger D/C content and fully spectacular A/S content without losing the workplace-supernatural identity
 - expand encounter debug tooling and authored boss/incident content beyond the initial shipped slice
 - optional later AI incident framing layered on top of deterministic authored triggers and consequence bundles, not as the gameplay authority
 - optional weekly AI-generated narrative reports built from saved raid summaries and guild state

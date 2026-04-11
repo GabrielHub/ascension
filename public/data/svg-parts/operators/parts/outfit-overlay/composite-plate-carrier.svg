@@ -1,0 +1,25 @@
+<!-- Operator Part: Composite Plate Carrier — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: rare | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, heavy composite plate carrier with pouches -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Carrier body -->
+  <path d="M30 66 L36 60 Q48 56 60 56 Q72 56 84 60 L90 66
+           L92 108 Q86 116 78 118 L60 120 L42 118 Q34 116 28 108 Z"
+    fill="#1a2440" opacity="0.4" stroke="#2a3555" stroke-width="0.7" />
+  <!-- Front plate -->
+  <rect x="42" y="64" width="36" height="36" rx="3" fill="#2a3555" opacity="0.2" stroke="#1a2440" stroke-width="0.5" />
+  <!-- Plate texture -->
+  <path d="M44 70 L76 70" stroke="#384872" stroke-width="0.3" opacity="0.2" />
+  <path d="M44 80 L76 80" stroke="#384872" stroke-width="0.3" opacity="0.2" />
+  <path d="M44 90 L76 90" stroke="#384872" stroke-width="0.3" opacity="0.2" />
+  <!-- Shoulder straps -->
+  <path d="M36 60 Q40 58 44 64 L42 68 L34 66 Z" fill="#1a2440" opacity="0.3" stroke="#2a3555" stroke-width="0.4" />
+  <path d="M84 60 Q80 58 76 64 L78 68 L86 66 Z" fill="#1a2440" opacity="0.3" stroke="#2a3555" stroke-width="0.4" />
+  <!-- MOLLE side pouches -->
+  <rect x="32" y="80" width="6" height="8" rx="1" fill="#2a3555" opacity="0.15" stroke="#1a2440" stroke-width="0.3" />
+  <rect x="82" y="80" width="6" height="8" rx="1" fill="#2a3555" opacity="0.15" stroke="#1a2440" stroke-width="0.3" />
+  <!-- Admin pouch -->
+  <rect x="50" y="96" width="20" height="10" rx="1" fill="#1a2440" opacity="0.25" stroke="#2a3555" stroke-width="0.4" />
+  <!-- Drag handle -->
+  <path d="M54 56 Q60 52 66 56" stroke="#5a4030" stroke-width="1" fill="none" opacity="0.4" />
+</svg>

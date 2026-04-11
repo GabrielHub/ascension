@@ -15,6 +15,8 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - The shipped bodega expansion now centers intel, logistics, and staging support. The next headquarters tier should build on those surfaces instead of re-solving them as bodega problems.
 - Porter's starter state should not regress room count or staging compared with the fully upgraded bodega.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
+- Content should escalate in tone and visual language with rank. F and E stay rooted in warped real places and plausible professional gear; D and C can become stranger, more specialized, and more visibly rift-touched; B and A can become institutionally famous and physically implausible; S is where the game spends its truly spectacular concepts.
+- That climb applies across dungeons, bosses, gear, and operators. It is not only a difficulty curve.
 
 ## Shared Uncertainty Resolution
 
@@ -116,6 +118,7 @@ Recruitment rarity direction should work like a weighted labor-market ladder, no
 - Late midgame should make the first A-rank recruit feel like a real milestone, not a routine pull.
 - Endgame should center on B, A, and S while still allowing occasional lower-rank filler outcomes for labor-market texture.
 - Recruit distribution should be authored through inspectable weight tables keyed by campaign progression, reputation, room support, and other explicit simulation inputs rather than one-off hand tuning.
+- Recruitment presentation should climb with the same rank contract as the wider content set: early operators should look like dangerous but plausible workers, midgame operators should start feeling rarer and more visually unusual, and S-rank operators should read as industry-famous singular figures.
 
 Staff are hired, assigned to rooms, and provide gameplay bonuses, but they should still read as authored people rather than faceless modifiers. They are the infrastructure that lets operators focus on the dangerous work.
 
@@ -145,6 +148,7 @@ Ordinary raid enemies should be authored content, not anonymous threat bundles:
 - Enemy families should match the dungeon concept and read like corrupted extensions of that site.
 - Contract-board threat hints should be able to surface likely enemy families when intel is sufficient.
 - Ordinary raids should use those authored enemies in lightweight simulation-owned skirmishes instead of resolving from aggregate threat alone.
+- Enemy and site presentation should climb with rank. Early content should stay local and recognizable. Midgame can become more impossible, distorted, and specialized. Endgame is where city-scale or world-scale spectacle belongs.
 
 Ordinary enemy content should support at least:
 
@@ -195,6 +199,7 @@ Boss confrontation direction:
 - Site concepts own dungeon identity, enemy-family pools, and the attached boss anchor. Mission type changes the job being done at the site; it does not detach the site from its boss.
 - A raid site must never be authored or generated without an attached boss definition. If a `site/*` entry does not resolve to a concrete boss, that site is invalid content rather than a partial draft.
 - Content-generation workflow should treat new raid-site creation as a paired operation: reserve the `site/*` id, reserve or attach the `boss/*` id, and review both together before promotion.
+- Do not spend the game's most spectacular concepts too early. D-rank can move beyond strict realism, but A and S should still feel like a meaningful escalation in scale, weirdness, and cultural visibility.
 
 Raid contract-surface direction:
 
@@ -274,6 +279,7 @@ Gear, inventory, and market defaults:
 - Porter's should make that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
+- Gear presentation should climb with rank without abandoning the grounded-professional baseline too early. F and E should still read as plausible field equipment; D and C can start showing rift-touched materials and stranger silhouettes; A and S can carry the most dramatic visual signatures.
 
 Rooms are the building blocks of the guild's physical space. They determine what the guild can do and how well it can do it.
 

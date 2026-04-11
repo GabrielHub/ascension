@@ -1,0 +1,19 @@
+<!-- Operator Part: Reinforced Bat — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, metal-reinforced bat across back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Bat barrel -->
+  <line x1="28" y1="18" x2="48" y2="55" stroke="#5a4030" stroke-width="5.5" stroke-linecap="round" />
+  <!-- Bat taper -->
+  <line x1="48" y1="55" x2="62" y2="80" stroke="#5a4030" stroke-width="3.5" stroke-linecap="round" />
+  <!-- Handle -->
+  <line x1="62" y1="80" x2="72" y2="98" stroke="#3d2c20" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Metal reinforcement bands -->
+  <line x1="26" y1="22" x2="34" y2="20" stroke="#b8b0a0" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="32" y1="32" x2="40" y2="30" stroke="#b8b0a0" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="38" y1="42" x2="46" y2="40" stroke="#b8b0a0" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Metal cap on barrel end -->
+  <circle cx="27" cy="17" r="3.5" fill="none" stroke="#b8b0a0" stroke-width="1" opacity="0.7" />
+  <!-- Knob -->
+  <circle cx="73" cy="99" r="2.2" fill="#b8b0a0" stroke="#e0ddd6" stroke-width="0.4" />
+</svg>

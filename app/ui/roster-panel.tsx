@@ -199,7 +199,7 @@ function StaffRow({
 
 // ── Visitor row (compact with inline actions) ────────────────────────────
 
-function VisitorRow({
+export function VisitorRow({
   visitor,
   replaceableOperators,
   showReplacePicker,

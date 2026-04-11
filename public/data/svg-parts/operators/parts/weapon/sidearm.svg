@@ -1,0 +1,17 @@
+<!-- Operator Part: Sidearm — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: rare | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, pistol in thigh holster -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Holster -->
+  <path d="M82 95 L80 95 L78 115 L84 115 L82 95" fill="#3d2c20" opacity="0.5" stroke="#5a4030" stroke-width="0.6" />
+  <!-- Holster strap -->
+  <path d="M76 95 Q80 93 84 95" stroke="#5a4030" stroke-width="0.8" fill="none" />
+  <!-- Pistol grip protruding -->
+  <path d="M79 95 L78 88 L84 88 L83 95" fill="#1a2440" stroke="#2a3555" stroke-width="0.5" />
+  <!-- Slide -->
+  <rect x="78" y="86" width="6" height="3" rx="0.5" fill="#2a3555" stroke="#1a2440" stroke-width="0.4" />
+  <!-- Rear sight -->
+  <line x1="79" y1="86" x2="83" y2="86" stroke="#b8b0a0" stroke-width="0.5" opacity="0.6" />
+  <!-- Thigh strap -->
+  <path d="M74 110 Q80 108 86 110" stroke="#5a4030" stroke-width="0.8" fill="none" opacity="0.5" />
+</svg>

@@ -1,0 +1,21 @@
+<!-- Operator Part: Field Medic Coat — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: rare | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, professional medical coat with insignia -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Coat body (long) -->
+  <path d="M34 64 Q48 58 60 58 Q72 58 86 64 L88 140 Q72 144 60 144 Q48 144 32 140 Z"
+    fill="none" stroke="#2a3555" stroke-width="0.7" opacity="0.55" />
+  <!-- Lapel left -->
+  <path d="M48 64 L54 58 L60 70" stroke="#1a2440" stroke-width="0.6" fill="#2a3555" fill-opacity="0.15" />
+  <!-- Lapel right -->
+  <path d="M72 64 L66 58 L60 70" stroke="#1a2440" stroke-width="0.6" fill="#2a3555" fill-opacity="0.15" />
+  <!-- Medical cross on arm -->
+  <line x1="30" y1="80" x2="30" y2="86" stroke="#c8a84c" stroke-width="1" opacity="0.5" />
+  <line x1="27" y1="83" x2="33" y2="83" stroke="#c8a84c" stroke-width="1" opacity="0.5" />
+  <!-- Coat pockets -->
+  <rect x="40" y="100" width="10" height="8" rx="1" fill="#2a3555" opacity="0.15" stroke="#1a2440" stroke-width="0.3" />
+  <rect x="70" y="100" width="10" height="8" rx="1" fill="#2a3555" opacity="0.15" stroke="#1a2440" stroke-width="0.3" />
+  <!-- Buttons -->
+  <circle cx="60" cy="80" r="0.8" fill="#b8b0a0" opacity="0.4" />
+  <circle cx="60" cy="92" r="0.8" fill="#b8b0a0" opacity="0.4" />
+</svg>

@@ -1,0 +1,16 @@
+<!-- Operator Part: Hi-Vis Vest — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, high-visibility safety vest over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Vest body -->
+  <path d="M38 66 Q48 62 60 62 Q72 62 82 66 L84 106 Q72 110 60 110 Q48 110 36 106 Z"
+    fill="none" stroke="#c8a84c" stroke-width="0.7" opacity="0.5" />
+  <!-- Reflective band upper -->
+  <path d="M38 82 Q60 80 82 82" stroke="#c8a84c" stroke-width="2" fill="none" opacity="0.5" />
+  <path d="M38 82 Q60 80 82 82" stroke="#e0ddd6" stroke-width="0.6" fill="none" opacity="0.3" />
+  <!-- Reflective band lower -->
+  <path d="M36 98 Q60 96 84 98" stroke="#c8a84c" stroke-width="2" fill="none" opacity="0.5" />
+  <path d="M36 98 Q60 96 84 98" stroke="#e0ddd6" stroke-width="0.6" fill="none" opacity="0.3" />
+  <!-- V-neck opening -->
+  <path d="M50 66 L60 78 L70 66" stroke="#c8a84c" stroke-width="0.5" fill="none" opacity="0.4" />
+</svg>

@@ -1,0 +1,15 @@
+<!-- Operator Part: Claw Hammer — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, hammer tucked at belt -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Handle -->
+  <line x1="86" y1="110" x2="86" y2="80" stroke="#5a4030" stroke-width="2.2" stroke-linecap="round" />
+  <!-- Handle grip -->
+  <line x1="86" y1="108" x2="86" y2="100" stroke="#3d2c20" stroke-width="2.8" stroke-linecap="round" />
+  <!-- Hammer head -->
+  <rect x="80" y="76" width="12" height="6" rx="1" fill="#b8b0a0" stroke="#e0ddd6" stroke-width="0.4" opacity="0.8" />
+  <!-- Claw fork -->
+  <path d="M80 78 L76 72 M80 80 L76 74" stroke="#b8b0a0" stroke-width="1.2" fill="none" stroke-linecap="round" />
+  <!-- Face highlight -->
+  <line x1="92" y1="77" x2="92" y2="81" stroke="#e0ddd6" stroke-width="0.4" opacity="0.4" />
+</svg>

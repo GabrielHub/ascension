@@ -4,9 +4,17 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-There are no active checked-in execution plans right now.
+The active checked-in execution queue is now the ordered Phase 4 midgame plan set:
 
-The former AI content layer bring-up plan has been removed because its settings, transport, runtime-session, and host-integration work are already shipped. Its current status now belongs in the roadmap, product docs, code, and tests rather than in `docs/plans/`.
+- `phase-4-midgame-manager-plan`
+- `phase-4-midgame-contract-lock-plan`
+- `phase-4-midgame-city-pressure-plan`
+- `phase-4-midgame-content-remediation-plan`
+- `phase-4-midgame-crafting-plan`
+- `phase-4-midgame-social-incident-plan`
+- `phase-4-midgame-encounter-plan`
+
+This replaces the previous "no active plan" state because the next roadmap section is now ready for execution.
 
 ## Shared Execution Contract
 
@@ -22,9 +30,23 @@ Before working any plan:
 
 Check in a new plan only when a concrete execution slice is ready to start, for example:
 
-- a bounded Phase 4 midgame-systems pass
 - HQ backdrop-package cleanup tied to a specific building or asset contract
 - a later narrow AI content-breadth pass on top of the shipped optional runtime layer
+
+Do not add another broad Phase 4 plan doc unless the current ordered plan set is materially superseded.
+
+## Active Order
+
+Run the current midgame plans in this order:
+
+1. `phase-4-midgame-contract-lock-plan`
+2. `phase-4-midgame-city-pressure-plan`
+3. `phase-4-midgame-content-remediation-plan`
+4. `phase-4-midgame-crafting-plan`
+5. `phase-4-midgame-social-incident-plan`
+6. `phase-4-midgame-encounter-plan`
+
+Use `phase-4-midgame-manager-plan` to coordinate locks, merge order, and scope control across that queue.
 
 ## Sequencing Notes
 

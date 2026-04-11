@@ -26,10 +26,21 @@ Rank measures the innate ceiling of an operator's attunement. It is extremely di
 
 **Rank advancement is possible but extremely rare.** Most operators live and die at the rank they started with.
 
+## Rank Presentation And Escalation
+
+Rank is not just a numeric power band. It should change how the world reads the person.
+
+- F and E operators should still feel like dangerous workers in a newly supernatural labor market. Their attunements are real, but their presentation should stay grounded and legible.
+- D operators are where things start to look expensive, specialized, and hard to replace. This is the first tier where "that person is not normal" should become obvious even in how stories about them circulate.
+- C and B operators should feel rare enough that their attunement changes the social atmosphere around them. Their visual identity, gear, and reputation can become stranger and more singular here.
+- A and especially S operators are where the game can spend the most extraordinary presentation. They should feel famous, difficult, and almost surreal without ceasing to be people with jobs, contracts, and opinions.
+- The climb matters. Do not make early-rank operators look as spectacular as S-rank celebrities, or the ladder collapses.
+
 ## Public Perception
 
 - Attuned people are known to exist. This is not a secret. But you cannot tell by looking - attunement is invisible until demonstrated.
 - Public opinion is mixed. High-rank operators are treated like athletes or minor celebrities. Low-rank operators are treated like anyone else with a blue-collar hazard job.
+- The public should experience the same escalation curve the player does: low-rank operators read like hazardous labor, mid-rank operators read like industry talent, and top-rank operators read like celebrities or public crises waiting to happen.
 - S-rank operators are famous. They have endorsement deals, fan followings, and opinions about which guilds are "beneath them."
 - No attunement types are currently stigmatized or legally restricted. The regulatory framework is still too young and too confused to have gotten that specific yet. This may change as the world develops.
 - The player is not attuned, and since attunement is invisible, this only comes up when people ask why they do not go on raids. The answer is always some variation of "I'm management."

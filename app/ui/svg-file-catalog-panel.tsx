@@ -5,17 +5,44 @@ import { ENV_LIGHTING_PRESETS, getEnvLightingPreset } from "./environment-parts"
 import { emptyStateClass } from "./styles";
 import {
   getLoadedSvgAssetCatalog,
+  getRoomGroups,
   type SvgCatalogAsset,
-  type SvgCatalogFamily,
+  type SvgCatalogView,
 } from "./svg-file-catalog";
 
 // ── Constants ────────────────────────────────────────────────────────────
 
-const FAMILY_LABELS: Record<SvgCatalogFamily, string> = {
-  operators: "Operators",
-  hq: "HQ",
+const VIEW_LABELS: Record<SvgCatalogView, string> = {
+  "hq-rooms": "HQ Rooms",
+  "hq-parts": "HQ Parts",
   raids: "Raids",
-  other: "Other",
+  equipment: "Equipment",
+  reference: "Reference",
+};
+
+const SUBGROUP_ORDER: Record<string, readonly string[]> = {
+  "hq-parts": ["background", "props", "structure", "shell", "room-kits"],
+  raids: ["bosses", "enemies", "tiles", "features", "markers"],
+  equipment: ["weapon", "accessory", "outfit-overlay"],
+  reference: ["hq", "raids"],
+};
+
+const SUBGROUP_LABELS: Record<string, string> = {
+  background: "Backgrounds",
+  props: "Props",
+  structure: "Structure",
+  shell: "Shell",
+  "room-kits": "Room Kits",
+  bosses: "Bosses",
+  enemies: "Enemies",
+  tiles: "Dungeon Tiles",
+  features: "Features",
+  markers: "Markers",
+  weapon: "Weapons",
+  accessory: "Accessories",
+  "outfit-overlay": "Outfit Overlays",
+  hq: "HQ Reference",
+  raids: "Raids Reference",
 };
 
 const ZOOM_MIN = 0.25;
@@ -74,38 +101,6 @@ function SearchInput({
   );
 }
 
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: readonly { value: string; label: string }[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.8)] px-2.5 py-1.5 text-xs text-silver-bright outline-none transition-colors focus:border-gold/40 [&>option]:bg-void"
-      >
-        <option value="">All</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 function MetadataRow({
   label,
   value,
@@ -131,10 +126,12 @@ function AssetListItem({
   asset,
   isSelected,
   onSelect,
+  large,
 }: {
   asset: SvgCatalogAsset;
   isSelected: boolean;
   onSelect: () => void;
+  large?: boolean;
 }) {
   return (
     <button
@@ -147,7 +144,9 @@ function AssetListItem({
       }`}
     >
       <div
-        className={`flex h-12 w-14 shrink-0 items-center justify-center overflow-hidden rounded border ${
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded border ${
+          large ? "h-16 w-18" : "h-12 w-14"
+        } ${
           isSelected
             ? "border-gold/20 bg-[rgba(200,168,76,0.06)]"
             : "border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.6)]"
@@ -167,15 +166,11 @@ function AssetListItem({
         >
           {asset.label}
         </p>
-        <div className="mt-0.5 flex items-center gap-1.5">
-          <span className="rounded bg-[rgba(200,168,76,0.08)] px-1.5 py-0.5 text-xs text-gold/60">
-            {FAMILY_LABELS[asset.family]}
+        {asset.subGroup && (
+          <span className="mt-0.5 inline-block text-xs text-silver/40">
+            {SUBGROUP_LABELS[asset.subGroup] ?? titleCase(asset.subGroup)}
           </span>
-          <span className="text-xs text-silver/50">{titleCase(asset.stage)}</span>
-          {asset.section && (
-            <span className="text-xs text-silver/40">{titleCase(asset.section)}</span>
-          )}
-        </div>
+        )}
       </div>
     </button>
   );
@@ -193,13 +188,11 @@ function AssetDetail({
   zoom: number;
 }) {
   const preset = getEnvLightingPreset(presetId);
-  const previewRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="animate-enter flex h-full flex-col">
       {/* Preview area */}
       <div
-        ref={previewRef}
         className="relative flex flex-1 items-center justify-center overflow-auto"
         style={{ backgroundColor: preset.background }}
       >
@@ -234,10 +227,14 @@ function AssetDetail({
             </p>
           </div>
           <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
-            <MetadataRow label="Family" value={FAMILY_LABELS[asset.family]} />
-            <MetadataRow label="Collection" value={titleCase(asset.pack)} />
-            <MetadataRow label="Type" value={titleCase(asset.stage)} />
-            {asset.section && <MetadataRow label="Section" value={titleCase(asset.section)} />}
+            <MetadataRow label="View" value={VIEW_LABELS[asset.view]} />
+            {asset.subGroup && (
+              <MetadataRow
+                label="Group"
+                value={SUBGROUP_LABELS[asset.subGroup] ?? titleCase(asset.subGroup)}
+              />
+            )}
+            {asset.tier !== null && <MetadataRow label="Tier" value={`Tier ${asset.tier}`} />}
             <MetadataRow label="File" value={asset.filename} />
             <MetadataRow label="Directory">
               <code className="text-xs text-gold/40">{asset.directory}</code>
@@ -249,31 +246,342 @@ function AssetDetail({
   );
 }
 
+// ── Room Comparison View ─────────────────────────────────────────────────
+
+function RoomComparisonView({
+  roomBaseName,
+  tiers,
+  presetId,
+  zoom,
+  onSelectTier,
+}: {
+  roomBaseName: string;
+  tiers: SvgCatalogAsset[];
+  presetId: string;
+  zoom: number;
+  onSelectTier: (assetId: string) => void;
+}) {
+  const preset = getEnvLightingPreset(presetId);
+  const displayName = titleCase(roomBaseName.replace(/^the-/, ""));
+
+  return (
+    <div className="animate-enter flex h-full flex-col">
+      {/* Side-by-side preview */}
+      <div
+        className="relative flex flex-1 items-stretch justify-center gap-px overflow-auto"
+        style={{ backgroundColor: preset.background }}
+      >
+        {tiers.map((tier) => (
+          <button
+            key={tier.id}
+            type="button"
+            onClick={() => onSelectTier(tier.id)}
+            className="group relative min-h-0 flex-1 transition-all hover:bg-[rgba(200,168,76,0.03)]"
+          >
+            {/* Tier label */}
+            <div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
+              <span className="rounded-full border border-gold/20 bg-[rgba(6,6,8,0.7)] px-2.5 py-0.5 text-xs font-medium text-gold/80 backdrop-blur-sm">
+                Tier {tier.tier ?? 1}
+              </span>
+            </div>
+
+            {/* Image — absolute fill like AssetDetail */}
+            <div
+              className="absolute inset-0 flex items-center justify-center p-8 pt-12 transition-transform duration-150 ease-out"
+              style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}
+            >
+              <img
+                src={tier.url}
+                alt={`${displayName} Tier ${tier.tier ?? 1}`}
+                className="max-h-full max-w-full object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
+                draggable={false}
+              />
+            </div>
+
+            {/* Hover hint */}
+            <div className="absolute inset-x-0 bottom-3 flex justify-center opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="rounded bg-[rgba(6,6,8,0.8)] px-2 py-0.5 text-xs text-silver/60 backdrop-blur-sm">
+                Click to inspect
+              </span>
+            </div>
+          </button>
+        ))}
+
+        {/* Divider lines between tiers */}
+        {tiers.length > 1 &&
+          tiers.slice(1).map((tier) => (
+            <div
+              key={`div-${tier.id}`}
+              className="absolute top-0 bottom-0 z-[1] w-px bg-[rgba(200,168,76,0.08)]"
+              style={{
+                left: `${(tiers.indexOf(tier) / tiers.length) * 100}%`,
+              }}
+            />
+          ))}
+
+        {preset.overlay && (
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: preset.overlay }}
+          />
+        )}
+      </div>
+
+      {/* Metadata */}
+      <div className="shrink-0 border-t border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.35)] p-5">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <div className="flex items-baseline gap-3">
+            <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-wide text-silver-bright">
+              {displayName}
+            </h3>
+            <span className="text-xs text-gold/50">
+              {tiers.length} tier{tiers.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tiers.map((tier) => (
+              <button
+                key={tier.id}
+                type="button"
+                onClick={() => onSelectTier(tier.id)}
+                className="rounded border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.5)] px-2.5 py-1 text-xs text-silver/60 transition-all hover:border-gold/20 hover:text-silver-bright"
+              >
+                <span className="text-gold/60">T{tier.tier ?? 1}</span>{" "}
+                <code className="text-xs text-silver/40">{tier.filename}</code>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── View: HQ Rooms ──────────────────────────────────────────────────────
+
+function HqRoomsViewList({
+  assets,
+  selectedRoomGroup,
+  onSelectRoom,
+}: {
+  assets: readonly SvgCatalogAsset[];
+  selectedRoomGroup: string | null;
+  onSelectRoom: (roomBaseName: string) => void;
+}) {
+  const roomGroups = useMemo(() => getRoomGroups(assets), [assets]);
+  const sortedRoomNames = useMemo(
+    () => [...roomGroups.keys()].sort((a, b) => a.localeCompare(b)),
+    [roomGroups],
+  );
+
+  if (sortedRoomNames.length === 0) {
+    return (
+      <div className={`${emptyStateClass} py-10`}>
+        <p className="text-xs text-silver/60">No room scenes match your search</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1 p-2">
+      {sortedRoomNames.map((roomName) => {
+        const tiers = roomGroups.get(roomName) ?? [];
+        const displayName = titleCase(roomName.replace(/^the-/, ""));
+        const isActive = selectedRoomGroup === roomName;
+
+        return (
+          <button
+            key={roomName}
+            type="button"
+            onClick={() => onSelectRoom(roomName)}
+            className={`group flex w-full flex-col gap-2 rounded-lg border px-3 py-2.5 text-left transition-all duration-200 ${
+              isActive
+                ? "border-gold/30 bg-[rgba(200,168,76,0.08)]"
+                : "border-transparent hover:border-[rgba(200,168,76,0.1)] hover:bg-[rgba(200,168,76,0.03)]"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={`text-xs font-medium ${isActive ? "text-gold" : "text-silver-bright"}`}
+              >
+                {displayName}
+              </span>
+              <span className="rounded-full bg-[rgba(200,168,76,0.06)] px-1.5 py-0.5 text-xs text-gold/50">
+                {tiers.length} tier{tiers.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {/* Tier thumbnail strip */}
+            <div className="flex gap-1.5">
+              {tiers.map((tier) => (
+                <div
+                  key={tier.id}
+                  className={`flex h-10 w-14 items-center justify-center overflow-hidden rounded border transition-colors ${
+                    isActive
+                      ? "border-gold/15 bg-[rgba(200,168,76,0.04)]"
+                      : "border-[rgba(200,168,76,0.04)] bg-[rgba(6,6,8,0.5)]"
+                  }`}
+                >
+                  <img
+                    src={tier.url}
+                    alt={`Tier ${tier.tier}`}
+                    loading="lazy"
+                    className="h-full w-full object-contain"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── View: Grouped List ──────────────────────────────────────────────────
+
+function GroupedAssetList({
+  assets,
+  view,
+  selectedId,
+  onSelectAsset,
+}: {
+  assets: readonly SvgCatalogAsset[];
+  view: SvgCatalogView;
+  selectedId: string | null;
+  onSelectAsset: (id: string) => void;
+}) {
+  const groups = useMemo(() => {
+    const order = SUBGROUP_ORDER[view] ?? [];
+    const map = new Map<string, SvgCatalogAsset[]>();
+
+    for (const asset of assets) {
+      const key = asset.subGroup ?? "other";
+      const existing = map.get(key);
+      if (existing) {
+        existing.push(asset);
+      } else {
+        map.set(key, [asset]);
+      }
+    }
+
+    // Sort by defined order, then alphabetically for any extras
+    const sorted: [string, SvgCatalogAsset[]][] = [];
+    for (const key of order) {
+      const group = map.get(key);
+      if (group) {
+        sorted.push([key, group]);
+        map.delete(key);
+      }
+    }
+    for (const [key, group] of [...map.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      sorted.push([key, group]);
+    }
+
+    return sorted;
+  }, [assets, view]);
+
+  if (groups.length === 0) {
+    return (
+      <div className={`${emptyStateClass} py-10`}>
+        <p className="text-xs text-silver/60">No assets match your search</p>
+      </div>
+    );
+  }
+
+  const useLargeThumbs = view === "raids";
+
+  return (
+    <div className="space-y-3 p-2">
+      {groups.map(([groupKey, groupAssets]) => (
+        <div key={groupKey}>
+          {/* Section header */}
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">
+              {SUBGROUP_LABELS[groupKey] ?? titleCase(groupKey)}
+            </span>
+            <span className="text-xs text-silver/30">{groupAssets.length}</span>
+            <div className="h-px flex-1 bg-[rgba(200,168,76,0.06)]" />
+          </div>
+
+          {/* Asset list */}
+          <div className="space-y-0.5">
+            {groupAssets.map((asset) => (
+              <AssetListItem
+                key={asset.id}
+                asset={asset}
+                isSelected={selectedId === asset.id}
+                onSelect={() => onSelectAsset(asset.id)}
+                large={useLargeThumbs && groupKey === "bosses"}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Filter Select ────────────────────────────────────────────────────────
+
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+  showAll = true,
+}: {
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+  showAll?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.8)] px-2.5 py-1.5 text-xs text-silver-bright outline-none transition-colors focus:border-gold/40 [&>option]:bg-void"
+      >
+        {showAll && <option value="">All</option>}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ── Main Panel ───────────────────────────────────────────────────────────
 
 export function SvgFileCatalogPanel() {
   const catalog = getLoadedSvgAssetCatalog();
   const assets = catalog.assets;
 
-  // Filter state
+  // Navigation state
+  const [activeView, setActiveView] = useState<SvgCatalogView>("hq-rooms");
+  const [activeSubGroup, setActiveSubGroup] = useState("");
   const [search, setSearch] = useState("");
-  const [activeFamily, setActiveFamily] = useState<SvgCatalogFamily | null>(null);
-  const [collection, setCollection] = useState("");
-  const [type, setType] = useState("");
-  const [section, setSection] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedRoomGroup, setSelectedRoomGroup] = useState<string | null>(null);
 
   // Display state
   const [presetId, setPresetId] = useState("neutral");
   const [zoom, setZoom] = useState(1);
 
-  // Wheel-zoom on the preview area (needs non-passive listener)
+  // Wheel-zoom on the preview area
   const mainRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
     const handler = (e: WheelEvent) => {
-      // Only zoom when cursor is over the preview (not the metadata)
       const target = e.target as HTMLElement;
       if (!target.closest("[data-preview-area]")) return;
       e.preventDefault();
@@ -284,47 +592,54 @@ export function SvgFileCatalogPanel() {
     return () => el.removeEventListener("wheel", handler);
   }, []);
 
-  // Cascading filter options — narrow based on active filters
-  const filterOptions = useMemo(() => {
-    let base = [...assets] as readonly SvgCatalogAsset[];
-    if (activeFamily) base = base.filter((a) => a.family === activeFamily);
+  // Available sub-groups for the active view
+  const subGroupOptions = useMemo(() => {
+    const viewAssets = assets.filter((a) => a.view === activeView);
+    const order = SUBGROUP_ORDER[activeView] ?? [];
+    const seen = new Set<string>();
+    for (const a of viewAssets) {
+      if (a.subGroup) seen.add(a.subGroup);
+    }
+    const ordered: { value: string; label: string }[] = [];
+    for (const key of order) {
+      if (seen.has(key)) {
+        ordered.push({ value: key, label: SUBGROUP_LABELS[key] ?? titleCase(key) });
+        seen.delete(key);
+      }
+    }
+    for (const key of [...seen].sort()) {
+      ordered.push({ value: key, label: SUBGROUP_LABELS[key] ?? titleCase(key) });
+    }
+    return ordered;
+  }, [assets, activeView]);
 
-    const collections = [...new Set(base.map((a) => a.pack))]
-      .sort()
-      .map((v) => ({ value: v, label: titleCase(v) }));
+  // View options for the dropdown
+  const viewOptions = useMemo(() => {
+    const counts = new Map<SvgCatalogView, number>();
+    for (const asset of assets) {
+      counts.set(asset.view, (counts.get(asset.view) ?? 0) + 1);
+    }
+    return (Object.keys(VIEW_LABELS) as SvgCatalogView[])
+      .filter((v) => (counts.get(v) ?? 0) > 0)
+      .map((v) => ({
+        value: v,
+        label: `${VIEW_LABELS[v]} (${counts.get(v)})`,
+      }));
+  }, [assets]);
 
-    const afterCollection = collection ? base.filter((a) => a.pack === collection) : base;
-    const types = [...new Set(afterCollection.map((a) => a.stage))]
-      .sort()
-      .map((v) => ({ value: v, label: titleCase(v) }));
-
-    const afterType = type ? afterCollection.filter((a) => a.stage === type) : afterCollection;
-    const sections = [
-      ...new Set(afterType.map((a) => a.section).filter((s): s is string => s !== null)),
-    ]
-      .sort()
-      .map((v) => ({ value: v, label: titleCase(v) }));
-
-    return { collections, types, sections };
-  }, [assets, activeFamily, collection, type]);
-
-  // Filtered assets
+  // Filtered assets for the active view + sub-group
   const filteredAssets = useMemo(() => {
     const q = search.toLowerCase().trim();
     return assets.filter((asset) => {
-      if (activeFamily && asset.family !== activeFamily) return false;
-      if (collection && asset.pack !== collection) return false;
-      if (type && asset.stage !== type) return false;
-      if (section && asset.section !== section) return false;
+      if (asset.view !== activeView) return false;
+      if (activeSubGroup && asset.subGroup !== activeSubGroup) return false;
       if (q) {
         const haystack = [
           asset.label,
           asset.filename,
           asset.url,
-          asset.family,
-          asset.pack,
-          asset.stage,
-          asset.section ?? "",
+          asset.subGroup ?? "",
+          asset.roomBaseName ?? "",
         ]
           .join(" ")
           .toLowerCase();
@@ -332,44 +647,59 @@ export function SvgFileCatalogPanel() {
       }
       return true;
     });
-  }, [assets, search, activeFamily, collection, type, section]);
+  }, [assets, activeView, activeSubGroup, search]);
 
-  // Family counts (always against full catalog, not filtered)
-  const familyCounts = useMemo(() => {
-    const counts = new Map<SvgCatalogFamily, number>();
-    for (const asset of assets) {
-      counts.set(asset.family, (counts.get(asset.family) ?? 0) + 1);
-    }
-    return counts;
-  }, [assets]);
+  const hasFilters = search.length > 0 || activeSubGroup.length > 0;
 
-  const hasFilters = !!(search || activeFamily || collection || type || section);
-
-  // Clear selection if selected asset is filtered out
+  // Clear selection if it's filtered out
   const effectiveSelectedId =
     selectedId && filteredAssets.some((a) => a.id === selectedId) ? selectedId : null;
   const effectiveSelectedAsset = effectiveSelectedId
-    ? (assets.find((a) => a.id === effectiveSelectedId) ?? null)
+    ? (filteredAssets.find((a) => a.id === effectiveSelectedId) ?? null)
     : null;
 
-  const clearFilters = useCallback(() => {
-    setSearch("");
-    setActiveFamily(null);
-    setCollection("");
-    setType("");
-    setSection("");
-  }, []);
+  // Room comparison data — filter directly instead of building full groups map
+  const roomComparisonTiers = useMemo(() => {
+    if (activeView !== "hq-rooms" || !selectedRoomGroup) return null;
+    const tiers = assets
+      .filter((a) => a.view === "hq-rooms" && a.roomBaseName === selectedRoomGroup)
+      .sort((a, b) => (a.tier ?? 1) - (b.tier ?? 1));
+    return tiers.length > 0 ? tiers : null;
+  }, [assets, activeView, selectedRoomGroup]);
 
-  function toggleFamily(family: SvgCatalogFamily) {
-    if (activeFamily === family) {
-      setActiveFamily(null);
-    } else {
-      setActiveFamily(family);
-      setCollection("");
-      setType("");
-      setSection("");
-    }
+  function changeView(view: SvgCatalogView) {
+    setActiveView(view);
+    setActiveSubGroup("");
+    setSelectedId(null);
+    setSelectedRoomGroup(null);
   }
+
+  const handleSelectRoom = useCallback(
+    (roomBaseName: string) => {
+      if (selectedRoomGroup === roomBaseName) {
+        setSelectedRoomGroup(null);
+      } else {
+        setSelectedRoomGroup(roomBaseName);
+        setSelectedId(null);
+      }
+    },
+    [selectedRoomGroup],
+  );
+
+  const handleSelectAsset = useCallback(
+    (id: string) => {
+      setSelectedId(effectiveSelectedId === id ? null : id);
+      setSelectedRoomGroup(null);
+    },
+    [effectiveSelectedId],
+  );
+
+  // Determine what the detail panel shows
+  const showRoomComparison =
+    activeView === "hq-rooms" &&
+    selectedRoomGroup &&
+    roomComparisonTiers &&
+    !effectiveSelectedAsset;
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
@@ -380,56 +710,21 @@ export function SvgFileCatalogPanel() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search assets..." />
         </div>
 
-        {/* Family toggle chips */}
-        <div className="flex flex-wrap gap-1.5 border-b border-[rgba(200,168,76,0.06)] px-3 py-2.5">
-          {(Object.keys(FAMILY_LABELS) as SvgCatalogFamily[]).map((family) => {
-            const count = familyCounts.get(family) ?? 0;
-            if (count === 0) return null;
-            const isActive = activeFamily === family;
-            return (
-              <button
-                key={family}
-                type="button"
-                onClick={() => toggleFamily(family)}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
-                  isActive
-                    ? "border-gold/30 bg-gold/15 text-gold"
-                    : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.5)] text-silver/50 hover:border-[rgba(200,168,76,0.15)] hover:text-silver/70"
-                }`}
-              >
-                {FAMILY_LABELS[family]} <span className="opacity-50">{count}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* Filter dropdowns */}
         <div className="grid grid-cols-2 gap-2 border-b border-[rgba(200,168,76,0.06)] p-3">
           <FilterSelect
-            label="Collection"
-            value={collection}
-            onChange={(v) => {
-              setCollection(v);
-              setType("");
-              setSection("");
-            }}
-            options={filterOptions.collections}
+            label="View"
+            value={activeView}
+            onChange={(v) => changeView(v as SvgCatalogView)}
+            options={viewOptions}
+            showAll={false}
           />
-          <FilterSelect
-            label="Type"
-            value={type}
-            onChange={(v) => {
-              setType(v);
-              setSection("");
-            }}
-            options={filterOptions.types}
-          />
-          {filterOptions.sections.length > 0 && (
+          {subGroupOptions.length > 0 && (
             <FilterSelect
-              label="Section"
-              value={section}
-              onChange={setSection}
-              options={filterOptions.sections}
+              label="Group"
+              value={activeSubGroup}
+              onChange={setActiveSubGroup}
+              options={subGroupOptions}
             />
           )}
         </div>
@@ -441,7 +736,10 @@ export function SvgFileCatalogPanel() {
             {hasFilters && (
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={() => {
+                  setSearch("");
+                  setActiveSubGroup("");
+                }}
                 className="ml-2 text-gold/70 transition-colors hover:text-gold"
               >
                 clear
@@ -450,21 +748,21 @@ export function SvgFileCatalogPanel() {
           </span>
         </div>
 
-        {/* Asset list */}
-        <div className="max-h-[42vh] flex-1 space-y-0.5 overflow-y-auto p-2 lg:max-h-none">
-          {filteredAssets.length === 0 ? (
-            <div className={`${emptyStateClass} py-10`}>
-              <p className="text-xs text-silver/60">No assets match your filters</p>
-            </div>
+        {/* View-specific list */}
+        <div className="max-h-[42vh] flex-1 overflow-y-auto lg:max-h-none">
+          {activeView === "hq-rooms" ? (
+            <HqRoomsViewList
+              assets={filteredAssets}
+              selectedRoomGroup={selectedRoomGroup}
+              onSelectRoom={handleSelectRoom}
+            />
           ) : (
-            filteredAssets.map((asset) => (
-              <AssetListItem
-                key={asset.id}
-                asset={asset}
-                isSelected={effectiveSelectedId === asset.id}
-                onSelect={() => setSelectedId(effectiveSelectedId === asset.id ? null : asset.id)}
-              />
-            ))
+            <GroupedAssetList
+              assets={filteredAssets}
+              view={activeView}
+              selectedId={effectiveSelectedId}
+              onSelectAsset={handleSelectAsset}
+            />
           )}
         </div>
       </aside>
@@ -528,7 +826,7 @@ export function SvgFileCatalogPanel() {
             </button>
           </div>
 
-          {effectiveSelectedAsset && (
+          {(effectiveSelectedAsset || showRoomComparison) && (
             <>
               <div className="h-4 w-px bg-[rgba(200,168,76,0.06)]" />
               <span className="text-xs text-silver/40">Scroll to zoom in preview</span>
@@ -545,13 +843,29 @@ export function SvgFileCatalogPanel() {
               presetId={presetId}
               zoom={zoom}
             />
+          ) : showRoomComparison && roomComparisonTiers ? (
+            <RoomComparisonView
+              key={selectedRoomGroup}
+              roomBaseName={selectedRoomGroup}
+              tiers={roomComparisonTiers}
+              presetId={presetId}
+              zoom={zoom}
+              onSelectTier={(id) => {
+                setSelectedId(id);
+              }}
+            />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
               <div className="text-2xl text-gold/15">&loz;</div>
-              <p className="text-xs text-silver/60">Select an SVG asset to inspect</p>
+              <p className="text-xs text-silver/60">
+                {activeView === "hq-rooms"
+                  ? "Select a room to compare upgrade tiers"
+                  : "Select an asset to inspect"}
+              </p>
               <p className="max-w-md text-sm leading-relaxed text-silver/40">
-                Browse all {assets.length} shipped SVG files. Use the family chips and filters to
-                narrow results, or search by name.
+                Browse {filteredAssets.length} assets in{" "}
+                <span className="text-gold/50">{VIEW_LABELS[activeView]}</span>. Use the tabs to
+                switch views or search by name.
               </p>
             </div>
           )}

@@ -39,11 +39,7 @@ import {
   type SimCommand,
   type StableSimCommandType,
 } from "sim";
-import {
-  getCompatibleOperatorGearOptions,
-  getLoadedOperatorAppearanceRecipes,
-  selectOperatorAppearanceRecipeId,
-} from "save/appearance";
+import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import { getSlotKey } from "lib/hq-room-state";
 import { normalizeGameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
@@ -51,21 +47,24 @@ import { visitorQualityToRank } from "lib/visitor-rank";
 import type { AudioCueId } from "app/features/audio";
 import type {
   AiConnectionStatus,
+  AiGenerationProgress,
   AiGenerationSurface,
   AiRequestRecord,
   AiRequestTriggerSource,
   AiRuntimeProbeResult,
   LocalAiTransportConfig,
 } from "app/features/ai";
-import { localAiClient } from "app/features/ai";
+import {
+  buildIncidentFramingPayload,
+  buildOperatorIdentityPayload,
+  localAiClient,
+} from "app/features/ai";
 import { readGameSettings } from "app/features/settings/storage";
-import { getAllowedPreferredMissionTags, getSpecialtyOptionsForRole } from "sim/systems/commands";
 
 const AUTONOMOUS_TICK_INTERVAL_MS = 1000;
 const AUTOSAVE_INTERVAL_MS = 10 * 60 * 1000;
 const PRESENTATION_FRAME_INTERVAL_MS = 50;
 const FIRST_INCIDENT_OPENING_BEAT_ID = "guidance/opening/first-incident";
-const AI_INCIDENT_GENERATION_TIMEOUT_MS = 8000;
 
 /** Duration for an actor to travel between rooms (ms). */
 const ACTOR_MOVE_DURATION_MS = 800;
@@ -586,6 +585,7 @@ function createRuntimeSession(
   let autoTickInterval: ReturnType<typeof setInterval> | undefined;
   let autosaveTimeout: ReturnType<typeof setTimeout> | undefined;
   let presentationRefreshInterval: ReturnType<typeof setInterval> | undefined;
+  let aiProgressRefreshInterval: ReturnType<typeof setInterval> | undefined;
   let autoTickEnabled = false;
   let autoTickPending = false;
   let mutationQueue = Promise.resolve();
@@ -604,6 +604,15 @@ function createRuntimeSession(
 
   const notifyListeners = () => {
     listeners.forEach((listener) => listener(session));
+  };
+
+  const clearAiProgressRefreshInterval = () => {
+    if (!aiProgressRefreshInterval) {
+      return;
+    }
+
+    clearInterval(aiProgressRefreshInterval);
+    aiProgressRefreshInterval = undefined;
   };
 
   const clearAutoTickInterval = () => {
@@ -1711,6 +1720,33 @@ function createRuntimeSession(
   let aiConnectionStatus: AiConnectionStatus = "unknown";
   let aiLastProbe: AiRuntimeProbeResult | null = null;
 
+  function hasAnyPendingAiRequest(): boolean {
+    for (const record of aiRequests.values()) {
+      if (record.status === "pending") return true;
+    }
+    return false;
+  }
+
+  function syncAiProgressRefresh(): void {
+    if (closed || !hasAnyPendingAiRequest()) {
+      clearAiProgressRefreshInterval();
+      return;
+    }
+
+    if (aiProgressRefreshInterval) {
+      return;
+    }
+
+    aiProgressRefreshInterval = setInterval(() => {
+      if (closed || !hasAnyPendingAiRequest()) {
+        clearAiProgressRefreshInterval();
+        return;
+      }
+
+      notifyListeners();
+    }, 250);
+  }
+
   function makeAiRequestKey(surface: AiGenerationSurface, subjectId: string): string {
     return `${surface}:${subjectId}`;
   }
@@ -1772,16 +1808,6 @@ function createRuntimeSession(
 
   function getAiConfigFingerprint(config: LocalAiTransportConfig): string {
     return `${config.runtimeKind}|${config.baseUrl}|${config.modelId}`;
-  }
-
-  function getOperatorIdentityMaxRarity(quality: number): "common" | "uncommon" | "rare" {
-    if (quality >= 82) {
-      return "rare";
-    }
-    if (quality >= 72) {
-      return "uncommon";
-    }
-    return "common";
   }
 
   const autoIncidentPresentationRequests = new Set<string>();
@@ -1861,7 +1887,7 @@ function createRuntimeSession(
         const generationResult = await commands.generateAiSurface({
           surface: "operator-identity",
           subjectId: nextVisitor.id,
-          payload: buildOperatorIdentityPayload(latestVisitor),
+          payload: buildOperatorIdentityPayload(session, latestVisitor),
           triggerSource: "auto",
         });
 
@@ -1925,234 +1951,6 @@ function createRuntimeSession(
         schedulePendingVisitorIdentityGeneration();
       }
     })();
-  }
-
-  function buildIncidentFramingPayload() {
-    const incident = readPendingIncident();
-    if (!incident) {
-      return null;
-    }
-
-    const operatorsById = new Map(
-      session.phase1View.operators.map((operator) => [operator.id, operator]),
-    );
-    const boundOperators = incident.boundContext.operatorIds
-      .map((operatorId) => operatorsById.get(operatorId))
-      .filter(
-        (operator): operator is RuntimePhase1View["operators"][number] => operator !== undefined,
-      );
-
-    const relationship =
-      incident.boundContext.operatorIds.length === 2
-        ? session.phase1View.relationshipSignals.find((signal) => {
-            const ids = [signal.operatorAId, signal.operatorBId];
-            return incident.boundContext.operatorIds.every((operatorId) =>
-              ids.includes(operatorId),
-            );
-          })
-        : undefined;
-
-    const phase2View = simulation.getPhase2View();
-    const room =
-      incident.boundContext.roomId !== undefined
-        ? session.phase1View.rooms.find((entry) => entry.id === incident.boundContext.roomId)
-        : undefined;
-    const roomTemplate = room ? session.registry.roomById.get(room.templateId) : undefined;
-    const roomCulture =
-      incident.boundContext.roomId !== undefined
-        ? phase2View.roomCultures.find((entry) => entry.roomId === incident.boundContext.roomId)
-        : undefined;
-
-    return {
-      incidentId: incident.instanceId,
-      templateId: incident.templateId,
-      templateName: incident.templateName,
-      category: incident.category,
-      tags: [...incident.tags],
-      triggerFamily: incident.triggerFamily,
-      guildName: session.phase1View.identity.guildName,
-      buildingId: session.phase1View.building.activeBuildingId,
-      buildingName: session.phase1View.building.activeBuildingName,
-      dayNumber: session.phase1View.clock.day,
-      minuteOfDay: session.phase1View.clock.minuteOfDay,
-      subjectSummary: incident.boundContext.operatorIds
-        .map((operatorId) => operatorsById.get(operatorId)?.identity.name ?? operatorId)
-        .concat(room ? [room.name] : [])
-        .join(", "),
-      operators: boundOperators.map((operator) => ({
-        id: operator.id,
-        name: operator.identity.name,
-        roleTag: operator.identity.roleTag,
-        specialtyTag: operator.identity.specialtyTag,
-        attunementTag: operator.combat?.attunementTag ?? "",
-        rank: operator.combat?.rank ?? "f",
-        traits: [...(operator.combat?.traits ?? [])],
-        morale: { ...operator.morale },
-        loyalty: { ...operator.loyalty },
-        needs: { ...operator.needs },
-        injury: { ...operator.injury },
-        preferences: {
-          ...operator.preferences,
-          preferredMissionTags: [...operator.preferences.preferredMissionTags],
-          preferredPartnerIds: [...operator.preferences.preferredPartnerIds],
-        },
-      })),
-      ...(relationship
-        ? {
-            relationship: {
-              operatorAId: relationship.operatorAId,
-              operatorBId: relationship.operatorBId,
-              trust: relationship.trust,
-              friction: relationship.friction,
-              familiarity: relationship.familiarity,
-              recentSharedOutcome: relationship.recentSharedOutcome,
-              historyTags: [...relationship.historyTags],
-            },
-          }
-        : {}),
-      ...(room
-        ? {
-            room: {
-              id: room.id,
-              name: room.name,
-              templateId: room.templateId,
-              functionTag:
-                roomTemplate?.tags.find((tag) => tag.startsWith("room:")) ??
-                room.requiredStaffTag ??
-                room.templateId,
-              ...(roomCulture ? { cultureSummary: roomCulture.summary } : {}),
-              ...(roomCulture && roomCulture.signals.length > 0
-                ? { cultureSignals: [...roomCulture.signals] }
-                : {}),
-            },
-          }
-        : {}),
-      choices: incident.choices.map((choice) => ({
-        choiceId: choice.choiceId,
-        defaultLabel: choice.label,
-        defaultDescription: choice.description,
-        defaultConsequenceSummary: choice.consequenceSummary,
-        deterministicEffects: choice.effects.map((effect) => ({
-          kind: effect.kind,
-          targetRef: effect.targetRef,
-          value: effect.value,
-        })),
-      })),
-    };
-  }
-
-  function buildOperatorIdentityPayload(
-    visitor: RuntimePhase1View["visitors"][number],
-  ): Record<string, unknown> {
-    const allowedRecipes = getLoadedOperatorAppearanceRecipes().map((recipe) => ({
-      id: recipe.id,
-      name: recipe.name,
-      bodySilhouette: recipe.bodySilhouette,
-      palette: recipe.palette,
-      skinTone: recipe.skinTone,
-    }));
-    const maxRarity = getOperatorIdentityMaxRarity(visitor.quality);
-    const allowedVisibleGearByRecipe = allowedRecipes.map((recipe) => ({
-      recipeId: recipe.id,
-      weaponPartIds: getCompatibleOperatorGearOptions({
-        category: "weapon",
-        roleTag: visitor.desiredRoleTag,
-        recipeId: recipe.id,
-        maxRarity,
-      }).map((part) => part.id),
-      outfitOverlayPartIds: getCompatibleOperatorGearOptions({
-        category: "outfit-overlay",
-        roleTag: visitor.desiredRoleTag,
-        recipeId: recipe.id,
-        maxRarity,
-      }).map((part) => part.id),
-      accessoryPartIds: getCompatibleOperatorGearOptions({
-        category: "accessory",
-        roleTag: visitor.desiredRoleTag,
-        recipeId: recipe.id,
-        maxRarity,
-      }).map((part) => part.id),
-    }));
-
-    const gearCatalog = {
-      weapon: [
-        ...new Map(
-          allowedRecipes.flatMap((recipe) =>
-            getCompatibleOperatorGearOptions({
-              category: "weapon",
-              roleTag: visitor.desiredRoleTag,
-              recipeId: recipe.id,
-              maxRarity,
-            }).map((part) => [part.id, { id: part.id, tags: [...part.tags], rarity: part.rarity }]),
-          ),
-        ).values(),
-      ],
-      outfitOverlay: [
-        ...new Map(
-          allowedRecipes.flatMap((recipe) =>
-            getCompatibleOperatorGearOptions({
-              category: "outfit-overlay",
-              roleTag: visitor.desiredRoleTag,
-              recipeId: recipe.id,
-              maxRarity,
-            }).map((part) => [part.id, { id: part.id, tags: [...part.tags], rarity: part.rarity }]),
-          ),
-        ).values(),
-      ],
-      accessory: [
-        ...new Map(
-          allowedRecipes.flatMap((recipe) =>
-            getCompatibleOperatorGearOptions({
-              category: "accessory",
-              roleTag: visitor.desiredRoleTag,
-              recipeId: recipe.id,
-              maxRarity,
-            }).map((part) => [part.id, { id: part.id, tags: [...part.tags], rarity: part.rarity }]),
-          ),
-        ).values(),
-      ],
-    };
-
-    return {
-      candidateId: visitor.id,
-      guildName: session.phase1View.identity.guildName,
-      buildingName: session.phase1View.building.activeBuildingName,
-      dayNumber: session.phase1View.clock.day,
-      name: visitor.name,
-      roleTag: visitor.desiredRoleTag,
-      quality: visitor.quality,
-      expectedLoyalty: visitor.expectedLoyalty,
-      allowedSpecialtyTags: [...getSpecialtyOptionsForRole(visitor.desiredRoleTag)],
-      allowedPreferredMissionTags: [...getAllowedPreferredMissionTags()],
-      allowedRecipes,
-      allowedVisibleGearByRecipe,
-      gearCatalog,
-      fallbackIdentity: {
-        specialtyTag:
-          visitor.specialtyTag ?? `focus:${visitor.desiredRoleTag.replace(/^role:/, "")}`,
-        appearance: {
-          presetId:
-            visitor.appearance?.presetId ??
-            selectOperatorAppearanceRecipeId({ stableKey: visitor.id }),
-          ...(visitor.appearance?.visibleGear
-            ? { visibleGear: { ...visitor.appearance.visibleGear } }
-            : {}),
-        },
-        preferences: {
-          riskTolerance: visitor.preferences?.riskTolerance ?? 50,
-          rewardFocus: visitor.preferences?.rewardFocus ?? 50,
-          recoveryBias: visitor.preferences?.recoveryBias ?? 50,
-          socialBias: visitor.preferences?.socialBias ?? 50,
-          trainingBias: visitor.preferences?.trainingBias ?? 50,
-          comfortBias: visitor.preferences?.comfortBias ?? 50,
-          preferredMissionTags: [...(visitor.preferences?.preferredMissionTags ?? [])],
-        },
-        personaSummary:
-          visitor.personaSummary ??
-          `${visitor.name} reads like a plausible ${visitor.desiredRoleTag.replace(/^role:/, "").replaceAll("_", " ")} hire.`,
-        personaHooks: [...(visitor.personaHooks ?? [])],
-      },
-    };
   }
 
   function buildGeneratedIncidentPresentation(output: Record<string, unknown>) {
@@ -2231,11 +2029,11 @@ function createRuntimeSession(
 
     void (async () => {
       try {
-        const payload = buildIncidentFramingPayload();
-        if (!payload) {
-          autoIncidentPresentationRequests.delete(requestKey);
+        const pendingIncident = readPendingIncident();
+        if (!pendingIncident) {
           return;
         }
+        const payload = buildIncidentFramingPayload(session, pendingIncident);
 
         const settings = readGameSettings().ai;
         if (!settings.enabled) {
@@ -2243,24 +2041,12 @@ function createRuntimeSession(
           return;
         }
 
-        const generationResult = await Promise.race([
-          commands.generateAiSurface({
-            surface: "incident-framing",
-            subjectId: incident.instanceId,
-            payload,
-            triggerSource: "auto",
-          }),
-          new Promise<"timeout">((resolve) => {
-            setTimeout(() => resolve("timeout"), AI_INCIDENT_GENERATION_TIMEOUT_MS);
-          }),
-        ]);
-
-        if (generationResult === "timeout") {
-          await fallbackToAuthored(
-            `Timed out after ${AI_INCIDENT_GENERATION_TIMEOUT_MS}ms; using authored incident copy.`,
-          );
-          return;
-        }
+        const generationResult = await commands.generateAiSurface({
+          surface: "incident-framing",
+          subjectId: incident.instanceId,
+          payload,
+          triggerSource: "auto",
+        });
 
         if (generationResult.status !== "succeeded" || !generationResult.result) {
           await fallbackToAuthored(
@@ -2502,12 +2288,28 @@ function createRuntimeSession(
         payloadVersion,
         startedAt: Date.now(),
         finishedAt: null,
+        progress: {
+          phase: "queued",
+          attempt: 1,
+          message: "Queued for generation…",
+          receivedCharacters: 0,
+          partialText: null,
+          updatedAt: Date.now(),
+        },
         result: null,
         error: null,
       };
 
       aiRequests.set(key, record);
+      syncAiProgressRefresh();
       notifyListeners();
+
+      const updateProgress = (progress: AiGenerationProgress): void => {
+        record.progress = progress;
+        if (aiRequests.get(key) === record) {
+          syncAiProgressRefresh();
+        }
+      };
 
       const finalizeRecord = (
         status: AiRequestRecord["status"],
@@ -2517,6 +2319,7 @@ function createRuntimeSession(
         record.finishedAt = overrides.finishedAt;
         record.result = overrides.result;
         record.error = overrides.error;
+        syncAiProgressRefresh();
         if (aiRequests.get(key) === record) {
           notifyListeners();
         }
@@ -2526,6 +2329,14 @@ function createRuntimeSession(
       const requestPromise = (async (): Promise<AiRequestRecord> => {
         const unsupportedSurfaceError = getUnsupportedAiSurfaceError(input.surface);
         if (unsupportedSurfaceError) {
+          updateProgress({
+            phase: "queued",
+            attempt: 1,
+            message: unsupportedSurfaceError,
+            receivedCharacters: 0,
+            partialText: null,
+            updatedAt: Date.now(),
+          });
           return finalizeRecord("failed", {
             finishedAt: Date.now(),
             result: null,
@@ -2534,12 +2345,26 @@ function createRuntimeSession(
         }
 
         try {
-          const result = await localAiClient.generate({
-            surface: input.surface,
-            subjectId: input.subjectId,
-            payload,
-            payloadVersion,
-            config,
+          const result = await localAiClient.generate(
+            {
+              surface: input.surface,
+              subjectId: input.subjectId,
+              payload,
+              payloadVersion,
+              config,
+            },
+            {
+              onProgress: updateProgress,
+            },
+          );
+
+          updateProgress({
+            phase: "validating",
+            attempt: record.progress?.attempt === 2 ? 2 : 1,
+            message: "Validated JSON successfully.",
+            receivedCharacters: record.progress?.receivedCharacters ?? 0,
+            partialText: record.progress?.partialText ?? null,
+            updatedAt: Date.now(),
           });
 
           return finalizeRecord("succeeded", {
@@ -2702,6 +2527,7 @@ function createRuntimeSession(
 
       closed = true;
       clearAutosaveTimeout();
+      clearAiProgressRefreshInterval();
       if (presentationRefreshInterval) {
         clearInterval(presentationRefreshInterval);
         presentationRefreshInterval = undefined;

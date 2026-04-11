@@ -1352,6 +1352,15 @@ const COMMANDS: DevConsoleCommand[] = [
         `  Connection: ${ctx.session.ai.connectionStatus}`,
         `  Pending requests: ${[...ctx.session.ai.requests.values()].filter((r) => r.status === "pending").length}`,
       ];
+      const activeRequest = [...ctx.session.ai.requests.values()].find(
+        (request) => request.status === "pending",
+      );
+      if (activeRequest?.progress) {
+        lines.push(
+          `  Active phase: ${activeRequest.progress.phase} (attempt ${activeRequest.progress.attempt}, chars ${activeRequest.progress.receivedCharacters})`,
+        );
+        lines.push(`  Active detail: ${activeRequest.progress.message}`);
+      }
       if (probe) {
         lines.push(`  Last probe: ${new Date(probe.probedAt).toLocaleTimeString()}`);
         if (probe.availableModels.length > 0) {
@@ -1484,6 +1493,10 @@ const COMMANDS: DevConsoleCommand[] = [
         `  Surface: ${record.surface}`,
         `  Subject: ${record.subjectId}`,
         `  Status: ${record.status}`,
+        record.progress ? `  Phase: ${record.progress.phase}` : null,
+        record.progress ? `  Attempt: ${record.progress.attempt}` : null,
+        record.progress ? `  Received chars: ${record.progress.receivedCharacters}` : null,
+        record.progress ? `  Detail: ${record.progress.message}` : null,
         `  Trigger: ${record.triggerSource}`,
         `  Runtime: ${record.runtimeKind}`,
         `  Model: ${record.modelId}`,

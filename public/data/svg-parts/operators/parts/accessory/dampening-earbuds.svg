@@ -1,0 +1,22 @@
+<!-- Operator Part: Dampening Earbuds — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: rare | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, rift-dampening earbuds in both ears -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Left earbud -->
+  <ellipse cx="34" cy="40" rx="2.5" ry="3" fill="#1a2440" stroke="#2a3555" stroke-width="0.5" />
+  <!-- Left earbud inner -->
+  <circle cx="34" cy="40" r="1.2" fill="#2a3555" opacity="0.5" />
+  <!-- Left dampening glow -->
+  <circle cx="34" cy="40" r="4" fill="#6a5fcf" opacity="0.06" />
+  <!-- Right earbud -->
+  <ellipse cx="86" cy="40" rx="2.5" ry="3" fill="#1a2440" stroke="#2a3555" stroke-width="0.5" />
+  <!-- Right earbud inner -->
+  <circle cx="86" cy="40" r="1.2" fill="#2a3555" opacity="0.5" />
+  <!-- Right dampening glow -->
+  <circle cx="86" cy="40" r="4" fill="#6a5fcf" opacity="0.06" />
+  <!-- Tech indicator LEDs -->
+  <circle cx="36" cy="38" r="0.6" fill="#6a5fcf" opacity="0.5" />
+  <circle cx="84" cy="38" r="0.6" fill="#6a5fcf" opacity="0.5" />
+  <!-- Band (behind head) -->
+  <path d="M36 39 Q60 34 84 39" stroke="#1a2440" stroke-width="0.6" fill="none" opacity="0.3" />
+</svg>

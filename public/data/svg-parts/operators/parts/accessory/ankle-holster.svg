@@ -1,0 +1,16 @@
+<!-- Operator Part: Ankle Holster — accessory overlay for raid-context portraits -->
+<!-- Category: accessory | Rarity: uncommon | Body: lean, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, concealed holster on right ankle -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Ankle strap -->
+  <path d="M70 148 Q76 146 82 148 Q84 150 82 152 Q76 154 70 152 Q68 150 70 148"
+    fill="#3d2c20" opacity="0.5" stroke="#5a4030" stroke-width="0.5" />
+  <!-- Mini holster -->
+  <rect x="74" y="142" width="5" height="8" rx="1" fill="#3d2c20" opacity="0.6" stroke="#5a4030" stroke-width="0.5" />
+  <!-- Holster flap -->
+  <line x1="74" y1="142" x2="79" y2="142" stroke="#5a4030" stroke-width="0.8" opacity="0.5" />
+  <!-- Snap closure -->
+  <circle cx="76.5" cy="143" r="0.6" fill="#b8b0a0" opacity="0.5" />
+  <!-- Grip peeking out -->
+  <rect x="75" y="140" width="3" height="3" rx="0.5" fill="#1a2440" opacity="0.5" />
+</svg>

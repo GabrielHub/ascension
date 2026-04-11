@@ -1,6 +1,16 @@
 # World Content Rules
 
-This file owns future-facing content-reference rules for enemies, bosses, gear language, copy, naming, and S-rank treatment.
+This file owns future-facing content-reference rules for enemies, bosses, gear language, copy, naming, rank escalation, and S-rank treatment.
+
+## Rank Escalation Contract
+
+The game needs a deliberate climb in tone and visual language as rank rises. Difficulty alone is not enough.
+
+- F and E content should stay grounded in recognizable city reality. The place or object is wrong, but it still clearly comes from the ordinary world.
+- D and C content can become more visibly rift-touched, specialized, and physically implausible. This is where the game starts leaning harder into impossible architecture, stranger materials, and rarer operator presence.
+- B and A content should feel institutionally famous, expensive, and hard to mistake for ordinary hazard work.
+- S-rank content is where the game can spend its most spectacular ideas: singular bosses, impossible spaces, celebrity operators, and signature gear.
+- This climb applies across dungeons, enemies, bosses, operators, and gear. Do not spend S-rank spectacle on early-rank content.
 
 ## Enemy And Boss Definitions
 
@@ -36,6 +46,7 @@ Bosses anchor dungeons. A dungeon exists as long as its boss does. Killing the b
 
 - A boss should feel like the culmination of its dungeon's theme.
 - Bosses should have names. They are specific entities. Not "The Guardian" or "Dark Lord." Something that implies the dungeon's theme. For example, "The Dispatcher" for a subway boss or "The Superintendent" for a residential boss.
+- Lower-rank bosses should still feel like the warped core of a recognizable place. Higher-rank bosses can become stranger, more singular, and more visually extravagant as long as they still read as the culmination of that place.
 - S-rank bosses should be genuine spectacles - unique visual design, lore implications, and lasting world consequences.
 
 ## Gear And Weapon Logic
@@ -84,6 +95,7 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 ### Gear Rules
 
 - Gear should look like equipment professionals carry into dangerous jobs. Not fantasy armor, not sci-fi power suits. Higher-rank gear can look more impressive, but it should still read as equipment.
+- Gear should climb by rank without flattening the ladder. F and E should remain grounded, practical, and plausible. D and C can start showing stranger materials, silhouettes, and rift-touched detailing. A and S can carry the boldest signatures.
 - Weapon and gear compatibility should align with field role and attunement. Field leads favor heavier protection. Scouts favor mobility, visibility, and fast access tools. Medics carry stabilization and support kit.
 - Gear can be common, uncommon, or rare within its rank tier. Rarity reflects quality and specialization within the rank.
 - Operators should not wear raid gear inside the headquarters. HQ presentation is casual.
@@ -123,7 +135,7 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 ### Naming Rules For Gear
 
 - Gear names should be functional and descriptive. "Tactical rifle" not "Shadowbane."
-- Higher-rank gear can have slightly more evocative names, but it should still sound like equipment.
+- Higher-rank gear can have slightly more evocative names, but it should still sound like equipment rather than fantasy artifacts.
 - S-rank gear can have proper names. These are signature items tied to famous operators.
 
 ### Naming Rules For Events

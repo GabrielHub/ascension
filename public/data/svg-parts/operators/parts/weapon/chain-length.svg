@@ -1,0 +1,17 @@
+<!-- Operator Part: Chain Length — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: common | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, chain draped over shoulder and hanging -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Chain draped from left shoulder -->
+  <path d="M28 62 Q40 68 50 78 Q56 86 54 100 Q52 112 48 120"
+    stroke="#b8b0a0" stroke-width="2.5" fill="none" stroke-linecap="round" />
+  <!-- Chain highlight -->
+  <path d="M30 63 Q42 70 52 80"
+    stroke="#e0ddd6" stroke-width="0.5" fill="none" opacity="0.35" />
+  <!-- Link details -->
+  <circle cx="34" cy="65" r="1.5" fill="none" stroke="#b8b0a0" stroke-width="0.8" opacity="0.5" />
+  <circle cx="44" cy="74" r="1.5" fill="none" stroke="#b8b0a0" stroke-width="0.8" opacity="0.5" />
+  <circle cx="52" cy="86" r="1.5" fill="none" stroke="#b8b0a0" stroke-width="0.8" opacity="0.5" />
+  <circle cx="53" cy="100" r="1.5" fill="none" stroke="#b8b0a0" stroke-width="0.8" opacity="0.5" />
+  <circle cx="50" cy="112" r="1.5" fill="none" stroke="#b8b0a0" stroke-width="0.8" opacity="0.5" />
+</svg>

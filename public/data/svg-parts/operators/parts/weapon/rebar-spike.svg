@@ -1,0 +1,16 @@
+<!-- Operator Part: Rebar Spike — weapon overlay for raid-context portraits -->
+<!-- Category: weapon | Rarity: uncommon | Body: broad, medium | Pose: standing -->
+<!-- Composites on 120×160 viewBox, rebar spike strapped to back -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Main rebar shaft -->
+  <line x1="84" y1="105" x2="30" y2="15" stroke="#b8b0a0" stroke-width="2.2" stroke-linecap="round" />
+  <!-- Metal texture ridges -->
+  <line x1="72" y1="85" x2="74" y2="83" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <line x1="62" y1="68" x2="64" y2="66" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <line x1="52" y1="52" x2="54" y2="50" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <line x1="42" y1="35" x2="44" y2="33" stroke="#e0ddd6" stroke-width="0.5" opacity="0.4" />
+  <!-- Ground-down point -->
+  <line x1="30" y1="15" x2="28" y2="10" stroke="#b8b0a0" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Wrapped grip section -->
+  <line x1="78" y1="95" x2="84" y2="105" stroke="#5a4030" stroke-width="3" stroke-linecap="round" />
+</svg>

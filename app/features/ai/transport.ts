@@ -1,4 +1,6 @@
 import type {
+  AiGenerationOptions,
+  AiGenerationProgress,
   AiGenerationRequest,
   AiGenerationResult,
   AiRuntimeProbeResult,
@@ -17,12 +19,26 @@ interface ChatCompletionMessage {
 interface ChatCompletionRequest {
   model: string;
   messages: ChatCompletionMessage[];
+  stream: boolean;
+  max_tokens?: number;
+  reasoning_effort?: "none";
   temperature?: number;
   response_format?: { type: "json_object" };
 }
 
 interface ChatCompletionResponse {
   choices: { message: { content: string } }[];
+}
+
+interface ChatCompletionChunk {
+  choices?: Array<{
+    delta?: {
+      content?: string;
+    };
+    message?: {
+      content?: string;
+    };
+  }>;
 }
 
 interface ModelListResponse {
@@ -32,6 +48,10 @@ interface ModelListResponse {
 const PROBE_TIMEOUT_MS = 5000;
 const GENERATE_TIMEOUT_MS = 180000;
 
+function formatTimeoutError(timeoutMs: number): string {
+  return `Timed out after ${Math.round(timeoutMs / 1000)}s waiting for the AI runtime response.`;
+}
+
 async function fetchJson<T>(
   url: string,
   init?: RequestInit,
@@ -40,17 +60,26 @@ async function fetchJson<T>(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  const response = await fetch(url, {
-    ...init,
-    signal: controller.signal,
-  }).finally(() => {
-    clearTimeout(timeout);
-  });
+  try {
+    const response = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(formatTimeoutError(timeoutMs));
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-  return response.json() as Promise<T>;
 }
 
 function buildChatCompletionRequest(
@@ -79,8 +108,13 @@ function buildChatCompletionRequest(
         ].join("\n")
       : buildUserPrompt(request.surface, request.payload);
 
+  const maxTokens = getMaxCompletionTokens(request.surface);
+
   return {
     model: request.config.modelId,
+    stream: true,
+    ...(maxTokens !== null ? { max_tokens: maxTokens } : {}),
+    ...(request.config.runtimeKind === "ollama" ? { reasoning_effort: "none" as const } : {}),
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -88,6 +122,17 @@ function buildChatCompletionRequest(
     temperature: mode === "repair" ? 0.1 : 0.2,
     ...(mode === "primary" ? { response_format: { type: "json_object" as const } } : {}),
   };
+}
+
+export function getMaxCompletionTokens(surface: AiGenerationRequest["surface"]): number | null {
+  switch (surface) {
+    case "incident-framing":
+      return null;
+    case "operator-identity":
+      return 450;
+    default:
+      return null;
+  }
 }
 
 function stripMarkdownCodeFence(rawContent: string): string | null {
@@ -159,6 +204,204 @@ function parseModelJson(rawContent: string): unknown {
   throw new Error(`Failed to parse JSON from model response: ${rawContent.slice(0, 200)}`);
 }
 
+function findValidatedStreamJson(
+  request: Pick<AiGenerationRequest, "surface" | "payload">,
+  rawContent: string,
+): string | null {
+  const candidate = extractFirstJsonObject(rawContent);
+  if (!candidate) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(candidate);
+    const validation = validateGenerationOutput(request.surface, parsed, request.payload);
+    return validation.ok ? candidate : null;
+  } catch {
+    return null;
+  }
+}
+
+function emitProgress(
+  options: AiGenerationOptions | undefined,
+  progress: Omit<AiGenerationProgress, "updatedAt">,
+): void {
+  options?.onProgress?.({
+    ...progress,
+    updatedAt: Date.now(),
+  });
+}
+
+function summarizeStreamEvent(data: string): string {
+  const normalized = data.replaceAll(/\s+/g, " ").trim();
+  return normalized.length > 180 ? `${normalized.slice(0, 177)}...` : normalized;
+}
+
+function getStreamingDeltaContent(payload: unknown): string {
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  const chunk = payload as ChatCompletionChunk;
+  const choice = chunk.choices?.[0];
+  if (!choice) {
+    return "";
+  }
+
+  if (typeof choice.delta?.content === "string") {
+    return choice.delta.content;
+  }
+
+  if (typeof choice.message?.content === "string") {
+    return choice.message.content;
+  }
+
+  return "";
+}
+
+async function readChatCompletionStream(
+  request: Pick<AiGenerationRequest, "surface" | "payload">,
+  response: Response,
+  options: AiGenerationOptions | undefined,
+  attempt: 1 | 2,
+): Promise<string> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/event-stream")) {
+    const json = (await response.json()) as ChatCompletionResponse;
+    const rawContent = json.choices[0]?.message?.content;
+    if (!rawContent) {
+      throw new Error("No content in chat completion response");
+    }
+
+    emitProgress(options, {
+      phase: "streaming",
+      attempt,
+      message: "Received full response.",
+      receivedCharacters: rawContent.length,
+      partialText: rawContent,
+    });
+
+    return rawContent;
+  }
+
+  const body = response.body;
+  if (!body) {
+    throw new Error("Streaming response body was unavailable.");
+  }
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let content = "";
+  let sawDone = false;
+  let eventCount = 0;
+  let nonContentEventCount = 0;
+  let lastEventData: string | null = null;
+
+  emitProgress(options, {
+    phase: "streaming",
+    attempt,
+    message: "Waiting for streamed response…",
+    receivedCharacters: 0,
+    partialText: null,
+  });
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      buffer += decoder.decode();
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    buffer = buffer.replaceAll("\r\n", "\n");
+
+    let separatorIndex = buffer.indexOf("\n\n");
+    while (separatorIndex >= 0) {
+      const eventBlock = buffer.slice(0, separatorIndex).trim();
+      buffer = buffer.slice(separatorIndex + 2);
+      separatorIndex = buffer.indexOf("\n\n");
+
+      if (!eventBlock) {
+        continue;
+      }
+
+      const data = eventBlock
+        .split("\n")
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice(5).trim())
+        .join("\n");
+
+      if (!data) {
+        continue;
+      }
+
+      eventCount += 1;
+      lastEventData = data;
+
+      if (data === "[DONE]") {
+        sawDone = true;
+        break;
+      }
+
+      let parsedChunk: unknown;
+      try {
+        parsedChunk = JSON.parse(data);
+      } catch {
+        throw new Error(`Failed to parse streamed event JSON: ${summarizeStreamEvent(data)}`);
+      }
+
+      const delta = getStreamingDeltaContent(parsedChunk);
+      if (!delta) {
+        nonContentEventCount += 1;
+        continue;
+      }
+
+      content += delta;
+      emitProgress(options, {
+        phase: "streaming",
+        attempt,
+        message: `Streaming response… ${content.length} chars received.`,
+        receivedCharacters: content.length,
+        partialText: content,
+      });
+
+      const validatedJson = findValidatedStreamJson(request, content);
+      if (validatedJson) {
+        emitProgress(options, {
+          phase: "validating",
+          attempt,
+          message: "Detected a valid JSON object. Finalizing early…",
+          receivedCharacters: validatedJson.length,
+          partialText: validatedJson,
+        });
+        await reader.cancel();
+        return validatedJson;
+      }
+    }
+
+    if (sawDone) {
+      break;
+    }
+  }
+
+  if (content.length === 0) {
+    const streamSummary =
+      eventCount > 0
+        ? `Received ${eventCount} stream events (${nonContentEventCount} without content).`
+        : "Received no stream events.";
+    const lastEventSummary =
+      lastEventData && lastEventData !== "[DONE]"
+        ? ` Last event: ${summarizeStreamEvent(lastEventData)}`
+        : "";
+    throw new Error(
+      `No content in streamed chat completion response. ${streamSummary}${lastEventSummary}`,
+    );
+  }
+
+  return content;
+}
+
 export function parseGenerationContent(
   request: Pick<
     AiGenerationRequest,
@@ -221,34 +464,90 @@ export async function probeRuntime(config: LocalAiTransportConfig): Promise<AiRu
   }
 }
 
-export async function generate(request: AiGenerationRequest): Promise<AiGenerationResult> {
+export async function generate(
+  request: AiGenerationRequest,
+  options?: AiGenerationOptions,
+): Promise<AiGenerationResult> {
   const completionsUrl = `${request.config.baseUrl}/chat/completions`;
 
   async function requestRawContent(mode: "primary" | "repair"): Promise<string> {
+    const attempt = mode === "repair" ? 2 : 1;
     const body = buildChatCompletionRequest(request, mode);
-    const response = await fetchJson<ChatCompletionResponse>(
-      completionsUrl,
-      {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GENERATE_TIMEOUT_MS);
+
+    emitProgress(options, {
+      phase: mode === "repair" ? "repairing" : "requesting",
+      attempt,
+      message:
+        mode === "repair"
+          ? "Retrying with a stricter JSON repair prompt…"
+          : "Sending request to the AI runtime…",
+      receivedCharacters: 0,
+      partialText: null,
+    });
+
+    try {
+      const response = await fetch(completionsUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      },
-      GENERATE_TIMEOUT_MS,
-    );
+        signal: controller.signal,
+      });
 
-    const rawContent = response.choices[0]?.message?.content;
-    if (!rawContent) {
-      throw new Error("No content in chat completion response");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      emitProgress(options, {
+        phase: "streaming",
+        attempt,
+        message: "Runtime accepted the request. Waiting for output…",
+        receivedCharacters: 0,
+        partialText: null,
+      });
+
+      const rawContent = await readChatCompletionStream(request, response, options, attempt);
+      clearTimeout(timeout);
+      return rawContent;
+    } catch (error) {
+      clearTimeout(timeout);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(formatTimeoutError(GENERATE_TIMEOUT_MS));
+      }
+
+      throw error;
     }
-
-    return rawContent;
   }
 
   try {
-    return parseGenerationContent(request, await requestRawContent("primary"));
+    const rawContent = await requestRawContent("primary");
+    emitProgress(options, {
+      phase: "validating",
+      attempt: 1,
+      message: "Validating streamed JSON against the surface schema…",
+      receivedCharacters: rawContent.length,
+      partialText: rawContent,
+    });
+    return parseGenerationContent(request, rawContent);
   } catch (primaryError) {
     try {
-      return parseGenerationContent(request, await requestRawContent("repair"));
+      emitProgress(options, {
+        phase: "repairing",
+        attempt: 2,
+        message: "Primary response was invalid. Retrying with a repair prompt…",
+        receivedCharacters: 0,
+        partialText: null,
+      });
+      const rawContent = await requestRawContent("repair");
+      emitProgress(options, {
+        phase: "validating",
+        attempt: 2,
+        message: "Validating repaired JSON against the surface schema…",
+        receivedCharacters: rawContent.length,
+        partialText: rawContent,
+      });
+      return parseGenerationContent(request, rawContent);
     } catch {
       throw primaryError;
     }

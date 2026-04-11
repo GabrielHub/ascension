@@ -1,0 +1,17 @@
+<!-- Operator Part: Leather Vest — outfit overlay for raid-context portraits -->
+<!-- Category: outfit-overlay | Rarity: common | Body: broad, medium, lean | Pose: standing -->
+<!-- Composites on 120×160 viewBox, open leather vest over base clothing -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <!-- Vest body -->
+  <path d="M38 66 Q48 62 60 62 Q72 62 82 66 L84 104 Q72 108 60 108 Q48 108 36 104 Z"
+    fill="#3d2c20" opacity="0.35" stroke="#5a4030" stroke-width="0.7" />
+  <!-- V-neck opening -->
+  <path d="M50 66 L60 82 L70 66" stroke="#5a4030" stroke-width="0.5" fill="none" opacity="0.5" />
+  <!-- Left panel edge -->
+  <line x1="56" y1="74" x2="52" y2="104" stroke="#5a4030" stroke-width="0.4" opacity="0.3" />
+  <!-- Right panel edge -->
+  <line x1="64" y1="74" x2="68" y2="104" stroke="#5a4030" stroke-width="0.4" opacity="0.3" />
+  <!-- Stitch detail -->
+  <path d="M40 80 L40 100" stroke="#5a4030" stroke-width="0.3" opacity="0.3" stroke-dasharray="1.5 1.5" />
+  <path d="M80 80 L80 100" stroke="#5a4030" stroke-width="0.3" opacity="0.3" stroke-dasharray="1.5 1.5" />
+</svg>
