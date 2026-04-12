@@ -19,6 +19,12 @@ export const advanceIncidentSystem: SimSystem = (context, deltaMs) => {
 
   const { incidentState, interruptionQueue } = context.runtimeState;
   const currentMinute = getCurrentAbsoluteMinute(context);
+  const decaySteps = Math.floor(deltaMs / 60000);
+  if (decaySteps > 0 && incidentState.pressureModifier !== 0) {
+    const nextMagnitude = Math.max(0, Math.abs(incidentState.pressureModifier) - decaySteps);
+    incidentState.pressureModifier =
+      nextMagnitude === 0 ? 0 : Math.sign(incidentState.pressureModifier) * nextMagnitude;
+  }
 
   // Don't evaluate if there's already a blocking interruption or the world is frozen
   if (hasBlockingInterruption(interruptionQueue)) return;
@@ -49,6 +55,7 @@ function computeSimplifiedPressure(context: SimSystemContext): number {
   const guild = context.singletonEntities.guild;
   const treasury = GuildState.treasury[guild];
   const reputation = GuildState.reputation[guild];
+  const pressureModifier = context.runtimeState.incidentState.pressureModifier;
 
   // Low treasury = high pressure
   const treasuryPressure = Math.max(0, 60 - Math.min(60, treasury / 10));
@@ -65,5 +72,8 @@ function computeSimplifiedPressure(context: SimSystemContext): number {
   }
   const moralePressure = operatorCount > 0 ? Math.max(0, 30 - moraleSum / operatorCount) : 0;
 
-  return Math.min(100, treasuryPressure + reputationPressure + moralePressure + 20);
+  return Math.min(
+    100,
+    Math.max(0, treasuryPressure + reputationPressure + moralePressure + 20 + pressureModifier),
+  );
 }

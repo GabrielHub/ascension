@@ -16,6 +16,7 @@ import {
   clamp,
   getPairOrder,
   getRoomTemplateForEntity,
+  pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
 import type { SimSystemContext } from "./types";
@@ -708,4 +709,315 @@ export function describeRoomCultureSummary(
     return `The room feels ${tone || "animated"} and chatty. People make it work through each other more than the furniture.`;
   }
   return `The room feels ${tone || "neutral"} and utilitarian. It has not developed much identity yet.`;
+}
+
+// ── Phase 4: Social fallout deepening ─────────────────────────────────
+
+/**
+ * Apply social fallout after an operator death. Grief ties are created or
+ * strengthened, morale and satisfaction drop for teammates, and recurring
+ * teams that included the dead operator are marked as damaged.
+ */
+export function applySocialFalloutAfterDeath(
+  context: SimSystemContext,
+  deadOperatorId: string,
+  teammateIds: readonly string[],
+): void {
+  const uniqueTeammates = [...new Set(teammateIds)].filter((id) => id !== deadOperatorId);
+
+  // Create or strengthen grief ties between teammates and the dead operator
+  for (const teammateId of uniqueTeammates) {
+    const existingTie = findNotableTieEntity(context, teammateId, deadOperatorId);
+    if (existingTie !== undefined) {
+      NotableTie.stance[existingTie] = "grief";
+      NotableTie.strength[existingTie] = clamp(NotableTie.strength[existingTie] + 20, 40, 100);
+    } else {
+      upsertNotableTie(context, teammateId, deadOperatorId, "grief", 55);
+    }
+
+    // Morale and satisfaction hit for each teammate
+    const dispositionEntity = ensureOperatorDispositionEntity(context, teammateId);
+    if (dispositionEntity !== undefined) {
+      OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+        OperatorDisposition.satisfactionLevel[dispositionEntity] - 8,
+        0,
+        100,
+      );
+      OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+        OperatorDisposition.grievanceLevel[dispositionEntity] + 6,
+        0,
+        100,
+      );
+    }
+
+    const operatorEntity = context.runtimeState.operatorEntities.find(
+      (e) => OperatorIdentity.id[e] === teammateId,
+    );
+    if (operatorEntity !== undefined) {
+      MoraleState.current[operatorEntity] = clamp(MoraleState.current[operatorEntity] - 6, 0, 100);
+      LoyaltyState.current[operatorEntity] = clamp(
+        LoyaltyState.current[operatorEntity] - 3,
+        0,
+        100,
+      );
+    }
+  }
+
+  // Mark recurring teams containing the dead operator as damaged
+  for (const teamEntity of context.runtimeState.recurringTeamEntities) {
+    const members = RecurringTeam.memberIds[teamEntity] ?? [];
+    if (members.includes(deadOperatorId)) {
+      RecurringTeam.damaged[teamEntity] = 1;
+      RecurringTeam.damageReason[teamEntity] = "operator_death";
+      RecurringTeam.cohesion[teamEntity] = clamp(RecurringTeam.cohesion[teamEntity] - 15, 0, 100);
+    }
+  }
+
+  // Create grief ties between surviving teammates
+  for (let i = 0; i < uniqueTeammates.length; i += 1) {
+    for (let j = i + 1; j < uniqueTeammates.length; j += 1) {
+      const existingTie = findNotableTieEntity(context, uniqueTeammates[i], uniqueTeammates[j]);
+      if (existingTie !== undefined) {
+        // Shared grief strengthens existing bonds regardless of stance
+        NotableTie.strength[existingTie] = clamp(NotableTie.strength[existingTie] + 8, 0, 100);
+      }
+    }
+  }
+
+  pushRuntimeEvent(context, {
+    kind: "social_fallout",
+    message: "The roster is absorbing the aftermath of a team death.",
+    accent: "magma",
+    targetKind: "operator",
+    targetId: deadOperatorId,
+  });
+}
+
+/**
+ * Apply social fallout after a contract is lost or failed. Grievance rises,
+ * satisfaction drops, and room culture tension increases in operations rooms.
+ */
+export function applySocialFalloutAfterContractLoss(context: SimSystemContext): void {
+  // All active operators take a satisfaction and morale hit
+  for (const entity of context.runtimeState.operatorEntities) {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") continue;
+    const operatorId = OperatorIdentity.id[entity];
+    MoraleState.current[entity] = clamp(MoraleState.current[entity] - 3, 0, 100);
+
+    const dispositionEntity = ensureOperatorDispositionEntity(context, operatorId);
+    if (dispositionEntity !== undefined) {
+      OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+        OperatorDisposition.satisfactionLevel[dispositionEntity] - 4,
+        0,
+        100,
+      );
+      OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+        OperatorDisposition.grievanceLevel[dispositionEntity] + 3,
+        0,
+        100,
+      );
+    }
+  }
+
+  // Operations and staffing rooms see tension spike
+  for (const cultureEntity of context.runtimeState.roomCultureEntities) {
+    const roomId = RoomCulture.roomInstanceId[cultureEntity];
+    const roomEntity = context.runtimeState.roomEntities.find((e) => RoomInstance.id[e] === roomId);
+    if (roomEntity === undefined) continue;
+    const template = getRoomTemplateForEntity(context, roomEntity);
+    if (template.tags.includes("room:operations") || template.tags.includes("room:staffing")) {
+      RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] + 10, 0, 100);
+      RoomCulture.camaraderie[cultureEntity] = clamp(
+        RoomCulture.camaraderie[cultureEntity] - 5,
+        0,
+        100,
+      );
+    }
+  }
+
+  pushRuntimeEvent(context, {
+    kind: "social_fallout",
+    message: "Contract failure tightened the room and pushed the roster into a worse mood.",
+    accent: "warning",
+  });
+}
+
+/**
+ * Apply social fallout after a public scandal or licensing hit. Reputation-
+ * linked morale pressure spreads across the roster.
+ */
+export function applySocialFalloutAfterScandal(
+  context: SimSystemContext,
+  severity: "minor" | "major",
+): void {
+  const moraleHit = severity === "major" ? -5 : -2;
+  const loyaltyHit = severity === "major" ? -3 : -1;
+  const tensionSpike = severity === "major" ? 12 : 5;
+
+  for (const entity of context.runtimeState.operatorEntities) {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") continue;
+    MoraleState.current[entity] = clamp(MoraleState.current[entity] + moraleHit, 0, 100);
+    LoyaltyState.current[entity] = clamp(LoyaltyState.current[entity] + loyaltyHit, 0, 100);
+  }
+
+  // All social/recovery rooms see tension spike from the scandal
+  for (const cultureEntity of context.runtimeState.roomCultureEntities) {
+    const roomId = RoomCulture.roomInstanceId[cultureEntity];
+    const roomEntity = context.runtimeState.roomEntities.find((e) => RoomInstance.id[e] === roomId);
+    if (roomEntity === undefined) continue;
+    const template = getRoomTemplateForEntity(context, roomEntity);
+    if (template.tags.includes("room:social") || template.tags.includes("room:recovery")) {
+      RoomCulture.tension[cultureEntity] = clamp(
+        RoomCulture.tension[cultureEntity] + tensionSpike,
+        0,
+        100,
+      );
+    }
+  }
+
+  pushRuntimeEvent(context, {
+    kind: "social_fallout",
+    message:
+      severity === "major"
+        ? "Institutional scrutiny is dragging morale and loyalty down across the guild."
+        : "The latest scrutiny has started to depress the room.",
+    accent: severity === "major" ? "magma" : "warning",
+  });
+}
+
+/**
+ * Apply positive social effects after a successful district recovery or
+ * containment win. Morale recovers, room camaraderie improves.
+ */
+export function applySocialRecoveryAfterDistrictWin(context: SimSystemContext): void {
+  for (const entity of context.runtimeState.operatorEntities) {
+    if (OperatorIdentity.lifecycleStatus[entity] !== "active") continue;
+    const operatorId = OperatorIdentity.id[entity];
+    MoraleState.current[entity] = clamp(MoraleState.current[entity] + 3, 0, 100);
+
+    const dispositionEntity = ensureOperatorDispositionEntity(context, operatorId);
+    if (dispositionEntity !== undefined) {
+      OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+        OperatorDisposition.satisfactionLevel[dispositionEntity] + 4,
+        0,
+        100,
+      );
+      OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+        OperatorDisposition.grievanceLevel[dispositionEntity] - 2,
+        0,
+        100,
+      );
+    }
+  }
+
+  // Social and recovery rooms see camaraderie boost
+  for (const cultureEntity of context.runtimeState.roomCultureEntities) {
+    const roomId = RoomCulture.roomInstanceId[cultureEntity];
+    const roomEntity = context.runtimeState.roomEntities.find((e) => RoomInstance.id[e] === roomId);
+    if (roomEntity === undefined) continue;
+    const template = getRoomTemplateForEntity(context, roomEntity);
+    if (template.tags.includes("room:social") || template.tags.includes("room:recovery")) {
+      RoomCulture.camaraderie[cultureEntity] = clamp(
+        RoomCulture.camaraderie[cultureEntity] + 6,
+        0,
+        100,
+      );
+      RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] - 4, 0, 100);
+    }
+  }
+
+  pushRuntimeEvent(context, {
+    kind: "social_fallout",
+    message: "A clean district recovery steadied the roster and eased room tension.",
+    accent: "gold",
+  });
+}
+
+/**
+ * Apply room culture shift when an incident resolves through a specific
+ * room's domain (e.g., an incident resolved in a social room changes that
+ * room's culture based on the resolution tone).
+ */
+export function applyRoomCultureShiftFromIncident(
+  context: SimSystemContext,
+  roomId: string,
+  resolutionTone: "positive" | "negative" | "neutral",
+): void {
+  const cultureEntity = context.runtimeState.roomCultureEntities.find(
+    (e) => RoomCulture.roomInstanceId[e] === roomId,
+  );
+  if (cultureEntity === undefined) return;
+
+  switch (resolutionTone) {
+    case "positive":
+      RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] - 6, 0, 100);
+      RoomCulture.camaraderie[cultureEntity] = clamp(
+        RoomCulture.camaraderie[cultureEntity] + 4,
+        0,
+        100,
+      );
+      RoomCulture.comfort[cultureEntity] = clamp(RoomCulture.comfort[cultureEntity] + 2, 0, 100);
+      break;
+    case "negative":
+      RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] + 8, 0, 100);
+      RoomCulture.camaraderie[cultureEntity] = clamp(
+        RoomCulture.camaraderie[cultureEntity] - 4,
+        0,
+        100,
+      );
+      break;
+    case "neutral":
+      RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] - 2, 0, 100);
+      break;
+  }
+}
+
+/**
+ * Apply increased retention pressure on operators involved in repeated
+ * death events, poor recovery outcomes, or bad faction standing.
+ */
+export function applyRetentionPressureFromPatterns(
+  context: SimSystemContext,
+  operatorId: string,
+  pattern: "repeated_death_exposure" | "poor_recovery" | "faction_hostility",
+): void {
+  const entity = context.runtimeState.operatorEntities.find(
+    (e) => OperatorIdentity.id[e] === operatorId,
+  );
+  if (entity === undefined || OperatorIdentity.lifecycleStatus[entity] !== "active") return;
+
+  const dispositionEntity = ensureOperatorDispositionEntity(context, operatorId);
+  if (dispositionEntity === undefined) return;
+
+  switch (pattern) {
+    case "repeated_death_exposure":
+      LoyaltyState.current[entity] = clamp(LoyaltyState.current[entity] - 5, 0, 100);
+      OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+        OperatorDisposition.grievanceLevel[dispositionEntity] + 8,
+        0,
+        100,
+      );
+      OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+        OperatorDisposition.satisfactionLevel[dispositionEntity] - 6,
+        0,
+        100,
+      );
+      break;
+    case "poor_recovery":
+      MoraleState.current[entity] = clamp(MoraleState.current[entity] - 4, 0, 100);
+      OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+        OperatorDisposition.grievanceLevel[dispositionEntity] + 5,
+        0,
+        100,
+      );
+      break;
+    case "faction_hostility":
+      LoyaltyState.current[entity] = clamp(LoyaltyState.current[entity] - 3, 0, 100);
+      OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+        OperatorDisposition.satisfactionLevel[dispositionEntity] - 4,
+        0,
+        100,
+      );
+      break;
+  }
 }

@@ -729,6 +729,40 @@ const INCIDENT_CATEGORY_META = {
   regulatory_scrutiny: { label: "Regulatory Scrutiny", tip: "" },
   kitchen_quality: { label: "Kitchen Quality", tip: "" },
   bar_drama: { label: "Bar Drama", tip: "" },
+  licensing_audit: {
+    label: "Licensing Audit",
+    tip: "A regulatory body is reviewing your operating licenses.",
+  },
+  labor_safety: {
+    label: "Labor Safety",
+    tip: "Operator working conditions are under institutional review.",
+  },
+  containment_demand: {
+    label: "Containment Demand",
+    tip: "A district requires emergency breach containment.",
+  },
+  borough_hearing: {
+    label: "Borough Hearing",
+    tip: "A faction has convened a hearing on contract performance.",
+  },
+  rival_interference: {
+    label: "Rival Interference",
+    tip: "A competing guild is actively undermining your operations.",
+  },
+  grief_memorial: { label: "Grief and Memorial", tip: "The roster is processing a recent loss." },
+  team_fracture: { label: "Team Fracture", tip: "A team is breaking apart after a casualty." },
+  district_backlash: {
+    label: "District Backlash",
+    tip: "Community pushback after a messy operation.",
+  },
+  workshop_disruption: {
+    label: "Workshop Disruption",
+    tip: "Crafting operations have been interrupted.",
+  },
+  sponsor_ultimatum: {
+    label: "Sponsor Ultimatum",
+    tip: "A contract sponsor is demanding results.",
+  },
 } satisfies DisplayRegistry;
 
 const RAID_CONTRIBUTING_FACTOR_META = {

@@ -33,6 +33,8 @@ const VALID_KINDS: Set<string> = new Set<EventLogKind>([
   "team_status",
   "room_culture",
   "city_pressure",
+  "incident_resolved",
+  "social_fallout",
 ]);
 
 export function normalizeEventLogKind(kind: string): EventLogKind {

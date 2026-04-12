@@ -96,7 +96,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - Pressure events are generated from runtime state rather than hand-authored UI triggers.
 - Interactive incidents bind to runtime subjects, surface authored choices through blocking modals, resolve deterministic consequence bundles in simulation code, and persist through refresh/load.
-- City-pressure changes already emit runtime events and management summaries, but several richer incident consequence kinds still remain stubbed for the next Phase 4 slice.
+- City-pressure changes emit runtime events and management summaries, and the richer incident consequence kinds now write through into ECS-owned pressure, injury, cohesion, retention, and social fallout state.
 - The interruption layer is runtime-owned: settings, incidents, and boss-commitment beats can freeze the simulation, persist when gameplay-authoritative, and restore cleanly through save/load.
 
 ### Onboarding & Narrative
@@ -139,13 +139,12 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
-- Phase 4 is in progress. Shared contract lock, city pressure, Porter's content remediation, and durable crafting are shipped in code; the remaining active execution work is deeper social and incident fallout plus encounter expansion.
+- Phase 4 is in progress. Shared contract lock, city pressure, Porter's content remediation, durable crafting, and deeper social/incident fallout are shipped in code; the remaining active execution work is encounter expansion.
 
 ## Next Steps
 
-1. Deepen social fallout and incidents so city pressure, casualties, room culture, and retention pressure produce real ECS consequences instead of partially stubbed effect kinds.
-2. Expand encounter breadth with more mixed enemy groups, boss reaction patterns, managerial interventions, and reward links into the midgame crafting loop.
-3. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+1. Expand encounter breadth with more mixed enemy groups, boss reaction patterns, managerial interventions, and reward links into the midgame crafting loop.
+2. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Phase 4: Midgame Systems
 
@@ -157,7 +156,7 @@ Current status:
 - city pressure is shipped
 - Porter's content remediation is shipped
 - durable crafting is shipped
-- deeper social fallout and encounter expansion remain active
+- encounter expansion remains active
 
 Deliverables:
 
@@ -216,7 +215,7 @@ Exit criteria:
 ## Practical Build Order
 
 1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 contract lock, Phase 4 city pressure, and Porter's content remediation.
-2. Finish the remaining midgame external-pressure work: deeper social fallout and encounter expansion.
+2. Finish the remaining midgame external-pressure work: encounter expansion.
 3. Add later-building and prestige content.
 4. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 

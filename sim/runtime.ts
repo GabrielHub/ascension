@@ -51,6 +51,7 @@ type IncidentState = {
   cooldowns: Record<string, number>;
   nextInstanceId: number;
   lastEvaluationMinute: number;
+  pressureModifier: number;
 };
 type GuidanceState = {
   seenBeatIds: string[];
@@ -95,6 +96,7 @@ function lazyCreateIncidentState(): IncidentState {
     cooldowns: {},
     nextInstanceId: 1,
     lastEvaluationMinute: 0,
+    pressureModifier: 0,
   };
 }
 
@@ -1568,6 +1570,7 @@ function restoreIncidentStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot):
       nextInstanceId: typeof data.nextInstanceId === "number" ? data.nextInstanceId : 1,
       lastEvaluationMinute:
         typeof data.lastEvaluationMinute === "number" ? data.lastEvaluationMinute : 0,
+      pressureModifier: typeof data.pressureModifier === "number" ? data.pressureModifier : 0,
     };
   } catch {
     return lazyCreateIncidentState();
@@ -2812,7 +2815,8 @@ function applyWorldSnapshot(
             }
           : {}),
         ...(runtimeState.incidentState.pendingIncident ||
-        runtimeState.incidentState.history.length > 0
+        runtimeState.incidentState.history.length > 0 ||
+        runtimeState.incidentState.pressureModifier !== 0
           ? {
               incidentState: {
                 pendingIncident: runtimeState.incidentState.pendingIncident,
@@ -2820,6 +2824,7 @@ function applyWorldSnapshot(
                 cooldowns: { ...runtimeState.incidentState.cooldowns },
                 nextInstanceId: runtimeState.incidentState.nextInstanceId,
                 lastEvaluationMinute: runtimeState.incidentState.lastEvaluationMinute,
+                pressureModifier: runtimeState.incidentState.pressureModifier,
               },
             }
           : {}),

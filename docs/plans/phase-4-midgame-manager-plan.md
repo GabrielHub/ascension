@@ -47,8 +47,7 @@ Phase 4 landed in this order:
 
 Current remaining order:
 
-1. `phase-4-midgame-social-incident-plan.md`
-2. `phase-4-midgame-encounter-plan.md`
+1. `phase-4-midgame-encounter-plan.md`
 
 ## Why This Order Is Locked
 
@@ -131,8 +130,7 @@ Current remaining order:
 
 ### Blocked
 
-- `phase-4-midgame-social-incident-plan`
-- `phase-4-midgame-encounter-plan`
+- None.
 
 ### Done
 
@@ -140,3 +138,5 @@ Current remaining order:
 - `phase-4-midgame-city-pressure-plan`
 - `phase-4-midgame-content-remediation-plan`
 - `phase-4-midgame-crafting-plan`
+- `phase-4-midgame-social-incident-plan`
+- The next ready execution slice is `phase-4-midgame-encounter-plan`.

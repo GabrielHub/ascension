@@ -128,6 +128,7 @@ function computePressure(context: Parameters<SimSystem>[0]): number {
   const activeInjuries = livingOperatorEntities.filter(
     (entity) => InjuryState.severity[entity] > 0,
   ).length;
+  const incidentPressureModifier = context.runtimeState.incidentState.pressureModifier;
 
   return Math.max(
     0,
@@ -136,7 +137,8 @@ function computePressure(context: Parameters<SimSystem>[0]): number {
         Math.max(0, GuildState.reputation[guildEntity] - 6) / 3 +
         activeInjuries +
         Math.max(0, 55 - averageMorale) / 8 +
-        (BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []).length,
+        (BuildingAuthority.activeRaidPackets[context.singletonEntities.building] ?? []).length +
+        incidentPressureModifier / 5,
     ),
   );
 }

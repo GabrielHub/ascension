@@ -143,9 +143,9 @@ Ship all of the following:
 
 ### Blocked
 
-- `phase-4-midgame-crafting-plan`
 - `phase-4-midgame-social-incident-plan`
 
 ### Done
 
-- Dependencies resolved: contract lock, city pressure, and content remediation are already shipped in code.
+- Dependencies resolved: contract lock, city pressure, content remediation, and crafting are already shipped in code.
+- Substantial encounter groundwork is already in code: Porter's-era D-rank site packets and bosses, multi-phase boss actions and summon support, six managerial interventions, and encounter pause/resume/step/retreat debug commands. The remaining work is to finish the plan-specific breadth, reward/debug alignment, and any final post-social-fallout wiring.

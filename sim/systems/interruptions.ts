@@ -82,6 +82,8 @@ export interface IncidentBoundContext {
   teamId?: string;
   contractSiteId?: string;
   bossId?: string;
+  districtId?: string;
+  factionId?: string;
 }
 
 export interface RaidBossCommitmentPayload extends PresenterBinding {

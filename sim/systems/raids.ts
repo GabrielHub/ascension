@@ -62,11 +62,14 @@ import { enqueueInterruption, hasBlockingInterruption } from "./interruptions";
 import { computeAutonomyFlags } from "./morale";
 import {
   applyRaidSocialOutcome,
+  applyRetentionPressureFromPatterns,
+  applySocialFalloutAfterContractLoss,
+  applySocialFalloutAfterDeath,
+  applySocialRecoveryAfterDistrictWin,
   computeSocialCohesion,
   findRecurringTeamForMembers,
   findDispositionEntity,
   getRecurringTeamCohesionBonus,
-  upsertNotableTie,
 } from "./social";
 import { computeDerivedStats, type OperatorBaseStats } from "./derived-stats";
 import type { TemplateRegistry } from "content/templates";
@@ -2398,8 +2401,10 @@ function finalizeRaidPacket(
   );
 
   diedOperatorIds.forEach((deceasedId) => {
-    createGriefTies(context, deceasedId, survivingOperatorIds);
-    markTeamDamaged(context, [deceasedId], "death");
+    applySocialFalloutAfterDeath(context, deceasedId, survivingOperatorIds);
+    survivingOperatorIds.forEach((survivorId) => {
+      applyRetentionPressureFromPatterns(context, survivorId, "repeated_death_exposure");
+    });
   });
 
   applyRaidSocialOutcome(context, packet.operatorIds, packet.resolutionPacket.result);
@@ -3202,16 +3207,6 @@ function markTeamDamaged(
   });
 }
 
-function createGriefTies(
-  context: SimSystemContext,
-  deceasedId: string,
-  survivingIds: readonly string[],
-): void {
-  survivingIds.forEach((survivorId) => {
-    upsertNotableTie(context, deceasedId, survivorId, "grief", 70);
-  });
-}
-
 function disbandRecurringTeam(
   context: SimSystemContext,
   teamEntity: number,
@@ -3674,6 +3669,12 @@ function enterResolvedPhase(context: SimSystemContext, contractSite: ContractSit
     }
 
     emitCityPressureEvents(context, cityEvents);
+  }
+
+  if (outcome === "contract_lost") {
+    applySocialFalloutAfterContractLoss(context);
+  } else if (districtId) {
+    applySocialRecoveryAfterDistrictWin(context);
   }
 
   BuildingAuthority.contractResult[buildingEntity] = result;

@@ -18,18 +18,29 @@ import { enqueueInterruption } from "./interruptions";
 import {
   BuildingAuthority,
   GuildState,
+  InjuryState,
   MoraleState,
   LoyaltyState,
+  OperatorDisposition,
   OperatorIdentity,
+  RecurringTeam,
   RoomInstance,
   WorldTimeState,
 } from "../components";
 import {
   BODEGA_BACK_OFFICE_TEMPLATE_ID,
+  clamp,
   getCurrentAbsoluteMinute,
   hasStaffedOperationalRoomTemplate,
   pushRuntimeEvent,
 } from "./commands";
+import {
+  applyRoomCultureShiftFromIncident,
+  applySocialRecoveryAfterDistrictWin,
+  applySocialFalloutAfterScandal,
+  ensureOperatorDispositionEntity,
+  findRecurringTeamForMembers,
+} from "./social";
 import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
 import { seedFromSimulationKey } from "./seed-utils";
 
@@ -44,7 +55,12 @@ export type IncidentTriggerFamily =
   | "room_breakdown"
   | "compliance_pressure"
   | "morale_opportunity"
-  | "raid_boss_commitment";
+  | "raid_boss_commitment"
+  | "district_fallout"
+  | "faction_pressure"
+  | "casualty_aftermath"
+  | "workshop_disruption"
+  | "sponsor_demand";
 
 export type ConsequenceKind =
   | "morale_delta"
@@ -129,6 +145,7 @@ export interface IncidentState {
   cooldowns: Record<string, number>;
   nextInstanceId: number;
   lastEvaluationMinute: number;
+  pressureModifier: number;
 }
 
 export function createIncidentState(): IncidentState {
@@ -138,6 +155,7 @@ export function createIncidentState(): IncidentState {
     cooldowns: {},
     nextInstanceId: 1,
     lastEvaluationMinute: 0,
+    pressureModifier: 0,
   };
 }
 
@@ -161,6 +179,14 @@ const OPENING_FORCE_SEED_INCIDENT_CATEGORIES = [
   "supply_shortage",
   "morale_surge",
 ] as const;
+
+const SCANDAL_INCIDENT_CATEGORIES = new Set([
+  "licensing_audit",
+  "labor_safety",
+  "regulatory_scrutiny",
+  "borough_hearing",
+  "district_backlash",
+]);
 
 // ── Authored incident library ────────────────────────────────────────────
 
@@ -1192,6 +1218,933 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
       },
     ],
   },
+
+  // ── Phase 4: Midgame social and institutional incidents ────────────────
+
+  // ── Licensing audit ──────────────────────────────────────────────────
+  {
+    id: "incident/licensing-audit-routine",
+    name: "Licensing Audit Notice",
+    category: "licensing_audit",
+    tags: ["institutional", "compliance", "district"],
+    weight: 20,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:regulatory", "pressure:reputation"],
+    pressureThreshold: 45,
+    requiredContext: ["district", "faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "{faction} has scheduled a routine licensing review for operations in {district}. The paperwork needs to hold up or the guild loses its operating clearance for the area.",
+    choices: [
+      {
+        choiceId: "full_disclosure",
+        label: "Full Disclosure",
+        description: "Lay everything out. The documentation is either clean or it isn't.",
+        consequenceSummary: "Reputation gain if clean, treasury cost for preparation.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -80 },
+          { kind: "reputation_delta", targetRef: "guild", value: 4 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -8 },
+        ],
+      },
+      {
+        choiceId: "selective_presentation",
+        label: "Selective Presentation",
+        description: "Show them what they need to see. Bury the rest in process.",
+        consequenceSummary: "Cheaper, but the risk lingers.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -30 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+      {
+        choiceId: "stall_and_reschedule",
+        label: "Stall and Reschedule",
+        description: "Cite an ongoing field operation and push the date back.",
+        consequenceSummary: "Bought time, increased scrutiny.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 10 },
+          { kind: "reputation_delta", targetRef: "guild", value: -3 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/licensing-audit-expedited",
+    name: "Expedited License Review",
+    category: "licensing_audit",
+    tags: ["institutional", "compliance", "urgent"],
+    weight: 16,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:regulatory", "pressure:contract"],
+    pressureThreshold: 55,
+    requiredContext: ["district", "faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.9,
+    briefingTemplate:
+      "{faction} is fast-tracking a license review after the last incident in {district}. The window to respond is hours, not days.",
+    choices: [
+      {
+        choiceId: "emergency_compliance",
+        label: "Emergency Compliance Sprint",
+        description: "Pull staff off the floor and get the filing done before the deadline.",
+        consequenceSummary: "Expensive, but clears the record.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -120 },
+          { kind: "reputation_delta", targetRef: "guild", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -12 },
+        ],
+      },
+      {
+        choiceId: "partial_response",
+        label: "Partial Response",
+        description: "Send what you have. Fill in the gaps at the hearing.",
+        consequenceSummary: "Reputation risk, lower immediate cost.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -40 },
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 5 },
+        ],
+      },
+    ],
+  },
+
+  // ── Labor safety inspection ──────────────────────────────────────────
+  {
+    id: "incident/labor-safety-inspection",
+    name: "Labor Safety Inspection",
+    category: "labor_safety",
+    tags: ["institutional", "safety", "operators"],
+    weight: 18,
+    triggerFamily: "compliance_pressure",
+    pressureTags: ["pressure:casualty", "pressure:regulatory"],
+    pressureThreshold: 40,
+    requiredContext: ["operator_a", "district"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "A labor safety review in {district} is flagging operator injury rates. {operator_a}'s recent medical record is the first item on their clipboard.",
+    choices: [
+      {
+        choiceId: "invest_in_safety",
+        label: "Invest in Safety Protocols",
+        description: "Spend on proper equipment and protocols. Reduce future injury exposure.",
+        consequenceSummary: "Treasury down, morale up, pressure relieved.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -100 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 8 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -10 },
+          { kind: "reputation_delta", targetRef: "guild", value: 3 },
+        ],
+      },
+      {
+        choiceId: "paper_compliance",
+        label: "Paper Compliance",
+        description: "File the reports that make the numbers look right.",
+        consequenceSummary: "Cheap but fragile. Another inspection will be worse.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -25 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+      {
+        choiceId: "dispute_findings",
+        label: "Dispute the Findings",
+        description: "Challenge the methodology. The data is anecdotal at best.",
+        consequenceSummary: "No cost, but reputation and scrutiny rise.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -4 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 8 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/labor-safety-followup",
+    name: "Safety Follow-Up Notice",
+    category: "labor_safety",
+    tags: ["institutional", "safety", "followup"],
+    weight: 14,
+    triggerFamily: "compliance_pressure",
+    pressureTags: ["pressure:casualty", "pressure:morale"],
+    pressureThreshold: 50,
+    requiredContext: ["operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "The safety review board has returned with follow-up concerns about operator deployment conditions. {operator_a} is cited as a case study.",
+    choices: [
+      {
+        choiceId: "mandatory_downtime",
+        label: "Mandatory Recovery Downtime",
+        description: "Pull the cited operator from all deployment until the board clears them.",
+        consequenceSummary: "Loyalty boost, slower operations.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 8 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 6 },
+        ],
+      },
+      {
+        choiceId: "modified_duty",
+        label: "Modified Duty Assignment",
+        description: "Keep them active on lighter tasks. The board probably won't check.",
+        consequenceSummary: "Balanced approach, minor reputation risk.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 2 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+    ],
+  },
+
+  // ── Emergency containment demand ─────────────────────────────────────
+  {
+    id: "incident/emergency-containment-demand",
+    name: "Emergency Containment Order",
+    category: "containment_demand",
+    tags: ["district", "emergency", "pressure"],
+    weight: 22,
+    triggerFamily: "district_fallout",
+    pressureTags: ["pressure:contract", "pressure:casualty"],
+    pressureThreshold: 50,
+    requiredContext: ["district", "operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "{district} has issued an emergency containment order. Breach residue from the last clearance is spreading faster than projected. {operator_a}'s team was the last unit on site.",
+    choices: [
+      {
+        choiceId: "full_response",
+        label: "Full Emergency Response",
+        description: "Commit resources and operators to contain it before it escalates.",
+        consequenceSummary: "Expensive, but trust and pressure both improve.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -130 },
+          { kind: "reputation_delta", targetRef: "guild", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -15 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -3 },
+        ],
+      },
+      {
+        choiceId: "minimal_containment",
+        label: "Minimal Containment",
+        description: "Send a small detail. Enough to show effort, not enough to finish it.",
+        consequenceSummary: "Low cost, partial resolution. The district notices.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -40 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -5 },
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+        ],
+      },
+      {
+        choiceId: "deny_responsibility",
+        label: "Deny Responsibility",
+        description: "The clearance was clean. Whatever is spreading is not your problem.",
+        consequenceSummary: "Free, but trust collapses and pressure spikes.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -6 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 12 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/containment-escalation",
+    name: "Containment Escalation",
+    category: "containment_demand",
+    tags: ["district", "emergency", "escalation"],
+    weight: 16,
+    triggerFamily: "district_fallout",
+    pressureTags: ["pressure:contract", "pressure:reputation"],
+    pressureThreshold: 60,
+    requiredContext: ["district"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.8,
+    briefingTemplate:
+      "The containment situation in {district} has escalated. The borough is threatening to revoke field clearance for all guilds operating in the area.",
+    choices: [
+      {
+        choiceId: "lead_coalition_response",
+        label: "Lead the Coalition Response",
+        description: "Coordinate with other guilds. Expensive but builds lasting district trust.",
+        consequenceSummary: "High treasury cost, significant reputation and pressure recovery.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -180 },
+          { kind: "reputation_delta", targetRef: "guild", value: 8 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -20 },
+        ],
+      },
+      {
+        choiceId: "contribute_minimally",
+        label: "Contribute Minimally",
+        description: "Participate enough to avoid blame. Let others carry the weight.",
+        consequenceSummary: "Low cost, moderate reputation damage.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -50 },
+          { kind: "reputation_delta", targetRef: "guild", value: -3 },
+        ],
+      },
+    ],
+  },
+
+  // ── Borough contract hearing ─────────────────────────────────────────
+  {
+    id: "incident/borough-contract-hearing",
+    name: "Borough Contract Hearing",
+    category: "borough_hearing",
+    tags: ["institutional", "contract", "district"],
+    weight: 20,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:contract", "pressure:reputation"],
+    pressureThreshold: 55,
+    requiredContext: ["district", "faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.9,
+    briefingTemplate:
+      "{faction} has convened a hearing about your contract performance in {district}. The board wants an accounting of timelines, casualties, and containment outcomes.",
+    choices: [
+      {
+        choiceId: "present_full_record",
+        label: "Present the Full Record",
+        description: "Go in with everything. The numbers either support you or they don't.",
+        consequenceSummary: "Reputation up if record is strong, treasury cost for prep.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -60 },
+          { kind: "reputation_delta", targetRef: "guild", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -10 },
+        ],
+      },
+      {
+        choiceId: "send_representative",
+        label: "Send a Representative",
+        description: "Delegate attendance. You have a guild to run.",
+        consequenceSummary: "Cheaper, but the board reads it as dismissive.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -20 },
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+        ],
+      },
+      {
+        choiceId: "request_postponement",
+        label: "Request Postponement",
+        description: "Cite operational constraints and ask for more time.",
+        consequenceSummary: "Bought time. The faction notes the delay.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 8 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/borough-performance-review",
+    name: "Borough Performance Review",
+    category: "borough_hearing",
+    tags: ["institutional", "contract", "performance"],
+    weight: 16,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:contract", "pressure:regulatory"],
+    pressureThreshold: 50,
+    requiredContext: ["faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.85,
+    briefingTemplate:
+      "{faction} has published a quarterly performance review. Your guild is listed under the underperforming tier. The summary is public.",
+    choices: [
+      {
+        choiceId: "public_response",
+        label: "Issue a Public Response",
+        description: "Contest the ranking with verifiable data. Costs time and credibility.",
+        consequenceSummary: "Reputation recovery if compelling, treasury cost.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -50 },
+          { kind: "reputation_delta", targetRef: "guild", value: 3 },
+        ],
+      },
+      {
+        choiceId: "accept_and_improve",
+        label: "Accept and Improve",
+        description: "Take the hit. Use it as motivation internally.",
+        consequenceSummary: "No cost, slight morale penalty.",
+        effects: [{ kind: "reputation_delta", targetRef: "guild", value: -2 }],
+      },
+    ],
+  },
+
+  // ── Rival interference ───────────────────────────────────────────────
+  {
+    id: "incident/rival-contract-sabotage",
+    name: "Rival Contract Interference",
+    category: "rival_interference",
+    tags: ["rival", "sabotage", "contract"],
+    weight: 22,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:contract", "pressure:reputation"],
+    pressureThreshold: 45,
+    requiredContext: ["operator_a", "faction"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "Intel suggests {faction} has been undermining your current contract. Field equipment has been tampered with, and {operator_a} reported interference during the last deployment.",
+    choices: [
+      {
+        choiceId: "investigate_and_expose",
+        label: "Investigate and Expose",
+        description: "Document the interference and bring it to the contract board.",
+        consequenceSummary: "Intel and reputation up, treasury cost for investigation.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -70 },
+          { kind: "intel_delta", targetRef: "guild", value: 8 },
+          { kind: "reputation_delta", targetRef: "guild", value: 4 },
+        ],
+      },
+      {
+        choiceId: "harden_operations",
+        label: "Harden Operations",
+        description: "Increase security protocols. Don't give them another opening.",
+        consequenceSummary: "Treasury cost, contract pressure eased.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -50 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -8 },
+        ],
+      },
+      {
+        choiceId: "absorb_the_hit",
+        label: "Absorb and Move On",
+        description: "Replace what was lost. The contract board won't care who did it.",
+        consequenceSummary: "Cheap but the interference continues.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -30 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -3 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/rival-recruitment-raid",
+    name: "Rival Recruitment Push",
+    category: "rival_interference",
+    tags: ["rival", "retention", "operators"],
+    weight: 18,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:retention", "pressure:loyalty"],
+    pressureThreshold: 50,
+    requiredContext: ["operator_a", "operator_b"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "A rival guild has been approaching your operators directly. {operator_a} and {operator_b} both received offers this week.",
+    choices: [
+      {
+        choiceId: "retention_bonuses",
+        label: "Issue Retention Bonuses",
+        description: "Pay to keep them. Money talks.",
+        consequenceSummary: "Treasury down, loyalty secured for both.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -120 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 10 },
+          { kind: "loyalty_delta", targetRef: "subject_b", value: 10 },
+        ],
+      },
+      {
+        choiceId: "team_address",
+        label: "Address the Team",
+        description: "Speak to the whole roster. Remind them what this guild is building.",
+        consequenceSummary: "Free but less effective. Works better with high morale.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 4 },
+          { kind: "loyalty_delta", targetRef: "subject_b", value: 4 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 2 },
+          { kind: "morale_delta", targetRef: "subject_b", value: 2 },
+        ],
+      },
+      {
+        choiceId: "accept_attrition",
+        label: "Accept Some Attrition",
+        description: "If they want to leave, replacing them costs less than overpaying.",
+        consequenceSummary: "Departure risk for both. Roster may thin.",
+        effects: [
+          { kind: "departure_risk", targetRef: "subject_a", value: 25 },
+          { kind: "departure_risk", targetRef: "subject_b", value: 25 },
+        ],
+      },
+    ],
+  },
+
+  // ── Memorial and grief fallout ───────────────────────────────────────
+  {
+    id: "incident/memorial-demand",
+    name: "Memorial Service Demand",
+    category: "grief_memorial",
+    tags: ["grief", "death", "morale", "social"],
+    weight: 24,
+    triggerFamily: "casualty_aftermath",
+    pressureTags: ["pressure:casualty", "pressure:morale"],
+    pressureThreshold: 35,
+    requiredContext: ["operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.3,
+    briefingTemplate:
+      "The roster is asking for a formal memorial after the last casualty. {operator_a} has been organizing something unofficial on their own time. The team is watching how you respond.",
+    choices: [
+      {
+        choiceId: "full_memorial",
+        label: "Authorize a Full Memorial",
+        description: "Stand down operations for a day. Let the guild grieve properly.",
+        consequenceSummary: "Treasury cost, significant morale and team cohesion recovery.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -80 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 10 },
+          { kind: "team_cohesion_delta", targetRef: "team", value: 8 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 5 },
+        ],
+      },
+      {
+        choiceId: "quiet_acknowledgment",
+        label: "Quiet Acknowledgment",
+        description: "A brief moment before shift. No stand-down, but the loss is named.",
+        consequenceSummary: "No cost, modest morale recovery.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 4 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 3 },
+        ],
+      },
+      {
+        choiceId: "move_forward",
+        label: "Keep Moving Forward",
+        description: "The mission doesn't stop. Everyone knew the risks.",
+        consequenceSummary: "No cost, but grievance spikes and departure risk rises.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: -6 },
+          { kind: "departure_risk", targetRef: "subject_a", value: 20 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/grief-spiral",
+    name: "Grief Spiral",
+    category: "grief_memorial",
+    tags: ["grief", "social", "retention"],
+    weight: 18,
+    triggerFamily: "casualty_aftermath",
+    pressureTags: ["pressure:casualty", "pressure:morale"],
+    pressureThreshold: 45,
+    requiredContext: ["operator_a", "operator_b"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.15,
+    briefingTemplate:
+      "{operator_a} and {operator_b} were closest to the last operator lost. Neither has been the same since. They are pulling back from assignments and the team feels it.",
+    choices: [
+      {
+        choiceId: "paired_recovery",
+        label: "Paired Recovery Detail",
+        description: "Assign them low-stakes work together. Let them process side by side.",
+        consequenceSummary: "Slow return, but the bond strengthens.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 6 },
+          { kind: "morale_delta", targetRef: "subject_b", value: 6 },
+          { kind: "team_cohesion_delta", targetRef: "team", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 4 },
+        ],
+      },
+      {
+        choiceId: "separate_assignments",
+        label: "Separate Assignments",
+        description: "Split them up. The grief is feeding on itself.",
+        consequenceSummary: "Faster operational recovery, but the relationship strains.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 2 },
+          { kind: "morale_delta", targetRef: "subject_b", value: 2 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: -3 },
+          { kind: "loyalty_delta", targetRef: "subject_b", value: -3 },
+        ],
+      },
+    ],
+  },
+
+  // ── Team fracture after casualty ─────────────────────────────────────
+  {
+    id: "incident/team-fracture-casualty",
+    name: "Team Fracture After Loss",
+    category: "team_fracture",
+    tags: ["team", "casualty", "cohesion"],
+    weight: 22,
+    triggerFamily: "casualty_aftermath",
+    pressureTags: ["pressure:casualty", "pressure:social"],
+    pressureThreshold: 40,
+    requiredContext: ["operator_a", "operator_b"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "The team that lost an operator last run is fracturing. {operator_a} blames {operator_b} for the call that got someone killed. The rest of the roster is picking sides.",
+    choices: [
+      {
+        choiceId: "formal_review",
+        label: "Formal After-Action Review",
+        description:
+          "Convene a structured review. Get the facts on record before the story hardens.",
+        consequenceSummary: "Cohesion partially restores, morale steadies.",
+        effects: [
+          { kind: "morale_delta", targetRef: "subject_a", value: 4 },
+          { kind: "morale_delta", targetRef: "subject_b", value: 4 },
+          { kind: "team_cohesion_delta", targetRef: "team", value: 6 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 3 },
+        ],
+      },
+      {
+        choiceId: "back_the_lead",
+        label: "Back the Team Lead",
+        description: "Support the decision-maker publicly. Chain of command holds.",
+        consequenceSummary: "One operator steadies, the other spirals.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: -5 },
+          { kind: "loyalty_delta", targetRef: "subject_b", value: 8 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+        ],
+      },
+      {
+        choiceId: "dissolve_team",
+        label: "Dissolve the Team",
+        description: "Break the unit apart. Reassign everyone. Start fresh.",
+        consequenceSummary: "Clean break, but cohesion is lost and morale dips.",
+        effects: [
+          { kind: "team_cohesion_delta", targetRef: "team", value: -20 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -3 },
+          { kind: "morale_delta", targetRef: "subject_b", value: -3 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/team-confidence-collapse",
+    name: "Team Confidence Collapse",
+    category: "team_fracture",
+    tags: ["team", "casualty", "morale"],
+    weight: 16,
+    triggerFamily: "casualty_aftermath",
+    pressureTags: ["pressure:casualty", "pressure:morale"],
+    pressureThreshold: 50,
+    requiredContext: ["operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "The entire field team is refusing high-risk assignments after the last loss. {operator_a} is the most vocal about standing down until conditions improve.",
+    choices: [
+      {
+        choiceId: "address_conditions",
+        label: "Address Their Concerns",
+        description: "Review safety protocols publicly and make visible changes.",
+        consequenceSummary: "Treasury cost, but morale and cohesion recover.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -60 },
+          { kind: "morale_delta", targetRef: "subject_a", value: 8 },
+          { kind: "team_cohesion_delta", targetRef: "team", value: 5 },
+        ],
+      },
+      {
+        choiceId: "mandatory_deployment",
+        label: "Mandate Deployment",
+        description: "The contract doesn't care about feelings. Everyone goes.",
+        consequenceSummary: "Contract pressure eased, but loyalty and morale tank.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -10 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -6 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: -5 },
+          { kind: "departure_risk", targetRef: "subject_a", value: 15 },
+        ],
+      },
+    ],
+  },
+
+  // ── District backlash after messy cleanup ────────────────────────────
+  {
+    id: "incident/district-backlash-cleanup",
+    name: "District Backlash",
+    category: "district_backlash",
+    tags: ["district", "reputation", "community"],
+    weight: 22,
+    triggerFamily: "district_fallout",
+    pressureTags: ["pressure:reputation", "pressure:contract"],
+    pressureThreshold: 45,
+    requiredContext: ["district"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "Residents in {district} are organizing against guild operations after the last messy clearance. The community board has scheduled a public comment session.",
+    choices: [
+      {
+        choiceId: "community_outreach",
+        label: "Community Outreach",
+        description: "Send a representative. Listen. Offer concrete remediation.",
+        consequenceSummary: "Treasury cost, reputation and trust recovery.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -90 },
+          { kind: "reputation_delta", targetRef: "guild", value: 5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -10 },
+        ],
+      },
+      {
+        choiceId: "written_response",
+        label: "Submit a Written Response",
+        description: "Acknowledge the concern on paper. Skip the public theater.",
+        consequenceSummary: "Low cost, minimal impact.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -15 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+      {
+        choiceId: "ignore_backlash",
+        label: "Ignore the Backlash",
+        description: "The guild answers to the contract board, not the community.",
+        consequenceSummary: "Free, but district trust collapses.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -5 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/district-property-damage-claim",
+    name: "Property Damage Claim",
+    category: "district_backlash",
+    tags: ["district", "legal", "financial"],
+    weight: 18,
+    triggerFamily: "district_fallout",
+    pressureTags: ["pressure:contract", "pressure:economy"],
+    pressureThreshold: 40,
+    requiredContext: ["district"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "A property damage claim from {district} has landed on your desk. Three storefronts and a fire escape, all from the last breach containment.",
+    choices: [
+      {
+        choiceId: "settle_immediately",
+        label: "Settle Immediately",
+        description: "Pay the claim and move on. Clean slate.",
+        consequenceSummary: "Heavy treasury cost, pressure and reputation stabilize.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -150 },
+          { kind: "reputation_delta", targetRef: "guild", value: 3 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -8 },
+        ],
+      },
+      {
+        choiceId: "negotiate_reduction",
+        label: "Negotiate a Reduction",
+        description: "Challenge the assessment. Some of that damage was pre-existing.",
+        consequenceSummary: "Moderate cost, slower resolution.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -80 },
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+        ],
+      },
+      {
+        choiceId: "contest_liability",
+        label: "Contest Liability",
+        description: "The breach caused the damage, not the guild. File a counterargument.",
+        consequenceSummary: "Free, but the claim escalates and pressure rises.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -4 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 12 },
+        ],
+      },
+    ],
+  },
+
+  // ── Workshop shortage or theft ───────────────────────────────────────
+  {
+    id: "incident/workshop-material-shortage",
+    name: "Workshop Material Shortage",
+    category: "workshop_disruption",
+    tags: ["workshop", "crafting", "logistics"],
+    weight: 20,
+    triggerFamily: "workshop_disruption",
+    pressureTags: ["pressure:logistics", "pressure:economy"],
+    pressureThreshold: 30,
+    requiredContext: ["room"],
+    cooldownMinutes: 720,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "The workshop is reporting a critical material shortage. Crafting has stalled and the queue is backing up. Someone miscounted the last inventory.",
+    choices: [
+      {
+        choiceId: "emergency_procurement",
+        label: "Emergency Procurement",
+        description: "Buy materials at markup to get the workshop running again today.",
+        consequenceSummary: "Heavy treasury cost, crafting resumes immediately.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -100 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -6 },
+        ],
+      },
+      {
+        choiceId: "ration_materials",
+        label: "Ration Remaining Stock",
+        description: "Prioritize critical orders. Everything else waits.",
+        consequenceSummary: "Cheap, but slower output and some morale friction.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -20 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 4 },
+        ],
+      },
+      {
+        choiceId: "scavenge_from_raids",
+        label: "Scavenge from Raid Salvage",
+        description: "Repurpose field salvage. Not ideal quality, but it fills the gaps.",
+        consequenceSummary: "Free, but output quality drops.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+          { kind: "intel_delta", targetRef: "guild", value: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/workshop-theft",
+    name: "Workshop Theft",
+    category: "workshop_disruption",
+    tags: ["workshop", "theft", "security"],
+    weight: 16,
+    triggerFamily: "workshop_disruption",
+    pressureTags: ["pressure:logistics", "pressure:security"],
+    pressureThreshold: 40,
+    requiredContext: ["room", "operator_a"],
+    cooldownMinutes: 1440,
+    noveltyWeight: 1.3,
+    briefingTemplate:
+      "Finished goods went missing from the workshop overnight. {operator_a} was last seen near the supply room. The lock wasn't forced.",
+    choices: [
+      {
+        choiceId: "investigate_internally",
+        label: "Internal Investigation",
+        description: "Question the roster, check logs, find the gap in security.",
+        consequenceSummary: "Intel gain, morale hit from suspicion.",
+        effects: [
+          { kind: "intel_delta", targetRef: "guild", value: 5 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -4 },
+          { kind: "treasury_delta", targetRef: "guild", value: -30 },
+        ],
+      },
+      {
+        choiceId: "upgrade_security",
+        label: "Upgrade Workshop Security",
+        description: "Better locks, inventory tracking, and accountability.",
+        consequenceSummary: "Treasury cost, prevents future incidents.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -70 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -4 },
+        ],
+      },
+      {
+        choiceId: "absorb_loss",
+        label: "Absorb the Loss",
+        description: "Write it off. Tightening security costs more than what was taken.",
+        consequenceSummary: "Free, but the pattern may continue.",
+        effects: [{ kind: "reputation_delta", targetRef: "guild", value: -2 }],
+      },
+    ],
+  },
+
+  // ── Sponsor ultimatum on overdue contract ────────────────────────────
+  {
+    id: "incident/sponsor-ultimatum",
+    name: "Sponsor Ultimatum",
+    category: "sponsor_ultimatum",
+    tags: ["sponsor", "contract", "deadline", "faction"],
+    weight: 24,
+    triggerFamily: "sponsor_demand",
+    pressureTags: ["pressure:contract", "pressure:deadline"],
+    pressureThreshold: 55,
+    requiredContext: ["operator_a", "faction", "contract_site"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.9,
+    briefingTemplate:
+      "{faction} has issued a formal ultimatum on the current contract. Deliver results within the week or the contract is pulled and awarded to a competitor.",
+    choices: [
+      {
+        choiceId: "all_hands_push",
+        label: "All-Hands Push",
+        description: "Commit everything to the contract. Cancel leave, double shifts.",
+        consequenceSummary: "Significant pressure relief, morale and loyalty cost.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -20 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -5 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: -3 },
+        ],
+      },
+      {
+        choiceId: "negotiate_terms",
+        label: "Negotiate Revised Terms",
+        description: "Accept a reduced payout in exchange for extended timeline.",
+        consequenceSummary: "Less pressure, less reward.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -12 },
+          { kind: "treasury_delta", targetRef: "guild", value: -60 },
+          { kind: "reputation_delta", targetRef: "guild", value: -2 },
+        ],
+      },
+      {
+        choiceId: "call_the_bluff",
+        label: "Call Their Bluff",
+        description: "They need you as much as you need them. Stay the course.",
+        consequenceSummary: "No immediate cost, but if they aren't bluffing...",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 8 },
+          { kind: "reputation_delta", targetRef: "guild", value: -3 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/sponsor-payment-hold",
+    name: "Sponsor Payment Hold",
+    category: "sponsor_ultimatum",
+    tags: ["sponsor", "financial", "faction"],
+    weight: 18,
+    triggerFamily: "sponsor_demand",
+    pressureTags: ["pressure:economy", "pressure:contract"],
+    pressureThreshold: 50,
+    requiredContext: ["operator_a", "faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 0.85,
+    briefingTemplate:
+      "{faction} has frozen progress payments pending a review of your operational expenses. The treasury is going to feel this immediately.",
+    choices: [
+      {
+        choiceId: "open_the_books",
+        label: "Open the Books",
+        description: "Full financial transparency. If the spending is justified, the freeze lifts.",
+        consequenceSummary: "No additional cost if clean. Reputation gain.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 4 },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: -8 },
+        ],
+      },
+      {
+        choiceId: "bridge_financing",
+        label: "Bridge the Gap",
+        description: "Dip into reserves to keep operations running during the freeze.",
+        consequenceSummary: "Treasury hit, but operations continue.",
+        effects: [{ kind: "treasury_delta", targetRef: "guild", value: -100 }],
+      },
+      {
+        choiceId: "reduce_operations",
+        label: "Reduce Operations",
+        description: "Scale back until the payments resume. Conserve cash.",
+        consequenceSummary: "Contract pressure rises, but treasury is preserved.",
+        effects: [
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 10 },
+          { kind: "morale_delta", targetRef: "subject_a", value: -3 },
+        ],
+      },
+    ],
+  },
 ];
 
 export function validateIncidentTemplates(
@@ -1326,6 +2279,36 @@ function hasRequiredIncidentContext(
     findEligibleIncidentRoomEntity(context, template) === undefined
   ) {
     return false;
+  }
+
+  if (template.requiredContext.includes("district")) {
+    const cityState = context.runtimeState.cityState;
+    if (!cityState) return false;
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    const hasDistrict =
+      contractSite?.districtId || Object.values(cityState.districts).some((d) => d.attention > 0);
+    if (!hasDistrict) return false;
+  }
+
+  if (template.requiredContext.includes("faction")) {
+    const cityState = context.runtimeState.cityState;
+    if (!cityState) return false;
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    const hasFaction =
+      contractSite?.sponsorFactionId ||
+      Object.values(cityState.factions).some((f) => f.scrutiny > 0);
+    if (!hasFaction) return false;
+  }
+
+  if (template.requiredContext.includes("contract_site")) {
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    if (!contractSite?.contractSiteId) return false;
+  }
+
+  if (template.requiredContext.includes("team")) {
+    if (activeOperators.length < 2) return false;
+    const hasTeam = context.runtimeState.recurringTeamEntities.length > 0;
+    if (!hasTeam) return false;
   }
 
   return true;
@@ -1466,6 +2449,22 @@ function buildRoomNameMap(context: SimSystemContext): Record<string, string> {
   return roomNames;
 }
 
+function buildDistrictNameMap(context: SimSystemContext): Record<string, string> {
+  const districtNames: Record<string, string> = {};
+  for (const template of context.registry.districts) {
+    districtNames[template.id] = template.name;
+  }
+  return districtNames;
+}
+
+function buildFactionNameMap(context: SimSystemContext): Record<string, string> {
+  const factionNames: Record<string, string> = {};
+  for (const template of context.registry.factions) {
+    factionNames[template.id] = template.name;
+  }
+  return factionNames;
+}
+
 function hasIncidentInterruptionForInstance(
   context: SimSystemContext,
   incidentInstanceId: string,
@@ -1538,6 +2537,8 @@ export function materializePendingIncident(
     buildOperatorNameMap(context),
     buildRoomNameMap(context),
     presentation,
+    buildDistrictNameMap(context),
+    buildFactionNameMap(context),
   );
   const subjectSummary = payload.subjectSummary.trim();
   const subjectSuffix = subjectSummary.length > 0 ? ` (${subjectSummary})` : "";
@@ -1565,12 +2566,15 @@ function bindIncidentSubjects(
 ): IncidentBoundContext {
   const operatorIds: string[] = [];
   let roomId: string | undefined;
+  let districtId: string | undefined;
+  let factionId: string | undefined;
+  let contractSiteId: string | undefined;
+  let teamId: string | undefined;
   const activeOperators = context.runtimeState.operatorEntities.filter(
     (e) => OperatorIdentity.lifecycleStatus[e] === "active",
   );
 
   if (template.requiredContext.includes("operator_a") && activeOperators.length > 0) {
-    // Pick the operator with lowest morale for conflict/negative incidents
     const rng = new SeededRng(
       seedFromSimulationKey(
         context,
@@ -1602,11 +2606,59 @@ function bindIncidentSubjects(
     }
   }
 
+  // Bind district from active contract site or highest-attention district
+  if (template.requiredContext.includes("district")) {
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    if (contractSite?.districtId) {
+      districtId = contractSite.districtId;
+    } else if (context.runtimeState.cityState) {
+      const districts = Object.values(context.runtimeState.cityState.districts);
+      const highest = districts.reduce<(typeof districts)[0] | undefined>(
+        (best, d) => (!best || d.attention > best.attention ? d : best),
+        undefined,
+      );
+      districtId = highest?.districtId;
+    }
+  }
+
+  // Bind faction from active contract sponsor or highest-scrutiny faction
+  if (template.requiredContext.includes("faction")) {
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    if (contractSite?.sponsorFactionId) {
+      factionId = contractSite.sponsorFactionId;
+    } else if (context.runtimeState.cityState) {
+      const factions = Object.values(context.runtimeState.cityState.factions);
+      const highest = factions.reduce<(typeof factions)[0] | undefined>(
+        (best, f) => (!best || f.scrutiny > best.scrutiny ? f : best),
+        undefined,
+      );
+      factionId = highest?.factionId;
+    }
+  }
+
+  // Bind contract site from active contract
+  if (template.requiredContext.includes("contract_site")) {
+    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+    if (contractSite?.contractSiteId) {
+      contractSiteId = contractSite.contractSiteId;
+    }
+  }
+
+  // Bind team from recurring teams with bound operators
+  if (template.requiredContext.includes("team") && operatorIds.length >= 2) {
+    const teamEntity = findRecurringTeamForMembers(context, operatorIds);
+    if (teamEntity !== undefined) {
+      teamId = RecurringTeam.id[teamEntity];
+    }
+  }
+
   return {
     operatorIds,
     roomId,
-    teamId: undefined,
-    contractSiteId: undefined,
+    teamId,
+    contractSiteId,
+    districtId,
+    factionId,
     bossId: undefined,
   };
 }
@@ -1648,6 +2700,58 @@ export function resolveIncident(
   const resolutionSummary = payload?.choices.find(
     (entry) => entry.choiceId === choiceId,
   )?.resolutionSummary;
+
+  const netMorale = adjustedEffects.reduce(
+    (sum, e) => sum + (e.kind === "morale_delta" ? e.value : 0),
+    0,
+  );
+  const netReputation = adjustedEffects.reduce(
+    (sum, e) => sum + (e.kind === "reputation_delta" ? e.value : 0),
+    0,
+  );
+
+  // Apply room culture shift when incident has a bound room
+  if (incident.boundContext.roomId) {
+    const tone = netMorale > 0 ? "positive" : netMorale < -3 ? "negative" : "neutral";
+    applyRoomCultureShiftFromIncident(context, incident.boundContext.roomId, tone);
+  }
+
+  // Apply scandal fallout for licensing/regulatory incidents with reputation loss
+  if (SCANDAL_INCIDENT_CATEGORIES.has(incident.category) && netReputation < -2) {
+    applySocialFalloutAfterScandal(context, netReputation <= -5 ? "major" : "minor");
+  }
+
+  // Apply district pressure writeback when district-bound incidents resolve
+  if (incident.boundContext.districtId && context.runtimeState.cityState) {
+    const district = context.runtimeState.cityState.districts[incident.boundContext.districtId];
+    if (district) {
+      if (netReputation > 0) {
+        district.trust = clamp(district.trust + Math.round(netReputation * 0.5), 0, 100);
+        district.attention = clamp(district.attention - Math.round(netReputation * 0.3), 0, 100);
+        if (
+          incident.category === "containment_demand" ||
+          incident.category === "district_backlash"
+        ) {
+          applySocialRecoveryAfterDistrictWin(context);
+        }
+      } else if (netReputation < 0) {
+        district.trust = clamp(district.trust + Math.round(netReputation * 0.4), 0, 100);
+      }
+    }
+  }
+
+  // Apply faction scrutiny adjustment when faction-bound incidents resolve
+  if (incident.boundContext.factionId && context.runtimeState.cityState) {
+    const faction = context.runtimeState.cityState.factions[incident.boundContext.factionId];
+    if (faction) {
+      if (netReputation > 0) {
+        faction.scrutiny = clamp(faction.scrutiny - Math.round(netReputation * 0.3), 0, 100);
+        faction.standing = clamp(faction.standing + Math.round(netReputation * 0.2), -100, 100);
+      } else if (netReputation < 0) {
+        faction.scrutiny = clamp(faction.scrutiny - Math.round(netReputation * 0.4), 0, 100);
+      }
+    }
+  }
 
   // Emit event
   pushRuntimeEvent(context, {
@@ -1749,9 +2853,96 @@ function applyConsequenceEffect(
       );
       break;
     }
+    case "team_cohesion_delta": {
+      // Apply to the recurring team that includes the bound operators
+      const memberIds = incident.boundContext.operatorIds;
+      if (memberIds.length >= 2) {
+        const teamEntity = findRecurringTeamForMembers(context, memberIds);
+        if (teamEntity !== undefined) {
+          RecurringTeam.cohesion[teamEntity] = clamp(
+            RecurringTeam.cohesion[teamEntity] + effect.value,
+            0,
+            100,
+          );
+          if (effect.value < 0 && RecurringTeam.cohesion[teamEntity] < 25) {
+            RecurringTeam.damaged[teamEntity] = 1;
+            RecurringTeam.damageReason[teamEntity] = "incident_fallout";
+          }
+        }
+      }
+      break;
+    }
+    case "injury_progression": {
+      const targetId = resolveEffectTarget(incident, effect.targetRef);
+      if (targetId) {
+        const entity = context.runtimeState.operatorEntities.find(
+          (e) => OperatorIdentity.id[e] === targetId,
+        );
+        if (entity !== undefined) {
+          InjuryState.severity[entity] = clamp(InjuryState.severity[entity] + effect.value, 0, 100);
+          if (effect.value > 0) {
+            InjuryState.recoveryHoursRemaining[entity] = Math.max(
+              InjuryState.recoveryHoursRemaining[entity],
+              effect.value * 0.8,
+            );
+          }
+        }
+      }
+      break;
+    }
+    case "departure_risk": {
+      const targetId = resolveEffectTarget(incident, effect.targetRef);
+      if (targetId) {
+        const entity = context.runtimeState.operatorEntities.find(
+          (e) => OperatorIdentity.id[e] === targetId,
+        );
+        if (entity !== undefined) {
+          // Departure risk translates to loyalty erosion and grievance increase
+          const loyaltyDrain = Math.round(effect.value * 0.3);
+          LoyaltyState.current[entity] = clamp(LoyaltyState.current[entity] - loyaltyDrain, 0, 100);
+          const dispositionEntity = ensureOperatorDispositionEntity(context, targetId);
+          if (dispositionEntity !== undefined) {
+            OperatorDisposition.grievanceLevel[dispositionEntity] = clamp(
+              OperatorDisposition.grievanceLevel[dispositionEntity] +
+                Math.round(effect.value * 0.4),
+              0,
+              100,
+            );
+            OperatorDisposition.satisfactionLevel[dispositionEntity] = clamp(
+              OperatorDisposition.satisfactionLevel[dispositionEntity] -
+                Math.round(effect.value * 0.2),
+              0,
+              100,
+            );
+          }
+        }
+      }
+      break;
+    }
+    case "contract_pressure_delta": {
+      // Only write to pressureModifier; BuildingAuthority.pressure is recomputed
+      // every tick by advanceEventPressureSystem via computePressure(), which
+      // already incorporates incidentPressureModifier / 5.
+      context.runtimeState.incidentState.pressureModifier = clamp(
+        context.runtimeState.incidentState.pressureModifier + effect.value,
+        -40,
+        40,
+      );
+      if (incident.boundContext.districtId && context.runtimeState.cityState) {
+        const district = context.runtimeState.cityState.districts[incident.boundContext.districtId];
+        if (district) {
+          district.attention = clamp(district.attention + Math.round(effect.value * 0.5), 0, 100);
+        }
+      }
+      if (incident.boundContext.factionId && context.runtimeState.cityState) {
+        const faction = context.runtimeState.cityState.factions[incident.boundContext.factionId];
+        if (faction) {
+          faction.scrutiny = clamp(faction.scrutiny + Math.round(effect.value * 0.3), 0, 100);
+        }
+      }
+      break;
+    }
     default:
-      // team_cohesion_delta, injury_progression, departure_risk, contract_pressure_delta
-      // These are tracked but have no immediate ECS effect in the first implementation
       break;
   }
 }
@@ -1811,6 +3002,8 @@ export function createIncidentInterruptionPayload(
   operatorNames: Record<string, string>,
   roomNames: Record<string, string> = {},
   presentation?: IncidentPresentationOverride,
+  districtNames: Record<string, string> = {},
+  factionNames: Record<string, string> = {},
 ): IncidentPayload {
   let briefing = template.briefingTemplate;
   if (incident.boundContext.operatorIds[0]) {
@@ -1825,6 +3018,14 @@ export function createIncidentInterruptionPayload(
     const roomName = roomNames[incident.boundContext.roomId] ?? "the room";
     briefing = briefing.replace("{room}", roomName);
   }
+  if (incident.boundContext.districtId) {
+    const districtName = districtNames[incident.boundContext.districtId] ?? "the district";
+    briefing = briefing.replace("{district}", districtName);
+  }
+  if (incident.boundContext.factionId) {
+    const factionName = factionNames[incident.boundContext.factionId] ?? "the faction";
+    briefing = briefing.replace("{faction}", factionName);
+  }
 
   const choiceViews: IncidentChoiceView[] = incident.choices.map((c) => ({
     choiceId: c.choiceId,
@@ -1837,6 +3038,12 @@ export function createIncidentInterruptionPayload(
   );
   if (incident.boundContext.roomId && roomNames[incident.boundContext.roomId]) {
     subjectSummaryParts.push(roomNames[incident.boundContext.roomId]);
+  }
+  if (incident.boundContext.districtId && districtNames[incident.boundContext.districtId]) {
+    subjectSummaryParts.push(districtNames[incident.boundContext.districtId]);
+  }
+  if (incident.boundContext.factionId && factionNames[incident.boundContext.factionId]) {
+    subjectSummaryParts.push(factionNames[incident.boundContext.factionId]);
   }
   const subjectSummary = subjectSummaryParts.join(", ");
   const mergedChoices =

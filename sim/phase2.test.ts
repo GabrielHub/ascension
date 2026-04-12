@@ -167,6 +167,7 @@ function createPhase2TestContext(): SimSystemContext {
         cooldowns: {},
         nextInstanceId: 1,
         lastEvaluationMinute: 0,
+        pressureModifier: 0,
       },
       guidanceState: {
         seenBeatIds: [],
@@ -511,6 +512,7 @@ describe("Phase 2 inventory system", () => {
           cooldowns: {},
           nextInstanceId: 1,
           lastEvaluationMinute: 0,
+          pressureModifier: 0,
         },
         guidanceState: {
           seenBeatIds: [],

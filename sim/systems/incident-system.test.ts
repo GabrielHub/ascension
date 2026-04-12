@@ -234,4 +234,68 @@ describe("incident system", () => {
     expect(bufferedTreasury).toBe(-15);
     expect(bufferedReputation).toBe(9);
   });
+
+  it("persists contract-pressure incident effects in incident state instead of only touching derived pressure", () => {
+    const context = createIncidentSystemContext();
+    const template = INCIDENT_TEMPLATES.find(
+      (entry) => entry.id === "incident/contract-deadline-warning",
+    );
+    if (!template) {
+      throw new Error("expected contract deadline incident template");
+    }
+
+    BuildingAuthority.pressure[context.singletonEntities.building] = 4;
+    context.runtimeState.incidentState.pendingIncident = {
+      instanceId: "incident-contract-pressure",
+      templateId: template.id,
+      templateName: template.name,
+      category: template.category,
+      tags: [...template.tags],
+      triggerFamily: template.triggerFamily,
+      boundContext: {
+        operatorIds: ["operator/a"],
+      },
+      choices: template.choices,
+      createdAtMinute: 600,
+    };
+
+    resolveIncident(context, context.runtimeState.incidentState, "push_harder");
+
+    expect(context.runtimeState.incidentState.pressureModifier).toBe(-15);
+    // BuildingAuthority.pressure is not written immediately — it is recomputed
+    // on the next tick by advanceEventPressureSystem via computePressure().
+    expect(BuildingAuthority.pressure[context.singletonEntities.building]).toBe(4);
+  });
+
+  it("emits a social fallout event when scandal incidents land with a meaningful reputation hit", () => {
+    const context = createIncidentSystemContext();
+    const template = INCIDENT_TEMPLATES.find(
+      (entry) => entry.id === "incident/licensing-audit-routine",
+    );
+    if (!template) {
+      throw new Error("expected licensing audit incident template");
+    }
+
+    context.runtimeState.incidentState.pendingIncident = {
+      instanceId: "incident-scandal",
+      templateId: template.id,
+      templateName: template.name,
+      category: template.category,
+      tags: [...template.tags],
+      triggerFamily: template.triggerFamily,
+      boundContext: {
+        operatorIds: [],
+        districtId: "district/lower-east-side",
+        factionId: "faction/city-licensing",
+      },
+      choices: template.choices,
+      createdAtMinute: 600,
+    };
+
+    resolveIncident(context, context.runtimeState.incidentState, "stall_and_reschedule");
+
+    expect(
+      context.runtimeState.pendingEvents.some((event) => event.kind === "social_fallout"),
+    ).toBe(true);
+  });
 });

@@ -1,6 +1,6 @@
 # Phase 4 Midgame Social And Incident Plan
 
-This plan deepens the consequences layer after city pressure, Porter's content remediation, and crafting exist. It turns faction pressure, operator death, contract fallout, and room culture into richer incident and social outcomes with real ECS-owned consequences.
+This plan deepens the consequences layer after city pressure, Porter's content remediation, and crafting exist. It turns faction pressure, operator death, contract fallout, and room culture into richer incident and social outcomes with real ECS-owned consequences. This execution slice is shipped.
 
 ## Goal
 
@@ -135,7 +135,7 @@ Ship these categories in Phase 4:
 
 ### File Locks
 
-- None until earlier slices merge.
+- None.
 
 ### In Progress
 
@@ -143,8 +143,15 @@ Ship these categories in Phase 4:
 
 ### Blocked
 
-- `phase-4-midgame-crafting-plan`
+- None.
 
 ### Done
 
-- Dependencies resolved: contract lock, city pressure, and content remediation are already shipped in code.
+- Dependencies resolved: contract lock, city pressure, content remediation, and crafting are already shipped in code.
+- Step 1: existing effect kinds (`team_cohesion_delta`, `injury_progression`, `departure_risk`, `contract_pressure_delta`) now apply real ECS state changes.
+- Step 2: `IncidentBoundContext` expanded with `districtId` and `factionId`; `bindIncidentSubjects` resolves them from active contracts or highest-pressure city state; `hasRequiredIncidentContext` gates on district/faction/contract_site/team availability.
+- Step 3: 20 new midgame incident templates authored across 10 categories (licensing audit, labor safety, containment demand, borough hearing, rival interference, grief memorial, team fracture, district backlash, workshop disruption, sponsor ultimatum).
+- Step 4: social fallout functions added for operator death, contract loss, scandal, district recovery, room culture shifts, and retention pressure patterns.
+- Step 5: event presentation updated with `incident_resolved` and `social_fallout` event log kinds; interruption payloads now include district/faction names in subject summary and briefing copy.
+- Step 6: glossary updated with all 10 new incident categories.
+- Verification: `vp check`, `vp test`, and `vp build` all pass.

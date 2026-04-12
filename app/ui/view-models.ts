@@ -564,7 +564,9 @@ export type EventLogKind =
   | "raid_result"
   | "team_status"
   | "room_culture"
-  | "city_pressure";
+  | "city_pressure"
+  | "incident_resolved"
+  | "social_fallout";
 
 export interface EventLogEntry {
   id: string;

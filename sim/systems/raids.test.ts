@@ -57,6 +57,7 @@ function createMinimalContext(): SimSystemContext {
         cooldowns: {},
         nextInstanceId: 1,
         lastEvaluationMinute: 0,
+        pressureModifier: 0,
       },
       guidanceState: {
         seenBeatIds: [],
