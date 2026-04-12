@@ -2484,6 +2484,19 @@ describe("phase 1 runtime", () => {
     expect(simulation.getPhase1View().contractResult?.outcome).toBe("mission_complete");
   });
 
+  it("dev force contract end preserves mission_complete instead of coercing it to a loss", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    simulation.dispatch({
+      type: "sim/dev-force-contract-end",
+      outcome: "mission_complete",
+    });
+    simulation.tick(1000);
+
+    expect(simulation.getPhase1View().contractResult?.outcome).toBe("mission_complete");
+  });
+
   it("visitor generation only produces field-role recruits", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 

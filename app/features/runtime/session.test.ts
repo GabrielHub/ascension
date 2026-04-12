@@ -1470,6 +1470,7 @@ describe("runtime session lifecycle", () => {
       session.state.phase1View.operators.find((operator) => operator.id === "operator/rose-vega")
         ?.appearance.visibleGear,
     ).toEqual({
+      accessoryPartId: "accessory/field-lead-badge",
       weaponPartId: "weapon/tactical-rifle",
       outfitOverlayPartId: "outfit-overlay/tactical-vest",
     });
@@ -1530,7 +1531,9 @@ describe("runtime session lifecycle", () => {
     expect(
       session.state.phase1View.operators.find((operator) => operator.id === targetOperator!.id)
         ?.appearance.visibleGear,
-    ).toBeUndefined();
+    ).toEqual({
+      weaponPartId: "weapon/pipe-wrench",
+    });
     expect(session.worldSnapshot.inventoryStacks).toEqual(
       expect.arrayContaining([
         { itemId: "weapon/pipe-wrench", quantity: 1 },

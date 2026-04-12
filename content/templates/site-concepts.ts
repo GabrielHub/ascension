@@ -1,3 +1,5 @@
+import type { RankTone } from "./shared";
+
 /**
  * Site concept templates define dungeon identity independently from mission objectives.
  * A site concept determines what the place is; a mission determines what you do there.
@@ -19,6 +21,7 @@ export interface SiteConceptTemplate {
   worldSpaceLabel: string;
   conceptSummary: string;
   rankPool: readonly ContractRank[];
+  rankTone: RankTone;
   threatProfileTags: readonly string[];
   hazardTags: readonly string[];
   enemyFamilyIds: readonly string[];
@@ -37,6 +40,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "A subway tunnel that kept going after the last stop. The water is warm and wrong.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:clustered", "threat:hazard"],
     hazardTags: ["hazard:flooding", "hazard:low-visibility"],
     enemyFamilyIds: ["enemy-family/tunnel-crawlers"],
@@ -57,6 +61,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Spiral ramps that don't end. Exhaust fumes that watch you. The attendant booth is still lit.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:mobile", "threat:ambush"],
     hazardTags: ["hazard:fumes", "hazard:poor-footing"],
     enemyFamilyIds: ["enemy-family/concrete-sentinels"],
@@ -77,6 +82,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Hallways that loop. Classrooms that rearrange when you look away. The PA system still works.",
     rankPool: ["f", "e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:unstable", "threat:hostile"],
     hazardTags: ["hazard:spatial-distortion", "hazard:noise"],
     enemyFamilyIds: ["enemy-family/chalk-swarms"],
@@ -97,6 +103,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Aggressive growth everywhere. Greenhouse glass that heals itself. Roots that relocate rooms.",
     rankPool: ["f", "e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:clustered", "threat:hazard"],
     hazardTags: ["hazard:entanglement", "hazard:pollen"],
     enemyFamilyIds: ["enemy-family/vine-constructs"],
@@ -118,6 +125,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The basement washers never stopped running. The water down here is hot, sudsy, and moving against the current. The dryers spin at frequencies that loosen fillings.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:hazard", "threat:clustered"],
     hazardTags: ["hazard:flooding", "hazard:chemical", "hazard:heat"],
     enemyFamilyIds: ["enemy-family/suds-constructs"],
@@ -138,6 +146,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Somebody's basement apartment kept going down. The furniture rearranges itself. The radiator still works, which is the most frightening part.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:ambush", "threat:unstable"],
     hazardTags: ["hazard:darkness", "hazard:structural-collapse"],
     enemyFamilyIds: ["enemy-family/cellar-dwellers"],
@@ -158,6 +167,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The gym lights are on. The scoreboard counts something. The pool has been drained but the diving board still bounces when nobody is on it.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:mobile", "threat:hostile"],
     hazardTags: ["hazard:noise", "hazard:spatial-distortion"],
     enemyFamilyIds: ["enemy-family/court-echoes"],
@@ -178,6 +188,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The walk-in fridge behind the deli counter goes back further than the building. The cold is wrong — it preserves things that should not be preserved.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:hazard", "threat:ambush"],
     hazardTags: ["hazard:cold", "hazard:low-visibility"],
     enemyFamilyIds: ["enemy-family/freezer-fauna"],
@@ -200,6 +211,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "A subway platform that was boarded up after the first week. The announcements still play. The trains that arrive are not MTA.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:ambush", "threat:unstable"],
     hazardTags: ["hazard:noise", "hazard:spatial-distortion"],
     enemyFamilyIds: ["enemy-family/transit-haunts"],
@@ -220,6 +232,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The ventilation failed months ago but the fumes never left. They thickened. The UV lamps are still on and the color is wrong.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:hazard", "threat:clustered"],
     hazardTags: ["hazard:chemical", "hazard:low-visibility"],
     enemyFamilyIds: ["enemy-family/fume-wraiths"],
@@ -240,6 +253,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The fire escape grew inward through the walls. Landings connect to rooms that do not exist. Going up takes you sideways.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:mobile", "threat:ambush"],
     hazardTags: ["hazard:poor-footing", "hazard:structural-collapse"],
     enemyFamilyIds: ["enemy-family/rust-creepers"],
@@ -260,6 +274,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Everything behind the security glass wants out. The display cases rearrange at night. The owner left the TV on and it shows things that have not happened yet.",
     rankPool: ["f"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:ambush", "threat:hostile"],
     hazardTags: ["hazard:entrapment", "hazard:noise"],
     enemyFamilyIds: ["enemy-family/display-mimics"],
@@ -282,6 +297,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Tanks that go deeper than possible. Water that doesn't behave right. The exhibit signs are still legible.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:mobile", "threat:hostile"],
     hazardTags: ["hazard:flooding", "hazard:pressure"],
     enemyFamilyIds: ["enemy-family/aquatic-horrors"],
@@ -302,6 +318,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Escalators to floors that shouldn't exist. Mannequins that weren't there a second ago. The fitting rooms don't open from inside.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:ambush", "threat:hostile"],
     hazardTags: ["hazard:spatial-distortion", "hazard:entrapment"],
     enemyFamilyIds: ["enemy-family/mannequin-stalkers"],
@@ -322,6 +339,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Half-built floors stacked wrong. Rebar that grows. The crane still turns, but nobody's up there.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:clustered", "threat:hostile"],
     hazardTags: ["hazard:falling-debris", "hazard:structural-collapse"],
     enemyFamilyIds: ["enemy-family/rebar-constructs"],
@@ -342,6 +360,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "Transformers that hum at the wrong frequency. Cables that reach. The control room lights flicker in patterns.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:hazard", "threat:unstable"],
     hazardTags: ["hazard:electrical", "hazard:magnetic-interference"],
     enemyFamilyIds: ["enemy-family/conduit-crawlers"],
@@ -363,6 +382,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The projectors never stopped running. The screens show films that were never made. The popcorn butter is warm and the concession stand lights flicker in rhythm with something breathing.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:ambush", "threat:hostile"],
     hazardTags: ["hazard:low-visibility", "hazard:noise"],
     enemyFamilyIds: ["enemy-family/reel-phantoms"],
@@ -383,6 +403,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The water tower on the roof stopped being a water tower. The water inside is too clear, too deep, and the algae growing on the inner walls glows when it hears footsteps.",
     rankPool: ["e"],
+    rankTone: "grounded",
     threatProfileTags: ["threat:hazard", "threat:clustered"],
     hazardTags: ["hazard:flooding", "hazard:poor-footing"],
     enemyFamilyIds: ["enemy-family/cistern-dwellers"],
@@ -405,6 +426,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The telescope connected to somewhere it shouldn't. Stars are visible during the day inside the dome, and they're wrong stars. The dome rotates on its own, tracking something the sky doesn't contain.",
     rankPool: ["d"],
+    rankTone: "heightened",
     threatProfileTags: ["threat:unstable", "threat:hostile"],
     hazardTags: ["hazard:spatial-distortion", "hazard:low-visibility"],
     enemyFamilyIds: ["enemy-family/astral-parasites"],
@@ -425,6 +447,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "A water pumping station under the East River. The water inside isn't river water anymore — it's too clear, too dense, and the pressure gauges read numbers that shouldn't be possible. Something in the pipes has adapted to pressures that don't occur on Earth's surface.",
     rankPool: ["d"],
+    rankTone: "heightened",
     threatProfileTags: ["threat:hazard", "threat:mobile"],
     hazardTags: ["hazard:flooding", "hazard:pressure"],
     enemyFamilyIds: ["enemy-family/pressure-spawn"],
@@ -445,6 +468,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "The upper works of a condemned theater where the fly system operates itself. Sandbags swing with precision, spotlights track living targets, and the rigging ropes tie themselves into shapes that hurt to look at. Six decades of performances have seeped into the machinery.",
     rankPool: ["d"],
+    rankTone: "heightened",
     threatProfileTags: ["threat:mobile", "threat:ambush"],
     hazardTags: ["hazard:falling-debris", "hazard:spatial-distortion"],
     enemyFamilyIds: ["enemy-family/stage-haunts"],
@@ -465,6 +489,7 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
     conceptSummary:
       "A biotech startup's lab in a converted warehouse. The automated systems continued their experiments after evacuation. Cell cultures became organisms. Centrifuges became predators. The equipment has been iterating on its own designs and the results are not peer-reviewed.",
     rankPool: ["d"],
+    rankTone: "heightened",
     threatProfileTags: ["threat:hazard", "threat:hostile"],
     hazardTags: ["hazard:chemical", "hazard:entrapment"],
     enemyFamilyIds: ["enemy-family/lab-specimens"],

@@ -90,6 +90,29 @@ const LOCATION_META = {
   "district/harlem-substation": "Harlem Substation",
 } satisfies DisplayRegistry;
 
+const FACTION_META = {
+  "faction/city-licensing": {
+    label: "City Licensing Bureau",
+    tip: "Issues and revokes guild operating licenses. Cares about paperwork and certification.",
+  },
+  "faction/labor-safety": {
+    label: "Labor & Safety Board",
+    tip: "Oversees working conditions for attuned labor. Watches injury reports and schedule violations.",
+  },
+  "faction/emergency-management": {
+    label: "Emergency Management Office",
+    tip: "Coordinates disaster response and containment enforcement after failed clearances.",
+  },
+  "faction/borough-contracts": {
+    label: "Borough Contracts Authority",
+    tip: "Controls borough-level contract allocation and priority bidding.",
+  },
+  "faction/rival-guild-market": {
+    label: "Rival Guild Market",
+    tip: "The collective competitive pressure from other guilds bidding for contracts and talent.",
+  },
+} satisfies DisplayRegistry;
+
 const RESOURCE_META = {
   "resource/cash": { label: "Cash", tip: "Currency used for upgrades, hiring, and bids." },
   "resource/reputation": {
@@ -849,4 +872,12 @@ export function getEffectLabel(eff: { type: string; [key: string]: unknown }): s
     default:
       return getEffectTypeMeta(eff.type).label;
   }
+}
+
+export function getFactionMeta(factionId: string): DisplayMeta {
+  return resolveDisplayMeta(factionId, FACTION_META);
+}
+
+export function getFactionLabel(factionId: string): string {
+  return getFactionMeta(factionId).label;
 }

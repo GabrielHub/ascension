@@ -7,6 +7,7 @@ import { refreshBuildingAuthoritySystem } from "./building-progression";
 import { reconcileAssignmentsSystem } from "./assignment";
 import { advanceEconomySystem } from "./economy";
 import { advanceEventPressureSystem } from "./events";
+import { advanceCityPressureSystem } from "./city-pressure";
 import { advanceMoraleSystem } from "./morale";
 import { advanceNeedsSystem } from "./needs";
 import { resolveRaidSystem } from "./raids";
@@ -75,6 +76,7 @@ export const simSystemSchedule: readonly SimSystemGroup[] = [
   { id: "movement", systems: [noopSystem] },
   { id: "raids", systems: [resolveRaidSystem] },
   { id: "economy", systems: [advanceEconomySystem] },
+  { id: "city-pressure", systems: [advanceCityPressureSystem] },
   { id: "events", systems: [advanceEventPressureSystem] },
   { id: "incidents", systems: [lazyIncidentSystem] },
   { id: "guidance", systems: [lazyGuidanceSystem] },

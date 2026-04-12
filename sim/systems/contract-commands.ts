@@ -25,11 +25,18 @@ export function applyContractCommand(
       const buildingEntity = context.singletonEntities.building;
       const contractSite = BuildingAuthority.contractSite[buildingEntity];
       if (!contractSite) return false;
-      const outcome = payload.outcome === "boss_defeated" ? "boss_defeated" : "contract_lost";
+      const outcome =
+        payload.outcome === "boss_defeated" ||
+        payload.outcome === "mission_complete" ||
+        payload.outcome === "contract_lost"
+          ? payload.outcome
+          : "contract_lost";
       BuildingAuthority.contractSite[buildingEntity] =
         outcome === "boss_defeated"
           ? { ...contractSite, bossDefeated: true }
-          : { ...contractSite, contractLost: true };
+          : outcome === "mission_complete"
+            ? { ...contractSite, missionCompleted: true }
+            : { ...contractSite, contractLost: true };
       return true;
     }
     default:

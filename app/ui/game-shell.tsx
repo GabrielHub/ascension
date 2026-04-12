@@ -67,6 +67,7 @@ import {
   tabButtonClass,
 } from "./styles";
 import {
+  buildCityPressureView,
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
   buildInventoryViewModels,
@@ -1545,6 +1546,11 @@ export function GameShell() {
     [phase2, registry],
   );
 
+  const cityPressure = useMemo(
+    () => buildCityPressureView(session?.state.worldSnapshot.cityPressure),
+    [session?.state.worldSnapshot.cityPressure],
+  );
+
   const { entries: eventLog, handleEntryClick: handleEventLogEntryClick } = useEventLog(
     session ?? null,
   );
@@ -2374,6 +2380,7 @@ export function GameShell() {
                       operators={hq.operators}
                       relocationGate={hq.relocationGate}
                       callbacks={callbacks}
+                      cityPressure={cityPressure}
                     />
                   )}
                   {activeTab === "hq" && hqCategory === "teams" && (

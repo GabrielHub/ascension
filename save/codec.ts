@@ -2,6 +2,8 @@ import {
   CURRENT_CONTENT_COMPATIBILITY,
   CURRENT_SAVE_SCHEMA_VERSION,
   SAVE_SLOT_IDS,
+  createDefaultDistrictPressure,
+  createDefaultFactionStanding,
   type OperatorAppearanceSnapshot,
   type OperatorCombatSnapshot,
   type OperatorTrainingSnapshot,
@@ -12,6 +14,9 @@ import {
   type EquipmentAssignmentSnapshot,
   type FogOfWarSnapshot,
   type BuildingSnapshot,
+  type CityPressureSnapshot,
+  type DistrictPressureSnapshot,
+  type FactionStandingSnapshot,
   type GuildSnapshot,
   type InventoryStackSnapshot,
   type LootAutomationSnapshot,
@@ -96,6 +101,8 @@ const CONTRACT_BOARD_INTEL_SOURCES = ["street", "back_office", "office"] as cons
 const CONTRACT_BOARD_INTEL_QUALITIES = ["rough", "reviewed", "dossier"] as const;
 const CONTRACT_BRIEFING_SOURCES = ["briefing_room", "briefing_room_and_prep"] as const;
 const CONTRACT_BRIEFING_STATUSES = ["briefed", "drilled"] as const;
+const CITY_PRESSURE_DISTRICT_IDS = templateRegistry.districts.map((district) => district.id);
+const CITY_PRESSURE_FACTION_IDS = templateRegistry.factions.map((faction) => faction.id);
 
 interface OperatorAppearanceParseContext {
   getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
@@ -813,6 +820,10 @@ function parseContractSiteSnapshot(
       ...(record.bossAvailable === undefined
         ? { bossAvailable: false }
         : { bossAvailable: expectBoolean(record.bossAvailable, `${path}.bossAvailable`) }),
+      ...(typeof record.districtId === "string" ? { districtId: record.districtId } : {}),
+      ...(typeof record.sponsorFactionId === "string"
+        ? { sponsorFactionId: record.sponsorFactionId }
+        : {}),
       boardIntel,
       briefing,
     },
@@ -903,6 +914,13 @@ function parsePostedContractSnapshot(value: unknown, path: string): ParsedPosted
           neighborhoodLabel: expectString(record.neighborhoodLabel, `${path}.neighborhoodLabel`),
         }),
     boardIntel,
+    ...(typeof record.districtId === "string" ? { districtId: record.districtId } : {}),
+    ...(typeof record.sponsorFactionId === "string"
+      ? { sponsorFactionId: record.sponsorFactionId }
+      : {}),
+    ...(Array.isArray(record.pressureTags)
+      ? { pressureTags: record.pressureTags.filter((t): t is string => typeof t === "string") }
+      : {}),
     _changed:
       record.knownTraits === undefined ||
       record.hiddenTraitCount === undefined ||
@@ -947,6 +965,10 @@ function parseContractResultSnapshot(
       ),
       operatorDeaths: expectNonNegativeInteger(record.operatorDeaths, `${path}.operatorDeaths`),
       resolvedAtTick: expectInteger(record.resolvedAtTick, `${path}.resolvedAtTick`),
+      ...(typeof record.districtId === "string" ? { districtId: record.districtId } : {}),
+      ...(typeof record.sponsorFactionId === "string"
+        ? { sponsorFactionId: record.sponsorFactionId }
+        : {}),
     },
     changed: false,
   };
@@ -1882,6 +1904,123 @@ function parseLootAutomationSnapshot(
   };
 }
 
+function parseDistrictPressureSnapshot(value: unknown, path: string): DistrictPressureSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    districtId: expectString(record.districtId, `${path}.districtId`),
+    attention: expectNumber(record.attention, `${path}.attention`),
+    trust: expectNumber(record.trust, `${path}.trust`),
+    containmentDebt: expectNumber(record.containmentDebt, `${path}.containmentDebt`),
+    recentContractCount: expectNonNegativeInteger(
+      record.recentContractCount,
+      `${path}.recentContractCount`,
+    ),
+    lastResolvedTick: expectNonNegativeInteger(record.lastResolvedTick, `${path}.lastResolvedTick`),
+  };
+}
+
+function parseFactionStandingSnapshot(value: unknown, path: string): FactionStandingSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    factionId: expectString(record.factionId, `${path}.factionId`),
+    standing: expectNumber(record.standing, `${path}.standing`),
+    scrutiny: expectNumber(record.scrutiny, `${path}.scrutiny`),
+    leverage: expectNumber(record.leverage, `${path}.leverage`),
+    cooldownUntilTick: expectNonNegativeInteger(
+      record.cooldownUntilTick,
+      `${path}.cooldownUntilTick`,
+    ),
+  };
+}
+
+function parseCityPressureSnapshot(
+  value: unknown,
+  path: string,
+): { cityPressure: CityPressureSnapshot | null | undefined; changed: boolean } {
+  if (value === undefined) {
+    return {
+      cityPressure: undefined,
+      changed: false,
+    };
+  }
+
+  if (value === null) {
+    return {
+      cityPressure: null,
+      changed: false,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  let changed = false;
+
+  const parsedDistricts =
+    record.districts === undefined
+      ? ((changed = true), [])
+      : parseCollection(record.districts, `${path}.districts`, parseDistrictPressureSnapshot);
+  const parsedFactions =
+    record.factions === undefined
+      ? ((changed = true), [])
+      : parseCollection(record.factions, `${path}.factions`, parseFactionStandingSnapshot);
+
+  const districtById = new Map<string, DistrictPressureSnapshot>();
+  parsedDistricts.forEach((district, index) => {
+    if (!templateRegistry.districtById.has(district.districtId)) {
+      fail(
+        `${path}.districts[${index}].districtId`,
+        `must reference a known district id, got "${district.districtId}".`,
+      );
+    }
+    if (districtById.has(district.districtId)) {
+      fail(
+        `${path}.districts[${index}].districtId`,
+        `duplicates districtId "${district.districtId}".`,
+      );
+    }
+    districtById.set(district.districtId, district);
+  });
+
+  const factionById = new Map<string, FactionStandingSnapshot>();
+  parsedFactions.forEach((faction, index) => {
+    if (!templateRegistry.factionById.has(faction.factionId)) {
+      fail(
+        `${path}.factions[${index}].factionId`,
+        `must reference a known faction id, got "${faction.factionId}".`,
+      );
+    }
+    if (factionById.has(faction.factionId)) {
+      fail(`${path}.factions[${index}].factionId`, `duplicates factionId "${faction.factionId}".`);
+    }
+    factionById.set(faction.factionId, faction);
+  });
+
+  const districts = CITY_PRESSURE_DISTRICT_IDS.map((districtId) => {
+    const existing = districtById.get(districtId);
+    if (existing) {
+      return existing;
+    }
+    changed = true;
+    return createDefaultDistrictPressure(districtId);
+  });
+
+  const factions = CITY_PRESSURE_FACTION_IDS.map((factionId) => {
+    const existing = factionById.get(factionId);
+    if (existing) {
+      return existing;
+    }
+    changed = true;
+    return createDefaultFactionStanding(factionId);
+  });
+
+  return {
+    cityPressure: {
+      districts,
+      factions,
+    },
+    changed,
+  };
+}
+
 function deriveDispositionFromOperator(operator: OperatorSnapshot): OperatorDispositionSnapshot {
   const moraleRecord = operator.morale;
   const loyaltyRecord = operator.loyalty;
@@ -1973,6 +2112,7 @@ function parseWorldSnapshot(
     record.lootAutomation,
     `${path}.lootAutomation`,
   );
+  const cityPressure = parseCityPressureSnapshot(record.cityPressure, `${path}.cityPressure`);
   const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
   const rooms = parseCollection(record.rooms, `${path}.rooms`, (entry, entryPath) =>
     parseRoomSnapshot(entry, entryPath, schemaVersion, building.building),
@@ -2295,6 +2435,9 @@ function parseWorldSnapshot(
       equipmentAssignments,
       policies: policies.policies,
       lootAutomation: lootAutomation.lootAutomation,
+      ...(cityPressure.cityPressure === undefined
+        ? {}
+        : { cityPressure: cityPressure.cityPressure }),
       // Encounter, interruption, and incident state: pass through if present, ignore if absent
       ...(record.activeEncounter && typeof record.activeEncounter === "object"
         ? { activeEncounter: record.activeEncounter as SaveStructuredRecord }
@@ -2332,6 +2475,7 @@ function parseWorldSnapshot(
       scheduler.changed ||
       policies.changed ||
       lootAutomation.changed ||
+      cityPressure.changed ||
       guild.changed ||
       raidSummaryChanged ||
       phase2Changed ||

@@ -18,6 +18,7 @@ const KIND_ICONS: Record<EventLogKind, string> = {
   raid_result: "\u2691", // flag
   team_status: "\u2689", // gear/team
   room_culture: "\u25A3", // room block
+  city_pressure: "\u2302", // city/house
 };
 
 const KIND_ACCENT_FALLBACK: Record<EventLogKind, string> = {
@@ -33,6 +34,7 @@ const KIND_ACCENT_FALLBACK: Record<EventLogKind, string> = {
   raid_result: "text-ember",
   team_status: "text-gold/80",
   room_culture: "text-silver/70",
+  city_pressure: "text-ember",
 };
 
 // ── Component ───────────────────────────────────────────────────────────

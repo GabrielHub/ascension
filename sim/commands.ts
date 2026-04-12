@@ -276,6 +276,18 @@ export type SimCommand =
   | {
       type: "sim/dev-force-contract-end";
       outcome: "mission_complete" | "boss_defeated" | "contract_lost";
+    }
+  | {
+      type: "sim/dev-set-district";
+      districtId: string;
+      field: "attention" | "trust" | "containmentDebt";
+      value: number;
+    }
+  | {
+      type: "sim/dev-set-faction";
+      factionId: string;
+      field: "standing" | "scrutiny" | "leverage";
+      value: number;
     };
 
 export interface SimCommandQueue {

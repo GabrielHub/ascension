@@ -1897,6 +1897,38 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
       return;
     }
+    case "sim/dev-set-district": {
+      const district = context.runtimeState.cityState.districts[command.districtId];
+      if (!district) return;
+      switch (command.field) {
+        case "attention":
+          district.attention = clamp(command.value, 0, 100);
+          return;
+        case "trust":
+          district.trust = clamp(command.value, 0, 100);
+          return;
+        case "containmentDebt":
+          district.containmentDebt = clamp(command.value, 0, 100);
+          return;
+      }
+      return;
+    }
+    case "sim/dev-set-faction": {
+      const faction = context.runtimeState.cityState.factions[command.factionId];
+      if (!faction) return;
+      switch (command.field) {
+        case "standing":
+          faction.standing = clamp(command.value, -100, 100);
+          return;
+        case "scrutiny":
+          faction.scrutiny = clamp(command.value, 0, 100);
+          return;
+        case "leverage":
+          faction.leverage = clamp(command.value, 0, 100);
+          return;
+      }
+      return;
+    }
     case "sim/prep-consumable": {
       const recipe = context.registry.prepRecipeById.get(command.recipeId);
       if (!recipe) return;

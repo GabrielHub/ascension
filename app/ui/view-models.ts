@@ -1,4 +1,5 @@
 import type { TemplateRegistry } from "content/templates";
+import { factionTemplates } from "content/templates/factions";
 import { siteConceptById } from "content/templates/site-concepts";
 import {
   DEFAULT_POLICY_STATE,
@@ -38,6 +39,7 @@ import {
   getIdentifierLabel,
   getLocationLabel,
   getRequirementLabel,
+  getFactionLabel,
 } from "./_glossary";
 import { formatIdentityText } from "lib/game-identity";
 
@@ -518,7 +520,8 @@ export type EventLogKind =
   | "event_change"
   | "raid_result"
   | "team_status"
-  | "room_culture";
+  | "room_culture"
+  | "city_pressure";
 
 export interface EventLogEntry {
   id: string;
@@ -641,6 +644,9 @@ export interface PostedContractViewModel {
     source: "street" | "back_office" | "office";
     quality: "rough" | "reviewed" | "dossier";
   };
+  districtName: string;
+  sponsorName: string;
+  pressureTags: readonly string[];
 }
 
 export interface ContractBossWeaknessViewModel {
@@ -693,6 +699,59 @@ export interface OperationsViewModel {
   raidHistory: readonly RaidSummaryViewModel[];
   raidWorld: RaidWorldViewModel | null;
   minuteOfDay: number;
+}
+
+// ── City pressure view-models ────────────────────────────────────────
+
+export interface DistrictPressureView {
+  districtId: string;
+  name: string;
+  attention: number;
+  trust: number;
+  containmentDebt: number;
+  recentContractCount: number;
+}
+
+export interface FactionStandingView {
+  factionId: string;
+  name: string;
+  kind: "institution" | "rival_guild";
+  standing: number;
+  scrutiny: number;
+  leverage: number;
+  onCooldown: boolean;
+}
+
+export interface CityPressureView {
+  districts: readonly DistrictPressureView[];
+  factions: readonly FactionStandingView[];
+}
+
+export function buildCityPressureView(
+  cityPressure: import("save").CityPressureSnapshot | null | undefined,
+): CityPressureView {
+  if (!cityPressure) {
+    return { districts: [], factions: [] };
+  }
+  return {
+    districts: cityPressure.districts.map((d) => ({
+      districtId: d.districtId,
+      name: getLocationLabel(d.districtId),
+      attention: d.attention,
+      trust: d.trust,
+      containmentDebt: d.containmentDebt,
+      recentContractCount: d.recentContractCount,
+    })),
+    factions: cityPressure.factions.map((f) => ({
+      factionId: f.factionId,
+      name: getFactionLabel(f.factionId),
+      kind: factionTemplates.find((t) => t.id === f.factionId)?.kind ?? "institution",
+      standing: f.standing,
+      scrutiny: f.scrutiny,
+      leverage: f.leverage,
+      onCooldown: f.cooldownUntilTick > 0,
+    })),
+  };
 }
 
 /** Map a contract rank letter to a badge CSS class. */
@@ -1436,6 +1495,9 @@ export function buildOpsViewFromPhase1(
       bossHint: p.bossHint ?? null,
       neighborhoodLabel: p.neighborhoodLabel ?? concept?.worldSpaceLabel ?? "",
       boardIntel: p.boardIntel ?? { source: "street", quality: "rough" },
+      districtName: getLocationLabel(p.districtId ?? ""),
+      sponsorName: getFactionLabel(p.sponsorFactionId ?? ""),
+      pressureTags: p.pressureTags ?? [],
     };
   });
 

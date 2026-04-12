@@ -3,6 +3,7 @@ import type { World } from "bitecs";
 import type { TemplateRegistry } from "content/templates";
 import type { KitTemplateRegistry } from "content/templates/kits";
 import type { RuntimeCueId } from "lib/runtime-cues";
+import type { CityState } from "../components/city-state";
 import type { BossEncounterInstance } from "./encounter-types";
 import type { InterruptionQueueState } from "./interruptions";
 import type { IncidentState } from "./incidents";
@@ -136,6 +137,7 @@ export interface SimRuntimeState {
   kitRegistry: KitTemplateRegistry;
   worldTimeFrozen: boolean;
   deferIncidentPresentation: boolean;
+  cityState: CityState;
 }
 
 export type VisitorQueueState = "active" | "deferred";

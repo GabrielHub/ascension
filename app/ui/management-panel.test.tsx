@@ -6,7 +6,7 @@ import { DEFAULT_POLICY_STATE } from "lib/policies";
 import { createBootstrapSimulation } from "sim";
 
 import { ManagementPanel } from "./management-panel";
-import { buildHqViewFromPhase1, type GameCallbacks } from "./view-models";
+import { buildCityPressureView, buildHqViewFromPhase1, type GameCallbacks } from "./view-models";
 
 const callbacks: GameCallbacks = {
   tick: () => {},
@@ -278,5 +278,146 @@ describe("management panel", () => {
     expect(html).toContain("Porter&#x27;s Upgrade Arc");
     expect(html).toContain("Kitchen Overhaul");
     expect(html).toContain("Affordable now");
+  });
+
+  it("includes Machine Shop as the final Porter's campaign step", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guildName="Red Hook Guild"
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="bidding"
+        building={{
+          id: "building/porters",
+          name: "Porter's",
+          description: "",
+          tier: 5,
+          activeFloorIndex: 0,
+          floorCount: 2,
+          usedRoomSlots: 10,
+          totalRoomSlots: 10,
+          operatorSlots: 16,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: ["upgrade/building/porters:machine_shop"],
+        }}
+        rooms={[]}
+        upgrades={[
+          {
+            id: "upgrade/building/porters:kitchen_overhaul",
+            name: "Kitchen Overhaul",
+            description: "",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: true,
+            isAffordable: true,
+            requirements: [],
+            effects: [],
+          },
+          {
+            id: "upgrade/building/porters:upstairs_conversion",
+            name: "Upstairs Conversion",
+            description: "",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: true,
+            isAffordable: true,
+            requirements: [],
+            effects: [],
+          },
+          {
+            id: "upgrade/building/porters:remodel",
+            name: "The Remodel",
+            description: "",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: true,
+            isAffordable: true,
+            requirements: [],
+            effects: [],
+          },
+          {
+            id: "upgrade/building/porters:waterfront",
+            name: "The Waterfront",
+            description: "",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: true,
+            isAffordable: true,
+            requirements: [],
+            effects: [],
+          },
+          {
+            id: "upgrade/building/porters:machine_shop",
+            name: "Machine Shop",
+            description: "Builds out Porter's fabrication workshop.",
+            target: "building",
+            targetId: "building/porters",
+            isApplied: false,
+            isAffordable: false,
+            requirements: [],
+            effects: [{ label: "Unlock The Workshop", type: "unlock_room_template" }],
+          },
+        ]}
+        operators={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+      />,
+    );
+
+    expect(html).toContain("Machine Shop");
+    expect(html).toContain("Step 5 of 5");
+    expect(html).toContain("Unlocks: The Workshop");
+  });
+
+  it("renders the city-pressure summary when active district and faction pressure exists", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guildName="Red Hook Guild"
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="bidding"
+        building={{
+          id: "building/porters",
+          name: "Porter's",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 0,
+          floorCount: 2,
+          usedRoomSlots: 7,
+          totalRoomSlots: 7,
+          operatorSlots: 12,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[]}
+        upgrades={[]}
+        operators={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+        cityPressure={buildCityPressureView({
+          districts: [
+            {
+              districtId: "district/red-hook-waterfront",
+              attention: 42,
+              trust: 55,
+              containmentDebt: 18,
+              recentContractCount: 2,
+              lastResolvedTick: 480,
+            },
+          ],
+          factions: [
+            {
+              factionId: "faction/labor-safety",
+              standing: -12,
+              scrutiny: 45,
+              leverage: 0,
+              cooldownUntilTick: 0,
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(html).toContain("City Pressure");
+    expect(html).toContain("Red Hook Waterfront");
+    expect(html).toContain("Labor &amp; Safety Board");
   });
 });

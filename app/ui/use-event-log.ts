@@ -32,7 +32,12 @@ const VALID_KINDS: Set<string> = new Set<EventLogKind>([
   "raid_result",
   "team_status",
   "room_culture",
+  "city_pressure",
 ]);
+
+export function normalizeEventLogKind(kind: string): EventLogKind {
+  return VALID_KINDS.has(kind) ? (kind as EventLogKind) : "event_change";
+}
 
 // ── Hook ─────────────────────────────────────────────────────────────────
 
@@ -71,7 +76,7 @@ export function useEventLog(session: RuntimeSession | null) {
     const newEntries: EventLogEntry[] = drained.map((event) => ({
       id: `evt-${++idRef.current}`,
       timestamp: event.timestamp,
-      kind: (VALID_KINDS.has(event.kind) ? event.kind : "event_change") as EventLogKind,
+      kind: normalizeEventLogKind(event.kind),
       message: event.message,
       accent: event.accent ?? "silver",
       ...(event.targetKind ? { targetKind: event.targetKind as EventLogEntry["targetKind"] } : {}),

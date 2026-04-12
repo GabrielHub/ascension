@@ -216,16 +216,16 @@ Each durable recipe must include:
 
 ### In Progress
 
-- Lock shared Phase 4 ids, types, and save fields.
+- None.
 
 ### Blocked
 
-- `phase-4-midgame-city-pressure-plan`
-- `phase-4-midgame-content-remediation-plan`
-- `phase-4-midgame-crafting-plan`
-- `phase-4-midgame-social-incident-plan`
-- `phase-4-midgame-encounter-plan`
+- None.
 
 ### Done
 
-- None.
+- Locked shared Phase 4 ids, types, and save fields.
+- Added authored districts, factions, craft-recipe contracts, workshop room, and machine-shop unlock ids.
+- Added city-pressure save/runtime plumbing with canonical codec normalization.
+- Added city-pressure view-model placeholders and district/faction glossary helpers.
+- Added explicit `rankTone` metadata to authored site, boss, item, and bootstrap operator content.

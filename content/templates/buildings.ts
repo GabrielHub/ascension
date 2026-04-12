@@ -34,6 +34,7 @@ export const buildingTemplates = [
       "upgrade/building/porters:upstairs_conversion",
       "upgrade/building/porters:remodel",
       "upgrade/building/porters:waterfront",
+      "upgrade/building/porters:machine_shop",
     ],
     contractRankCeiling: "d",
     baseIncome: 35,

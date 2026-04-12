@@ -415,4 +415,23 @@ export const upgradeTemplates = [
       { type: "modify_morale", amount: 1 },
     ],
   },
+  {
+    id: "upgrade/building/porters:machine_shop",
+    kind: "upgrade",
+    name: "Machine Shop",
+    tags: ["upgrade:building", "progression:crafting"],
+    description:
+      "Converts the back storage bay into a proper workshop with a welding bench, parts press, and ventilation. For the first time the guild can fabricate durable gear from site materials instead of buying everything off the rack.",
+    target: "building",
+    targetId: "building/porters",
+    requirements: [
+      { type: "resource_min", resourceId: "resource/cash", minimum: 1200 },
+      { type: "resource_min", resourceId: "resource/reputation", minimum: 100 },
+      { type: "building_tier_min", buildingId: "building/porters", minimum: 5 },
+    ],
+    effects: [
+      { type: "add_room_slot", amount: 1 },
+      { type: "unlock_room_template", roomId: "room/workshop:tier_1" },
+    ],
+  },
 ] satisfies readonly UpgradeTemplate[];

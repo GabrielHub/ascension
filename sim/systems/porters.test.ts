@@ -41,13 +41,14 @@ describe("Porter's building template", () => {
     expect(porters!.recruitmentQualityBonus).toBe(1);
   });
 
-  it("has four upgrades in correct order", () => {
+  it("has five upgrades in correct order", () => {
     const porters = registry.buildingById.get("building/porters");
     expect(porters!.upgradeIds).toEqual([
       "upgrade/building/porters:kitchen_overhaul",
       "upgrade/building/porters:upstairs_conversion",
       "upgrade/building/porters:remodel",
       "upgrade/building/porters:waterfront",
+      "upgrade/building/porters:machine_shop",
     ]);
   });
 });
@@ -206,7 +207,7 @@ describe("Porter's upgrade progression", () => {
     expect(unlockEffects).toHaveLength(2);
   });
 
-  it("fully upgraded Porter's reaches 11 rooms and 18 operators", () => {
+  it("fully upgraded Porter's reaches 12 rooms and 18 operators", () => {
     let rooms = 7;
     let ops = 12;
 
@@ -218,7 +219,7 @@ describe("Porter's upgrade progression", () => {
       }
     }
 
-    expect(rooms).toBe(11);
+    expect(rooms).toBe(12);
     expect(ops).toBe(18);
   });
 });

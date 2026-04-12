@@ -107,6 +107,14 @@ import type {
   SimSystemContext,
 } from "./types";
 import { seedFromSimulationKey } from "./seed-utils";
+import {
+  selectDistrictForConcept,
+  selectSponsorFaction,
+  computeCityContractModifiers,
+  applyCityPressureOutcome,
+  emitCityPressureEvents,
+  type CityPressureOutcome,
+} from "./city-pressure";
 import { FIRST_RAID_RETURN_BEAT_ID } from "./guidance-beats";
 import {
   applyPostRaidTrainingWear,
@@ -2388,6 +2396,25 @@ function finalizeRaidPacket(
 
   applyRaidSocialOutcome(context, packet.operatorIds, packet.resolutionPacket.result);
 
+  // Per-raid city-pressure feedback for mixed outcomes
+  const contractSite = BuildingAuthority.contractSite[buildingEntity];
+  if (
+    context.runtimeState.cityState &&
+    contractSite?.districtId &&
+    contractSite?.sponsorFactionId
+  ) {
+    if (packet.resolutionPacket.result === "mixed") {
+      const mixedEvents = applyCityPressureOutcome(
+        context.runtimeState.cityState,
+        contractSite.districtId,
+        contractSite.sponsorFactionId,
+        "mixed",
+        currentMinute,
+      );
+      emitCityPressureEvents(context, mixedEvents);
+    }
+  }
+
   const MAX_RAID_SUMMARIES = 50;
   const existingSummaries = BuildingAuthority.raidSummaries[buildingEntity] ?? [];
   const trimmed =
@@ -3567,26 +3594,68 @@ function enterResolvedPhase(context: SimSystemContext, contractSite: ContractSit
     (s) => s.contractSiteId === contractSite.contractSiteId,
   );
 
+  const outcome: "boss_defeated" | "mission_complete" | "contract_lost" = contractSite.bossDefeated
+    ? "boss_defeated"
+    : contractSite.missionCompleted
+      ? "mission_complete"
+      : "contract_lost";
+  const operatorDeaths = summaries.reduce(
+    (sum, s) => sum + (s.operatorOutcomes?.filter((o) => o.died).length ?? 0),
+    0,
+  );
+
   const result: ContractResultSummary = {
     contractSiteId: contractSite.contractSiteId,
     missionId: contractSite.missionId,
     siteConceptId: contractSite.siteConceptId ?? "",
     location: contractSite.location,
     rank: contractSite.rank ?? "f",
-    outcome: contractSite.bossDefeated
-      ? "boss_defeated"
-      : contractSite.missionCompleted
-        ? "mission_complete"
-        : "contract_lost",
+    outcome,
     totalRaids: summaries.length,
     totalCashEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.cashDelta), 0),
     totalReputationEarned: summaries.reduce((sum, s) => sum + Math.max(0, s.reputationDelta), 0),
-    operatorDeaths: summaries.reduce(
-      (sum, s) => sum + (s.operatorOutcomes?.filter((o) => o.died).length ?? 0),
-      0,
-    ),
+    operatorDeaths,
     resolvedAtTick: getCurrentAbsoluteMinute(context),
+    districtId: contractSite.districtId,
+    sponsorFactionId: contractSite.sponsorFactionId,
   };
+
+  const { districtId, sponsorFactionId } = contractSite;
+  if (districtId && sponsorFactionId && context.runtimeState.cityState) {
+    const currentTick = getCurrentAbsoluteMinute(context);
+
+    // Map contract outcome to city-pressure outcome
+    let cityOutcome: CityPressureOutcome;
+    if (outcome === "boss_defeated") {
+      cityOutcome = "boss_defeated";
+    } else if (outcome === "contract_lost") {
+      cityOutcome = "contract_lost";
+    } else {
+      cityOutcome = "success";
+    }
+
+    const cityEvents = applyCityPressureOutcome(
+      context.runtimeState.cityState,
+      districtId,
+      sponsorFactionId,
+      cityOutcome,
+      currentTick,
+    );
+
+    // Apply operator death deltas separately (each death is its own event)
+    for (let i = 0; i < operatorDeaths; i++) {
+      const deathEvents = applyCityPressureOutcome(
+        context.runtimeState.cityState,
+        districtId,
+        sponsorFactionId,
+        "operator_death",
+        currentTick,
+      );
+      cityEvents.push(...deathEvents);
+    }
+
+    emitCityPressureEvents(context, cityEvents);
+  }
 
   BuildingAuthority.contractResult[buildingEntity] = result;
   BuildingAuthority.contractSite[buildingEntity] = null;
@@ -3667,6 +3736,8 @@ function generateContractBoard(context: SimSystemContext): void {
   }
   const selectedConcepts = pool.slice(pool.length - pickCount);
 
+  const cityState = context.runtimeState.cityState ?? { districts: {}, factions: {} };
+
   const postings: PostedContract[] = selectedConcepts.map((concept, index) => {
     // Pick a rank from the intersection of concept ranks and available ranks
     const validRanks = concept.rankPool.filter((r) => availableRanks.includes(r));
@@ -3676,9 +3747,13 @@ function generateContractBoard(context: SimSystemContext): void {
     const missionIndex = rng.int(0, context.registry.missions.length - 1);
     const mission = context.registry.missions[missionIndex];
 
-    // Pick a location from the concept's district pool
-    const locationIndex = rng.int(0, concept.districtPool.length - 1);
-    const location = concept.districtPool[locationIndex];
+    // Select district and sponsor faction from city-pressure model
+    const districtId = selectDistrictForConcept(concept, rng.int(0, 9999));
+    const sponsorFactionId = selectSponsorFaction(districtId, rng.int(0, 9999));
+    const location = districtId;
+
+    // Compute city-pressure modifiers for this district/faction pair
+    const cityMods = computeCityContractModifiers(cityState, districtId, sponsorFactionId);
 
     const budget = computePostedContractEconomyBudget({
       rank,
@@ -3698,6 +3773,15 @@ function generateContractBoard(context: SimSystemContext): void {
         POSTED_CONTRACT_VARIANCE.reward.max,
       ),
     });
+
+    // Apply city-pressure modifiers to reward and risk
+    const modifiedReward = clamp(Math.round(budget.reward * cityMods.rewardMultiplier), 40, 500);
+    const modifiedRisk = clamp(Math.round(budget.risk * cityMods.riskMultiplier), 18, 96);
+    const modifiedMinRep = Math.max(
+      0,
+      getMinimumReputationForContractRank(rank) + cityMods.minReputationOffset,
+    );
+
     const contractIntel = getBoardAdjustedContractIntel(budget.intel, boardIntel);
     const boardRead = buildBoardContractIntel(concept.siteConceptId, contractIntel, boardIntel);
 
@@ -3709,10 +3793,10 @@ function generateContractBoard(context: SimSystemContext): void {
       rank,
       threat: budget.threat,
       intel: contractIntel,
-      reward: budget.reward,
-      risk: budget.risk,
-      bidCost: budget.bidCost,
-      minReputation: getMinimumReputationForContractRank(rank),
+      reward: modifiedReward,
+      risk: modifiedRisk,
+      bidCost: Math.round(modifiedReward * 0.08),
+      minReputation: modifiedMinRep,
       generatedAtTick: currentMinute,
       knownTraits: boardRead.knownTraits,
       hiddenTraitCount: boardRead.hiddenTraitCount,
@@ -3721,6 +3805,9 @@ function generateContractBoard(context: SimSystemContext): void {
       bossHint: boardRead.bossHint,
       neighborhoodLabel: formatNeighborhoodLabel(location),
       boardIntel,
+      districtId,
+      sponsorFactionId,
+      pressureTags: cityMods.pressureTags,
     };
   });
 
@@ -3767,6 +3854,8 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
     siteConceptId: posting.siteConceptId,
     location: posting.location,
     rank: posting.rank,
+    districtId: posting.districtId,
+    sponsorFactionId: posting.sponsorFactionId,
     bossDefeated: false,
     missionCompleted: false,
     contractLost: false,
@@ -3784,6 +3873,13 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
     requiresBossClear,
     bossAvailable: false,
   };
+
+  // Increment district recent contract count
+  const districtState = context.runtimeState.cityState?.districts[posting.districtId];
+  if (districtState) {
+    districtState.recentContractCount += 1;
+    districtState.lastResolvedTick = currentMinute;
+  }
 
   newContract.briefing = getContractBriefingState(context, newContract);
   BuildingAuthority.contractSite[buildingEntity] = newContract;
