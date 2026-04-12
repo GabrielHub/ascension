@@ -117,6 +117,7 @@ export interface BossProfile {
   bossId: string;
   name: string;
   rank: string;
+  rankTone: RankTone;
   phases: number;
   tags: readonly BossTag[];
   weaknesses: readonly BossWeakness[];
@@ -252,6 +253,7 @@ export interface ItemTemplate extends TemplateBase {
   kind: "item";
   category: ItemCategory;
   rank: ItemRank;
+  rankTone: RankTone;
   buyPrice: number;
   sellPrice: number;
   statEffects: readonly StatEffect[];
@@ -272,6 +274,59 @@ export interface PrepRecipeTemplate {
   outputQuantity: number;
   /** Room tag required (e.g. "ops:staging" for the Prep Room). */
   requiredRoomTag: string;
+}
+
+// ── Phase 4: Rank tone ──────────────────────────────────────────────
+
+export type RankTone = "grounded" | "heightened" | "surreal" | "mythic";
+
+// ── Phase 4: Districts ──────────────────────────────────────────────
+
+export interface DistrictTemplate {
+  id: string;
+  name: string;
+  borough: string;
+  tags: readonly string[];
+  description: string;
+  siteConceptIds: readonly string[];
+  primaryFactionIds: readonly string[];
+  pressureBias: number;
+  rewardBias: number;
+  rareMaterialDropTags: readonly string[];
+}
+
+// ── Phase 4: Factions ───────────────────────────────────────────────
+
+export type FactionKind = "institution" | "rival_guild";
+
+export interface FactionTemplate {
+  id: string;
+  name: string;
+  kind: FactionKind;
+  tags: readonly string[];
+  description: string;
+  preferredDistrictIds: readonly string[];
+  incidentCategoryBias: readonly string[];
+  contractModifierProfile: Readonly<Record<string, number>>;
+  pressureResponseProfile: Readonly<Record<string, number>>;
+}
+
+// ── Phase 4: Durable crafting recipes ───────────────────────────────
+
+export interface CraftRecipeTemplate {
+  id: string;
+  family: string;
+  name: string;
+  description: string;
+  requiredRoomId: string;
+  requiredStaffTag: string;
+  minimumBuildingId: string;
+  minimumBuildingTier: number;
+  outputItemId: string;
+  outputQuantity: number;
+  inputItems: readonly { itemId: string; quantity: number }[];
+  requiredDistrictTags: readonly string[];
+  requiredFactionStanding: Readonly<Record<string, number>>;
 }
 
 export interface DropTableEntry {
@@ -298,7 +353,10 @@ export interface TemplateRegistryValidationIssue {
     | "items"
     | "prepRecipes"
     | "dropTables"
-    | "enemyFamilies";
+    | "enemyFamilies"
+    | "districts"
+    | "factions"
+    | "craftRecipes";
   templateId: string;
   message: string;
 }
@@ -328,6 +386,12 @@ export interface TemplateRegistry {
   bossById: ReadonlyMap<string, BossProfile>;
   prepRecipes: readonly PrepRecipeTemplate[];
   prepRecipeById: ReadonlyMap<string, PrepRecipeTemplate>;
+  districts: readonly DistrictTemplate[];
+  districtById: ReadonlyMap<string, DistrictTemplate>;
+  factions: readonly FactionTemplate[];
+  factionById: ReadonlyMap<string, FactionTemplate>;
+  craftRecipes: readonly CraftRecipeTemplate[];
+  craftRecipeById: ReadonlyMap<string, CraftRecipeTemplate>;
   resourceIndexById: ReadonlyMap<string, number>;
   buildingIndexById: ReadonlyMap<string, number>;
   roomIndexById: ReadonlyMap<string, number>;

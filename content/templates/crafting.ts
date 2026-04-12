@@ -1,0 +1,201 @@
+import type { CraftRecipeTemplate } from "./shared";
+
+export const craftRecipeTemplates = [
+  {
+    id: "craft-recipe/field-lead-breach/breach-hammer",
+    family: "craft-family/field-lead-breach",
+    name: "Breach Hammer Assembly",
+    description:
+      "Build a structural-entry hammer around salvaged overpass hardware and monster bone.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "weapon/breach-hammer",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/fang", quantity: 3 },
+      { itemId: "loot/monster-part/bone-shard", quantity: 2 },
+      { itemId: "loot/monster-part/bollard-core", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:highway"],
+    requiredFactionStanding: {
+      "faction/emergency-management": 5,
+    },
+  },
+  {
+    id: "craft-recipe/field-lead-breach/composite-plate-carrier",
+    family: "craft-family/field-lead-breach",
+    name: "Composite Plate Carrier Build",
+    description: "Laminate salvaged highway aggregate and shell plating into a heavy carrier rig.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "outfit-overlay/composite-plate-carrier",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/carapace", quantity: 3 },
+      { itemId: "loot/monster-part/ramp-gravel", quantity: 2 },
+      { itemId: "loot/monster-part/threat-gland", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:highway"],
+    requiredFactionStanding: {
+      "faction/labor-safety": 5,
+    },
+  },
+  {
+    id: "craft-recipe/field-lead-breach/reinforced-gloves",
+    family: "craft-family/field-lead-breach",
+    name: "Reinforced Gloves Stitch-Up",
+    description:
+      "Rework industrial glove shells into a frontline grip kit that can survive breach work.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "accessory/reinforced-gloves",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/sinew", quantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", quantity: 1 },
+      { itemId: "loot/monster-part/rivet-cluster", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:highway"],
+    requiredFactionStanding: {
+      "faction/labor-safety": 4,
+    },
+  },
+  {
+    id: "craft-recipe/scout-recon/focused-carbine",
+    family: "craft-family/scout-recon",
+    name: "Focused Carbine Retrofit",
+    description:
+      "Retrofit a short rifle with rail salvage and sighting glass tuned for distorted spaces.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "weapon/focused-carbine",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/crystal-eye", quantity: 2 },
+      { itemId: "loot/monster-part/rail-splice", quantity: 2 },
+      { itemId: "loot/monster-part/fang", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:rail"],
+    requiredFactionStanding: {
+      "faction/borough-contracts": 5,
+    },
+  },
+  {
+    id: "craft-recipe/scout-recon/signal-dampening-coat",
+    family: "craft-family/scout-recon",
+    name: "Signal-Dampening Coat Weave",
+    description:
+      "Cut a recon coat around transit salvage that deadens noise and rift interference.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "outfit-overlay/signal-dampening-coat",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/void-residue", quantity: 1 },
+      { itemId: "loot/monster-part/ticket-stub", quantity: 2 },
+      { itemId: "loot/monster-part/sinew", quantity: 2 },
+    ],
+    requiredDistrictTags: ["infrastructure:rail"],
+    requiredFactionStanding: {
+      "faction/city-licensing": 4,
+    },
+  },
+  {
+    id: "craft-recipe/scout-recon/rift-compass",
+    family: "craft-family/scout-recon",
+    name: "Rift Compass Calibration",
+    description:
+      "Build a field compass around rail shards and a crystal optic that refuses ordinary north.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "accessory/rift-compass",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
+      { itemId: "loot/monster-part/rail-splice", quantity: 1 },
+      { itemId: "loot/monster-part/ticket-stub", quantity: 2 },
+    ],
+    requiredDistrictTags: ["infrastructure:rail"],
+    requiredFactionStanding: {
+      "faction/borough-contracts": 4,
+    },
+  },
+  {
+    id: "craft-recipe/medic-stabilization/pulse-baton",
+    family: "craft-family/medic-stabilization",
+    name: "Pulse Baton Fit-Out",
+    description:
+      "Assemble a control baton with a tuned crystal core for nonlethal site stabilization.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "weapon/pulse-baton",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
+      { itemId: "loot/monster-part/pressure-seal", quantity: 1 },
+      { itemId: "loot/monster-part/ichor", quantity: 2 },
+    ],
+    requiredDistrictTags: ["infrastructure:power"],
+    requiredFactionStanding: {
+      "faction/emergency-management": 4,
+    },
+  },
+  {
+    id: "craft-recipe/medic-stabilization/field-medic-coat",
+    family: "craft-family/medic-stabilization",
+    name: "Field Medic Coat Assembly",
+    description:
+      "Build a reinforced treatment coat around sealed lab salvage and resilient site fiber.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "outfit-overlay/field-medic-coat",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/culture-sample", quantity: 1 },
+      { itemId: "loot/monster-part/reagent-vial", quantity: 2 },
+      { itemId: "loot/monster-part/sinew", quantity: 2 },
+    ],
+    requiredDistrictTags: ["infrastructure:power"],
+    requiredFactionStanding: {
+      "faction/labor-safety": 5,
+    },
+  },
+  {
+    id: "craft-recipe/medic-stabilization/trauma-kit",
+    family: "craft-family/medic-stabilization",
+    name: "Trauma Kit Pack-Out",
+    description:
+      "Pack a field trauma rig with sealed canisters and the parts needed to keep a squad upright.",
+    requiredRoomId: "room/workshop:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/porters",
+    minimumBuildingTier: 5,
+    outputItemId: "accessory/trauma-kit",
+    outputQuantity: 1,
+    inputItems: [
+      { itemId: "loot/monster-part/pressure-seal", quantity: 1 },
+      { itemId: "loot/monster-part/reagent-vial", quantity: 1 },
+      { itemId: "loot/monster-part/ichor", quantity: 2 },
+    ],
+    requiredDistrictTags: ["infrastructure:power"],
+    requiredFactionStanding: {
+      "faction/labor-safety": 4,
+    },
+  },
+] satisfies readonly CraftRecipeTemplate[];

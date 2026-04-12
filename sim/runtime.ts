@@ -6,6 +6,12 @@ import {
   type RaidSummarySnapshot,
   type WorldSnapshot,
 } from "save";
+import {
+  type CityState,
+  createDefaultCityState,
+  cityStateFromSnapshot,
+  cityStateToSnapshot,
+} from "./components/city-state";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
 import { siteConceptById, type ContractRank } from "content/templates/site-concepts";
@@ -1336,6 +1342,12 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
     contractSite: extendedSnapshot.contractSite
       ? {
           ...extendedSnapshot.contractSite,
+          districtId:
+            extendedSnapshot.contractSite.districtId ??
+            extendedSnapshot.contractSite.location ??
+            "district/lower-east-side",
+          sponsorFactionId:
+            extendedSnapshot.contractSite.sponsorFactionId ?? "faction/city-licensing",
           boardIntel: {
             source: extendedSnapshot.contractSite.boardIntel?.source ?? "street",
             quality: extendedSnapshot.contractSite.boardIntel?.quality ?? "rough",
@@ -1356,6 +1368,9 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
       bossHint: contract.bossHint ?? null,
       neighborhoodLabel: contract.neighborhoodLabel ?? "",
       boardIntel: cloneContractBoardIntel(contract.boardIntel),
+      districtId: contract.districtId ?? contract.location ?? "district/lower-east-side",
+      sponsorFactionId: contract.sponsorFactionId ?? "faction/city-licensing",
+      pressureTags: [...(contract.pressureTags ?? [])],
     })),
     fogOfWar: extendedSnapshot.fogOfWar ?? null,
     scheduler: extendedSnapshot.scheduler,
@@ -1415,6 +1430,7 @@ export function createBaseSimRuntimeState(
       | "incidentState"
       | "guidanceState"
       | "deferIncidentPresentation"
+      | "cityState"
     >
   > = {},
 ): SimRuntimeState {
@@ -1459,6 +1475,7 @@ export function createBaseSimRuntimeState(
     kitRegistry: buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES),
     worldTimeFrozen: false,
     deferIncidentPresentation: overrides.deferIncidentPresentation ?? false,
+    cityState: overrides.cityState ?? createDefaultCityState(),
   };
 }
 
@@ -1495,7 +1512,15 @@ function createRuntimeState(
     ) as SimRuntimeState["interruptionQueue"],
     incidentState: restoreIncidentStateFromSnapshot(snapshot) as SimRuntimeState["incidentState"],
     guidanceState: restoreGuidanceStateFromSnapshot(snapshot) as SimRuntimeState["guidanceState"],
+    cityState: restoreCityStateFromSnapshot(snapshot),
   });
+}
+
+function restoreCityStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot): CityState {
+  if (snapshot.cityPressure) {
+    return cityStateFromSnapshot(snapshot.cityPressure);
+  }
+  return createDefaultCityState();
 }
 
 function restoreEncounterFromSnapshot(
@@ -2741,6 +2766,7 @@ function applyWorldSnapshot(
         lootAutomation: {
           autoSellEnabled: BuildingAuthority.lootAutomationEnabled[buildingEntity] === 1,
         },
+        cityPressure: cityStateToSnapshot(runtimeState.cityState),
         // Encounter, interruption, and incident persistence
         ...(runtimeState.activeEncounter
           ? {

@@ -2,18 +2,25 @@ import { validateEffect } from "../effects";
 import { validateRequirement } from "../requirements";
 import { bossById } from "./bosses";
 import { buildingTemplates } from "./buildings";
+import { craftRecipeTemplates } from "./crafting";
+import { districtTemplates } from "./districts";
 import { enemyFamilyTemplates } from "./enemies";
 import { eventTemplates } from "./events";
+import { factionTemplates } from "./factions";
 import { dropTables as dropTableData, itemTemplates, prepRecipeTemplates } from "./items";
 import { missionTemplates } from "./missions";
 import { presenterTemplates } from "./presenters";
 import { resourceTemplates } from "./resources";
 import { roomTemplates } from "./rooms";
+import { siteConceptById } from "./site-concepts";
 import {
   type BuildingTemplate,
+  type CraftRecipeTemplate,
+  type DistrictTemplate,
   type DropTable,
   type EnemyFamilyTemplate,
   type EventTemplate,
+  type FactionTemplate,
   type ItemTemplate,
   type MissionTemplate,
   type OrdinaryEnemyTemplate,
@@ -42,6 +49,9 @@ const TEMPLATE_CATEGORY_ORDER: readonly TemplateCategory[] = [
   "prepRecipes",
   "dropTables",
   "enemyFamilies",
+  "districts",
+  "factions",
+  "craftRecipes",
 ] as const;
 
 function makeLookup<T extends { id: string }>(
@@ -688,6 +698,275 @@ function validateEnemyFamilies(
   });
 }
 
+function validateDistrictTemplates(
+  templates: readonly DistrictTemplate[],
+  factions: ReadonlyMap<string, FactionTemplate>,
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenIds = new Set<string>();
+
+  templates.forEach((template) => {
+    if (template.id.trim().length === 0) {
+      issues.push({
+        category: "districts",
+        templateId: template.id,
+        message: "id must be non-empty.",
+      });
+    }
+    if (seenIds.has(template.id)) {
+      issues.push({
+        category: "districts",
+        templateId: template.id,
+        message: "Duplicate district id.",
+      });
+    }
+    seenIds.add(template.id);
+
+    if (template.name.trim().length === 0) {
+      issues.push({
+        category: "districts",
+        templateId: template.id,
+        message: "name must be non-empty.",
+      });
+    }
+
+    if (template.siteConceptIds.length === 0) {
+      issues.push({
+        category: "districts",
+        templateId: template.id,
+        message: "siteConceptIds must include at least one authored site concept.",
+      });
+    }
+
+    template.siteConceptIds.forEach((siteConceptId, index) => {
+      const siteConcept = siteConceptById.get(siteConceptId);
+      if (!siteConcept) {
+        issues.push({
+          category: "districts",
+          templateId: template.id,
+          message: `siteConceptIds[${index}]: unknown site concept "${siteConceptId}".`,
+        });
+        return;
+      }
+
+      if (!siteConcept.districtPool.includes(template.id)) {
+        issues.push({
+          category: "districts",
+          templateId: template.id,
+          message: `siteConceptIds[${index}]: "${siteConceptId}" does not include district "${template.id}" in its district pool.`,
+        });
+      }
+    });
+
+    template.primaryFactionIds.forEach((factionId, index) => {
+      if (!factions.has(factionId)) {
+        issues.push({
+          category: "districts",
+          templateId: template.id,
+          message: `primaryFactionIds[${index}]: unknown faction "${factionId}".`,
+        });
+      }
+    });
+  });
+}
+
+function validateFactionTemplates(
+  templates: readonly FactionTemplate[],
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenIds = new Set<string>();
+
+  templates.forEach((template) => {
+    if (template.id.trim().length === 0) {
+      issues.push({
+        category: "factions",
+        templateId: template.id,
+        message: "id must be non-empty.",
+      });
+    }
+    if (seenIds.has(template.id)) {
+      issues.push({
+        category: "factions",
+        templateId: template.id,
+        message: "Duplicate faction id.",
+      });
+    }
+    seenIds.add(template.id);
+
+    if (template.name.trim().length === 0) {
+      issues.push({
+        category: "factions",
+        templateId: template.id,
+        message: "name must be non-empty.",
+      });
+    }
+
+    if (template.kind !== "institution" && template.kind !== "rival_guild") {
+      issues.push({
+        category: "factions",
+        templateId: template.id,
+        message: `kind must be "institution" or "rival_guild", got "${template.kind}".`,
+      });
+    }
+  });
+}
+
+function validateCraftRecipeTemplates(
+  templates: readonly CraftRecipeTemplate[],
+  items: ReadonlyMap<string, ItemTemplate>,
+  rooms: ReadonlyMap<string, RoomTemplate>,
+  buildings: ReadonlyMap<string, BuildingTemplate>,
+  factions: ReadonlyMap<string, FactionTemplate>,
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  const seenIds = new Set<string>();
+
+  templates.forEach((template) => {
+    if (template.id.trim().length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "id must be non-empty.",
+      });
+    }
+    if (seenIds.has(template.id)) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "Duplicate craft recipe id.",
+      });
+    }
+    seenIds.add(template.id);
+
+    if (template.name.trim().length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "name must be non-empty.",
+      });
+    }
+
+    if (template.description.trim().length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "description must be non-empty.",
+      });
+    }
+
+    if (!rooms.has(template.requiredRoomId)) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: `requiredRoomId references unknown room "${template.requiredRoomId}".`,
+      });
+    }
+
+    if (template.requiredStaffTag.trim().length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "requiredStaffTag must be non-empty.",
+      });
+    }
+
+    if (!buildings.has(template.minimumBuildingId)) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: `minimumBuildingId references unknown building "${template.minimumBuildingId}".`,
+      });
+    }
+
+    if (template.minimumBuildingTier < 1) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "minimumBuildingTier must be at least 1.",
+      });
+    }
+
+    const outputItem = items.get(template.outputItemId);
+    if (!outputItem) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: `outputItemId references unknown item "${template.outputItemId}".`,
+      });
+    } else if (
+      outputItem.category !== "weapon" &&
+      outputItem.category !== "outfit-overlay" &&
+      outputItem.category !== "accessory"
+    ) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: `outputItemId "${template.outputItemId}" must be durable gear.`,
+      });
+    }
+
+    if (template.outputQuantity < 1) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "outputQuantity must be at least 1.",
+      });
+    }
+
+    if (template.inputItems.length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "inputItems must include at least one item requirement.",
+      });
+    }
+
+    template.inputItems.forEach((input, index) => {
+      if (!items.has(input.itemId)) {
+        issues.push({
+          category: "craftRecipes",
+          templateId: template.id,
+          message: `inputItems[${index}]: unknown item "${input.itemId}".`,
+        });
+      }
+
+      if (input.quantity < 1) {
+        issues.push({
+          category: "craftRecipes",
+          templateId: template.id,
+          message: `inputItems[${index}]: quantity must be at least 1.`,
+        });
+      }
+    });
+
+    if (template.requiredDistrictTags.length === 0) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "requiredDistrictTags must include at least one district tag.",
+      });
+    }
+
+    Object.entries(template.requiredFactionStanding).forEach(([factionId, standing]) => {
+      if (!factions.has(factionId)) {
+        issues.push({
+          category: "craftRecipes",
+          templateId: template.id,
+          message: `requiredFactionStanding references unknown faction "${factionId}".`,
+        });
+      }
+
+      if (!Number.isFinite(standing)) {
+        issues.push({
+          category: "craftRecipes",
+          templateId: template.id,
+          message: `requiredFactionStanding["${factionId}"] must be a finite number.`,
+        });
+      }
+    });
+  });
+}
+
 function makeEnemyFamilyLookup(
   families: readonly EnemyFamilyTemplate[],
 ): ReadonlyMap<string, EnemyFamilyTemplate> {
@@ -742,6 +1021,9 @@ export function createTemplateRegistry(): TemplateRegistry {
   const dropTables = [...dropTableData];
   const enemyFamilies = [...enemyFamilyTemplates];
   const prepRecipes = [...prepRecipeTemplates];
+  const districts = [...districtTemplates];
+  const factions = [...factionTemplates];
+  const craftRecipes = [...craftRecipeTemplates];
 
   const resourceLookup = makeLookup("resources", resources, issues);
   const buildingLookup = makeLookup("buildings", buildings, issues);
@@ -760,6 +1042,10 @@ export function createTemplateRegistry(): TemplateRegistry {
   const enemyFamilyLookup = makeEnemyFamilyLookup(enemyFamilies);
   const enemyTemplateLookup = makeEnemyTemplateLookup(enemyFamilies);
 
+  const factionLookup = makeLookup("factions", factions, issues);
+  const districtLookup = makeLookup("districts", districts, issues);
+  const craftRecipeLookup = makeLookup("craftRecipes", craftRecipes, issues);
+
   validateResourceTemplates(resources, issues);
   validateBuildingTemplates(buildings, upgradeLookup.byId, issues);
   validateRoomTemplates(rooms, buildingLookup.byId, issues);
@@ -777,6 +1063,16 @@ export function createTemplateRegistry(): TemplateRegistry {
   validatePrepRecipes(prepRecipes, itemLookup.byId, roomLookup.byId, issues);
   validateDropTables(dropTables, itemLookup.byId, issues);
   validateEnemyFamilies(enemyFamilies, dropTableLookup, issues);
+  validateDistrictTemplates(districts, factionLookup.byId, issues);
+  validateFactionTemplates(factions, issues);
+  validateCraftRecipeTemplates(
+    craftRecipes,
+    itemLookup.byId,
+    roomLookup.byId,
+    buildingLookup.byId,
+    factionLookup.byId,
+    issues,
+  );
 
   if (issues.length > 0) {
     throw new Error(`Template registry validation failed.\n${formatIssues(issues)}`);
@@ -807,6 +1103,12 @@ export function createTemplateRegistry(): TemplateRegistry {
     bossById,
     prepRecipes,
     prepRecipeById: new Map(prepRecipes.map((r) => [r.id, r])),
+    districts,
+    districtById: districtLookup.byId,
+    factions,
+    factionById: factionLookup.byId,
+    craftRecipes,
+    craftRecipeById: craftRecipeLookup.byId,
     resourceIndexById: resourceLookup.indexById,
     buildingIndexById: buildingLookup.indexById,
     roomIndexById: roomLookup.indexById,

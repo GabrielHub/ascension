@@ -2463,4 +2463,126 @@ describe("save codec", () => {
     expect(guidance.openingPathState).toBe("completed");
     expect(guidance.completedBeatIds).toContain("guidance/opening/bodega-overview");
   });
+
+  it("round-trips city pressure state through storage preparation", () => {
+    const base = createBaseSave();
+    const cityPressure = {
+      districts: [
+        {
+          districtId: "district/lower-east-side",
+          attention: 10,
+          trust: 45,
+          containmentDebt: 3,
+          recentContractCount: 2,
+          lastResolvedTick: 100,
+        },
+      ],
+      factions: [
+        {
+          factionId: "faction/city-licensing",
+          standing: 5,
+          scrutiny: 12,
+          leverage: 3,
+          cooldownUntilTick: 200,
+        },
+      ],
+    };
+    const normalized = preparePersistedSaveGameForStorage({
+      ...base,
+      world: {
+        ...base.world,
+        cityPressure,
+      },
+    });
+    expect(normalized.world.cityPressure).toBeDefined();
+    expect(normalized.world.cityPressure!.districts).toHaveLength(5);
+    expect(normalized.world.cityPressure!.districts[0].districtId).toBe("district/lower-east-side");
+    expect(normalized.world.cityPressure!.districts[0].trust).toBe(45);
+    expect(normalized.world.cityPressure!.districts[1]).toEqual({
+      districtId: "district/queens-railyard",
+      attention: 0,
+      trust: 50,
+      containmentDebt: 0,
+      recentContractCount: 0,
+      lastResolvedTick: 0,
+    });
+    expect(normalized.world.cityPressure!.factions).toHaveLength(5);
+    expect(normalized.world.cityPressure!.factions[0].factionId).toBe("faction/city-licensing");
+    expect(normalized.world.cityPressure!.factions[0].standing).toBe(5);
+    expect(normalized.world.cityPressure!.factions[1]).toEqual({
+      factionId: "faction/labor-safety",
+      standing: 0,
+      scrutiny: 0,
+      leverage: 0,
+      cooldownUntilTick: 0,
+    });
+  });
+
+  it("hydrates saves without city pressure as undefined", () => {
+    const base = createBaseSave();
+    const result = hydratePersistedSaveGame(base);
+    expect(result.save.world.cityPressure).toBeUndefined();
+  });
+
+  it("rejects city pressure entries for unknown district ids", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          cityPressure: {
+            districts: [
+              {
+                districtId: "district/not-real",
+                attention: 1,
+                trust: 2,
+                containmentDebt: 3,
+                recentContractCount: 4,
+                lastResolvedTick: 5,
+              },
+            ],
+            factions: [],
+          },
+        },
+      }),
+    ).toThrowError(
+      /save\.world\.cityPressure\.districts\[0\]\.districtId must reference a known district id, got "district\/not-real"\./,
+    );
+  });
+
+  it("rejects duplicate city pressure faction ids", () => {
+    const base = createBaseSave();
+
+    expect(() =>
+      hydratePersistedSaveGame({
+        ...base,
+        world: {
+          ...base.world,
+          cityPressure: {
+            districts: [],
+            factions: [
+              {
+                factionId: "faction/city-licensing",
+                standing: 1,
+                scrutiny: 2,
+                leverage: 3,
+                cooldownUntilTick: 4,
+              },
+              {
+                factionId: "faction/city-licensing",
+                standing: 5,
+                scrutiny: 6,
+                leverage: 7,
+                cooldownUntilTick: 8,
+              },
+            ],
+          },
+        },
+      }),
+    ).toThrowError(
+      /save\.world\.cityPressure\.factions\[1\]\.factionId duplicates factionId "faction\/city-licensing"\./,
+    );
+  });
 });

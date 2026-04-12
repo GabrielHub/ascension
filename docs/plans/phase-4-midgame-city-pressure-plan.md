@@ -136,16 +136,42 @@ Replace the current mostly reputation-driven contract board with a city-pressure
 
 ### File Locks
 
-- None until the contract-lock plan is merged.
+- `sim/systems/city-pressure.ts`
+- `sim/systems/city-pressure.test.ts`
+- `sim/systems/raids.ts` (contract generation and result writeback)
+- `sim/systems/commands.ts` (dev-set-district, dev-set-faction handlers)
+- `sim/systems/index.ts` (city-pressure system registration)
+- `sim/components/building-authority.ts` (PostedContract, ContractSiteState, ContractResultSummary)
+- `sim/commands.ts` (dev-set-district, dev-set-faction command types)
+- `save/types.ts` (PostedContractSnapshot, ContractSiteSnapshot, ContractResultSnapshot)
+- `save/codec.ts` (city-pressure field parsing)
+- `sim/runtime.ts` (posted contract and contract site restoration defaults)
+- `app/ui/view-models.ts` (PostedContractViewModel, CityPressureView, EventLogKind)
+- `app/ui/raid-panel.tsx` (PostedContractCard district/sponsor display)
+- `app/ui/management-panel.tsx` (CityPressureSummaryCard)
+- `app/ui/event-log.tsx` (city_pressure event kind)
+- `app/ui/dev-console-commands.ts` (city district, city faction, city dump commands)
 
 ### In Progress
 
-- Blocked pending contract lock.
+- None.
 
 ### Blocked
 
-- `phase-4-midgame-contract-lock-plan`
+- None.
 
 ### Done
 
-- None.
+- Created `sim/systems/city-pressure.ts` with system authority, delta table, writeback, contract modifiers, district/faction selection, passive decay, and event emission.
+- Extended `PostedContract`, `ContractSiteState`, and `ContractResultSummary` with `districtId`, `sponsorFactionId`, and `pressureTags`.
+- Extended save types and codec to persist and restore city-pressure fields on contracts.
+- Updated contract board generation to select district and sponsor per concept, apply city-pressure modifiers to reward, risk, and minReputation.
+- Added contract-result writeback into district and faction state on resolution (boss_defeated, contract_lost, success) and per-raid mixed outcomes and operator deaths.
+- Registered city-pressure system in the simulation schedule.
+- Extended operations view models with district name, sponsor name, and pressure tags.
+- Updated contract cards with district and sponsor display.
+- Added `CityPressureSummaryCard` to the management panel.
+- Added `city_pressure` event kind to the event log.
+- Added dev-console commands for setting district fields, faction fields, and dumping city state.
+- Added 19 tests covering save/load round-trip, contract generation helpers, city contract modifiers, contract-result writeback, clamping, threshold events, and passive decay.
+- Passed `vp check`, `vp test` (799 tests), and `vp build`.

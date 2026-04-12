@@ -10,7 +10,7 @@ import {
   type PolicyState,
 } from "lib/policies";
 
-import type { GameCallbacks, HqViewModel } from "./view-models";
+import type { CityPressureView, GameCallbacks, HqViewModel } from "./view-models";
 import { getTagMeta } from "./_glossary";
 
 interface ManagementPanelProps {
@@ -23,6 +23,7 @@ interface ManagementPanelProps {
   operators: HqViewModel["operators"];
   relocationGate: HqViewModel["relocationGate"];
   callbacks: GameCallbacks;
+  cityPressure?: CityPressureView | null;
 }
 
 function formatContractLifecycle(contractLifecycle: HqViewModel["contractLifecycle"]): string {
@@ -160,6 +161,7 @@ const PORTERS_BUILDING_UPGRADE_ORDER = [
   "upgrade/building/porters:upstairs_conversion",
   "upgrade/building/porters:remodel",
   "upgrade/building/porters:waterfront",
+  "upgrade/building/porters:machine_shop",
 ] as const;
 
 const PORTERS_UPGRADE_SHORT_NAMES: Record<string, string> = {
@@ -167,6 +169,7 @@ const PORTERS_UPGRADE_SHORT_NAMES: Record<string, string> = {
   "upgrade/building/porters:upstairs_conversion": "Upstairs",
   "upgrade/building/porters:remodel": "Remodel",
   "upgrade/building/porters:waterfront": "Waterfront",
+  "upgrade/building/porters:machine_shop": "Workshop",
 };
 
 function PortersCampaignCard({
@@ -204,16 +207,20 @@ function PortersCampaignCard({
             : "The shell is open, but it still needs the quality pass that makes recovery and morale gains stick across a real Porter's run."
           : nextUpgrade?.id === "upgrade/building/porters:waterfront"
             ? "The harbor side is still idle. Waterfront turns Porter's final expansion into staging throughput and post-raid decompression while this HQ still matters."
-            : "Every shipped Porter's upgrade is online.";
+            : nextUpgrade?.id === "upgrade/building/porters:machine_shop"
+              ? "Field salvage still leaves too much value on the floor. Machine Shop is the last major Porter's step because it turns a stable headquarters into one that can fabricate its own durable gear."
+              : "Every shipped Porter's upgrade is online.";
 
   const unlockPreview =
     nextUpgrade?.id === "upgrade/building/porters:upstairs_conversion"
       ? "Unlocks: The Break Room, The Briefing Room"
       : nextUpgrade?.id === "upgrade/building/porters:waterfront"
         ? "Unlocks: The Dock, The Deck"
-        : nextUpgrade?.effects.length
-          ? `Impact: ${nextUpgrade.effects.map((effect) => effect.label).join(" | ")}`
-          : "Impact: already applied";
+        : nextUpgrade?.id === "upgrade/building/porters:machine_shop"
+          ? "Unlocks: The Workshop"
+          : nextUpgrade?.effects.length
+            ? `Impact: ${nextUpgrade.effects.map((effect) => effect.label).join(" | ")}`
+            : "Impact: already applied";
 
   return (
     <section
@@ -224,7 +231,7 @@ function PortersCampaignCard({
         <div>
           <h4 className="text-sm font-medium text-silver-bright">Porter's Upgrade Arc</h4>
           <p className="mt-1 text-sm leading-relaxed text-silver/55">
-            Porter's has a fixed four-step campaign. The next meaningful spend should move the room
+            Porter's has a fixed five-step campaign. The next meaningful spend should move the room
             mix forward, not just drain cash at random.
           </p>
         </div>
@@ -284,7 +291,7 @@ function PortersCampaignCard({
         <p className="mt-2 text-sm leading-relaxed text-silver/65">
           {nextUpgrade
             ? nextUpgrade.description
-            : "Briefing, recovery, and waterfront staging are all unlocked for this headquarters."}
+            : "Briefing, recovery, waterfront staging, and workshop fabrication are all unlocked for this headquarters."}
         </p>
       </div>
 
@@ -449,6 +456,60 @@ function RelocationCard({
   );
 }
 
+function CityPressureSummaryCard({ cityPressure }: { cityPressure: CityPressureView }) {
+  const activeDistricts = cityPressure.districts.filter(
+    (d) => d.recentContractCount > 0 || d.attention > 10 || d.containmentDebt > 10,
+  );
+  const pressuredFactions = cityPressure.factions.filter(
+    (f) => f.scrutiny >= 20 || f.standing <= -10 || f.leverage >= 20,
+  );
+  if (activeDistricts.length === 0 && pressuredFactions.length === 0) return null;
+
+  return (
+    <section className="glass-card space-y-2 rounded-2xl p-4" data-testid="city-pressure-summary">
+      <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+        City Pressure
+      </h4>
+      {activeDistricts.map((d) => (
+        <div
+          key={d.districtId}
+          className="flex items-center justify-between gap-2 text-sm text-silver/70"
+        >
+          <span className="truncate">{d.name}</span>
+          <span className="flex shrink-0 gap-3 text-xs">
+            <span title="Trust">T {Math.round(d.trust)}</span>
+            <span className={d.attention >= 40 ? "text-ember" : ""} title="Attention">
+              A {Math.round(d.attention)}
+            </span>
+            <span className={d.containmentDebt >= 50 ? "text-magma" : ""} title="Containment debt">
+              C {Math.round(d.containmentDebt)}
+            </span>
+          </span>
+        </div>
+      ))}
+      {pressuredFactions.map((f) => (
+        <div
+          key={f.factionId}
+          className="flex items-center justify-between gap-2 text-sm text-silver/70"
+        >
+          <span className="truncate">{f.name}</span>
+          <span className="flex shrink-0 gap-3 text-xs">
+            <span title="Standing">S {Math.round(f.standing)}</span>
+            <span className={f.scrutiny >= 40 ? "text-ember" : ""} title="Scrutiny">
+              Sc {Math.round(f.scrutiny)}
+            </span>
+            {f.leverage > 0 && (
+              <span className={f.leverage >= 30 ? "text-magma" : ""} title="Leverage">
+                L {Math.round(f.leverage)}
+              </span>
+            )}
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 export function ManagementPanel({
   guildName,
   policies,
@@ -459,6 +520,7 @@ export function ManagementPanel({
   operators,
   relocationGate,
   callbacks,
+  cityPressure,
 }: ManagementPanelProps) {
   return (
     <div className="animate-enter space-y-4" data-testid="management-panel">
@@ -483,6 +545,8 @@ export function ManagementPanel({
         />
         <StaffingPressureCard rooms={rooms} />
       </div>
+
+      {cityPressure && <CityPressureSummaryCard cityPressure={cityPressure} />}
 
       {building.id === "building/porters" && (
         <PortersCampaignCard rooms={rooms} upgrades={upgrades} operators={operators} />

@@ -314,6 +314,8 @@ export interface ContractSiteSnapshot {
   siteConceptId?: string;
   location: string;
   rank?: string;
+  districtId?: string;
+  sponsorFactionId?: string;
   bossDefeated: boolean;
   missionCompleted?: boolean;
   contractLost: boolean;
@@ -364,6 +366,9 @@ export interface PostedContractSnapshot {
   bossHint?: string | null;
   neighborhoodLabel?: string;
   boardIntel?: ContractBoardIntelSnapshot;
+  districtId?: string;
+  sponsorFactionId?: string;
+  pressureTags?: string[];
 }
 
 export interface ContractResultSnapshot {
@@ -378,6 +383,8 @@ export interface ContractResultSnapshot {
   totalReputationEarned: number;
   operatorDeaths: number;
   resolvedAtTick: number;
+  districtId?: string;
+  sponsorFactionId?: string;
 }
 
 export interface FogOfWarSnapshot {
@@ -446,6 +453,45 @@ export interface LootAutomationSnapshot {
   autoSellEnabled: boolean;
 }
 
+// ── Phase 4: City pressure save state ───────────────────────────────
+
+export interface DistrictPressureSnapshot {
+  districtId: string;
+  attention: number;
+  trust: number;
+  containmentDebt: number;
+  recentContractCount: number;
+  lastResolvedTick: number;
+}
+
+export interface FactionStandingSnapshot {
+  factionId: string;
+  standing: number;
+  scrutiny: number;
+  leverage: number;
+  cooldownUntilTick: number;
+}
+
+export interface CityPressureSnapshot {
+  districts: DistrictPressureSnapshot[];
+  factions: FactionStandingSnapshot[];
+}
+
+export function createDefaultDistrictPressure(districtId: string): DistrictPressureSnapshot {
+  return {
+    districtId,
+    attention: 0,
+    trust: 50,
+    containmentDebt: 0,
+    recentContractCount: 0,
+    lastResolvedTick: 0,
+  };
+}
+
+export function createDefaultFactionStanding(factionId: string): FactionStandingSnapshot {
+  return { factionId, standing: 0, scrutiny: 0, leverage: 0, cooldownUntilTick: 0 };
+}
+
 export interface WorldSnapshot {
   simulationSeed?: number;
   guild: GuildSnapshot;
@@ -480,6 +526,7 @@ export interface WorldSnapshot {
   incidentState?: SaveStructuredRecord | null;
   guidanceState?: SaveStructuredRecord | null;
   raidRuns?: RaidRunSnapshot[];
+  cityPressure?: CityPressureSnapshot | null;
 }
 
 export interface PersistedSaveGame {

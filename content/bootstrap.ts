@@ -1,3 +1,5 @@
+import type { RankTone } from "./templates";
+
 export interface BootstrapRoomSeed {
   id: string;
   templateId: string;
@@ -46,6 +48,7 @@ export interface BootstrapScenario {
       roleTag: string;
       specialtyTag: string;
     };
+    rankTone: RankTone;
     preferences: {
       riskTolerance: number;
       rewardFocus: number;
@@ -209,6 +212,7 @@ export const bootstrapScenario = {
         roleTag: "role:field_lead",
         specialtyTag: "focus:containment",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 74,
         rewardFocus: 66,
@@ -273,6 +277,7 @@ export const bootstrapScenario = {
         roleTag: "role:scout",
         specialtyTag: "focus:extraction",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 61,
         rewardFocus: 71,
@@ -337,6 +342,7 @@ export const bootstrapScenario = {
         roleTag: "role:medic",
         specialtyTag: "focus:containment",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 45,
         rewardFocus: 52,
@@ -401,6 +407,7 @@ export const bootstrapScenario = {
         roleTag: "role:field_lead",
         specialtyTag: "focus:extraction",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 78,
         rewardFocus: 74,
@@ -465,6 +472,7 @@ export const bootstrapScenario = {
         roleTag: "role:scout",
         specialtyTag: "focus:extraction",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 68,
         rewardFocus: 60,
@@ -529,6 +537,7 @@ export const bootstrapScenario = {
         roleTag: "role:medic",
         specialtyTag: "focus:containment",
       },
+      rankTone: "grounded",
       preferences: {
         riskTolerance: 40,
         rewardFocus: 48,

@@ -199,4 +199,16 @@ export const roomTemplates = [
     baseCapacity: 4,
     availableInBuildings: ["building/porters"],
   },
+  // ── Porter's workshop ────────────────────────────────────────────────
+  {
+    id: "room/workshop:tier_1",
+    kind: "room",
+    name: "The Workshop",
+    tags: ["room:operations", "ops:crafting", "staff:logistics"],
+    description:
+      "A converted machine shop behind the dock with a welding bench, a parts press, and ventilation that mostly works. The first place the guild can turn raw site materials into durable field gear instead of buying everything off the rack.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/porters"],
+  },
 ] satisfies readonly RoomTemplate[];

@@ -272,6 +272,25 @@ function PostedContractCard({
           {posting.siteSummary}
         </p>
 
+        {/* Phase 4: District and sponsor */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {posting.districtName && (
+            <span className="text-silver/55">
+              <span className="text-gold/40">{"\u25A3"}</span> {posting.districtName}
+            </span>
+          )}
+          {posting.sponsorName && (
+            <span className="text-silver/55">
+              <span className="text-gold/40">{"\u2302"}</span> {posting.sponsorName}
+            </span>
+          )}
+          {posting.pressureTags.length > 0 && (
+            <span className="text-ember/60">
+              {posting.pressureTags.length} pressure{posting.pressureTags.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+
         <div className="mt-3 flex items-center gap-2">
           <Tooltip content={getBoardIntelDetail(posting.boardIntel)}>
             <span className="badge badge-slate">{getBoardIntelLabel(posting.boardIntel)}</span>
