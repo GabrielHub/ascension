@@ -262,6 +262,49 @@ async function advanceOneHour(page: Page): Promise<BrowserTestSnapshot> {
   );
 }
 
+async function loadSeededPortersSave(page: Page): Promise<BrowserTestSnapshot> {
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.evaluate(async () => {
+    const driver = (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__;
+    await driver?.resetSaveSlots();
+    await driver?.seedPortersUpgradeCampaignSave("slot/1");
+  });
+
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.locator('[data-testid="slot-load"][data-slot-id="slot/1"]').click();
+  await page.getByTestId("game-shell").waitFor({ state: "visible" });
+
+  return waitForSnapshot(
+    page,
+    "Porters campaign seed",
+    (next) =>
+      next.building.activeBuildingId === "building/porters" &&
+      next.contracts.postedContractIds.length > 0,
+  );
+}
+
+async function openDevConsole(page: Page): Promise<void> {
+  await page.keyboard.press("`");
+  await page.getByTestId("dev-console").waitFor({ state: "visible" });
+}
+
+async function runDevConsoleCommand(page: Page, command: string): Promise<void> {
+  await openDevConsole(page);
+  const input = page.getByTestId("dev-console-input");
+  const transcript = page.getByTestId("dev-console-transcript");
+  await input.fill(command);
+  await input.press("Enter");
+  await expect(transcript).toContainText(command);
+
+  const consolePanel = page.getByTestId("dev-console");
+  if (await consolePanel.isVisible().catch(() => false)) {
+    await page.keyboard.press("Escape");
+    await consolePanel.waitFor({ state: "hidden" });
+  }
+}
+
 let browser: Browser;
 let context: BrowserContext;
 let page: Page;
@@ -316,26 +359,7 @@ const describeBrowser = RUN_BROWSER_TEST ? describe.sequential : describe.skip;
 
 describeBrowser("Porters upgrade campaign browser path", () => {
   it("verifies the post-relocation Porters upgrade arc and room usage in the real browser runtime", async () => {
-    await page.goto(BASE_URL, { waitUntil: "networkidle" });
-    await waitForDriver(page);
-    await page.evaluate(async () => {
-      const driver = (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__;
-      await driver?.resetSaveSlots();
-      await driver?.seedPortersUpgradeCampaignSave("slot/1");
-    });
-
-    await page.goto(BASE_URL, { waitUntil: "networkidle" });
-    await waitForDriver(page);
-    await page.locator('[data-testid="slot-load"][data-slot-id="slot/1"]').click();
-    await page.getByTestId("game-shell").waitFor({ state: "visible" });
-
-    let snapshot = await waitForSnapshot(
-      page,
-      "Porters campaign seed",
-      (next) =>
-        next.building.activeBuildingId === "building/porters" &&
-        next.contracts.postedContractIds.length > 0,
-    );
+    let snapshot = await loadSeededPortersSave(page);
     expect(snapshot.upgrades.appliedIds).toEqual([]);
     expect(snapshot.contracts.contractBriefing).toBeNull();
 
@@ -373,7 +397,7 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     );
     snapshot = await placeNextRoom(page, "The Break Room");
     expect(snapshot.rooms.some((room) => room.templateId === "room/break_room:tier_1")).toBe(true);
-    await activateRoom(page, 2, "The Briefing Room");
+    snapshot = await activateRoom(page, 2, "The Briefing Room");
     await captureScreenshot(page, "porters-campaign-upstairs");
 
     await purchaseBuildingUpgrade(
@@ -426,4 +450,29 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     );
     await captureScreenshot(page, "porters-campaign-proof");
   }, 180_000);
+
+  it("verifies the encounter expansion flow in the real browser runtime", async () => {
+    await loadSeededPortersSave(page);
+
+    await runDevConsoleCommand(page, "encounter force-site site/collapsed-customs-house");
+
+    const encounterSurface = page.getByTestId("encounter-surface");
+    await encounterSurface.waitFor({ state: "visible" });
+    expect(await encounterSurface.textContent()).toContain("The Excise Officer");
+    expect(await encounterSurface.textContent()).toContain("Phase 1/3");
+
+    const priorityTargetCard = page
+      .locator("button.enc-intervention-card")
+      .filter({ hasText: "Priority Target Designation" });
+    await priorityTargetCard.click();
+    expect(await priorityTargetCard.isDisabled()).toBe(true);
+
+    await page.getByRole("button", { exact: true, name: "Pause" }).click();
+    await page.waitForFunction(() => {
+      const surface = document.querySelector('[data-testid="encounter-surface"]');
+      return surface?.textContent?.includes("Paused") ?? false;
+    });
+
+    await captureScreenshot(page, "encounter-expansion-proof");
+  }, 120_000);
 });

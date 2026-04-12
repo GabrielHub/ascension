@@ -123,7 +123,10 @@ export type InterventionId =
   | "force_regroup"
   | "defensive_posture"
   | "extraction_window"
-  | "consumable_boost";
+  | "consumable_boost"
+  | "priority_target"
+  | "field_rotation"
+  | "district_intel_reserve";
 
 export interface InterventionDefinition {
   id: InterventionId;
@@ -132,7 +135,6 @@ export interface InterventionDefinition {
   usesPerEncounter: number;
   targeting: "all_allies" | "lowest_hp_ally" | "boss_enemy";
   effects: readonly AbilityEffect[];
-  logTextKey: string;
 }
 
 export interface InterventionUsageState {
@@ -148,7 +150,6 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
     usesPerEncounter: 2,
     targeting: "boss_enemy",
     effects: [{ kind: "spawn_intel_window", duration: 3 }],
-    logTextKey: "intervention.intel_reveal",
   },
   {
     id: "emergency_stabilize",
@@ -160,7 +161,6 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
       { kind: "heal", basePower: 30, scalingStat: "intelligence", scalingFactor: 0.5 },
       { kind: "apply_status", statusId: "stabilized", duration: 2, potency: 10 },
     ],
-    logTextKey: "intervention.emergency_stabilize",
   },
   {
     id: "force_regroup",
@@ -173,7 +173,6 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
       { kind: "shield", basePower: 15, scalingStat: "resilience", scalingFactor: 0.5 },
       { kind: "cleanse_status", count: 1 },
     ],
-    logTextKey: "intervention.force_regroup",
   },
   {
     id: "defensive_posture",
@@ -185,7 +184,6 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
       { kind: "apply_status", statusId: "guarded", duration: 3, potency: 12 },
       { kind: "apply_status", statusId: "suppressed", duration: 3, potency: 5 },
     ],
-    logTextKey: "intervention.defensive_posture",
   },
   {
     id: "extraction_window",
@@ -195,7 +193,6 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
     usesPerEncounter: 1,
     targeting: "all_allies",
     effects: [{ kind: "prevent_defeat", hpFloor: 1 }],
-    logTextKey: "intervention.extraction_window",
   },
   {
     id: "consumable_boost",
@@ -207,7 +204,41 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
       { kind: "modify_stat", stat: "strength", delta: 5, duration: 3 },
       { kind: "modify_stat", stat: "speed", delta: 3, duration: 3 },
     ],
-    logTextKey: "intervention.consumable_boost",
+  },
+  {
+    id: "priority_target",
+    name: "Priority Target Designation",
+    summary:
+      "Mark the boss for concentrated fire. All operators deal increased damage for 2 rounds.",
+    usesPerEncounter: 1,
+    targeting: "boss_enemy",
+    effects: [
+      { kind: "apply_status", statusId: "marked", duration: 2, potency: 14 },
+      { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+    ],
+  },
+  {
+    id: "field_rotation",
+    name: "Field Rotation Order",
+    summary: "Rotate the team's positioning to redistribute threat and break hostile locks.",
+    usesPerEncounter: 1,
+    targeting: "all_allies",
+    effects: [
+      { kind: "cleanse_status", count: 2 },
+      { kind: "modify_stat", stat: "speed", delta: 4, duration: 2 },
+    ],
+  },
+  {
+    id: "district_intel_reserve",
+    name: "District Intel Reserve",
+    summary:
+      "Spend accumulated district intelligence to predict and mitigate the boss's next actions.",
+    usesPerEncounter: 1,
+    targeting: "all_allies",
+    effects: [
+      { kind: "apply_status", statusId: "guarded", duration: 3, potency: 10 },
+      { kind: "apply_status", statusId: "fortified", duration: 2, potency: 8 },
+    ],
   },
 ];
 
@@ -267,6 +298,7 @@ export interface BossEncounterInstance {
   pendingRoundStart: boolean;
   actors: Record<string, ActorCombatState>;
   interventions: InterventionUsageState[];
+  reactionHooks: BossReactionHook[];
   encounterLog: EncounterActionRecord[];
   debugTraceEnabled: boolean;
   autoplayEnabled: boolean;
@@ -293,6 +325,7 @@ export interface BossEncounterSnapshot {
   pendingRoundStart?: boolean;
   actors: Record<string, ActorCombatState>;
   interventions: InterventionUsageState[];
+  reactionHooks?: BossReactionHook[];
   encounterLog: EncounterActionRecord[];
 }
 

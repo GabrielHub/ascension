@@ -6,7 +6,8 @@ Ascension is a web-first management sim about running a dungeon-clearing guild i
 
 - The current shipped baseline covers the full bodega arc, relocation into Porter's, multi-floor HQ support, onboarding, runtime-owned incidents and encounter handoff, browser and desktop save hosts, and optional local-first AI generation.
 - The AI content layer is not an active bring-up plan anymore. The shipped baseline already includes localhost transport, settings, browser and desktop adapters, runtime request tracking, dev-console commands, and two live surfaces: `incident-framing` and `operator-identity`.
-- The next planned work is midgame external pressure and content breadth, not another foundation pass for the already-shipped systems above.
+- Phase 4 midgame breadth is complete: contract lock, city pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter expansion are all shipped.
+- The next planned work is midgame remediation: deeper browser/runtime verification, balance review, and tuning across the shipped Porter's-era D-rank layer.
 
 ## What This README Is For
 

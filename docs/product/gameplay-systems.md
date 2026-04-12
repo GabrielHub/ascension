@@ -9,11 +9,11 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Rank advancement is possible but rare, dramatic, and not a standard progression path.
 - The real early-game progression band should span F, E, and D content, but with strongly weighted rarity rather than even availability.
 - Lower-rank content should never disappear completely. Progression should shift weighted pools upward instead of hard-deleting F or E outcomes from the game.
-- The first post-bodega building is Porter's, a dual-use bar and restaurant with converted upstairs operational rooms and a later waterfront expansion.
-- The first post-bodega building should unlock systems and room families that do not fit in a bodega, not just increase capacity.
-- Early external pressure should come primarily from the dungeon economy and the operator labor market, with city institutions layered in later.
-- The shipped bodega expansion now centers intel, logistics, and staging support. The next headquarters tier should build on those surfaces instead of re-solving them as bodega problems.
-- Porter's starter state should not regress room count or staging compared with the fully upgraded bodega.
+- The first post-bodega building is Porter's, a dual-use bar and restaurant with converted upstairs operational rooms and a waterfront expansion.
+- The first post-bodega building now unlocks systems and room families that do not fit in a bodega, not just more capacity.
+- The shipped Porter's-era pressure band now comes from the dungeon economy, the operator labor market, city-pressure writeback, incident fallout, and encounter escalation; heavier institutional and political escalation can layer in later tiers.
+- The shipped bodega expansion centers intel, logistics, and staging support, and Porter's builds on those surfaces instead of re-solving them as bodega problems.
+- Porter's starter state should not regress room count or staging compared with the fully upgraded bodega, and the shipped upgrade path should remain above that floor.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
 - Content should escalate in tone and visual language with rank. F and E stay rooted in warped real places and plausible professional gear; D and C can become stranger, more specialized, and more visibly rift-touched; B and A can become institutionally famous and physically implausible; S is where the game spends its truly spectacular concepts.
 - That climb applies across dungeons, bosses, gear, and operators. It is not only a difficulty curve.
@@ -276,7 +276,7 @@ Gear, inventory, and market defaults:
 - The HQ should support an optional runtime-owned loot filter that auto-sells junk monster parts and gear below the guild's current practical equipment floor.
 - That floor should be balance-owned, inferred from roster coverage and available higher-rank replacements, rather than set manually per item by the player.
 - The bodega may introduce lightweight consumable preparation as a precursor system, but that should stay deliberately narrow: short recipe lists, temporary raid aids, and no full workshop identity.
-- Porter's should make that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
+- Porter's now makes that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
 - Crafting is a midgame feature. It requires a dedicated room and staff support.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
 - Gear presentation should climb with rank without abandoning the grounded-professional baseline too early. F and E should still read as plausible field equipment; D and C can start showing rift-touched materials and stranger silhouettes; A and S can carry the most dramatic visual signatures.

@@ -139,12 +139,13 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
-- Phase 4 is in progress. Shared contract lock, city pressure, Porter's content remediation, durable crafting, and deeper social/incident fallout are shipped in code; the remaining active execution work is encounter expansion.
+- Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
 
 ## Next Steps
 
-1. Expand encounter breadth with more mixed enemy groups, boss reaction patterns, managerial interventions, and reward links into the midgame crafting loop.
+1. Remediate the shipped midgame: run deeper browser/runtime verification, close usability regressions, and tune the Porter's-era D-rank economy, contract, incident, and encounter loops against deterministic reports.
 2. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+3. Add later-building and prestige content only after the existing Porter's campaign layer is fully exercised and tuned.
 
 ## Phase 4: Midgame Systems
 
@@ -156,28 +157,41 @@ Current status:
 - city pressure is shipped
 - Porter's content remediation is shipped
 - durable crafting is shipped
-- encounter expansion remains active
+- social/incident fallout is shipped
+- encounter expansion is shipped
 
-Deliverables:
+Shipped deliverables:
 
-- reputation-based threat escalation
-- better district-level city map logic
-- Porter's content remediation across higher-rank site packets, operator breadth, event coverage, and loot families
-- richer gear and crafting built around authored recipe families, resource families, and rare site-specific materials
-- additional economic resources beyond the current cash, reputation, intel, and Phase 2 loot-market baseline if needed
-- faction or contract pressure
-- city institutions begin pushing through licensing/compliance, labor and worker-safety oversight, emergency-response containment, and borough-level political or contract pressure
-- richer social fallout from guild reputation, contract performance, operator death, and room/team culture
-- expand the shipped incident library with more authored subject bindings, consequence bundles, and higher-pressure institutional scenarios
-- deepen boss-encounter content breadth with additional bosses, mixed enemy rosters, phase behaviors, and longer-form intervention design
-- lock the tonal and visual climb in authored content so grounded F/E content gives way to stranger D/C content and fully spectacular A/S content without losing the workplace-supernatural identity
-- expand encounter debug tooling and authored boss/incident content beyond the initial shipped slice
-- optional later AI incident framing layered on top of deterministic authored triggers and consequence bundles, not as the gameplay authority
-- optional weekly AI-generated narrative reports built from saved raid summaries and guild state
+- reputation-based escalation through shared contract metadata, city-pressure writeback, and runtime fallout
+- district-level contract/site/faction data lock for the active midgame pressure band
+- Porter's content remediation across additional site packets, operator breadth, event coverage, boss coverage, loot families, and runtime asset-parity validation
+- richer gear and crafting through authored recipe families, protected inputs, workshop blockers, and craft-time cash sinks
+- deeper social fallout from guild reputation, contract performance, operator death, and room/team culture
+- expanded incident and encounter breadth through more authored bindings, higher-pressure consequence bundles, more bosses and enemy coverage, encounter phase/intervention surfaces, and encounter debug tooling
+- tonal and visual climb locked into authored content so grounded F/E content can progress into stranger D/C content without losing the workplace-supernatural identity
 
 Exit criteria:
 
 - the world pushes back instead of acting like a passive mission board
+
+## Immediate Follow-Through: Midgame Remediation
+
+Goal: treat the shipped Porter's-era midgame as a playable production band that now needs verification depth, balance tightening, and UX remediation instead of more breadth-first expansion.
+
+Deliverables:
+
+- expand browser-driven regression coverage across the canonical Porter's campaign path, active-contract loop, workshop loop, incident fallout, and encounter handoff
+- add deterministic report or harness coverage where browser runs are too slow or too noisy, especially for economy, recruit quality, contract generation, and encounter reward output
+- review the shipped D-rank economy envelope using the existing midgame ledger and tune recipe cash sinks, reward pacing, and market fallback value where needed
+- review contract-board readability, briefing/staging clarity, and interruption/event-log legibility in the shipped midgame loop and fix regressions that make the management layer hard to read
+- tune the balance-owned tables behind recruit quality, raid payout, loot output, crafting blockers, recovery pressure, and city-pressure pacing rather than layering on new mechanics
+- capture the tuned baseline in tests, reports, and browser coverage so future content work builds on a stable Porter's-era target instead of a moving midpoint
+
+Exit criteria:
+
+- the canonical Porter's loop is covered by meaningful browser and deterministic regression surfaces
+- the D-rank economy and reward loop sit inside an explicit tuned envelope rather than a first-pass authored guess
+- the midgame reads clearly enough in browser play that the next headquarters tier does not have to compensate for unresolved Porter's-era UX debt
 
 ## Later: AI Content Breadth
 
@@ -215,8 +229,9 @@ Exit criteria:
 ## Practical Build Order
 
 1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 contract lock, Phase 4 city pressure, and Porter's content remediation.
-2. Finish the remaining midgame external-pressure work: encounter expansion.
-3. Add later-building and prestige content.
-4. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
+2. Phase 4 midgame external-pressure work is complete.
+3. Remediate, verify, and tune the shipped Porter's-era midgame.
+4. Add later-building and prestige content.
+5. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 
 That order matters more than any specific library choice.

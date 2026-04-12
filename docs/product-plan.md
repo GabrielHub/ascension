@@ -5,7 +5,8 @@ This document is now a stable hub. The canonical product-plan content lives unde
 ## Status
 
 - The shipped product baseline already includes the full bodega campaign closeout, relocation into Porter's, multi-floor HQ support, onboarding, incidents, boss encounter handoff, browser and desktop hosting, and the first optional local-first AI surfaces.
-- Current planned work is no longer "ship the base game at all." The next product-facing work is to deepen midgame external pressure, later-building breadth, and selective AI content expansion on top of the shipped deterministic baseline.
+- Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth are all shipped in the current baseline.
+- Current planned work is no longer "ship the base game at all." The next product-facing work is to remediate the shipped midgame through verification depth, balance tuning, and usability cleanup before moving on to later-building breadth or wider optional AI content.
 
 ## Read Order
 

@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="eo-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#c8884a" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#1a1008" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#060404" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="eo-coat" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a2438"/>
+      <stop offset="50%" stop-color="#0e1828"/>
+      <stop offset="100%" stop-color="#060c18"/>
+    </linearGradient>
+    <linearGradient id="eo-brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4a848"/>
+      <stop offset="50%" stop-color="#987828"/>
+      <stop offset="100%" stop-color="#5a4008"/>
+    </linearGradient>
+    <linearGradient id="eo-stamp" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#8a2828"/>
+      <stop offset="50%" stop-color="#5a1818"/>
+      <stop offset="100%" stop-color="#2a0808"/>
+    </linearGradient>
+    <radialGradient id="eo-seal" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c83838" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#8a1818" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#3a0808" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="eo-ink" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8a2828" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#3a0808" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0a0204" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="eo-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="eo-paperglow">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="96" ry="134" fill="url(#eo-aura)"/>
+
+  <!-- Floating customs documents — forms and ledgers drifting in the air -->
+  <rect x="14" y="24" width="20" height="14" rx="0.5" fill="#e8dcc0" stroke="#6a5838" stroke-width="0.4" transform="rotate(-12 24 31)" opacity="0.8"/>
+  <line x1="17" y1="28" x2="31" y2="28" stroke="#3a2808" stroke-width="0.3" transform="rotate(-12 24 31)"/>
+  <line x1="17" y1="31" x2="29" y2="31" stroke="#3a2808" stroke-width="0.3" transform="rotate(-12 24 31)"/>
+  <line x1="17" y1="34" x2="26" y2="34" stroke="#3a2808" stroke-width="0.3" transform="rotate(-12 24 31)"/>
+  <circle cx="29" cy="33" r="1.8" fill="url(#eo-seal)" transform="rotate(-12 24 31)" filter="url(#eo-paperglow)"/>
+
+  <rect x="164" y="40" width="22" height="16" rx="0.5" fill="#e8dcc0" stroke="#6a5838" stroke-width="0.4" transform="rotate(8 175 48)" opacity="0.75"/>
+  <line x1="167" y1="44" x2="183" y2="44" stroke="#3a2808" stroke-width="0.3" transform="rotate(8 175 48)"/>
+  <line x1="167" y1="47" x2="181" y2="47" stroke="#3a2808" stroke-width="0.3" transform="rotate(8 175 48)"/>
+  <line x1="167" y1="50" x2="178" y2="50" stroke="#3a2808" stroke-width="0.3" transform="rotate(8 175 48)"/>
+
+  <rect x="8" y="190" width="18" height="12" rx="0.5" fill="#e8dcc0" stroke="#6a5838" stroke-width="0.4" transform="rotate(18 17 196)" opacity="0.65"/>
+  <rect x="176" y="210" width="16" height="10" rx="0.5" fill="#e8dcc0" stroke="#6a5838" stroke-width="0.4" transform="rotate(-14 184 215)" opacity="0.6"/>
+
+  <!-- Red ink seal stamps floating — the Officer's authority made visible -->
+  <circle cx="30" cy="80" r="4" fill="url(#eo-seal)" opacity="0.7" filter="url(#eo-glow)"/>
+  <circle cx="30" cy="80" r="2" fill="none" stroke="#e8c8c8" stroke-width="0.3"/>
+  <circle cx="170" cy="100" r="3.5" fill="url(#eo-seal)" opacity="0.65" filter="url(#eo-glow)"/>
+  <circle cx="20" cy="240" r="3" fill="url(#eo-seal)" opacity="0.55" filter="url(#eo-glow)"/>
+  <circle cx="180" cy="260" r="2.5" fill="url(#eo-seal)" opacity="0.5" filter="url(#eo-glow)"/>
+
+  <!-- Red ink dripping from thin air -->
+  <path d="M 28 84 L 29 92 L 31 98" fill="none" stroke="#8a2828" stroke-width="0.5" opacity="0.6"/>
+  <path d="M 168 104 L 169 110 L 167 116" fill="none" stroke="#8a2828" stroke-width="0.5" opacity="0.55"/>
+
+  <!-- Feet — heavy customs boots with brass buckles -->
+  <path d="M 68 244 L 60 258 L 60 264 L 88 264 L 88 244 Z" fill="#1a1828" stroke="#0a0810" stroke-width="0.8"/>
+  <path d="M 112 244 L 112 264 L 140 264 L 140 258 L 132 244 Z" fill="#1a1828" stroke="#0a0810" stroke-width="0.8"/>
+  <!-- Boot buckles -->
+  <rect x="68" y="252" width="12" height="4" rx="0.5" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <rect x="120" y="252" width="12" height="4" rx="0.5" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <!-- Boot sole stripes -->
+  <line x1="62" y1="263" x2="86" y2="263" stroke="#5a4a38" stroke-width="0.5"/>
+  <line x1="114" y1="263" x2="138" y2="263" stroke="#5a4a38" stroke-width="0.5"/>
+
+  <!-- Legs — uniform trousers with red piping -->
+  <rect x="72" y="210" width="20" height="36" rx="1" fill="url(#eo-coat)" stroke="#0a0c18" stroke-width="0.7"/>
+  <rect x="108" y="210" width="20" height="36" rx="1" fill="url(#eo-coat)" stroke="#0a0c18" stroke-width="0.7"/>
+  <line x1="78" y1="210" x2="78" y2="246" stroke="#5a1818" stroke-width="0.6"/>
+  <line x1="122" y1="210" x2="122" y2="246" stroke="#5a1818" stroke-width="0.6"/>
+
+  <!-- Main body — heavy customs greatcoat, double-breasted -->
+  <path d="
+    M 60 104
+    L 66 92 L 80 86 L 100 82 L 120 86 L 134 92 L 140 104
+    L 146 130 L 150 160 L 150 190 L 146 214
+    L 54 214 L 50 190 L 50 160 L 54 130 Z
+  " fill="url(#eo-coat)" stroke="#0a0c18" stroke-width="1.2"/>
+
+  <!-- Double-breasted coat front lines -->
+  <path d="M 86 88 L 80 110 L 78 150 L 80 190 L 82 210" fill="none" stroke="#0e1828" stroke-width="0.8"/>
+  <path d="M 114 88 L 120 110 L 122 150 L 120 190 L 118 210" fill="none" stroke="#0e1828" stroke-width="0.8"/>
+  <!-- Red piping down the coat edges -->
+  <path d="M 84 90 L 76 120 L 74 160 L 76 200 L 78 214" fill="none" stroke="#5a1818" stroke-width="0.5"/>
+  <path d="M 116 90 L 124 120 L 126 160 L 124 200 L 122 214" fill="none" stroke="#5a1818" stroke-width="0.5"/>
+
+  <!-- Brass double-breasted buttons -->
+  <circle cx="88" cy="110" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="112" cy="110" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="88" cy="130" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="112" cy="130" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="88" cy="150" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="112" cy="150" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="88" cy="170" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="112" cy="170" r="1.6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+
+  <!-- Epaulettes — brass fringed shoulder boards -->
+  <rect x="48" y="90" width="22" height="8" rx="1" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.6"/>
+  <rect x="130" y="90" width="22" height="8" rx="1" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.6"/>
+  <!-- Fringe -->
+  <path d="M 50 98 L 48 104 M 54 98 L 52 104 M 58 98 L 56 104 M 62 98 L 60 104 M 66 98 L 64 104" stroke="#d4a848" stroke-width="0.4"/>
+  <path d="M 132 98 L 130 104 M 136 98 L 134 104 M 140 98 L 138 104 M 144 98 L 142 104 M 148 98 L 146 104" stroke="#d4a848" stroke-width="0.4"/>
+
+  <!-- Belt with massive customs seal buckle -->
+  <rect x="56" y="186" width="88" height="7" rx="1" fill="#1a0e04" stroke="#3a2808" stroke-width="0.5"/>
+  <!-- Seal buckle -->
+  <circle cx="100" cy="189.5" r="6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.8"/>
+  <circle cx="100" cy="189.5" r="4" fill="none" stroke="#5a4008" stroke-width="0.4"/>
+  <text x="100" y="191" text-anchor="middle" fill="#2a1808" font-size="3.5" font-family="serif">E</text>
+
+  <!-- HEAD — peaked customs cap with brass badge, severe face -->
+  <!-- Cap -->
+  <path d="M 72 54 Q 72 36 100 28 Q 128 36 128 54 L 128 58 L 72 58 Z" fill="#1a2438" stroke="#0a0c18" stroke-width="0.8"/>
+  <!-- Cap band -->
+  <rect x="72" y="54" width="56" height="5" fill="#2a0808" stroke="#0a0404" stroke-width="0.4"/>
+  <!-- Cap visor -->
+  <path d="M 68 59 Q 100 66 132 59 L 130 62 Q 100 68 70 62 Z" fill="#0a0c18" stroke="#060810" stroke-width="0.5"/>
+  <!-- Cap badge — brass eagle/seal -->
+  <circle cx="100" cy="44" r="6" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.8"/>
+  <circle cx="100" cy="44" r="4" fill="none" stroke="#5a4008" stroke-width="0.4"/>
+  <path d="M 96 44 L 100 40 L 104 44 L 100 48 Z" fill="#8a6818" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="100" cy="44" r="1.2" fill="#d4a848"/>
+
+  <!-- Face — severe, gaunt, official -->
+  <ellipse cx="100" cy="68" rx="14" ry="10" fill="#c8b898" stroke="#6a5838" stroke-width="0.4"/>
+  <!-- Heavy brow shadows -->
+  <path d="M 88 64 Q 92 62 96 64" fill="none" stroke="#3a2818" stroke-width="0.8"/>
+  <path d="M 104 64 Q 108 62 112 64" fill="none" stroke="#3a2818" stroke-width="0.8"/>
+  <!-- Eyes — narrow, cold, stamps where pupils should be -->
+  <ellipse cx="92" cy="67" rx="2.5" ry="1.5" fill="#f4e8d0" stroke="#3a2818" stroke-width="0.3"/>
+  <circle cx="92" cy="67" r="0.9" fill="#8a2828"/>
+  <ellipse cx="108" cy="67" rx="2.5" ry="1.5" fill="#f4e8d0" stroke="#3a2818" stroke-width="0.3"/>
+  <circle cx="108" cy="67" r="0.9" fill="#8a2828"/>
+  <!-- Nose — sharp, thin -->
+  <path d="M 100 66 L 98 72 L 100 74 L 102 72 Z" fill="#b8a888" stroke="#6a5838" stroke-width="0.3"/>
+  <!-- Mouth — thin, downturned, disapproving -->
+  <path d="M 94 76 Q 100 78 106 76" fill="none" stroke="#5a3828" stroke-width="0.7"/>
+  <!-- Jawline -->
+  <path d="M 86 72 Q 86 80 100 82 Q 114 80 114 72" fill="none" stroke="#8a7858" stroke-width="0.4"/>
+
+  <!-- Red ink stains bleeding from the eyes — the seal marks you -->
+  <path d="M 92 69 Q 90 74 88 80" fill="none" stroke="#8a2828" stroke-width="0.5" opacity="0.7"/>
+  <path d="M 108 69 Q 110 74 112 80" fill="none" stroke="#8a2828" stroke-width="0.5" opacity="0.7"/>
+
+  <!-- Left arm — holding an enormous brass seal stamp, raised to strike -->
+  <path d="M 48 104 L 36 118 L 24 140 L 16 166 L 14 180 L 20 182 L 30 168 L 40 144 L 50 120 Z" fill="url(#eo-coat)" stroke="#0a0c18" stroke-width="0.7"/>
+  <!-- Brass cuff -->
+  <rect x="12" y="176" width="14" height="4" rx="0.5" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <!-- Gloved hand -->
+  <ellipse cx="18" cy="188" rx="6" ry="4" fill="#1a0e04" stroke="#0a0808" stroke-width="0.5"/>
+
+  <!-- THE SEAL STAMP — enormous, the signature weapon -->
+  <!-- Handle -->
+  <rect x="10" y="188" width="16" height="44" rx="2" fill="#5a3018" stroke="#2a1808" stroke-width="0.8"/>
+  <!-- Handle grip rings -->
+  <rect x="9" y="196" width="18" height="3" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <rect x="9" y="210" width="18" height="3" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <rect x="9" y="224" width="18" height="3" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <!-- Stamp face — flat red bottom with inverted seal text -->
+  <rect x="4" y="232" width="28" height="10" rx="1" fill="url(#eo-stamp)" stroke="#1a0808" stroke-width="0.8"/>
+  <circle cx="18" cy="237" r="3.5" fill="none" stroke="#c86868" stroke-width="0.4"/>
+  <text x="18" y="239" text-anchor="middle" fill="#c86868" font-size="3" font-family="serif">VOID</text>
+  <!-- Ink dripping from stamp face -->
+  <path d="M 8 242 L 8 250 L 10 256" fill="none" stroke="#8a2828" stroke-width="0.7" opacity="0.75"/>
+  <circle cx="10" cy="258" r="1" fill="#8a2828" opacity="0.7"/>
+  <path d="M 28 242 L 30 248 L 28 254" fill="none" stroke="#8a2828" stroke-width="0.6" opacity="0.65"/>
+
+  <!-- Right arm — extended, palm open, summoning inspection drone -->
+  <path d="M 152 104 L 164 118 L 174 138 L 180 158 L 182 170 L 176 172 L 168 156 L 158 136 L 148 116 Z" fill="url(#eo-coat)" stroke="#0a0c18" stroke-width="0.7"/>
+  <rect x="172" y="166" width="14" height="4" rx="0.5" fill="url(#eo-brass)" stroke="#3a2808" stroke-width="0.3"/>
+  <!-- Gloved hand — fingers splayed, commanding -->
+  <ellipse cx="180" cy="180" rx="7" ry="5" fill="#1a0e04" stroke="#0a0808" stroke-width="0.5"/>
+  <path d="M 174 178 L 170 172" fill="none" stroke="#0a0808" stroke-width="0.5"/>
+  <path d="M 178 176 L 176 168" fill="none" stroke="#0a0808" stroke-width="0.5"/>
+  <path d="M 182 176 L 184 168" fill="none" stroke="#0a0808" stroke-width="0.5"/>
+  <path d="M 186 178 L 190 172" fill="none" stroke="#0a0808" stroke-width="0.5"/>
+
+  <!-- INSPECTION DRONE — hovering near the right hand, a mechanical eye-sphere -->
+  <circle cx="186" cy="140" r="10" fill="#2a2838" stroke="#0a0c18" stroke-width="0.8"/>
+  <!-- Drone eye lens -->
+  <circle cx="186" cy="140" r="6" fill="#1a0808" stroke="url(#eo-brass)" stroke-width="0.8"/>
+  <circle cx="186" cy="140" r="3.5" fill="#8a2828" filter="url(#eo-glow)"/>
+  <circle cx="186" cy="140" r="1.2" fill="#ff8888"/>
+  <!-- Drone housing rivets -->
+  <circle cx="178" cy="134" r="0.6" fill="#0a0810"/>
+  <circle cx="194" cy="134" r="0.6" fill="#0a0810"/>
+  <circle cx="178" cy="146" r="0.6" fill="#0a0810"/>
+  <circle cx="194" cy="146" r="0.6" fill="#0a0810"/>
+  <!-- Drone antenna -->
+  <line x1="186" y1="130" x2="186" y2="124" stroke="#5a5868" stroke-width="0.5"/>
+  <circle cx="186" cy="122" r="1" fill="#c83838" filter="url(#eo-glow)"/>
+  <!-- Drone propulsion glow -->
+  <ellipse cx="186" cy="152" rx="4" ry="1.5" fill="#c83838" opacity="0.45" filter="url(#eo-glow)"/>
+
+  <!-- Red seal stamp imprints burned into the air around the figure -->
+  <circle cx="42" cy="140" r="6" fill="none" stroke="#8a2828" stroke-width="0.5" opacity="0.4"/>
+  <circle cx="42" cy="140" r="4" fill="none" stroke="#8a2828" stroke-width="0.3" opacity="0.3"/>
+  <circle cx="158" cy="200" r="5" fill="none" stroke="#8a2828" stroke-width="0.4" opacity="0.35"/>
+
+  <!-- Coat hem and shadow -->
+  <path d="M 60 210 Q 100 218 140 210 L 142 216 Q 100 224 58 216 Z" fill="#060c18" stroke="#0a0c18" stroke-width="0.4"/>
+
+  <!-- Large red ink pool spreading beneath the boots -->
+  <ellipse cx="100" cy="268" rx="44" ry="4" fill="url(#eo-ink)" filter="url(#eo-glow)"/>
+</svg>

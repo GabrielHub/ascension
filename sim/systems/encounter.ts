@@ -175,6 +175,7 @@ export function createBossEncounter(
     pendingRoundStart: false,
     actors,
     interventions,
+    reactionHooks: bossDef.reactionHooks.map((hook) => ({ ...hook })),
     encounterLog: [],
     debugTraceEnabled: false,
     autoplayEnabled: false,
@@ -240,27 +241,41 @@ export function advanceEncounterTurn(encounter: BossEncounterInstance): void {
   const actor = encounter.actors[actorId];
   if (actor?.condition === "alive") {
     const rng = createEncounterRng(encounter);
+    const enemyAddsAliveBeforeStatus = countAliveEnemyAdds(encounter);
 
     // Tick statuses at turn start.
     tickStatusesForActor(encounter, actor);
+    if (triggerOnBossAllyDefeatIfNeeded(encounter, enemyAddsAliveBeforeStatus, rng)) {
+      if (endEncounterIfTerminated(encounter)) {
+        return;
+      }
+    }
 
-    const terminationAfterStatus = checkEncounterTermination(encounter);
-    if (terminationAfterStatus) {
-      endEncounter(encounter, terminationAfterStatus);
+    if (endEncounterIfTerminated(encounter)) {
       return;
     }
 
     if (actor.condition === "alive") {
+      const enemyAddsAliveBeforeAction =
+        actor.side === "ally" ? countAliveEnemyAdds(encounter) : -1;
+
       if (actor.side === "ally") {
         resolveOperatorAction(encounter, actor, rng);
       } else {
         resolveEnemyAction(encounter, actor, rng);
       }
 
-      const terminationAfterAction = checkEncounterTermination(encounter);
-      if (terminationAfterAction) {
-        endEncounter(encounter, terminationAfterAction);
+      if (endEncounterIfTerminated(encounter)) {
         return;
+      }
+
+      if (
+        actor.side === "ally" &&
+        triggerOnBossAllyDefeatIfNeeded(encounter, enemyAddsAliveBeforeAction, rng)
+      ) {
+        if (endEncounterIfTerminated(encounter)) {
+          return;
+        }
       }
     }
   }
@@ -278,12 +293,78 @@ function createEncounterRng(encounter: BossEncounterInstance): SeededRng {
   return rng;
 }
 
+function endEncounterIfTerminated(encounter: BossEncounterInstance): boolean {
+  const terminationResult = checkEncounterTermination(encounter);
+  if (!terminationResult) {
+    return false;
+  }
+
+  endEncounter(encounter, terminationResult);
+  return true;
+}
+
+function getAliveBossActor(encounter: BossEncounterInstance): ActorCombatState | null {
+  return (
+    Object.values(encounter.actors).find(
+      (actor) => actor.kind === "boss" && actor.condition === "alive",
+    ) ?? null
+  );
+}
+
+function countAliveEnemyAdds(encounter: BossEncounterInstance): number {
+  return Object.values(encounter.actors).filter(
+    (actor) => actor.side === "enemy" && actor.kind !== "boss" && actor.condition === "alive",
+  ).length;
+}
+
+function getEncounterReactionHooks(encounter: BossEncounterInstance) {
+  if (!encounter.reactionHooks) {
+    encounter.reactionHooks =
+      getBossEncounterDefinition(
+        templateRegistry,
+        encounter.missionId,
+        encounter.bossDefinitionId,
+      )?.reactionHooks.map((hook) => ({ ...hook })) ?? [];
+  }
+
+  return encounter.reactionHooks;
+}
+
+function hasRemainingReactionHook(
+  encounter: BossEncounterInstance,
+  trigger: BossEncounterDefinition["reactionHooks"][number]["trigger"],
+): boolean {
+  return getEncounterReactionHooks(encounter).some(
+    (hook) => hook.trigger === trigger && hook.usesRemaining > 0,
+  );
+}
+
+function triggerOnBossAllyDefeatIfNeeded(
+  encounter: BossEncounterInstance,
+  enemyAddsAliveBefore: number,
+  rng: SeededRng,
+): boolean {
+  if (
+    countAliveEnemyAdds(encounter) >= enemyAddsAliveBefore ||
+    !hasRemainingReactionHook(encounter, "on_ally_defeat")
+  ) {
+    return false;
+  }
+
+  const bossActor = getAliveBossActor(encounter);
+  const bossDef = getBossEncounterDefinitionFromEncounter(encounter);
+  if (!bossActor || !bossDef) {
+    return false;
+  }
+
+  applyReactionHooks(encounter, bossActor, bossDef, "on_ally_defeat", rng);
+  return true;
+}
+
 function beginEncounterRound(encounter: BossEncounterInstance): void {
   if (encounter.status !== "active") return;
 
-  const terminationResult = checkEncounterTermination(encounter);
-  if (terminationResult) {
-    endEncounter(encounter, terminationResult);
+  if (endEncounterIfTerminated(encounter)) {
     return;
   }
 
@@ -315,14 +396,15 @@ function finalizeEncounterRound(encounter: BossEncounterInstance): void {
     // Keep checking until no more transitions occur.
   }
 
+  if (encounter.status !== "active") {
+    return;
+  }
+
   encounter.currentRound++;
   encounter.initiativeQueue = [];
   encounter.pendingRoundStart = true;
 
-  const terminationResult = checkEncounterTermination(encounter);
-  if (terminationResult) {
-    endEncounter(encounter, terminationResult);
-  }
+  endEncounterIfTerminated(encounter);
 }
 
 function endEncounter(
@@ -872,7 +954,12 @@ function checkBossPhaseTransition(encounter: BossEncounterInstance, rng: SeededR
       }
     }
 
-    applyReactionHooks(encounter, bossActor, bossDef, "on_phase_enter", rng);
+    if (hasRemainingReactionHook(encounter, "on_phase_enter")) {
+      applyReactionHooks(encounter, bossActor, bossDef, "on_phase_enter", rng);
+      if (endEncounterIfTerminated(encounter) || bossActor.condition !== "alive") {
+        return false;
+      }
+    }
 
     if (nextPhase.summonIds.length > 0 && bossDef.summonDefinitions.length > 0) {
       nextPhase.summonIds.forEach((summonId, i) => {
@@ -993,6 +1080,16 @@ export function useIntervention(
     effects: allEffects,
     timestamp: Date.now(),
   });
+
+  // Fire on_intervention_used reaction hooks
+  const bossActor = getAliveBossActor(encounter);
+  if (bossActor && hasRemainingReactionHook(encounter, "on_intervention_used")) {
+    const bossDef = getBossEncounterDefinitionFromEncounter(encounter);
+    if (bossDef) {
+      applyReactionHooks(encounter, bossActor, bossDef, "on_intervention_used", rng);
+      endEncounterIfTerminated(encounter);
+    }
+  }
 
   return true;
 }
@@ -1176,11 +1273,21 @@ export function snapshotEncounter(encounter: BossEncounterInstance): BossEncount
     pendingRoundStart: encounter.pendingRoundStart,
     actors: JSON.parse(JSON.stringify(encounter.actors)),
     interventions: encounter.interventions.map((i) => ({ ...i })),
+    reactionHooks: getEncounterReactionHooks(encounter).map((hook) => ({ ...hook })),
     encounterLog: encounter.encounterLog.slice(-50),
   };
 }
 
 export function restoreEncounter(snapshot: BossEncounterSnapshot): BossEncounterInstance {
+  const restoredReactionHooks =
+    snapshot.reactionHooks?.map((hook) => ({ ...hook })) ??
+    getBossEncounterDefinition(
+      templateRegistry,
+      snapshot.missionId,
+      snapshot.bossDefinitionId,
+    )?.reactionHooks.map((hook) => ({ ...hook })) ??
+    [];
+
   return {
     ...snapshot,
     participatingOperatorIds: [...snapshot.participatingOperatorIds],
@@ -1188,6 +1295,7 @@ export function restoreEncounter(snapshot: BossEncounterSnapshot): BossEncounter
     pendingRoundStart: snapshot.pendingRoundStart ?? snapshot.initiativeQueue.length === 0,
     actors: JSON.parse(JSON.stringify(snapshot.actors)),
     interventions: snapshot.interventions.map((i) => ({ ...i })),
+    reactionHooks: restoredReactionHooks,
     encounterLog: [...snapshot.encounterLog],
     debugTraceEnabled: false,
     autoplayEnabled: snapshot.status === "active",
@@ -1345,11 +1453,16 @@ function logEncounterAction(encounter: BossEncounterInstance, record: EncounterA
 function getBossEncounterDefinitionFromEncounter(
   encounter: BossEncounterInstance,
 ): BossEncounterDefinition | undefined {
-  return getBossEncounterDefinition(
+  const bossDef = getBossEncounterDefinition(
     templateRegistry,
     encounter.missionId,
     encounter.bossDefinitionId,
   );
+  if (!bossDef) {
+    return undefined;
+  }
+
+  return { ...bossDef, reactionHooks: getEncounterReactionHooks(encounter) };
 }
 
 function getSortedAliveActors(encounter: BossEncounterInstance): ActorCombatState[] {
@@ -1395,7 +1508,7 @@ function applyReactionHooks(
   encounter: BossEncounterInstance,
   bossActor: ActorCombatState,
   bossDef: BossEncounterDefinition,
-  trigger: "on_phase_enter",
+  trigger: "on_phase_enter" | "on_ally_defeat" | "on_intervention_used",
   rng: SeededRng,
 ): void {
   for (const hook of bossDef.reactionHooks) {

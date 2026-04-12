@@ -631,6 +631,93 @@ export const siteConceptTemplates: readonly SiteConceptTemplate[] = [
       copyStyleTags: ["tone:uncanny", "tone:vertical"],
     },
   },
+
+  // ── D-rank encounter-expansion sites ────────────────────────────────────
+
+  {
+    siteConceptId: "site/collapsed-customs-house",
+    name: "Collapsed Customs House",
+    districtPool: ["district/red-hook-waterfront", "district/lower-east-side"],
+    worldSpaceLabel: "Customs Rift — Submerged Port Authority Annex",
+    conceptSummary:
+      "The port authority customs house sank into its own inspection basement after the seawall cracked. Import manifests still process themselves through pneumatic tubes that lead nowhere. The inspection tables weigh arriving things that aren't there yet.",
+    rankPool: ["d"],
+    rankTone: "heightened",
+    threatProfileTags: ["threat:hostile", "threat:hazard", "threat:clustered"],
+    hazardTags: ["hazard:flooding", "hazard:entrapment", "hazard:structural-collapse"],
+    enemyFamilyIds: ["enemy-family/customs-sentries"],
+    bossId: "boss/the-excise-officer",
+    lootThemeLabels: ["Customs Salvage", "Port Authority Parts"],
+    visualTheme: {
+      accentPalette: "aquatic",
+      fogTreatmentId: "fog/murky-water",
+      markerStyleId: "marker/commercial",
+      copyStyleTags: ["tone:bureaucratic", "tone:submerged"],
+    },
+  },
+  {
+    siteConceptId: "site/rift-cracked-switchyard",
+    name: "Rift-Cracked Switchyard",
+    districtPool: ["district/queens-railyard", "district/bronx-overpass"],
+    worldSpaceLabel: "Switchyard Rift — Former Freight Junction",
+    conceptSummary:
+      "A freight rail switchyard where the tracks rerouted themselves. Switches flip to destinations that don't exist on any transit map. Cargo containers have been rearranged into a maze by something that understands logistics but not physics.",
+    rankPool: ["d"],
+    rankTone: "heightened",
+    threatProfileTags: ["threat:mobile", "threat:ambush", "threat:hazard"],
+    hazardTags: ["hazard:noise", "hazard:poor-footing", "hazard:electrical"],
+    enemyFamilyIds: ["enemy-family/rail-grinders"],
+    bossId: "boss/the-yardmaster",
+    lootThemeLabels: ["Rail Salvage", "Switch Components"],
+    visualTheme: {
+      accentPalette: "rust",
+      fogTreatmentId: "fog/exhaust-haze",
+      markerStyleId: "marker/industrial",
+      copyStyleTags: ["tone:industrial", "tone:mechanical"],
+    },
+  },
+  {
+    siteConceptId: "site/shuttered-transformer-vault",
+    name: "Shuttered Transformer Vault",
+    districtPool: ["district/harlem-substation", "district/lower-east-side"],
+    worldSpaceLabel: "Vault Rift — Underground Power Distribution",
+    conceptSummary:
+      "A Con-Ed transformer vault sealed after the rift made the power flow backwards. The transformers hum at frequencies that induce nosebleeds. Cable runs have fused into the walls and pulse with a rhythm that isn't sixty hertz.",
+    rankPool: ["d"],
+    rankTone: "heightened",
+    threatProfileTags: ["threat:hazard", "threat:hostile", "threat:unstable"],
+    hazardTags: ["hazard:electrical", "hazard:magnetic-interference", "hazard:darkness"],
+    enemyFamilyIds: ["enemy-family/arc-crawlers"],
+    bossId: "boss/the-regulator",
+    lootThemeLabels: ["Electrical Salvage", "Transformer Components"],
+    visualTheme: {
+      accentPalette: "neon",
+      fogTreatmentId: "fog/static-field",
+      markerStyleId: "marker/electrical",
+      copyStyleTags: ["tone:buzzing", "tone:oppressive"],
+    },
+  },
+  {
+    siteConceptId: "site/suspended-overpass-segment",
+    name: "Suspended Overpass Segment",
+    districtPool: ["district/bronx-overpass", "district/queens-railyard"],
+    worldSpaceLabel: "Overpass Rift — Detached Highway Section",
+    conceptSummary:
+      "A section of elevated highway that detached from its supports and floats at the wrong angle. The asphalt surface has softened into something that remembers being liquid. Jersey barriers patrol the shoulder in formations.",
+    rankPool: ["d"],
+    rankTone: "heightened",
+    threatProfileTags: ["threat:mobile", "threat:hostile", "threat:hazard"],
+    hazardTags: ["hazard:poor-footing", "hazard:falling-debris", "hazard:spatial-distortion"],
+    enemyFamilyIds: ["enemy-family/asphalt-shapers"],
+    bossId: "boss/the-surveyor",
+    lootThemeLabels: ["Highway Salvage", "Overpass Debris"],
+    visualTheme: {
+      accentPalette: "concrete",
+      fogTreatmentId: "fog/exhaust-haze",
+      markerStyleId: "marker/industrial",
+      copyStyleTags: ["tone:precarious", "tone:industrial"],
+    },
+  },
 ];
 
 /** Lookup map built once at module load. */

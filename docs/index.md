@@ -13,11 +13,11 @@ Documentation is intentionally narrow.
 
 - The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
 - The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
-- Phase 4 is underway. Contract lock, city pressure, Porter's content remediation, durable crafting, and social/incident fallout are already implemented; the remaining active plan queue is encounter breadth.
+- Phase 4 is complete. Contract lock, city pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter breadth are all shipped.
 
 ## Planned Work
 
-- Continue Phase 4 by landing broader encounter depth on top of the shipped district, faction, content-remediation, crafting, and social/incident baseline.
+- The next active execution work is midgame remediation: thorough browser/runtime verification, balance review, and tuning across the shipped Porter's-era D-rank layer.
 - Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and later-building reuse.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
 
@@ -34,7 +34,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  The current active queue is the remaining Phase 4 encounter set coordinated by the manager plan.
+  The active queue is midgame remediation, balance, and tuning for the shipped Porter's-era layer.
 
 ### Research
 

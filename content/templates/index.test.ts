@@ -19,12 +19,12 @@ describe("template registry", () => {
     expect(registry.upgrades).toHaveLength(13);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(25);
-    expect(registry.items).toHaveLength(126);
+    expect(registry.items).toHaveLength(137);
     expect(registry.prepRecipes).toHaveLength(6);
     expect(registry.districts).toHaveLength(5);
     expect(registry.factions).toHaveLength(5);
     expect(registry.craftRecipes).toHaveLength(9);
-    expect(registry.dropTables).toHaveLength(72);
+    expect(registry.dropTables).toHaveLength(84);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
       "mission/containment",

@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="rg-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#6868d4" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#08081a" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#040406" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rg-insulation" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a4a58"/>
+      <stop offset="50%" stop-color="#2a2a38"/>
+      <stop offset="100%" stop-color="#0e0e18"/>
+    </linearGradient>
+    <linearGradient id="rg-copper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d88848"/>
+      <stop offset="50%" stop-color="#a85828"/>
+      <stop offset="100%" stop-color="#5a2808"/>
+    </linearGradient>
+    <linearGradient id="rg-visor" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1818c8" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#0808a8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#040488" stop-opacity="0.8"/>
+    </linearGradient>
+    <radialGradient id="rg-arc" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#88a8ff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#2848a8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="rg-glow">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="rg-spark">
+      <feGaussianBlur stdDeviation="0.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="96" ry="134" fill="url(#rg-aura)"/>
+
+  <!-- Background transformer coil outlines — the vault infrastructure -->
+  <rect x="4" y="20" width="16" height="60" rx="2" fill="none" stroke="#2a2a48" stroke-width="1" opacity="0.5"/>
+  <rect x="6" y="24" width="12" height="52" rx="1" fill="none" stroke="#3a3a58" stroke-width="0.5" opacity="0.4"/>
+  <rect x="180" y="30" width="16" height="60" rx="2" fill="none" stroke="#2a2a48" stroke-width="1" opacity="0.5"/>
+  <rect x="182" y="34" width="12" height="52" rx="1" fill="none" stroke="#3a3a58" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Arcing electricity in the background -->
+  <path d="M 20 50 L 28 46 L 24 40 L 36 34" fill="none" stroke="#88a8ff" stroke-width="0.6" opacity="0.7" filter="url(#rg-spark)"/>
+  <path d="M 180 60 L 172 56 L 176 48 L 164 42" fill="none" stroke="#88a8ff" stroke-width="0.6" opacity="0.7" filter="url(#rg-spark)"/>
+  <circle cx="36" cy="34" r="1" fill="#ffffff" opacity="0.9" filter="url(#rg-spark)"/>
+  <circle cx="164" cy="42" r="1" fill="#ffffff" opacity="0.9" filter="url(#rg-spark)"/>
+
+  <!-- Stray electrical sparks floating -->
+  <circle cx="28" cy="120" r="0.7" fill="#88a8ff" opacity="0.7" filter="url(#rg-spark)"/>
+  <circle cx="172" cy="140" r="0.6" fill="#88a8ff" opacity="0.65" filter="url(#rg-spark)"/>
+  <circle cx="16" cy="200" r="0.7" fill="#a8c8ff" opacity="0.6" filter="url(#rg-spark)"/>
+  <circle cx="184" cy="220" r="0.6" fill="#a8c8ff" opacity="0.6" filter="url(#rg-spark)"/>
+  <circle cx="44" cy="30" r="0.5" fill="#ffffff" opacity="0.75" filter="url(#rg-spark)"/>
+  <circle cx="156" cy="24" r="0.5" fill="#ffffff" opacity="0.75" filter="url(#rg-spark)"/>
+
+  <!-- Feet — heavy insulated boots with copper grounding straps -->
+  <path d="M 66 242 L 58 256 L 58 264 L 88 264 L 88 242 Z" fill="url(#rg-insulation)" stroke="#0e0e18" stroke-width="0.8"/>
+  <path d="M 112 242 L 112 264 L 142 264 L 142 256 L 134 242 Z" fill="url(#rg-insulation)" stroke="#0e0e18" stroke-width="0.8"/>
+  <!-- Copper grounding straps -->
+  <path d="M 62 256 L 62 272" stroke="url(#rg-copper)" stroke-width="1.2"/>
+  <path d="M 138 256 L 138 272" stroke="url(#rg-copper)" stroke-width="1.2"/>
+  <!-- Boot insulation bands -->
+  <rect x="60" y="248" width="26" height="3" rx="0.5" fill="#f4d848" stroke="#8a7808" stroke-width="0.3"/>
+  <rect x="114" y="248" width="26" height="3" rx="0.5" fill="#f4d848" stroke="#8a7808" stroke-width="0.3"/>
+
+  <!-- Legs — insulated work trousers -->
+  <rect x="70" y="208" width="22" height="36" rx="1" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.7"/>
+  <rect x="108" y="208" width="22" height="36" rx="1" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.7"/>
+
+  <!-- Main body — heavy insulated suit -->
+  <path d="
+    M 58 100
+    L 64 90 L 80 84 L 100 80 L 120 84 L 136 90 L 142 100
+    L 148 130 L 152 160 L 152 190 L 148 212
+    L 52 212 L 48 190 L 48 160 L 52 130 Z
+  " fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="1.2"/>
+
+  <!-- Insulation seams -->
+  <path d="M 84 86 L 78 120 L 76 160 L 78 200 L 80 212" fill="none" stroke="#1a1a28" stroke-width="0.6"/>
+  <path d="M 116 86 L 122 120 L 124 160 L 122 200 L 120 212" fill="none" stroke="#1a1a28" stroke-width="0.6"/>
+  <!-- Warning tape stripes across the torso -->
+  <rect x="56" y="140" width="88" height="4" fill="#f4d848" stroke="#8a7808" stroke-width="0.3" opacity="0.85"/>
+  <rect x="56" y="170" width="88" height="4" fill="#f4d848" stroke="#8a7808" stroke-width="0.3" opacity="0.85"/>
+  <!-- Lightning bolt warning symbol on chest -->
+  <path d="M 98 108 L 94 120 L 100 120 L 96 134 L 106 118 L 100 118 L 104 108 Z" fill="#f4d848" stroke="#8a7808" stroke-width="0.4"/>
+
+  <!-- Copper coils on shoulders — TRANSFORMER COILS mounted on the body -->
+  <!-- Left coil stack -->
+  <ellipse cx="46" cy="92" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.8"/>
+  <ellipse cx="46" cy="88" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.6"/>
+  <ellipse cx="46" cy="84" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.6"/>
+  <!-- Coil winding lines -->
+  <path d="M 36 84 Q 46 80 56 84" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+  <path d="M 36 88 Q 46 84 56 88" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+  <path d="M 36 92 Q 46 88 56 92" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+  <!-- Right coil stack -->
+  <ellipse cx="154" cy="92" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.8"/>
+  <ellipse cx="154" cy="88" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.6"/>
+  <ellipse cx="154" cy="84" rx="12" ry="8" fill="url(#rg-copper)" stroke="#3a1808" stroke-width="0.6"/>
+  <path d="M 144 84 Q 154 80 164 84" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+  <path d="M 144 88 Q 154 84 164 88" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+  <path d="M 144 92 Q 154 88 164 92" fill="none" stroke="#5a2808" stroke-width="0.4"/>
+
+  <!-- Electricity arcing between shoulder coils — the constant discharge -->
+  <path d="M 58 86 Q 68 74 80 78 Q 90 82 100 72 Q 110 82 120 78 Q 132 74 142 86" fill="none" stroke="#88a8ff" stroke-width="0.8" opacity="0.85" filter="url(#rg-glow)"/>
+  <path d="M 62 82 Q 80 68 100 66 Q 120 68 138 82" fill="none" stroke="#a8c8ff" stroke-width="0.4" opacity="0.55" filter="url(#rg-glow)"/>
+  <!-- Arc flash points -->
+  <circle cx="80" cy="78" r="1.2" fill="#ffffff" opacity="0.95" filter="url(#rg-spark)"/>
+  <circle cx="100" cy="72" r="1.5" fill="url(#rg-arc)" filter="url(#rg-glow)"/>
+  <circle cx="120" cy="78" r="1.2" fill="#ffffff" opacity="0.95" filter="url(#rg-spark)"/>
+
+  <!-- HEAD — hard hat with welding face shield, eyes behind the dark visor -->
+  <!-- Hard hat -->
+  <path d="M 72 52 Q 72 30 100 24 Q 128 30 128 52 L 128 56 L 72 56 Z" fill="#f4d848" stroke="#8a7808" stroke-width="0.8"/>
+  <!-- Hard hat ridge -->
+  <path d="M 72 42 Q 100 36 128 42" fill="none" stroke="#c8a828" stroke-width="0.6"/>
+  <!-- Hard hat brim -->
+  <rect x="70" y="54" width="60" height="3" rx="0.5" fill="#c8a828" stroke="#8a7808" stroke-width="0.4"/>
+
+  <!-- Face shield — dark welding visor covering entire face -->
+  <path d="M 76 57 Q 76 54 84 52 L 116 52 Q 124 54 124 57 L 124 80 Q 120 84 100 86 Q 80 84 76 80 Z" fill="url(#rg-visor)" stroke="#1a1a38" stroke-width="0.8"/>
+  <!-- Visor reflection streak -->
+  <path d="M 82 58 Q 86 56 94 58" fill="none" stroke="#4848a8" stroke-width="0.5" opacity="0.6"/>
+  <!-- Eyes visible BEHIND the visor — glowing electric blue -->
+  <circle cx="90" cy="66" r="2" fill="#88a8ff" opacity="0.85" filter="url(#rg-glow)"/>
+  <circle cx="90" cy="66" r="0.8" fill="#ffffff"/>
+  <circle cx="110" cy="66" r="2" fill="#88a8ff" opacity="0.85" filter="url(#rg-glow)"/>
+  <circle cx="110" cy="66" r="0.8" fill="#ffffff"/>
+  <!-- Visor mounting bolts -->
+  <circle cx="78" cy="58" r="0.8" fill="#2a2a38"/>
+  <circle cx="122" cy="58" r="0.8" fill="#2a2a38"/>
+
+  <!-- Left arm — gauntleted, arcing with electricity -->
+  <path d="M 42 100 L 30 116 L 20 140 L 14 166 L 12 184 L 18 186 L 28 170 L 38 146 L 48 122 Z" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.7"/>
+  <!-- Insulated gauntlet -->
+  <path d="M 6 186 L 4 196 L 4 210 L 24 210 L 24 196 L 22 186 Z" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.6"/>
+  <!-- Gauntlet copper contacts -->
+  <circle cx="8" cy="200" r="1" fill="url(#rg-copper)"/>
+  <circle cx="20" cy="200" r="1" fill="url(#rg-copper)"/>
+  <!-- Electricity from left hand -->
+  <path d="M 14 210 L 10 220 L 16 226 L 8 234 L 18 240" fill="none" stroke="#88a8ff" stroke-width="0.8" opacity="0.8" filter="url(#rg-glow)"/>
+  <circle cx="18" cy="240" r="1.5" fill="url(#rg-arc)" filter="url(#rg-glow)"/>
+
+  <!-- Right arm — gauntleted, arcing with electricity -->
+  <path d="M 158 100 L 170 116 L 180 140 L 186 166 L 188 184 L 182 186 L 172 170 L 162 146 L 152 122 Z" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.7"/>
+  <path d="M 194 186 L 196 196 L 196 210 L 176 210 L 176 196 L 178 186 Z" fill="url(#rg-insulation)" stroke="#0a0a14" stroke-width="0.6"/>
+  <circle cx="180" cy="200" r="1" fill="url(#rg-copper)"/>
+  <circle cx="192" cy="200" r="1" fill="url(#rg-copper)"/>
+  <!-- Electricity from right hand -->
+  <path d="M 186 210 L 190 220 L 184 226 L 192 234 L 182 240" fill="none" stroke="#88a8ff" stroke-width="0.8" opacity="0.8" filter="url(#rg-glow)"/>
+  <circle cx="182" cy="240" r="1.5" fill="url(#rg-arc)" filter="url(#rg-glow)"/>
+
+  <!-- ARC between hands across the bottom — the Regulator's constant field -->
+  <path d="M 18 240 Q 60 260 100 254 Q 140 260 182 240" fill="none" stroke="#88a8ff" stroke-width="0.5" opacity="0.5" filter="url(#rg-glow)"/>
+  <path d="M 18 240 Q 50 268 100 262 Q 150 268 182 240" fill="none" stroke="#a8c8ff" stroke-width="0.3" opacity="0.35" filter="url(#rg-glow)"/>
+
+  <!-- Copper conduit cables running down the body to the ground straps -->
+  <path d="M 46 96 L 40 130 L 36 170 L 38 210 L 42 240 L 62 256" fill="none" stroke="url(#rg-copper)" stroke-width="1.5" opacity="0.75"/>
+  <path d="M 154 96 L 160 130 L 164 170 L 162 210 L 158 240 L 138 256" fill="none" stroke="url(#rg-copper)" stroke-width="1.5" opacity="0.75"/>
+
+  <!-- Hum lines — concentric rings around the body suggesting the electromagnetic field -->
+  <ellipse cx="100" cy="140" rx="68" ry="100" fill="none" stroke="#4848a8" stroke-width="0.3" opacity="0.2"/>
+  <ellipse cx="100" cy="140" rx="78" ry="110" fill="none" stroke="#4848a8" stroke-width="0.2" opacity="0.15"/>
+</svg>

@@ -7,7 +7,8 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 ## Current Planning State
 
 - The repo already ships the baseline game loop through the bodega arc, relocation into Porter's, multi-floor HQ support, management/onboarding/interruption surfaces, and the initial optional local-first AI runtime contract.
-- The next product work is midgame depth, not foundation bring-up: more external pressure, richer encounter and incident breadth, stronger later-building differentiation, and only then wider optional AI presentation layers where the deterministic system contract is already stable.
+- Phase 4 midgame breadth is shipped: external pressure, encounter and incident expansion, Porter's-era content remediation, and durable crafting now exist in the baseline product.
+- The next product work is midgame remediation, not more breadth-first expansion: verify the shipped Porter's loop more deeply, tune the D-rank economy and pressure curves, and clean up usability debt before moving on to later-building differentiation or wider optional AI presentation layers.
 
 ## File Map
 
@@ -44,10 +45,10 @@ The game should make the player feel all of the following:
 
 - Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
 - Broaden the late-bodega content pool only if later repeated-campaign evidence shows collapse into the same few recruits, sites, loadouts, and pressure patterns.
-- Deepen the shipped Porter's tier so it continues to feel like a real management step up, not just a capacity increase.
-- Expand from the shipped Porter's baseline into larger buildings that change spatial and staffing decisions, not just numbers.
+- Remediate the shipped Porter's tier so it reads clearly in browser play, holds up under regression coverage, and lands inside an explicit tuned D-rank envelope.
+- Expand from the shipped Porter's baseline into larger buildings that change spatial and staffing decisions, not just numbers, only after the current Porter's layer is exercised and tuned.
 - Extend the shipped multi-floor HQ model so later buildings can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
-- Grow external pressure through reputation, regulation, competition, and factional response.
+- Grow later-building pressure through stronger reputation, regulation, competition, and factional response once the current Porter's-era pressure band is stable.
 - Push operator social memory, injury, recovery, and retention further so roster management stays central.
 - Increase mission and event variety without losing the observational, non-direct-control identity.
 

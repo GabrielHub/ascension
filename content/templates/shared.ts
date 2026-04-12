@@ -158,8 +158,10 @@ export interface BossEncounterActionTemplate {
   phaseIndices?: readonly number[];
 }
 
+export type BossReactionTrigger = "on_phase_enter" | "on_ally_defeat" | "on_intervention_used";
+
 export interface BossEncounterReactionTemplate {
-  trigger: "on_phase_enter";
+  trigger: BossReactionTrigger;
   target: "boss_self" | "all_allies";
   effects: readonly AbilityEffect[];
   usesRemaining: number;

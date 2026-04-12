@@ -2632,6 +2632,621 @@ export const bossTemplates: readonly BossProfile[] = [
       ],
     },
   },
+
+  // ── D-rank encounter-expansion bosses ───────────────────────────────────
+
+  {
+    bossId: "boss/the-excise-officer",
+    name: "The Excise Officer",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:recovery-suppress", "boss:area-damage", "boss:summon-pressure"],
+    weaknesses: [
+      { kind: "role", target: "role:field_lead", multiplier: 1.3 },
+      { kind: "stat", target: "strength", multiplier: 1.2 },
+    ],
+    attack: 44,
+    defense: 34,
+    hp: 170,
+    speed: 18,
+    threat: 84,
+    dropTableId: "drop-table/the-excise-officer",
+    encounter: {
+      elapsedMinutes: 50,
+      targetingPriority: "highest_threat",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/excise/tariff-stamp",
+            "action/excise/impound-wave",
+            "action/excise/customs-hold",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { attack: 4, defense: 3 },
+          actionIds: [
+            "action/excise/tariff-stamp",
+            "action/excise/impound-wave",
+            "action/excise/customs-hold",
+            "action/excise/contraband-purge",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 10 },
+          ],
+          summonIds: ["summon/inspection-drone"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.25,
+          statModifiers: { attack: 8, defense: 5, speed: -3 },
+          actionIds: [
+            "action/excise/tariff-stamp",
+            "action/excise/contraband-purge",
+            "action/excise/final-levy",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/excise/tariff-stamp",
+          name: "Tariff Stamp",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.9 },
+            { kind: "apply_status", statusId: "marked", duration: 1, potency: 6 },
+          ],
+        },
+        {
+          id: "action/excise/impound-wave",
+          name: "Impound Wave",
+          weight: 22,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.6 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "action/excise/customs-hold",
+          name: "Customs Hold",
+          weight: 24,
+          cooldown: 3,
+          targeting: "enemy_lowest_hp",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+            { kind: "apply_status", statusId: "staggered", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/excise/contraband-purge",
+          name: "Contraband Purge",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "bleeding", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/excise/final-levy",
+          name: "Final Levy",
+          weight: 10,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.1 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 12 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 }],
+          usesRemaining: 2,
+        },
+        {
+          trigger: "on_ally_defeat",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 16, scalingStat: "resilience", scalingFactor: 0.4 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/inspection-drone",
+          label: "Inspection Drone",
+          stats: { attack: 10, defense: 5, hp: 28, speed: 16, threat: 22 },
+          actions: [
+            {
+              id: "action/inspection-drone/scan-pulse",
+              name: "Scan Pulse",
+              weight: 100,
+              cooldown: 0,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.4 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-yardmaster",
+    name: "The Yardmaster",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:speed-drain", "boss:area-damage", "boss:resilience-pierce"],
+    weaknesses: [
+      { kind: "role", target: "role:scout", multiplier: 1.3 },
+      { kind: "stat", target: "speed", multiplier: 1.2 },
+    ],
+    attack: 46,
+    defense: 30,
+    hp: 165,
+    speed: 20,
+    threat: 82,
+    dropTableId: "drop-table/the-yardmaster",
+    encounter: {
+      elapsedMinutes: 48,
+      targetingPriority: "frontline",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/yard/switch-strike",
+            "action/yard/rail-salvo",
+            "action/yard/shunt-lock",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { attack: 5, speed: 4 },
+          actionIds: [
+            "action/yard/switch-strike",
+            "action/yard/rail-salvo",
+            "action/yard/shunt-lock",
+            "action/yard/derailment",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.25,
+          statModifiers: { attack: 10, speed: 6, defense: -4 },
+          actionIds: [
+            "action/yard/switch-strike",
+            "action/yard/derailment",
+            "action/yard/freight-collision",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 3, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/yard/switch-strike",
+          name: "Switch Strike",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "action/yard/rail-salvo",
+          name: "Rail Salvo",
+          weight: 24,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.6 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "action/yard/shunt-lock",
+          name: "Shunt Lock",
+          weight: 22,
+          cooldown: 3,
+          targeting: "enemy_highest_threat",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "staggered", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "action/yard/derailment",
+          name: "Derailment",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.85 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/yard/freight-collision",
+          name: "Freight Collision",
+          weight: 10,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.1 },
+            { kind: "apply_status", statusId: "bleeding", duration: 3, potency: 12 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 18, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+          usesRemaining: 2,
+        },
+        {
+          trigger: "on_intervention_used",
+          target: "all_allies",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.4 },
+            { kind: "apply_status", statusId: "suppressed", duration: 1, potency: 8 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-regulator",
+    name: "The Regulator",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:area-damage", "boss:intel-resist", "boss:recovery-suppress"],
+    weaknesses: [
+      { kind: "role", target: "role:medic", multiplier: 1.3 },
+      { kind: "stat", target: "endurance", multiplier: 1.2 },
+    ],
+    attack: 42,
+    defense: 28,
+    hp: 155,
+    speed: 24,
+    threat: 80,
+    dropTableId: "drop-table/the-regulator",
+    encounter: {
+      elapsedMinutes: 46,
+      targetingPriority: "lowest_hp",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/reg/arc-discharge",
+            "action/reg/frequency-shift",
+            "action/reg/insulation-drain",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.55,
+          statModifiers: { speed: 4, attack: 4 },
+          actionIds: [
+            "action/reg/arc-discharge",
+            "action/reg/frequency-shift",
+            "action/reg/insulation-drain",
+            "action/reg/overload-pulse",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 2, potency: 10 },
+          ],
+          summonIds: ["summon/arc-node"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.25,
+          statModifiers: { speed: 8, attack: 8, defense: -5 },
+          actionIds: [
+            "action/reg/arc-discharge",
+            "action/reg/overload-pulse",
+            "action/reg/cascading-failure",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 3, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/reg/arc-discharge",
+          name: "Arc Discharge",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "action/reg/frequency-shift",
+          name: "Frequency Shift",
+          weight: 24,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+            { kind: "apply_status", statusId: "slowed", duration: 1, potency: 8 },
+          ],
+        },
+        {
+          id: "action/reg/insulation-drain",
+          name: "Insulation Drain",
+          weight: 22,
+          cooldown: 3,
+          targeting: "enemy_lowest_hp",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "action/reg/overload-pulse",
+          name: "Overload Pulse",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/reg/cascading-failure",
+          name: "Cascading Failure",
+          weight: 10,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 14 },
+            { kind: "apply_status", statusId: "exposed", duration: 1, potency: 8 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.4 }],
+          usesRemaining: 2,
+        },
+        {
+          trigger: "on_ally_defeat",
+          target: "boss_self",
+          effects: [{ kind: "apply_status", statusId: "hastened", duration: 2, potency: 10 }],
+          usesRemaining: 2,
+        },
+        {
+          trigger: "on_intervention_used",
+          target: "all_allies",
+          effects: [{ kind: "apply_status", statusId: "exposed", duration: 1, potency: 8 }],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/arc-node",
+          label: "Arc Node",
+          stats: { attack: 10, defense: 4, hp: 24, speed: 18, threat: 20 },
+          actions: [
+            {
+              id: "action/arc-node/spark-bolt",
+              name: "Spark Bolt",
+              weight: 100,
+              cooldown: 0,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.4 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-surveyor",
+    name: "The Surveyor",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:resilience-pierce", "boss:summon-pressure", "boss:speed-drain"],
+    weaknesses: [
+      { kind: "stat", target: "resilience", multiplier: 1.25 },
+      { kind: "role", target: "role:field_lead", multiplier: 1.2 },
+    ],
+    attack: 40,
+    defense: 32,
+    hp: 175,
+    speed: 16,
+    threat: 86,
+    dropTableId: "drop-table/the-surveyor",
+    encounter: {
+      elapsedMinutes: 52,
+      targetingPriority: "frontline",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/surv/grade-stake",
+            "action/surv/shoulder-crush",
+            "action/surv/lane-closure",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.55,
+          statModifiers: { defense: 5, attack: 4 },
+          actionIds: [
+            "action/surv/grade-stake",
+            "action/surv/shoulder-crush",
+            "action/surv/lane-closure",
+            "action/surv/median-collapse",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 12 },
+          ],
+          summonIds: ["summon/barrier-fragment"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.25,
+          statModifiers: { defense: 8, attack: 8 },
+          actionIds: [
+            "action/surv/grade-stake",
+            "action/surv/median-collapse",
+            "action/surv/overpass-drop",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/surv/grade-stake",
+          name: "Grade Stake",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.85 },
+          ],
+        },
+        {
+          id: "action/surv/shoulder-crush",
+          name: "Shoulder Crush",
+          weight: 24,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.6 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "action/surv/lane-closure",
+          name: "Lane Closure",
+          weight: 22,
+          cooldown: 3,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/surv/median-collapse",
+          name: "Median Collapse",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/surv/overpass-drop",
+          name: "Overpass Drop",
+          weight: 10,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 26, scalingStat: "strength", scalingFactor: 1.15 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 12 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 20, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+          usesRemaining: 2,
+        },
+        {
+          trigger: "on_intervention_used",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.3 }],
+          usesRemaining: 3,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/barrier-fragment",
+          label: "Barrier Fragment",
+          stats: { attack: 8, defense: 8, hp: 30, speed: 10, threat: 22 },
+          actions: [
+            {
+              id: "action/barrier-fragment/concrete-slam",
+              name: "Concrete Slam",
+              weight: 100,
+              cooldown: 0,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export const bossById: ReadonlyMap<string, BossProfile> = new Map(
