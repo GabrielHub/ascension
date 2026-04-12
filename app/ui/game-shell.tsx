@@ -290,6 +290,9 @@ export function buildGameCallbacks(
     prepConsumable: (recipeId: string) => {
       void session.commands.prepConsumable({ recipeId });
     },
+    craftDurable: (recipeId: string) => {
+      void session.commands.craftDurable({ recipeId });
+    },
   };
 }
 
@@ -1482,9 +1485,14 @@ export function GameShell() {
   const hqBase = useMemo(
     () =>
       session && deferredPhase1View && registry
-        ? buildHqViewFromPhase1(deferredPhase1View, registry, phase2?.inventory)
+        ? buildHqViewFromPhase1(
+            deferredPhase1View,
+            registry,
+            phase2?.inventory,
+            session.state.worldSnapshot.cityPressure,
+          )
         : null,
-    [deferredPhase1View, registry, session, phase2],
+    [deferredPhase1View, registry, session, phase2, session?.state.worldSnapshot.cityPressure],
   );
   const operations = useMemo(
     () =>

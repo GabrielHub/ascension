@@ -5,6 +5,7 @@
   "scripts": {
     "catalog:svg": "tsx scripts/generate-svg-asset-catalog.ts",
     "report:economy": "tsx scripts/generate-early-campaign-economy-ledger.ts",
+    "report:midgame-economy": "tsx scripts/generate-midgame-economy-ledger.ts",
     "report:simulation": "tsx scripts/generate-early-campaign-simulation.ts",
     "build": "vp build",
     "check": "vp check",

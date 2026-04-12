@@ -29,6 +29,7 @@ const callbacks: GameCallbacks = {
   bidContract: () => {},
   advanceContract: () => {},
   prepConsumable: () => {},
+  craftDurable: () => {},
 };
 
 function makeTrainingRoom(overrides: Partial<RoomViewModel> = {}): RoomViewModel {
@@ -53,6 +54,7 @@ function makeTrainingRoom(overrides: Partial<RoomViewModel> = {}): RoomViewModel
     reservedFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
     activeFootprint: { col: 6, row: 8, cols: 4, rows: 3 },
     prepRecipes: [],
+    craftRecipes: [],
     training: {
       currentTraineeCount: 2,
       currentTraineeNames: ["Rose Vega", "Ivo Mercer"],

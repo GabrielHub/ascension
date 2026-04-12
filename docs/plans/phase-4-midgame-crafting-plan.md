@@ -142,18 +142,21 @@ Each recipe must consume:
 
 ### File Locks
 
-- None until earlier slices merge.
+- None.
 
 ### In Progress
 
-- Blocked pending earlier slices.
+- None.
 
 ### Blocked
 
-- `phase-4-midgame-contract-lock-plan`
-- `phase-4-midgame-city-pressure-plan`
-- `phase-4-midgame-content-remediation-plan`
+- None.
 
 ### Done
 
-- None.
+- Dependencies resolved: contract lock, city pressure, and content remediation are already shipped in code.
+- Step 1: Workshop room (`room/workshop:tier_1`) and unlock upgrade (`upgrade/building/porters:machine_shop`) already authored in templates.
+- Step 2: `sim/craft-durable` command added; command handler validates room staffing, building tier, district tags, faction standing, treasury, and inventory before consuming cash and inputs and producing output.
+- Step 3: All 9 crafted D-rank gear items and district-tagged rare materials already authored in `items.ts`; drop tables already reference district materials.
+- Step 4: `CraftRecipeCard` UI renders recipe requirements, cash sink, blockers, and stat effects in the workshop room detail panel; market does not directly sell rare district materials.
+- Step 5: `sim/tools/midgame-economy-ledger.ts` ships material source, craft cost, crafted gear value, and market fallback envelopes with Zod validation and markdown report; tests cover all exit criteria, including craft-time cash costs.

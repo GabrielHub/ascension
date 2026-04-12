@@ -165,6 +165,7 @@ export * from "./derived-stats";
 export * from "./inventory";
 export * from "./market";
 export * from "./prep";
+export * from "./craft";
 export * from "./raids";
 export * from "./social";
 export * from "./types";

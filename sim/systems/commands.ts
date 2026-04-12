@@ -3,6 +3,7 @@ import { addComponent, addEntity, removeEntity } from "bitecs";
 import { getBuildingFloors, getBuildingLayout } from "content/building-layouts";
 import { evaluateRequirement, type RequirementEvaluationContext } from "content/requirements";
 import type { UpgradeTemplate } from "content/templates";
+import { districtTemplates } from "content/templates/districts";
 import {
   canChangePolicy,
   DEFAULT_POLICY_STATE,
@@ -1955,6 +1956,61 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       pushRuntimeEvent(context, {
         kind: "event_change",
         message: `Prep Room produced ${recipe.outputQuantity}x ${recipe.name}.`,
+        accent: "gold",
+      });
+      return;
+    }
+    case "sim/craft-durable": {
+      const craftRecipe = context.registry.craftRecipeById.get(command.recipeId);
+      if (!craftRecipe) return;
+
+      // Workshop room must be operational and staffed
+      if (!hasStaffedOperationalRoomTemplate(context, craftRecipe.requiredRoomId)) return;
+
+      // Building tier gate
+      const buildingEntity = context.singletonEntities.building;
+      if (BuildingAuthority.activeBuildingTier[buildingEntity] < craftRecipe.minimumBuildingTier)
+        return;
+
+      // District tag gate: pool tags from all trusted districts
+      const accessibleTags = new Set<string>();
+      for (const dt of districtTemplates) {
+        const snapshot = context.runtimeState.cityState.districts[dt.id];
+        if (snapshot && snapshot.trust > 0) {
+          for (const tag of dt.tags) accessibleTags.add(tag);
+        }
+      }
+      if (craftRecipe.requiredDistrictTags.some((tag) => !accessibleTags.has(tag))) return;
+
+      // Faction standing gate
+      for (const [factionId, required] of Object.entries(craftRecipe.requiredFactionStanding)) {
+        const faction = context.runtimeState.cityState.factions[factionId];
+        if (!faction || faction.standing < required) return;
+      }
+
+      // Inventory input gate
+      for (const input of craftRecipe.inputItems) {
+        if (getInventoryCount(context, input.itemId) < input.quantity) return;
+      }
+
+      // Craft-time cash sink gate
+      if (readResourceBalance(context, "resource/cash") < craftRecipe.cashCost) return;
+
+      // Consume inputs
+      for (const input of craftRecipe.inputItems) {
+        removeFromInventory(context, input.itemId, input.quantity);
+      }
+
+      spendResourceBalance(context, "resource/cash", craftRecipe.cashCost);
+
+      // Produce output
+      addToInventory(context, craftRecipe.outputItemId, craftRecipe.outputQuantity);
+
+      const outputName =
+        context.registry.itemById.get(craftRecipe.outputItemId)?.name ?? craftRecipe.name;
+      pushRuntimeEvent(context, {
+        kind: "event_change",
+        message: `Workshop produced ${craftRecipe.outputQuantity}x ${outputName}.`,
         accent: "gold",
       });
       return;

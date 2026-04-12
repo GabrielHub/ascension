@@ -10,6 +10,7 @@ import {
 } from "lib/policies";
 import type {
   ActiveRaidSnapshot,
+  CityPressureSnapshot,
   GoalCheckGrade,
   GoalCheckKind,
   RaidRunSnapshot,
@@ -20,6 +21,7 @@ import type {
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
 import { normalizeOperatorCombatSnapshot } from "lib/operator-combat";
 import {
+  buildCraftRecipeAvailability,
   buildPrepRecipeAvailabilityForRoom,
   projectVisitorRecruitLoyalty,
   projectVisitorRecruitMorale,
@@ -27,6 +29,7 @@ import {
   type Phase2InventoryView,
   type Phase2View,
 } from "sim";
+import { districtTemplates } from "content/templates/districts";
 import { getTrainingDerivedBonus, getTrainingStatusLabel } from "sim/systems/training";
 import { getBuildingFloors } from "content/building-layouts";
 import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
@@ -74,6 +77,7 @@ export interface GameCallbacks {
   bidContract: (postingId: string) => void;
   advanceContract: () => void;
   prepConsumable: (recipeId: string) => void;
+  craftDurable: (recipeId: string) => void;
 }
 
 // ── View model types ─────────────────────────────────────────────────────
@@ -142,6 +146,7 @@ export interface RoomViewModel {
   reservedFootprint: RoomFootprintViewModel;
   activeFootprint: RoomFootprintViewModel;
   prepRecipes: readonly PrepRecipeViewModel[];
+  craftRecipes: readonly CraftRecipeViewModel[];
   training: RoomTrainingViewModel | null;
 }
 
@@ -475,6 +480,43 @@ export interface PrepRecipeViewModel {
   isRoomStaffed: boolean;
 }
 
+export interface CraftRecipeInputViewModel {
+  itemId: string;
+  itemName: string;
+  quantityRequired: number;
+  quantityOwned: number;
+  isSatisfied: boolean;
+}
+
+export interface CraftRecipeViewModel {
+  recipeId: string;
+  family: string;
+  name: string;
+  description: string;
+  inputs: readonly CraftRecipeInputViewModel[];
+  outputItemId: string;
+  outputName: string;
+  outputCategory: string;
+  outputRank: string;
+  outputQuantity: number;
+  cashCost: number;
+  cashOnHand: number;
+  outputStatEffects: readonly StatEffectViewModel[];
+  canProduce: boolean;
+  isRoomStaffed: boolean;
+  isBuildingTierMet: boolean;
+  isDistrictMet: boolean;
+  isFactionMet: boolean;
+  isCashMet: boolean;
+  factionBlockers: readonly {
+    factionId: string;
+    factionName: string;
+    required: number;
+    current: number;
+  }[];
+  missingDistrictTags: readonly string[];
+}
+
 export interface EquipmentViewModel {
   operatorId: string;
   operatorName: string;
@@ -730,7 +772,7 @@ export interface CityPressureView {
 }
 
 export function buildCityPressureView(
-  cityPressure: import("save").CityPressureSnapshot | null | undefined,
+  cityPressure: CityPressureSnapshot | null | undefined,
 ): CityPressureView {
   if (!cityPressure) {
     return { districts: [], factions: [] };
@@ -1055,10 +1097,91 @@ function buildPrepRecipesForRoom(
   });
 }
 
+function buildCraftRecipesForRoom(
+  roomTemplateId: string,
+  isOperational: boolean,
+  assignedStaffCount: number,
+  buildingTier: number,
+  cashOnHand: number,
+  inventory: readonly Phase2InventoryView[],
+  cityPressure: CityPressureSnapshot | null | undefined,
+  registry: TemplateRegistry,
+): CraftRecipeViewModel[] {
+  // Build district tag set: districts with trust > 0 (player has operated there)
+  const activeDistrictTags: string[] = [];
+  if (cityPressure) {
+    for (const ds of cityPressure.districts) {
+      if (ds.trust > 0) {
+        const dt = districtTemplates.find((d) => d.id === ds.districtId);
+        if (dt) activeDistrictTags.push(...dt.tags);
+      }
+    }
+  }
+
+  // Build faction standings keyed by faction id
+  const factionStandings: Record<string, { standing: number }> = {};
+  if (cityPressure) {
+    for (const f of cityPressure.factions) {
+      factionStandings[f.factionId] = { standing: f.standing };
+    }
+  }
+
+  return buildCraftRecipeAvailability(
+    roomTemplateId,
+    isOperational,
+    assignedStaffCount,
+    buildingTier,
+    cashOnHand,
+    inventory,
+    activeDistrictTags,
+    factionStandings,
+    registry,
+  ).map((availability) => {
+    const outputTemplate = registry.itemById.get(availability.outputItemId);
+    const inputs: CraftRecipeInputViewModel[] = availability.inputs.map((input) => ({
+      itemId: input.itemId,
+      itemName: registry.itemById.get(input.itemId)?.name ?? input.itemId,
+      quantityRequired: input.quantityRequired,
+      quantityOwned: input.quantityOwned,
+      isSatisfied: input.isSatisfied,
+    }));
+
+    const factionBlockers = availability.factionBlockers.map((b) => ({
+      ...b,
+      factionName: registry.factionById.get(b.factionId)?.name ?? b.factionId,
+    }));
+
+    return {
+      recipeId: availability.recipeId,
+      family: availability.family,
+      name: availability.name,
+      description: availability.description,
+      inputs,
+      outputItemId: availability.outputItemId,
+      outputName: outputTemplate?.name ?? availability.name,
+      outputCategory: outputTemplate?.category ?? "weapon",
+      outputRank: outputTemplate?.rank ?? "d",
+      outputQuantity: availability.outputQuantity,
+      cashCost: availability.cashCost,
+      cashOnHand: availability.cashOnHand,
+      outputStatEffects: mapStatEffects(outputTemplate?.statEffects ?? []),
+      canProduce: availability.canProduce,
+      isRoomStaffed: availability.isRoomStaffed,
+      isBuildingTierMet: availability.isBuildingTierMet,
+      isDistrictMet: availability.isDistrictMet,
+      isFactionMet: availability.isFactionMet,
+      isCashMet: availability.isCashMet,
+      factionBlockers,
+      missingDistrictTags: availability.missingDistrictTags,
+    };
+  });
+}
+
 export function buildHqViewFromPhase1(
   view: Phase1RuntimeView,
   registry: TemplateRegistry,
   inventory?: readonly Phase2InventoryView[],
+  cityPressure?: CityPressureSnapshot | null,
 ): HqViewModel {
   const identity = view.identity;
   const buildingTemplate =
@@ -1098,6 +1221,16 @@ export function buildHqViewFromPhase1(
         room.isOperational,
         room.assignedStaffCount,
         inventory ?? [],
+        registry,
+      ),
+      craftRecipes: buildCraftRecipesForRoom(
+        template.id,
+        room.isOperational,
+        room.assignedStaffCount,
+        view.building.tier,
+        view.resources.cash,
+        inventory ?? [],
+        cityPressure,
         registry,
       ),
       training: buildRoomTrainingViewModel(

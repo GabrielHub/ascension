@@ -139,15 +139,12 @@ Ship these categories in Phase 4:
 
 ### In Progress
 
-- Blocked pending earlier slices.
+- None.
 
 ### Blocked
 
-- `phase-4-midgame-contract-lock-plan`
-- `phase-4-midgame-city-pressure-plan`
-- `phase-4-midgame-content-remediation-plan`
 - `phase-4-midgame-crafting-plan`
 
 ### Done
 
-- None.
+- Dependencies resolved: contract lock, city pressure, and content remediation are already shipped in code.

@@ -1,10 +1,12 @@
 import type {
+  CraftRecipeViewModel,
   GameCallbacks,
   PrepRecipeViewModel,
   RoomCultureViewModel,
   RoomViewModel,
   UpgradeViewModel,
 } from "./view-models";
+import { ItemCategoryIcon, ItemRankBadge, StatEffectChips } from "./item-surface";
 import { Tooltip } from "./_tooltip";
 import {
   getCultureSummaryLabel,
@@ -387,6 +389,118 @@ function PrepRecipeCard({
   );
 }
 
+function getCraftBlockerMessage(recipe: CraftRecipeViewModel): string {
+  if (!recipe.isRoomStaffed) return "Needs staff";
+  if (!recipe.isBuildingTierMet) return "Building tier too low";
+  if (!recipe.isDistrictMet) return "District access needed";
+  if (!recipe.isFactionMet) return "Faction standing too low";
+  if (!recipe.isCashMet) return "Needs cash";
+  return "Missing inputs";
+}
+
+function CraftRecipeCard({
+  recipe,
+  onCraft,
+}: {
+  recipe: CraftRecipeViewModel;
+  onCraft: () => void;
+}) {
+  return (
+    <div className="glass-card-inset space-y-3 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h4 className="text-sm font-medium text-silver-bright">{recipe.name}</h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/65">{recipe.description}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <ItemCategoryIcon category={recipe.outputCategory} />
+          <ItemRankBadge rank={recipe.outputRank} />
+        </div>
+      </div>
+
+      {recipe.outputStatEffects.length > 0 && (
+        <StatEffectChips effects={recipe.outputStatEffects} />
+      )}
+
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">Inputs</span>
+        <div className="flex flex-wrap gap-1.5">
+          {recipe.inputs.map((input) => (
+            <Tooltip
+              key={input.itemId}
+              content={`${input.quantityOwned} owned / ${input.quantityRequired} needed`}
+            >
+              <span
+                className={`rounded px-1.5 py-0.5 text-xs ${
+                  input.isSatisfied
+                    ? "bg-[rgba(200,168,76,0.08)] text-gold"
+                    : "bg-[rgba(180,60,60,0.08)] text-ember"
+                }`}
+              >
+                {input.quantityRequired}x {input.itemName}
+                <span className="ml-1 opacity-60">({input.quantityOwned})</span>
+              </span>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/60">Cash</span>
+        <Tooltip content={`${recipe.cashOnHand} treasury / ${recipe.cashCost} required`}>
+          <span
+            className={`rounded px-1.5 py-0.5 text-xs ${
+              recipe.isCashMet
+                ? "bg-[rgba(200,168,76,0.08)] text-gold"
+                : "bg-[rgba(180,60,60,0.08)] text-ember"
+            }`}
+          >
+            {recipe.cashCost} cash
+            <span className="ml-1 opacity-60">({recipe.cashOnHand})</span>
+          </span>
+        </Tooltip>
+      </div>
+
+      {!recipe.isRoomStaffed && (
+        <p className="text-xs text-ember/80">Requires assigned logistics staff to produce.</p>
+      )}
+      {!recipe.isBuildingTierMet && (
+        <p className="text-xs text-ember/80">Requires building tier 5 or higher.</p>
+      )}
+      {!recipe.isDistrictMet && recipe.missingDistrictTags.length > 0 && (
+        <p className="text-xs text-ember/80">
+          Requires district access: {recipe.missingDistrictTags.join(", ")}.
+        </p>
+      )}
+      {!recipe.isFactionMet && recipe.factionBlockers.length > 0 && (
+        <div className="space-y-0.5">
+          {recipe.factionBlockers.map((b) => (
+            <p key={b.factionId} className="text-xs text-ember/80">
+              {b.factionName} standing: {b.current}/{b.required}
+            </p>
+          ))}
+        </div>
+      )}
+      {!recipe.isCashMet && (
+        <p className="text-xs text-ember/80">
+          Requires {recipe.cashCost} cash at craft time. Treasury: {recipe.cashOnHand}.
+        </p>
+      )}
+
+      <button
+        type="button"
+        disabled={!recipe.canProduce}
+        className="btn-primary w-full text-xs"
+        onClick={onCraft}
+      >
+        {recipe.canProduce
+          ? `Craft ${recipe.outputQuantity}x ${recipe.outputName}`
+          : getCraftBlockerMessage(recipe)}
+      </button>
+    </div>
+  );
+}
+
 export function RoomDetailPanel({
   guildName = "the guild",
   room,
@@ -698,6 +812,23 @@ export function RoomDetailPanel({
                 key={recipe.recipeId}
                 recipe={recipe}
                 onProduce={() => callbacks.prepConsumable(recipe.recipeId)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {room.craftRecipes.length > 0 && (
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Durable Gear Crafting
+          </h4>
+          <div className="space-y-2.5">
+            {room.craftRecipes.map((recipe) => (
+              <CraftRecipeCard
+                key={recipe.recipeId}
+                recipe={recipe}
+                onCraft={() => callbacks.craftDurable(recipe.recipeId)}
               />
             ))}
           </div>

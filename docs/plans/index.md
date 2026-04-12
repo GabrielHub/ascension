@@ -4,17 +4,13 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The active checked-in execution queue is now the ordered Phase 4 midgame plan set:
+The active checked-in execution queue is now the remaining Phase 4 midgame plan set:
 
 - `phase-4-midgame-manager-plan`
-- `phase-4-midgame-contract-lock-plan`
-- `phase-4-midgame-city-pressure-plan`
-- `phase-4-midgame-content-remediation-plan`
-- `phase-4-midgame-crafting-plan`
 - `phase-4-midgame-social-incident-plan`
 - `phase-4-midgame-encounter-plan`
 
-This replaces the previous "no active plan" state because the next roadmap section is now ready for execution.
+The completed contract-lock, city-pressure, content-remediation, and crafting slices are already reflected in code and in the roadmap. They remain checked in as concrete scope references for the remaining work, but they are no longer the active queue.
 
 ## Shared Execution Contract
 
@@ -39,12 +35,8 @@ Do not add another broad Phase 4 plan doc unless the current ordered plan set is
 
 Run the current midgame plans in this order:
 
-1. `phase-4-midgame-contract-lock-plan`
-2. `phase-4-midgame-city-pressure-plan`
-3. `phase-4-midgame-content-remediation-plan`
-4. `phase-4-midgame-crafting-plan`
-5. `phase-4-midgame-social-incident-plan`
-6. `phase-4-midgame-encounter-plan`
+1. `phase-4-midgame-social-incident-plan`
+2. `phase-4-midgame-encounter-plan`
 
 Use `phase-4-midgame-manager-plan` to coordinate locks, merge order, and scope control across that queue.
 
@@ -63,3 +55,7 @@ Use `phase-4-midgame-manager-plan` to coordinate locks, merge order, and scope c
 - the Porter's upgrade-campaign pass is shipped; management guidance, deterministic harnesses, and browser regression coverage now exercise the canonical Kitchen Overhaul-through-Waterfront arc instead of leaving it mostly in template breadth
 - the dev-menu command-console plan is shipped; future browser-testing work should extend the typed command registry instead of reopening button-sheet cheats
 - the AI content layer bring-up pass is shipped; future AI work should be staged as narrow content-breadth or quality passes instead of reopening transport/settings/runtime scaffolding
+- the Phase 4 contract-lock pass is shipped; districts, factions, city-pressure save state, craft-recipe contracts, workshop ids, and `rankTone` metadata now belong to code, tests, and the roadmap instead of the active queue
+- the Phase 4 city-pressure pass is shipped; district/sponsor contract generation, city-pressure writeback, management summary surfaces, and dev-console controls now belong to code, tests, and the roadmap instead of the active queue
+- the Phase 4 content-remediation pass is shipped; Porter's-era site, boss, recruit, item, event, and runtime-asset-parity breadth now belong to code, tests, and the roadmap instead of the active queue
+- the Phase 4 crafting pass is shipped; craft-time cash sinks, workshop execution, recipe blockers, and the midgame economy ledger now belong to code, tests, and the roadmap instead of the active queue

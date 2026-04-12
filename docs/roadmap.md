@@ -32,6 +32,8 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The template registry covers resources, buildings, rooms, upgrades, items, missions, events, bosses, enemies, and kits with deterministic validation.
 - Phase 2 content breadth is in place through authored gear families, loot families, additional room families for later tiers, and expanded operator/staff/runtime content definitions.
+- Phase 4 shared midgame contracts are now locked in data: districts, factions, city-pressure save state, craft recipes, workshop ids, and explicit `rankTone` escalation metadata.
+- Porter's-era content remediation is shipped through additional D-rank site packets, expanded boss and enemy coverage, promoted recruit identities, non-gear item visual contracts, and runtime asset-parity validation.
 - The Phase 2 asset-production contract is documented and locked around canon-first briefs, recipe previews, modular production, props-only room scenes, controlled item variants, and viewer/playground review.
 
 ### ECS & Simulation
@@ -45,9 +47,10 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The bodega ships the full three-step building arc (Frontage, Annex, Backyard Extension), four bodega-native room identities from the world foundation, bodega-native support rooms (Back Office, Backstock, Alley), and hard roster-cap overflow handling.
 - The second headquarters tier (Porter's) is shipped with multi-floor layouts, explicit floor switching, starter room placement, and a D-rank contract ceiling.
-- Porter's supports 11 rooms: Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, and Deck, plus lightweight consumable prep from monster drops.
+- Porter's now exposes 12 room templates at the HQ contract level: Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, Deck, and Workshop.
 - Porter's upgrade arc is a real player-facing campaign through Kitchen Overhaul, Upstairs Conversion, The Remodel, and The Waterfront, with upgrade-gated room unlocks for Break Room, Briefing Room, Dock, and Deck.
 - Porter's specialized rooms change management decisions: gym drives bounded training readiness, Office and Briefing Room change contract reading and raid preparation, Infirmary/Break Room/Dock/Deck change recovery/morale/decompression/staging outcomes through simulation-owned room effects.
+- The Phase 4 machine-shop upgrade path and durable crafting loop are shipped through recipe execution, craft-time cash sinks, workshop blocker surfaces, and the midgame economy ledger.
 - Room progression is data-driven through building and room upgrades plus generic requirement and effect evaluation.
 - Relocation from bodega to Porter's is runtime-owned and save-safe with carryover/reset rules, readiness/blocker surfaces, and an interruption-backed relocation flow.
 - The HQ exterior day-night pass drives canonical sunrise/day/sunset/night phases from the simulation clock, with manifest-driven per-phase tint/fog/shadow values and elevation-band support for both headquarters.
@@ -61,6 +64,7 @@ The implementation itself is the source of truth. This section is organized by s
 - Gear stat effects are first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, flowing through the derived-stat layer into raid outcomes.
 - Porter's training is a bounded readiness loop: operational `room:training` space accrues save-safe physical readiness, feeds derived stats and raid readiness, decays through neglect and raid wear, and stays absent from bodega runs.
 - Permanent operator death, operator departure, and roster replacement pressure are implemented.
+- Starter roster portrait assignment is deliberate for all six bootstrap operators, and deterministic recruitment now draws from a promoted recruit identity pool instead of treating the SVG-playground recipe catalog as live content.
 - Operator portraits use the shipped modular recipe-based SVG pipeline, including visible gear overlays where present.
 
 ### Social & Teams
@@ -72,17 +76,19 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The operations view supports the full contract loop: a resolved-contract review beat, a posted-contract bidding board, and the secured active contract site as the live raid map.
 - New game boots into a generated posted-contract bidding state; preview/dev mode seeds an active contract for in-media-res tooling.
+- Posted contracts now carry persistent `districtId`, `sponsorFactionId`, and `pressureTags`; city-pressure writeback changes future postings and contract fallout instead of living only in flavor text.
 - Operators autonomously evaluate raid opportunities, form teams, launch raids, return with persistent summaries, and can permanently die or depart.
 - Raid resolution is stat-driven and boss-aware: missions carry explicit enemy group profiles and boss combat profiles with tags, weaknesses, and threat values.
 - Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty; boss weaknesses reward matching team composition.
 - Loot distribution is driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
 - Boss commitment escalates into a blocking interruption beat and can hand off into a save-safe encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
-- Authored encounter portraits exist for the three shipped bodega-era bosses.
+- Boss art and raid-surface visual coverage now extend across the shipped Porter's-era content slice instead of stopping at the original bodega boss set.
 
 ### Economy & Gear
 
 - Stackable shared inventory, loot drops, the market, automatic accessory selection, and runtime-owned loot filtering are implemented for weapons, outfit overlays, accessories, and monster-part loot.
 - The optional loot filter auto-sells junk monster parts and obsolete gear once the guild has outgrown them.
+- Durable crafting is shipped through the machine-shop upgrade, workshop room template, craft-recipe registry, protected crafting inputs, district/faction recipe requirements, craft-time cash sinks, workshop recipe UX, and the midgame economy ledger.
 - The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
 - First standing management policy surfaces are shipped through the runtime policy contract and the HQ management panel.
 
@@ -90,6 +96,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - Pressure events are generated from runtime state rather than hand-authored UI triggers.
 - Interactive incidents bind to runtime subjects, surface authored choices through blocking modals, resolve deterministic consequence bundles in simulation code, and persist through refresh/load.
+- City-pressure changes already emit runtime events and management summaries, but several richer incident consequence kinds still remain stubbed for the next Phase 4 slice.
 - The interruption layer is runtime-owned: settings, incidents, and boss-commitment beats can freeze the simulation, persist when gameplay-authoritative, and restore cleanly through save/load.
 
 ### Onboarding & Narrative
@@ -132,18 +139,25 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
-- Active checked-in execution plans now cover the Phase 4 midgame pass. The next work should come from those milestones, starting with shared contract lock, city pressure, and Porter's content remediation.
+- Phase 4 is in progress. Shared contract lock, city pressure, Porter's content remediation, and durable crafting are shipped in code; the remaining active execution work is deeper social and incident fallout plus encounter expansion.
 
 ## Next Steps
 
-1. Start Phase 4 with external pressure that pushes back on the shipped Porter's baseline: reputation fallout, institutions, factional or contract pressure, and richer social consequences.
-2. Deepen content breadth around the existing systems before adding another large foundation pass: more incident coverage, more boss and mixed-roster encounter breadth, stronger authored mission and loot variety where repetition shows up in play, and a real Porter's-era operator and dungeon pool instead of isolated higher-tier footholds.
-3. Lock the rank-escalation contract across content and presentation: F and E stay grounded and local, D and C become stranger and more visibly rift-touched, B and A become institutionally famous and physically implausible, and S becomes fully spectacular and world-defining.
-4. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+1. Deepen social fallout and incidents so city pressure, casualties, room culture, and retention pressure produce real ECS consequences instead of partially stubbed effect kinds.
+2. Expand encounter breadth with more mixed enemy groups, boss reaction patterns, managerial interventions, and reward links into the midgame crafting loop.
+3. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Phase 4: Midgame Systems
 
 Goal: add the features that create external pressure.
+
+Current status:
+
+- shared contract lock is shipped
+- city pressure is shipped
+- Porter's content remediation is shipped
+- durable crafting is shipped
+- deeper social fallout and encounter expansion remain active
 
 Deliverables:
 
@@ -201,8 +215,8 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, and Porter's functional differentiation.
-2. Add midgame external pressure.
+1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 contract lock, Phase 4 city pressure, and Porter's content remediation.
+2. Finish the remaining midgame external-pressure work: deeper social fallout and encounter expansion.
 3. Add later-building and prestige content.
 4. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 

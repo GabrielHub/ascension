@@ -13,6 +13,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "weapon/breach-hammer",
     outputQuantity: 1,
+    cashCost: 120,
     inputItems: [
       { itemId: "loot/monster-part/fang", quantity: 3 },
       { itemId: "loot/monster-part/bone-shard", quantity: 2 },
@@ -34,6 +35,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/composite-plate-carrier",
     outputQuantity: 1,
+    cashCost: 105,
     inputItems: [
       { itemId: "loot/monster-part/carapace", quantity: 3 },
       { itemId: "loot/monster-part/ramp-gravel", quantity: 2 },
@@ -56,6 +58,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "accessory/reinforced-gloves",
     outputQuantity: 1,
+    cashCost: 70,
     inputItems: [
       { itemId: "loot/monster-part/sinew", quantity: 2 },
       { itemId: "loot/monster-part/bone-shard", quantity: 1 },
@@ -78,6 +81,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "weapon/focused-carbine",
     outputQuantity: 1,
+    cashCost: 110,
     inputItems: [
       { itemId: "loot/monster-part/crystal-eye", quantity: 2 },
       { itemId: "loot/monster-part/rail-splice", quantity: 2 },
@@ -100,6 +104,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/signal-dampening-coat",
     outputQuantity: 1,
+    cashCost: 95,
     inputItems: [
       { itemId: "loot/monster-part/void-residue", quantity: 1 },
       { itemId: "loot/monster-part/ticket-stub", quantity: 2 },
@@ -122,6 +127,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "accessory/rift-compass",
     outputQuantity: 1,
+    cashCost: 65,
     inputItems: [
       { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
       { itemId: "loot/monster-part/rail-splice", quantity: 1 },
@@ -144,6 +150,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "weapon/pulse-baton",
     outputQuantity: 1,
+    cashCost: 100,
     inputItems: [
       { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
       { itemId: "loot/monster-part/pressure-seal", quantity: 1 },
@@ -166,6 +173,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/field-medic-coat",
     outputQuantity: 1,
+    cashCost: 90,
     inputItems: [
       { itemId: "loot/monster-part/culture-sample", quantity: 1 },
       { itemId: "loot/monster-part/reagent-vial", quantity: 2 },
@@ -188,6 +196,7 @@ export const craftRecipeTemplates = [
     minimumBuildingTier: 5,
     outputItemId: "accessory/trauma-kit",
     outputQuantity: 1,
+    cashCost: 75,
     inputItems: [
       { itemId: "loot/monster-part/pressure-seal", quantity: 1 },
       { itemId: "loot/monster-part/reagent-vial", quantity: 1 },

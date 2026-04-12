@@ -53,6 +53,7 @@ function createContext(): DevConsoleContext {
         autoAssignAccessory: vi.fn(() => Promise.resolve()),
         unequipItem: vi.fn(() => Promise.resolve()),
         prepConsumable: vi.fn(() => Promise.resolve()),
+        craftDurable: vi.fn(() => Promise.resolve()),
         probeAiRuntime,
         generateAiSurface,
         regenerateAiSurface,

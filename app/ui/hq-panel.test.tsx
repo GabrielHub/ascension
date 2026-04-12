@@ -33,6 +33,7 @@ const callbacks: GameCallbacks = {
   bidContract: () => {},
   advanceContract: () => {},
   prepConsumable: () => {},
+  craftDurable: () => {},
 };
 
 describe("hq panel", () => {

@@ -913,6 +913,14 @@ function validateCraftRecipeTemplates(
       });
     }
 
+    if (!Number.isFinite(template.cashCost) || template.cashCost < 1) {
+      issues.push({
+        category: "craftRecipes",
+        templateId: template.id,
+        message: "cashCost must be a finite amount of at least 1.",
+      });
+    }
+
     if (template.inputItems.length === 0) {
       issues.push({
         category: "craftRecipes",
@@ -922,11 +930,18 @@ function validateCraftRecipeTemplates(
     }
 
     template.inputItems.forEach((input, index) => {
-      if (!items.has(input.itemId)) {
+      const inputItem = items.get(input.itemId);
+      if (!inputItem) {
         issues.push({
           category: "craftRecipes",
           templateId: template.id,
           message: `inputItems[${index}]: unknown item "${input.itemId}".`,
+        });
+      } else if (!inputItem.tags.includes("loot:crafting_input")) {
+        issues.push({
+          category: "craftRecipes",
+          templateId: template.id,
+          message: `inputItems[${index}]: "${input.itemId}" must be tagged loot:crafting_input so loot automation does not auto-sell it.`,
         });
       }
 

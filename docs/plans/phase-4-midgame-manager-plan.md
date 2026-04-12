@@ -36,12 +36,19 @@ Phase 4 is complete when Porter's no longer feels like a passive capacity increa
 
 ## Required Order
 
-1. Finish `phase-4-midgame-contract-lock-plan.md`.
-2. Finish `phase-4-midgame-city-pressure-plan.md`.
-3. Finish `phase-4-midgame-content-remediation-plan.md`.
-4. Finish `phase-4-midgame-crafting-plan.md`.
-5. Finish `phase-4-midgame-social-incident-plan.md`.
-6. Finish `phase-4-midgame-encounter-plan.md`.
+Phase 4 landed in this order:
+
+1. `phase-4-midgame-contract-lock-plan.md` (done)
+2. `phase-4-midgame-city-pressure-plan.md` (done)
+3. `phase-4-midgame-content-remediation-plan.md` (done)
+4. `phase-4-midgame-crafting-plan.md`
+5. `phase-4-midgame-social-incident-plan.md`
+6. `phase-4-midgame-encounter-plan.md`
+
+Current remaining order:
+
+1. `phase-4-midgame-social-incident-plan.md`
+2. `phase-4-midgame-encounter-plan.md`
 
 ## Why This Order Is Locked
 
@@ -124,7 +131,6 @@ Phase 4 is complete when Porter's no longer feels like a passive capacity increa
 
 ### Blocked
 
-- `phase-4-midgame-crafting-plan`
 - `phase-4-midgame-social-incident-plan`
 - `phase-4-midgame-encounter-plan`
 
@@ -133,3 +139,4 @@ Phase 4 is complete when Porter's no longer feels like a passive capacity increa
 - `phase-4-midgame-contract-lock-plan`
 - `phase-4-midgame-city-pressure-plan`
 - `phase-4-midgame-content-remediation-plan`
+- `phase-4-midgame-crafting-plan`

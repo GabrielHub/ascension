@@ -207,6 +207,9 @@ export interface RuntimeSessionCommands {
   prepConsumable(
     input: Omit<Extract<SimCommand, { type: "sim/prep-consumable" }>, "type">,
   ): Promise<void>;
+  craftDurable(
+    input: Omit<Extract<SimCommand, { type: "sim/craft-durable" }>, "type">,
+  ): Promise<void>;
   probeAiRuntime(): Promise<AiRuntimeProbeResult>;
   generateAiSurface(input: {
     surface: AiGenerationSurface;
@@ -2236,6 +2239,13 @@ function createRuntimeSession(
     prepConsumable(input) {
       return commands.dispatch({
         type: "sim/prep-consumable",
+        ...input,
+      });
+    },
+
+    craftDurable(input) {
+      return commands.dispatch({
+        type: "sim/craft-durable",
         ...input,
       });
     },

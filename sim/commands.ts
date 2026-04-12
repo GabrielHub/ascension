@@ -39,6 +39,7 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/guidance-reset-opening",
   "sim/initiate-relocation",
   "sim/prep-consumable",
+  "sim/craft-durable",
 ] as const;
 
 export type StableSimCommandType = (typeof STABLE_SIM_COMMAND_TYPES)[number];
@@ -252,6 +253,10 @@ export type SimCommand =
     }
   | {
       type: "sim/prep-consumable";
+      recipeId: string;
+    }
+  | {
+      type: "sim/craft-durable";
       recipeId: string;
     }
   | {

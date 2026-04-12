@@ -324,6 +324,7 @@ export interface CraftRecipeTemplate {
   minimumBuildingTier: number;
   outputItemId: string;
   outputQuantity: number;
+  cashCost: number;
   inputItems: readonly { itemId: string; quantity: number }[];
   requiredDistrictTags: readonly string[];
   requiredFactionStanding: Readonly<Record<string, number>>;

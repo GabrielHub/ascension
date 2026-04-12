@@ -13,11 +13,11 @@ Documentation is intentionally narrow.
 
 - The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
 - The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
-- Active checked-in execution plans now exist under `docs/plans/` for the Phase 4 midgame pass: contract lock, city pressure, Porter's content remediation, crafting, social fallout, and encounter breadth.
+- Phase 4 is underway. Contract lock, city pressure, Porter's content remediation, and durable crafting are already implemented; the remaining active plan queue is social fallout and encounter breadth.
 
 ## Planned Work
 
-- Start the next roadmap phase with midgame external pressure: reputation fallout, city and institutional pressure, richer incident coverage, and deeper boss and encounter breadth.
+- Continue Phase 4 by landing richer social and incident fallout plus broader encounter depth on top of the shipped district, faction, content-remediation, and crafting baseline.
 - Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and later-building reuse.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
 
@@ -34,7 +34,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  The current active queue is the ordered Phase 4 midgame plan set.
+  The current active queue is the remaining Phase 4 social and encounter set coordinated by the manager plan.
 
 ### Research
 

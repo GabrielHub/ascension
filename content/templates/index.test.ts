@@ -290,6 +290,7 @@ describe("template registry", () => {
       expect(recipe.requiredStaffTag).toBe("staff:logistics");
       expect(recipe.minimumBuildingId).toBe("building/porters");
       expect(recipe.minimumBuildingTier).toBeGreaterThanOrEqual(5);
+      expect(recipe.cashCost).toBeGreaterThan(0);
       expect(recipe.inputItems.length).toBeGreaterThan(0);
       expect(recipe.requiredDistrictTags.length).toBeGreaterThan(0);
 
@@ -298,8 +299,10 @@ describe("template registry", () => {
       expect(["weapon", "outfit-overlay", "accessory"]).toContain(outputItem?.category);
 
       recipe.inputItems.forEach((input) => {
-        expect(registry.itemById.has(input.itemId)).toBe(true);
+        const inputItem = registry.itemById.get(input.itemId);
+        expect(inputItem).toBeTruthy();
         expect(input.quantity).toBeGreaterThan(0);
+        expect(inputItem?.tags).toContain("loot:crafting_input");
       });
 
       Object.keys(recipe.requiredFactionStanding).forEach((factionId) => {

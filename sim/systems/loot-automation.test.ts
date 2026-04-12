@@ -33,6 +33,7 @@ describe("loot automation", () => {
     setLootAutomationEnabled(context, true);
 
     addToInventory(context, "loot/monster-part/fang", 2);
+    addToInventory(context, "loot/monster-part/ramp-gravel", 2);
     addToInventory(context, "loot/monster-part/drain-sludge", 2);
 
     const result = applyLootAutomationSweep(context);
@@ -43,6 +44,7 @@ describe("loot automation", () => {
       entries: [{ itemId: "loot/monster-part/drain-sludge", quantity: 2, revenue: 14 }],
     });
     expect(getInventoryCount(context, "loot/monster-part/fang")).toBe(2);
+    expect(getInventoryCount(context, "loot/monster-part/ramp-gravel")).toBe(2);
     expect(getInventoryCount(context, "loot/monster-part/drain-sludge")).toBe(0);
     expect(GuildState.treasury[context.singletonEntities.guild]).toBe(14);
   });

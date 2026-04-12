@@ -1006,6 +1006,19 @@ const COMMANDS: DevConsoleCommand[] = [
     },
   },
 
+  {
+    name: "craft",
+    family: "Inventory",
+    args: "<recipe>",
+    help: "Craft a durable gear item from a recipe",
+    examples: ["/craft craft-recipe/field-lead-breach/breach-hammer"],
+    execute: (args, ctx) => {
+      if (args.length < 1) return err("Usage: /craft <recipeId>");
+      void ctx.session.commands.craftDurable({ recipeId: args[0] });
+      return ok(`Crafting ${args[0]}`);
+    },
+  },
+
   // ── Contracts, Incidents & Encounters ──────────────────────────────────
   {
     name: "contract bid",
