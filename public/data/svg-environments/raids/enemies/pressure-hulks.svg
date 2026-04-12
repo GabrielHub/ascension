@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Pressure Hulks — wide rounded hexagon (pressure vessel cross-section), dark steel blue -->
+  <polygon points="5,3 11,3 14,8 11,13 5,13 2,8" fill="rgba(64,88,120,0.18)" stroke="rgba(64,88,120,0.45)" stroke-width="1.1" stroke-linejoin="round"/>
+  <circle cx="8" cy="8" r="1.5" fill="rgba(64,88,120,0.3)" stroke="rgba(64,88,120,0.2)" stroke-width="0.4"/>
+</svg>

@@ -106,7 +106,7 @@
       "tags": ["team", "operator", "position"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "marker/team-goal",
@@ -114,7 +114,7 @@
       "tags": ["team", "goal", "indicator"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "marker/team-focused",
@@ -122,7 +122,7 @@
       "tags": ["team", "operator", "focused", "selected"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "enemy/threat-generic",
@@ -130,7 +130,7 @@
       "tags": ["enemy", "threat", "generic", "hostile"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "enemy/threat-elite",
@@ -138,7 +138,7 @@
       "tags": ["enemy", "elite", "threat", "tough"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "enemy/threat-boss",
@@ -146,7 +146,7 @@
       "tags": ["enemy", "boss", "threat", "final"],
       "scale": "marker",
       "concept": null,
-      "status": "exploration"
+      "status": "approved"
     },
     {
       "id": "enemy/focus-frame",
@@ -179,6 +179,232 @@
       "scale": "detail",
       "concept": null,
       "status": "exploration"
+    },
+
+    {
+      "id": "enemy/family-tunnel-crawlers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "tunnel-crawlers", "swarm", "ambush"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-concrete-sentinels",
+      "category": "enemy",
+      "tags": ["enemy", "family", "concrete-sentinels", "heavy", "defensive"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-chalk-swarms",
+      "category": "enemy",
+      "tags": ["enemy", "family", "chalk-swarms", "swarm", "hazard"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-vine-constructs",
+      "category": "enemy",
+      "tags": ["enemy", "family", "vine-constructs", "entangle", "organic"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-suds-constructs",
+      "category": "enemy",
+      "tags": ["enemy", "family", "suds-constructs", "corrosive", "slippery"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-cellar-dwellers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "cellar-dwellers", "ambush", "underground"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-court-echoes",
+      "category": "enemy",
+      "tags": ["enemy", "family", "court-echoes", "suppression", "ranged"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-freezer-fauna",
+      "category": "enemy",
+      "tags": ["enemy", "family", "freezer-fauna", "heavy", "cold"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-transit-haunts",
+      "category": "enemy",
+      "tags": ["enemy", "family", "transit-haunts", "mobile", "ambush"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-fume-wraiths",
+      "category": "enemy",
+      "tags": ["enemy", "family", "fume-wraiths", "hazard", "corrosive"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-rust-creepers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "rust-creepers", "corrosive", "swarm"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-display-mimics",
+      "category": "enemy",
+      "tags": ["enemy", "family", "display-mimics", "ambush", "deceptive"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-aquatic-horrors",
+      "category": "enemy",
+      "tags": ["enemy", "family", "aquatic-horrors", "heavy", "aquatic"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-mannequin-stalkers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "mannequin-stalkers", "ambush", "uncanny"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-rebar-constructs",
+      "category": "enemy",
+      "tags": ["enemy", "family", "rebar-constructs", "heavy", "industrial"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-conduit-crawlers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "conduit-crawlers", "electrical", "swarm"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-reel-phantoms",
+      "category": "enemy",
+      "tags": ["enemy", "family", "reel-phantoms", "ranged", "light"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-cistern-dwellers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "cistern-dwellers", "aquatic", "ambush"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-astral-parasites",
+      "category": "enemy",
+      "tags": ["enemy", "family", "astral-parasites", "hazard", "spatial"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-pressure-spawn",
+      "category": "enemy",
+      "tags": ["enemy", "family", "pressure-spawn", "heavy", "pressure"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-stage-haunts",
+      "category": "enemy",
+      "tags": ["enemy", "family", "stage-haunts", "mobile", "theatrical"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-lab-specimens",
+      "category": "enemy",
+      "tags": ["enemy", "family", "lab-specimens", "hazard", "chemical"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+
+    {
+      "id": "enemy/family-gravity-lice",
+      "category": "enemy",
+      "tags": ["enemy", "family", "gravity-lice", "ambush", "inverted"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-fold-walkers",
+      "category": "enemy",
+      "tags": ["enemy", "family", "fold-walkers", "heavy", "spatial"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-ledger-wraiths",
+      "category": "enemy",
+      "tags": ["enemy", "family", "ledger-wraiths", "suppression", "bureaucratic"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-loop-echoes",
+      "category": "enemy",
+      "tags": ["enemy", "family", "loop-echoes", "temporal", "ambush"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-pressure-hulks",
+      "category": "enemy",
+      "tags": ["enemy", "family", "pressure-hulks", "heavy", "industrial"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
+    },
+    {
+      "id": "enemy/family-signal-phantoms",
+      "category": "enemy",
+      "tags": ["enemy", "family", "signal-phantoms", "ranged", "light"],
+      "scale": "marker",
+      "concept": null,
+      "status": "approved"
     }
   ]
 }

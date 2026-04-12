@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="sm-aura" cx="50%" cy="40%" r="56%">
+      <stop offset="0%" stop-color="#40c8e0" stop-opacity="0.1"/>
+      <stop offset="55%" stop-color="#1a1a20" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sm-tower" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a2a34"/>
+      <stop offset="50%" stop-color="#1a1a20"/>
+      <stop offset="100%" stop-color="#0e0e14"/>
+    </linearGradient>
+    <linearGradient id="sm-lens" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80e8f8"/>
+      <stop offset="50%" stop-color="#40c8e0"/>
+      <stop offset="100%" stop-color="#1a6880"/>
+    </linearGradient>
+    <linearGradient id="sm-beam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#40c8e0" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#80e8f8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#40c8e0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="sm-beamL" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#40c8e0" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#80e8f8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#40c8e0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="sm-flag" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d04040"/>
+      <stop offset="100%" stop-color="#8a2020"/>
+    </linearGradient>
+    <linearGradient id="sm-flagY" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4c040"/>
+      <stop offset="100%" stop-color="#8a7a20"/>
+    </linearGradient>
+    <filter id="sm-glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sm-flicker">
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="130" rx="95" ry="130" fill="url(#sm-aura)"/>
+
+  <!-- Sweeping light beams from head -->
+  <path d="M 110 42 L 196 20 L 198 36 L 116 48 Z" fill="url(#sm-beam)" opacity="0.3" filter="url(#sm-glow)"/>
+  <path d="M 90 42 L 4 20 L 2 36 L 84 48 Z" fill="url(#sm-beamL)" opacity="0.25" filter="url(#sm-glow)"/>
+  <!-- Secondary dimmer beam -->
+  <path d="M 108 46 L 180 60 L 182 68 L 114 52 Z" fill="url(#sm-beam)" opacity="0.12"/>
+  <path d="M 92 46 L 20 60 L 18 68 L 86 52 Z" fill="url(#sm-beamL)" opacity="0.1"/>
+
+  <!-- Radio static lines at bottom — body dissolving -->
+  <line x1="60" y1="248" x2="140" y2="248" stroke="#2a2a34" stroke-width="0.8" opacity="0.4"/>
+  <line x1="56" y1="252" x2="144" y2="252" stroke="#3a3a44" stroke-width="0.5" opacity="0.35"/>
+  <line x1="64" y1="256" x2="136" y2="256" stroke="#2a2a34" stroke-width="0.6" opacity="0.3"/>
+  <line x1="68" y1="260" x2="132" y2="260" stroke="#3a3a44" stroke-width="0.4" opacity="0.25"/>
+  <line x1="72" y1="264" x2="128" y2="264" stroke="#2a2a34" stroke-width="0.5" opacity="0.2"/>
+  <line x1="78" y1="268" x2="122" y2="268" stroke="#3a3a44" stroke-width="0.3" opacity="0.15"/>
+  <line x1="84" y1="272" x2="116" y2="272" stroke="#2a2a34" stroke-width="0.4" opacity="0.1"/>
+  <!-- Static noise dots -->
+  <circle cx="70" cy="250" r="0.5" fill="#4a4a54" opacity="0.3"/>
+  <circle cx="88" cy="254" r="0.4" fill="#5a5a64" opacity="0.25"/>
+  <circle cx="112" cy="252" r="0.5" fill="#4a4a54" opacity="0.3"/>
+  <circle cx="130" cy="256" r="0.4" fill="#5a5a64" opacity="0.2"/>
+  <circle cx="96" cy="260" r="0.3" fill="#4a4a54" opacity="0.2"/>
+  <circle cx="106" cy="258" r="0.4" fill="#5a5a64" opacity="0.25"/>
+
+  <!-- Body — narrow tower-like form -->
+  <path d="
+    M 100 56
+    Q 112 58 120 70 L 124 100
+    L 126 140 L 128 180
+    L 126 210 Q 124 230 120 244
+    L 112 248 L 88 248
+    L 80 244 Q 76 230 74 210
+    L 72 180 L 74 140
+    L 76 100 L 80 70
+    Q 88 58 100 56 Z
+  " fill="url(#sm-tower)" stroke="rgba(26,26,32,0.6)" stroke-width="1"/>
+
+  <!-- Tower panel lines -->
+  <line x1="84" y1="70" x2="82" y2="244" stroke="#2a2a34" stroke-width="0.5" opacity="0.6"/>
+  <line x1="92" y1="66" x2="90" y2="246" stroke="#2a2a34" stroke-width="0.5" opacity="0.6"/>
+  <line x1="100" y1="64" x2="100" y2="248" stroke="#2a2a34" stroke-width="0.5" opacity="0.6"/>
+  <line x1="108" y1="66" x2="110" y2="246" stroke="#2a2a34" stroke-width="0.5" opacity="0.6"/>
+  <line x1="116" y1="70" x2="118" y2="244" stroke="#2a2a34" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Horizontal banding -->
+  <rect x="76" y="98" width="48" height="3" fill="#2a2a34" stroke="#0e0e14" stroke-width="0.4" opacity="0.5"/>
+  <rect x="74" y="138" width="52" height="3" fill="#2a2a34" stroke="#0e0e14" stroke-width="0.4" opacity="0.5"/>
+  <rect x="74" y="178" width="52" height="3" fill="#2a2a34" stroke="#0e0e14" stroke-width="0.4" opacity="0.5"/>
+  <rect x="76" y="218" width="48" height="3" fill="#2a2a34" stroke="#0e0e14" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Signal wires extending from body like tendrils -->
+  <path d="M 76 120 Q 52 116 34 130 Q 20 142 16 160" fill="none" stroke="#3a3a44" stroke-width="0.7" opacity="0.4"/>
+  <path d="M 74 160 Q 48 158 28 170 Q 14 180 10 196" fill="none" stroke="#3a3a44" stroke-width="0.6" opacity="0.35"/>
+  <path d="M 76 200 Q 56 202 40 214 Q 28 224 24 240" fill="none" stroke="#3a3a44" stroke-width="0.5" opacity="0.3"/>
+  <path d="M 124 120 Q 148 116 166 130 Q 180 142 184 160" fill="none" stroke="#3a3a44" stroke-width="0.7" opacity="0.4"/>
+  <path d="M 126 160 Q 152 158 172 170 Q 186 180 190 196" fill="none" stroke="#3a3a44" stroke-width="0.6" opacity="0.35"/>
+  <path d="M 124 200 Q 144 202 160 214 Q 172 224 176 240" fill="none" stroke="#3a3a44" stroke-width="0.5" opacity="0.3"/>
+  <!-- Wire endpoint sparks -->
+  <circle cx="16" cy="160" r="1" fill="#40c8e0" opacity="0.5" filter="url(#sm-flicker)"/>
+  <circle cx="184" cy="160" r="1" fill="#40c8e0" opacity="0.5" filter="url(#sm-flicker)"/>
+  <circle cx="10" cy="196" r="0.8" fill="#40c8e0" opacity="0.4" filter="url(#sm-flicker)"/>
+  <circle cx="190" cy="196" r="0.8" fill="#40c8e0" opacity="0.4" filter="url(#sm-flicker)"/>
+
+  <!-- Navigation lights dotting the figure -->
+  <circle cx="80" cy="110" r="1.5" fill="#d04040" opacity="0.8" filter="url(#sm-flicker)"/>
+  <circle cx="120" cy="110" r="1.5" fill="#30a040" opacity="0.8" filter="url(#sm-flicker)"/>
+  <circle cx="78" cy="150" r="1.2" fill="#30a040" opacity="0.7" filter="url(#sm-flicker)"/>
+  <circle cx="122" cy="150" r="1.2" fill="#d04040" opacity="0.7" filter="url(#sm-flicker)"/>
+  <circle cx="80" cy="190" r="1.2" fill="#d04040" opacity="0.6" filter="url(#sm-flicker)"/>
+  <circle cx="120" cy="190" r="1.2" fill="#30a040" opacity="0.6" filter="url(#sm-flicker)"/>
+  <circle cx="82" cy="230" r="1" fill="#30a040" opacity="0.45" filter="url(#sm-flicker)"/>
+  <circle cx="118" cy="230" r="1" fill="#d04040" opacity="0.45" filter="url(#sm-flicker)"/>
+
+  <!-- Left arm — semaphore flag appendage -->
+  <path d="M 76 100 Q 58 96 42 84 Q 32 78 24 68 L 28 64 L 38 74 Q 50 86 64 92 Z" fill="url(#sm-tower)" stroke="#0e0e14" stroke-width="0.6"/>
+  <!-- Left semaphore flag -->
+  <path d="M 24 68 L 10 54 L 22 48 L 28 64 Z" fill="url(#sm-flag)" stroke="#6a1818" stroke-width="0.5"/>
+  <!-- Flag diagonal stripe -->
+  <line x1="16" y1="52" x2="26" y2="60" stroke="#f0e0e0" stroke-width="0.6" opacity="0.4"/>
+  <!-- Arm joint -->
+  <circle cx="56" cy="90" r="2.5" fill="#2a2a34" stroke="#3a3a44" stroke-width="0.5"/>
+
+  <!-- Right arm — semaphore flag appendage -->
+  <path d="M 124 100 Q 142 96 158 84 Q 168 78 176 68 L 172 64 L 162 74 Q 150 86 136 92 Z" fill="url(#sm-tower)" stroke="#0e0e14" stroke-width="0.6"/>
+  <!-- Right semaphore flag -->
+  <path d="M 176 68 L 190 54 L 178 48 L 172 64 Z" fill="url(#sm-flagY)" stroke="#6a5a18" stroke-width="0.5"/>
+  <!-- Flag diagonal stripe -->
+  <line x1="184" y1="52" x2="174" y2="60" stroke="#f0f0e0" stroke-width="0.6" opacity="0.4"/>
+  <!-- Arm joint -->
+  <circle cx="144" cy="90" r="2.5" fill="#2a2a34" stroke="#3a3a44" stroke-width="0.5"/>
+
+  <!-- Head — rotating hexagonal signal lens assembly -->
+  <!-- Lens housing outer ring -->
+  <circle cx="100" cy="38" r="20" fill="#1a1a20" stroke="#3a3a44" stroke-width="1"/>
+  <!-- Hexagonal prism lens -->
+  <polygon points="100,20 117,29 117,47 100,56 83,47 83,29" fill="none" stroke="url(#sm-lens)" stroke-width="1.5"/>
+  <polygon points="100,24 113,31 113,45 100,52 87,45 87,31" fill="#0e1820" stroke="#40c8e0" stroke-width="0.6" opacity="0.8"/>
+  <!-- Inner hexagonal facets -->
+  <polygon points="100,28 109,33 109,43 100,48 91,43 91,33" fill="none" stroke="#40c8e0" stroke-width="0.4" opacity="0.5"/>
+  <!-- Central lens glow -->
+  <circle cx="100" cy="38" r="6" fill="#40c8e0" opacity="0.25" filter="url(#sm-glow)"/>
+  <circle cx="100" cy="38" r="3.5" fill="#80e8f8" opacity="0.6" filter="url(#sm-glow)"/>
+  <circle cx="100" cy="38" r="1.5" fill="#ffffff" opacity="0.85"/>
+  <!-- Lens refraction lines -->
+  <line x1="87" y1="31" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <line x1="87" y1="45" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <line x1="113" y1="31" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <line x1="113" y1="45" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <line x1="100" y1="24" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <line x1="100" y1="52" x2="100" y2="38" stroke="#40c8e0" stroke-width="0.3" opacity="0.4"/>
+  <!-- Rotation mechanism ring -->
+  <circle cx="100" cy="38" r="17" fill="none" stroke="#3a3a44" stroke-width="0.8" opacity="0.5"/>
+  <!-- Housing bracket marks -->
+  <line x1="80" y1="38" x2="83" y2="38" stroke="#4a4a54" stroke-width="0.6"/>
+  <line x1="117" y1="38" x2="120" y2="38" stroke="#4a4a54" stroke-width="0.6"/>
+  <line x1="100" y1="18" x2="100" y2="21" stroke="#4a4a54" stroke-width="0.6"/>
+  <line x1="100" y1="55" x2="100" y2="58" stroke="#4a4a54" stroke-width="0.6"/>
+
+  <!-- Antenna spike atop lens -->
+  <line x1="100" y1="18" x2="100" y2="6" stroke="#3a3a44" stroke-width="0.8"/>
+  <circle cx="100" cy="4" r="1.5" fill="#d04040" opacity="0.8" filter="url(#sm-flicker)"/>
+</svg>

@@ -87,6 +87,7 @@ export interface RaidPresentationEnemy {
   threat: RaidEncounterThreat;
   discovered: boolean;
   engagedRaidId?: string;
+  familyId?: string;
 }
 
 export interface RaidPresentationFeature {

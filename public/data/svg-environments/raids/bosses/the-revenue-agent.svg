@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="ra-aura" cx="50%" cy="48%" r="56%">
+      <stop offset="0%" stop-color="#c8a848" stop-opacity="0.09"/>
+      <stop offset="50%" stop-color="#1a1420" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ra-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a1828"/>
+      <stop offset="50%" stop-color="#381020"/>
+      <stop offset="100%" stop-color="#2a0c18"/>
+    </linearGradient>
+    <linearGradient id="ra-desk" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a4838"/>
+      <stop offset="100%" stop-color="#1a3028"/>
+    </linearGradient>
+    <linearGradient id="ra-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8a848"/>
+      <stop offset="100%" stop-color="#8a7430" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="ra-glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ra-cold">
+      <feGaussianBlur stdDeviation="1.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura backdrop -->
+  <ellipse cx="100" cy="140" rx="94" ry="128" fill="url(#ra-aura)"/>
+
+  <!-- Desk surface fused with lower body — wide institutional desk -->
+  <path d="
+    M 20 195 L 40 185 L 160 185 L 180 195
+    L 182 198 L 180 260 L 174 270
+    L 26 270 L 20 260 Z
+  " fill="url(#ra-desk)" stroke="#1a3028" stroke-width="0.8"/>
+  <!-- Desk front face -->
+  <path d="M 20 195 L 180 195 L 180 260 L 20 260 Z" fill="#1a3028" opacity="0.4"/>
+  <!-- Desk drawers -->
+  <rect x="30" y="205" width="40" height="22" rx="1" fill="#1a3028" stroke="#2a4838" stroke-width="0.4"/>
+  <rect x="130" y="205" width="40" height="22" rx="1" fill="#1a3028" stroke="#2a4838" stroke-width="0.4"/>
+  <circle cx="50" cy="216" r="1.2" fill="#c8a848" opacity="0.25"/>
+  <circle cx="150" cy="216" r="1.2" fill="#c8a848" opacity="0.25"/>
+  <!-- Desk gold trim edge -->
+  <line x1="22" y1="196" x2="178" y2="196" stroke="#c8a848" stroke-width="0.6" opacity="0.3"/>
+  <!-- Center drawer -->
+  <rect x="75" y="205" width="50" height="22" rx="1" fill="#1a3028" stroke="#2a4838" stroke-width="0.4"/>
+  <circle cx="100" cy="216" r="1.5" fill="#c8a848" opacity="0.3"/>
+
+  <!-- Desk surface items — papers, inkwell -->
+  <rect x="36" y="180" width="18" height="12" rx="0.5" fill="#2a4838" opacity="0.3" transform="rotate(-5,45,186)"/>
+  <rect x="146" y="178" width="16" height="14" rx="0.5" fill="#2a4838" opacity="0.25" transform="rotate(8,154,185)"/>
+  <circle cx="165" cy="182" r="3" fill="#1a1420" stroke="#2a4838" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Body silhouette — squat, wide, emerging from desk at waist -->
+  <path d="
+    M 100 38
+    L 128 48 L 148 65 L 155 90 L 158 115
+    L 160 145 L 160 175 L 158 190
+    L 42 190 L 40 175 L 40 145
+    L 42 115 L 45 90 L 52 65
+    L 72 48 Z
+  " fill="url(#ra-body)" stroke="rgba(74,24,40,0.5)" stroke-width="0.8"/>
+
+  <!-- Abacus ribcage — horizontal rods with beads across chest -->
+  <line x1="62" y1="100" x2="138" y2="100" stroke="#c8a848" stroke-width="0.4" opacity="0.2"/>
+  <circle cx="72" cy="100" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="80" cy="100" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="88" cy="100" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="118" cy="100" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="126" cy="100" r="2" fill="#c8a848" opacity="0.15"/>
+
+  <line x1="60" y1="112" x2="140" y2="112" stroke="#c8a848" stroke-width="0.4" opacity="0.2"/>
+  <circle cx="70" cy="112" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="78" cy="112" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="86" cy="112" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="94" cy="112" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="120" cy="112" r="2" fill="#c8a848" opacity="0.15"/>
+
+  <line x1="62" y1="124" x2="138" y2="124" stroke="#c8a848" stroke-width="0.4" opacity="0.18"/>
+  <circle cx="74" cy="124" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="82" cy="124" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="112" cy="124" r="2" fill="#c8a848" opacity="0.15"/>
+  <circle cx="120" cy="124" r="2" fill="#c8a848" opacity="0.12"/>
+  <circle cx="128" cy="124" r="2" fill="#c8a848" opacity="0.12"/>
+
+  <!-- Ledger-line patterns on lower torso -->
+  <line x1="56" y1="140" x2="144" y2="140" stroke="#2a4838" stroke-width="0.5" opacity="0.25"/>
+  <line x1="54" y1="150" x2="146" y2="150" stroke="#2a4838" stroke-width="0.4" opacity="0.2"/>
+  <line x1="52" y1="160" x2="148" y2="160" stroke="#2a4838" stroke-width="0.4" opacity="0.18"/>
+  <line x1="50" y1="170" x2="150" y2="170" stroke="#2a4838" stroke-width="0.3" opacity="0.15"/>
+  <!-- Vertical column dividers -->
+  <line x1="80" y1="138" x2="80" y2="175" stroke="#2a4838" stroke-width="0.3" opacity="0.15"/>
+  <line x1="100" y1="136" x2="100" y2="178" stroke="#2a4838" stroke-width="0.4" opacity="0.18"/>
+  <line x1="120" y1="138" x2="120" y2="175" stroke="#2a4838" stroke-width="0.3" opacity="0.15"/>
+
+  <!-- Shoulder pads — bureaucratic epaulettes with gold trim -->
+  <path d="M 52 70 L 32 78 L 30 90 L 34 94 L 52 86 Z" fill="#4a1828" stroke="#381020" stroke-width="0.5"/>
+  <path d="M 148 70 L 168 78 L 170 90 L 166 94 L 148 86 Z" fill="#4a1828" stroke="#381020" stroke-width="0.5"/>
+  <line x1="34" y1="80" x2="50" y2="72" stroke="#c8a848" stroke-width="0.5" opacity="0.25"/>
+  <line x1="150" y1="72" x2="166" y2="80" stroke="#c8a848" stroke-width="0.5" opacity="0.25"/>
+
+  <!-- Head — wide, squat, bureaucratic authority -->
+  <path d="
+    M 100 28
+    L 120 34 L 128 48 L 126 62 L 120 72
+    L 100 76 L 80 72 L 74 62
+    L 72 48 L 80 34 Z
+  " fill="#381020" stroke="#4a1828" stroke-width="0.7"/>
+
+  <!-- Flat bureaucratic cap/visor -->
+  <path d="M 68 44 L 132 44 L 130 48 Q 100 42 70 48 Z" fill="#2a0c18" stroke="#4a1828" stroke-width="0.4"/>
+  <!-- Cap gold band -->
+  <line x1="72" y1="44" x2="128" y2="44" stroke="#c8a848" stroke-width="0.6" opacity="0.3"/>
+  <!-- Cap insignia -->
+  <circle cx="100" cy="38" r="3" fill="none" stroke="#c8a848" stroke-width="0.4" opacity="0.25"/>
+  <circle cx="100" cy="38" r="1" fill="#c8a848" opacity="0.2"/>
+
+  <!-- Eyes — cold precise green-gold -->
+  <ellipse cx="90" cy="54" rx="5" ry="2.8" fill="#2a4838" opacity="0.8"/>
+  <ellipse cx="110" cy="54" rx="5" ry="2.8" fill="#2a4838" opacity="0.8"/>
+  <!-- Eye glow -->
+  <ellipse cx="90" cy="54" rx="3" ry="1.8" fill="#c8a848" opacity="0.5" filter="url(#ra-cold)"/>
+  <ellipse cx="110" cy="54" rx="3" ry="1.8" fill="#c8a848" opacity="0.5" filter="url(#ra-cold)"/>
+  <!-- Pupil slits -->
+  <ellipse cx="90" cy="54" rx="1.2" ry="1.8" fill="#2a4838" opacity="0.7"/>
+  <ellipse cx="110" cy="54" rx="1.2" ry="1.8" fill="#2a4838" opacity="0.7"/>
+
+  <!-- Thin disapproving mouth -->
+  <line x1="92" y1="64" x2="108" y2="64" stroke="#2a0c18" stroke-width="0.8" opacity="0.5"/>
+  <line x1="90" y1="64" x2="92" y2="66" stroke="#2a0c18" stroke-width="0.4" opacity="0.3"/>
+  <line x1="108" y1="64" x2="110" y2="66" stroke="#2a0c18" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Collar and tie — institutional -->
+  <path d="M 88 74 L 100 82 L 112 74" fill="none" stroke="#c8a848" stroke-width="0.5" opacity="0.25"/>
+  <path d="M 98 82 L 100 96 L 102 82 Z" fill="#2a4838" opacity="0.4"/>
+
+  <!-- Left arm — reaching across desk surface -->
+  <path d="M 44 86 L 28 118 L 22 148 L 24 162 L 32 158 L 34 132 L 42 104 Z" fill="#381020" stroke="#4a1828" stroke-width="0.5"/>
+  <!-- Left hand — flat on desk, fingers spread -->
+  <path d="M 22 160 L 16 168 L 14 176 L 18 178 L 24 172 L 30 164 Z" fill="#381020" stroke="#4a1828" stroke-width="0.4"/>
+  <line x1="16" y1="170" x2="14" y2="178" stroke="#4a1828" stroke-width="0.4" opacity="0.5"/>
+  <line x1="20" y1="168" x2="18" y2="176" stroke="#4a1828" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Right arm — holding massive rubber stamp -->
+  <path d="M 156 86 L 172 118 L 176 148 L 174 162 L 166 158 L 164 132 L 158 104 Z" fill="#381020" stroke="#4a1828" stroke-width="0.5"/>
+  <!-- Right hand gripping stamp handle -->
+  <path d="M 174 160 L 180 168 L 178 174 L 170 172 L 168 164 Z" fill="#381020" stroke="#4a1828" stroke-width="0.4"/>
+
+  <!-- Rubber stamp — large, institutional -->
+  <rect x="170" y="168" width="10" height="18" rx="1.5" fill="#2a4838" stroke="#1a3028" stroke-width="0.6"/>
+  <!-- Stamp handle -->
+  <rect x="172" y="162" width="6" height="8" rx="1" fill="#4a1828" stroke="#381020" stroke-width="0.4"/>
+  <!-- Stamp pad face (bottom) — ink stained -->
+  <rect x="170" y="184" width="10" height="3" rx="0.5" fill="#1a1420" stroke="#c8a848" stroke-width="0.3" opacity="0.4"/>
+  <!-- DENIED stamp impression faintly on desk -->
+  <rect x="108" y="182" width="22" height="8" rx="0.5" fill="none" stroke="#4a1828" stroke-width="0.6" opacity="0.2"/>
+  <line x1="110" y1="186" x2="128" y2="186" stroke="#4a1828" stroke-width="0.4" opacity="0.15"/>
+
+  <!-- Gold trim details — institutional authority lines -->
+  <line x1="60" y1="88" x2="140" y2="88" stroke="#c8a848" stroke-width="0.3" opacity="0.15"/>
+  <line x1="54" y1="136" x2="146" y2="136" stroke="#c8a848" stroke-width="0.4" opacity="0.18"/>
+
+  <!-- Desk nameplate -->
+  <rect x="82" y="194" width="36" height="8" rx="1" fill="#1a3028" stroke="#c8a848" stroke-width="0.4" opacity="0.3"/>
+  <line x1="86" y1="198" x2="114" y2="198" stroke="#c8a848" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Faint audit sigil beneath desk -->
+  <circle cx="100" cy="248" r="10" fill="none" stroke="#c8a848" stroke-width="0.4" opacity="0.1"/>
+  <circle cx="100" cy="248" r="5" fill="none" stroke="#c8a848" stroke-width="0.3" opacity="0.12"/>
+  <circle cx="100" cy="248" r="1.5" fill="#c8a848" opacity="0.1"/>
+</svg>

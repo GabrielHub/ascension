@@ -243,6 +243,7 @@ export interface RaidEnemyMarker {
   y: number;
   threat: EnemyThreatLevel;
   discovered: boolean;
+  familyId?: string;
 }
 
 export type DungeonFeatureKind = "loot-cache" | "intel-node" | "hazard-zone" | "debris-pile";

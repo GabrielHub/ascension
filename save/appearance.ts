@@ -99,6 +99,169 @@ function parseOperatorAppearancePartEntries(value: unknown, path: string): unkno
 
 export const OPERATOR_APPEARANCE_RECIPE_IDS = [...recipeIds] as readonly string[];
 
+// ── Promoted recruit pool ──────────────────────────────────────────────
+// Recipes explicitly promoted for live recruitment content. The visitor
+// pipeline should draw from this pool instead of the entire playground.
+// Recipes used by bootstrap operators are excluded — they belong to
+// specific authored characters and should not appear on random recruits.
+// Bootstrap recipe IDs: vera-004, dax-008, jin-005, ryn-011, ash-006, lena-007
+
+export interface PromotedRecruitIdentity {
+  recipeId: string;
+  name: string;
+  roleTag: string;
+  specialtyTag: string;
+}
+
+export const PROMOTED_RECRUIT_IDENTITIES: readonly PromotedRecruitIdentity[] = [
+  {
+    recipeId: "kael-001",
+    name: "Kael Reyes",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "mira-002",
+    name: "Mira Vasquez",
+    roleTag: "role:medic",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "soren-003",
+    name: "Soren Lindqvist",
+    roleTag: "role:scout",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "sera-010",
+    name: "Sera Okonkwo",
+    roleTag: "role:medic",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "nyx-012",
+    name: "Nyx Ferreira",
+    roleTag: "role:scout",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "cole-013",
+    name: "Cole Abrams",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "yuki-014",
+    name: "Yuki Tanabe",
+    roleTag: "role:medic",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "zara-015",
+    name: "Zara Mbeki",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "kai-016",
+    name: "Kai Espinoza",
+    roleTag: "role:scout",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "ren-017",
+    name: "Ren Nakamura",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "lux-018",
+    name: "Lux Almeida",
+    roleTag: "role:medic",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "tova-019",
+    name: "Tova Strand",
+    roleTag: "role:scout",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "haze-020",
+    name: "Haze Calderon",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "frost-022",
+    name: "Frost Ivanenko",
+    roleTag: "role:scout",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "wren-024",
+    name: "Wren Baptiste",
+    roleTag: "role:medic",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "storm-028",
+    name: "Storm Oduya",
+    roleTag: "role:field_lead",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "flint-030",
+    name: "Flint Marquez",
+    roleTag: "role:scout",
+    specialtyTag: "focus:extraction",
+  },
+  {
+    recipeId: "vex-031",
+    name: "Vex Ellison",
+    roleTag: "role:medic",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "alder-033",
+    name: "Alder Sinclair",
+    roleTag: "role:scout",
+    specialtyTag: "focus:containment",
+  },
+  {
+    recipeId: "opal-035",
+    name: "Opal Nwosu",
+    roleTag: "role:medic",
+    specialtyTag: "focus:extraction",
+  },
+];
+
+/** Recipe IDs that are promoted for live recruitment — excludes bootstrap-assigned recipes. */
+export const PROMOTED_RECRUIT_RECIPE_IDS: readonly string[] = PROMOTED_RECRUIT_IDENTITIES.map(
+  (identity) => identity.recipeId,
+);
+
+/** Select a promoted recruit identity by stable key. Returns undefined only if the pool is empty. */
+export function selectPromotedRecruitIdentity(
+  stableKey: string,
+  roleTag?: string,
+): PromotedRecruitIdentity | undefined {
+  const candidates = roleTag
+    ? PROMOTED_RECRUIT_IDENTITIES.filter((identity) => identity.roleTag === roleTag)
+    : PROMOTED_RECRUIT_IDENTITIES;
+  if (candidates.length === 0) return undefined;
+  return candidates[stableStringHash(stableKey) % candidates.length];
+}
+
+/** Select a recipe from the promoted recruit pool instead of the full playground. */
+export function selectPromotedRecruitRecipeId(stableKey: string): string {
+  if (PROMOTED_RECRUIT_RECIPE_IDS.length === 0) return fallbackRecipeId;
+  return (
+    PROMOTED_RECRUIT_RECIPE_IDS[stableStringHash(stableKey) % PROMOTED_RECRUIT_RECIPE_IDS.length] ??
+    fallbackRecipeId
+  );
+}
+
 const BODY_SILHOUETTE_TO_BUILD: Record<string, string> = {
   "armored-structured": "broad",
   "elegant-light": "lean",

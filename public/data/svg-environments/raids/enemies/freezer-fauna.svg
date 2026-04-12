@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Freezer Fauna — hexagon (crystal/ice), ice blue -->
+  <path d="M8,2 L13.2,5 L13.2,11 L8,14 L2.8,11 L2.8,5 Z" fill="rgba(96,168,200,0.15)" stroke="rgba(96,168,200,0.3)" stroke-width="0.7"/>
+  <circle cx="8" cy="8" r="1.2" fill="rgba(96,168,200,0.25)"/>
+</svg>

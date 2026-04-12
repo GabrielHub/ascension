@@ -1629,6 +1629,334 @@ export const itemTemplates = [
     statEffects: [],
     consumableBuff: { stat: "endurance", value: 3, durationMinutes: 120 },
   },
+
+  // ── Themed family loot: harbor district (D-rank) ────────────────────
+  {
+    id: "loot/monster-part/gravity-residue",
+    kind: "item",
+    name: "Gravity Residue",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "A metallic smear that falls upward if you let go. Dock parasites leave it on every surface they touch.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/fold-fragment",
+    kind: "item",
+    name: "Fold Fragment",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "A shard of packing material that shows a different warehouse when viewed from each angle.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/revenue-seal",
+    kind: "item",
+    name: "Revenue Seal",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "An official-looking stamp that binds whatever it touches to the nearest flat surface. Still warm.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/loop-shard",
+    kind: "item",
+    name: "Loop Shard",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "A crystallized slice of repeated time. It replays the same three seconds of a loading bay over and over.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/pressure-condensate",
+    kind: "item",
+    name: "Pressure Condensate",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "Liquid steel that formed under impossible compression. It stays liquid at room temperature and weighs too much.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+  {
+    id: "loot/monster-part/signal-filament",
+    kind: "item",
+    name: "Signal Filament",
+    tags: ["rank:d", "loot:monster-part"],
+    description:
+      "A thread of solidified harbor light. It bends around corners and hums at a frequency that makes your teeth itch.",
+    category: "loot",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 8,
+    statEffects: [],
+  },
+
+  // ── D-rank weapons: harbor district ─────────────────────────────────
+  {
+    id: "weapon/dock-hook",
+    kind: "item",
+    name: "Dock Hook",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "A longshoreman's cargo hook reforged with gravity-residue alloy. Pulls targets off balance on impact.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 120,
+    sellPrice: 60,
+    statEffects: [
+      { stat: "attack", value: 5 },
+      { stat: "speed", value: 2 },
+    ],
+  },
+  {
+    id: "weapon/folded-rebar",
+    kind: "item",
+    name: "Folded Rebar",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "Structural steel bent through a spatial fold. The bend point hits harder than either end.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 140,
+    sellPrice: 70,
+    statEffects: [
+      { stat: "attack", value: 6 },
+      { stat: "endurance", value: 3 },
+    ],
+  },
+  {
+    id: "weapon/stamp-staff",
+    kind: "item",
+    name: "Stamp Staff",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "A revenue office stamp mounted on a broom handle. Anything it marks sticks to the floor for a few seconds.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 130,
+    sellPrice: 65,
+    statEffects: [
+      { stat: "attack", value: 4 },
+      { stat: "intelligence", value: 3 },
+    ],
+  },
+  {
+    id: "weapon/loop-wrench",
+    kind: "item",
+    name: "Loop Wrench",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "A pipe wrench caught in a three-second time loop. Swings land twice if you time it right.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 125,
+    sellPrice: 62,
+    statEffects: [
+      { stat: "attack", value: 5 },
+      { stat: "perception", value: 3 },
+    ],
+  },
+  {
+    id: "weapon/pressure-spike",
+    kind: "item",
+    name: "Pressure Spike",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "A ballast valve sharpened to a point. Impossibly heavy for its size and slow to swing, but the impact is final.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 160,
+    sellPrice: 80,
+    statEffects: [
+      { stat: "attack", value: 7 },
+      { stat: "speed", value: -1 },
+    ],
+  },
+  {
+    id: "weapon/signal-mace",
+    kind: "item",
+    name: "Signal Mace",
+    tags: ["rank:d", "slot:weapon"],
+    description:
+      "A harbor signal lamp housing welded to a steel rod. Emits a disorienting flash on heavy strikes.",
+    category: "weapon",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 135,
+    sellPrice: 67,
+    statEffects: [
+      { stat: "attack", value: 4 },
+      { stat: "perception", value: 4 },
+    ],
+  },
+
+  // ── D-rank outfit overlays: harbor district ─────────────────────────
+  {
+    id: "outfit-overlay/gravity-weave-vest",
+    kind: "item",
+    name: "Gravity-Weave Vest",
+    tags: ["rank:d", "slot:outfit-overlay"],
+    description:
+      "A dock worker's vest threaded with gravity-residue fibers. Incoming force disperses downward into the floor.",
+    category: "outfit-overlay",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 150,
+    sellPrice: 75,
+    statEffects: [
+      { stat: "defense", value: 4 },
+      { stat: "endurance", value: 3 },
+    ],
+  },
+  {
+    id: "outfit-overlay/fold-stitched-jacket",
+    kind: "item",
+    name: "Fold-Stitched Jacket",
+    tags: ["rank:d", "slot:outfit-overlay"],
+    description:
+      "A courier jacket with seams that pass through folded space. Hard to hit the wearer when part of them isn't technically here.",
+    category: "outfit-overlay",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 145,
+    sellPrice: 72,
+    statEffects: [
+      { stat: "defense", value: 3 },
+      { stat: "speed", value: 3 },
+    ],
+  },
+  {
+    id: "outfit-overlay/audit-coat",
+    kind: "item",
+    name: "Audit Coat",
+    tags: ["rank:d", "slot:outfit-overlay"],
+    description:
+      "A revenue office coat lined with stamped ward-paper. It turns incoming force into a shuddering paper-cut halo instead of a direct hit.",
+    category: "outfit-overlay",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 155,
+    sellPrice: 77,
+    statEffects: [
+      { stat: "defense", value: 4 },
+      { stat: "intelligence", value: 2 },
+    ],
+  },
+
+  // ── D-rank accessories: harbor district ─────────────────────────────
+  {
+    id: "accessory/ledger-monocle",
+    kind: "item",
+    name: "Ledger Monocle",
+    tags: ["rank:d", "slot:accessory"],
+    description:
+      "A customs inspector's monocle that highlights structural weaknesses. Also works on shipping manifests.",
+    category: "accessory",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 110,
+    sellPrice: 55,
+    statEffects: [
+      { stat: "perception", value: 5 },
+      { stat: "intelligence", value: 2 },
+    ],
+  },
+  {
+    id: "accessory/loop-chronometer",
+    kind: "item",
+    name: "Loop Chronometer",
+    tags: ["rank:d", "slot:accessory"],
+    description:
+      "A pocket watch salvaged from a time loop. The second hand moves faster than it should, and so does the wearer.",
+    category: "accessory",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 115,
+    sellPrice: 57,
+    statEffects: [
+      { stat: "speed", value: 4 },
+      { stat: "perception", value: 2 },
+    ],
+  },
+  {
+    id: "accessory/signal-prism",
+    kind: "item",
+    name: "Signal Prism",
+    tags: ["rank:d", "slot:accessory"],
+    description:
+      "A harbor lens prism mounted in a brass cuff. It splits hostile movement into colored afterimages a second before impact.",
+    category: "accessory",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 120,
+    sellPrice: 60,
+    statEffects: [
+      { stat: "perception", value: 4 },
+      { stat: "speed", value: 2 },
+    ],
+  },
+
+  // ── D-rank consumables: harbor district ─────────────────────────────
+  {
+    id: "consumable/pressure-ration",
+    kind: "item",
+    name: "Pressure Ration",
+    tags: ["rank:d", "consumable:buff"],
+    description:
+      "A compressed meal bar from the ballast crews. Dense enough to chip a tooth and filling enough to last a full shift.",
+    category: "consumable",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 0,
+    statEffects: [],
+    consumableBuff: { stat: "endurance", value: 4, durationMinutes: 30 },
+  },
+  {
+    id: "consumable/signal-tonic",
+    kind: "item",
+    name: "Signal Tonic",
+    tags: ["rank:d", "consumable:buff"],
+    description:
+      "A bitter tincture brewed from dissolved signal filaments. Sharpens awareness but makes your fillings hum.",
+    category: "consumable",
+    rank: "d",
+    rankTone: "heightened",
+    buyPrice: 0,
+    sellPrice: 0,
+    statEffects: [],
+    consumableBuff: { stat: "perception", value: 4, durationMinutes: 30 },
+  },
 ] satisfies readonly ItemTemplate[];
 
 // ── Prep Recipes ──────────────────────────────────────────────────────
@@ -1678,6 +2006,30 @@ export const prepRecipeTemplates: readonly PrepRecipeTemplate[] = [
       { itemId: "loot/monster-part/ichor", quantity: 2 },
     ],
     outputItemId: "consumable/endurance-draught",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+  {
+    id: "prep-recipe/pressure-ration",
+    name: "Pressure Ration",
+    description: "Compress condensate and bone shards into a dense meal bar.",
+    inputs: [
+      { itemId: "loot/monster-part/pressure-condensate", quantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", quantity: 1 },
+    ],
+    outputItemId: "consumable/pressure-ration",
+    outputQuantity: 1,
+    requiredRoomTag: "ops:staging",
+  },
+  {
+    id: "prep-recipe/signal-tonic",
+    name: "Signal Tonic",
+    description: "Dissolve signal filaments in crystal-eye extract for a perception tincture.",
+    inputs: [
+      { itemId: "loot/monster-part/signal-filament", quantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", quantity: 1 },
+    ],
+    outputItemId: "consumable/signal-tonic",
     outputQuantity: 1,
     requiredRoomTag: "ops:staging",
   },
@@ -2391,6 +2743,128 @@ export const dropTables = [
       { itemId: "outfit-overlay/signal-dampening-coat", weight: 5, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/monster-part/threat-gland", weight: 15, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/ichor", weight: 10, minQuantity: 2, maxQuantity: 4 },
+    ],
+  },
+
+  // ── D-rank family tables: harbor district ─────────────────────────────
+  {
+    id: "drop-table/gravity-lice-regular",
+    entries: [
+      { itemId: "loot/monster-part/gravity-residue", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/void-residue", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/fold-walkers-regular",
+    entries: [
+      { itemId: "loot/monster-part/fold-fragment", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/prop-residue", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/curtain-thread", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/ledger-wraiths-regular",
+    entries: [
+      { itemId: "loot/monster-part/revenue-seal", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/void-residue", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/loop-echoes-regular",
+    entries: [
+      { itemId: "loot/monster-part/loop-shard", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/bone-shard", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/threat-gland", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/pressure-hulks-regular",
+    entries: [
+      {
+        itemId: "loot/monster-part/pressure-condensate",
+        weight: 5,
+        minQuantity: 1,
+        maxQuantity: 2,
+      },
+      { itemId: "loot/monster-part/pressure-seal", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/turbine-tooth", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/signal-phantoms-regular",
+    entries: [
+      {
+        itemId: "loot/monster-part/signal-filament",
+        weight: 5,
+        minQuantity: 1,
+        maxQuantity: 2,
+      },
+      { itemId: "loot/monster-part/crystal-eye", weight: 3, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/void-residue", weight: 2, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+
+  // ── D-rank boss tables: harbor district ───────────────────────────────
+  {
+    id: "drop-table/the-dockmaster-boss",
+    entries: [
+      { itemId: "loot/monster-part/gravity-residue", weight: 4, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "weapon/dock-hook", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/void-residue", weight: 3, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-manifest-clerk-boss",
+    entries: [
+      { itemId: "loot/monster-part/fold-fragment", weight: 4, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "weapon/folded-rebar", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/prop-residue", weight: 3, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-revenue-agent-boss",
+    entries: [
+      { itemId: "loot/monster-part/revenue-seal", weight: 4, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "weapon/stamp-staff", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "outfit-overlay/audit-coat", weight: 1, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 3, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-lift-operator-boss",
+    entries: [
+      { itemId: "loot/monster-part/loop-shard", weight: 4, minQuantity: 2, maxQuantity: 4 },
+      { itemId: "weapon/loop-wrench", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/bone-shard", weight: 3, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-ballast-master-boss",
+    entries: [
+      {
+        itemId: "loot/monster-part/pressure-condensate",
+        weight: 4,
+        minQuantity: 2,
+        maxQuantity: 4,
+      },
+      { itemId: "weapon/pressure-spike", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/pressure-seal", weight: 3, minQuantity: 1, maxQuantity: 2 },
+    ],
+  },
+  {
+    id: "drop-table/the-signalman-boss",
+    entries: [
+      {
+        itemId: "loot/monster-part/signal-filament",
+        weight: 4,
+        minQuantity: 2,
+        maxQuantity: 4,
+      },
+      { itemId: "weapon/signal-mace", weight: 2, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "accessory/signal-prism", weight: 1, minQuantity: 1, maxQuantity: 1 },
+      { itemId: "loot/monster-part/crystal-eye", weight: 3, minQuantity: 1, maxQuantity: 2 },
     ],
   },
 ] satisfies readonly DropTable[];

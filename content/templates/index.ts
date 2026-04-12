@@ -1,6 +1,6 @@
 import { validateEffect } from "../effects";
 import { validateRequirement } from "../requirements";
-import { bossById } from "./bosses";
+import { bossById, bossTemplates } from "./bosses";
 import { buildingTemplates } from "./buildings";
 import { craftRecipeTemplates } from "./crafting";
 import { districtTemplates } from "./districts";
@@ -12,7 +12,7 @@ import { missionTemplates } from "./missions";
 import { presenterTemplates } from "./presenters";
 import { resourceTemplates } from "./resources";
 import { roomTemplates } from "./rooms";
-import { siteConceptById } from "./site-concepts";
+import { siteConceptById, siteConceptTemplates } from "./site-concepts";
 import {
   type BuildingTemplate,
   type CraftRecipeTemplate,
@@ -967,6 +967,103 @@ function validateCraftRecipeTemplates(
   });
 }
 
+// ── Rank-tone escalation validation ────────────────────────────────────
+
+const VALID_RANK_TONES = new Set(["grounded", "heightened", "surreal", "mythic"]);
+
+const RANK_TO_ALLOWED_TONES: Record<string, readonly string[]> = {
+  f: ["grounded"],
+  e: ["grounded"],
+  d: ["grounded", "heightened"],
+  c: ["heightened", "surreal"],
+  b: ["surreal"],
+  a: ["surreal", "mythic"],
+  s: ["mythic"],
+};
+
+function validateRankToneConsistency(issues: TemplateRegistryValidationIssue[]): void {
+  // Validate boss rank tones match their rank
+  for (const boss of bossTemplates) {
+    if (!VALID_RANK_TONES.has(boss.rankTone)) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: boss.bossId,
+        message: `Boss "${boss.bossId}" has invalid rankTone "${boss.rankTone}".`,
+      });
+      continue;
+    }
+    const allowed = RANK_TO_ALLOWED_TONES[boss.rank];
+    if (allowed && !allowed.includes(boss.rankTone)) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: boss.bossId,
+        message: `Boss "${boss.bossId}" rank "${boss.rank}" is incompatible with rankTone "${boss.rankTone}" (allowed: ${allowed.join(", ")}).`,
+      });
+    }
+  }
+
+  // Validate site concept rank tones match their rank pools
+  for (const site of siteConceptTemplates) {
+    if (!VALID_RANK_TONES.has(site.rankTone)) {
+      issues.push({
+        category: "missions",
+        templateId: site.siteConceptId,
+        message: `Site "${site.siteConceptId}" has invalid rankTone "${site.rankTone}".`,
+      });
+      continue;
+    }
+    for (const rank of site.rankPool) {
+      const allowed = RANK_TO_ALLOWED_TONES[rank];
+      if (allowed && !allowed.includes(site.rankTone)) {
+        issues.push({
+          category: "missions",
+          templateId: site.siteConceptId,
+          message: `Site "${site.siteConceptId}" rank pool includes "${rank}" but rankTone "${site.rankTone}" is not allowed for that rank (allowed: ${allowed.join(", ")}).`,
+        });
+      }
+    }
+  }
+}
+
+// ── Asset-parity validation ───────────────────────────────────────────
+
+function validateAssetParity(
+  enemyFamilies: readonly EnemyFamilyTemplate[],
+  issues: TemplateRegistryValidationIssue[],
+): void {
+  // Validate every site concept references valid bosses and enemy families
+  for (const site of siteConceptTemplates) {
+    if (!bossById.has(site.bossId)) {
+      issues.push({
+        category: "missions",
+        templateId: site.siteConceptId,
+        message: `Site concept references unknown boss "${site.bossId}".`,
+      });
+    }
+    const familyLookup = new Map(enemyFamilies.map((f) => [f.familyId, f]));
+    for (const familyId of site.enemyFamilyIds) {
+      if (!familyLookup.has(familyId)) {
+        issues.push({
+          category: "missions",
+          templateId: site.siteConceptId,
+          message: `Site concept references unknown enemy family "${familyId}".`,
+        });
+      }
+    }
+  }
+
+  // Validate every boss has a drop table reference
+  for (const boss of bossTemplates) {
+    if (!boss.dropTableId || boss.dropTableId.trim().length === 0) {
+      issues.push({
+        category: "enemyFamilies",
+        templateId: boss.bossId,
+        message: `Boss "${boss.bossId}" is missing a drop table reference.`,
+      });
+    }
+  }
+}
+
 function makeEnemyFamilyLookup(
   families: readonly EnemyFamilyTemplate[],
 ): ReadonlyMap<string, EnemyFamilyTemplate> {
@@ -1065,6 +1162,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   validateEnemyFamilies(enemyFamilies, dropTableLookup, issues);
   validateDistrictTemplates(districts, factionLookup.byId, issues);
   validateFactionTemplates(factions, issues);
+  validateRankToneConsistency(issues);
+  validateAssetParity(enemyFamilies, issues);
   validateCraftRecipeTemplates(
     craftRecipes,
     itemLookup.byId,

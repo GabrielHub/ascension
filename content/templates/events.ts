@@ -131,4 +131,139 @@ export const eventTemplates = [
     pressureTags: ["pressure:reputation"],
     weight: 1,
   },
+
+  // ── Porter's-era midgame events ────────────────────────────────────────
+
+  {
+    id: "event/waterfront_inspection",
+    kind: "event",
+    name: "Waterfront Inspection",
+    tags: ["event:external", "pressure:reputation", "era:porters"],
+    description:
+      "Harbor authority inspectors are making rounds along the waterfront. Any guild running contracts near the docks will need permits in order.",
+    category: "regulatory_scrutiny",
+    pressureTags: ["pressure:reputation", "pressure:cash"],
+    weight: 1,
+  },
+  {
+    id: "event/harbor_authority_audit",
+    kind: "event",
+    name: "Harbor Authority Audit",
+    tags: ["event:external", "pressure:reputation", "pressure:cash", "era:porters"],
+    description:
+      "The harbor authority has flagged recent containment work near the port for a full operational review. Paperwork and compliance costs incoming.",
+    category: "regulatory_scrutiny",
+    pressureTags: ["pressure:reputation", "pressure:cash"],
+    weight: 1,
+  },
+  {
+    id: "event/dock_worker_dispute",
+    kind: "event",
+    name: "Dock Worker Dispute",
+    tags: ["event:staff", "pressure:morale", "pressure:loyalty", "era:porters"],
+    description:
+      "A disagreement between operators about waterfront shift coverage has escalated. Someone pulled rank, someone else took it personally.",
+    category: "team_friction",
+    pressureTags: ["pressure:morale", "pressure:loyalty"],
+    weight: 1,
+  },
+  {
+    id: "event/license_renewal_pressure",
+    kind: "event",
+    name: "License Renewal Pressure",
+    tags: ["event:external", "pressure:cash", "pressure:reputation", "era:porters"],
+    description:
+      "The guild's waterfront operating license is up for renewal. The borough office wants proof of compliance, and that proof is expensive.",
+    category: "economic_pressure",
+    pressureTags: ["pressure:cash", "pressure:reputation"],
+    weight: 1,
+  },
+  {
+    id: "event/rival_dockside_bid",
+    kind: "event",
+    name: "Rival Dockside Bid",
+    tags: ["event:external", "pressure:loyalty", "pressure:reputation", "era:porters"],
+    description:
+      "A competing guild has posted a recruitment board two blocks from your front door. Their signing bonuses are hard to ignore.",
+    category: "rival_poaching",
+    pressureTags: ["pressure:loyalty", "pressure:reputation"],
+    weight: 1,
+  },
+  {
+    id: "event/operator_shore_leave",
+    kind: "event",
+    name: "Operator Shore Leave",
+    tags: ["event:staff", "pressure:morale", "era:porters"],
+    description:
+      "A senior operator has requested extended downtime after back-to-back waterfront contracts. Denying it risks morale; approving it costs coverage.",
+    category: "departure_warning",
+    pressureTags: ["pressure:morale", "pressure:loyalty"],
+    weight: 1,
+  },
+  {
+    id: "event/supply_chain_delay",
+    kind: "event",
+    name: "Supply Chain Delay",
+    tags: ["event:economy", "pressure:cash", "era:porters"],
+    description:
+      "A shipping disruption at the port has delayed resupply of field consumables. Market prices are climbing and your stock is thinning.",
+    category: "supply_shortage",
+    pressureTags: ["pressure:cash"],
+    weight: 1,
+  },
+  {
+    id: "event/public_relations_incident",
+    kind: "event",
+    name: "Public Relations Incident",
+    tags: ["event:external", "pressure:reputation", "era:porters"],
+    description:
+      "A containment failure near a busy waterfront promenade made the local news. The guild's name was mentioned. The borough office is not pleased.",
+    category: "breach_emergency",
+    pressureTags: ["pressure:reputation", "pressure:casualty"],
+    weight: 1,
+  },
+  {
+    id: "event/bar_recruitment_drive",
+    kind: "event",
+    name: "Bar Recruitment Drive",
+    tags: ["event:operations", "pressure:reputation", "era:porters"],
+    description:
+      "Word of mouth at Porter's has drawn a wave of walk-in candidates. Quality is mixed, but the bar is busier than usual.",
+    category: "contract_opportunity",
+    pressureTags: ["pressure:reputation"],
+    weight: 1,
+  },
+  {
+    id: "event/waterfront_containment_breach",
+    kind: "event",
+    name: "Waterfront Containment Breach",
+    tags: ["event:response", "pressure:casualty", "pressure:time", "era:porters"],
+    description:
+      "Something from a recently cleared dock site has resurfaced outside the containment perimeter. Emergency staffing required before it reaches the pier.",
+    category: "breach_emergency",
+    pressureTags: ["pressure:casualty", "pressure:time"],
+    weight: 1,
+  },
+  {
+    id: "event/labor_board_complaint",
+    kind: "event",
+    name: "Labor Board Complaint",
+    tags: ["event:external", "pressure:reputation", "pressure:morale", "era:porters"],
+    description:
+      "An anonymous complaint has been filed with the labor board regarding operator work hours and hazard pay. An investigation is pending.",
+    category: "regulatory_scrutiny",
+    pressureTags: ["pressure:reputation", "pressure:morale"],
+    weight: 1,
+  },
+  {
+    id: "event/retention_bonus_demand",
+    kind: "event",
+    name: "Retention Bonus Demand",
+    tags: ["event:staff", "pressure:cash", "pressure:loyalty", "era:porters"],
+    description:
+      "Your top-performing operator has heard what rivals are paying. They want a retention bonus or they are shopping around.",
+    category: "departure_warning",
+    pressureTags: ["pressure:cash", "pressure:loyalty"],
+    weight: 1,
+  },
 ] satisfies readonly EventTemplate[];

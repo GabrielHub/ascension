@@ -748,6 +748,7 @@ function buildTranscriptWorldMarkers(
   packet: ActiveRaidPacketRecord,
   run: NonNullable<ActiveRaidPacketRecord["raidRun"]>,
   steps: Readonly<NonNullable<ActiveRaidPacketRecord["raidRun"]>["steps"]>,
+  enemyFamilyLookup?: ReadonlyMap<string, string>,
 ): {
   enemies: RaidPresentationEnemy[];
   features: RaidPresentationFeature[];
@@ -784,6 +785,7 @@ function buildTranscriptWorldMarkers(
       id: `${packet.id}:${step.siteNodeId}:${step.enemyTemplateId ?? "generic"}`,
       threat: "generic",
       discovered: true,
+      familyId: step.enemyTemplateId ? enemyFamilyLookup?.get(step.enemyTemplateId) : undefined,
       ...getCellCenter(node.x, node.y),
     });
   }
@@ -844,6 +846,10 @@ function ensureRaidPresentationSeed(context: SimSystemContext, contractSiteId: s
   }
 
   const rng = new SeededRng(seedFromSimulationKey(context, `raid-presentation:${contractSiteId}`));
+  const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+  const siteConceptId = contractSite?.siteConceptId;
+  const siteConcept = siteConceptId ? siteConceptById.get(siteConceptId) : undefined;
+  const seedFamilyId = siteConcept?.enemyFamilyIds?.[0];
   const features: RaidPresentationFeature[] = [
     {
       id: `${contractSiteId}:feature:intel-0`,
@@ -875,12 +881,14 @@ function ensureRaidPresentationSeed(context: SimSystemContext, contractSiteId: s
       id: `${contractSiteId}:enemy:generic-0`,
       threat: "generic",
       discovered: false,
+      familyId: seedFamilyId,
       ...getCellCenter(4 + rng.int(0, 1), 6),
     },
     {
       id: `${contractSiteId}:enemy:elite-0`,
       threat: "elite",
       discovered: false,
+      familyId: seedFamilyId,
       ...getCellCenter(9, 9 + rng.int(0, 1)),
     },
     {
@@ -2735,6 +2743,12 @@ function updateRaidPresentation(context: SimSystemContext): void {
   const transcriptEnemyMarkers = new Map<string, RaidPresentationEnemy>();
   const transcriptFeatureMarkers = new Map<string, RaidPresentationFeature>();
   const hasTranscriptPackets = activePackets.some((packet) => packet.raidRun !== undefined);
+  const enemyFamilyLookup = new Map<string, string>();
+  for (const family of context.registry.enemyFamilies) {
+    for (const member of family.members) {
+      enemyFamilyLookup.set(member.enemyTemplateId, family.familyId);
+    }
+  }
   const operatorEntityById = new Map(
     context.runtimeState.operatorEntities.map((entity) => [OperatorIdentity.id[entity], entity]),
   );
@@ -2799,7 +2813,12 @@ function updateRaidPresentation(context: SimSystemContext): void {
         });
       }
 
-      const transcriptMarkers = buildTranscriptWorldMarkers(packet, run, playbackSteps);
+      const transcriptMarkers = buildTranscriptWorldMarkers(
+        packet,
+        run,
+        playbackSteps,
+        enemyFamilyLookup,
+      );
       transcriptMarkers.features.forEach((feature) => {
         transcriptFeatureMarkers.set(feature.id, feature);
       });

@@ -513,6 +513,7 @@ export interface Phase1RaidEnemyMarkerView {
   y: number;
   threat: RaidEncounterThreat;
   discovered: boolean;
+  familyId?: string;
 }
 
 export interface Phase1RaidFeatureMarkerView {
@@ -3249,6 +3250,7 @@ function applyWorldSnapshot(
                   y: enemy.y,
                   threat: enemy.threat,
                   discovered: enemy.discovered,
+                  familyId: enemy.familyId,
                 })),
                 featureMarkers: runtimeState.raidPresentation.features.map((feature) => ({
                   id: feature.id,

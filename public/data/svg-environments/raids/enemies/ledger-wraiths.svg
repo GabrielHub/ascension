@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Ledger Wraiths — page rectangle with horizontal lines and stamp seal, parchment -->
+  <rect x="4.5" y="2.5" width="7" height="11" rx="0.5" fill="rgba(184,168,112,0.15)" stroke="rgba(184,168,112,0.35)" stroke-width="0.6"/>
+  <path d="M6,5.5 L10,5.5 M6,8 L10,8 M6,10.5 L10,10.5" fill="none" stroke="rgba(184,168,112,0.3)" stroke-width="0.5"/>
+  <!-- Stamp seal — D-rank bureaucratic authority mark -->
+  <circle cx="9.5" cy="11.5" r="1.2" fill="rgba(160,80,80,0.2)" stroke="rgba(160,80,80,0.3)" stroke-width="0.4"/>
+</svg>

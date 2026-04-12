@@ -1,6 +1,7 @@
 import { removeEntity } from "bitecs";
 
 import { getRosterFlowConfig } from "lib/policies";
+import { selectPromotedRecruitIdentity } from "save/appearance";
 import { BuildingAuthority, VisitorState } from "../components";
 import {
   formatIdentityRuntimeText,
@@ -230,9 +231,17 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
     BuildingAuthority.attractionWeightByTag[buildingEntity]?.[desiredRoleTag] ?? 0;
   const buildingQualityBonus = getActiveBuildingTemplate(context).recruitmentQualityBonus ?? 0;
 
+  // Try the promoted recruit pool first for deliberate identity coverage.
+  // Falls back to the deterministic name pool when no promoted identity matches.
+  const stableKey = `visitor/${sequence}`;
+  const promotedIdentity = selectPromotedRecruitIdentity(stableKey, desiredRoleTag);
+  const visitorName =
+    promotedIdentity?.name ?? VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length];
+
   spawnVisitorEntity(context, {
-    name: VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length],
+    name: visitorName,
     desiredRoleTag,
+    specialtyTag: promotedIdentity?.specialtyTag,
     patience: Math.max(
       180,
       Math.round(BASE_VISITOR_PATIENCE_MINUTES * rosterFlow.visitorPatienceMultiplier),
@@ -240,13 +249,14 @@ export const advanceVisitorPoolSystem: SimSystem = (context, deltaMs) => {
     quality:
       50 + rosterFlow.visitorBaseQualityBonus + attractionBonus * 6 + buildingQualityBonus * 5,
     expectedLoyalty: 45 + attractionBonus * 4 + buildingQualityBonus * 3,
+    presetId: promotedIdentity?.recipeId,
   });
 
   BuildingAuthority.lastVisitorSpawnTick[buildingEntity] = currentMinute;
   context.runtimeState.pendingCueIds.push("hq.visitor");
   pushRuntimeEvent(context, {
     kind: "staffing_change",
-    message: `${VISITOR_NAMES[(sequence - 1) % VISITOR_NAMES.length]} arrived looking for work. ${describeArrivalPolicy(
+    message: `${visitorName} arrived looking for work. ${describeArrivalPolicy(
       context,
       BuildingAuthority.policies[buildingEntity]?.rosterFlow ?? "open_doors",
     )}`,

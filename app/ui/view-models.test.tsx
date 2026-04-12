@@ -8,7 +8,12 @@ import {
   createBootstrapWorldSnapshot,
 } from "sim";
 
-import { buildHqViewFromPhase1, buildHqViewModel, buildOpsViewFromPhase1 } from "./view-models";
+import {
+  buildHqViewFromPhase1,
+  buildHqViewModel,
+  buildInventoryViewModels,
+  buildOpsViewFromPhase1,
+} from "./view-models";
 
 describe("phase 1 view models", () => {
   it("keeps applied room upgrades visible in the HQ panel model", () => {
@@ -268,6 +273,26 @@ describe("phase 1 view models", () => {
         projectedLoyalty: 77,
         canAccept: firstVisitor.canAccept,
         canReplace: firstVisitor.canReplace,
+      }),
+    );
+  });
+
+  it("classifies Porter's consumables into the dedicated consumables bucket", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const phase2View = simulation.getPhase2View();
+
+    const inventory = buildInventoryViewModels(
+      {
+        ...phase2View,
+        inventory: [{ itemId: "consumable/pressure-ration", quantity: 2 }],
+      },
+      templateRegistry,
+    );
+
+    expect(inventory).toContainEqual(
+      expect.objectContaining({
+        itemId: "consumable/pressure-ration",
+        category: "consumables",
       }),
     );
   });

@@ -1936,6 +1936,702 @@ export const bossTemplates: readonly BossProfile[] = [
       ],
     },
   },
+
+  // ── D-rank bosses (expanded pool) ─────────────────────────────────────
+
+  {
+    bossId: "boss/the-dockmaster",
+    name: "The Dockmaster",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:area-damage", "boss:speed-drain"],
+    weaknesses: [
+      { kind: "role", target: "role:scout", multiplier: 1.3 },
+      { kind: "stat", target: "speed", multiplier: 1.2 },
+    ],
+    attack: 36,
+    defense: 28,
+    hp: 340,
+    speed: 14,
+    threat: 110,
+    dropTableId: "drop-table/the-dockmaster-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "frontline",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-dockmaster/crane-sweep",
+            "encounter/the-dockmaster/gantry-drop",
+            "encounter/the-dockmaster/gravity-well",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { attack: 5, defense: 3 },
+          actionIds: [
+            "encounter/the-dockmaster/crane-sweep",
+            "encounter/the-dockmaster/gantry-drop",
+            "encounter/the-dockmaster/gravity-well",
+            "encounter/the-dockmaster/dry-dock-collapse",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 2, potency: 10 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-dockmaster/crane-sweep",
+          name: "Crane Sweep",
+          weight: 32,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "encounter/the-dockmaster/gantry-drop",
+          name: "Gantry Drop",
+          weight: 26,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.6 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+        },
+        {
+          id: "encounter/the-dockmaster/gravity-well",
+          name: "Gravity Well",
+          weight: 24,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [{ kind: "apply_status", statusId: "slowed", duration: 2, potency: 12 }],
+        },
+        {
+          id: "encounter/the-dockmaster/dry-dock-collapse",
+          name: "Dry Dock Collapse",
+          weight: 18,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 }],
+          usesRemaining: 1,
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-manifest-clerk",
+    name: "The Manifest Clerk",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:summon-pressure", "boss:intel-resist"],
+    weaknesses: [
+      { kind: "role", target: "role:field_lead", multiplier: 1.3 },
+      { kind: "stat", target: "perception", multiplier: 1.2 },
+    ],
+    attack: 30,
+    defense: 26,
+    hp: 320,
+    speed: 15,
+    threat: 100,
+    dropTableId: "drop-table/the-manifest-clerk-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "random",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-manifest-clerk/manifest-strike",
+            "encounter/the-manifest-clerk/spatial-fold",
+            "encounter/the-manifest-clerk/lost-shipment",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { attack: 4, speed: 3 },
+          actionIds: [
+            "encounter/the-manifest-clerk/manifest-strike",
+            "encounter/the-manifest-clerk/spatial-fold",
+            "encounter/the-manifest-clerk/lost-shipment",
+            "encounter/the-manifest-clerk/inventory-paradox",
+            "encounter/the-manifest-clerk/phantom-delivery",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 10 },
+          ],
+          summonIds: ["summon/doorway-echo"],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-manifest-clerk/manifest-strike",
+          name: "Manifest Strike",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.85 },
+          ],
+        },
+        {
+          id: "encounter/the-manifest-clerk/spatial-fold",
+          name: "Spatial Fold",
+          weight: 24,
+          cooldown: 2,
+          targeting: "random_enemy",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.9 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+        },
+        {
+          id: "encounter/the-manifest-clerk/lost-shipment",
+          name: "Lost Shipment",
+          weight: 22,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [{ kind: "apply_status", statusId: "suppressed", duration: 2, potency: 10 }],
+        },
+        {
+          id: "encounter/the-manifest-clerk/inventory-paradox",
+          name: "Inventory Paradox",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 8 },
+          ],
+          phaseIndices: [1],
+        },
+        {
+          id: "encounter/the-manifest-clerk/phantom-delivery",
+          name: "Phantom Delivery",
+          weight: 10,
+          cooldown: 4,
+          targeting: "enemy_lowest_hp",
+          effects: [{ kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.1 }],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "apply_status", statusId: "staggered", duration: 1, potency: 8 }],
+          usesRemaining: 1,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/doorway-echo",
+          label: "Doorway Echo",
+          stats: { attack: 8, defense: 5, hp: 28, speed: 14, threat: 20 },
+          actions: [
+            {
+              id: "encounter/the-manifest-clerk/doorway-echo/flicker-strike",
+              name: "Flicker Strike",
+              weight: 100,
+              cooldown: 0,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.4 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-revenue-agent",
+    name: "The Revenue Agent",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:recovery-suppress", "boss:resilience-pierce"],
+    weaknesses: [
+      { kind: "role", target: "role:medic", multiplier: 1.3 },
+      { kind: "stat", target: "resilience", multiplier: 1.2 },
+    ],
+    attack: 32,
+    defense: 30,
+    hp: 360,
+    speed: 13,
+    threat: 120,
+    dropTableId: "drop-table/the-revenue-agent-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "highest_threat",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-revenue-agent/audit-strike",
+            "encounter/the-revenue-agent/red-tape-bind",
+            "encounter/the-revenue-agent/paper-storm",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { defense: 5, attack: 3 },
+          actionIds: [
+            "encounter/the-revenue-agent/audit-strike",
+            "encounter/the-revenue-agent/red-tape-bind",
+            "encounter/the-revenue-agent/paper-storm",
+            "encounter/the-revenue-agent/lien-filing",
+            "encounter/the-revenue-agent/final-assessment",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 10 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-revenue-agent/audit-strike",
+          name: "Audit Strike",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_highest_threat",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.85 },
+            { kind: "apply_status", statusId: "marked", duration: 2, potency: 8 },
+          ],
+        },
+        {
+          id: "encounter/the-revenue-agent/red-tape-bind",
+          name: "Red Tape Bind",
+          weight: 26,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "encounter/the-revenue-agent/paper-storm",
+          name: "Paper Storm",
+          weight: 22,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.55 },
+            { kind: "apply_status", statusId: "bleeding", duration: 2, potency: 8 },
+          ],
+        },
+        {
+          id: "encounter/the-revenue-agent/lien-filing",
+          name: "Lien Filing",
+          weight: 14,
+          cooldown: 4,
+          targeting: "enemy_lowest_hp",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+        {
+          id: "encounter/the-revenue-agent/final-assessment",
+          name: "Final Assessment",
+          weight: 8,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.85 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 18, scalingStat: "resilience", scalingFactor: 0.45 },
+          ],
+          usesRemaining: 1,
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-lift-operator",
+    name: "The Lift Operator",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:speed-drain", "boss:area-damage"],
+    weaknesses: [
+      { kind: "role", target: "role:field_lead", multiplier: 1.3 },
+      { kind: "stat", target: "endurance", multiplier: 1.2 },
+    ],
+    attack: 34,
+    defense: 24,
+    hp: 300,
+    speed: 16,
+    threat: 95,
+    dropTableId: "drop-table/the-lift-operator-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "random",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-lift-operator/gate-slam",
+            "encounter/the-lift-operator/temporal-shear",
+            "encounter/the-lift-operator/floor-shift",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { speed: 5, attack: 4 },
+          actionIds: [
+            "encounter/the-lift-operator/gate-slam",
+            "encounter/the-lift-operator/temporal-shear",
+            "encounter/the-lift-operator/floor-shift",
+            "encounter/the-lift-operator/decade-collision",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 2, potency: 10 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-lift-operator/gate-slam",
+          name: "Gate Slam",
+          weight: 32,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "encounter/the-lift-operator/temporal-shear",
+          name: "Temporal Shear",
+          weight: 26,
+          cooldown: 2,
+          targeting: "random_enemy",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 0.95 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 10 },
+          ],
+        },
+        {
+          id: "encounter/the-lift-operator/floor-shift",
+          name: "Floor Shift",
+          weight: 24,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.5 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+        },
+        {
+          id: "encounter/the-lift-operator/decade-collision",
+          name: "Decade Collision",
+          weight: 18,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 }],
+          usesRemaining: 1,
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-ballast-master",
+    name: "The Ballast Master",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:resilience-pierce", "boss:area-damage"],
+    weaknesses: [
+      { kind: "role", target: "role:scout", multiplier: 1.3 },
+      { kind: "stat", target: "speed", multiplier: 1.2 },
+    ],
+    attack: 40,
+    defense: 32,
+    hp: 400,
+    speed: 12,
+    threat: 130,
+    dropTableId: "drop-table/the-ballast-master-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "frontline",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-ballast-master/tank-blow",
+            "encounter/the-ballast-master/pressure-crush",
+            "encounter/the-ballast-master/bulkhead-seal",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { attack: 6, defense: 4 },
+          actionIds: [
+            "encounter/the-ballast-master/tank-blow",
+            "encounter/the-ballast-master/pressure-crush",
+            "encounter/the-ballast-master/bulkhead-seal",
+            "encounter/the-ballast-master/decompression-wave",
+            "encounter/the-ballast-master/hull-breach",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 12 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-ballast-master/tank-blow",
+          name: "Tank Blow",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.95 },
+          ],
+        },
+        {
+          id: "encounter/the-ballast-master/pressure-crush",
+          name: "Pressure Crush",
+          weight: 24,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 24, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 12 },
+          ],
+        },
+        {
+          id: "encounter/the-ballast-master/bulkhead-seal",
+          name: "Bulkhead Seal",
+          weight: 22,
+          cooldown: 3,
+          targeting: "boss",
+          effects: [
+            { kind: "shield", basePower: 20, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+        },
+        {
+          id: "encounter/the-ballast-master/decompression-wave",
+          name: "Decompression Wave",
+          weight: 14,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.85 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+        {
+          id: "encounter/the-ballast-master/hull-breach",
+          name: "Hull Breach",
+          weight: 10,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1.0 },
+            { kind: "apply_status", statusId: "bleeding", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 20, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+          usesRemaining: 1,
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-signalman",
+    name: "The Signalman",
+    rank: "d",
+    rankTone: "heightened",
+    phases: 2,
+    tags: ["boss:intel-resist", "boss:summon-pressure"],
+    weaknesses: [
+      { kind: "role", target: "role:medic", multiplier: 1.3 },
+      { kind: "stat", target: "intelligence", multiplier: 1.2 },
+    ],
+    attack: 28,
+    defense: 22,
+    hp: 280,
+    speed: 16,
+    threat: 90,
+    dropTableId: "drop-table/the-signalman-boss",
+    encounter: {
+      elapsedMinutes: 0,
+      targetingPriority: "lowest_hp",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "encounter/the-signalman/beam-sweep",
+            "encounter/the-signalman/signal-flare",
+            "encounter/the-signalman/geometry-shift",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.5,
+          statModifiers: { attack: 5, speed: 3 },
+          actionIds: [
+            "encounter/the-signalman/beam-sweep",
+            "encounter/the-signalman/signal-flare",
+            "encounter/the-signalman/geometry-shift",
+            "encounter/the-signalman/lighthouse-burn",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 2, potency: 10 },
+          ],
+          summonIds: ["summon/refracted-self"],
+        },
+      ],
+      actions: [
+        {
+          id: "encounter/the-signalman/beam-sweep",
+          name: "Beam Sweep",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.85 },
+          ],
+        },
+        {
+          id: "encounter/the-signalman/signal-flare",
+          name: "Signal Flare",
+          weight: 26,
+          cooldown: 2,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+            { kind: "apply_status", statusId: "exposed", duration: 1, potency: 8 },
+          ],
+        },
+        {
+          id: "encounter/the-signalman/geometry-shift",
+          name: "Geometry Shift",
+          weight: 24,
+          cooldown: 3,
+          targeting: "random_enemy",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.95 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 10 },
+          ],
+        },
+        {
+          id: "encounter/the-signalman/lighthouse-burn",
+          name: "Lighthouse Burn",
+          weight: 20,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.9 },
+            { kind: "apply_status", statusId: "bleeding", duration: 2, potency: 10 },
+          ],
+          phaseIndices: [1],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "all_allies",
+          effects: [{ kind: "apply_status", statusId: "suppressed", duration: 1, potency: 8 }],
+          usesRemaining: 1,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/refracted-self",
+          label: "Refracted Self",
+          stats: { attack: 9, defense: 5, hp: 26, speed: 16, threat: 22 },
+          actions: [
+            {
+              id: "encounter/the-signalman/refracted-self/prism-bolt",
+              name: "Prism Bolt",
+              weight: 100,
+              cooldown: 0,
+              targeting: "random_enemy",
+              effects: [
+                { kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.4 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export const bossById: ReadonlyMap<string, BossProfile> = new Map(

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Suds Constructs — overlapping bubbles, blue-white -->
+  <circle cx="6" cy="7" r="3.5" fill="rgba(128,168,192,0.12)" stroke="rgba(128,168,192,0.3)" stroke-width="0.6"/>
+  <circle cx="10" cy="7" r="3" fill="rgba(128,168,192,0.15)" stroke="rgba(128,168,192,0.3)" stroke-width="0.6"/>
+  <circle cx="8" cy="10" r="2" fill="rgba(128,168,192,0.2)"/>
+</svg>

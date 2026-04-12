@@ -22,6 +22,7 @@ import type {
 } from "render";
 
 import { getRaidGoalPresentation } from "./raid-world/raid-goals";
+import { getLoadedRaidParts } from "./raid-world";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ const WORLD_CELL = 32;
 const CELL_PX = 38;
 /** Total grid dimension. */
 const GRID_SIZE = 16;
+const RAID_PARTS = getLoadedRaidParts();
+const RAID_PART_BY_ID = new Map(RAID_PARTS.map((part) => [part.id, part]));
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -56,6 +59,20 @@ function worldToGrid(worldX: number, worldY: number) {
 function formatTeamLabel(teamId: string): string {
   const suffix = teamId.split("/").pop();
   return suffix ? `Team ${suffix}` : "Team";
+}
+
+function resolveEnemyFamilyAssetPath(familyId: string | undefined): string | null {
+  if (!familyId) {
+    return null;
+  }
+
+  const slug = familyId.replace(/^enemy-family\//, "");
+  const part = RAID_PART_BY_ID.get(`enemy/family-${slug}`);
+  if (!part) {
+    return null;
+  }
+
+  return `/data/svg-environments/raids/enemies/${slug}.svg`;
 }
 
 // ── Fog grid cell ─────────────────────────────────────────────────────
@@ -286,10 +303,48 @@ function TeamMarkerElement({
 
 // ── Enemy marker ──────────────────────────────────────────────────────
 
+/** Derive a stable accent hue (0-360) from a family ID for visual differentiation. */
+function familyAccentHue(familyId: string): number {
+  let hash = 0;
+  for (let i = 0; i < familyId.length; i++) {
+    hash = ((hash << 5) - hash + familyId.charCodeAt(i)) | 0;
+  }
+  return ((hash % 360) + 360) % 360;
+}
+
+/** Resolve accent colors for an enemy marker. Returns HSL-derived rgba strings.
+ *  Falls back to the default ember accent (hue ~18) when no family is set. */
+function resolveEnemyAccent(familyId: string | undefined): {
+  fill: string;
+  stroke: string;
+  glow: string;
+  pip: string;
+  inner: string;
+  bossFillA: string;
+  bossFillB: string;
+} {
+  const hue = familyId ? familyAccentHue(familyId) : 18;
+  const sat = familyId ? 72 : 78;
+  return {
+    fill: `hsla(${hue},${sat}%,48%,0.6)`,
+    stroke: `hsla(${hue},${sat}%,48%,0.9)`,
+    glow: `hsla(${hue},${sat}%,48%,0.3)`,
+    pip: `hsla(${hue},${sat}%,58%,0.9)`,
+    inner: `hsla(${hue},${sat}%,62%,0.35)`,
+    bossFillA: `hsla(${hue},${sat}%,62%,0.8)`,
+    bossFillB: `hsla(${hue},${sat}%,42%,0.6)`,
+  };
+}
+
 function EnemyMarkerElement({ enemy, isDimmed }: { enemy: RaidEnemyMarker; isDimmed: boolean }) {
   const pos = worldToGrid(enemy.x, enemy.y);
   const size = enemy.threat === "boss" ? 14 : enemy.threat === "elite" ? 10 : 7;
+  const accent = resolveEnemyAccent(enemy.familyId);
   const glowIntensity = enemy.threat === "boss" ? 0.25 : enemy.threat === "elite" ? 0.16 : 0.1;
+  const glowHue = enemy.familyId ? familyAccentHue(enemy.familyId) : 18;
+  const familyAssetPath =
+    enemy.threat === "boss" ? null : resolveEnemyFamilyAssetPath(enemy.familyId);
+  const assetBoxSize = size * 2 + 6;
 
   return (
     <motion.div
@@ -303,80 +358,101 @@ function EnemyMarkerElement({ enemy, isDimmed }: { enemy: RaidEnemyMarker; isDim
       <div
         className="absolute -inset-5 rounded-full"
         style={{
-          background: `radial-gradient(circle, rgba(212,84,30,${glowIntensity}) 0%, transparent 65%)`,
+          background: `radial-gradient(circle, hsla(${glowHue},72%,48%,${glowIntensity}) 0%, transparent 65%)`,
         }}
       />
 
-      {/* Diamond SVG */}
-      <svg
-        width={size * 2 + 4}
-        height={size * 2 + 4}
-        viewBox={`0 0 ${size * 2 + 4} ${size * 2 + 4}`}
-        className="raid-enemy-pulse"
-        style={{ animationDuration: enemy.threat === "boss" ? "3s" : "4s" }}
-      >
-        <defs>
-          <filter id={`enemy-glow-${enemy.id}`}>
-            <feGaussianBlur stdDeviation="2" />
-          </filter>
-          {enemy.threat === "boss" && (
-            <radialGradient id={`boss-gradient-${enemy.id}`}>
-              <stop offset="0%" stopColor="rgba(255,120,60,0.8)" />
-              <stop offset="100%" stopColor="rgba(180,44,26,0.6)" />
-            </radialGradient>
-          )}
-        </defs>
-        {/* Glow shadow */}
-        <polygon
-          points={`${size + 2},2 ${size * 2 + 2},${size + 2} ${size + 2},${size * 2 + 2} 2,${size + 2}`}
-          fill="rgba(212,84,30,0.3)"
-          filter={`url(#enemy-glow-${enemy.id})`}
-        />
-        {/* Main diamond */}
-        <polygon
-          points={`${size + 2},2 ${size * 2 + 2},${size + 2} ${size + 2},${size * 2 + 2} 2,${size + 2}`}
-          fill={enemy.threat === "boss" ? `url(#boss-gradient-${enemy.id})` : "rgba(212,84,30,0.6)"}
-          stroke="rgba(212,84,30,0.9)"
-          strokeWidth={enemy.threat === "boss" ? 1.5 : 0.8}
-        />
-        {/* Inner diamond for elite+ */}
-        {(enemy.threat === "elite" || enemy.threat === "boss") && (
-          <polygon
-            points={`${size + 2},${size + 2 - size * 0.4} ${size + 2 + size * 0.4},${size + 2} ${size + 2},${size + 2 + size * 0.4} ${size + 2 - size * 0.4},${size + 2}`}
-            fill="none"
-            stroke="rgba(255,160,80,0.35)"
-            strokeWidth="0.7"
+      {familyAssetPath ? (
+        <div
+          className="relative flex items-center justify-center raid-enemy-pulse"
+          style={{
+            width: assetBoxSize,
+            height: assetBoxSize,
+            animationDuration: enemy.threat === "elite" ? "3.5s" : "4s",
+          }}
+        >
+          <img
+            src={familyAssetPath}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none h-full w-full object-contain opacity-90 drop-shadow-[0_0_10px_rgba(0,0,0,0.35)]"
           />
-        )}
-        {/* Core pip */}
-        <circle
-          cx={size + 2}
-          cy={size + 2}
-          r={enemy.threat === "boss" ? 3 : 1.8}
-          fill={enemy.threat === "boss" ? "rgba(255,140,60,0.9)" : "rgba(212,84,30,0.9)"}
-        />
-        {/* Boss outer ring */}
-        {enemy.threat === "boss" && (
+          {enemy.threat === "elite" && (
+            <div
+              className="pointer-events-none absolute inset-0 rounded-[6px] border"
+              style={{
+                borderColor: accent.inner,
+                boxShadow: `0 0 12px ${accent.glow}`,
+              }}
+            />
+          )}
+        </div>
+      ) : (
+        <svg
+          width={size * 2 + 4}
+          height={size * 2 + 4}
+          viewBox={`0 0 ${size * 2 + 4} ${size * 2 + 4}`}
+          className="raid-enemy-pulse"
+          style={{ animationDuration: enemy.threat === "boss" ? "3s" : "4s" }}
+        >
+          <defs>
+            <filter id={`enemy-glow-${enemy.id}`}>
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+            {enemy.threat === "boss" && (
+              <radialGradient id={`boss-gradient-${enemy.id}`}>
+                <stop offset="0%" stopColor={accent.bossFillA} />
+                <stop offset="100%" stopColor={accent.bossFillB} />
+              </radialGradient>
+            )}
+          </defs>
+          <polygon
+            points={`${size + 2},2 ${size * 2 + 2},${size + 2} ${size + 2},${size * 2 + 2} 2,${size + 2}`}
+            fill={accent.glow}
+            filter={`url(#enemy-glow-${enemy.id})`}
+          />
+          <polygon
+            points={`${size + 2},2 ${size * 2 + 2},${size + 2} ${size + 2},${size * 2 + 2} 2,${size + 2}`}
+            fill={enemy.threat === "boss" ? `url(#boss-gradient-${enemy.id})` : accent.fill}
+            stroke={accent.stroke}
+            strokeWidth={enemy.threat === "boss" ? 1.5 : 0.8}
+          />
+          {(enemy.threat === "elite" || enemy.threat === "boss") && (
+            <polygon
+              points={`${size + 2},${size + 2 - size * 0.4} ${size + 2 + size * 0.4},${size + 2} ${size + 2},${size + 2 + size * 0.4} ${size + 2 - size * 0.4},${size + 2}`}
+              fill="none"
+              stroke={accent.inner}
+              strokeWidth="0.7"
+            />
+          )}
           <circle
             cx={size + 2}
             cy={size + 2}
-            r={size + 1}
-            fill="none"
-            stroke="rgba(212,84,30,0.3)"
-            strokeWidth="1.2"
-            strokeDasharray="3 2"
-          >
-            <animateTransform
-              attributeName="transform"
-              type="rotate"
-              from={`0 ${size + 2} ${size + 2}`}
-              to={`360 ${size + 2} ${size + 2}`}
-              dur="12s"
-              repeatCount="indefinite"
-            />
-          </circle>
-        )}
-      </svg>
+            r={enemy.threat === "boss" ? 3 : 1.8}
+            fill={accent.pip}
+          />
+          {enemy.threat === "boss" && (
+            <circle
+              cx={size + 2}
+              cy={size + 2}
+              r={size + 1}
+              fill="none"
+              stroke={accent.glow}
+              strokeWidth="1.2"
+              strokeDasharray="3 2"
+            >
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from={`0 ${size + 2} ${size + 2}`}
+                to={`360 ${size + 2} ${size + 2}`}
+                dur="12s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          )}
+        </svg>
+      )}
 
       {/* Boss label */}
       {enemy.threat === "boss" && (

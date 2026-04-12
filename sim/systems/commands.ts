@@ -226,6 +226,8 @@ export interface VisitorSeed {
   personaSummary?: string;
   personaHooks?: string[];
   identitySource?: "deterministic" | "generated";
+  /** Promoted recipe preset to pass through to appearance selection. */
+  presetId?: string;
 }
 
 export interface PreferenceProfileRecord {
@@ -1101,6 +1103,7 @@ export function spawnVisitorEntity(context: SimSystemContext, seed: VisitorSeed)
       stableKey: [stableKey, seed.name, seed.desiredRoleTag, specialtyTag].join(":"),
       roleTag: seed.desiredRoleTag,
       quality: seed.quality,
+      presetId: seed.presetId,
     });
   const preferences =
     seed.preferences ??

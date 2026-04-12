@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="mc-aura" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#c8b890" stop-opacity="0.10"/>
+      <stop offset="55%" stop-color="#1a1820" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#060608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mc-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#3a3428"/>
+      <stop offset="50%" stop-color="#2a2418"/>
+      <stop offset="100%" stop-color="#1a1820"/>
+    </linearGradient>
+    <linearGradient id="mc-page" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c8b890" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8a7c60" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="mc-ink" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a1820"/>
+      <stop offset="100%" stop-color="#0e0c14"/>
+    </linearGradient>
+    <filter id="mc-glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="mc-haze">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura backdrop -->
+  <ellipse cx="100" cy="135" rx="92" ry="130" fill="url(#mc-aura)"/>
+
+  <!-- Orbiting paper sheets — slow tornado around figure -->
+  <path d="M 38 80 L 46 76 L 50 82 L 42 86 Z" fill="#c8b890" opacity="0.18" transform="rotate(-12,44,81)"/>
+  <path d="M 152 92 L 160 88 L 164 94 L 156 98 Z" fill="#b8a878" opacity="0.15" transform="rotate(8,158,93)"/>
+  <path d="M 30 140 L 38 134 L 42 142 L 34 148 Z" fill="#c8b890" opacity="0.12" transform="rotate(-20,36,141)"/>
+  <path d="M 160 150 L 168 146 L 170 154 L 162 156 Z" fill="#b8a878" opacity="0.14" transform="rotate(15,165,151)"/>
+  <path d="M 36 200 L 44 196 L 46 204 L 38 206 Z" fill="#c8b890" opacity="0.10" transform="rotate(-8,41,201)"/>
+  <path d="M 156 210 L 164 206 L 166 214 L 158 216 Z" fill="#b8a878" opacity="0.11" transform="rotate(22,161,211)"/>
+  <path d="M 48 240 L 56 236 L 58 242 L 50 244 Z" fill="#c8b890" opacity="0.08" transform="rotate(-15,53,240)"/>
+  <path d="M 144 248 L 152 244 L 154 250 L 146 252 Z" fill="#b8a878" opacity="0.09" transform="rotate(10,149,248)"/>
+  <!-- Distant orbiting pages -->
+  <path d="M 22 120 L 28 116 L 30 120 L 24 124 Z" fill="#a89c78" opacity="0.08" transform="rotate(25,26,120)"/>
+  <path d="M 172 170 L 178 166 L 180 172 L 174 174 Z" fill="#a89c78" opacity="0.07" transform="rotate(-18,176,170)"/>
+
+  <!-- Faint ink lines trailing from orbiting pages -->
+  <path d="M 50 82 Q 62 90 68 102" fill="none" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <path d="M 152 94 Q 140 102 134 112" fill="none" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+
+  <!-- Body silhouette — tall, narrow, stacked paper/ledger construction -->
+  <path d="
+    M 100 26
+    L 116 34 L 124 50 L 126 72 L 128 100
+    L 130 130 L 130 160 L 128 190
+    L 126 215 L 122 240 L 118 258
+    L 108 268 L 100 270 L 92 268
+    L 82 258 L 78 240 L 74 215
+    L 72 190 L 70 160 L 70 130
+    L 72 100 L 74 72 L 76 50
+    L 84 34 Z
+  " fill="url(#mc-body)" stroke="rgba(60,52,40,0.5)" stroke-width="0.8"/>
+
+  <!-- Paper layer edges — horizontal fold lines across the body -->
+  <line x1="72" y1="80" x2="128" y2="80" stroke="#c8b890" stroke-width="0.4" opacity="0.2"/>
+  <line x1="71" y1="110" x2="129" y2="110" stroke="#c8b890" stroke-width="0.5" opacity="0.25"/>
+  <line x1="70" y1="140" x2="130" y2="140" stroke="#c8b890" stroke-width="0.5" opacity="0.22"/>
+  <line x1="71" y1="170" x2="129" y2="170" stroke="#c8b890" stroke-width="0.4" opacity="0.2"/>
+  <line x1="72" y1="200" x2="128" y2="200" stroke="#c8b890" stroke-width="0.4" opacity="0.18"/>
+  <line x1="74" y1="230" x2="126" y2="230" stroke="#c8b890" stroke-width="0.3" opacity="0.15"/>
+
+  <!-- Ledger text lines — columns of faint writing on the body surface -->
+  <line x1="82" y1="85" x2="82" y2="195" stroke="#1a1820" stroke-width="0.5" opacity="0.15"/>
+  <line x1="100" y1="82" x2="100" y2="198" stroke="#1a1820" stroke-width="0.6" opacity="0.12"/>
+  <line x1="118" y1="85" x2="118" y2="195" stroke="#1a1820" stroke-width="0.5" opacity="0.15"/>
+  <!-- Faint ink text rows -->
+  <line x1="76" y1="92" x2="94" y2="92" stroke="#1a1820" stroke-width="0.3" opacity="0.12"/>
+  <line x1="76" y1="98" x2="90" y2="98" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <line x1="106" y1="92" x2="124" y2="92" stroke="#1a1820" stroke-width="0.3" opacity="0.12"/>
+  <line x1="106" y1="98" x2="120" y2="98" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <line x1="76" y1="122" x2="96" y2="122" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <line x1="104" y1="122" x2="124" y2="122" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <line x1="76" y1="152" x2="92" y2="152" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+  <line x1="108" y1="152" x2="124" y2="152" stroke="#1a1820" stroke-width="0.3" opacity="0.1"/>
+
+  <!-- Head — narrow, angular, parchment-colored skull -->
+  <path d="
+    M 100 20
+    L 114 26 L 120 40 L 118 56 L 114 64
+    L 100 68 L 86 64 L 82 56
+    L 80 40 L 86 26 Z
+  " fill="#2a2418" stroke="#3a3428" stroke-width="0.7"/>
+
+  <!-- Spectacle eyes — round ink-black circles with parchment glow ring -->
+  <circle cx="91" cy="46" r="7" fill="none" stroke="#c8b890" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="109" cy="46" r="7" fill="none" stroke="#c8b890" stroke-width="0.8" opacity="0.4"/>
+  <!-- Ink-black eye fills -->
+  <circle cx="91" cy="46" r="5" fill="#0e0c14" opacity="0.85"/>
+  <circle cx="109" cy="46" r="5" fill="#0e0c14" opacity="0.85"/>
+  <!-- Parchment glow behind spectacles -->
+  <circle cx="91" cy="46" r="8" fill="#c8b890" opacity="0.08" filter="url(#mc-glow)"/>
+  <circle cx="109" cy="46" r="8" fill="#c8b890" opacity="0.08" filter="url(#mc-glow)"/>
+  <!-- Spectacle bridge -->
+  <path d="M 98 46 Q 100 43 102 46" fill="none" stroke="#c8b890" stroke-width="0.6" opacity="0.35"/>
+  <!-- Spectacle side arms -->
+  <line x1="84" y1="44" x2="78" y2="40" stroke="#c8b890" stroke-width="0.4" opacity="0.3"/>
+  <line x1="116" y1="44" x2="122" y2="40" stroke="#c8b890" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Pupil-like ink dots at center of eyes -->
+  <circle cx="91" cy="46" r="1.5" fill="#c8b890" opacity="0.4" filter="url(#mc-glow)"/>
+  <circle cx="109" cy="46" r="1.5" fill="#c8b890" opacity="0.4" filter="url(#mc-glow)"/>
+
+  <!-- Thin mouth line -->
+  <line x1="94" y1="58" x2="106" y2="58" stroke="#1a1820" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Paper collar — folded pages around neck -->
+  <path d="M 84 66 Q 92 72 100 70 Q 108 72 116 66 L 118 72 Q 108 78 100 76 Q 92 78 82 72 Z" fill="#c8b890" opacity="0.2" stroke="#8a7c60" stroke-width="0.3"/>
+
+  <!-- Arms — elongated ruler-straight -->
+  <path d="M 72 80 L 56 120 L 44 168 L 40 186 L 46 188 L 52 170 L 62 124 L 74 88 Z" fill="#2a2418" stroke="#3a3428" stroke-width="0.5"/>
+  <path d="M 128 80 L 144 120 L 156 168 L 160 186 L 154 188 L 148 170 L 138 124 L 126 88 Z" fill="#2a2418" stroke="#3a3428" stroke-width="0.5"/>
+
+  <!-- Ruler markings along arms -->
+  <line x1="58" y1="130" x2="60" y2="128" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+  <line x1="56" y1="140" x2="58" y2="138" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+  <line x1="54" y1="150" x2="56" y2="148" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+  <line x1="142" y1="130" x2="140" y2="128" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+  <line x1="144" y1="140" x2="142" y2="138" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+  <line x1="146" y1="150" x2="144" y2="148" stroke="#c8b890" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Stamp-pad hands — flat rectangular -->
+  <rect x="34" y="186" width="16" height="12" rx="1.5" fill="#1a1820" stroke="#3a3428" stroke-width="0.5"/>
+  <rect x="36" y="188" width="12" height="8" rx="1" fill="#4a1828" opacity="0.6"/>
+  <rect x="150" y="186" width="16" height="12" rx="1.5" fill="#1a1820" stroke="#3a3428" stroke-width="0.5"/>
+  <rect x="152" y="188" width="12" height="8" rx="1" fill="#1a2848" opacity="0.6"/>
+
+  <!-- Ink drips from stamp-pad hands -->
+  <circle cx="42" cy="202" r="1" fill="#1a1820" opacity="0.2"/>
+  <circle cx="40" cy="208" r="0.7" fill="#1a1820" opacity="0.15"/>
+  <circle cx="158" cy="202" r="1" fill="#1a1820" opacity="0.2"/>
+  <circle cx="160" cy="206" r="0.6" fill="#1a1820" opacity="0.12"/>
+
+  <!-- Paper dust motes drifting upward -->
+  <circle cx="60" cy="60" r="0.8" fill="#c8b890" opacity="0.12"/>
+  <circle cx="140" cy="50" r="0.6" fill="#c8b890" opacity="0.10"/>
+  <circle cx="50" cy="110" r="0.7" fill="#c8b890" opacity="0.08"/>
+  <circle cx="150" cy="130" r="0.5" fill="#c8b890" opacity="0.09"/>
+  <circle cx="46" cy="180" r="0.6" fill="#c8b890" opacity="0.07"/>
+  <circle cx="154" cy="190" r="0.8" fill="#c8b890" opacity="0.08"/>
+
+  <!-- Filing reference mark at base -->
+  <rect x="88" y="248" width="24" height="10" rx="1" fill="none" stroke="#c8b890" stroke-width="0.4" opacity="0.15"/>
+  <line x1="92" y1="252" x2="108" y2="252" stroke="#c8b890" stroke-width="0.3" opacity="0.12"/>
+  <line x1="94" y1="256" x2="106" y2="256" stroke="#c8b890" stroke-width="0.3" opacity="0.1"/>
+</svg>

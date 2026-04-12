@@ -273,11 +273,13 @@ describe("Prep Room consumables", () => {
   });
 
   it("prep recipes exist in registry", () => {
-    expect(registry.prepRecipes).toHaveLength(4);
+    expect(registry.prepRecipes).toHaveLength(6);
     expect(registry.prepRecipeById.has("prep-recipe/rift-tonic")).toBe(true);
     expect(registry.prepRecipeById.has("prep-recipe/recovery-salve")).toBe(true);
     expect(registry.prepRecipeById.has("prep-recipe/phase-ward")).toBe(true);
     expect(registry.prepRecipeById.has("prep-recipe/endurance-draught")).toBe(true);
+    expect(registry.prepRecipeById.has("prep-recipe/pressure-ration")).toBe(true);
+    expect(registry.prepRecipeById.has("prep-recipe/signal-tonic")).toBe(true);
   });
 
   it("all prep recipes reference valid items", () => {

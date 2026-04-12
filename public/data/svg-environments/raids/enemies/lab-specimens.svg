@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Lab Specimens — circle with cross (clinical), clinical green -->
+  <circle cx="8" cy="8" r="4.5" fill="rgba(80,160,112,0.15)" stroke="rgba(80,160,112,0.4)" stroke-width="0.7"/>
+  <path d="M8,4.5 L8,11.5 M4.5,8 L11.5,8" fill="none" stroke="rgba(80,160,112,0.35)" stroke-width="0.8"/>
+</svg>

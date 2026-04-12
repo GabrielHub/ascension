@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Cistern Dwellers — rounded rectangle (submerged), murky green -->
+  <rect x="4" y="5" width="8" height="6" rx="2.5" fill="rgba(80,128,80,0.2)" stroke="rgba(80,128,80,0.4)" stroke-width="0.7"/>
+  <circle cx="8" cy="8" r="1" fill="rgba(80,128,80,0.3)"/>
+</svg>

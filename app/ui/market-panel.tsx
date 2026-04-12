@@ -6,7 +6,7 @@ import type {
   InventoryItemViewModel,
   MarketItemViewModel,
 } from "./view-models";
-import { ItemRankBadge, ItemTagChips, StatEffectChips } from "./item-surface";
+import { ItemCategoryIcon, ItemRankBadge, ItemTagChips, StatEffectChips } from "./item-surface";
 
 interface MarketPanelProps {
   marketItems: readonly MarketItemViewModel[];
@@ -112,6 +112,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
                     <div className="flex items-start gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
+                          <ItemCategoryIcon category={item.category} />
                           <span className="min-w-0 truncate text-xs text-silver-bright">
                             {item.name}
                           </span>
@@ -172,6 +173,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
                     <div className="flex items-start gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
+                          <ItemCategoryIcon category={inv.category} />
                           <span className="min-w-0 truncate text-xs text-silver-bright">
                             {inv.name}
                           </span>

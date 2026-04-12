@@ -120,7 +120,7 @@ Phase 4 is complete when Porter's no longer feels like a passive capacity increa
 
 ### In Progress
 
-- `phase-4-midgame-content-remediation-plan`
+- None.
 
 ### Blocked
 
@@ -132,3 +132,4 @@ Phase 4 is complete when Porter's no longer feels like a passive capacity increa
 
 - `phase-4-midgame-contract-lock-plan`
 - `phase-4-midgame-city-pressure-plan`
+- `phase-4-midgame-content-remediation-plan`

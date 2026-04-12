@@ -437,6 +437,86 @@ const CONTRACT_HINT_META = {
     label: "Conduit Crawlers",
     tip: "Electrical parasites that channel current.",
   },
+  "enemy-family/suds-constructs": {
+    label: "Suds Constructs",
+    tip: "Corrosive foam entities formed from cleaning chemicals.",
+  },
+  "enemy-family/cellar-dwellers": {
+    label: "Cellar Dwellers",
+    tip: "Basement-adapted ambush predators.",
+  },
+  "enemy-family/court-echoes": {
+    label: "Court Echoes",
+    tip: "Spectral after-images of old judicial proceedings.",
+  },
+  "enemy-family/freezer-fauna": {
+    label: "Freezer Fauna",
+    tip: "Cold-adapted creatures from deep freeze storage.",
+  },
+  "enemy-family/transit-haunts": {
+    label: "Transit Haunts",
+    tip: "Restless commuter remnants bound to stations.",
+  },
+  "enemy-family/fume-wraiths": {
+    label: "Fume Wraiths",
+    tip: "Toxic vapor entities from industrial exhaust.",
+  },
+  "enemy-family/rust-creepers": {
+    label: "Rust Creepers",
+    tip: "Corroded metal organisms that spread oxidation.",
+  },
+  "enemy-family/display-mimics": {
+    label: "Display Mimics",
+    tip: "Retail fixtures animated into deceptive predators.",
+  },
+  "enemy-family/reel-phantoms": {
+    label: "Reel Phantoms",
+    tip: "Projections of old film footage made solid.",
+  },
+  "enemy-family/cistern-dwellers": {
+    label: "Cistern Dwellers",
+    tip: "Water-storage predators adapted to enclosed tanks.",
+  },
+  "enemy-family/astral-parasites": {
+    label: "Astral Parasites",
+    tip: "Spatial anomalies that feed on dimensional rifts.",
+  },
+  "enemy-family/pressure-spawn": {
+    label: "Pressure Spawn",
+    tip: "Heavy organisms born from compressed infrastructure.",
+  },
+  "enemy-family/stage-haunts": {
+    label: "Stage Haunts",
+    tip: "Theatrical entities that perform lethal routines.",
+  },
+  "enemy-family/lab-specimens": {
+    label: "Lab Specimens",
+    tip: "Self-iterating biotech experiments gone feral.",
+  },
+  "enemy-family/gravity-lice": {
+    label: "Gravity Lice",
+    tip: "Dock parasites adapted to inverted gravity fields.",
+  },
+  "enemy-family/fold-walkers": {
+    label: "Fold Walkers",
+    tip: "Spatial-fold entities that step through walls.",
+  },
+  "enemy-family/ledger-wraiths": {
+    label: "Ledger Wraiths",
+    tip: "Bureaucratic paper constructs that bind and audit.",
+  },
+  "enemy-family/loop-echoes": {
+    label: "Loop Echoes",
+    tip: "Temporal echoes cycling through repeated decades.",
+  },
+  "enemy-family/pressure-hulks": {
+    label: "Pressure Hulks",
+    tip: "Compressed steel organisms shaped like dock equipment.",
+  },
+  "enemy-family/signal-phantoms": {
+    label: "Signal Phantoms",
+    tip: "Light-based entities refracted through rotating geometry.",
+  },
   // Boss display names (keyed by real boss IDs from boss registry)
   "boss/tunneler-brood-mother": {
     label: "Tunneler Brood-Mother",
@@ -469,6 +549,70 @@ const CONTRACT_HINT_META = {
   "boss/the-stockkeeper": {
     label: "The Stockkeeper",
     tip: "Boss. Cold storage preservation gone wrong. Does not let anything leave.",
+  },
+  "boss/the-dispatcher": {
+    label: "The Dispatcher",
+    tip: "Boss. Transit coordination turned territorial occupation.",
+  },
+  "boss/the-manicurist": {
+    label: "The Manicurist",
+    tip: "Boss. Salon precision instruments fused into precise, cutting authority.",
+  },
+  "boss/the-inspector": {
+    label: "The Inspector",
+    tip: "Boss. A code enforcement officer's clipboard made judge and executioner.",
+  },
+  "boss/the-appraiser": {
+    label: "The Appraiser",
+    tip: "Boss. Pawn shop evaluations that find everything wanting.",
+  },
+  "boss/the-projectionist": {
+    label: "The Projectionist",
+    tip: "Boss. Film projection made physical. Replays violent scenes.",
+  },
+  "boss/the-valve-master": {
+    label: "The Valve Master",
+    tip: "Boss. Water pressure control systems defending their cistern.",
+  },
+  "boss/the-astronomer": {
+    label: "The Astronomer",
+    tip: "Boss. Spatial distortion anchored to a rooftop observatory.",
+  },
+  "boss/the-engineer": {
+    label: "The Engineer",
+    tip: "Boss. Infrastructure systems defending a flooded pumping station.",
+  },
+  "boss/the-director": {
+    label: "The Director",
+    tip: "Boss. A condemned theater's stagecraft turned lethal performance.",
+  },
+  "boss/the-researcher": {
+    label: "The Researcher",
+    tip: "Boss. Self-iterating biotech lab experiments defending their work.",
+  },
+  "boss/the-dockmaster": {
+    label: "The Dockmaster",
+    tip: "Boss. Fused to crane controls, manipulates gravity across the dry dock.",
+  },
+  "boss/the-manifest-clerk": {
+    label: "The Manifest Clerk",
+    tip: "Boss. Exists in multiple spatial folds simultaneously.",
+  },
+  "boss/the-revenue-agent": {
+    label: "The Revenue Agent",
+    tip: "Boss. Processes operators like delinquent accounts.",
+  },
+  "boss/the-lift-operator": {
+    label: "The Lift Operator",
+    tip: "Boss. Exists across all temporal loops of the freight elevator.",
+  },
+  "boss/the-ballast-master": {
+    label: "The Ballast Master",
+    tip: "Boss. Living pressure system controlling compression across the tank.",
+  },
+  "boss/the-signalman": {
+    label: "The Signalman",
+    tip: "Boss. Rotates with the signal tower light through alternate geometries.",
   },
 } satisfies DisplayRegistry;
 

@@ -20,6 +20,13 @@ const BOSS_ART_MAP: Record<string, string> = {
   "boss/the-engineer": "/data/svg-environments/raids/bosses/the-engineer.svg",
   "boss/the-director": "/data/svg-environments/raids/bosses/the-director.svg",
   "boss/the-researcher": "/data/svg-environments/raids/bosses/the-researcher.svg",
+  // ── Porter's-era D-rank bosses ──────────────────────────────────────
+  "boss/the-dockmaster": "/data/svg-environments/raids/bosses/the-dockmaster.svg",
+  "boss/the-manifest-clerk": "/data/svg-environments/raids/bosses/the-manifest-clerk.svg",
+  "boss/the-revenue-agent": "/data/svg-environments/raids/bosses/the-revenue-agent.svg",
+  "boss/the-lift-operator": "/data/svg-environments/raids/bosses/the-lift-operator.svg",
+  "boss/the-ballast-master": "/data/svg-environments/raids/bosses/the-ballast-master.svg",
+  "boss/the-signalman": "/data/svg-environments/raids/bosses/the-signalman.svg",
 };
 
 /** Resolve a boss's encounter portrait SVG path, or null for unknown bosses. */

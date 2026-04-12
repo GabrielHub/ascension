@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Fume Wraiths — wavy organic blob, haze purple -->
+  <ellipse cx="8" cy="8" rx="5" ry="4" fill="rgba(136,96,160,0.15)" stroke="rgba(136,96,160,0.3)" stroke-width="0.7"/>
+  <ellipse cx="7" cy="7" rx="2.5" ry="2" fill="rgba(136,96,160,0.2)" transform="rotate(-15 7 7)"/>
+  <circle cx="8" cy="8" r="1" fill="rgba(136,96,160,0.3)"/>
+</svg>

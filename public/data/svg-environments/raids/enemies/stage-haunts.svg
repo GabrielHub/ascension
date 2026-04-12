@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Stage Haunts — spotlight cone/wedge, warm white -->
+  <path d="M8,3 L12,13 L4,13 Z" fill="rgba(200,184,144,0.18)" stroke="rgba(200,184,144,0.4)" stroke-width="0.7"/>
+  <circle cx="8" cy="4.5" r="1" fill="rgba(200,184,144,0.3)"/>
+</svg>

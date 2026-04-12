@@ -263,17 +263,23 @@ Done when:
 
 ### File Locks
 
-- None until earlier slices merge.
+- All target files locked and verified.
 
 ### In Progress
 
-- Blocked pending contract lock and city pressure.
+- None.
 
 ### Blocked
 
-- `phase-4-midgame-contract-lock-plan`
-- `phase-4-midgame-city-pressure-plan`
+- None.
 
 ### Done
 
-- None.
+- Step 1: Rank escalation metadata locked with validation in `content/templates/index.ts`.
+- Step 2: Runtime asset-parity contracts locked with site→boss, site→enemy-family, and boss→drop-table validation.
+- Step 3: 6 new D-rank Porter's-era site packets added to `content/templates/site-concepts.ts`.
+- Step 4: All 6 bootstrap operators assigned distinct recipes; 20 promoted recruit identities in `save/appearance.ts`; visitor system wired to promoted pool.
+- Step 5: Boss art entries for 6 new bosses; enemy family visual entries for all 20 families in `raid-environment-index.json`.
+- Step 6: 20 new items (6 weapons, 3 overlays, 3 accessories, 6 loot, 2 consumables); 12 new drop tables; item category icon family contract in `item-surface.tsx`.
+- Step 7: 12 new Porter's-era narrative event templates.
+- Step 8: `vp check`, `vp test` (808 passed), and `vp build` all pass.

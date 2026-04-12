@@ -495,6 +495,7 @@ export interface MarketItemViewModel {
   itemId: string;
   name: string;
   description: string;
+  category: string;
   buyPrice: number;
   sellPrice: number;
   available: boolean;
@@ -674,6 +675,7 @@ export interface RaidEnemyViewModel {
   y: number;
   threat: string;
   discovered: boolean;
+  familyId?: string;
 }
 
 export interface RaidFeatureViewModel {
@@ -1509,6 +1511,7 @@ export function buildOpsViewFromPhase1(
           y: enemy.y,
           threat: enemy.threat,
           discovered: enemy.discovered,
+          familyId: enemy.familyId,
         })),
         featureMarkers: view.raidWorld.featureMarkers.map((feature) => ({
           id: feature.id,
@@ -2005,6 +2008,7 @@ function resolveItemCategory(itemId: string): string {
   if (itemId.startsWith("outfit-overlay/")) return "outfits";
   if (itemId.startsWith("accessory/")) return "accessories";
   if (itemId.startsWith("loot/")) return "loot";
+  if (itemId.startsWith("consumable/")) return "consumables";
   return "misc";
 }
 
@@ -2121,6 +2125,7 @@ export function buildMarketItemViewModels(
       itemId: mi.itemId,
       name: template?.name ?? getIdentifierLabel(mi.itemId),
       description: template?.description ?? "",
+      category: resolveItemCategory(mi.itemId),
       buyPrice: mi.buyPrice,
       sellPrice: mi.sellPrice,
       available: mi.available,

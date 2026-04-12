@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Cellar Dwellers — inverted triangle (underground), dark amber -->
+  <path d="M3,4 L13,4 L8,13 Z" fill="rgba(160,128,64,0.15)" stroke="rgba(160,128,64,0.3)" stroke-width="0.7"/>
+  <circle cx="8" cy="7" r="1.2" fill="rgba(160,128,64,0.25)"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Display Mimics — diamond with inner square (deception), teal -->
+  <path d="M8,2 L14,8 L8,14 L2,8 Z" fill="rgba(64,160,144,0.12)" stroke="rgba(64,160,144,0.3)" stroke-width="0.7"/>
+  <rect x="6" y="6" width="4" height="4" fill="rgba(64,160,144,0.2)" stroke="rgba(64,160,144,0.25)" stroke-width="0.4"/>
+</svg>

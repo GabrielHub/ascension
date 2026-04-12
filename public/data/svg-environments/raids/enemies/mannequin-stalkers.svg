@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Mannequin Stalkers — tiny standing figure silhouette, pale pink -->
+  <circle cx="8" cy="4" r="1.8" fill="rgba(192,136,144,0.2)" stroke="rgba(192,136,144,0.3)" stroke-width="0.5"/>
+  <line x1="8" y1="6" x2="8" y2="11" stroke="rgba(192,136,144,0.35)" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="5" y1="8" x2="11" y2="8" stroke="rgba(192,136,144,0.3)" stroke-width="0.7" stroke-linecap="round"/>
+  <line x1="8" y1="11" x2="5.5" y2="14" stroke="rgba(192,136,144,0.25)" stroke-width="0.7" stroke-linecap="round"/>
+  <line x1="8" y1="11" x2="10.5" y2="14" stroke="rgba(192,136,144,0.25)" stroke-width="0.7" stroke-linecap="round"/>
+</svg>

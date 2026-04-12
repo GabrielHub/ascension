@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Rebar Constructs — angular cross, steel grey -->
+  <path d="M8,3 L8,13 M3,8 L13,8" fill="none" stroke="rgba(112,128,144,0.4)" stroke-width="2.5" stroke-linecap="square"/>
+  <rect x="6.5" y="6.5" width="3" height="3" fill="rgba(112,128,144,0.25)" rx="0.3"/>
+</svg>

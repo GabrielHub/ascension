@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Reel Phantoms — film frame rectangle with sprocket dots, amber -->
+  <rect x="4" y="3" width="8" height="10" rx="0.5" fill="rgba(200,144,64,0.15)" stroke="rgba(200,144,64,0.4)" stroke-width="0.7"/>
+  <circle cx="5.5" cy="5" r="0.7" fill="rgba(200,144,64,0.3)"/>
+  <circle cx="5.5" cy="8" r="0.7" fill="rgba(200,144,64,0.3)"/>
+  <circle cx="5.5" cy="11" r="0.7" fill="rgba(200,144,64,0.3)"/>
+</svg>

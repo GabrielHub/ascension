@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Court Echoes — two overlapping diamonds (echo/mirror), gold -->
+  <path d="M6,2 L11,8 L6,14 L1,8 Z" fill="rgba(200,168,72,0.12)" stroke="rgba(200,168,72,0.25)" stroke-width="0.6"/>
+  <path d="M10,2 L15,8 L10,14 L5,8 Z" fill="rgba(200,168,72,0.12)" stroke="rgba(200,168,72,0.3)" stroke-width="0.6"/>
+  <circle cx="8" cy="8" r="1" fill="rgba(200,168,72,0.3)"/>
+</svg>

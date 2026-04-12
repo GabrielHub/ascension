@@ -18,6 +18,10 @@ import {
 const OPERATOR_APPEARANCE_PRESET_BY_ID: Record<string, string> = {
   "operator/rose-vega": "vera-004",
   "operator/milo-hart": "dax-008",
+  "operator/jin-tanaka": "jin-005",
+  "operator/vera-santos": "ryn-011",
+  "operator/ash-okafor": "ash-006",
+  "operator/lena-park": "lena-007",
 };
 
 const BOOTSTRAP_OPERATOR_VISIBLE_GEAR_BY_ID: Record<
