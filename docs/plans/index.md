@@ -4,12 +4,9 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The active checked-in execution queue is:
+There is no active checked-in execution plan right now.
 
-- `midgame-remediation-plan`
-
-The completed Phase 4 contract-lock, city-pressure, content-remediation, crafting, social/incident, and encounter slices are already reflected in code and in the roadmap. They are no longer kept here as active plans.
-The next ready plan to run is `midgame-remediation-plan`.
+The completed Phase 4 contract-lock, city-pressure, content-remediation, crafting, social/incident, encounter, and midgame-remediation slices are already reflected in code and in the roadmap. They are no longer kept here as active plans.
 
 ## Shared Execution Contract
 
@@ -31,15 +28,9 @@ Check in a new plan only when a concrete execution slice is ready to start, for 
 
 Do not add another broad umbrella plan when a narrower active execution slice is enough.
 
-## Active Order
-
-Run the current remediation queue in this order:
-
-1. `midgame-remediation-plan`
-
 ## Sequencing Notes
 
 - Phase 4 midgame breadth is shipped and should now be treated as the baseline under test, not as an open-ended content queue.
-- The active remediation pass should prefer verification depth, readability fixes, and balance-table tuning over adding new mechanics or broad new content.
+- The retired midgame remediation pass was verification-first work: browser depth, readability fixes, and balance-table tuning rather than new mechanics or broad new content.
 - Use browser automation as the primary fast regression surface for the canonical Porter's loop.
 - Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.

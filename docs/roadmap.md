@@ -51,6 +51,7 @@ The implementation itself is the source of truth. This section is organized by s
 - Porter's upgrade arc is a real player-facing campaign through Kitchen Overhaul, Upstairs Conversion, The Remodel, and The Waterfront, with upgrade-gated room unlocks for Break Room, Briefing Room, Dock, and Deck.
 - Porter's specialized rooms change management decisions: gym drives bounded training readiness, Office and Briefing Room change contract reading and raid preparation, Infirmary/Break Room/Dock/Deck change recovery/morale/decompression/staging outcomes through simulation-owned room effects.
 - The Phase 4 machine-shop upgrade path and durable crafting loop are shipped through recipe execution, craft-time cash sinks, workshop blocker surfaces, and the midgame economy ledger.
+- The Porter's remediation pass is shipped through workshop blocker-summary UX, corrected Machine Shop workshop placement, and focused-room/build-surface interaction cleanup proven against browser coverage.
 - Room progression is data-driven through building and room upgrades plus generic requirement and effect evaluation.
 - Relocation from bodega to Porter's is runtime-owned and save-safe with carryover/reset rules, readiness/blocker surfaces, and an interruption-backed relocation flow.
 - The HQ exterior day-night pass drives canonical sunrise/day/sunset/night phases from the simulation clock, with manifest-driven per-phase tint/fog/shadow values and elevation-band support for both headquarters.
@@ -83,6 +84,7 @@ The implementation itself is the source of truth. This section is organized by s
 - Loot distribution is driven by mission combat profiles: enemy groups and bosses each reference specific drop tables, with guaranteed boss loot on successful raids.
 - Boss commitment escalates into a blocking interruption beat and can hand off into a save-safe encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
 - Boss art and raid-surface visual coverage now extend across the shipped Porter's-era content slice instead of stopping at the original bodega boss set.
+- Browser regression now covers the canonical Porter's path through contract bidding, briefing, workshop use, incident resolution, dock/deck staging payoff, and boss-commitment encounter handoff.
 
 ### Economy & Gear
 
@@ -90,6 +92,7 @@ The implementation itself is the source of truth. This section is organized by s
 - The optional loot filter auto-sells junk monster parts and obsolete gear once the guild has outgrown them.
 - Durable crafting is shipped through the machine-shop upgrade, workshop room template, craft-recipe registry, protected crafting inputs, district/faction recipe requirements, craft-time cash sinks, workshop recipe UX, and the midgame economy ledger.
 - The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
+- The D-rank economy remediation pass is shipped through a machine-checkable `midgame-economy.v2` ledger covering contract posting envelopes, payout envelopes, loot-sale envelopes, source coverage, and workshop-vs-market comparisons, plus tuned D-rank recipe and loot authored data.
 - First standing management policy surfaces are shipped through the runtime policy contract and the HQ management panel.
 
 ### Events & Incidents
@@ -113,6 +116,7 @@ The implementation itself is the source of truth. This section is organized by s
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
 - The management panel surfaces relocation readiness, blockers, building name, floor zone badges, atmospheric floor descriptions, and building-aware "Why This Room Matters" copy for all 18 shipped rooms.
 - Staffing pressure cards use room-specific language explaining what each room needs staff for.
+- The Porter's remediation pass is shipped through narrower readability fixes for workshop blockers and overlay interaction debt instead of a broad UI redesign.
 - HQ environment metadata, raid environment metadata, and visual review tooling are shipped.
 
 ### Audio
@@ -140,58 +144,13 @@ The implementation itself is the source of truth. This section is organized by s
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
 - Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
+- Midgame remediation is complete. The Porter's-era D-rank band now has browser regression coverage across contracts, workshop use, incidents, and encounter handoff; deterministic D-rank economy reporting; tuned workshop authored data; and the narrow management-surface fixes that verification exposed.
 
 ## Next Steps
 
-1. Remediate the shipped midgame: run deeper browser/runtime verification, close usability regressions, and tune the Porter's-era D-rank economy, contract, incident, and encounter loops against deterministic reports.
-2. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
-3. Add later-building and prestige content only after the existing Porter's campaign layer is fully exercised and tuned.
-
-## Phase 4: Midgame Systems
-
-Goal: add the features that create external pressure.
-
-Current status:
-
-- shared contract lock is shipped
-- city pressure is shipped
-- Porter's content remediation is shipped
-- durable crafting is shipped
-- social/incident fallout is shipped
-- encounter expansion is shipped
-
-Shipped deliverables:
-
-- reputation-based escalation through shared contract metadata, city-pressure writeback, and runtime fallout
-- district-level contract/site/faction data lock for the active midgame pressure band
-- Porter's content remediation across additional site packets, operator breadth, event coverage, boss coverage, loot families, and runtime asset-parity validation
-- richer gear and crafting through authored recipe families, protected inputs, workshop blockers, and craft-time cash sinks
-- deeper social fallout from guild reputation, contract performance, operator death, and room/team culture
-- expanded incident and encounter breadth through more authored bindings, higher-pressure consequence bundles, more bosses and enemy coverage, encounter phase/intervention surfaces, and encounter debug tooling
-- tonal and visual climb locked into authored content so grounded F/E content can progress into stranger D/C content without losing the workplace-supernatural identity
-
-Exit criteria:
-
-- the world pushes back instead of acting like a passive mission board
-
-## Immediate Follow-Through: Midgame Remediation
-
-Goal: treat the shipped Porter's-era midgame as a playable production band that now needs verification depth, balance tightening, and UX remediation instead of more breadth-first expansion.
-
-Deliverables:
-
-- expand browser-driven regression coverage across the canonical Porter's campaign path, active-contract loop, workshop loop, incident fallout, and encounter handoff
-- add deterministic report or harness coverage where browser runs are too slow or too noisy, especially for economy, recruit quality, contract generation, and encounter reward output
-- review the shipped D-rank economy envelope using the existing midgame ledger and tune recipe cash sinks, reward pacing, and market fallback value where needed
-- review contract-board readability, briefing/staging clarity, and interruption/event-log legibility in the shipped midgame loop and fix regressions that make the management layer hard to read
-- tune the balance-owned tables behind recruit quality, raid payout, loot output, crafting blockers, recovery pressure, and city-pressure pacing rather than layering on new mechanics
-- capture the tuned baseline in tests, reports, and browser coverage so future content work builds on a stable Porter's-era target instead of a moving midpoint
-
-Exit criteria:
-
-- the canonical Porter's loop is covered by meaningful browser and deterministic regression surfaces
-- the D-rank economy and reward loop sit inside an explicit tuned envelope rather than a first-pass authored guess
-- the midgame reads clearly enough in browser play that the next headquarters tier does not have to compensate for unresolved Porter's-era UX debt
+1. Add later-building and prestige content now that the Porter's-era baseline is verified and tuned.
+2. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and later-building reuse.
+3. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Later: AI Content Breadth
 
@@ -228,10 +187,8 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 contract lock, Phase 4 city pressure, and Porter's content remediation.
-2. Phase 4 midgame external-pressure work is complete.
-3. Remediate, verify, and tune the shipped Porter's-era midgame.
-4. Add later-building and prestige content.
-5. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
+1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, and Porter's-era midgame remediation.
+2. Add later-building and prestige content.
+3. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 
 That order matters more than any specific library choice.

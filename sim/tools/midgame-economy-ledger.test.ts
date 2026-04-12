@@ -14,6 +14,8 @@ describe("midgame economy ledger", () => {
     expect(ledger.meta.craftRecipeCount).toBe(9);
     expect(ledger.meta.craftFamilyCount).toBe(3);
     expect(ledger.meta.craftOutputCount).toBe(9);
+    expect(ledger.meta.dRankMissionCount).toBeGreaterThan(0);
+    expect(ledger.meta.dRankSiteCount).toBeGreaterThan(0);
     expect(ledger.meta.districtCount).toBeGreaterThan(0);
   });
 
@@ -30,9 +32,10 @@ describe("midgame economy ledger", () => {
     const ledger = buildMidgameEconomyLedger();
 
     expect(ledger.ledgers.materialSources.length).toBeGreaterThan(0);
-    // Every material source must reference at least one recipe
     for (const source of ledger.ledgers.materialSources) {
       expect(source.usedInRecipeIds.length).toBeGreaterThan(0);
+      expect(source.sourceTableIds.length).toBeGreaterThan(0);
+      expect(source.dRankSiteConceptIds.length).toBeGreaterThan(0);
     }
   });
 
@@ -54,8 +57,11 @@ describe("midgame economy ledger", () => {
       expect(cost.cashCost).toBeGreaterThan(0);
       expect(cost.inputCost.min).toBeGreaterThanOrEqual(0);
       expect(cost.inputCost.max).toBeGreaterThanOrEqual(cost.inputCost.min);
+      expect(cost.inputCost.expected).toBeGreaterThanOrEqual(cost.inputCost.min);
+      expect(cost.inputCost.expected).toBeLessThanOrEqual(cost.inputCost.max);
       expect(cost.totalCost.min).toBe(cost.inputCost.min + cost.cashCost);
       expect(cost.totalCost.max).toBe(cost.inputCost.max + cost.cashCost);
+      expect(cost.totalCost.expected).toBe(cost.inputCost.expected + cost.cashCost);
       for (const input of cost.inputItems) {
         expect(input.quantity).toBeGreaterThan(0);
         expect(input.totalOpportunityCost).toBeGreaterThanOrEqual(0);
@@ -89,6 +95,30 @@ describe("midgame economy ledger", () => {
     }
   });
 
+  it("covers D-rank contract posting, payout, and loot-sale envelopes", () => {
+    const ledger = buildMidgameEconomyLedger();
+
+    expect(ledger.ledgers.dRankContractPostings.length).toBe(ledger.meta.dRankMissionCount);
+    expect(ledger.ledgers.dRankPayouts.length).toBe(ledger.meta.dRankMissionCount);
+    expect(ledger.ledgers.dRankLootSales.length).toBe(
+      ledger.meta.dRankMissionCount * ledger.meta.dRankSiteCount,
+    );
+
+    for (const row of ledger.ledgers.dRankLootSales) {
+      expect(row.successSaleValue.max).toBeGreaterThanOrEqual(row.successSaleValue.min);
+      expect(row.mixedSaleValue.max).toBeGreaterThanOrEqual(row.mixedSaleValue.min);
+      expect(row.failureSaleValue.max).toBe(0);
+    }
+  });
+
+  it("keeps workshop outputs out of the overpriced band", () => {
+    const ledger = buildMidgameEconomyLedger();
+
+    for (const row of ledger.ledgers.craftComparisons) {
+      expect(row.marketPosition).not.toBe("overpriced");
+    }
+  });
+
   it("renders self-consistent economy artifacts", () => {
     const artifacts = buildMidgameEconomyArtifacts();
 
@@ -96,6 +126,10 @@ describe("midgame economy ledger", () => {
     expect(artifacts.report).toContain("# Midgame Economy Report");
     expect(artifacts.report).toContain("## Material Source Envelope");
     expect(artifacts.report).toContain("## Craft Cost Envelope");
+    expect(artifacts.report).toContain("## D-rank Contract Posting Envelope");
+    expect(artifacts.report).toContain("## D-rank Payout Envelope");
+    expect(artifacts.report).toContain("## D-rank Loot Sale Envelope");
+    expect(artifacts.report).toContain("## Workshop vs Market");
     expect(artifacts.report).toContain("## Crafted Gear Value Envelope");
     expect(artifacts.report).toContain("## Market Fallback Comparison");
     expect(artifacts.report).toContain("Craft-time cash sink");

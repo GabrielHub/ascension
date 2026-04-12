@@ -39,6 +39,13 @@ export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = []
     },
     [onFocusChange, selectedRoomId],
   );
+  const handlePlaceRoom = useCallback(
+    (templateId: string, floorIndex: number, slotId: string) => {
+      onFocusChange?.(null);
+      callbacks.placeRoom(templateId, floorIndex, slotId);
+    },
+    [callbacks, onFocusChange],
+  );
 
   return (
     <div className="animate-enter space-y-4">
@@ -81,7 +88,7 @@ export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = []
           placeableTemplates={hq.placeableRoomTemplates}
           selectedRoomId={selectedRoomId}
           onSelectRoom={handleSelectRoom}
-          onPlaceRoom={callbacks.placeRoom}
+          onPlaceRoom={handlePlaceRoom}
           cultureMap={cultureMap}
         />
       </div>

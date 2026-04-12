@@ -398,6 +398,45 @@ function getCraftBlockerMessage(recipe: CraftRecipeViewModel): string {
   return "Missing inputs";
 }
 
+function getCraftBlockerSummary(recipe: CraftRecipeViewModel): string | null {
+  if (recipe.canProduce) {
+    return null;
+  }
+
+  const blockers: string[] = [];
+
+  if (!recipe.isRoomStaffed) {
+    blockers.push("assigned logistics staff");
+  }
+  if (!recipe.isBuildingTierMet) {
+    blockers.push("Porter's tier 5");
+  }
+  if (!recipe.isDistrictMet && recipe.missingDistrictTags.length > 0) {
+    blockers.push(`district access (${recipe.missingDistrictTags.join(", ")})`);
+  }
+  if (!recipe.isFactionMet && recipe.factionBlockers.length > 0) {
+    blockers.push(
+      ...recipe.factionBlockers.map(
+        (blocker) => `${blocker.factionName} ${blocker.current}/${blocker.required}`,
+      ),
+    );
+  }
+  if (!recipe.isCashMet) {
+    blockers.push(`${recipe.cashCost} cash (${recipe.cashOnHand} on hand)`);
+  }
+
+  const missingInputs = recipe.inputs.filter((input) => !input.isSatisfied);
+  if (missingInputs.length > 0) {
+    blockers.push(
+      missingInputs
+        .map((input) => `${input.itemName} ${input.quantityOwned}/${input.quantityRequired}`)
+        .join(", "),
+    );
+  }
+
+  return blockers.length > 0 ? `Blocked by: ${blockers.join(" • ")}.` : null;
+}
+
 function CraftRecipeCard({
   recipe,
   onCraft,
@@ -405,6 +444,8 @@ function CraftRecipeCard({
   recipe: CraftRecipeViewModel;
   onCraft: () => void;
 }) {
+  const blockerSummary = getCraftBlockerSummary(recipe);
+
   return (
     <div className="glass-card-inset space-y-3 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -461,29 +502,9 @@ function CraftRecipeCard({
         </Tooltip>
       </div>
 
-      {!recipe.isRoomStaffed && (
-        <p className="text-xs text-ember/80">Requires assigned logistics staff to produce.</p>
-      )}
-      {!recipe.isBuildingTierMet && (
-        <p className="text-xs text-ember/80">Requires building tier 5 or higher.</p>
-      )}
-      {!recipe.isDistrictMet && recipe.missingDistrictTags.length > 0 && (
-        <p className="text-xs text-ember/80">
-          Requires district access: {recipe.missingDistrictTags.join(", ")}.
-        </p>
-      )}
-      {!recipe.isFactionMet && recipe.factionBlockers.length > 0 && (
-        <div className="space-y-0.5">
-          {recipe.factionBlockers.map((b) => (
-            <p key={b.factionId} className="text-xs text-ember/80">
-              {b.factionName} standing: {b.current}/{b.required}
-            </p>
-          ))}
-        </div>
-      )}
-      {!recipe.isCashMet && (
-        <p className="text-xs text-ember/80">
-          Requires {recipe.cashCost} cash at craft time. Treasury: {recipe.cashOnHand}.
+      {blockerSummary && (
+        <p className="rounded border border-[rgba(180,60,60,0.2)] bg-[rgba(180,60,60,0.08)] px-2 py-1.5 text-xs leading-relaxed text-ember/90">
+          {blockerSummary}
         </p>
       )}
 

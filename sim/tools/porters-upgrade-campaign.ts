@@ -259,13 +259,34 @@ export function createPortersUpgradeCampaignSeedWorld(): WorldSnapshot {
     ...operator,
     assignment: { kind: "idle", targetId: "" },
   }));
+  const inventoryByItemId = new Map(
+    (relocatedWorld.inventoryStacks ?? []).map((stack) => [stack.itemId, stack.quantity]),
+  );
+  for (const [itemId, quantity] of [
+    ["loot/monster-part/fang", 3],
+    ["loot/monster-part/bone-shard", 2],
+    ["loot/monster-part/bollard-core", 1],
+  ] as const) {
+    inventoryByItemId.set(itemId, (inventoryByItemId.get(itemId) ?? 0) + quantity);
+  }
+  relocatedWorld.inventoryStacks = [...inventoryByItemId.entries()].map(([itemId, quantity]) => ({
+    itemId,
+    quantity,
+  }));
+  if (relocatedWorld.cityPressure) {
+    relocatedWorld.cityPressure.factions = relocatedWorld.cityPressure.factions.map((faction) =>
+      faction.factionId === "faction/emergency-management"
+        ? { ...faction, standing: Math.max(faction.standing, 5) }
+        : faction,
+    );
+  }
 
   const simulation = createAscensionSimulation(relocatedWorld, templateRegistry);
   simulation.dispatch({ type: "sim/dev-set-resource", resourceId: "resource/cash", amount: 5200 });
   simulation.dispatch({
     type: "sim/dev-set-resource",
     resourceId: "resource/reputation",
-    amount: 320,
+    amount: 420,
   });
 
   for (let hour = 0; hour < 6; hour += 1) {

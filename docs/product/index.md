@@ -8,7 +8,8 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 
 - The repo already ships the baseline game loop through the bodega arc, relocation into Porter's, multi-floor HQ support, management/onboarding/interruption surfaces, and the initial optional local-first AI runtime contract.
 - Phase 4 midgame breadth is shipped: external pressure, encounter and incident expansion, Porter's-era content remediation, and durable crafting now exist in the baseline product.
-- The next product work is midgame remediation, not more breadth-first expansion: verify the shipped Porter's loop more deeply, tune the D-rank economy and pressure curves, and clean up usability debt before moving on to later-building differentiation or wider optional AI presentation layers.
+- Midgame remediation is shipped: the Porter's loop now has stronger browser coverage, deterministic D-rank reporting, tuned workshop economics, and the narrow readability fixes required by that verification pass.
+- The next product work is later-building and prestige differentiation plus related environment cleanup, not another Porter's-era breadth or remediation pass.
 
 ## File Map
 
@@ -45,7 +46,6 @@ The game should make the player feel all of the following:
 
 - Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
 - Broaden the late-bodega content pool only if later repeated-campaign evidence shows collapse into the same few recruits, sites, loadouts, and pressure patterns.
-- Remediate the shipped Porter's tier so it reads clearly in browser play, holds up under regression coverage, and lands inside an explicit tuned D-rank envelope.
 - Expand from the shipped Porter's baseline into larger buildings that change spatial and staffing decisions, not just numbers, only after the current Porter's layer is exercised and tuned.
 - Extend the shipped multi-floor HQ model so later buildings can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
 - Grow later-building pressure through stronger reputation, regulation, competition, and factional response once the current Porter's-era pressure band is stable.

@@ -343,7 +343,7 @@ export const itemTemplates = [
     category: "weapon",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 145,
+    buyPrice: 0,
     sellPrice: 58,
     statEffects: [
       { stat: "strength", value: 4 },
@@ -361,7 +361,7 @@ export const itemTemplates = [
     category: "weapon",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 190,
+    buyPrice: 0,
     sellPrice: 76,
     statEffects: [
       { stat: "strength", value: 8 },
@@ -379,7 +379,7 @@ export const itemTemplates = [
     category: "weapon",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 200,
+    buyPrice: 0,
     sellPrice: 80,
     statEffects: [
       { stat: "strength", value: 4 },
@@ -475,7 +475,7 @@ export const itemTemplates = [
     category: "outfit-overlay",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 140,
+    buyPrice: 0,
     sellPrice: 55,
     statEffects: [
       { stat: "resilience", value: 4 },
@@ -634,7 +634,7 @@ export const itemTemplates = [
     category: "outfit-overlay",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 155,
+    buyPrice: 0,
     sellPrice: 62,
     statEffects: [
       { stat: "resilience", value: 5 },
@@ -652,7 +652,7 @@ export const itemTemplates = [
     category: "outfit-overlay",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 185,
+    buyPrice: 0,
     sellPrice: 74,
     statEffects: [
       { stat: "resilience", value: 8 },
@@ -758,7 +758,7 @@ export const itemTemplates = [
     category: "accessory",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 100,
+    buyPrice: 0,
     sellPrice: 40,
     statEffects: [
       { stat: "strength", value: 3 },
@@ -887,7 +887,7 @@ export const itemTemplates = [
     category: "accessory",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 95,
+    buyPrice: 0,
     sellPrice: 38,
     statEffects: [
       { stat: "endurance", value: 3 },
@@ -906,7 +906,7 @@ export const itemTemplates = [
     category: "accessory",
     rank: "d",
     rankTone: "heightened",
-    buyPrice: 115,
+    buyPrice: 0,
     sellPrice: 46,
     statEffects: [
       { stat: "perception", value: 4 },
@@ -3025,6 +3025,7 @@ export const dropTables = [
     id: "drop-table/customs-sentries-regular",
     entries: [
       { itemId: "loot/monster-part/customs-seal", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/rivet-cluster", weight: 3, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/void-residue", weight: 3, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/monster-part/bone-shard", weight: 2, minQuantity: 1, maxQuantity: 2 },
     ],
@@ -3033,6 +3034,7 @@ export const dropTables = [
     id: "drop-table/customs-sentries-elite",
     entries: [
       { itemId: "loot/monster-part/import-stamp", weight: 4, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/bollard-core", weight: 2, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/customs-seal", weight: 3, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/void-residue", weight: 2, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/rare-material/brine-crystal", weight: 1, minQuantity: 1, maxQuantity: 1 },
@@ -3042,6 +3044,7 @@ export const dropTables = [
     id: "drop-table/rail-grinders-regular",
     entries: [
       { itemId: "loot/monster-part/rail-splice", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ticket-stub", weight: 4, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/bone-shard", weight: 3, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/threat-gland", weight: 2, minQuantity: 1, maxQuantity: 1 },
     ],
@@ -3050,6 +3053,7 @@ export const dropTables = [
     id: "drop-table/rail-grinders-elite",
     entries: [
       { itemId: "loot/monster-part/switch-plate", weight: 4, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ticket-stub", weight: 3, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/rail-splice", weight: 3, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/threat-gland", weight: 2, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/rare-material/rail-slag", weight: 1, minQuantity: 1, maxQuantity: 1 },
@@ -3076,6 +3080,7 @@ export const dropTables = [
     id: "drop-table/asphalt-shapers-regular",
     entries: [
       { itemId: "loot/monster-part/tar-bead", weight: 5, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ramp-gravel", weight: 4, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/bone-shard", weight: 3, minQuantity: 1, maxQuantity: 2 },
       { itemId: "loot/monster-part/carapace", weight: 2, minQuantity: 1, maxQuantity: 1 },
     ],
@@ -3084,6 +3089,8 @@ export const dropTables = [
     id: "drop-table/asphalt-shapers-elite",
     entries: [
       { itemId: "loot/monster-part/reflector-chip", weight: 4, minQuantity: 1, maxQuantity: 2 },
+      { itemId: "loot/monster-part/ramp-gravel", weight: 3, minQuantity: 1, maxQuantity: 3 },
+      { itemId: "loot/monster-part/bollard-core", weight: 2, minQuantity: 1, maxQuantity: 1 },
       { itemId: "loot/monster-part/tar-bead", weight: 3, minQuantity: 1, maxQuantity: 3 },
       { itemId: "loot/monster-part/carapace", weight: 2, minQuantity: 1, maxQuantity: 1 },
       {

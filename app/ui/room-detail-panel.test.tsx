@@ -203,4 +203,69 @@ describe("room detail panel", () => {
 
     expect(html).toContain('aria-label="Close room detail"');
   });
+
+  it("summarizes workshop blockers before the detailed craft requirements", () => {
+    const html = renderToStaticMarkup(
+      <RoomDetailPanel
+        guildName="Porter's"
+        room={makeTrainingRoom({
+          id: "room-instance/workshop",
+          templateId: "room/workshop:tier_1",
+          name: "The Workshop",
+          tags: ["room:operations", "ops:crafting", "staff:logistics"],
+          assignedStaffCount: 0,
+          requiredStaffTag: "staff:logistics",
+          craftRecipes: [
+            {
+              recipeId: "craft-recipe/field-lead-breach/breach-hammer",
+              family: "craft-family/field-lead-breach",
+              name: "Breach Hammer Assembly",
+              description: "Build a structural-entry hammer from salvaged parts.",
+              inputs: [
+                {
+                  itemId: "loot/monster-part/fang",
+                  itemName: "Fang",
+                  quantityRequired: 3,
+                  quantityOwned: 1,
+                  isSatisfied: false,
+                },
+              ],
+              outputItemId: "weapon/breach-hammer",
+              outputName: "Breach Hammer",
+              outputCategory: "weapon",
+              outputRank: "d",
+              outputQuantity: 1,
+              cashCost: 95,
+              cashOnHand: 60,
+              outputStatEffects: [{ stat: "strength", value: 8 }],
+              canProduce: false,
+              isRoomStaffed: false,
+              isBuildingTierMet: false,
+              isDistrictMet: false,
+              isFactionMet: false,
+              isCashMet: false,
+              factionBlockers: [
+                {
+                  factionId: "faction/emergency-management",
+                  factionName: "Emergency Management",
+                  required: 5,
+                  current: 2,
+                },
+              ],
+              missingDistrictTags: ["infrastructure:highway"],
+            },
+          ],
+          training: null,
+        })}
+        buildingUpgrades={[]}
+        roomUpgrades={[]}
+        callbacks={callbacks}
+      />,
+    );
+
+    expect(html).toContain("Blocked by:");
+    expect(html).toContain("assigned logistics staff");
+    expect(html).toContain("Emergency Management 2/5");
+    expect(html).toContain("Fang 1/3");
+  });
 });

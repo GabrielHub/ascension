@@ -14,11 +14,14 @@ Documentation is intentionally narrow.
 - The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
 - The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
 - Phase 4 is complete. Contract lock, city pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter breadth are all shipped.
+- Midgame remediation is complete. The shipped Porter's-era baseline now has stronger browser coverage, deterministic D-rank economy reporting, workshop tuning, and the verified UX fixes needed by that loop.
 
 ## Planned Work
 
-- The next active execution work is midgame remediation: thorough browser/runtime verification, balance review, and tuning across the shipped Porter's-era D-rank layer.
+- There is no active checked-in execution plan at the moment.
+- The next product work is later-building and prestige breadth on top of the verified Porter's-era baseline.
 - Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and later-building reuse.
+- Start the next execution plan only when a concrete later-building or environment-cleanup slice is ready to run.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
 
 ## Current Docs
@@ -34,7 +37,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  The active queue is midgame remediation, balance, and tuning for the shipped Porter's-era layer.
+  There is no active checked-in plan right now; completed work should already be reflected back into the roadmap and product docs.
 
 ### Research
 
