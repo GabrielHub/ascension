@@ -47,6 +47,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The bodega ships the full three-step building arc (Frontage, Annex, Backyard Extension), four bodega-native room identities from the world foundation, bodega-native support rooms (Back Office, Backstock, Alley), and hard roster-cap overflow handling.
 - The second headquarters tier (Porter's) is shipped with multi-floor layouts, explicit floor switching, starter room placement, and a D-rank contract ceiling.
+- The third and final headquarters (Ascension Tower, the midtown skyscraper) is shipped with a five-floor starter stack, ops/recovery/training/logistics/rooftop floors, relocation from Porter's, HQ environment wiring, and a C-rank contract ceiling.
 - Porter's now exposes 12 room templates at the HQ contract level: Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, Deck, and Workshop.
 - Porter's upgrade arc is a real player-facing campaign through Kitchen Overhaul, Upstairs Conversion, The Remodel, and The Waterfront, with upgrade-gated room unlocks for Break Room, Briefing Room, Dock, and Deck.
 - Porter's specialized rooms change management decisions: gym drives bounded training readiness, Office and Briefing Room change contract reading and raid preparation, Infirmary/Break Room/Dock/Deck change recovery/morale/decompression/staging outcomes through simulation-owned room effects.
@@ -61,6 +62,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - Operators have needs, morale, loyalty, injury, schedule, preference, and relationship state that drive readiness, refusal, quitting, recovery, and staffing pressure.
 - Operators carry a permanent combat identity: rank, attunement, traits, fixed kit references, and six base combat stats (strength, speed, endurance, resilience, perception, intelligence).
+- Recruit generation is rank-aware: the bodega still produces F-rank operators, Porter's spreads F/E/D based on visitor quality, and the skyscraper spreads E/D/C. Combat base stats scale with rank while attunement, traits, and kit identity stay role-deterministic.
 - First-class operator kit templates are implemented for regular attacks, skills, ultimates, and passives, with deterministic runtime execution rules.
 - Gear stat effects are first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, flowing through the derived-stat layer into raid outcomes.
 - Porter's training is a bounded readiness loop: operational `room:training` space accrues save-safe physical readiness, feeds derived stats and raid readiness, decays through neglect and raid wear, and stays absent from bodega runs.
@@ -85,6 +87,7 @@ The implementation itself is the source of truth. This section is organized by s
 - Boss commitment escalates into a blocking interruption beat and can hand off into a save-safe encounter surface with phase state, interventions, debug pause/step controls, and authoritative writeback into raid, roster, and contract outcomes.
 - Boss art and raid-surface visual coverage now extend across the shipped Porter's-era content slice instead of stopping at the original bodega boss set.
 - Browser regression now covers the canonical Porter's path through contract bidding, briefing, workshop use, incident resolution, dock/deck staging payoff, and boss-commitment encounter handoff.
+- The skyscraper surfaces a first C-rank content packet — six authored sites, six bosses, six enemy families, and matching drop tables — gating postings to the skyscraper contract ceiling once guild reputation clears the C threshold.
 
 ### Economy & Gear
 
@@ -93,6 +96,7 @@ The implementation itself is the source of truth. This section is organized by s
 - Durable crafting is shipped through the machine-shop upgrade, workshop room template, craft-recipe registry, protected crafting inputs, district/faction recipe requirements, craft-time cash sinks, workshop recipe UX, and the midgame economy ledger.
 - The economy harness is shipped at first pass through authored ledgers, direct simulation tooling, and checked-in economy reports for the early campaign.
 - The D-rank economy remediation pass is shipped through a machine-checkable `midgame-economy.v2` ledger covering contract posting envelopes, payout envelopes, loot-sale envelopes, source coverage, and workshop-vs-market comparisons, plus tuned D-rank recipe and loot authored data.
+- The skyscraper endgame-entry economy envelope is shipped through a new C-rank craft family authored against the Fabrication Bay, C-rank gear (weapons, outfits, accessories, consumables), boss- and family-specific C-rank drop tables, and a deterministic test harness that compares C-rank postings, payouts, and craft costs against the D-rank baseline.
 - First standing management policy surfaces are shipped through the runtime policy contract and the HQ management panel.
 
 ### Events & Incidents
@@ -142,15 +146,17 @@ The implementation itself is the source of truth. This section is organized by s
 ## Status Snapshot
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
-- The current shipped baseline is a playable bodega-to-Porter's management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
+- The current shipped baseline is a playable bodega-to-Porter's-to-skyscraper management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
 - Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
 - Midgame remediation is complete. The Porter's-era D-rank band now has browser regression coverage across contracts, workshop use, incidents, and encounter handoff; deterministic D-rank economy reporting; tuned workshop authored data; and the narrow management-surface fixes that verification exposed.
+- The skyscraper HQ baseline and the first C-rank endgame-entry band are shipped. The tower exposes a bounded starter floor stack, C-rank contracts once reputation clears the threshold, a C-rank craft family in the Fabrication Bay, and rank-aware recruit generation that stops flattening new hires to F at every building.
 
 ## Next Steps
 
-1. Add later-building and prestige content now that the Porter's-era baseline is verified and tuned.
-2. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and later-building reuse.
-3. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+1. Continue expanding the skyscraper floor loop beyond the starter stack (floor acquisition, elevation-band reuse).
+2. Stage additional endgame pressure inside the skyscraper once the C-rank bridge is stable in live play: prestige ladder entry, bigger raid envelopes, and the first B-rank content packet when the C-rank band proves itself.
+3. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
+4. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Later: AI Content Breadth
 
@@ -178,8 +184,8 @@ Exit criteria:
 
 ## Deferred Until Proven Necessary
 
-- S-rank endgame content
-- tower-scale 20+ floor management
+- the full B/A/S prestige ladder beyond the first skyscraper-entry band
+- literal tower-scale 20+ floor simultaneous management if reusable floor bands and staged expansion solve the need sooner
 - live premium operator generation
 - FAL-style AI image generation for portraits and scene art as core systems; if external image generation is explored later, constrain portraits to S-rank operators so cost stays bounded and those operators get a uniquely prestigious presentation layer
 - heavy procedural narrative systems
@@ -187,8 +193,9 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, and Porter's-era midgame remediation.
-2. Add later-building and prestige content.
-3. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
+1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, Porter's-era midgame remediation, skyscraper HQ baseline, and the first C-rank endgame-entry content/economy/recruit band.
+2. Deepen the skyscraper itself: floor acquisition beyond the starter stack, additional pressure loops, and prestige presentation once the C-rank bridge proves itself in live play.
+3. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
+4. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 
 That order matters more than any specific library choice.

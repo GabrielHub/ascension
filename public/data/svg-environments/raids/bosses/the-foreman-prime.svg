@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="fp-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#f4a030" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#180c04" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#050404" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fp-vis" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4d028"/>
+      <stop offset="55%" stop-color="#c89018"/>
+      <stop offset="100%" stop-color="#6a5010"/>
+    </linearGradient>
+    <linearGradient id="fp-coverall" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2e4a6a"/>
+      <stop offset="55%" stop-color="#162838"/>
+      <stop offset="100%" stop-color="#08141c"/>
+    </linearGradient>
+    <linearGradient id="fp-steel" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#b8b8b4"/>
+      <stop offset="55%" stop-color="#585854"/>
+      <stop offset="100%" stop-color="#1a1a18"/>
+    </linearGradient>
+    <filter id="fp-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="94" ry="132" fill="url(#fp-aura)"/>
+
+  <!-- Steel grating floor -->
+  <line x1="0" y1="262" x2="200" y2="262" stroke="#585854" stroke-width="0.4"/>
+  <line x1="0" y1="268" x2="200" y2="268" stroke="#585854" stroke-width="0.4"/>
+  <line x1="12" y1="260" x2="12" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="30" y1="260" x2="30" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="48" y1="260" x2="48" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="66" y1="260" x2="66" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="84" y1="260" x2="84" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="102" y1="260" x2="102" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="120" y1="260" x2="120" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="138" y1="260" x2="138" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="156" y1="260" x2="156" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="174" y1="260" x2="174" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+  <line x1="192" y1="260" x2="192" y2="276" stroke="#3a3a38" stroke-width="0.25"/>
+
+  <!-- Skybridge silhouettes faint behind -->
+  <path d="M 0 40 L 30 42 L 30 200 L 0 200 Z" fill="#1a2a3a" opacity="0.35"/>
+  <path d="M 170 40 L 200 42 L 200 200 L 170 200 Z" fill="#1a2a3a" opacity="0.35"/>
+  <line x1="0" y1="90" x2="30" y2="92" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+  <line x1="0" y1="120" x2="30" y2="122" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+  <line x1="0" y1="150" x2="30" y2="152" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+  <line x1="170" y1="90" x2="200" y2="92" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+  <line x1="170" y1="120" x2="200" y2="122" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+  <line x1="170" y1="150" x2="200" y2="152" stroke="#c8c0a8" stroke-width="0.25" opacity="0.5"/>
+
+  <!-- Steel-toed work boots -->
+  <path d="M 64 240 L 58 260 L 92 260 L 90 240 Z" fill="url(#fp-steel)" stroke="#0a0a08" stroke-width="0.5"/>
+  <path d="M 110 240 L 108 260 L 142 260 L 136 240 Z" fill="url(#fp-steel)" stroke="#0a0a08" stroke-width="0.5"/>
+  <!-- Toe caps -->
+  <rect x="58" y="256" width="34" height="4" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+  <rect x="108" y="256" width="34" height="4" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+
+  <!-- Coverall legs -->
+  <rect x="70" y="198" width="22" height="44" rx="1" fill="url(#fp-coverall)" stroke="#050a10" stroke-width="0.6"/>
+  <rect x="108" y="198" width="22" height="44" rx="1" fill="url(#fp-coverall)" stroke="#050a10" stroke-width="0.6"/>
+  <!-- Knee pads -->
+  <rect x="70" y="218" width="22" height="8" rx="1" fill="#1a1a18" stroke="#0a0a08" stroke-width="0.3"/>
+  <rect x="108" y="218" width="22" height="8" rx="1" fill="#1a1a18" stroke="#0a0a08" stroke-width="0.3"/>
+
+  <!-- Main body — hi-vis vest over heavy coverall -->
+  <!-- Coverall torso -->
+  <path d="M 58 100 L 66 90 L 80 84 L 100 82 L 120 84 L 134 90 L 142 100 L 146 130 L 150 160 L 148 198 L 52 198 L 50 160 L 54 130 Z"
+        fill="url(#fp-coverall)" stroke="#050a10" stroke-width="1.0"/>
+
+  <!-- Hi-vis safety vest -->
+  <path d="M 62 96 L 72 94 L 80 100 L 100 104 L 120 100 L 128 94 L 138 96 L 140 150 L 144 190 L 56 190 L 60 150 Z"
+        fill="url(#fp-vis)" stroke="#6a4810" stroke-width="0.6" opacity="0.95"/>
+  <!-- Reflective strips -->
+  <rect x="60" y="130" width="80" height="3" fill="#f4f0d4" stroke="#6a6830" stroke-width="0.3" opacity="0.8"/>
+  <rect x="60" y="160" width="80" height="3" fill="#f4f0d4" stroke="#6a6830" stroke-width="0.3" opacity="0.8"/>
+  <!-- Vest zipper -->
+  <line x1="100" y1="100" x2="100" y2="190" stroke="#3a2a10" stroke-width="0.5"/>
+  <!-- Vest pocket -->
+  <rect x="72" y="140" width="18" height="14" rx="0.5" fill="none" stroke="#6a4810" stroke-width="0.3"/>
+  <rect x="110" y="140" width="18" height="14" rx="0.5" fill="none" stroke="#6a4810" stroke-width="0.3"/>
+
+  <!-- Tool belt -->
+  <rect x="54" y="188" width="92" height="7" rx="1" fill="#2a1e14" stroke="#0a0a08" stroke-width="0.5"/>
+  <!-- Wrench on belt -->
+  <rect x="70" y="192" width="12" height="2" fill="url(#fp-steel)" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- Radio on belt -->
+  <rect x="118" y="190" width="8" height="10" rx="0.5" fill="#1a1a18" stroke="#0a0a08" stroke-width="0.3"/>
+  <line x1="120" y1="185" x2="120" y2="190" stroke="#585854" stroke-width="0.4"/>
+  <circle cx="122" cy="193" r="0.6" fill="#c83a18"/>
+
+  <!-- Left arm — holding an I-beam pipe -->
+  <path d="M 48 106 L 36 122 L 26 150 L 20 182 L 26 186 L 36 162 L 46 138 L 54 122 Z" fill="url(#fp-coverall)" stroke="#050a10" stroke-width="0.6"/>
+  <ellipse cx="24" cy="190" rx="6" ry="4.5" fill="#c8a878" stroke="#5a3a18" stroke-width="0.4"/>
+  <!-- I-beam pipe across the chest -->
+  <rect x="4" y="172" width="48" height="6" fill="url(#fp-steel)" stroke="#1a1a18" stroke-width="0.5"/>
+  <rect x="4" y="170" width="48" height="2" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+  <rect x="4" y="178" width="48" height="2" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+
+  <!-- Right arm — massive pipe wrench swinging -->
+  <path d="M 152 106 L 164 122 L 174 150 L 180 182 L 174 186 L 164 162 L 154 138 L 146 122 Z" fill="url(#fp-coverall)" stroke="#050a10" stroke-width="0.6"/>
+  <ellipse cx="176" cy="188" rx="6" ry="4.5" fill="#c8a878" stroke="#5a3a18" stroke-width="0.4"/>
+  <!-- Pipe wrench -->
+  <rect x="170" y="190" width="4" height="44" rx="0.3" fill="url(#fp-steel)" stroke="#1a1a18" stroke-width="0.4"/>
+  <rect x="163" y="226" width="18" height="10" rx="1" fill="url(#fp-steel)" stroke="#1a1a18" stroke-width="0.5"/>
+  <!-- Wrench jaws -->
+  <path d="M 163 228 L 167 228 L 167 234 L 163 234 Z" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+  <path d="M 181 228 L 177 228 L 177 234 L 181 234 Z" fill="#181818" stroke="#0a0a08" stroke-width="0.3"/>
+
+  <!-- Head -->
+  <ellipse cx="100" cy="64" rx="16" ry="14" fill="#c8a878" stroke="#5a3a18" stroke-width="0.5"/>
+  <!-- Hard hat -->
+  <path d="M 80 44 Q 100 30 120 44 L 124 50 L 76 50 Z" fill="#f4d028" stroke="#6a4810" stroke-width="0.6"/>
+  <!-- Hard hat ridge -->
+  <line x1="78" y1="48" x2="122" y2="48" stroke="#6a4810" stroke-width="0.5"/>
+  <!-- Hard hat lamp -->
+  <rect x="96" y="40" width="8" height="5" rx="0.5" fill="url(#fp-steel)" stroke="#1a1a18" stroke-width="0.3"/>
+  <circle cx="100" cy="42" r="1.6" fill="#f4f0c8" filter="url(#fp-glow)"/>
+
+  <!-- Eyes — amber -->
+  <ellipse cx="93" cy="64" rx="2.5" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="93" cy="64" r="1.1" fill="#f4a030" filter="url(#fp-glow)"/>
+  <ellipse cx="107" cy="64" rx="2.5" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="107" cy="64" r="1.1" fill="#f4a030" filter="url(#fp-glow)"/>
+
+  <!-- Brow -->
+  <path d="M 88 59 Q 93 57 98 60" fill="none" stroke="#2a1810" stroke-width="0.7"/>
+  <path d="M 102 60 Q 107 57 112 59" fill="none" stroke="#2a1810" stroke-width="0.7"/>
+
+  <!-- Nose -->
+  <path d="M 100 66 L 98 72 L 100 74 L 102 72 Z" fill="#b89068" stroke="#5a3a18" stroke-width="0.3"/>
+  <!-- Set mouth -->
+  <path d="M 92 78 L 108 78" stroke="#2a1810" stroke-width="0.6"/>
+
+  <!-- Clipboard half-visible at vest -->
+  <rect x="85" y="158" width="14" height="18" rx="0.5" fill="#e0d098" stroke="#6a5018" stroke-width="0.4"/>
+  <line x1="87" y1="162" x2="97" y2="162" stroke="#6a5018" stroke-width="0.25"/>
+  <line x1="87" y1="166" x2="97" y2="166" stroke="#6a5018" stroke-width="0.25"/>
+  <line x1="87" y1="170" x2="93" y2="170" stroke="#6a5018" stroke-width="0.25"/>
+</svg>

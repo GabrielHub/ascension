@@ -14,6 +14,29 @@ function buildCultureMap(
   return map;
 }
 
+const FLOOR_BADGES: Record<string, Record<number, string>> = {
+  "building/porters": { 0: "Public", 1: "Private", 2: "Waterfront" },
+  "building/skyscraper": { 0: "Public", 1: "Ops", 2: "Recovery", 3: "Logistics", 4: "Rooftop" },
+};
+
+const FLOOR_DESCRIPTIONS: Record<string, Record<number, string>> = {
+  "building/porters": {
+    0: "Ground floor — worn hardwood and loud conversation. The bar and dining room keep regulars coming through while operators eat alongside them.",
+    1: "Upstairs — converted apartments turned real operational rooms. Admin, recovery, training, and prep behind doors that actually close.",
+    2: "Waterfront — concrete dock and weathered deck over harbor water. Staging and decompression where the salt air does half the work.",
+  },
+  "building/skyscraper": {
+    0: "Lobby — polished stone, tall glass, and the reception desk that says the guild finally has an address worth printing.",
+    1: "Operations — open bullpen, glass-walled situation room, and a corkboard that takes up half a corridor. Contracts live here now.",
+    2: "Recovery and training — a proper clinic, a full dojo, and a staff lounge with a skyline view. The floor that stops turning operators into attrition.",
+    3: "Logistics — supply hall, secure cage, and the fabrication bay that took over where the dockside workshop left off.",
+    4: "Rooftop — helipad, sky garden, and quiet sky. Fast departures one direction, decompression the other.",
+  },
+};
+
+const DEFAULT_FLOOR_DESCRIPTION =
+  "The whole operation runs out of one floor. Every room doubles as something else.";
+
 interface HqPanelProps {
   hq: HqViewModel;
   callbacks: GameCallbacks;
@@ -25,12 +48,16 @@ interface HqPanelProps {
 export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = [] }: HqPanelProps) {
   const cultureMap = useMemo(() => buildCultureMap(roomCultures), [roomCultures]);
   const selectedRoomId = focus?.targetKind === "room" ? focus.targetId : null;
-  const currentFloorRooms = hq.rooms.filter(
-    (room) => room.floorIndex === hq.building.activeFloorIndex,
-  );
-  const currentFloorExpansionSlots = hq.expansionSlots.filter(
-    (slot) => slot.floorIndex === hq.building.activeFloorIndex,
-  );
+  const { currentFloorRooms, currentFloorExpansionSlots } = useMemo(() => {
+    return {
+      currentFloorRooms: hq.rooms.filter(
+        (room) => room.floorIndex === hq.building.activeFloorIndex,
+      ),
+      currentFloorExpansionSlots: hq.expansionSlots.filter(
+        (slot) => slot.floorIndex === hq.building.activeFloorIndex,
+      ),
+    };
+  }, [hq.rooms, hq.expansionSlots, hq.building.activeFloorIndex]);
   const currentFloorTotalSlots = currentFloorRooms.length + currentFloorExpansionSlots.length;
   const handleSelectRoom = useCallback(
     (roomId: string) => {
@@ -47,6 +74,10 @@ export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = []
     [callbacks, onFocusChange],
   );
 
+  const floorBadge = FLOOR_BADGES[hq.building.id]?.[hq.building.activeFloorIndex];
+  const floorDescription =
+    FLOOR_DESCRIPTIONS[hq.building.id]?.[hq.building.activeFloorIndex] ?? DEFAULT_FLOOR_DESCRIPTION;
+
   return (
     <div className="animate-enter space-y-4">
       {/* Room strip — full width */}
@@ -59,29 +90,13 @@ export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = []
             <span className="text-xs tabular-nums text-silver/60">
               Floor {hq.building.activeFloorIndex + 1}/{hq.building.floorCount}
             </span>
-            {hq.building.id === "building/porters" && (
-              <span className="badge badge-slate">
-                {hq.building.activeFloorIndex === 0
-                  ? "Public"
-                  : hq.building.activeFloorIndex === 1
-                    ? "Private"
-                    : "Waterfront"}
-              </span>
-            )}
+            {floorBadge && <span className="badge badge-slate">{floorBadge}</span>}
           </div>
           <span className="text-xs tabular-nums text-silver/60">
             {currentFloorRooms.length} rooms / {currentFloorTotalSlots} slots
           </span>
         </div>
-        <p className="pb-2 text-xs leading-relaxed text-silver/45">
-          {hq.building.id === "building/porters"
-            ? hq.building.activeFloorIndex === 0
-              ? "Ground floor — worn hardwood and loud conversation. The bar and dining room keep regulars coming through while operators eat alongside them."
-              : hq.building.activeFloorIndex === 1
-                ? "Upstairs — converted apartments turned real operational rooms. Admin, recovery, training, and prep behind doors that actually close."
-                : "Waterfront — concrete dock and weathered deck over harbor water. Staging and decompression where the salt air does half the work."
-            : "The whole operation runs out of one floor. Every room doubles as something else."}
-        </p>
+        <p className="pb-2 text-xs leading-relaxed text-silver/45">{floorDescription}</p>
         <BodegaFloor
           rooms={currentFloorRooms}
           expansionSlots={currentFloorExpansionSlots}

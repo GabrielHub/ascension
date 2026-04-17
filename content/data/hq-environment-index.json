@@ -810,6 +810,99 @@
           }
         }
       }
+    },
+    "building/skyscraper": {
+      "style": "skyscraper-midtown-isometric",
+      "paths": {
+        "partsRoot": "/data/svg-environments/hq/bodega/parts",
+        "referenceRoot": "/data/svg-environments/hq/bodega/reference",
+        "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
+      },
+      "parts": [],
+      "composition": {
+        "tileWidth": 96,
+        "tileHeight": 48,
+        "wallHeight": 84,
+        "rendering": "canvas-modular",
+        "roomRecipes": [
+          "room:operations",
+          "room:recovery",
+          "room:social",
+          "room:staffing",
+          "room:training"
+        ],
+        "sceneSystem": {
+          "canonicalOrigin": [200, 100],
+          "canonicalViewBox": "20 0 420 310",
+          "roomFootprint": {
+            "cols": 4,
+            "rows": 3
+          },
+          "fallback": "per-prop sprite placement for rooms without scene SVGs"
+        }
+      },
+      "backdrop": {
+        "profileId": "skyscraper-midtown",
+        "elevationBandId": "ground-floor",
+        "phases": {
+          "sunrise": {
+            "ambientTint": "rgba(180, 160, 130, 0.12)",
+            "fogColor": "rgba(200, 190, 170, 0.18)",
+            "shadowIntensity": 0.12,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "day": {
+            "ambientTint": "rgba(0, 0, 0, 0)",
+            "fogColor": "rgba(0, 0, 0, 0)",
+            "shadowIntensity": 0.18,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "sunset": {
+            "ambientTint": "rgba(200, 140, 60, 0.14)",
+            "fogColor": "rgba(180, 120, 60, 0.08)",
+            "shadowIntensity": 0.22,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          },
+          "night": {
+            "ambientTint": "rgba(18, 26, 44, 0.22)",
+            "fogColor": "rgba(10, 14, 28, 0.14)",
+            "shadowIntensity": 0.3,
+            "zones": {
+              "belowShell": [],
+              "rear": [],
+              "leftFlank": [],
+              "rightFlank": [],
+              "fore": [],
+              "aboveShell": [],
+              "fxOverlay": []
+            }
+          }
+        }
+      }
     }
   }
 }

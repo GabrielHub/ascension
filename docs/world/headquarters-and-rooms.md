@@ -105,7 +105,7 @@ Rooms evolve as the guild relocates to larger buildings. Each building has its o
 
 - **Bodega scale:** Everything shares space. Four rooms, each pulling double duty. No specialization.
 - **Porter's scale:** Public and operational space separate. Recovery gets a real room. Training unlocks. Staging and light consumable prep can be given a dedicated home. The charm is in the guild becoming more competent without becoming sleek.
-- **Higher tiers (future):** Rooms reflect the guild's identity and reputation more strongly. Specialized rooms and real workshop spaces emerge.
+- **Skyscraper scale (future):** This is the final headquarters. The guild stops relocating and starts expanding upward by acquiring more floors. Rooms reflect institutional reach, prestige, and specialization much more strongly here than in the earlier buildings.
 
 ### Recruitment Space Progression
 
@@ -146,13 +146,15 @@ Relocation should feel like a milestone that the player earned by surviving the 
 
 ### Future Building Directions
 
-The world model supports multiple building tiers beyond the bodega. Each should feel like a different phase of the guild's life, not just a size increase.
+The headquarters ladder should stop at three buildings. Each should feel like a different phase of the guild's life, not just a size increase.
 
-- Later buildings are larger, better-equipped, and come with higher expectations from the city, from operators, and from the player.
-- Each building should have a distinct physical identity tied to a real type of New York space: bodega, Porter's-style bar and restaurant, office floor, converted warehouse, proper tower floor.
-- The building's identity shapes what rooms feel like inside it.
+- The first headquarters is the bodega.
+- The second headquarters is Porter's.
+- The third headquarters is a skyscraper. It is the guild's final home and the base for endgame expansion.
+- The skyscraper should absorb the room identities that would otherwise have belonged to extra intermediate headquarters. Office-floor, club, lounge, workshop, and prestige-floor identities can all exist as different owned floors inside the same tower.
 - Relocation between buildings is always a narrative event, never a silent upgrade.
-- Every building should have a distinct exterior backdrop family tied to its location and identity.
+- After the move into the skyscraper, progression should come from acquiring more floors and fitting them out rather than relocating again.
+- Every headquarters should have a distinct exterior backdrop family tied to its location and identity.
 
 ### Room Catalog By Building Tier
 
@@ -172,12 +174,13 @@ The bodega combines most functions into one dining area. As the guild moves to l
 - **The Dock.** Waterfront staging and departure surface.
 - **The Deck.** Waterfront downtime and morale space.
 
-**Later buildings:**
+**Skyscraper:**
 
 - **Role-specific training rooms.** Field Lead Drill Floor, Scout Recon Course, Medic Clinic.
 - **Dedicated social tiers.** Club and lounge recruitment spaces emerge later.
 - **Specialized operations rooms.** Bigger briefing, intel, and mission-planning spaces.
 - **Crafting and workshop spaces.** Dedicated rooms for real gear production, requiring staff and materials.
+- **Prestige and expansion floors.** Additional owned floors deepen the tower over time instead of introducing a fourth headquarters.
 
 ## Content Rules For Buildings And Rooms
 

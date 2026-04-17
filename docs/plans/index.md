@@ -4,9 +4,12 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-There is no active checked-in execution plan right now.
+The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline and the first C-rank endgame-entry band are also shipped and folded back into the roadmap. The active planning focus is now deepening the skyscraper into the start of endgame.
 
-The completed Phase 4 contract-lock, city-pressure, content-remediation, crafting, social/incident, encounter, and midgame-remediation slices are already reflected in code and in the roadmap. They are no longer kept here as active plans.
+Current checked-in execution slices:
+
+- [Skyscraper Floor Expansion](./skyscraper-floor-expansion.md)
+- [Skyscraper Prestige Pressure](./skyscraper-prestige-pressure.md)
 
 ## Shared Execution Contract
 
@@ -20,10 +23,10 @@ Before working any plan:
 
 ## Next Planning Trigger
 
-Check in a new plan only when a concrete execution slice is ready to start, for example:
+Check in a new plan only when a concrete execution slice is ready to start beyond the current skyscraper stack, for example:
 
-- HQ backdrop-package cleanup tied to a specific building or asset contract
-- later-building baseline tied to a concrete third-headquarters implementation slice
+- a specific HQ backdrop-package cleanup tied to skyscraper elevation-band reuse
+- a concrete B-rank or A-rank content packet after the C-rank bridge is stable
 - a later narrow AI content-breadth pass on top of the shipped optional runtime layer
 
 Do not add another broad umbrella plan when a narrower active execution slice is enough.
@@ -34,3 +37,4 @@ Do not add another broad umbrella plan when a narrower active execution slice is
 - The retired midgame remediation pass was verification-first work: browser depth, readability fixes, and balance-table tuning rather than new mechanics or broad new content.
 - Use browser automation as the primary fast regression surface for the canonical Porter's loop.
 - Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.
+- Treat the skyscraper as the final headquarters. Later planning should deepen that building's floor expansion, rank ladder, and pressure loops rather than introduce a fourth HQ.

@@ -17,6 +17,12 @@ type BrowserTestWindow = Window & {
   __ASCENSION_BROWSER_TEST__?: {
     getSnapshot(): BrowserTestSnapshot | null;
     resetSaveSlots(): Promise<void>;
+    listSlots(): Promise<
+      Array<{
+        slotId: string;
+        state: string;
+      }>
+    >;
     seedPortersUpgradeCampaignSave(slotId?: string): Promise<void>;
   };
 };
@@ -155,6 +161,13 @@ async function openOperationsContractBoard(page: Page): Promise<BrowserTestSnaps
     (next) =>
       next.navigation.activeTab === "operations" && next.navigation.opsCategory === "contract",
   );
+}
+
+async function waitForRoomCard(page: Page, roomName: string): Promise<void> {
+  await page.locator("button.glass-card").filter({ hasText: roomName }).first().waitFor({
+    state: "visible",
+    timeout: 15_000,
+  });
 }
 
 async function selectRoom(page: Page, roomName: string): Promise<void> {
@@ -313,6 +326,102 @@ async function loadSeededPortersSave(page: Page): Promise<BrowserTestSnapshot> {
   );
 }
 
+async function loadSkyscraperReadyPortersSave(page: Page): Promise<BrowserTestSnapshot> {
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.evaluate(async () => {
+    const driver = (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__;
+    await driver?.resetSaveSlots();
+    const importModule = (specifier: string) => (0, eval)(`import("${specifier}")`);
+
+    const [saveModule, portersModule, simModule, templateModule] = await Promise.all([
+      importModule("/save/index.ts"),
+      importModule("/sim/tools/porters-upgrade-campaign.ts"),
+      importModule("/sim/index.ts"),
+      importModule("/content/templates/index.ts"),
+    ]);
+
+    const world = portersModule.createPortersUpgradeCampaignSeedWorld();
+    const simulation = simModule.createAscensionSimulation(world, templateModule.templateRegistry);
+    for (const upgradeId of [
+      ...portersModule.PORTERS_CAMPAIGN_UPGRADE_SEQUENCE,
+      "upgrade/building/porters:machine_shop",
+    ]) {
+      simulation.dispatch({ type: "sim/purchase-building-upgrade", upgradeId });
+    }
+    simulation.tick(0);
+
+    const upgraded = structuredClone(simulation.getWorldSnapshot());
+    upgraded.guild.treasury = 9_999;
+    upgraded.guild.reputation = 999;
+
+    while ((upgraded.operators?.length ?? 0) < 12) {
+      const clone = structuredClone(upgraded.operators?.[0]);
+      if (!clone) {
+        throw new Error("Expected the Porters seed world to include operators.");
+      }
+      const nextIndex = (upgraded.operators?.length ?? 0) + 1;
+      clone.id = `operator/skyscraper-ready-${nextIndex}`;
+      clone.identity = {
+        ...clone.identity,
+        name: `Testing ${nextIndex}`,
+      };
+      clone.assignment = { kind: "idle", targetId: "" };
+      clone.lifecycle = { status: "active" };
+      upgraded.operators?.push(clone);
+    }
+
+    const raidSummaries = upgraded.raidSummaries ?? [];
+    for (let index = raidSummaries.length; index < 60; index += 1) {
+      raidSummaries.push({
+        id: `raid/skyscraper-ready-${index + 1}`,
+        contractSiteId: `contract/skyscraper-ready-${index + 1}`,
+        missionId: "mission/clearance",
+        startedAt: `2026-03-${String((index % 28) + 1).padStart(2, "0")}T18:00:00.000Z`,
+        endedAt: `2026-03-${String((index % 28) + 1).padStart(2, "0")}T20:00:00.000Z`,
+        result: "success",
+        reputationDelta: 5,
+        cashDelta: 150,
+        threat: 55,
+        intel: 65,
+        reward: 180,
+        cohesion: 70,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+        bossDefeated: index < 27,
+        contributingFactors: ["phase:porters", "promotion:ready"],
+      });
+    }
+    upgraded.raidSummaries = raidSummaries;
+
+    await saveModule.saveStorage.writeSaveGame({
+      slotId: "slot/1",
+      schemaVersion: saveModule.CURRENT_SAVE_SCHEMA_VERSION,
+      compatibilityVersion: saveModule.CURRENT_CONTENT_COMPATIBILITY,
+      metadata: {
+        guildName: upgraded.guild.guildName,
+        playerName: upgraded.guild.playerName,
+        createdAt: new Date().toISOString(),
+        lastPlayedAt: new Date().toISOString(),
+      },
+      world: upgraded,
+    });
+  });
+
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.locator('[data-testid="slot-load"][data-slot-id="slot/1"]').click();
+  await page.getByTestId("game-shell").waitFor({ state: "visible" });
+
+  return waitForSnapshot(
+    page,
+    "skyscraper-ready Porters seed",
+    (next) =>
+      next.building.activeBuildingId === "building/porters" && next.relocation.status === "ready",
+  );
+}
+
 async function openDevConsole(page: Page): Promise<void> {
   await page.keyboard.press("`");
   await page.getByTestId("dev-console").waitFor({ state: "visible" });
@@ -441,6 +550,90 @@ afterAll(async () => {
 const describeBrowser = RUN_BROWSER_TEST ? describe.sequential : describe.skip;
 
 describeBrowser("Porters upgrade campaign browser path", () => {
+  it("verifies the Porter's to skyscraper relocation flow, tower presentation, and reload persistence", async () => {
+    let snapshot = await loadSkyscraperReadyPortersSave(page);
+    expect(snapshot.relocation.status).toBe("ready");
+
+    await openHqCategory(page, "management");
+    await page.getByTestId("management-relocation").waitFor({ state: "visible" });
+    expect(await page.getByTestId("management-relocation").textContent()).toContain(
+      "Ascension Tower",
+    );
+    await captureScreenshot(page, "skyscraper-relocation-ready");
+
+    await page.getByRole("button", { exact: true, name: "Start Relocation Review" }).click();
+    await page.getByText("Facility Upgrade Notice", { exact: true }).waitFor({ state: "visible" });
+    expect(await page.locator('[role="dialog"]').textContent()).toContain("Midtown Manhattan");
+    await page.getByRole("button", { exact: true, name: "Review Offer" }).click();
+
+    await page
+      .getByText("Relocate to Ascension Tower?", { exact: true })
+      .waitFor({ state: "visible" });
+    const decisionText = await page.locator('[role="dialog"]').textContent();
+    expect(decisionText).toContain("Porter's closes as headquarters");
+    expect(decisionText).toContain("11 rooms across five floors");
+    await captureScreenshot(page, "skyscraper-relocation-decision");
+
+    await page.getByRole("button", { exact: true, name: "Accept and Relocate" }).click();
+    await page
+      .getByText("Welcome to Ascension Tower", { exact: true })
+      .waitFor({ state: "visible" });
+    expect(await page.locator('[role="dialog"]').textContent()).toContain("Midtown, Manhattan");
+    await page.getByRole("button", { exact: true, name: "Begin" }).click();
+
+    snapshot = await waitForSnapshot(
+      page,
+      "skyscraper relocation landed",
+      (next) => next.building.activeBuildingId === "building/skyscraper",
+    );
+    expect(snapshot.building.floorCount).toBe(5);
+
+    await openHqCategory(page, "rooms");
+    await page.getByRole("button", { exact: true, name: "Rooftop" }).click();
+    await waitForRoomCard(page, "The Helipad");
+    await waitForRoomCard(page, "The Sky Garden");
+    await page.getByText("Floor 5/5", { exact: true }).waitFor({ state: "visible" });
+    await captureScreenshot(page, "skyscraper-relocation-landed");
+
+    await page.reload({ waitUntil: "networkidle" });
+    await waitForDriver(page);
+    snapshot = await waitForSnapshot(
+      page,
+      "skyscraper persists after reload",
+      (next) => next.building.activeBuildingId === "building/skyscraper",
+    );
+    expect(snapshot.building.floorCount).toBe(5);
+  }, 180_000);
+
+  it("verifies Porter's floor stepper controls switch the visible floor stack", async () => {
+    await loadSeededPortersSave(page);
+    await openHqCategory(page, "rooms");
+
+    const previousFloorButton = page.getByTestId("floor-step-previous");
+    const nextFloorButton = page.getByTestId("floor-step-next");
+
+    await waitForRoomCard(page, "The Floor");
+    await waitForRoomCard(page, "The Bar");
+    await page.getByText("Floor 1/2", { exact: true }).waitFor({ state: "visible" });
+    expect(await previousFloorButton.isDisabled()).toBe(true);
+    expect(await nextFloorButton.isDisabled()).toBe(false);
+    await captureScreenshot(page, "porters-floor-stepper-ground");
+
+    await nextFloorButton.click();
+    await waitForRoomCard(page, "The Office");
+    await waitForRoomCard(page, "The Prep Room");
+    await page.getByText("Floor 2/2", { exact: true }).waitFor({ state: "visible" });
+    expect(await previousFloorButton.isDisabled()).toBe(false);
+    expect(await nextFloorButton.isDisabled()).toBe(true);
+    await captureScreenshot(page, "porters-floor-stepper-upper");
+
+    await previousFloorButton.click();
+    await waitForRoomCard(page, "The Floor");
+    await page.getByText("Floor 1/2", { exact: true }).waitFor({ state: "visible" });
+    expect(await previousFloorButton.isDisabled()).toBe(true);
+    expect(await nextFloorButton.isDisabled()).toBe(false);
+  }, 120_000);
+
   it("verifies the post-relocation Porters upgrade arc and room usage in the real browser runtime", async () => {
     let snapshot = await loadSeededPortersSave(page);
     expect(snapshot.upgrades.appliedIds).toEqual([]);

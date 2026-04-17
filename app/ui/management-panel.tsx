@@ -325,6 +325,30 @@ function PortersCampaignCard({
   );
 }
 
+const RELOCATION_FLAVOR_BY_BUILDING: Record<
+  string,
+  {
+    hiddenLead: string;
+    readyLead: string;
+    target: string;
+  }
+> = {
+  "building/bodega": {
+    hiddenLead:
+      "Porter's stays hidden until the bodega starts proving it can scale. Upgrade the site, build roster depth, clear contracts, and this section will turn into a concrete checklist.",
+    readyLead:
+      "Promotion out of the bodega is a gated management handoff. Meet the checklist, clear any live blockers, then start the review flow.",
+    target: "Porter's",
+  },
+  "building/porters": {
+    hiddenLead:
+      "Ascension Tower stays hidden until Porter's proves it has outgrown the waterfront. Finish the upgrade arc, build reputation, clear high-rank contracts, and this section opens into a real checklist.",
+    readyLead:
+      "Leaving Porter's is a gated management handoff. The tower move is the last relocation — meet the checklist, clear any live blockers, then start the review.",
+    target: "Ascension Tower",
+  },
+};
+
 function RelocationCard({
   building,
   guildName,
@@ -336,23 +360,41 @@ function RelocationCard({
   relocationGate: HqViewModel["relocationGate"];
   callbacks: GameCallbacks;
 }) {
-  if (building.id !== "building/bodega") {
+  if (building.id === "building/skyscraper") {
+    return (
+      <section className="glass-card space-y-3 rounded-2xl p-4" data-testid="management-relocation">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h4 className="text-sm font-medium text-silver-bright">Headquarters</h4>
+            <p className="mt-1 text-sm leading-relaxed text-silver/55">
+              The relocation ladder is finished. {building.name} is {guildName}'s permanent address.
+            </p>
+          </div>
+          <span className="badge badge-gold">Permanent</span>
+        </div>
+        <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
+          <p className="text-sm leading-relaxed text-silver/65">
+            Further growth happens by expanding inside the tower — acquiring more floors and
+            outfitting them — not by relocating again.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const flavor = RELOCATION_FLAVOR_BY_BUILDING[building.id];
+
+  if (!flavor) {
     return (
       <section className="glass-card space-y-3 rounded-2xl p-4" data-testid="management-relocation">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h4 className="text-sm font-medium text-silver-bright">Relocation</h4>
             <p className="mt-1 text-sm leading-relaxed text-silver/55">
-              The bodega handoff is complete. {building.name} is now {guildName}'s headquarters.
+              {building.name} is {guildName}'s current headquarters.
             </p>
           </div>
-          <span className="badge badge-gold">Completed</span>
-        </div>
-        <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
-          <p className="text-sm leading-relaxed text-silver/65">
-            Operators, staff, gear, cash, and reputation carried over. Room assignments were reset
-            as part of the move.
-          </p>
+          <span className="badge badge-slate">Stable</span>
         </div>
       </section>
     );
@@ -363,11 +405,7 @@ function RelocationCard({
       <section className="glass-card space-y-3 rounded-2xl p-4">
         <div>
           <h4 className="text-sm font-medium text-silver-bright">Relocation</h4>
-          <p className="mt-1 text-sm leading-relaxed text-silver/55">
-            Porter's stays hidden until the bodega starts proving it can scale. Upgrade the site,
-            build roster depth, clear contracts, and this section will turn into a concrete
-            checklist.
-          </p>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">{flavor.hiddenLead}</p>
         </div>
         <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
           <p className="text-sm leading-relaxed text-silver/65">
@@ -385,11 +423,8 @@ function RelocationCard({
     <section className="glass-card space-y-3 rounded-2xl p-4" data-testid="management-relocation">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="text-sm font-medium text-silver-bright">Relocation</h4>
-          <p className="mt-1 text-sm leading-relaxed text-silver/55">
-            Promotion out of the bodega is a gated management handoff. Meet the checklist, clear any
-            live blockers, then start the review flow.
-          </p>
+          <h4 className="text-sm font-medium text-silver-bright">Relocation to {flavor.target}</h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">{flavor.readyLead}</p>
         </div>
         <span className={`badge ${canInitiate ? "badge-gold" : "badge-slate"}`}>
           {canInitiate ? "Ready" : relocationGate.allPrerequisitesMet ? "Blocked" : "In Progress"}

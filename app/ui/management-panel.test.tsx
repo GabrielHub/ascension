@@ -127,7 +127,7 @@ describe("management panel", () => {
     expect(html).toMatch(/data-testid="management-policy-objectiveBias-boss_rush"[^>]*disabled=""/);
   });
 
-  it("shows relocation as completed once the guild has moved to Porter's", () => {
+  it("shows the hidden skyscraper gate copy while Porter's is the active HQ", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
         guildName="Red Hook Guild"
@@ -154,8 +154,41 @@ describe("management panel", () => {
       />,
     );
 
-    expect(html).toContain("Completed");
-    expect(html).toContain("Porter&#x27;s is now Red Hook Guild&#x27;s headquarters.");
+    expect(html).toContain("Ascension Tower stays hidden");
+    expect(html).toContain(
+      "When relocation opens, operators, staff, gear, cash, and reputation carry over.",
+    );
+  });
+
+  it("shows the permanent badge once the guild has moved into the skyscraper", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guildName="Red Hook Guild"
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="idle"
+        building={{
+          id: "building/skyscraper",
+          name: "Ascension Tower",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 0,
+          floorCount: 5,
+          usedRoomSlots: 11,
+          totalRoomSlots: 11,
+          operatorSlots: 18,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[]}
+        upgrades={[]}
+        operators={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+      />,
+    );
+
+    expect(html).toContain("Permanent");
+    expect(html).toContain("Ascension Tower is Red Hook Guild&#x27;s permanent address.");
   });
 
   it("shows the next Porter's campaign step after relocation", () => {

@@ -40,4 +40,19 @@ export const buildingTemplates = [
     baseIncome: 35,
     recruitmentQualityBonus: 1,
   },
+  {
+    id: "building/skyscraper",
+    kind: "building",
+    name: "Ascension Tower",
+    tags: ["phase:skyscraper", "site:midtown", "tier:final"],
+    description:
+      "A midtown office tower the guild finally put its name on. Mirrored glass out front, an institutional lobby, an operations floor behind a keycard door, and dedicated floors for recovery, training, and logistics stacked above. No more sharing space with a deli or a bar — this is the guild's permanent address.",
+    baseTier: 1,
+    baseRoomSlots: 11,
+    baseOperatorSlots: 18,
+    upgradeIds: [],
+    contractRankCeiling: "c",
+    baseIncome: 60,
+    recruitmentQualityBonus: 2,
+  },
 ] satisfies readonly BuildingTemplate[];

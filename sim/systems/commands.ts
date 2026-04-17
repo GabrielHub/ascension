@@ -22,7 +22,8 @@ import {
   getRoomStateId,
   getSlotKey,
 } from "lib/hq-room-state";
-import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { deriveOperatorCombatDefaults, type OperatorRank } from "lib/operator-combat";
+import { deriveRecruitRank } from "lib/visitor-rank";
 import { formatIdentityText, type GameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
 import { selectOperatorAppearanceProfile } from "save/appearance";
@@ -297,10 +298,16 @@ export function buildDefaultPreferenceProfile(source: {
 
 /** Build the seed data needed to create an operator from a visitor recruit. */
 function buildOperatorSeedFromVisitor(
+  context: SimSystemContext,
   visitorEntity: number,
 ): Parameters<typeof createOperatorEntity>[1] {
   const name = VisitorState.name[visitorEntity];
   const roleTag = VisitorState.desiredRoleTag[visitorEntity];
+  const buildingTemplate = getActiveBuildingTemplate(context);
+  const rank = deriveRecruitRank(
+    VisitorState.quality[visitorEntity],
+    buildingTemplate?.contractRankCeiling,
+  );
   const specialtyTag =
     VisitorState.specialtyTag[visitorEntity] ||
     selectOperatorSpecialtyTag({
@@ -383,6 +390,7 @@ function buildOperatorSeedFromVisitor(
     hunger: 10,
     fatigue: 12,
     stress: 18,
+    rank,
   };
 }
 
@@ -934,6 +942,7 @@ function createOperatorEntity(
       workStartMinute: number;
       workEndMinute: number;
     };
+    rank?: OperatorRank;
   },
 ): number {
   const entity = addEntity(context.world);
@@ -944,7 +953,7 @@ function createOperatorEntity(
       roleTag: source.roleTag,
       specialtyTag: source.specialtyTag,
     });
-  const combat = deriveOperatorCombatDefaults(source.roleTag);
+  const combat = deriveOperatorCombatDefaults(source.roleTag, source.rank);
 
   addComponent(context.world, entity, OperatorIdentity);
   addComponent(context.world, entity, NeedState);
@@ -1586,7 +1595,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
       const visitorQueueState = getVisitorQueueState(visitorEntity);
 
-      createOperatorEntity(context, buildOperatorSeedFromVisitor(visitorEntity));
+      createOperatorEntity(context, buildOperatorSeedFromVisitor(context, visitorEntity));
 
       const recruitName = VisitorState.name[visitorEntity];
       removeVisitorEntity(context, visitorEntity);
@@ -1700,7 +1709,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         `${replacedOperatorName} was dismissed to free a roster slot.`,
       );
 
-      createOperatorEntity(context, buildOperatorSeedFromVisitor(visitorEntity));
+      createOperatorEntity(context, buildOperatorSeedFromVisitor(context, visitorEntity));
       removeVisitorEntity(context, visitorEntity);
       pushRuntimeEvent(context, {
         kind: "staffing_change",

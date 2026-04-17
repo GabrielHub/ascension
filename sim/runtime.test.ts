@@ -3791,4 +3791,150 @@ describe("relocation save/load through full pipeline", () => {
     const payload = phase1View.activeInterruption!.payload as Record<string, unknown>;
     expect(payload.beat).toBe("moving");
   });
+
+  it("loads a post-relocation skyscraper snapshot into a working simulation", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    // Transform into a post-relocation skyscraper state
+    snapshot.building = {
+      activeBuildingId: "building/skyscraper",
+      activeBuildingTier: 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 11,
+      operatorSlotCount: 18,
+    };
+
+    const skyscraperBuilding = templateRegistry.buildingById.get("building/skyscraper");
+    expect(skyscraperBuilding).toBeDefined();
+
+    const lobbyRoom = templateRegistry.roomById.get("room/lobby:tier_1");
+    const receptionRoom = templateRegistry.roomById.get("room/reception:tier_1");
+    const bullpenRoom = templateRegistry.roomById.get("room/bullpen:tier_1");
+    expect(lobbyRoom).toBeDefined();
+    expect(receptionRoom).toBeDefined();
+    expect(bullpenRoom).toBeDefined();
+
+    snapshot.rooms = [
+      {
+        id: "room-instance/skyscraper-lobby",
+        templateId: "room/lobby:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/lobby",
+        roomStateId: "lobby:tier_1",
+        capacity: lobbyRoom!.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 2, cols: 7, rows: 5 },
+        activeFootprint: { col: 1, row: 2, cols: 7, rows: 5 },
+      },
+      {
+        id: "room-instance/skyscraper-reception",
+        templateId: "room/reception:tier_1",
+        tier: 1,
+        floorIndex: 0,
+        slotId: "slot/reception",
+        roomStateId: "reception:tier_1",
+        capacity: receptionRoom!.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 8, row: 2, cols: 3, rows: 3 },
+        activeFootprint: { col: 8, row: 2, cols: 3, rows: 3 },
+      },
+      {
+        id: "room-instance/skyscraper-bullpen",
+        templateId: "room/bullpen:tier_1",
+        tier: 1,
+        floorIndex: 1,
+        slotId: "slot/bullpen",
+        roomStateId: "bullpen:tier_1",
+        capacity: bullpenRoom!.baseCapacity,
+        occupancy: 0,
+        isActive: true,
+        reservedFootprint: { col: 1, row: 2, cols: 7, rows: 5 },
+        activeFootprint: { col: 1, row: 2, cols: 7, rows: 5 },
+      },
+    ];
+
+    snapshot.guild.treasury = 200;
+    snapshot.guild.reputation = 200;
+    snapshot.activeRaidPackets = [];
+    snapshot.appliedUpgradeIds = [];
+    snapshot.contractLifecycle = "idle";
+    snapshot.contractSite = null;
+    snapshot.contractResult = null;
+    snapshot.postedContracts = [];
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const restoredSnapshot = simulation.getWorldSnapshot();
+
+    expect(restoredSnapshot.building.activeBuildingId).toBe("building/skyscraper");
+    expect(restoredSnapshot.building.activeBuildingTier).toBe(1);
+    expect(restoredSnapshot.building.operatorSlotCount).toBe(18);
+
+    expect(restoredSnapshot.rooms.length).toBe(3);
+    expect(restoredSnapshot.rooms.map((r) => r.templateId).sort()).toEqual([
+      "room/bullpen:tier_1",
+      "room/lobby:tier_1",
+      "room/reception:tier_1",
+    ]);
+
+    // The simulation should tick without errors while the skyscraper is active
+    simulation.tick(1000);
+    const afterTick = simulation.getWorldSnapshot();
+    expect(afterTick.building.activeBuildingId).toBe("building/skyscraper");
+    expect(afterTick.rooms.length).toBe(3);
+  });
+
+  it("loads a mid-relocation save for the Porter's → skyscraper handoff", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+
+    // Starting from Porter's — skyscraper handoff not yet executed
+    snapshot.building = {
+      activeBuildingId: "building/porters",
+      activeBuildingTier: 6,
+      activeFloorIndex: 0,
+      roomSlotCount: 10,
+      operatorSlotCount: 12,
+    };
+    snapshot.guild.treasury = 500; // Already debited 3000 from 3500
+
+    // Relocation moving beat in the interruption queue
+    (snapshot as Record<string, unknown>).interruptionQueue = {
+      active: {
+        instanceId: "int-skyscraper-1",
+        type: "relocation",
+        payload: {
+          kind: "relocation",
+          eventId: "event/relocation/porters-to-skyscraper",
+          beat: "moving",
+          buildingFromId: "building/porters",
+          buildingToId: "building/skyscraper",
+          treasuryCost: 3000,
+        },
+        sourceSystem: "relocation-system",
+        timestamp: 9000,
+        blockingMode: "blocking",
+        persistence: "persistent",
+        dismissible: false,
+        priority: 0,
+      },
+      queue: [],
+      nextInstanceId: 2,
+    };
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    const restoredSnapshot = simulation.getWorldSnapshot();
+
+    // Building is still Porter's (handoff hasn't executed)
+    expect(restoredSnapshot.building.activeBuildingId).toBe("building/porters");
+    expect(restoredSnapshot.guild.treasury).toBe(500);
+
+    const phase1View = simulation.getPhase1View();
+    expect(phase1View.activeInterruption).not.toBeNull();
+    expect(phase1View.activeInterruption?.type).toBe("relocation");
+    const payload = phase1View.activeInterruption!.payload as Record<string, unknown>;
+    expect(payload.beat).toBe("moving");
+    expect(payload.buildingToId).toBe("building/skyscraper");
+  });
 });

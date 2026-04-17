@@ -85,4 +85,81 @@ describe("interruption host", () => {
     expect(html).toContain("hover:border-[rgba(200,168,76,0.22)]");
     expect(html).toContain("Push through");
   });
+
+  it("renders skyscraper relocation decision copy against the final HQ target", () => {
+    const interruption: InterruptionInstance = {
+      instanceId: "interruption-relocation-skyscraper",
+      type: "relocation",
+      priority: 85,
+      blockingMode: "blocking",
+      createdAtMinute: 120,
+      sourceSystem: "relocation-system",
+      dismissible: false,
+      persistence: "persistent",
+      payload: {
+        kind: "relocation",
+        eventId: "event/relocation/porters-to-skyscraper",
+        beat: "decision",
+        buildingFromId: "building/porters",
+        buildingToId: "building/skyscraper",
+        treasuryCost: 3000,
+        presenterId: "presenter/assistant",
+        presenterExpression: "concerned",
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <InterruptionHost
+        activeInterruption={interruption}
+        onResolve={vi.fn()}
+        onDismiss={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("Relocate to Ascension Tower?");
+    expect(html).toContain("Porter&#x27;s closes as headquarters.");
+    expect(html).toContain("Ascension Tower starts with 11 rooms across five floors");
+    expect(html).not.toContain("Relocate to Porter's?");
+    expect(html).not.toContain("The bodega lease terminates.");
+  });
+
+  it("renders skyscraper relocation landing copy for the tower arrival", () => {
+    const interruption: InterruptionInstance = {
+      instanceId: "interruption-relocation-skyscraper-moving",
+      type: "relocation",
+      priority: 85,
+      blockingMode: "blocking",
+      createdAtMinute: 120,
+      sourceSystem: "relocation-system",
+      dismissible: false,
+      persistence: "persistent",
+      payload: {
+        kind: "relocation",
+        eventId: "event/relocation/porters-to-skyscraper",
+        beat: "moving",
+        buildingFromId: "building/porters",
+        buildingToId: "building/skyscraper",
+        treasuryCost: 3000,
+        presenterId: "presenter/assistant",
+        presenterExpression: "neutral",
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <InterruptionHost
+        activeInterruption={interruption}
+        guildName="Ascension Guild"
+        playerName="Testing"
+        onResolve={vi.fn()}
+        onDismiss={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("Welcome to Ascension Tower");
+    expect(html).toContain("Midtown, Manhattan");
+    expect(html).toContain("Porter&#x27;s closed as headquarters for the last time.");
+    expect(html).toContain("It is not comfortable yet. But it is permanent.");
+    expect(html).not.toContain("Welcome to Porter's");
+    expect(html).not.toContain("Red Hook, Brooklyn");
+  });
 });

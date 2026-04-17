@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="sm-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#5a78a8" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#0c1218" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#040608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sm-wool" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a3448"/>
+      <stop offset="55%" stop-color="#121a2a"/>
+      <stop offset="100%" stop-color="#080a14"/>
+    </linearGradient>
+    <linearGradient id="sm-brass" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4c878"/>
+      <stop offset="55%" stop-color="#c8882c"/>
+      <stop offset="100%" stop-color="#6a4a14"/>
+    </linearGradient>
+    <filter id="sm-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="94" ry="132" fill="url(#sm-aura)"/>
+
+  <!-- Platform edge with warning stripes -->
+  <rect x="0" y="254" width="200" height="4" fill="#e8d898" stroke="#6a5018" stroke-width="0.4"/>
+  <line x1="0" y1="256" x2="200" y2="256" stroke="#1a1408" stroke-width="0.3" stroke-dasharray="6 3"/>
+  <rect x="0" y="258" width="200" height="14" fill="#2a2a28" stroke="#0a0a08" stroke-width="0.3"/>
+  <!-- Platform tile lines -->
+  <line x1="0" y1="262" x2="200" y2="262" stroke="#4a4a48" stroke-width="0.2"/>
+  <line x1="0" y1="266" x2="200" y2="266" stroke="#4a4a48" stroke-width="0.2"/>
+  <line x1="0" y1="270" x2="200" y2="270" stroke="#4a4a48" stroke-width="0.2"/>
+
+  <!-- Rails just behind platform edge -->
+  <rect x="0" y="272" width="200" height="2" fill="#585854"/>
+  <!-- Third rail glow -->
+  <rect x="0" y="275" width="200" height="2" fill="#d4a040" opacity="0.7" filter="url(#sm-glow)"/>
+
+  <!-- Distant tunnel arch -->
+  <path d="M 20 110 Q 100 42 180 110 L 180 230 L 20 230 Z" fill="none" stroke="#2a3a4a" stroke-width="0.6" opacity="0.7"/>
+  <path d="M 40 120 Q 100 64 160 120 L 160 230 L 40 230 Z" fill="none" stroke="#2a3a4a" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- Approach-light over the tunnel -->
+  <circle cx="100" cy="36" r="6" fill="#c83020" filter="url(#sm-glow)" opacity="0.9"/>
+  <circle cx="100" cy="36" r="2.5" fill="#f4e8c8"/>
+
+  <!-- Shoes — polished service dress -->
+  <path d="M 66 250 L 62 258 L 90 258 L 88 250 Z" fill="#0a0608" stroke="#050404" stroke-width="0.4"/>
+  <path d="M 110 250 L 112 258 L 138 258 L 134 250 Z" fill="#0a0608" stroke="#050404" stroke-width="0.4"/>
+
+  <!-- Trousers -->
+  <rect x="70" y="200" width="22" height="50" rx="1" fill="url(#sm-wool)" stroke="#050608" stroke-width="0.6"/>
+  <rect x="108" y="200" width="22" height="50" rx="1" fill="url(#sm-wool)" stroke="#050608" stroke-width="0.6"/>
+  <!-- Trouser stripes -->
+  <line x1="92" y1="200" x2="92" y2="250" stroke="url(#sm-brass)" stroke-width="0.5" opacity="0.7"/>
+  <line x1="108" y1="200" x2="108" y2="250" stroke="url(#sm-brass)" stroke-width="0.5" opacity="0.7"/>
+
+  <!-- Heavy wool service coat -->
+  <path d="M 56 100 L 64 90 L 78 84 L 100 82 L 122 84 L 136 90 L 144 100 L 150 140 L 154 180 L 148 220 L 52 220 L 46 180 L 50 140 Z"
+        fill="url(#sm-wool)" stroke="#050608" stroke-width="1.0"/>
+
+  <!-- Coat double-button row -->
+  <line x1="100" y1="90" x2="100" y2="220" stroke="#050608" stroke-width="0.4"/>
+  <circle cx="92" cy="110" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="108" cy="110" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="92" cy="134" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="108" cy="134" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="92" cy="158" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="108" cy="158" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="92" cy="182" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <circle cx="108" cy="182" r="1.3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+
+  <!-- Epaulets w/ rank pips -->
+  <rect x="58" y="94" width="18" height="6" rx="1" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.4"/>
+  <rect x="124" y="94" width="18" height="6" rx="1" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.4"/>
+  <circle cx="64" cy="97" r="1" fill="#f4ecd0"/>
+  <circle cx="70" cy="97" r="1" fill="#f4ecd0"/>
+  <circle cx="130" cy="97" r="1" fill="#f4ecd0"/>
+  <circle cx="136" cy="97" r="1" fill="#f4ecd0"/>
+
+  <!-- Chest crest — station shield -->
+  <path d="M 80 114 L 86 112 L 88 128 L 80 132 Z" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.4"/>
+  <path d="M 80 118 L 88 120" stroke="#3a1808" stroke-width="0.3"/>
+
+  <!-- Left arm — extended, holding a signal lantern -->
+  <path d="M 46 106 L 34 124 L 22 156 L 14 192 L 22 198 L 32 170 L 42 146 L 52 122 Z" fill="url(#sm-wool)" stroke="#050608" stroke-width="0.6"/>
+  <!-- Gloved hand -->
+  <ellipse cx="18" cy="200" rx="6" ry="4.5" fill="#1a1a18" stroke="#050404" stroke-width="0.4"/>
+  <!-- Signal lantern -->
+  <rect x="12" y="204" width="14" height="5" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.4"/>
+  <rect x="8" y="209" width="22" height="26" rx="1" fill="none" stroke="url(#sm-brass)" stroke-width="1"/>
+  <rect x="10" y="214" width="18" height="18" fill="#1a4428" stroke="#0a2814" stroke-width="0.3"/>
+  <!-- Green lantern light (all-clear) -->
+  <ellipse cx="19" cy="223" rx="6" ry="8" fill="#3ad466" opacity="0.85" filter="url(#sm-glow)"/>
+  <ellipse cx="19" cy="221" rx="3" ry="4" fill="#f4ecd0" opacity="0.9"/>
+
+  <!-- Right arm — holding a flag -->
+  <path d="M 154 106 L 166 122 L 176 148 L 182 178 L 176 184 L 166 162 L 156 136 L 148 120 Z" fill="url(#sm-wool)" stroke="#050608" stroke-width="0.6"/>
+  <!-- Gloved hand -->
+  <ellipse cx="180" cy="186" rx="6" ry="4.5" fill="#1a1a18" stroke="#050404" stroke-width="0.4"/>
+  <!-- Flag pole -->
+  <rect x="180" y="100" width="2" height="100" fill="#5a3810" stroke="#2a1808" stroke-width="0.3"/>
+  <!-- Flag — red and yellow pennant -->
+  <path d="M 180 100 L 180 130 L 160 115 Z" fill="#c83020" stroke="#5a1808" stroke-width="0.4"/>
+  <path d="M 180 130 L 180 150 L 162 140 Z" fill="#f4c828" stroke="#6a4810" stroke-width="0.4"/>
+
+  <!-- Watch chain -->
+  <path d="M 94 122 Q 90 130 94 138 Q 98 144 96 150" fill="none" stroke="url(#sm-brass)" stroke-width="0.55"/>
+  <circle cx="95" cy="152" r="2.5" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <line x1="95" y1="150" x2="95" y2="154" stroke="#3a1808" stroke-width="0.3"/>
+  <line x1="93" y1="152" x2="97" y2="152" stroke="#3a1808" stroke-width="0.3"/>
+
+  <!-- Head -->
+  <ellipse cx="100" cy="64" rx="14" ry="16" fill="#d8bc98" stroke="#5a3a1c" stroke-width="0.5"/>
+
+  <!-- Stationmaster's cap — flat-topped, sharp visor -->
+  <rect x="80" y="36" width="40" height="12" rx="1" fill="url(#sm-wool)" stroke="#050608" stroke-width="0.5"/>
+  <rect x="80" y="46" width="40" height="3" fill="url(#sm-brass)" stroke="#3a1808" stroke-width="0.3"/>
+  <!-- Cap visor -->
+  <path d="M 76 49 Q 100 56 124 49 L 122 52 Q 100 58 78 52 Z" fill="#0a0608" stroke="#050404" stroke-width="0.3"/>
+  <!-- Cap badge — clock face -->
+  <circle cx="100" cy="42" r="3.2" fill="#f4ecd0" stroke="#3a1808" stroke-width="0.4"/>
+  <line x1="100" y1="40" x2="100" y2="42" stroke="#1a0e08" stroke-width="0.3"/>
+  <line x1="100" y1="42" x2="102.2" y2="43.2" stroke="#1a0e08" stroke-width="0.3"/>
+  <circle cx="100" cy="42" r="0.5" fill="#1a0e08"/>
+
+  <!-- Eyes — pale blue -->
+  <ellipse cx="93" cy="64" rx="2.6" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="93" cy="64" r="1.0" fill="#5078a8" filter="url(#sm-glow)"/>
+  <ellipse cx="107" cy="64" rx="2.6" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="107" cy="64" r="1.0" fill="#5078a8" filter="url(#sm-glow)"/>
+
+  <!-- Thick moustache -->
+  <path d="M 88 76 Q 100 78 112 76" fill="none" stroke="#1a0e08" stroke-width="1.6"/>
+
+  <!-- Brow -->
+  <path d="M 88 59 Q 93 57 98 60" fill="none" stroke="#1a0e08" stroke-width="0.6"/>
+  <path d="M 102 60 Q 107 57 112 59" fill="none" stroke="#1a0e08" stroke-width="0.6"/>
+
+  <!-- Mouth set firm below moustache -->
+  <path d="M 94 82 L 106 82" stroke="#2a1810" stroke-width="0.5"/>
+
+  <!-- Steam wisps rising from the tunnel -->
+  <path d="M 50 80 Q 54 68 52 54" fill="none" stroke="#6a788a" stroke-width="0.4" opacity="0.55"/>
+  <path d="M 150 80 Q 146 68 148 54" fill="none" stroke="#6a788a" stroke-width="0.4" opacity="0.55"/>
+</svg>

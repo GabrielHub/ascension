@@ -211,4 +211,126 @@ export const roomTemplates = [
     baseCapacity: 2,
     availableInBuildings: ["building/porters"],
   },
+  // ── Skyscraper rooms ─────────────────────────────────────────────────
+  {
+    id: "room/lobby:tier_1",
+    kind: "room",
+    name: "The Lobby",
+    tags: ["room:social", "ops:recruitment"],
+    description:
+      "Polished stone floor, a long reception desk under the {guildName} logo, and a wall of glass that looks out onto midtown. Prospects, clients, and couriers all check in here — the first thing anyone sees when the guild is finally an institution with an address worth printing.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/reception:tier_1",
+    kind: "room",
+    name: "The Front Desk",
+    tags: ["room:operations", "staff:reception"],
+    description:
+      "A pair of workstations behind the lobby counter. Badges printed here, calls routed here, and walk-in paperwork filed here before anybody gets further into the building. The first formal screen between the guild and the street.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/bullpen:tier_1",
+    kind: "room",
+    name: "The Bullpen",
+    tags: ["room:operations", "ops:intel", "staff:admin"],
+    description:
+      "An open operations floor with rolling chairs, a glass conference wall, and a corkboard that takes up half a corridor. Contract research, intel triage, and day-to-day coordination happen in the same room instead of being split across a kitchen office and a folding table.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/situation_room:tier_1",
+    kind: "room",
+    name: "The Situation Room",
+    tags: ["room:operations", "ops:intel"],
+    description:
+      "A glass-walled briefing space off the bullpen, with a projector, a city map, and enough chairs for a full squad plus leadership. Where secured contracts become real plans instead of improvised conversations over the bar.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/clinic:tier_1",
+    kind: "room",
+    name: "The Clinic",
+    tags: ["room:recovery", "staff:medical"],
+    description:
+      "A proper recovery suite on a quiet floor — exam bays behind curtains, a small trauma station, and locked cabinets stocked with more than the infirmary ever had. The first time guild medical feels like a clinic instead of a back-room cot.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/dojo:tier_1",
+    kind: "room",
+    name: "The Dojo",
+    tags: ["room:training"],
+    description:
+      "A full training floor with proper mats, weighted equipment, and enough clear space to run drills instead of just lifting. Taller ceilings, real coaching, and a locker wall. The gym Porter's never had room to be.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/lounge:tier_1",
+    kind: "room",
+    name: "The Lounge",
+    tags: ["room:social", "room:recovery"],
+    description:
+      "A staff-only lounge on the recovery floor — upholstered couches, dim lighting, and a window wall looking over the skyline. No customers, no public floor. Just somewhere operators can sit and breathe between shifts.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/supply_hall:tier_1",
+    kind: "room",
+    name: "The Supply Hall",
+    tags: ["room:staffing", "staff:logistics", "ops:staging"],
+    description:
+      "A logistics floor built around racks, a weighing station, and a secure cage for contract-sensitive gear. Loadouts get assembled here instead of dragged out of a stockroom, and teams can stage a departure without tripping over the bar.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/fabrication_bay:tier_1",
+    kind: "room",
+    name: "The Fabrication Bay",
+    tags: ["room:operations", "ops:crafting", "staff:logistics"],
+    description:
+      "A sealed workshop off the supply hall — lathe, press, reinforced bench, and proper ventilation piped up through the shaft. The workshop Porter's machine shop grew into, without the dock stink or the salt corrosion.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/rooftop_helipad:tier_1",
+    kind: "room",
+    name: "The Helipad",
+    tags: ["room:operations", "ops:staging"],
+    description:
+      "A rooftop pad with painted guide lines, hangar doors for the fast deployment case, and a windsock that actually tells you something. Teams cutting across the city can stage and launch from here instead of fighting traffic to a dock.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/sky_garden:tier_1",
+    kind: "room",
+    name: "The Sky Garden",
+    tags: ["room:social"],
+    description:
+      "A rooftop terrace ringed by planters and low walls, with a view that stretches across the skyline. Quiet, open, and the only place in the tower where the city feels like an audience instead of a workload. Downtime lands differently up here.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
 ] satisfies readonly RoomTemplate[];

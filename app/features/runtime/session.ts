@@ -1489,6 +1489,7 @@ function createRuntimeSession(
     });
 
     // ── Visitor actors ────────────────────────────────────────────────
+    const activeBuildingTemplate = templateRegistry.buildingById.get(activeBuildingId);
     const visitorActors: ActorMarker[] = visitorAssignments.map(({ visitor, roomId }) => {
       const fallbackPos = computeRoomAnchorPosition(
         roomId,
@@ -1511,7 +1512,7 @@ function createRuntimeSession(
           visitor.appearance?.presetId ??
           selectOperatorAppearanceRecipeId({ stableKey: visitor.id }),
         roleTag: visitor.desiredRoleTag,
-        rank: visitorQualityToRank(visitor.quality),
+        rank: visitorQualityToRank(visitor.quality, activeBuildingTemplate?.contractRankCeiling),
         state: "idle" as ActorState,
         moveProgress: 1,
       };

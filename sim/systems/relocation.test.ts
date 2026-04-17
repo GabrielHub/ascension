@@ -23,10 +23,15 @@ import {
   initiateRelocation,
   advanceRelocationBeat,
   RELOCATION_THRESHOLDS,
+  SKYSCRAPER_RELOCATION_THRESHOLDS,
 } from "./relocation";
 import type { RelocationPayload } from "./interruptions";
 import { resolveActiveInterruption } from "./interruptions";
-import { BODEGA_SPECIFIC_BEAT_IDS, OPENING_BEAT_IDS } from "./guidance-beats";
+import {
+  BODEGA_SPECIFIC_BEAT_IDS,
+  OPENING_BEAT_IDS,
+  PORTERS_CAMPAIGN_BEAT_IDS,
+} from "./guidance-beats";
 import { addActiveTestOperators, createSimTestContext } from "./test-context";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
@@ -146,7 +151,7 @@ describe("relocation gate visibility", () => {
     expect(gate.allPrerequisitesMet).toBe(false);
   });
 
-  it("gate is not visible when building is not bodega", () => {
+  it("gate is not visible when no skyscraper prerequisite is met at Porter's", () => {
     const context = createTestContext({ reputation: 40 });
     const portersIndex = templateRegistry.buildingIndexById.get("building/porters");
     if (portersIndex !== undefined) {
@@ -922,5 +927,338 @@ describe("relocation carryover/reset contract", () => {
     expect(context.runtimeState.guidanceState.queuedBeatIds).not.toContain(bodegaBeat);
     // Non-bodega queued beats are untouched
     expect(context.runtimeState.guidanceState.queuedBeatIds).toContain("guidance/opening/other");
+  });
+});
+
+// ── Porter's → Skyscraper relocation ─────────────────────────────────────
+
+function createSkyscraperTestContext(overrides?: {
+  buildingTier?: number;
+  reputation?: number;
+  treasury?: number;
+  contractLifecycle?: string;
+  activeRoster?: number;
+  raidSummaries?: Array<{ id: string; contractSiteId?: string; bossDefeated?: boolean }>;
+}): SimSystemContext {
+  const portersIndex = templateRegistry.buildingIndexById.get("building/porters") ?? 0;
+  const rosterSize = overrides?.activeRoster ?? 0;
+  const context = createSimTestContext({
+    registry: templateRegistry,
+    guild: {
+      guildName: "Skyscraper Test Guild",
+      playerName: "Boss",
+      reputation: overrides?.reputation ?? 0,
+      treasury: overrides?.treasury ?? 0,
+      intel: 0,
+    },
+    time: {
+      tick: 1440,
+      day: 1,
+      minuteOfDay: 0,
+    },
+    building: {
+      activeBuildingTemplateIndex: portersIndex,
+      activeBuildingTier: overrides?.buildingTier ?? 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 7,
+      operatorSlotCount: 12,
+      contractLifecycle:
+        (overrides?.contractLifecycle as "idle" | "bidding" | "active" | "resolved") ?? "bidding",
+      raidSummaries: (overrides?.raidSummaries ?? []).map((summary) => ({
+        id: summary.id,
+        missionId: "mission/clearance",
+        startedAt: "2026-02-01",
+        endedAt: "2026-02-01",
+        result: "success" as const,
+        reputationDelta: 2,
+        cashDelta: 50,
+        contractSiteId: summary.contractSiteId,
+        bossDefeated: summary.bossDefeated,
+      })),
+      policies: {},
+    },
+  });
+
+  addActiveTestOperators(context, rosterSize);
+  return context;
+}
+
+function generateSkyscraperRaidSummaries(count: number, bossCount: number) {
+  const summaries: Array<{ id: string; contractSiteId: string; bossDefeated: boolean }> = [];
+  for (let i = 0; i < count; i++) {
+    summaries.push({
+      id: `raid-porters-${i}`,
+      contractSiteId: `site-porters-${i}`,
+      bossDefeated: i < bossCount,
+    });
+  }
+  return summaries;
+}
+
+function createReadySkyscraperRelocationContext() {
+  const context = createSkyscraperTestContext({
+    buildingTier: SKYSCRAPER_RELOCATION_THRESHOLDS.buildingTier,
+    reputation: SKYSCRAPER_RELOCATION_THRESHOLDS.reputation + 10,
+    treasury: SKYSCRAPER_RELOCATION_THRESHOLDS.treasury + 500,
+    activeRoster: SKYSCRAPER_RELOCATION_THRESHOLDS.activeRoster,
+    raidSummaries: generateSkyscraperRaidSummaries(
+      SKYSCRAPER_RELOCATION_THRESHOLDS.contractsCompleted,
+      SKYSCRAPER_RELOCATION_THRESHOLDS.bossEncountersCompleted,
+    ),
+  });
+
+  const staffEntity = addEntity(context.world);
+  addComponent(context.world, staffEntity, StaffState);
+  addComponent(context.world, staffEntity, AssignmentState);
+  StaffState.id[staffEntity] = "staff/porters-1";
+  StaffState.name[staffEntity] = "Porter's Staff";
+  StaffState.roleTag[staffEntity] = "staff:logistics";
+  AssignmentState.kind[staffEntity] = "room";
+  AssignmentState.targetId[staffEntity] = "room-instance/stockroom";
+  context.runtimeState.staffEntities.push(staffEntity);
+
+  return context;
+}
+
+function runFullSkyscraperAcceptance(context: SimSystemContext) {
+  initiateRelocation(context);
+
+  const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, offerResolved!.payload as RelocationPayload, "continue");
+
+  const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
+
+  const movingResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+  advanceRelocationBeat(context, movingResolved!.payload as RelocationPayload, "acknowledge");
+}
+
+describe("skyscraper relocation gate", () => {
+  it("is hidden when Porter's has not proven it can scale", () => {
+    const context = createSkyscraperTestContext();
+    const gate = evaluateRelocationGate(context);
+    expect(gate.visible).toBe(false);
+    expect(gate.allPrerequisitesMet).toBe(false);
+  });
+
+  it("reports Porter's-specific tier label and higher thresholds", () => {
+    const context = createSkyscraperTestContext({
+      buildingTier: 5,
+      reputation: SKYSCRAPER_RELOCATION_THRESHOLDS.reputation,
+    });
+    const gate = evaluateRelocationGate(context);
+    expect(gate.visible).toBe(true);
+    const tierPrereq = gate.prerequisites.find((p) => p.key === "buildingTier");
+    expect(tierPrereq?.label).toBe("Porter's fully upgraded");
+    expect(tierPrereq?.target).toBe(SKYSCRAPER_RELOCATION_THRESHOLDS.buildingTier);
+    const treasuryPrereq = gate.prerequisites.find((p) => p.key === "treasury");
+    expect(treasuryPrereq?.target).toBe(SKYSCRAPER_RELOCATION_THRESHOLDS.treasury);
+  });
+
+  it("unlocks only when every skyscraper prerequisite is met", () => {
+    const context = createSkyscraperTestContext({
+      buildingTier: SKYSCRAPER_RELOCATION_THRESHOLDS.buildingTier,
+      reputation: SKYSCRAPER_RELOCATION_THRESHOLDS.reputation,
+      treasury: SKYSCRAPER_RELOCATION_THRESHOLDS.treasury,
+      activeRoster: SKYSCRAPER_RELOCATION_THRESHOLDS.activeRoster,
+      raidSummaries: generateSkyscraperRaidSummaries(
+        SKYSCRAPER_RELOCATION_THRESHOLDS.contractsCompleted,
+        SKYSCRAPER_RELOCATION_THRESHOLDS.bossEncountersCompleted,
+      ),
+    });
+    const gate = evaluateRelocationGate(context);
+    expect(gate.allPrerequisitesMet).toBe(true);
+  });
+
+  it("hides the relocation gate once the skyscraper is active", () => {
+    const context = createSkyscraperTestContext();
+    const skyscraperIndex = templateRegistry.buildingIndexById.get("building/skyscraper");
+    if (skyscraperIndex !== undefined) {
+      BuildingAuthority.activeBuildingTemplateIndex[context.singletonEntities.building] =
+        skyscraperIndex;
+    }
+    const gate = evaluateRelocationGate(context);
+    expect(gate.visible).toBe(false);
+  });
+
+  it("uses different reputation thresholds than the bodega relocation", () => {
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.reputation).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.reputation,
+    );
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.treasury).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.treasury,
+    );
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.contractsCompleted).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.contractsCompleted,
+    );
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.activeRoster).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.activeRoster,
+    );
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.bossEncountersCompleted).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.bossEncountersCompleted,
+    );
+    expect(SKYSCRAPER_RELOCATION_THRESHOLDS.buildingTier).toBeGreaterThan(
+      RELOCATION_THRESHOLDS.buildingTier,
+    );
+  });
+});
+
+describe("skyscraper relocation handoff", () => {
+  it("swaps Porter's for the skyscraper on full acceptance", () => {
+    const context = createReadySkyscraperRelocationContext();
+    runFullSkyscraperAcceptance(context);
+
+    const skyscraperIndex = templateRegistry.buildingIndexById.get("building/skyscraper");
+    expect(BuildingAuthority.activeBuildingTemplateIndex[context.singletonEntities.building]).toBe(
+      skyscraperIndex,
+    );
+  });
+
+  it("resets the skyscraper tier and slot counts to base values", () => {
+    const context = createReadySkyscraperRelocationContext();
+    runFullSkyscraperAcceptance(context);
+
+    const skyscraperTemplate = templateRegistry.buildingById.get("building/skyscraper");
+    expect(BuildingAuthority.activeBuildingTier[context.singletonEntities.building]).toBe(
+      skyscraperTemplate!.baseTier,
+    );
+    expect(BuildingAuthority.roomSlotCount[context.singletonEntities.building]).toBe(
+      skyscraperTemplate!.baseRoomSlots,
+    );
+    expect(BuildingAuthority.operatorSlotCount[context.singletonEntities.building]).toBe(
+      skyscraperTemplate!.baseOperatorSlots,
+    );
+  });
+
+  it("places every skyscraper starter room across the five starter floors", () => {
+    const context = createReadySkyscraperRelocationContext();
+    runFullSkyscraperAcceptance(context);
+
+    const placedTemplateIds = context.runtimeState.roomEntities
+      .map((e) => templateRegistry.rooms[RoomInstance.templateIndex[e]]?.id)
+      .sort();
+    expect(placedTemplateIds).toEqual([
+      "room/bullpen:tier_1",
+      "room/clinic:tier_1",
+      "room/dojo:tier_1",
+      "room/fabrication_bay:tier_1",
+      "room/lobby:tier_1",
+      "room/lounge:tier_1",
+      "room/reception:tier_1",
+      "room/rooftop_helipad:tier_1",
+      "room/situation_room:tier_1",
+      "room/sky_garden:tier_1",
+      "room/supply_hall:tier_1",
+    ]);
+
+    const floorIndices = new Set(
+      context.runtimeState.roomEntities.map((e) => RoomInstance.floorIndex[e]),
+    );
+    expect(floorIndices).toEqual(new Set([0, 1, 2, 3, 4]));
+  });
+
+  it("debits the skyscraper deposit from the treasury", () => {
+    const context = createReadySkyscraperRelocationContext();
+    const treasuryBefore = GuildState.treasury[context.singletonEntities.guild];
+    runFullSkyscraperAcceptance(context);
+    // The deposit is declared on the PORTERS_TO_SKYSCRAPER config.
+    expect(GuildState.treasury[context.singletonEntities.guild]).toBe(treasuryBefore - 3000);
+  });
+
+  it("retires Porter's campaign guidance beats on the skyscraper landing", () => {
+    const context = createReadySkyscraperRelocationContext();
+    context.runtimeState.guidanceState.completedBeatIds = [];
+
+    runFullSkyscraperAcceptance(context);
+
+    for (const beatId of PORTERS_CAMPAIGN_BEAT_IDS) {
+      expect(context.runtimeState.guidanceState.completedBeatIds).toContain(beatId);
+    }
+  });
+
+  it("preserves operator dispositions and inventory through the skyscraper move", () => {
+    const context = createReadySkyscraperRelocationContext();
+
+    const itemEntity = addEntity(context.world);
+    addComponent(context.world, itemEntity, InventoryStack);
+    InventoryStack.itemId[itemEntity] = "item/medkit";
+    InventoryStack.quantity[itemEntity] = 7;
+    context.runtimeState.inventoryEntities.push(itemEntity);
+
+    const dispEntity = addEntity(context.world);
+    addComponent(context.world, dispEntity, OperatorDisposition);
+    OperatorDisposition.operatorId[dispEntity] = "operator-0";
+    OperatorDisposition.sociability[dispEntity] = 72;
+    context.runtimeState.dispositionEntities.push(dispEntity);
+
+    const tieEntity = addEntity(context.world);
+    addComponent(context.world, tieEntity, NotableTie);
+    NotableTie.operatorAId[tieEntity] = "operator-0";
+    NotableTie.operatorBId[tieEntity] = "operator-1";
+    NotableTie.stance[tieEntity] = "trust";
+    NotableTie.strength[tieEntity] = 45;
+    context.runtimeState.notableTieEntities.push(tieEntity);
+
+    const teamEntity = addEntity(context.world);
+    addComponent(context.world, teamEntity, RecurringTeam);
+    RecurringTeam.id[teamEntity] = "team-porters-1";
+    RecurringTeam.memberIds[teamEntity] = ["operator-0"];
+    RecurringTeam.cohesion[teamEntity] = 40;
+    context.runtimeState.recurringTeamEntities.push(teamEntity);
+
+    const equipEntity = addEntity(context.world);
+    addComponent(context.world, equipEntity, EquipmentAssignment);
+    EquipmentAssignment.operatorId[equipEntity] = "operator-0";
+    EquipmentAssignment.weaponId[equipEntity] = "weapon/kitchen-knife";
+    context.runtimeState.equipmentEntities.push(equipEntity);
+
+    runFullSkyscraperAcceptance(context);
+
+    expect(context.runtimeState.inventoryEntities.length).toBe(1);
+    expect(InventoryStack.quantity[context.runtimeState.inventoryEntities[0]]).toBe(7);
+    expect(context.runtimeState.dispositionEntities.length).toBe(1);
+    expect(OperatorDisposition.sociability[context.runtimeState.dispositionEntities[0]]).toBe(72);
+    expect(context.runtimeState.notableTieEntities.length).toBe(1);
+    expect(context.runtimeState.recurringTeamEntities.length).toBe(1);
+    expect(context.runtimeState.equipmentEntities.length).toBe(1);
+  });
+
+  it("clears active raid and visitor state during the skyscraper handoff", () => {
+    const context = createReadySkyscraperRelocationContext();
+
+    const visitorEntity = addEntity(context.world);
+    addComponent(context.world, visitorEntity, VisitorState);
+    VisitorState.id[visitorEntity] = "visitor-porters-1";
+    context.runtimeState.visitorEntities.push(visitorEntity);
+
+    const operatorEntity = context.runtimeState.operatorEntities[0];
+    RaidParticipationState.activeRaidId[operatorEntity] = "";
+    AssignmentState.kind[operatorEntity] = "room";
+    AssignmentState.targetId[operatorEntity] = "room-instance/bar";
+
+    runFullSkyscraperAcceptance(context);
+
+    expect(context.runtimeState.visitorEntities.length).toBe(0);
+    expect(AssignmentState.kind[operatorEntity]).toBe("idle");
+    expect(AssignmentState.targetId[operatorEntity]).toBe("");
+  });
+
+  it("wires the Porter's → skyscraper relocation event id into the moving beat", () => {
+    const context = createReadySkyscraperRelocationContext();
+
+    initiateRelocation(context);
+    const offerResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+    advanceRelocationBeat(context, offerResolved!.payload as RelocationPayload, "continue");
+    const decisionResolved = resolveActiveInterruption(context.runtimeState.interruptionQueue);
+    advanceRelocationBeat(context, decisionResolved!.payload as RelocationPayload, "accept");
+
+    const movingActive = context.runtimeState.interruptionQueue.active!;
+    expect(movingActive.payload.kind).toBe("relocation");
+    const movingPayload = movingActive.payload as RelocationPayload;
+    expect(movingPayload.beat).toBe("moving");
+    expect(movingPayload.eventId).toBe("event/relocation/porters-to-skyscraper");
+    expect(movingPayload.buildingFromId).toBe("building/porters");
+    expect(movingPayload.buildingToId).toBe("building/skyscraper");
+    expect(movingPayload.treasuryCost).toBe(3000);
   });
 });

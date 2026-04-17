@@ -237,6 +237,84 @@ function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly s
     ];
   }
 
+  // ── Skyscraper rooms ─────────────────────────────────────────────────
+  if (room.templateId === "room/lobby:tier_1") {
+    return [
+      "The lobby is the guild's public face. Walk-in traffic, prospects, and clients all pass the reception desk before anyone gets further into the tower.",
+      `Scales ${guildName}'s recruitment funnel from bar-room pitches to institutional visibility — a real front door instead of a back counter.`,
+    ];
+  }
+
+  if (room.templateId === "room/reception:tier_1") {
+    return [
+      "The front desk turns walk-in traffic into filed paperwork instead of lost prospects. Badges, calls, and intake routing live here.",
+      `Gives ${guildName} a dedicated administrative screen between the street and the operations floor.`,
+    ];
+  }
+
+  if (room.templateId === "room/bullpen:tier_1") {
+    return [
+      "The bullpen is where contract research, intel triage, and day-to-day operations coordination happen in one visible room instead of split across makeshift offices.",
+      "Turns scattered admin into a real operations floor that can handle more contracts in parallel.",
+    ];
+  }
+
+  if (room.templateId === "room/situation_room:tier_1") {
+    return [
+      "The situation room takes secured contracts and turns them into briefed plans with projectors, maps, and a full squad in chairs.",
+      "Moves pre-deploy planning from an improvised conversation at the bar into a real operations surface.",
+    ];
+  }
+
+  if (room.templateId === "room/clinic:tier_1") {
+    return [
+      "A proper clinic accelerates recovery and raises the ceiling on what serious injuries the guild can take without burning operators out of rotation.",
+      `Replaces Porter's infirmary with something that actually looks like medical infrastructure, so ${guildName} stops trading health for throughput.`,
+    ];
+  }
+
+  if (room.templateId === "room/dojo:tier_1") {
+    return [
+      "The dojo is a full training floor — mats, equipment, and coaching that actually deepens raid readiness between contracts.",
+      "Training bonuses accrue faster here than the Porter's gym ever supported, so the roster improves even when contracts are quiet.",
+    ];
+  }
+
+  if (room.templateId === "room/lounge:tier_1") {
+    return [
+      "A dedicated staff lounge separates decompression from the public floor. Morale and loyalty stabilize when operators have somewhere to sit that is not also a work surface.",
+      "Gives the recovery floor a social anchor that keeps the tower from feeling clinical.",
+    ];
+  }
+
+  if (room.templateId === "room/supply_hall:tier_1") {
+    return [
+      "The supply hall is where loadouts get assembled and staged for deployment without tripping over the bar or the office.",
+      "Keeps logistics and raid staging from bottlenecking the operations floor as contract volume grows.",
+    ];
+  }
+
+  if (room.templateId === "room/fabrication_bay:tier_1") {
+    return [
+      "The fabrication bay is the tower's durable-gear workshop — a real machine shop sealed inside the logistics floor instead of tacked on behind a dock.",
+      "Picks up where Porter's workshop left off, with higher-tier crafting support and no weather or salt to fight.",
+    ];
+  }
+
+  if (room.templateId === "room/rooftop_helipad:tier_1") {
+    return [
+      "The helipad lets teams cross the city fast instead of fighting street traffic. Rooftop deployment turns the tower into a real forward base.",
+      "Staging departures from the roof keeps the supply hall unclogged and puts teams on-site before the incident window closes.",
+    ];
+  }
+
+  if (room.templateId === "room/sky_garden:tier_1") {
+    return [
+      "A rooftop decompression space with a skyline view. Downtime up here moves morale and loyalty harder than any indoor room in the tower.",
+      "Gives the guild a prestige social surface that reads as institutional reach, not repurposed back-of-house.",
+    ];
+  }
+
   // ── Bodega rooms ─────────────────────────────────────────────────────
   if (room.templateId === "room/register:tier_1") {
     return [

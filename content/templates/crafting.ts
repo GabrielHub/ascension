@@ -207,4 +207,240 @@ export const craftRecipeTemplates = [
       "faction/labor-safety": 4,
     },
   },
+
+  // ── C-rank recipes (skyscraper endgame entry) ───────────────────────
+  // Produced in the skyscraper's Fabrication Bay using C-rank monster parts
+  // plus bridging inputs from Porter's-era D-rank ledgers. Each recipe pins
+  // a district tag so the craft surface stays rooted in the city pressure
+  // model even once the guild has moved into the tower.
+  {
+    id: "craft-recipe/skyscraper-endgame/market-scythe",
+    family: "craft-family/skyscraper-endgame",
+    name: "Market Scythe Forge",
+    description:
+      "Reforge ticker ribbons and trading-coin alloy into a long-handled scythe tuned for trading-floor silhouettes.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "weapon/market-scythe",
+    outputQuantity: 1,
+    cashCost: 220,
+    inputItems: [
+      { itemId: "loot/monster-part/ticker-ribbon", quantity: 3 },
+      { itemId: "loot/monster-part/exchange-coin", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["density:high"],
+    requiredFactionStanding: {
+      "faction/city-licensing": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/exchange-bespoke",
+    family: "craft-family/skyscraper-endgame",
+    name: "Exchange Bespoke Suit Fit-Out",
+    description:
+      "Tailor a trading-floor bespoke suit over pressed ticker tape and a woven spire-residue backing.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "outfit-overlay/exchange-bespoke",
+    outputQuantity: 1,
+    cashCost: 215,
+    inputItems: [
+      { itemId: "loot/monster-part/ticker-ribbon", quantity: 2 },
+      { itemId: "loot/monster-part/penthouse-velvet", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["density:high"],
+    requiredFactionStanding: {
+      "faction/city-licensing": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/concierge-baton",
+    family: "craft-family/skyscraper-endgame",
+    name: "Concierge Baton Assembly",
+    description:
+      "Core a brass service baton around residence-key alloy and a spire-residue inlay so it enforces tenancy rules on contact.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "weapon/concierge-baton",
+    outputQuantity: 1,
+    cashCost: 210,
+    inputItems: [
+      { itemId: "loot/monster-part/residence-key", quantity: 3 },
+      { itemId: "loot/monster-part/penthouse-velvet", quantity: 1 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:power"],
+    requiredFactionStanding: {
+      "faction/city-licensing": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/skybridge-carrier",
+    family: "craft-family/skyscraper-endgame",
+    name: "Skybridge Plate Carrier Lamination",
+    description:
+      "Laminate corridor-glass panels into a heavy plate carrier that routes incoming force along its skybridge lining.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "outfit-overlay/skybridge-carrier",
+    outputQuantity: 1,
+    cashCost: 220,
+    inputItems: [
+      { itemId: "loot/monster-part/corridor-glass", quantity: 3 },
+      { itemId: "loot/monster-part/corporate-lanyard", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:highway"],
+    requiredFactionStanding: {
+      "faction/labor-safety": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/express-pike",
+    family: "craft-family/skyscraper-endgame",
+    name: "Express Pike Fit-Up",
+    description:
+      "Reshape a platform-rail section into a two-handed pike timed to the interchange's express schedule.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "weapon/express-pike",
+    outputQuantity: 1,
+    cashCost: 205,
+    inputItems: [
+      { itemId: "loot/monster-part/platform-rail", quantity: 3 },
+      { itemId: "loot/monster-part/express-token", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:rail"],
+    requiredFactionStanding: {
+      "faction/borough-contracts": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/corridor-goggles",
+    family: "craft-family/skyscraper-endgame",
+    name: "Corridor Goggles Assembly",
+    description:
+      "Mount corridor-glass lenses in a reinforced frame to resolve commuter formations before they reach the operator.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "accessory/corridor-goggles",
+    outputQuantity: 1,
+    cashCost: 165,
+    inputItems: [
+      { itemId: "loot/monster-part/corridor-glass", quantity: 2 },
+      { itemId: "loot/monster-part/observation-lens", quantity: 1 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:rail"],
+    requiredFactionStanding: {
+      "faction/borough-contracts": 5,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/curator-stylus",
+    family: "craft-family/skyscraper-endgame",
+    name: "Curator Stylus Build",
+    description:
+      "Rebuild a docent's laser-pointer around a gallery gold-leaf lens and a docent-label stabilizer.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "weapon/curator-stylus",
+    outputQuantity: 1,
+    cashCost: 215,
+    inputItems: [
+      { itemId: "loot/monster-part/gallery-gold-leaf", quantity: 3 },
+      { itemId: "loot/monster-part/docent-label", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["density:high"],
+    requiredFactionStanding: {
+      "faction/emergency-management": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/gallery-smock",
+    family: "craft-family/skyscraper-endgame",
+    name: "Gallery Conservator Smock Weave",
+    description:
+      "Sew a conservator smock from archival linen and docent labels so the wearer inherits a coherent placard on-site.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "outfit-overlay/gallery-smock",
+    outputQuantity: 1,
+    cashCost: 205,
+    inputItems: [
+      { itemId: "loot/monster-part/docent-label", quantity: 3 },
+      { itemId: "loot/monster-part/penthouse-velvet", quantity: 1 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["density:high"],
+    requiredFactionStanding: {
+      "faction/emergency-management": 6,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/altitude-spike",
+    family: "craft-family/skyscraper-endgame",
+    name: "Altitude Spike Forge",
+    description:
+      "Forge a spotter's spike from binocular-barrel alloy and altitude resin so it locks onto an updraft signature.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "weapon/altitude-spike",
+    outputQuantity: 1,
+    cashCost: 205,
+    inputItems: [
+      { itemId: "loot/monster-part/observation-lens", quantity: 2 },
+      { itemId: "loot/monster-part/altitude-resin", quantity: 2 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:port"],
+    requiredFactionStanding: {
+      "faction/rival-guild-market": 5,
+    },
+  },
+  {
+    id: "craft-recipe/skyscraper-endgame/altitude-earpiece",
+    family: "craft-family/skyscraper-endgame",
+    name: "Altitude Earpiece Assembly",
+    description:
+      "Calibrate an in-ear receiver to the observation deck's pressure band so the wearer can navigate shifted verticals.",
+    requiredRoomId: "room/fabrication_bay:tier_1",
+    requiredStaffTag: "staff:logistics",
+    minimumBuildingId: "building/skyscraper",
+    minimumBuildingTier: 1,
+    outputItemId: "accessory/altitude-earpiece",
+    outputQuantity: 1,
+    cashCost: 160,
+    inputItems: [
+      { itemId: "loot/monster-part/altitude-resin", quantity: 2 },
+      { itemId: "loot/monster-part/observation-lens", quantity: 1 },
+      { itemId: "loot/monster-part/spire-residue", quantity: 1 },
+    ],
+    requiredDistrictTags: ["infrastructure:port"],
+    requiredFactionStanding: {
+      "faction/rival-guild-market": 5,
+    },
+  },
 ] satisfies readonly CraftRecipeTemplate[];
