@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="ak-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#88c8f4" stop-opacity="0.15"/>
+      <stop offset="55%" stop-color="#0c1824" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#040608" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ak-uniform" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#284a68"/>
+      <stop offset="55%" stop-color="#0e1c30"/>
+      <stop offset="100%" stop-color="#050c1a"/>
+    </linearGradient>
+    <linearGradient id="ak-chrome" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4f4f0"/>
+      <stop offset="55%" stop-color="#6a6a68"/>
+      <stop offset="100%" stop-color="#181818"/>
+    </linearGradient>
+    <linearGradient id="ak-glass" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#b8d8f4" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#284a68" stop-opacity="0.4"/>
+    </linearGradient>
+    <filter id="ak-glow">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="94" ry="132" fill="url(#ak-aura)"/>
+
+  <!-- Observation-deck railing behind the figure -->
+  <rect x="0" y="232" width="200" height="3" fill="url(#ak-chrome)" stroke="#0a0a08" stroke-width="0.3"/>
+  <rect x="0" y="246" width="200" height="3" fill="url(#ak-chrome)" stroke="#0a0a08" stroke-width="0.3"/>
+  <!-- Vertical posts -->
+  <rect x="12" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+  <rect x="44" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+  <rect x="78" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+  <rect x="116" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+  <rect x="154" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+  <rect x="186" y="232" width="2" height="18" fill="url(#ak-chrome)"/>
+
+  <!-- City skyline way below -->
+  <rect x="4" y="252" width="10" height="22" fill="#0e1a28"/>
+  <rect x="18" y="256" width="8" height="18" fill="#0e1a28"/>
+  <rect x="30" y="250" width="14" height="24" fill="#0e1a28"/>
+  <rect x="50" y="254" width="10" height="20" fill="#0e1a28"/>
+  <rect x="64" y="248" width="12" height="26" fill="#0e1a28"/>
+  <rect x="82" y="252" width="16" height="22" fill="#0e1a28"/>
+  <rect x="104" y="246" width="14" height="28" fill="#0e1a28"/>
+  <rect x="122" y="252" width="10" height="22" fill="#0e1a28"/>
+  <rect x="138" y="248" width="12" height="26" fill="#0e1a28"/>
+  <rect x="156" y="254" width="10" height="20" fill="#0e1a28"/>
+  <rect x="172" y="250" width="8" height="24" fill="#0e1a28"/>
+  <rect x="184" y="254" width="12" height="20" fill="#0e1a28"/>
+  <!-- Window lights -->
+  <circle cx="8" cy="258" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="34" cy="258" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="70" cy="258" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="90" cy="260" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="110" cy="258" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="142" cy="258" r="0.4" fill="#f4d080" opacity="0.8"/>
+  <circle cx="176" cy="260" r="0.4" fill="#f4d080" opacity="0.8"/>
+
+  <!-- Cloud wisps at his feet -->
+  <path d="M 0 212 Q 40 206 80 212 Q 120 218 160 212 Q 190 208 200 212 L 200 226 L 0 226 Z" fill="#e8f0f8" opacity="0.35"/>
+
+  <!-- Feet -->
+  <path d="M 66 216 L 62 226 L 90 226 L 88 216 Z" fill="#0a0608" stroke="#050404" stroke-width="0.4"/>
+  <path d="M 110 216 L 112 226 L 138 226 L 134 216 Z" fill="#0a0608" stroke="#050404" stroke-width="0.4"/>
+
+  <!-- Long overcoat bottom -->
+  <path d="M 54 190 L 46 226 L 154 226 L 146 190 Z" fill="url(#ak-uniform)" stroke="#050608" stroke-width="0.7"/>
+  <line x1="100" y1="190" x2="100" y2="226" stroke="#050608" stroke-width="0.4"/>
+
+  <!-- Torso — high-collared uniform coat -->
+  <path d="M 56 102 L 64 90 L 78 84 L 100 82 L 122 84 L 136 90 L 144 102 L 148 140 L 150 180 L 146 200 L 54 200 L 50 180 L 52 140 Z"
+        fill="url(#ak-uniform)" stroke="#050608" stroke-width="1.0"/>
+  <!-- Collar with altitude pin -->
+  <path d="M 82 86 L 80 98 L 100 100 L 120 98 L 118 86 Z" fill="#1a2838" stroke="#080c18" stroke-width="0.5"/>
+  <circle cx="86" cy="94" r="1.3" fill="#f4f4f0" stroke="#3a3a38" stroke-width="0.3"/>
+  <circle cx="114" cy="94" r="1.3" fill="#f4f4f0" stroke="#3a3a38" stroke-width="0.3"/>
+
+  <!-- Center uniform stripe -->
+  <line x1="100" y1="100" x2="100" y2="200" stroke="#f4f4f0" stroke-width="0.5" opacity="0.6"/>
+  <!-- Silver buttons -->
+  <circle cx="100" cy="120" r="1.2" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <circle cx="100" cy="140" r="1.2" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <circle cx="100" cy="160" r="1.2" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <circle cx="100" cy="180" r="1.2" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+
+  <!-- Shoulder boards — silver with wings -->
+  <rect x="58" y="94" width="18" height="6" rx="1" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.4"/>
+  <rect x="124" y="94" width="18" height="6" rx="1" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.4"/>
+  <!-- Tiny wing insignia on the boards -->
+  <path d="M 62 97 Q 67 95 72 97" fill="none" stroke="#1a1a18" stroke-width="0.35"/>
+  <path d="M 128 97 Q 133 95 138 97" fill="none" stroke="#1a1a18" stroke-width="0.35"/>
+
+  <!-- Left arm — turned to hold the coin-op binoculars on its pedestal -->
+  <path d="M 48 108 L 38 124 L 26 152 L 18 184 L 24 188 L 34 168 L 44 146 L 54 124 Z" fill="url(#ak-uniform)" stroke="#050608" stroke-width="0.6"/>
+  <!-- Glove -->
+  <ellipse cx="22" cy="192" rx="5.5" ry="4" fill="#f4f4f0" stroke="#6a6a68" stroke-width="0.4"/>
+
+  <!-- Binoculars pedestal -->
+  <rect x="20" y="200" width="4" height="30" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.4"/>
+  <!-- Pedestal base -->
+  <path d="M 10 230 L 34 230 L 30 234 L 14 234 Z" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- Binoculars housing -->
+  <rect x="12" y="186" width="22" height="16" rx="2" fill="#182838" stroke="#080c18" stroke-width="0.5"/>
+  <circle cx="18" cy="194" r="3" fill="#0a0c14" stroke="#182838" stroke-width="0.3"/>
+  <circle cx="28" cy="194" r="3" fill="#0a0c14" stroke="#182838" stroke-width="0.3"/>
+  <!-- Glowing lenses (wrong sights) -->
+  <circle cx="18" cy="194" r="1.4" fill="#88c8f4" filter="url(#ak-glow)"/>
+  <circle cx="28" cy="194" r="1.4" fill="#88c8f4" filter="url(#ak-glow)"/>
+  <!-- Coin slot -->
+  <rect x="20" y="188" width="4" height="1.2" fill="#0a0c14" stroke="#050608" stroke-width="0.2"/>
+
+  <!-- Right arm — gesturing outward as if to the horizon -->
+  <path d="M 152 108 L 164 120 L 176 144 L 186 172 L 180 180 L 170 158 L 158 134 L 148 120 Z" fill="url(#ak-uniform)" stroke="#050608" stroke-width="0.6"/>
+  <!-- Glove -->
+  <ellipse cx="182" cy="184" rx="5.5" ry="4" fill="#f4f4f0" stroke="#6a6a68" stroke-width="0.4"/>
+
+  <!-- Streamer/ribbon from his hand, lifted by the altitude wind -->
+  <path d="M 186 184 Q 196 168 184 148 Q 172 128 190 108 Q 198 94 188 82" fill="none" stroke="#f4d488" stroke-width="0.7" opacity="0.85"/>
+
+  <!-- Head — calm, altitude-wind-swept hair -->
+  <ellipse cx="100" cy="62" rx="14" ry="16" fill="#d8c8b0" stroke="#5a4030" stroke-width="0.5"/>
+  <!-- Hair: windswept gray -->
+  <path d="M 82 50 Q 100 38 118 50 L 122 52 Q 110 48 100 50 Q 92 52 80 52 Z" fill="#6a6a6c" stroke="#3a3a3c" stroke-width="0.4"/>
+  <!-- Hair streamers lifted -->
+  <path d="M 118 52 Q 132 48 140 42" fill="none" stroke="#6a6a6c" stroke-width="0.6"/>
+  <path d="M 82 50 Q 68 46 60 40" fill="none" stroke="#6a6a6c" stroke-width="0.6"/>
+
+  <!-- Captain's cap -->
+  <path d="M 80 42 L 120 42 L 124 52 L 76 52 Z" fill="url(#ak-uniform)" stroke="#050608" stroke-width="0.5"/>
+  <rect x="76" y="50" width="48" height="3" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- Cap visor -->
+  <path d="M 74 53 Q 100 60 126 53 L 124 56 Q 100 62 76 56 Z" fill="#0a0608" stroke="#050404" stroke-width="0.3"/>
+  <!-- Cap winged badge -->
+  <path d="M 92 46 Q 100 42 108 46" fill="none" stroke="url(#ak-chrome)" stroke-width="0.6"/>
+  <circle cx="100" cy="46" r="1.4" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+
+  <!-- Eyes — sky-blue, fixed on the horizon -->
+  <ellipse cx="93" cy="62" rx="2.6" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="93" cy="62" r="1.1" fill="#88c8f4" filter="url(#ak-glow)"/>
+  <ellipse cx="107" cy="62" rx="2.6" ry="1.8" fill="#f4ecd0" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="107" cy="62" r="1.1" fill="#88c8f4" filter="url(#ak-glow)"/>
+
+  <!-- Brow -->
+  <path d="M 88 57 Q 93 55 98 58" fill="none" stroke="#3a2e18" stroke-width="0.55"/>
+  <path d="M 102 58 Q 107 55 112 57" fill="none" stroke="#3a2e18" stroke-width="0.55"/>
+
+  <!-- Thin nose -->
+  <path d="M 100 64 L 98 72 L 100 74 L 102 72 Z" fill="#c0a890" stroke="#5a4030" stroke-width="0.3"/>
+
+  <!-- Serene mouth -->
+  <path d="M 94 80 Q 100 82 106 80" fill="none" stroke="#3a2818" stroke-width="0.55"/>
+
+  <!-- Pocket watch (altimeter) chain -->
+  <path d="M 90 138 Q 86 146 90 154 Q 94 160 92 168" fill="none" stroke="url(#ak-chrome)" stroke-width="0.5"/>
+  <circle cx="92" cy="170" r="3" fill="url(#ak-chrome)" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- Altimeter needle -->
+  <line x1="92" y1="167" x2="92" y2="170" stroke="#1a1a18" stroke-width="0.3"/>
+  <line x1="92" y1="170" x2="94" y2="171" stroke="#c83020" stroke-width="0.3"/>
+
+  <!-- Tiny glass shard floating near his shoulder — piece of observation glass -->
+  <polygon points="150,110 156,106 154,118 148,114" fill="url(#ak-glass)" stroke="#6a6a68" stroke-width="0.25"/>
+  <polygon points="44,128 50,122 48,134 42,132" fill="url(#ak-glass)" stroke="#6a6a68" stroke-width="0.25"/>
+</svg>

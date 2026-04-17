@@ -242,9 +242,172 @@ export const PORTERS_LAYOUT: BuildingLayoutDefinition = {
   ],
 };
 
+// ── Skyscraper layouts ──────────────────────────────────────────────────
+//
+// The skyscraper starts as a bounded owned stack of five floors. Each floor
+// has its own identity (public lobby, operations, recovery/training,
+// logistics, rooftop) so the move out of Porter's reads as the guild becoming
+// an institution — not as a Porter's with a taller roof.
+
+const SKYSCRAPER_LOBBY: BuildingFloorLayout = {
+  floorIndex: 0,
+  elevationBandId: "ground-floor",
+  stackGroupId: "tower-core",
+  stackLayer: 0,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/lobby",
+      col: 1,
+      row: 2,
+      cols: 7,
+      rows: 5,
+      startingTemplateId: "room/lobby:tier_1",
+    },
+    {
+      slotId: "slot/reception",
+      col: 8,
+      row: 2,
+      cols: 3,
+      rows: 3,
+      startingTemplateId: "room/reception:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_OPERATIONS: BuildingFloorLayout = {
+  floorIndex: 1,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 1,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/bullpen",
+      col: 1,
+      row: 2,
+      cols: 7,
+      rows: 5,
+      startingTemplateId: "room/bullpen:tier_1",
+    },
+    {
+      slotId: "slot/situation-room",
+      col: 8,
+      row: 2,
+      cols: 3,
+      rows: 5,
+      startingTemplateId: "room/situation_room:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_RECOVERY: BuildingFloorLayout = {
+  floorIndex: 2,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 2,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/clinic",
+      col: 1,
+      row: 2,
+      cols: 4,
+      rows: 5,
+      startingTemplateId: "room/clinic:tier_1",
+    },
+    {
+      slotId: "slot/dojo",
+      col: 5,
+      row: 2,
+      cols: 4,
+      rows: 5,
+      startingTemplateId: "room/dojo:tier_1",
+    },
+    {
+      slotId: "slot/lounge",
+      col: 9,
+      row: 2,
+      cols: 2,
+      rows: 5,
+      startingTemplateId: "room/lounge:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_LOGISTICS: BuildingFloorLayout = {
+  floorIndex: 3,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 3,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/supply-hall",
+      col: 1,
+      row: 2,
+      cols: 5,
+      rows: 5,
+      startingTemplateId: "room/supply_hall:tier_1",
+    },
+    {
+      slotId: "slot/fabrication-bay",
+      col: 6,
+      row: 2,
+      cols: 5,
+      rows: 5,
+      startingTemplateId: "room/fabrication_bay:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_ROOFTOP: BuildingFloorLayout = {
+  floorIndex: 4,
+  elevationBandId: "rooftop",
+  stackGroupId: "rooftop",
+  stackLayer: 0,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/helipad",
+      col: 0,
+      row: 2,
+      cols: 6,
+      rows: 5,
+      startingTemplateId: "room/rooftop_helipad:tier_1",
+    },
+    {
+      slotId: "slot/sky-garden",
+      col: 6,
+      row: 2,
+      cols: 6,
+      rows: 5,
+      startingTemplateId: "room/sky_garden:tier_1",
+    },
+  ],
+};
+
+export const SKYSCRAPER_LAYOUT: BuildingLayoutDefinition = {
+  buildingId: "building/skyscraper",
+  stages: [
+    {
+      stageId: "skyscraper/baseline",
+      minimumTier: 1,
+      floors: [
+        SKYSCRAPER_LOBBY,
+        SKYSCRAPER_OPERATIONS,
+        SKYSCRAPER_RECOVERY,
+        SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_ROOFTOP,
+      ],
+    },
+  ],
+};
+
 const LAYOUTS_BY_BUILDING: Record<string, BuildingLayoutDefinition> = {
   [BODEGA_LAYOUT.buildingId]: BODEGA_LAYOUT,
   [PORTERS_LAYOUT.buildingId]: PORTERS_LAYOUT,
+  [SKYSCRAPER_LAYOUT.buildingId]: SKYSCRAPER_LAYOUT,
 };
 
 const activeStageCache = new Map<string, BuildingLayoutStage | undefined>();

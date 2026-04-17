@@ -349,6 +349,44 @@ function RelocationModal({
 }) {
   const resolvedGuildName = guildName ?? "your guild";
   const resolvedPlayerName = playerName ?? "Boss";
+  const relocationCopy =
+    payload.buildingToId === "building/skyscraper"
+      ? {
+          offerLead:
+            "A lease for a licensed headquarters in Midtown Manhattan is available. Moving assistance and a transition budget are included.",
+          decisionTitle: "Relocate to Ascension Tower?",
+          decisionLead:
+            "Accepting spends {cost} from the treasury. Porter's closes as headquarters. All operators, staff, gear, cash, and reputation carry over. Room assignments reset in the new building.",
+          decisionDetail:
+            "Ascension Tower starts with 11 rooms across five floors and an 18-operator cap. Operations, recovery, training, logistics, fabrication, and rooftop staging are already built into the stack. You cannot reverse this decision, and relocation is only valid when no contract, raid, or blocking interruption is still in progress.",
+          movingTitle: "Welcome to Ascension Tower",
+          movingSubtitle: "Midtown, Manhattan",
+          movingBody: [
+            "Porter's closed as headquarters for the last time. The bar lights went dark, the office files got boxed, and the waterfront keys changed hands.",
+            "The tower is brighter, quieter, and too clean to feel lived in yet. Operators drift between the lobby, the operations floor, and the rooftop trying to decide which parts feel like work and which parts finally feel like arrival.",
+            "It is not comfortable yet. But it is permanent.",
+          ],
+        }
+      : {
+          offerLead:
+            "A lease for a larger licensed headquarters in Red Hook, Brooklyn is available. Moving assistance and a transitional operating budget are included.",
+          decisionTitle: "Relocate to Porter's?",
+          decisionLead:
+            "Accepting spends {cost} from the treasury. The bodega lease terminates. All operators, staff, gear, cash, and reputation carry over. Room assignments reset in the new building.",
+          decisionDetail:
+            "Porter's starts with 7 rooms across two floors and a 12-operator cap. Training and dedicated recovery unlock for the first time. You cannot reverse this decision, and relocation is only valid when no contract, raid, or blocking interruption is still in progress.",
+          movingTitle: "Welcome to Porter's",
+          movingSubtitle: "Red Hook, Brooklyn",
+          movingBody: [
+            "The register closed for the last time. Aina counted out the drawer, put the keys on the counter, and turned off the lights. The bodega is behind you now.",
+            "The new building is bigger, emptier, and unfamiliar. Harbor air comes through the open windows. The operators spread out across two floors, looking for places to sit. Nobody knows where anything is yet, least of all {playerName}.",
+            "It is not home yet. But it will be.",
+          ],
+        };
+  const decisionLead = relocationCopy.decisionLead.replace("{cost}", String(payload.treasuryCost));
+  const movingBody = relocationCopy.movingBody.map((paragraph) =>
+    paragraph.replace("{playerName}", resolvedPlayerName),
+  );
 
   if (payload.beat === "offer") {
     return (
@@ -377,10 +415,7 @@ function RelocationModal({
               {resolvedGuildName}'s performance record, facility condition, and reputation score
               qualify it for a facility upgrade under the city's guild infrastructure program.
             </p>
-            <p className="text-sm leading-relaxed text-silver/80">
-              A lease for a larger licensed headquarters in Red Hook, Brooklyn is available. Moving
-              assistance and a transitional operating budget are included.
-            </p>
+            <p className="text-sm leading-relaxed text-silver/80">{relocationCopy.offerLead}</p>
             <div className="glass-card-inset rounded-lg p-3">
               <p className="text-xs uppercase tracking-[0.14em] text-gold/80">
                 Relocation deposit: ${payload.treasuryCost}
@@ -398,7 +433,7 @@ function RelocationModal({
   if (payload.beat === "decision") {
     return (
       <GameModal
-        title="Relocate to Porter's?"
+        title={relocationCopy.decisionTitle}
         subtitle="This decision is irreversible"
         dismissible={false}
       >
@@ -407,17 +442,10 @@ function RelocationModal({
           presenterExpression={payload.presenterExpression}
         >
           <div className="space-y-5">
-            <p className="text-sm leading-relaxed text-silver/80">
-              Accepting spends ${payload.treasuryCost} from the treasury. The bodega lease
-              terminates. All operators, staff, gear, cash, and reputation carry over. Room
-              assignments reset in the new building.
-            </p>
+            <p className="text-sm leading-relaxed text-silver/80">{decisionLead}</p>
             <div className="glass-card-inset rounded-lg p-3">
               <p className="text-xs leading-relaxed text-silver/60">
-                Porter's starts with 7 rooms across two floors and a 12-operator cap. Training and
-                dedicated recovery unlock for the first time. You cannot reverse this decision, and
-                relocation is only valid when no contract, raid, or blocking interruption is still
-                in progress.
+                {relocationCopy.decisionDetail}
               </p>
             </div>
             <div className="flex items-center justify-end gap-3">
@@ -445,8 +473,8 @@ function RelocationModal({
   // beat === "moving"
   return (
     <GameModal
-      title="Welcome to Porter's"
-      subtitle="Red Hook, Brooklyn"
+      title={relocationCopy.movingTitle}
+      subtitle={relocationCopy.movingSubtitle}
       dismissible={false}
       footer={
         <div className="flex justify-end">
@@ -465,18 +493,9 @@ function RelocationModal({
         presenterExpression={payload.presenterExpression}
       >
         <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-silver/80">
-            The register closed for the last time. Aina counted out the drawer, put the keys on the
-            counter, and turned off the lights. The bodega is behind you now.
-          </p>
-          <p className="text-sm leading-relaxed text-silver/80">
-            The new building is bigger, emptier, and unfamiliar. Harbor air comes through the open
-            windows. The operators spread out across two floors, looking for places to sit. Nobody
-            knows where anything is yet, least of all {resolvedPlayerName}.
-          </p>
-          <p className="text-sm leading-relaxed text-silver/60 italic">
-            It is not home yet. But it will be.
-          </p>
+          <p className="text-sm leading-relaxed text-silver/80">{movingBody[0]}</p>
+          <p className="text-sm leading-relaxed text-silver/80">{movingBody[1]}</p>
+          <p className="text-sm leading-relaxed text-silver/60 italic">{movingBody[2]}</p>
         </div>
       </NarrativeLayout>
     </GameModal>

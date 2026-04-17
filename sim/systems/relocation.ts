@@ -1,9 +1,11 @@
 /**
  * Relocation Gate And Handoff System
  *
- * Evaluates the bodega relocation prerequisites, checks acceptance
- * preconditions, enqueues the multi-beat blocking interruption, and
- * executes the building swap from bodega to Porter's.
+ * Evaluates the relocation prerequisites for the current headquarters,
+ * checks acceptance preconditions, enqueues the multi-beat blocking
+ * interruption, and executes the building swap. Supports both the
+ * bodega → Porter's and Porter's → skyscraper handoffs via a single
+ * runtime-resolved configuration.
  */
 
 import { removeEntity } from "bitecs";
@@ -25,14 +27,10 @@ import {
   getCurrentAbsoluteMinute,
   pushRuntimeEvent,
 } from "./commands";
-import { BODEGA_SPECIFIC_BEAT_IDS } from "./guidance-beats";
+import { BODEGA_SPECIFIC_BEAT_IDS, PORTERS_CAMPAIGN_BEAT_IDS } from "./guidance-beats";
 
 // ── Constants ───────────────────────────────────────────────────────────
 
-const RELOCATION_EVENT_ID = "event/relocation/bodega-to-next-hq";
-const RELOCATION_FROM = "building/bodega";
-const RELOCATION_TO = "building/porters";
-const RELOCATION_TREASURY_COST = 600;
 const ASSISTANT_PRESENTER_ID = "presenter/assistant";
 
 export const RELOCATION_THRESHOLDS = {
@@ -43,6 +41,80 @@ export const RELOCATION_THRESHOLDS = {
   activeRoster: 8,
   bossEncountersCompleted: 3,
 } as const;
+
+export const SKYSCRAPER_RELOCATION_THRESHOLDS = {
+  buildingTier: 6,
+  reputation: 180,
+  treasury: 3000,
+  contractsCompleted: 60,
+  activeRoster: 12,
+  bossEncountersCompleted: 10,
+} as const;
+
+interface RelocationTransitionConfig {
+  eventId: string;
+  fromBuildingId: string;
+  toBuildingId: string;
+  treasuryCost: number;
+  landingMessage: string;
+  retiredGuidanceBeatIds: readonly string[];
+  thresholds: {
+    buildingTier: number;
+    reputation: number;
+    treasury: number;
+    contractsCompleted: number;
+    activeRoster: number;
+    bossEncountersCompleted: number;
+  };
+  tierLabel: string;
+}
+
+const BODEGA_TO_PORTERS: RelocationTransitionConfig = {
+  eventId: "event/relocation/bodega-to-next-hq",
+  fromBuildingId: "building/bodega",
+  toBuildingId: "building/porters",
+  treasuryCost: 600,
+  landingMessage:
+    "{guildName} has relocated to Porter's in Red Hook. The bodega is behind you. Welcome to the waterfront.",
+  retiredGuidanceBeatIds: BODEGA_SPECIFIC_BEAT_IDS,
+  thresholds: RELOCATION_THRESHOLDS,
+  tierLabel: "Building fully upgraded",
+};
+
+const PORTERS_TO_SKYSCRAPER: RelocationTransitionConfig = {
+  eventId: "event/relocation/porters-to-skyscraper",
+  fromBuildingId: "building/porters",
+  toBuildingId: "building/skyscraper",
+  treasuryCost: 3000,
+  landingMessage:
+    "{guildName} has moved into Ascension Tower. Porter's is behind you. The guild has an address now — and a permanent one.",
+  retiredGuidanceBeatIds: PORTERS_CAMPAIGN_BEAT_IDS,
+  thresholds: SKYSCRAPER_RELOCATION_THRESHOLDS,
+  tierLabel: "Porter's fully upgraded",
+};
+
+const RELOCATION_CONFIGS: readonly RelocationTransitionConfig[] = [
+  BODEGA_TO_PORTERS,
+  PORTERS_TO_SKYSCRAPER,
+];
+
+function resolveActiveRelocationConfig(
+  context: SimSystemContext,
+): RelocationTransitionConfig | null {
+  const buildingEntity = context.singletonEntities.building;
+  const buildingTemplate =
+    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
+  if (!buildingTemplate) return null;
+
+  return RELOCATION_CONFIGS.find((config) => config.fromBuildingId === buildingTemplate.id) ?? null;
+}
+
+function resolveRelocationConfigByEventId(
+  eventId: string | undefined,
+): RelocationTransitionConfig | null {
+  if (!eventId) return null;
+  return RELOCATION_CONFIGS.find((config) => config.eventId === eventId) ?? null;
+}
 
 // ── Gate state ──────────────────────────────────────────────────────────
 
@@ -72,9 +144,8 @@ export function evaluateRelocationGate(context: SimSystemContext): RelocationGat
   const buildingEntity = singletonEntities.building;
   const guildEntity = singletonEntities.guild;
 
-  const buildingTemplate =
-    context.registry.buildings[BuildingAuthority.activeBuildingTemplateIndex[buildingEntity]];
-  if (!buildingTemplate || buildingTemplate.id !== RELOCATION_FROM) {
+  const config = resolveActiveRelocationConfig(context);
+  if (!config) {
     return { visible: false, allPrerequisitesMet: false, prerequisites: [] };
   }
 
@@ -95,48 +166,50 @@ export function evaluateRelocationGate(context: SimSystemContext): RelocationGat
   }
   const contractsCompleted = contractSiteIds.size;
 
+  const { thresholds, tierLabel } = config;
+
   const prerequisites: RelocationPrerequisite[] = [
     {
       key: "buildingTier",
-      label: "Building fully upgraded",
+      label: tierLabel,
       current: buildingTier,
-      target: RELOCATION_THRESHOLDS.buildingTier,
-      met: buildingTier >= RELOCATION_THRESHOLDS.buildingTier,
+      target: thresholds.buildingTier,
+      met: buildingTier >= thresholds.buildingTier,
     },
     {
       key: "reputation",
       label: "Reputation",
       current: reputation,
-      target: RELOCATION_THRESHOLDS.reputation,
-      met: reputation >= RELOCATION_THRESHOLDS.reputation,
+      target: thresholds.reputation,
+      met: reputation >= thresholds.reputation,
     },
     {
       key: "treasury",
       label: "Treasury",
       current: treasury,
-      target: RELOCATION_THRESHOLDS.treasury,
-      met: treasury >= RELOCATION_THRESHOLDS.treasury,
+      target: thresholds.treasury,
+      met: treasury >= thresholds.treasury,
     },
     {
       key: "contractsCompleted",
       label: "Contracts completed",
       current: contractsCompleted,
-      target: RELOCATION_THRESHOLDS.contractsCompleted,
-      met: contractsCompleted >= RELOCATION_THRESHOLDS.contractsCompleted,
+      target: thresholds.contractsCompleted,
+      met: contractsCompleted >= thresholds.contractsCompleted,
     },
     {
       key: "activeRoster",
       label: "Active roster",
       current: activeRoster,
-      target: RELOCATION_THRESHOLDS.activeRoster,
-      met: activeRoster >= RELOCATION_THRESHOLDS.activeRoster,
+      target: thresholds.activeRoster,
+      met: activeRoster >= thresholds.activeRoster,
     },
     {
       key: "bossEncountersCompleted",
       label: "Boss encounters completed",
       current: bossEncountersCompleted,
-      target: RELOCATION_THRESHOLDS.bossEncountersCompleted,
-      met: bossEncountersCompleted >= RELOCATION_THRESHOLDS.bossEncountersCompleted,
+      target: thresholds.bossEncountersCompleted,
+      met: bossEncountersCompleted >= thresholds.bossEncountersCompleted,
     },
   ];
 
@@ -194,6 +267,9 @@ export function getRelocationBlockers(context: SimSystemContext): readonly Reloc
 // ── Initiate relocation sequence ────────────────────────────────────────
 
 export function initiateRelocation(context: SimSystemContext): boolean {
+  const config = resolveActiveRelocationConfig(context);
+  if (!config) return false;
+
   const gate = evaluateRelocationGate(context);
   if (!gate.allPrerequisitesMet) return false;
 
@@ -203,11 +279,11 @@ export function initiateRelocation(context: SimSystemContext): boolean {
   const currentMinute = getCurrentAbsoluteMinute(context);
   const payload: RelocationPayload = {
     kind: "relocation",
-    eventId: RELOCATION_EVENT_ID,
+    eventId: config.eventId,
     beat: "offer",
-    buildingFromId: RELOCATION_FROM,
-    buildingToId: RELOCATION_TO,
-    treasuryCost: RELOCATION_TREASURY_COST,
+    buildingFromId: config.fromBuildingId,
+    buildingToId: config.toBuildingId,
+    treasuryCost: config.treasuryCost,
     presenterId: ASSISTANT_PRESENTER_ID,
     presenterExpression: "serious",
   };
@@ -309,7 +385,7 @@ export function advanceRelocationBeat(
 
     case "moving": {
       // Execute the building handoff
-      executeRelocationHandoff(context);
+      executeRelocationHandoff(context, resolvedPayload);
       break;
     }
   }
@@ -317,16 +393,23 @@ export function advanceRelocationBeat(
 
 // ── Building handoff ────────────────────────────────────────────────────
 
-function executeRelocationHandoff(context: SimSystemContext): void {
+function executeRelocationHandoff(context: SimSystemContext, payload: RelocationPayload): void {
   const { world, registry, singletonEntities, runtimeState } = context;
   const buildingEntity = singletonEntities.building;
 
-  // ── 1. Resolve Porter's template index ─────────────────────────────
-  const portersIndex = registry.buildingIndexById.get(RELOCATION_TO);
-  if (portersIndex === undefined) {
-    throw new Error(`Relocation target building "${RELOCATION_TO}" not found in registry.`);
+  // ── 1. Resolve target config and template ──────────────────────────
+  const config = resolveRelocationConfigByEventId(payload.eventId);
+  if (!config) {
+    throw new Error(
+      `Unknown relocation handoff: ${payload.buildingFromId} -> ${payload.buildingToId}`,
+    );
   }
-  const portersTemplate = registry.buildings[portersIndex];
+
+  const targetIndex = registry.buildingIndexById.get(config.toBuildingId);
+  if (targetIndex === undefined) {
+    throw new Error(`Relocation target building "${config.toBuildingId}" not found in registry.`);
+  }
+  const targetTemplate = registry.buildings[targetIndex];
 
   // ── 2. Remove all existing room entities ───────────────────────────
   const oldRoomEntities = runtimeState.roomEntities.slice();
@@ -368,11 +451,11 @@ function executeRelocationHandoff(context: SimSystemContext): void {
   }
 
   // ── 5. Switch building identity ────────────────────────────────────
-  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = portersIndex;
-  BuildingAuthority.activeBuildingTier[buildingEntity] = portersTemplate.baseTier;
+  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] = targetIndex;
+  BuildingAuthority.activeBuildingTier[buildingEntity] = targetTemplate.baseTier;
   BuildingAuthority.activeFloorIndex[buildingEntity] = 0;
-  BuildingAuthority.roomSlotCount[buildingEntity] = portersTemplate.baseRoomSlots;
-  BuildingAuthority.operatorSlotCount[buildingEntity] = portersTemplate.baseOperatorSlots;
+  BuildingAuthority.roomSlotCount[buildingEntity] = targetTemplate.baseRoomSlots;
+  BuildingAuthority.operatorSlotCount[buildingEntity] = targetTemplate.baseOperatorSlots;
   BuildingAuthority.appliedUpgradeIds[buildingEntity] = [];
   BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] = [];
   BuildingAuthority.unlockedRoomTierByTemplateId[buildingEntity] = {};
@@ -405,8 +488,8 @@ function executeRelocationHandoff(context: SimSystemContext): void {
   }
   runtimeState.visitorEntities.length = 0;
 
-  // ── 6. Place Porter's starter rooms ────────────────────────────────
-  const starterFloors = getBuildingFloors(RELOCATION_TO, portersTemplate.baseTier);
+  // ── 6. Place starter rooms for the target building ─────────────────
+  const starterFloors = getBuildingFloors(config.toBuildingId, targetTemplate.baseTier);
   for (const floor of starterFloors) {
     for (const slot of floor.slots) {
       if (!slot.startingTemplateId) continue;
@@ -429,9 +512,9 @@ function executeRelocationHandoff(context: SimSystemContext): void {
     }
   }
 
-  // ── 7. Retire bodega-specific guidance beats ────────────────────────
+  // ── 7. Retire building-specific guidance beats from the old HQ ─────
   const { guidanceState } = runtimeState;
-  for (const beatId of BODEGA_SPECIFIC_BEAT_IDS) {
+  for (const beatId of config.retiredGuidanceBeatIds) {
     if (guidanceState.activeBeatId === beatId) {
       guidanceState.activeBeatId = null;
       guidanceState.activeBeatView = null;
@@ -448,10 +531,7 @@ function executeRelocationHandoff(context: SimSystemContext): void {
   context.runtimeState.pendingCueIds.push("hq.relocation.land");
   pushRuntimeEvent(context, {
     kind: "relocation",
-    message: formatIdentityRuntimeText(
-      context,
-      "{guildName} has relocated to Porter's in Red Hook. The bodega is behind you. Welcome to the waterfront.",
-    ),
+    message: formatIdentityRuntimeText(context, config.landingMessage),
     accent: "gold",
   });
 }

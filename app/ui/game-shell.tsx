@@ -125,6 +125,13 @@ const TAB_ORDER: readonly ShellTab[] = ["hq", "operations"];
 // Manual advancement stays aligned with the simulation's hour-based tick contract.
 const TICK_HOUR_MS = 60 * 60 * 1000;
 const PORTERS_FLOOR_LABELS: Record<number, string> = { 0: "Ground", 1: "Upper", 2: "Waterfront" };
+const SKYSCRAPER_FLOOR_LABELS: Record<number, string> = {
+  0: "Lobby",
+  1: "Ops",
+  2: "Recovery",
+  3: "Logistics",
+  4: "Rooftop",
+};
 const PERSISTENT_GUIDANCE_COMPLETION_KINDS = new Set([
   "incident_resolved",
   "boss_commitment_resolved",
@@ -2013,14 +2020,28 @@ export function GameShell() {
                 </Tooltip>
                 <span className="hidden text-sm text-silver/48 sm:inline">{hq.building.name}</span>
                 {hq.building.floorCount > 1 && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-xs uppercase tracking-[0.15em] text-gold/60">Floor</span>
+                    <button
+                      type="button"
+                      data-testid="floor-step-previous"
+                      aria-label="Go to previous floor"
+                      className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={hq.building.activeFloorIndex === 0}
+                      onClick={() =>
+                        callbacks.setActiveFloor(Math.max(0, hq.building.activeFloorIndex - 1))
+                      }
+                    >
+                      <span aria-hidden="true">↓</span>
+                    </button>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => {
                         const label =
                           hq.building.id === "building/porters"
                             ? (PORTERS_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
-                            : String(floorIndex + 1);
+                            : hq.building.id === "building/skyscraper"
+                              ? (SKYSCRAPER_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
+                              : String(floorIndex + 1);
                         return (
                           <button
                             key={floorIndex}
@@ -2037,6 +2058,20 @@ export function GameShell() {
                         );
                       })}
                     </div>
+                    <button
+                      type="button"
+                      data-testid="floor-step-next"
+                      aria-label="Go to next floor"
+                      className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={hq.building.activeFloorIndex >= hq.building.floorCount - 1}
+                      onClick={() =>
+                        callbacks.setActiveFloor(
+                          Math.min(hq.building.floorCount - 1, hq.building.activeFloorIndex + 1),
+                        )
+                      }
+                    >
+                      <span aria-hidden="true">↑</span>
+                    </button>
                   </div>
                 )}
               </div>

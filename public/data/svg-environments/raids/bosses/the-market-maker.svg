@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="mm-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#d4a048" stop-opacity="0.16"/>
+      <stop offset="55%" stop-color="#1a1208" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#050404" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mm-suit" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#3a2e1e"/>
+      <stop offset="55%" stop-color="#1e1810"/>
+      <stop offset="100%" stop-color="#0a0804"/>
+    </linearGradient>
+    <linearGradient id="mm-gold" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4d488"/>
+      <stop offset="50%" stop-color="#c89438"/>
+      <stop offset="100%" stop-color="#745418"/>
+    </linearGradient>
+    <linearGradient id="mm-tape" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f4e8b0" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#f4e8b0" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#f4e8b0" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="mm-glow">
+      <feGaussianBlur stdDeviation="2.1" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="94" ry="132" fill="url(#mm-aura)"/>
+
+  <!-- Trading floor grid behind the figure — inverted ceiling lines -->
+  <line x1="0" y1="252" x2="200" y2="252" stroke="#3a3020" stroke-width="0.3" opacity="0.4"/>
+  <line x1="0" y1="260" x2="200" y2="260" stroke="#3a3020" stroke-width="0.3" opacity="0.4"/>
+  <line x1="0" y1="268" x2="200" y2="268" stroke="#3a3020" stroke-width="0.3" opacity="0.4"/>
+
+  <!-- Ticker-tape streamers — flowing upward around the figure -->
+  <path d="M 10 230 C 30 200 6 160 24 120 C 36 90 18 60 28 30" fill="none" stroke="url(#mm-tape)" stroke-width="1.4" opacity="0.9"/>
+  <path d="M 186 232 C 170 198 192 162 176 122 C 166 88 188 58 176 28" fill="none" stroke="url(#mm-tape)" stroke-width="1.4" opacity="0.9"/>
+  <path d="M 32 236 Q 48 210 40 180 Q 30 152 44 122" fill="none" stroke="url(#mm-tape)" stroke-width="0.8" opacity="0.6"/>
+  <path d="M 164 236 Q 148 208 158 178 Q 168 150 156 122" fill="none" stroke="url(#mm-tape)" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- Tiny ticker symbols on the tape -->
+  <text x="20" y="160" font-family="monospace" font-size="3" fill="#d4b878" opacity="0.8">BRK ▲</text>
+  <text x="176" y="170" font-family="monospace" font-size="3" fill="#d4b878" opacity="0.8">INV ▼</text>
+  <text x="42" y="112" font-family="monospace" font-size="3" fill="#d4b878" opacity="0.7">MKT ▲</text>
+  <text x="154" y="100" font-family="monospace" font-size="3" fill="#d4b878" opacity="0.7">RFT ▼</text>
+
+  <!-- Inverted floor shoes — patent leather, pointed up -->
+  <path d="M 68 248 L 64 262 L 90 262 L 88 248 Z" fill="#12080a" stroke="#050204" stroke-width="0.5"/>
+  <path d="M 110 248 L 112 262 L 138 262 L 134 248 Z" fill="#12080a" stroke="#050204" stroke-width="0.5"/>
+
+  <!-- Legs — pinstripe trousers -->
+  <rect x="72" y="200" width="20" height="50" rx="1" fill="url(#mm-suit)" stroke="#0a0604" stroke-width="0.6"/>
+  <rect x="108" y="200" width="20" height="50" rx="1" fill="url(#mm-suit)" stroke="#0a0604" stroke-width="0.6"/>
+  <!-- Pinstripes -->
+  <line x1="78" y1="202" x2="78" y2="248" stroke="#d4b878" stroke-width="0.25" opacity="0.6"/>
+  <line x1="84" y1="202" x2="84" y2="248" stroke="#d4b878" stroke-width="0.25" opacity="0.6"/>
+  <line x1="114" y1="202" x2="114" y2="248" stroke="#d4b878" stroke-width="0.25" opacity="0.6"/>
+  <line x1="120" y1="202" x2="120" y2="248" stroke="#d4b878" stroke-width="0.25" opacity="0.6"/>
+
+  <!-- Main body — double-breasted suit jacket -->
+  <path d="M 58 104 L 66 92 L 80 84 L 100 82 L 120 84 L 134 92 L 142 104 L 146 140 L 148 170 L 146 198 L 54 198 L 52 170 L 54 140 Z"
+        fill="url(#mm-suit)" stroke="#050404" stroke-width="1.0"/>
+  <!-- Lapels -->
+  <path d="M 80 86 L 90 108 L 100 116 L 110 108 L 120 86" fill="#2a1e10" stroke="#1a1008" stroke-width="0.6"/>
+  <!-- Shirt triangle -->
+  <path d="M 90 110 L 100 132 L 110 110 Z" fill="#f4ecd4" stroke="#b89450" stroke-width="0.4"/>
+  <!-- Tie — blood-red -->
+  <path d="M 94 112 L 98 132 L 102 132 L 106 112 Z" fill="#5a1010" stroke="#2a0808" stroke-width="0.3"/>
+  <path d="M 94 132 L 98 162 L 102 162 L 106 132 Z" fill="#5a1010" stroke="#2a0808" stroke-width="0.3"/>
+  <!-- Gold tie clip -->
+  <rect x="93" y="148" width="14" height="2" fill="url(#mm-gold)" stroke="#5a3810" stroke-width="0.3"/>
+
+  <!-- Pinstripe pattern on jacket -->
+  <line x1="70" y1="100" x2="70" y2="196" stroke="#d4b878" stroke-width="0.22" opacity="0.5"/>
+  <line x1="76" y1="100" x2="76" y2="196" stroke="#d4b878" stroke-width="0.22" opacity="0.5"/>
+  <line x1="124" y1="100" x2="124" y2="196" stroke="#d4b878" stroke-width="0.22" opacity="0.5"/>
+  <line x1="130" y1="100" x2="130" y2="196" stroke="#d4b878" stroke-width="0.22" opacity="0.5"/>
+
+  <!-- Double-breasted buttons -->
+  <circle cx="86" cy="140" r="1.1" fill="url(#mm-gold)"/>
+  <circle cx="114" cy="140" r="1.1" fill="url(#mm-gold)"/>
+  <circle cx="86" cy="160" r="1.1" fill="url(#mm-gold)"/>
+  <circle cx="114" cy="160" r="1.1" fill="url(#mm-gold)"/>
+
+  <!-- Left arm — holding a rolled-up ticker tape as a scroll -->
+  <path d="M 50 108 L 40 130 L 32 166 L 28 196 L 34 200 L 42 176 L 50 150 L 56 124 Z" fill="url(#mm-suit)" stroke="#050404" stroke-width="0.6"/>
+  <!-- Cuff -->
+  <rect x="28" y="196" width="12" height="5" rx="0.5" fill="#0a0604" stroke="#050404" stroke-width="0.3"/>
+  <!-- Hand -->
+  <ellipse cx="34" cy="204" rx="5" ry="4" fill="#c8a878" stroke="#5a4028" stroke-width="0.4"/>
+  <!-- Rolled ticker tape -->
+  <rect x="22" y="206" width="26" height="12" rx="1" fill="#f4ecd4" stroke="#a87848" stroke-width="0.4"/>
+  <line x1="25" y1="210" x2="46" y2="210" stroke="#745418" stroke-width="0.3" opacity="0.6"/>
+  <line x1="25" y1="214" x2="46" y2="214" stroke="#745418" stroke-width="0.3" opacity="0.6"/>
+
+  <!-- Right arm — gavel/closing-bell striker raised in warning -->
+  <path d="M 150 108 L 160 126 L 170 150 L 176 172 L 172 178 L 162 160 L 152 136 L 144 118 Z" fill="url(#mm-suit)" stroke="#050404" stroke-width="0.6"/>
+  <!-- Cuff -->
+  <rect x="168" y="174" width="10" height="5" rx="0.5" fill="#0a0604" stroke="#050404" stroke-width="0.3"/>
+  <!-- Hand -->
+  <ellipse cx="174" cy="182" rx="5" ry="4" fill="#c8a878" stroke="#5a4028" stroke-width="0.4"/>
+  <!-- Gavel -->
+  <rect x="168" y="152" width="3" height="28" rx="0.3" fill="#4a3018" stroke="#2a1808" stroke-width="0.3"/>
+  <rect x="158" y="148" width="22" height="10" rx="1" fill="url(#mm-gold)" stroke="#5a3810" stroke-width="0.4"/>
+  <circle cx="169" cy="153" r="1" fill="#2a1808"/>
+
+  <!-- Head — thin, hungry -->
+  <ellipse cx="100" cy="62" rx="15" ry="18" fill="#e0c098" stroke="#6a4828" stroke-width="0.5"/>
+  <!-- Hair — slicked back, graying at temples -->
+  <path d="M 86 50 L 84 42 L 98 38 L 112 40 L 116 44 L 114 52 Q 100 48 86 50 Z" fill="#2a1810" stroke="#1a0e08" stroke-width="0.5"/>
+  <!-- Greying temples -->
+  <path d="M 86 48 L 86 56" stroke="#7a5a3a" stroke-width="0.4" opacity="0.7"/>
+  <path d="M 114 48 L 114 56" stroke="#7a5a3a" stroke-width="0.4" opacity="0.7"/>
+
+  <!-- Eyes — gold glow, intense -->
+  <ellipse cx="93" cy="62" rx="2.6" ry="1.8" fill="#f4e8c8" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="93" cy="62" r="1.0" fill="url(#mm-gold)" filter="url(#mm-glow)"/>
+  <ellipse cx="107" cy="62" rx="2.6" ry="1.8" fill="#f4e8c8" stroke="#2a1810" stroke-width="0.3"/>
+  <circle cx="107" cy="62" r="1.0" fill="url(#mm-gold)" filter="url(#mm-glow)"/>
+
+  <!-- Thin brows -->
+  <path d="M 88 57 Q 93 55 98 58" fill="none" stroke="#1a0e08" stroke-width="0.6"/>
+  <path d="M 102 58 Q 107 55 112 57" fill="none" stroke="#1a0e08" stroke-width="0.6"/>
+
+  <!-- Sharp nose -->
+  <path d="M 100 64 L 98 72 L 100 74 L 102 72 Z" fill="#c8a080" stroke="#6a4828" stroke-width="0.3"/>
+  <!-- Thin closed-line smile — predator's -->
+  <path d="M 92 78 Q 100 80 108 78" fill="none" stroke="#3a1810" stroke-width="0.6"/>
+
+  <!-- Gold pocket square -->
+  <path d="M 122 108 L 120 120 L 128 118 L 130 108 Z" fill="url(#mm-gold)" stroke="#5a3810" stroke-width="0.3"/>
+
+  <!-- Inverted market bell suspended overhead -->
+  <path d="M 86 2 L 114 2 L 110 12 L 90 12 Z" fill="url(#mm-gold)" stroke="#5a3810" stroke-width="0.5"/>
+  <rect x="99" y="12" width="2" height="8" fill="#5a3810"/>
+  <circle cx="100" cy="22" r="2" fill="url(#mm-gold)" stroke="#5a3810" stroke-width="0.3"/>
+</svg>

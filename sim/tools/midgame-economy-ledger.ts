@@ -24,8 +24,14 @@ const dRankSiteConcepts = siteConceptTemplates.filter((site) =>
   site.rankPool.includes(MIDGAME_RANK),
 );
 const combatMissions = registry.missions.filter((mission) => mission.combatProfile);
+// The midgame ledger tracks only the D-rank workshop loop. C-rank endgame
+// recipes are scoped to the skyscraper and live outside this ledger.
+const midgameCraftRecipes = registry.craftRecipes.filter((recipe) => {
+  const output = registry.itemById.get(recipe.outputItemId);
+  return output?.rank === MIDGAME_RANK;
+});
 const craftInputItemIds = new Set(
-  registry.craftRecipes.flatMap((recipe) => recipe.inputItems.map((input) => input.itemId)),
+  midgameCraftRecipes.flatMap((recipe) => recipe.inputItems.map((input) => input.itemId)),
 );
 
 const valueEnvelopeSchema = z
@@ -237,7 +243,7 @@ type MidgameEconomyLedger = z.infer<typeof midgameEconomyLedgerSchema>;
 
 function collectCraftInputItems(): Map<string, { item: ItemTemplate; recipeIds: string[] }> {
   const map = new Map<string, { item: ItemTemplate; recipeIds: string[] }>();
-  for (const recipe of registry.craftRecipes) {
+  for (const recipe of midgameCraftRecipes) {
     for (const input of recipe.inputItems) {
       const item = registry.itemById.get(input.itemId);
       if (!item) continue;
@@ -381,7 +387,7 @@ function buildMaterialSources() {
 }
 
 function buildCraftCosts() {
-  return registry.craftRecipes.map((recipe) => {
+  return midgameCraftRecipes.map((recipe) => {
     const output = registry.itemById.get(recipe.outputItemId);
     const { items, total } = computeInputOpportunityCost(recipe);
     const inputCost = createDeterministicEnvelope(total);
@@ -420,7 +426,7 @@ function buildCraftCosts() {
 
 function buildCraftedGearValues() {
   const outputItems = new Map<string, { item: ItemTemplate; recipeIds: string[] }>();
-  for (const recipe of registry.craftRecipes) {
+  for (const recipe of midgameCraftRecipes) {
     const item = registry.itemById.get(recipe.outputItemId);
     if (!item) continue;
     const existing = outputItems.get(recipe.outputItemId);
@@ -449,7 +455,7 @@ function buildCraftedGearValues() {
 }
 
 function buildMarketFallbacks() {
-  const craftedOutputIds = new Set(registry.craftRecipes.map((recipe) => recipe.outputItemId));
+  const craftedOutputIds = new Set(midgameCraftRecipes.map((recipe) => recipe.outputItemId));
 
   return registry.items
     .filter(
@@ -749,8 +755,8 @@ function buildCraftComparisons(
 }
 
 export function buildMidgameEconomyLedger(): MidgameEconomyLedger {
-  const families = new Set(registry.craftRecipes.map((recipe) => recipe.family));
-  const outputIds = new Set(registry.craftRecipes.map((recipe) => recipe.outputItemId));
+  const families = new Set(midgameCraftRecipes.map((recipe) => recipe.family));
+  const outputIds = new Set(midgameCraftRecipes.map((recipe) => recipe.outputItemId));
   const craftCosts = buildCraftCosts();
   const marketFallbacks = buildMarketFallbacks();
   const dRankContractPostings = buildDRankContractPostings();
@@ -759,7 +765,7 @@ export function buildMidgameEconomyLedger(): MidgameEconomyLedger {
     schemaVersion: MIDGAME_ECONOMY_LEDGER_SCHEMA_VERSION,
     meta: {
       registryPath: "content/templates/index.ts",
-      craftRecipeCount: registry.craftRecipes.length,
+      craftRecipeCount: midgameCraftRecipes.length,
       craftFamilyCount: families.size,
       craftOutputCount: outputIds.size,
       dRankMissionCount: combatMissions.length,

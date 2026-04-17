@@ -3247,6 +3247,895 @@ export const bossTemplates: readonly BossProfile[] = [
       ],
     },
   },
+
+  // ── C-rank bosses (skyscraper endgame entry) ─────────────────────────────
+
+  {
+    bossId: "boss/the-market-maker",
+    name: "The Market Maker",
+    rank: "c",
+    rankTone: "surreal",
+    phases: 3,
+    tags: ["boss:area-damage", "boss:summon-pressure", "boss:intel-resist"],
+    weaknesses: [
+      { kind: "stat", target: "intelligence", multiplier: 1.3 },
+      { kind: "role", target: "role:scout", multiplier: 1.2 },
+    ],
+    attack: 48,
+    defense: 38,
+    hp: 220,
+    speed: 18,
+    threat: 100,
+    dropTableId: "drop-table/the-market-maker",
+    encounter: {
+      elapsedMinutes: 62,
+      targetingPriority: "highest_threat",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/market-maker/opening-bell",
+            "action/market-maker/ticker-storm",
+            "action/market-maker/position-call",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { attack: 5, defense: 3 },
+          actionIds: [
+            "action/market-maker/ticker-storm",
+            "action/market-maker/position-call",
+            "action/market-maker/margin-call",
+          ],
+          onEnterEffects: [{ kind: "apply_status", statusId: "exposed", duration: 3, potency: 14 }],
+          summonIds: ["summon/ticker-fragment"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.28,
+          statModifiers: { attack: 10, speed: 4 },
+          actionIds: [
+            "action/market-maker/closing-bell",
+            "action/market-maker/margin-call",
+            "action/market-maker/position-call",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/market-maker/opening-bell",
+          name: "Opening Bell",
+          weight: 30,
+          cooldown: 0,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "intelligence", scalingFactor: 0.85 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/market-maker/ticker-storm",
+          name: "Ticker Storm",
+          weight: 24,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "intelligence", scalingFactor: 0.95 },
+          ],
+        },
+        {
+          id: "action/market-maker/position-call",
+          name: "Position Call",
+          weight: 20,
+          cooldown: 3,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "intelligence", scalingFactor: 0.8 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 12 },
+          ],
+        },
+        {
+          id: "action/market-maker/margin-call",
+          name: "Margin Call",
+          weight: 18,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "intelligence", scalingFactor: 0.75 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 14 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/market-maker/closing-bell",
+          name: "Closing Bell",
+          weight: 14,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 32, scalingStat: "intelligence", scalingFactor: 1.1 },
+            { kind: "apply_status", statusId: "suppressed", duration: 3, potency: 14 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 32, scalingStat: "resilience", scalingFactor: 0.6 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/ticker-fragment",
+          label: "Ticker Fragment",
+          stats: { attack: 12, defense: 8, hp: 36, speed: 20, threat: 28 },
+          actions: [
+            {
+              id: "action/ticker-fragment/paper-cut",
+              name: "Paper Cut",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_lowest_hp",
+              effects: [
+                { kind: "damage", basePower: 10, scalingStat: "intelligence", scalingFactor: 0.45 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-concierge-prime",
+    name: "The Concierge",
+    rank: "c",
+    rankTone: "surreal",
+    phases: 3,
+    tags: ["boss:recovery-suppress", "boss:speed-drain", "boss:resilience-pierce"],
+    weaknesses: [
+      { kind: "stat", target: "perception", multiplier: 1.3 },
+      { kind: "role", target: "role:field_lead", multiplier: 1.2 },
+    ],
+    attack: 50,
+    defense: 42,
+    hp: 240,
+    speed: 16,
+    threat: 104,
+    dropTableId: "drop-table/the-concierge-prime",
+    encounter: {
+      elapsedMinutes: 64,
+      targetingPriority: "lowest_hp",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/concierge-prime/registry-strike",
+            "action/concierge-prime/guest-book",
+            "action/concierge-prime/floor-reassign",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { defense: 5, attack: 3 },
+          actionIds: [
+            "action/concierge-prime/registry-strike",
+            "action/concierge-prime/guest-book",
+            "action/concierge-prime/floor-reassign",
+            "action/concierge-prime/house-rules",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 14 },
+          ],
+          summonIds: ["summon/bellhop"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.3,
+          statModifiers: { defense: 9, attack: 6 },
+          actionIds: [
+            "action/concierge-prime/house-rules",
+            "action/concierge-prime/eviction",
+            "action/concierge-prime/floor-reassign",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 4, potency: 16 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/concierge-prime/registry-strike",
+          name: "Registry Strike",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "action/concierge-prime/guest-book",
+          name: "Guest Book",
+          weight: 22,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "intelligence", scalingFactor: 0.65 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/concierge-prime/floor-reassign",
+          name: "Floor Reassign",
+          weight: 20,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "intelligence", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/concierge-prime/house-rules",
+          name: "House Rules",
+          weight: 16,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1 },
+            { kind: "apply_status", statusId: "exposed", duration: 3, potency: 14 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/concierge-prime/eviction",
+          name: "Eviction",
+          weight: 12,
+          cooldown: 5,
+          targeting: "enemy_lowest_hp",
+          effects: [
+            { kind: "damage", basePower: 32, scalingStat: "strength", scalingFactor: 1.15 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_ally_defeat",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 28, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/bellhop",
+          label: "Bellhop",
+          stats: { attack: 12, defense: 10, hp: 38, speed: 18, threat: 26 },
+          actions: [
+            {
+              id: "action/bellhop/luggage-slam",
+              name: "Luggage Slam",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-foreman-prime",
+    name: "The Foreman",
+    rank: "c",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:area-damage", "boss:speed-drain"],
+    weaknesses: [
+      { kind: "stat", target: "speed", multiplier: 1.25 },
+      { kind: "role", target: "role:scout", multiplier: 1.2 },
+    ],
+    attack: 50,
+    defense: 34,
+    hp: 210,
+    speed: 20,
+    threat: 98,
+    dropTableId: "drop-table/the-foreman-prime",
+    encounter: {
+      elapsedMinutes: 58,
+      targetingPriority: "frontline",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/foreman-prime/wrench-strike",
+            "action/foreman-prime/work-order",
+            "action/foreman-prime/corridor-close",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.55,
+          statModifiers: { attack: 4, speed: 3 },
+          actionIds: [
+            "action/foreman-prime/wrench-strike",
+            "action/foreman-prime/work-order",
+            "action/foreman-prime/corridor-close",
+            "action/foreman-prime/shift-change",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 3, potency: 12 },
+          ],
+          summonIds: ["summon/maintenance-ghost"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.28,
+          statModifiers: { attack: 8, speed: 6 },
+          actionIds: [
+            "action/foreman-prime/shift-change",
+            "action/foreman-prime/lockout-tagout",
+            "action/foreman-prime/corridor-close",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/foreman-prime/wrench-strike",
+          name: "Wrench Strike",
+          weight: 30,
+          cooldown: 0,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "action/foreman-prime/work-order",
+          name: "Work Order",
+          weight: 22,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "staggered", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/foreman-prime/corridor-close",
+          name: "Corridor Close",
+          weight: 20,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/foreman-prime/shift-change",
+          name: "Shift Change",
+          weight: 16,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.95 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/foreman-prime/lockout-tagout",
+          name: "Lockout/Tagout",
+          weight: 12,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 28, scalingStat: "strength", scalingFactor: 1.1 },
+            { kind: "apply_status", statusId: "exposed", duration: 3, potency: 14 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_intervention_used",
+          target: "all_allies",
+          effects: [{ kind: "damage", basePower: 10, scalingStat: "strength", scalingFactor: 0.4 }],
+          usesRemaining: 3,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/maintenance-ghost",
+          label: "Maintenance Ghost",
+          stats: { attack: 14, defense: 10, hp: 40, speed: 18, threat: 30 },
+          actions: [
+            {
+              id: "action/maintenance-ghost/tool-swing",
+              name: "Tool Swing",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-stationmaster",
+    name: "The Stationmaster",
+    rank: "c",
+    rankTone: "heightened",
+    phases: 3,
+    tags: ["boss:summon-pressure", "boss:area-damage", "boss:intel-resist"],
+    weaknesses: [
+      { kind: "stat", target: "perception", multiplier: 1.3 },
+      { kind: "role", target: "role:field_lead", multiplier: 1.2 },
+    ],
+    attack: 46,
+    defense: 40,
+    hp: 225,
+    speed: 16,
+    threat: 102,
+    dropTableId: "drop-table/the-stationmaster",
+    encounter: {
+      elapsedMinutes: 60,
+      targetingPriority: "highest_threat",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/stationmaster/whistle-blow",
+            "action/stationmaster/platform-call",
+            "action/stationmaster/rail-clamp",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { defense: 4, speed: 3 },
+          actionIds: [
+            "action/stationmaster/whistle-blow",
+            "action/stationmaster/platform-call",
+            "action/stationmaster/rail-clamp",
+            "action/stationmaster/express-override",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 3, potency: 12 },
+          ],
+          summonIds: ["summon/conductor-shade"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.28,
+          statModifiers: { defense: 8, attack: 6 },
+          actionIds: [
+            "action/stationmaster/express-override",
+            "action/stationmaster/all-clear",
+            "action/stationmaster/rail-clamp",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "fortified", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/stationmaster/whistle-blow",
+          name: "Whistle Blow",
+          weight: 28,
+          cooldown: 0,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "perception", scalingFactor: 0.75 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/stationmaster/platform-call",
+          name: "Platform Call",
+          weight: 24,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 0.9 }],
+        },
+        {
+          id: "action/stationmaster/rail-clamp",
+          name: "Rail Clamp",
+          weight: 22,
+          cooldown: 3,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.8 },
+            { kind: "apply_status", statusId: "staggered", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/stationmaster/express-override",
+          name: "Express Override",
+          weight: 16,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "strength", scalingFactor: 1 },
+            { kind: "apply_status", statusId: "exposed", duration: 2, potency: 14 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/stationmaster/all-clear",
+          name: "All Clear",
+          weight: 12,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 30, scalingStat: "strength", scalingFactor: 1.15 },
+            { kind: "apply_status", statusId: "slowed", duration: 3, potency: 14 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_phase_enter",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 30, scalingStat: "resilience", scalingFactor: 0.55 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/conductor-shade",
+          label: "Conductor Shade",
+          stats: { attack: 14, defense: 10, hp: 40, speed: 20, threat: 32 },
+          actions: [
+            {
+              id: "action/conductor-shade/ticket-check",
+              name: "Ticket Check",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-curator-prime",
+    name: "The Head Curator",
+    rank: "c",
+    rankTone: "surreal",
+    phases: 3,
+    tags: ["boss:intel-resist", "boss:recovery-suppress", "boss:area-damage"],
+    weaknesses: [
+      { kind: "stat", target: "perception", multiplier: 1.3 },
+      { kind: "role", target: "role:scout", multiplier: 1.2 },
+    ],
+    attack: 48,
+    defense: 40,
+    hp: 230,
+    speed: 16,
+    threat: 102,
+    dropTableId: "drop-table/the-curator-prime",
+    encounter: {
+      elapsedMinutes: 62,
+      targetingPriority: "lowest_hp",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/curator-prime/silence-call",
+            "action/curator-prime/exhibit-label",
+            "action/curator-prime/gallery-patrol",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.6,
+          statModifiers: { defense: 5, attack: 3 },
+          actionIds: [
+            "action/curator-prime/silence-call",
+            "action/curator-prime/exhibit-label",
+            "action/curator-prime/gallery-patrol",
+            "action/curator-prime/fold-wing",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "suppressed", duration: 3, potency: 14 },
+          ],
+          summonIds: ["summon/display-sentinel"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.28,
+          statModifiers: { attack: 8, defense: 6 },
+          actionIds: [
+            "action/curator-prime/fold-wing",
+            "action/curator-prime/closing-announcement",
+            "action/curator-prime/gallery-patrol",
+          ],
+          onEnterEffects: [{ kind: "apply_status", statusId: "exposed", duration: 4, potency: 14 }],
+        },
+      ],
+      actions: [
+        {
+          id: "action/curator-prime/silence-call",
+          name: "Silence Call",
+          weight: 28,
+          cooldown: 0,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 12, scalingStat: "intelligence", scalingFactor: 0.65 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 14 },
+          ],
+        },
+        {
+          id: "action/curator-prime/exhibit-label",
+          name: "Exhibit Label",
+          weight: 22,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 22, scalingStat: "intelligence", scalingFactor: 0.9 },
+          ],
+        },
+        {
+          id: "action/curator-prime/gallery-patrol",
+          name: "Gallery Patrol",
+          weight: 20,
+          cooldown: 3,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 18, scalingStat: "strength", scalingFactor: 0.8 },
+            { kind: "apply_status", statusId: "staggered", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/curator-prime/fold-wing",
+          name: "Fold Wing",
+          weight: 16,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "intelligence", scalingFactor: 0.9 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 12 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/curator-prime/closing-announcement",
+          name: "Closing Announcement",
+          weight: 12,
+          cooldown: 5,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 30, scalingStat: "intelligence", scalingFactor: 1.1 },
+            { kind: "apply_status", statusId: "exposed", duration: 3, potency: 14 },
+          ],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_ally_defeat",
+          target: "all_allies",
+          effects: [
+            { kind: "damage", basePower: 10, scalingStat: "intelligence", scalingFactor: 0.4 },
+          ],
+          usesRemaining: 3,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/display-sentinel",
+          label: "Display Sentinel",
+          stats: { attack: 12, defense: 14, hp: 46, speed: 14, threat: 30 },
+          actions: [
+            {
+              id: "action/display-sentinel/case-slam",
+              name: "Case Slam",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 12, scalingStat: "strength", scalingFactor: 0.5 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    bossId: "boss/the-altitude-keeper",
+    name: "The Altitude Keeper",
+    rank: "c",
+    rankTone: "surreal",
+    phases: 3,
+    tags: ["boss:speed-drain", "boss:area-damage", "boss:resilience-pierce"],
+    weaknesses: [
+      { kind: "stat", target: "resilience", multiplier: 1.3 },
+      { kind: "role", target: "role:medic", multiplier: 1.2 },
+    ],
+    attack: 52,
+    defense: 36,
+    hp: 220,
+    speed: 20,
+    threat: 104,
+    dropTableId: "drop-table/the-altitude-keeper",
+    encounter: {
+      elapsedMinutes: 60,
+      targetingPriority: "random",
+      phases: [
+        {
+          phaseIndex: 0,
+          hpThresholdFraction: 1,
+          statModifiers: {},
+          actionIds: [
+            "action/altitude-keeper/deck-sweep",
+            "action/altitude-keeper/panoramic-lens",
+            "action/altitude-keeper/updraft",
+          ],
+          onEnterEffects: [],
+        },
+        {
+          phaseIndex: 1,
+          hpThresholdFraction: 0.55,
+          statModifiers: { attack: 5, speed: 3 },
+          actionIds: [
+            "action/altitude-keeper/deck-sweep",
+            "action/altitude-keeper/panoramic-lens",
+            "action/altitude-keeper/updraft",
+            "action/altitude-keeper/thin-air",
+          ],
+          onEnterEffects: [{ kind: "apply_status", statusId: "exposed", duration: 3, potency: 14 }],
+          summonIds: ["summon/observation-wisp"],
+        },
+        {
+          phaseIndex: 2,
+          hpThresholdFraction: 0.25,
+          statModifiers: { attack: 9, speed: 6 },
+          actionIds: [
+            "action/altitude-keeper/thin-air",
+            "action/altitude-keeper/vertigo-toss",
+            "action/altitude-keeper/updraft",
+          ],
+          onEnterEffects: [
+            { kind: "apply_status", statusId: "hastened", duration: 4, potency: 14 },
+          ],
+        },
+      ],
+      actions: [
+        {
+          id: "action/altitude-keeper/deck-sweep",
+          name: "Deck Sweep",
+          weight: 28,
+          cooldown: 0,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 16, scalingStat: "strength", scalingFactor: 0.8 },
+            { kind: "apply_status", statusId: "staggered", duration: 1, potency: 12 },
+          ],
+        },
+        {
+          id: "action/altitude-keeper/panoramic-lens",
+          name: "Panoramic Lens",
+          weight: 22,
+          cooldown: 2,
+          targeting: "enemy_single",
+          effects: [
+            { kind: "damage", basePower: 24, scalingStat: "perception", scalingFactor: 0.95 },
+          ],
+        },
+        {
+          id: "action/altitude-keeper/updraft",
+          name: "Updraft",
+          weight: 20,
+          cooldown: 3,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 14, scalingStat: "strength", scalingFactor: 0.7 },
+            { kind: "apply_status", statusId: "slowed", duration: 2, potency: 12 },
+          ],
+        },
+        {
+          id: "action/altitude-keeper/thin-air",
+          name: "Thin Air",
+          weight: 16,
+          cooldown: 4,
+          targeting: "all_enemies",
+          effects: [
+            { kind: "damage", basePower: 20, scalingStat: "perception", scalingFactor: 0.9 },
+            { kind: "apply_status", statusId: "suppressed", duration: 2, potency: 14 },
+          ],
+          phaseIndices: [1, 2],
+        },
+        {
+          id: "action/altitude-keeper/vertigo-toss",
+          name: "Vertigo Toss",
+          weight: 12,
+          cooldown: 5,
+          targeting: "enemy_single",
+          effects: [{ kind: "damage", basePower: 36, scalingStat: "strength", scalingFactor: 1.2 }],
+          phaseIndices: [2],
+        },
+      ],
+      reactionHooks: [
+        {
+          trigger: "on_intervention_used",
+          target: "boss_self",
+          effects: [
+            { kind: "shield", basePower: 26, scalingStat: "resilience", scalingFactor: 0.5 },
+          ],
+          usesRemaining: 2,
+        },
+      ],
+      summonDefinitions: [
+        {
+          summonId: "summon/observation-wisp",
+          label: "Observation Wisp",
+          stats: { attack: 14, defense: 8, hp: 32, speed: 22, threat: 28 },
+          actions: [
+            {
+              id: "action/observation-wisp/focus-beam",
+              name: "Focus Beam",
+              weight: 100,
+              cooldown: 0,
+              targeting: "enemy_single",
+              effects: [
+                { kind: "damage", basePower: 10, scalingStat: "perception", scalingFactor: 0.45 },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export const bossById: ReadonlyMap<string, BossProfile> = new Map(

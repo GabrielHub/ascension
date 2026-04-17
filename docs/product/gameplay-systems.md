@@ -14,6 +14,9 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - The shipped Porter's-era pressure band now comes from the dungeon economy, the operator labor market, city-pressure writeback, incident fallout, and encounter escalation; heavier institutional and political escalation can layer in later tiers.
 - The shipped bodega expansion centers intel, logistics, and staging support, and Porter's builds on those surfaces instead of re-solving them as bodega problems.
 - Porter's starter state should not regress room count or staging compared with the fully upgraded bodega, and the shipped upgrade path should remain above that floor.
+- Headquarters progression is intentionally capped at three buildings: the bodega, Porter's, and one final skyscraper headquarters.
+- The skyscraper is the final headquarters and the long-tail endgame home. Progression after reaching it should come from acquiring and fitting additional floors, not from adding a fourth headquarters tier.
+- The first skyscraper implementation should establish a bounded endgame-entry band with a small owned floor stack before widening into the broader forever loop.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
 - Content should escalate in tone and visual language with rank. F and E stay rooted in warped real places and plausible professional gear; D and C can become stranger, more specialized, and more visibly rift-touched; B and A can become institutionally famous and physically implausible; S is where the game spends its truly spectacular concepts.
 - That climb applies across dungeons, bosses, gear, and operators. It is not only a difficulty curve.
@@ -332,7 +335,8 @@ Multi-floor headquarters direction:
 - Do not pivot into a direct-control combat game.
 - Do not make runtime AI a hard dependency for the core loop.
 - Do not treat the bodega slice as the final shape of building progression.
-- Do not overbuild tower-scale or prestige content before the midgame proves itself.
+- Do not add a fourth headquarters tier unless the product plan is explicitly updated.
+- Do not overbuild literal tower-scale management before the skyscraper baseline proves that more floor acquisition actually deepens play.
 
 ## Locked Defaults For Deferred Systems
 

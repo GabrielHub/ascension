@@ -14,17 +14,17 @@ describe("template registry", () => {
     const registry = createTemplateRegistry();
 
     expect(registry.resources).toHaveLength(3);
-    expect(registry.buildings).toHaveLength(2);
-    expect(registry.rooms).toHaveLength(19);
+    expect(registry.buildings).toHaveLength(3);
+    expect(registry.rooms).toHaveLength(30);
     expect(registry.upgrades).toHaveLength(13);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(25);
-    expect(registry.items).toHaveLength(137);
+    expect(registry.items).toHaveLength(166);
     expect(registry.prepRecipes).toHaveLength(6);
     expect(registry.districts).toHaveLength(5);
     expect(registry.factions).toHaveLength(5);
-    expect(registry.craftRecipes).toHaveLength(9);
-    expect(registry.dropTables).toHaveLength(84);
+    expect(registry.craftRecipes).toHaveLength(19);
+    expect(registry.dropTables).toHaveLength(102);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
       "mission/clearance",
       "mission/containment",
@@ -282,21 +282,33 @@ describe("template registry", () => {
     });
   });
 
-  it("validates craft recipes reference the workshop, durable outputs, and known factions", () => {
+  it("validates craft recipes reference the correct workshop, durable outputs, and known factions", () => {
     const registry = createTemplateRegistry();
 
-    registry.craftRecipes.forEach((recipe) => {
-      expect(recipe.requiredRoomId).toBe("room/workshop:tier_1");
-      expect(recipe.requiredStaffTag).toBe("staff:logistics");
-      expect(recipe.minimumBuildingId).toBe("building/porters");
-      expect(recipe.minimumBuildingTier).toBeGreaterThanOrEqual(5);
-      expect(recipe.cashCost).toBeGreaterThan(0);
-      expect(recipe.inputItems.length).toBeGreaterThan(0);
-      expect(recipe.requiredDistrictTags.length).toBeGreaterThan(0);
+    const dCraftRoomId = "room/workshop:tier_1";
+    const cCraftRoomId = "room/fabrication_bay:tier_1";
 
+    registry.craftRecipes.forEach((recipe) => {
       const outputItem = registry.itemById.get(recipe.outputItemId);
       expect(outputItem).toBeTruthy();
       expect(["weapon", "outfit-overlay", "accessory"]).toContain(outputItem?.category);
+
+      // Porter's-era D-rank recipes use the workshop; skyscraper C-rank
+      // recipes use the Fabrication Bay. Every recipe must specify one of
+      // the two authored craft rooms.
+      if (recipe.minimumBuildingId === "building/porters") {
+        expect(recipe.requiredRoomId).toBe(dCraftRoomId);
+        expect(recipe.minimumBuildingTier).toBeGreaterThanOrEqual(5);
+      } else {
+        expect(recipe.minimumBuildingId).toBe("building/skyscraper");
+        expect(recipe.requiredRoomId).toBe(cCraftRoomId);
+        expect(recipe.minimumBuildingTier).toBeGreaterThanOrEqual(1);
+      }
+
+      expect(recipe.requiredStaffTag).toBe("staff:logistics");
+      expect(recipe.cashCost).toBeGreaterThan(0);
+      expect(recipe.inputItems.length).toBeGreaterThan(0);
+      expect(recipe.requiredDistrictTags.length).toBeGreaterThan(0);
 
       recipe.inputItems.forEach((input) => {
         const inputItem = registry.itemById.get(input.itemId);
@@ -530,18 +542,38 @@ describe("rank tone contracts", () => {
   it("tags current site concepts, bosses, and items with explicit rank tone metadata", () => {
     const registry = createTemplateRegistry();
 
+    // Rank tones escalate with rank:
+    //  F/E → grounded
+    //  D   → heightened (still grounded allowed for lower-band overlap)
+    //  C   → heightened or surreal (skyscraper endgame bridge)
     siteConceptTemplates.forEach((siteConcept) => {
-      expect(siteConcept.rankTone).toBe(
-        siteConcept.rankPool.includes("d") ? "heightened" : "grounded",
-      );
+      if (siteConcept.rankPool.includes("c")) {
+        expect(["heightened", "surreal"]).toContain(siteConcept.rankTone);
+      } else if (siteConcept.rankPool.includes("d")) {
+        expect(siteConcept.rankTone).toBe("heightened");
+      } else {
+        expect(siteConcept.rankTone).toBe("grounded");
+      }
     });
 
     bossTemplates.forEach((boss) => {
-      expect(boss.rankTone).toBe(boss.rank === "d" ? "heightened" : "grounded");
+      if (boss.rank === "c") {
+        expect(["heightened", "surreal"]).toContain(boss.rankTone);
+      } else if (boss.rank === "d") {
+        expect(boss.rankTone).toBe("heightened");
+      } else {
+        expect(boss.rankTone).toBe("grounded");
+      }
     });
 
     registry.items.forEach((item) => {
-      expect(item.rankTone).toBe(item.rank === "d" ? "heightened" : "grounded");
+      if (item.rank === "c") {
+        expect(["heightened", "surreal"]).toContain(item.rankTone);
+      } else if (item.rank === "d") {
+        expect(item.rankTone).toBe("heightened");
+      } else {
+        expect(item.rankTone).toBe("grounded");
+      }
     });
   });
 });

@@ -1340,7 +1340,7 @@ export function buildHqViewFromPhase1(
     personaSummary: v.personaSummary ?? null,
     personaHooks: [...(v.personaHooks ?? [])],
     identitySource: v.identitySource === "generated" ? "generated" : "deterministic",
-    rank: visitorQualityToRank(v.quality),
+    rank: visitorQualityToRank(v.quality, buildingTemplate.contractRankCeiling),
     queueState: v.queueState ?? "active",
     canAccept: v.canAccept ?? false,
     lockedReason: v.lockedReason ?? null,
@@ -1867,7 +1867,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
         .map((value) => value),
       identitySource:
         str(raw, "identitySource", "deterministic") === "generated" ? "generated" : "deterministic",
-      rank: visitorQualityToRank(quality),
+      rank: visitorQualityToRank(quality, buildingTemplate.contractRankCeiling),
       queueState: str(raw, "queueState", "active") === "deferred" ? "deferred" : "active",
       canAccept: bool(raw, "canAccept", true),
       lockedReason: optionalStr(raw, "lockedReason"),

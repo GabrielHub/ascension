@@ -581,7 +581,7 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
     },
     resources: session.phase1View.resources,
     relocation: (() => {
-      if (hq.building.id !== "building/bodega") {
+      if (hq.building.id === "building/skyscraper") {
         return {
           allPrerequisitesMet: true,
           blockers: [],

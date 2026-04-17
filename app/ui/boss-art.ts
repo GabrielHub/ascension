@@ -32,6 +32,13 @@ const BOSS_ART_MAP: Record<string, string> = {
   "boss/the-yardmaster": "/data/svg-environments/raids/bosses/the-yardmaster.svg",
   "boss/the-regulator": "/data/svg-environments/raids/bosses/the-regulator.svg",
   "boss/the-surveyor": "/data/svg-environments/raids/bosses/the-surveyor.svg",
+  // ── Skyscraper-era C-rank bosses ──────────────────────────────────────
+  "boss/the-market-maker": "/data/svg-environments/raids/bosses/the-market-maker.svg",
+  "boss/the-concierge-prime": "/data/svg-environments/raids/bosses/the-concierge-prime.svg",
+  "boss/the-foreman-prime": "/data/svg-environments/raids/bosses/the-foreman-prime.svg",
+  "boss/the-stationmaster": "/data/svg-environments/raids/bosses/the-stationmaster.svg",
+  "boss/the-curator-prime": "/data/svg-environments/raids/bosses/the-curator-prime.svg",
+  "boss/the-altitude-keeper": "/data/svg-environments/raids/bosses/the-altitude-keeper.svg",
 };
 
 /** Resolve a boss's encounter portrait SVG path, or null for unknown bosses. */

@@ -18,10 +18,10 @@ Documentation is intentionally narrow.
 
 ## Planned Work
 
-- There is no active checked-in execution plan at the moment.
-- The next product work is later-building and prestige breadth on top of the verified Porter's-era baseline.
-- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and later-building reuse.
-- Start the next execution plan only when a concrete later-building or environment-cleanup slice is ready to run.
+- The next product work is the third and final headquarters: an expandable skyscraper that becomes the campaign's long-tail endgame home.
+- The first skyscraper slice should establish the HQ baseline and endgame-entry band, not attempt the full forever loop in one pass.
+- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
+- Active execution should stay split into narrow checked-in slices under `docs/plans/` rather than another umbrella phase doc.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
 
 ## Current Docs
@@ -49,5 +49,5 @@ Documentation is intentionally narrow.
 - Keep the browser-versus-desktop split in mind while reading: the web engine stays authoritative, and Tauri owns desktop hosting and file persistence.
 - Use [Product Plan Hub](./product-plan.md) if you want the stable entry point, or jump straight to [Product Plan Index](./product/index.md) for the split docs.
 - Use [World Foundation Hub](./world-foundation.md) if you want the stable entry point, or jump straight to [World Foundation Index](./world/index.md) for the split docs.
-- Use [Plans Index](./plans/index.md) when coordinating execution across multiple agents.
+- Use [Plans Index](./plans/index.md) when coordinating concrete skyscraper and endgame-entry slices.
 - Add research docs only when a future design question actually needs outside context and the answer is worth preserving.
