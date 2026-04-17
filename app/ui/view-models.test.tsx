@@ -9,10 +9,13 @@ import {
 } from "sim";
 
 import {
+  buildCityPressureView,
   buildHqViewFromPhase1,
   buildHqViewModel,
   buildInventoryViewModels,
   buildOpsViewFromPhase1,
+  buildVisibleInstitutionView,
+  type CityPressureView,
 } from "./view-models";
 
 describe("phase 1 view models", () => {
@@ -447,5 +450,147 @@ describe("phase 1 view models", () => {
       recentDeathOperatorIds: [],
       replacementPressureLevel: "stable",
     });
+  });
+});
+
+describe("visible institution view", () => {
+  function buildPressure(
+    overrides: Partial<{
+      cityLicensingStanding: number;
+      laborSafetyStanding: number;
+      emergencyManagementStanding: number;
+      boroughContractsStanding: number;
+      cooldownFactionId: string;
+    }> = {},
+  ): CityPressureView {
+    return buildCityPressureView({
+      districts: [],
+      factions: [
+        {
+          factionId: "faction/city-licensing",
+          standing: overrides.cityLicensingStanding ?? 0,
+          scrutiny: 0,
+          leverage: 0,
+          cooldownUntilTick: overrides.cooldownFactionId === "faction/city-licensing" ? 1000 : 0,
+        },
+        {
+          factionId: "faction/labor-safety",
+          standing: overrides.laborSafetyStanding ?? 0,
+          scrutiny: 0,
+          leverage: 0,
+          cooldownUntilTick: 0,
+        },
+        {
+          factionId: "faction/emergency-management",
+          standing: overrides.emergencyManagementStanding ?? 0,
+          scrutiny: 0,
+          leverage: 0,
+          cooldownUntilTick: 0,
+        },
+        {
+          factionId: "faction/borough-contracts",
+          standing: overrides.boroughContractsStanding ?? 0,
+          scrutiny: 0,
+          leverage: 0,
+          cooldownUntilTick: 0,
+        },
+        {
+          factionId: "faction/rival-guild-market",
+          standing: 0,
+          scrutiny: 0,
+          leverage: 0,
+          cooldownUntilTick: 0,
+        },
+      ],
+    });
+  }
+
+  it("reports emerging when reputation and standing are low", () => {
+    const institution = buildVisibleInstitutionView(5, buildPressure(), "building/porters", 1, []);
+    expect(institution.band).toBe("emerging");
+  });
+
+  it("climbs to recognized when the tower is online and standings lift", () => {
+    const institution = buildVisibleInstitutionView(
+      60,
+      buildPressure({
+        cityLicensingStanding: 20,
+        laborSafetyStanding: 20,
+        emergencyManagementStanding: 20,
+        boroughContractsStanding: 20,
+      }),
+      "building/skyscraper",
+      2,
+      [],
+    );
+    expect(institution.band).toBe("recognized");
+  });
+
+  it("reaches prestige with strong reputation, standing, and upper tower tiers", () => {
+    const institution = buildVisibleInstitutionView(
+      120,
+      buildPressure({
+        cityLicensingStanding: 70,
+        laborSafetyStanding: 60,
+        emergencyManagementStanding: 60,
+        boroughContractsStanding: 60,
+      }),
+      "building/skyscraper",
+      4,
+      [],
+    );
+    expect(institution.band).toBe("prestige");
+  });
+
+  it("surfaces operational Executive Floor rooms that are offsetting pressure", () => {
+    const institution = buildVisibleInstitutionView(40, buildPressure(), "building/skyscraper", 1, [
+      "room/executive_office:tier_1",
+      "room/compliance_office:tier_1",
+      "room/briefing_room:tier_1",
+    ]);
+    expect(institution.offsettingRoomTemplateIds).toEqual([
+      "room/executive_office:tier_1",
+      "room/compliance_office:tier_1",
+    ]);
+  });
+
+  it("lists cooldown factions in its readout", () => {
+    const institution = buildVisibleInstitutionView(
+      40,
+      buildPressure({ cooldownFactionId: "faction/city-licensing" }),
+      "building/skyscraper",
+      1,
+      [],
+    );
+    expect(institution.cooldownFactionIds).toContain("faction/city-licensing");
+  });
+
+  it("ignores rival-guild standing when averaging institutional standing", () => {
+    const withRivalHigh = buildVisibleInstitutionView(
+      40,
+      buildCityPressureView({
+        districts: [],
+        factions: [
+          {
+            factionId: "faction/city-licensing",
+            standing: 10,
+            scrutiny: 0,
+            leverage: 0,
+            cooldownUntilTick: 0,
+          },
+          {
+            factionId: "faction/rival-guild-market",
+            standing: 100,
+            scrutiny: 0,
+            leverage: 0,
+            cooldownUntilTick: 0,
+          },
+        ],
+      }),
+      "building/skyscraper",
+      1,
+      [],
+    );
+    expect(withRivalHigh.averageStanding).toBe(10);
   });
 });

@@ -3,8 +3,18 @@ import type { DistrictPressureSnapshot, FactionStandingSnapshot } from "save/typ
 import type { DistrictTemplate, FactionTemplate } from "content/templates/shared";
 import { districtTemplates } from "content/templates/districts";
 import { factionTemplates } from "content/templates/factions";
-import { getCurrentAbsoluteMinute, pushRuntimeEvent } from "./commands";
+import { getCurrentAbsoluteMinute, hasOperationalRoomTemplate, pushRuntimeEvent } from "./commands";
 import type { SimSystemContext } from "./types";
+
+export const SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID = "room/compliance_office:tier_1";
+export const SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID = "room/executive_office:tier_1";
+
+// Bounded so compliance alone cannot zero out regulator pressure — aggressive
+// scrutiny gain still outpaces the compliance slack.
+const COMPLIANCE_OFFICE_EXTRA_SCRUTINY_DECAY_PER_HOUR = 0.6;
+const COMPLIANCE_OFFICE_MAX_DECAY_PER_TICK = 6;
+
+const EXECUTIVE_OFFICE_STANDING_MULTIPLIER = 1.4;
 
 const districtById = new Map(districtTemplates.map((d) => [d.id, d]));
 const factionById = new Map(factionTemplates.map((f) => [f.id, f]));
@@ -100,7 +110,43 @@ function clampFaction(f: FactionStandingSnapshot): void {
   f.leverage = Math.max(0, Math.min(100, f.leverage));
 }
 
+// ── Direct faction deltas for incident consequence effects ──────────────
+
+export function applyFactionStandingDelta(
+  cityState: CityState,
+  factionId: string,
+  delta: number,
+): boolean {
+  const faction = cityState.factions[factionId];
+  if (!faction) return false;
+  faction.standing += delta;
+  clampFaction(faction);
+  return true;
+}
+
+export function applyFactionScrutinyDelta(
+  cityState: CityState,
+  factionId: string,
+  delta: number,
+): boolean {
+  const faction = cityState.factions[factionId];
+  if (!faction) return false;
+  faction.scrutiny += delta;
+  clampFaction(faction);
+  return true;
+}
+
 // ── Writeback: apply outcome deltas to city state ───────────────────────
+
+export interface ApplyCityPressureOutcomeOptions {
+  /**
+   * When true, positive faction standing deltas are scaled up. Set this
+   * when the Executive Office is operational — faction reps working out
+   * of a named corner suite translate contract wins into stronger
+   * institutional relationships.
+   */
+  executiveOfficeBonus?: boolean;
+}
 
 export function applyCityPressureOutcome(
   cityState: CityState,
@@ -108,8 +154,22 @@ export function applyCityPressureOutcome(
   sponsorFactionId: string,
   outcome: CityPressureOutcome,
   currentTick: number,
+  options: ApplyCityPressureOutcomeOptions = {},
 ): string[] {
-  const delta = OUTCOME_DELTAS[outcome];
+  const baseDelta = OUTCOME_DELTAS[outcome];
+  const delta: CityDelta = { ...baseDelta };
+  if (options.executiveOfficeBonus) {
+    if (delta.sponsorStanding !== undefined && delta.sponsorStanding > 0) {
+      delta.sponsorStanding = Math.round(
+        delta.sponsorStanding * EXECUTIVE_OFFICE_STANDING_MULTIPLIER,
+      );
+    }
+    if (delta.boroughContractStanding !== undefined && delta.boroughContractStanding > 0) {
+      delta.boroughContractStanding = Math.round(
+        delta.boroughContractStanding * EXECUTIVE_OFFICE_STANDING_MULTIPLIER,
+      );
+    }
+  }
   const events: string[] = [];
 
   // Apply district deltas
@@ -287,10 +347,21 @@ export function selectSponsorFaction(districtId: string, rngValue: number): stri
 
 // ── Passive tick: natural decay of district attention and faction scrutiny ─
 
+export interface TickCityPressureDecayOptions {
+  /**
+   * When true, applies an additional bounded scrutiny decay across all
+   * factions on top of the baseline. Set this when the Compliance Office
+   * is operational. Does not decay factions that are still inside their
+   * scrutiny cooldown window.
+   */
+  complianceOfficeActive?: boolean;
+}
+
 export function tickCityPressureDecay(
   cityState: CityState,
   elapsedMinutes: number,
   currentTick: number,
+  options: TickCityPressureDecayOptions = {},
 ): void {
   if (elapsedMinutes <= 0) {
     return;
@@ -316,9 +387,20 @@ export function tickCityPressureDecay(
     }
   }
 
+  const complianceExtra = options.complianceOfficeActive
+    ? Math.min(
+        COMPLIANCE_OFFICE_EXTRA_SCRUTINY_DECAY_PER_HOUR * elapsedHours,
+        COMPLIANCE_OFFICE_MAX_DECAY_PER_TICK,
+      )
+    : 0;
+
   for (const faction of Object.values(cityState.factions)) {
     if (faction.scrutiny > 0) {
-      faction.scrutiny = Math.max(0, faction.scrutiny - 0.3 * elapsedHours);
+      let scrutinyDecay = 0.3 * elapsedHours;
+      if (complianceExtra > 0 && faction.cooldownUntilTick <= currentTick) {
+        scrutinyDecay += complianceExtra;
+      }
+      faction.scrutiny = Math.max(0, faction.scrutiny - scrutinyDecay);
     }
     if (faction.leverage > 0) {
       faction.leverage = Math.max(0, faction.leverage - 0.15 * elapsedHours);
@@ -343,6 +425,12 @@ export const advanceCityPressureSystem = (context: SimSystemContext, _deltaMs: n
     cityState,
     Math.max(1, Math.floor(_deltaMs / 60000)),
     getCurrentAbsoluteMinute(context),
+    {
+      complianceOfficeActive: hasOperationalRoomTemplate(
+        context,
+        SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+      ),
+    },
   );
 };
 

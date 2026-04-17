@@ -4,11 +4,10 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline and the first C-rank endgame-entry band are also shipped and folded back into the roadmap. The active planning focus is now deepening the skyscraper into the start of endgame.
+The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, and the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse) are all shipped and folded back into the roadmap. The active planning focus is now wiring institutional-pressure consequences onto the Executive Floor rooms the expansion arc delivered.
 
 Current checked-in execution slices:
 
-- [Skyscraper Floor Expansion](./skyscraper-floor-expansion.md)
 - [Skyscraper Prestige Pressure](./skyscraper-prestige-pressure.md)
 
 ## Shared Execution Contract

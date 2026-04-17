@@ -777,6 +777,19 @@ export interface CityPressureView {
   factions: readonly FactionStandingView[];
 }
 
+export type VisibleInstitutionBand = "emerging" | "recognized" | "prestige";
+
+export interface VisibleInstitutionView {
+  band: VisibleInstitutionBand;
+  score: number;
+  averageStanding: number;
+  reputation: number;
+  buildingTier: number;
+  cooldownFactionIds: readonly string[];
+  offsettingRoomTemplateIds: readonly string[];
+  pressureThreats: readonly string[];
+}
+
 export function buildCityPressureView(
   cityPressure: CityPressureSnapshot | null | undefined,
 ): CityPressureView {
@@ -801,6 +814,75 @@ export function buildCityPressureView(
       leverage: f.leverage,
       onCooldown: f.cooldownUntilTick > 0,
     })),
+  };
+}
+
+const VISIBLE_INSTITUTION_SKYSCRAPER_ROOM_TEMPLATE_IDS = [
+  "room/executive_office:tier_1",
+  "room/compliance_office:tier_1",
+  "room/war_room:tier_1",
+] as const;
+
+export function buildVisibleInstitutionView(
+  reputation: number,
+  cityPressure: CityPressureView,
+  buildingId: string,
+  buildingTier: number,
+  operationalRoomTemplateIds: readonly string[] = [],
+): VisibleInstitutionView {
+  const institutionFactions = cityPressure.factions.filter((f) => f.kind === "institution");
+  const averageStanding =
+    institutionFactions.length > 0
+      ? institutionFactions.reduce((sum, f) => sum + f.standing, 0) / institutionFactions.length
+      : 0;
+
+  const repScore = Math.max(0, Math.min(100, reputation * 0.8));
+  const standingScore = Math.max(0, Math.min(100, (averageStanding + 100) * 0.5));
+  const tierBonus = buildingId === "building/skyscraper" ? Math.min(50, buildingTier * 10) : 0;
+  const score = Math.round(repScore * 0.45 + standingScore * 0.4 + tierBonus * 0.15);
+
+  let band: VisibleInstitutionBand;
+  if (score >= 62) band = "prestige";
+  else if (score >= 34) band = "recognized";
+  else band = "emerging";
+
+  const cooldownFactionIds = cityPressure.factions
+    .filter((f) => f.onCooldown)
+    .map((f) => f.factionId);
+
+  const operationalRoomSet = new Set(operationalRoomTemplateIds);
+  const offsettingRoomTemplateIds = VISIBLE_INSTITUTION_SKYSCRAPER_ROOM_TEMPLATE_IDS.filter((id) =>
+    operationalRoomSet.has(id),
+  );
+
+  const pressureThreats: string[] = [];
+  const cityLicensingHighScrutiny = cityPressure.factions.some(
+    (f) => f.factionId === "faction/city-licensing" && f.scrutiny >= 30,
+  );
+  const boroughContractsHighScrutiny = cityPressure.factions.some(
+    (f) => f.factionId === "faction/borough-contracts" && f.scrutiny >= 30,
+  );
+  const rivalLeverageHigh = cityPressure.factions.some(
+    (f) => f.factionId === "faction/rival-guild-market" && f.leverage >= 25,
+  );
+  if (cityLicensingHighScrutiny) pressureThreats.push("Licensing audit");
+  if (boroughContractsHighScrutiny) pressureThreats.push("Borough hearing");
+  if (rivalLeverageHigh) pressureThreats.push("Rival poaching");
+  if (band === "prestige") {
+    pressureThreats.push("Sponsor demand", "Press exposure");
+  } else if (band === "recognized") {
+    pressureThreats.push("Sponsor demand");
+  }
+
+  return {
+    band,
+    score,
+    averageStanding: Math.round(averageStanding * 10) / 10,
+    reputation,
+    buildingTier,
+    cooldownFactionIds,
+    offsettingRoomTemplateIds,
+    pressureThreats,
   };
 }
 

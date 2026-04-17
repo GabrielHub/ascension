@@ -10,10 +10,18 @@ import {
   type PolicyState,
 } from "lib/policies";
 
-import type { CityPressureView, GameCallbacks, HqViewModel } from "./view-models";
+import {
+  buildVisibleInstitutionView,
+  type CityPressureView,
+  type GameCallbacks,
+  type HqViewModel,
+  type VisibleInstitutionBand,
+  type VisibleInstitutionView,
+} from "./view-models";
 import { getTagMeta } from "./_glossary";
 
 interface ManagementPanelProps {
+  guild: HqViewModel["guild"];
   guildName: HqViewModel["guild"]["guildName"];
   policies: HqViewModel["policies"];
   contractLifecycle: HqViewModel["contractLifecycle"];
@@ -639,61 +647,196 @@ function RelocationCard({
   );
 }
 
-function CityPressureSummaryCard({ cityPressure }: { cityPressure: CityPressureView }) {
+const SKYSCRAPER_EXECUTIVE_ROOM_META: Record<string, { label: string; summary: string }> = {
+  "room/executive_office:tier_1": {
+    label: "Executive Office",
+    summary: "Scales positive standing gains from contract outcomes (+40%).",
+  },
+  "room/compliance_office:tier_1": {
+    label: "Compliance Office",
+    summary: "Bleeds faction scrutiny each hour and softens scandal incidents.",
+  },
+  "room/war_room:tier_1": {
+    label: "War Room",
+    summary: "Stacks x1.5 on briefing-room intel and unlocks counter-op framing.",
+  },
+};
+
+const VISIBLE_INSTITUTION_BAND_COPY: Record<
+  VisibleInstitutionBand,
+  { label: string; summary: string; accent: string }
+> = {
+  emerging: {
+    label: "Emerging",
+    summary:
+      "The tower is on the map, but regulators and rivals still treat the guild as a newcomer.",
+    accent: "badge-slate",
+  },
+  recognized: {
+    label: "Recognized",
+    summary:
+      "The guild reads as an institutional player. Factions answer calls and rivals start coordinating against the name.",
+    accent: "badge-ember",
+  },
+  prestige: {
+    label: "Prestige",
+    summary:
+      "The tower is the address a borough chair expects to hear from. Every move is visible, and every missed signal is remembered.",
+    accent: "badge-gold",
+  },
+};
+
+function VisibleInstitutionSection({ institution }: { institution: VisibleInstitutionView }) {
+  const bandCopy = VISIBLE_INSTITUTION_BAND_COPY[institution.band];
+  const offsettingRooms = institution.offsettingRoomTemplateIds
+    .map((id) => SKYSCRAPER_EXECUTIVE_ROOM_META[id])
+    .filter((meta): meta is { label: string; summary: string } => meta !== undefined);
+
+  return (
+    <section
+      className="glass-card space-y-3 rounded-2xl p-4"
+      data-testid="visible-institution-summary"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Visible Institution
+          </h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">{bandCopy.summary}</p>
+        </div>
+        <span
+          className={`badge ${bandCopy.accent} shrink-0`}
+          data-testid="visible-institution-band"
+          data-band={institution.band}
+        >
+          {bandCopy.label} · {institution.score}
+        </span>
+      </div>
+
+      <div className="grid gap-2 text-xs text-silver/60 sm:grid-cols-3">
+        <div className="glass-card-inset rounded-xl p-3">
+          <p className="uppercase tracking-[0.12em] text-gold/55">Reputation</p>
+          <p className="mt-1 text-sm text-silver-bright">{Math.round(institution.reputation)}</p>
+        </div>
+        <div className="glass-card-inset rounded-xl p-3">
+          <p className="uppercase tracking-[0.12em] text-gold/55">Avg Standing</p>
+          <p className="mt-1 text-sm text-silver-bright">{institution.averageStanding}</p>
+        </div>
+        <div className="glass-card-inset rounded-xl p-3">
+          <p className="uppercase tracking-[0.12em] text-gold/55">Tower Tier</p>
+          <p className="mt-1 text-sm text-silver-bright">T{institution.buildingTier}</p>
+        </div>
+      </div>
+
+      {offsettingRooms.length > 0 && (
+        <div
+          className="glass-card-inset space-y-2 rounded-xl p-3"
+          data-testid="visible-institution-rooms"
+        >
+          <p className="text-xs uppercase tracking-[0.12em] text-gold/55">
+            Executive Floor offsets
+          </p>
+          <ul className="space-y-1.5">
+            {offsettingRooms.map((room) => (
+              <li key={room.label} className="text-sm leading-relaxed text-silver/70">
+                <span className="text-silver-bright">{room.label}.</span> {room.summary}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {institution.pressureThreats.length > 0 && (
+        <div
+          className="glass-card-inset space-y-1 rounded-xl p-3"
+          data-testid="visible-institution-threats"
+        >
+          <p className="text-xs uppercase tracking-[0.12em] text-gold/55">
+            Families threatening to fire
+          </p>
+          <p className="text-sm leading-relaxed text-silver/70">
+            {institution.pressureThreats.join(" · ")}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CityPressureSummaryCard({
+  cityPressure,
+  institution,
+}: {
+  cityPressure: CityPressureView;
+  institution: VisibleInstitutionView | null;
+}) {
   const activeDistricts = cityPressure.districts.filter(
     (d) => d.recentContractCount > 0 || d.attention > 10 || d.containmentDebt > 10,
   );
   const pressuredFactions = cityPressure.factions.filter(
     (f) => f.scrutiny >= 20 || f.standing <= -10 || f.leverage >= 20,
   );
-  if (activeDistricts.length === 0 && pressuredFactions.length === 0) return null;
+  const hasCityPressure = activeDistricts.length > 0 || pressuredFactions.length > 0;
+  if (!institution && !hasCityPressure) return null;
 
   return (
-    <section className="glass-card space-y-2 rounded-2xl p-4" data-testid="city-pressure-summary">
-      <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-        City Pressure
-      </h4>
-      {activeDistricts.map((d) => (
-        <div
-          key={d.districtId}
-          className="flex items-center justify-between gap-2 text-sm text-silver/70"
+    <div className="space-y-3">
+      {institution && <VisibleInstitutionSection institution={institution} />}
+      {hasCityPressure && (
+        <section
+          className="glass-card space-y-2 rounded-2xl p-4"
+          data-testid="city-pressure-summary"
         >
-          <span className="truncate">{d.name}</span>
-          <span className="flex shrink-0 gap-3 text-xs">
-            <span title="Trust">T {Math.round(d.trust)}</span>
-            <span className={d.attention >= 40 ? "text-ember" : ""} title="Attention">
-              A {Math.round(d.attention)}
-            </span>
-            <span className={d.containmentDebt >= 50 ? "text-magma" : ""} title="Containment debt">
-              C {Math.round(d.containmentDebt)}
-            </span>
-          </span>
-        </div>
-      ))}
-      {pressuredFactions.map((f) => (
-        <div
-          key={f.factionId}
-          className="flex items-center justify-between gap-2 text-sm text-silver/70"
-        >
-          <span className="truncate">{f.name}</span>
-          <span className="flex shrink-0 gap-3 text-xs">
-            <span title="Standing">S {Math.round(f.standing)}</span>
-            <span className={f.scrutiny >= 40 ? "text-ember" : ""} title="Scrutiny">
-              Sc {Math.round(f.scrutiny)}
-            </span>
-            {f.leverage > 0 && (
-              <span className={f.leverage >= 30 ? "text-magma" : ""} title="Leverage">
-                L {Math.round(f.leverage)}
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            City Pressure
+          </h4>
+          {activeDistricts.map((d) => (
+            <div
+              key={d.districtId}
+              className="flex items-center justify-between gap-2 text-sm text-silver/70"
+            >
+              <span className="truncate">{d.name}</span>
+              <span className="flex shrink-0 gap-3 text-xs">
+                <span title="Trust">T {Math.round(d.trust)}</span>
+                <span className={d.attention >= 40 ? "text-ember" : ""} title="Attention">
+                  A {Math.round(d.attention)}
+                </span>
+                <span
+                  className={d.containmentDebt >= 50 ? "text-magma" : ""}
+                  title="Containment debt"
+                >
+                  C {Math.round(d.containmentDebt)}
+                </span>
               </span>
-            )}
-          </span>
-        </div>
-      ))}
-    </section>
+            </div>
+          ))}
+          {pressuredFactions.map((f) => (
+            <div
+              key={f.factionId}
+              className="flex items-center justify-between gap-2 text-sm text-silver/70"
+            >
+              <span className="truncate">{f.name}</span>
+              <span className="flex shrink-0 gap-3 text-xs">
+                <span title="Standing">S {Math.round(f.standing)}</span>
+                <span className={f.scrutiny >= 40 ? "text-ember" : ""} title="Scrutiny">
+                  Sc {Math.round(f.scrutiny)}
+                </span>
+                {f.leverage > 0 && (
+                  <span className={f.leverage >= 30 ? "text-magma" : ""} title="Leverage">
+                    L {Math.round(f.leverage)}
+                  </span>
+                )}
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
   );
 }
 
 export function ManagementPanel({
+  guild,
   guildName,
   policies,
   contractLifecycle,
@@ -705,6 +848,17 @@ export function ManagementPanel({
   callbacks,
   cityPressure,
 }: ManagementPanelProps) {
+  const institution =
+    building.id === "building/skyscraper" && cityPressure
+      ? buildVisibleInstitutionView(
+          guild.reputation,
+          cityPressure,
+          building.id,
+          building.tier,
+          rooms.filter((room) => room.isOperational).map((room) => room.templateId),
+        )
+      : null;
+
   return (
     <div className="animate-enter space-y-4" data-testid="management-panel">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -729,7 +883,9 @@ export function ManagementPanel({
         <StaffingPressureCard rooms={rooms} />
       </div>
 
-      {cityPressure && <CityPressureSummaryCard cityPressure={cityPressure} />}
+      {cityPressure && (
+        <CityPressureSummaryCard cityPressure={cityPressure} institution={institution} />
+      )}
 
       {building.id === "building/porters" && (
         <PortersCampaignCard rooms={rooms} upgrades={upgrades} operators={operators} />

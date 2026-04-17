@@ -3,10 +3,16 @@ import { createWorld, addEntity, addComponent } from "bitecs";
 
 import { templateRegistry } from "content/templates";
 import type { BossTag, BossWeakness } from "content/templates/shared";
-import { BuildingAuthority, OperatorIdentity } from "../components";
+import { BuildingAuthority, OperatorIdentity, RoomInstance } from "../components";
 import { SeededRng, seedFromKey } from "../uncertainty";
+import type { ContractSiteState } from "../components";
 import type { SimSystemContext } from "./types";
-import { computeBossTagPenalty, computeBossWeaknessBonus, generateLootDrops } from "./raids";
+import {
+  computeBossTagPenalty,
+  computeBossWeaknessBonus,
+  generateLootDrops,
+  getContractBriefingState,
+} from "./raids";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
 
@@ -365,6 +371,80 @@ describe("mission combat profiles", () => {
         expect(templateRegistry.dropTableById.has(profile.boss.dropTableId)).toBe(true);
       }
     }
+  });
+
+  // ── War Room briefing multiplier ──────────────────────────────────────
+
+  describe("war room briefing stacking", () => {
+    function addOperationalRoom(context: SimSystemContext, templateId: string): void {
+      const entity = addEntity(context.world);
+      addComponent(context.world, entity, RoomInstance);
+      RoomInstance.id[entity] = `room-instance/${templateId}`;
+      RoomInstance.templateIndex[entity] = templateRegistry.roomIndexById.get(templateId) ?? 0;
+      RoomInstance.isOperational[entity] = 1;
+      context.runtimeState.roomEntities.push(entity);
+    }
+
+    function buildActiveContract(): ContractSiteState {
+      return {
+        contractSiteId: "contract/test-briefing",
+        missionId: "mission/clearance",
+        siteConceptId: "site/flooded-subway-tunnel",
+        location: "district/lower-east-side",
+        rank: "c",
+        bossDefeated: false,
+        contractLost: false,
+        threat: 60,
+        intel: 50,
+        reward: 200,
+        securedAtTick: 100,
+        explorationProgress: 0,
+        bossIntelProgress: 0,
+        bossPressureProgress: 0,
+        bossAvailable: false,
+      };
+    }
+
+    it("returns null without a briefing room", () => {
+      const context = createMinimalContext();
+      expect(getContractBriefingState(context, buildActiveContract())).toBeNull();
+    });
+
+    it("returns briefing-alone bonuses without the war room", () => {
+      const context = createMinimalContext();
+      addOperationalRoom(context, "room/briefing_room:tier_1");
+      const briefing = getContractBriefingState(context, buildActiveContract());
+      expect(briefing?.source).toBe("briefing_room");
+      expect(briefing?.opportunityIntelBonus).toBe(8);
+      expect(briefing?.bossIntelBonus).toBe(15);
+    });
+
+    it("stacks the war room multiplier on top of briefing room", () => {
+      const context = createMinimalContext();
+      addOperationalRoom(context, "room/briefing_room:tier_1");
+      addOperationalRoom(context, "room/war_room:tier_1");
+      const briefing = getContractBriefingState(context, buildActiveContract());
+      expect(briefing?.source).toBe("briefing_room");
+      expect(briefing?.opportunityIntelBonus).toBeGreaterThan(8);
+      expect(briefing?.bossIntelBonus).toBeGreaterThan(15);
+    });
+
+    it("stacks the war room multiplier on top of briefing room + prep room", () => {
+      const context = createMinimalContext();
+      addOperationalRoom(context, "room/briefing_room:tier_1");
+      addOperationalRoom(context, "room/prep_room:tier_1");
+      addOperationalRoom(context, "room/war_room:tier_1");
+      const briefing = getContractBriefingState(context, buildActiveContract());
+      expect(briefing?.source).toBe("briefing_room_and_prep");
+      expect(briefing?.opportunityIntelBonus).toBeGreaterThan(16);
+      expect(briefing?.bossIntelBonus).toBeGreaterThan(30);
+    });
+
+    it("war room alone without briefing room yields no briefing state", () => {
+      const context = createMinimalContext();
+      addOperationalRoom(context, "room/war_room:tier_1");
+      expect(getContractBriefingState(context, buildActiveContract())).toBeNull();
+    });
   });
 
   it("boss tag penalties match expected values for each mission boss", () => {

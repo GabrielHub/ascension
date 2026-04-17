@@ -48,6 +48,7 @@ The implementation itself is the source of truth. This section is organized by s
 - The bodega ships the full three-step building arc (Frontage, Annex, Backyard Extension), four bodega-native room identities from the world foundation, bodega-native support rooms (Back Office, Backstock, Alley), and hard roster-cap overflow handling.
 - The second headquarters tier (Porter's) is shipped with multi-floor layouts, explicit floor switching, starter room placement, and a D-rank contract ceiling.
 - The third and final headquarters (Ascension Tower, the midtown skyscraper) is shipped with a five-floor starter stack, ops/recovery/training/logistics/rooftop floors, relocation from Porter's, HQ environment wiring, and a C-rank contract ceiling.
+- The skyscraper expansion arc ships a four-step floor upgrade ladder (Nightlife, Specialist Training, Executive, Penthouse) that grows the tower from its baseline five-floor stack to the canonical nine-floor endgame footprint, with authored starter rooms per floor, layout-stage swaps following the Porter's upgrade idiom, and a Skyscraper Floor Arc card in the management panel.
 - Porter's now exposes 12 room templates at the HQ contract level: Floor, Bar, Office, Stockroom, Infirmary, Gym, Prep Room, Break Room, Briefing Room, Dock, Deck, and Workshop.
 - Porter's upgrade arc is a real player-facing campaign through Kitchen Overhaul, Upstairs Conversion, The Remodel, and The Waterfront, with upgrade-gated room unlocks for Break Room, Briefing Room, Dock, and Deck.
 - Porter's specialized rooms change management decisions: gym drives bounded training readiness, Office and Briefing Room change contract reading and raid preparation, Infirmary/Break Room/Dock/Deck change recovery/morale/decompression/staging outcomes through simulation-owned room effects.
@@ -150,13 +151,15 @@ The implementation itself is the source of truth. This section is organized by s
 - Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
 - Midgame remediation is complete. The Porter's-era D-rank band now has browser regression coverage across contracts, workshop use, incidents, and encounter handoff; deterministic D-rank economy reporting; tuned workshop authored data; and the narrow management-surface fixes that verification exposed.
 - The skyscraper HQ baseline and the first C-rank endgame-entry band are shipped. The tower exposes a bounded starter floor stack, C-rank contracts once reputation clears the threshold, a C-rank craft family in the Fabrication Bay, and rank-aware recruit generation that stops flattening new hires to F at every building.
+- The skyscraper floor expansion arc is shipped. The tower now grows from its baseline five-floor stack into the canonical nine-floor endgame footprint through the Nightlife, Specialist Training, Executive, and Penthouse upgrades, each delivering authored starter rooms ready for consequence wiring.
 
 ## Next Steps
 
-1. Continue expanding the skyscraper floor loop beyond the starter stack (floor acquisition, elevation-band reuse).
-2. Stage additional endgame pressure inside the skyscraper once the C-rank bridge is stable in live play: prestige ladder entry, bigger raid envelopes, and the first B-rank content packet when the C-rank band proves itself.
-3. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
-4. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
+1. Wire institutional-pressure consequences onto the Executive Floor rooms the expansion arc delivered: Executive Office, Compliance Office, War Room, plus the faction, scrutiny, and incident plumbing around them.
+2. Wire consequences for the remaining expansion-floor rooms as separate narrow slices: Nightlife recruitment (Club, Green Room), Specialist Training role-specific training (Drill Floor, Recon Course, Trauma Bay), and Penthouse A-rank recruitment (Sky Lounge, Private Cellar).
+3. Stage additional endgame pressure inside the skyscraper once institutional pressure is proven in live play: bigger raid envelopes, and the first B-rank content packet when the C-rank band proves itself.
+4. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
+5. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
 ## Later: AI Content Breadth
 
@@ -193,9 +196,10 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, Porter's-era midgame remediation, skyscraper HQ baseline, and the first C-rank endgame-entry content/economy/recruit band.
-2. Deepen the skyscraper itself: floor acquisition beyond the starter stack, additional pressure loops, and prestige presentation once the C-rank bridge proves itself in live play.
-3. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
-4. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
+1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, Porter's-era midgame remediation, skyscraper HQ baseline, the first C-rank endgame-entry content/economy/recruit band, and the skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse).
+2. Wire institutional-pressure consequences onto the Executive Floor, then fan out to the remaining expansion-floor consequence slices (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment).
+3. Stage additional endgame pressure — bigger raid envelopes, the first B-rank content packet — once institutional pressure proves itself in live play.
+4. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
+5. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 
 That order matters more than any specific library choice.

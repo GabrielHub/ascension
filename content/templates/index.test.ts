@@ -78,6 +78,9 @@ describe("template registry", () => {
       "pressure:loyalty",
       "pressure:cash",
       "pressure:time",
+      "pressure:rivalry",
+      "pressure:exposure",
+      "pressure:prestige",
     ]);
 
     registry.events.forEach((event) => {

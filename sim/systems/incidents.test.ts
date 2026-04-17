@@ -10,8 +10,10 @@ import {
   RoomInstance,
   WorldTimeState,
 } from "../components";
+import { createDefaultCityState } from "../components/city-state";
 import type { PendingIncident } from "./incidents";
 import {
+  computeIncidentTemplateSelectionWeight,
   OPENING_SAFE_INCIDENT_CATEGORIES,
   createIncidentInterruptionPayload,
   createIncidentState,
@@ -24,8 +26,9 @@ import {
 import type { SimSystemContext } from "./types";
 
 function createIncidentContext(options?: {
-  buildingId?: "building/bodega" | "building/porters";
+  buildingId?: "building/bodega" | "building/porters" | "building/skyscraper";
   roomTemplateId?: string;
+  sponsorFactionId?: string;
 }): SimSystemContext {
   const world = createWorld();
   const guildEntity = addEntity(world);
@@ -50,6 +53,7 @@ function createIncidentContext(options?: {
     missionId: "mission/clearance",
     siteConceptId: "site/flooded-subway-tunnel",
     location: "district/lower-east-side",
+    sponsorFactionId: options?.sponsorFactionId,
     rank: "f",
     bossDefeated: false,
     contractLost: false,
@@ -165,8 +169,54 @@ function createIncidentContext(options?: {
       },
       worldTimeFrozen: false,
       deferIncidentPresentation: false,
+      cityState: createDefaultCityState(),
     },
   };
+}
+
+function prepSkyscraperContext(options?: {
+  roomTemplateId?: string;
+  sponsorFactionId?: string;
+}): SimSystemContext {
+  const context = createIncidentContext({
+    buildingId: "building/skyscraper",
+    roomTemplateId: options?.roomTemplateId,
+    sponsorFactionId: options?.sponsorFactionId,
+  });
+  context.runtimeState.guidanceState.openingPathState = "completed";
+  context.runtimeState.guidanceState.openingTiming = {
+    firstRaidReturnCompletedAtMinute: null,
+    firstIncidentSeededAtMinute: null,
+    securedContractCount: 5,
+    lastTrackedContractSiteId: null,
+  };
+  if (context.runtimeState.cityState) {
+    context.runtimeState.cityState.factions["faction/city-licensing"].scrutiny = 40;
+    context.runtimeState.cityState.factions["faction/labor-safety"].scrutiny = 40;
+  }
+  return context;
+}
+
+function findIncidentCandidate(context: SimSystemContext, templateId: string): PendingIncident {
+  for (let minute = 600; minute < 2400; minute += 1) {
+    const candidate = selectIncidentCandidate(
+      context,
+      context.runtimeState.incidentState,
+      minute,
+      100,
+      {
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+        seedKey: `${templateId}:${minute}`,
+      },
+    );
+    if (candidate?.templateId === templateId) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`Could not select incident template ${templateId}.`);
 }
 
 describe("incident interruption payloads", () => {
@@ -329,6 +379,154 @@ describe("incident interruption payloads", () => {
     // Complete the opening path → mercy window fully lifts
     context.runtimeState.guidanceState.openingPathState = "completed";
     expect(isOpeningIncidentMercyWindowActive(context)).toBe(false);
+  });
+
+  it("gates skyscraper institutional incidents behind the skyscraper building", () => {
+    const bodegaContext = createIncidentContext();
+    const skyscraperCategories = [
+      "licensing_audit",
+      "sponsor_ultimatum",
+      "rival_poaching",
+      "borough_hearing",
+      "regulatory_scrutiny",
+    ];
+
+    const bodegaCandidate = selectIncidentCandidate(
+      bodegaContext,
+      bodegaContext.runtimeState.incidentState,
+      600,
+      100,
+      {
+        allowedCategories: skyscraperCategories,
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+      },
+    );
+    if (bodegaCandidate) {
+      const template = INCIDENT_TEMPLATES.find((t) => t.id === bodegaCandidate.templateId);
+      expect(template?.requiredBuildingIds).not.toContain("building/skyscraper");
+    }
+  });
+
+  it("exposes at least one skyscraper-gated incident per intended family", () => {
+    const skyscraperTemplates = INCIDENT_TEMPLATES.filter((template) =>
+      template.requiredBuildingIds?.includes("building/skyscraper"),
+    );
+    const families = new Set(skyscraperTemplates.map((t) => t.triggerFamily));
+
+    expect(skyscraperTemplates.length).toBeGreaterThanOrEqual(5);
+    expect(families).toContain("compliance_pressure");
+    expect(families).toContain("sponsor_demand");
+    expect(families).toContain("rival_poaching");
+    expect(families).toContain("district_fallout");
+    expect(families).toContain("faction_pressure");
+  });
+
+  it("requires every skyscraper template to reference an executive floor room", () => {
+    const executiveRoomIds = new Set([
+      "room/executive_office:tier_1",
+      "room/compliance_office:tier_1",
+      "room/war_room:tier_1",
+    ]);
+
+    INCIDENT_TEMPLATES.filter((t) =>
+      t.requiredBuildingIds?.includes("building/skyscraper"),
+    ).forEach((template) => {
+      expect(template.preferredRoomTemplateIds).toBeDefined();
+      template.preferredRoomTemplateIds?.forEach((roomId) =>
+        expect(executiveRoomIds.has(roomId)).toBe(true),
+      );
+      const hasNewPressureTag = template.pressureTags.some(
+        (tag) =>
+          tag === "pressure:rivalry" || tag === "pressure:exposure" || tag === "pressure:prestige",
+      );
+      expect(hasNewPressureTag).toBe(true);
+    });
+  });
+
+  it("requires every skyscraper template to carry at least one faction consequence effect", () => {
+    INCIDENT_TEMPLATES.filter((t) =>
+      t.requiredBuildingIds?.includes("building/skyscraper"),
+    ).forEach((template) => {
+      const hasFactionEffect = template.choices.some((choice) =>
+        choice.effects.some(
+          (effect) =>
+            effect.kind === "faction_standing_delta" || effect.kind === "faction_scrutiny_delta",
+        ),
+      );
+      expect(hasFactionEffect).toBe(true);
+    });
+  });
+
+  it("reduces scandal-category selection weight when the Compliance Office is operational", () => {
+    const skyscraperTemplates = INCIDENT_TEMPLATES.filter((t) =>
+      t.requiredBuildingIds?.includes("building/skyscraper"),
+    );
+    expect(skyscraperTemplates.length).toBeGreaterThan(0);
+
+    const genericComplianceAudit = INCIDENT_TEMPLATES.find(
+      (template) => template.id === "incident/compliance-audit",
+    );
+    expect(genericComplianceAudit).toBeDefined();
+
+    const baselineWeight = computeIncidentTemplateSelectionWeight(
+      prepSkyscraperContext(),
+      genericComplianceAudit!,
+    );
+    const complianceWeight = computeIncidentTemplateSelectionWeight(
+      prepSkyscraperContext({ roomTemplateId: "room/compliance_office:tier_1" }),
+      genericComplianceAudit!,
+    );
+
+    expect(baselineWeight).toBeGreaterThan(0);
+    expect(complianceWeight).toBeLessThan(baselineWeight);
+  });
+
+  it("hides the war-room counter-op choice until the War Room is operational", () => {
+    const withoutWarRoom = findIncidentCandidate(
+      prepSkyscraperContext(),
+      "incident/rival-guild-poaching-push",
+    );
+    expect(withoutWarRoom.choices.map((choice) => choice.choiceId)).not.toContain(
+      "war_room_counter_op",
+    );
+
+    const withWarRoom = findIncidentCandidate(
+      prepSkyscraperContext({ roomTemplateId: "room/war_room:tier_1" }),
+      "incident/rival-guild-poaching-push",
+    );
+    expect(withWarRoom.choices.map((choice) => choice.choiceId)).toContain("war_room_counter_op");
+  });
+
+  it("hides the plea-deal choice until the Compliance Office is operational", () => {
+    const withoutCompliance = findIncidentCandidate(
+      prepSkyscraperContext(),
+      "incident/borough-contracts-hearing",
+    );
+    expect(withoutCompliance.choices.map((choice) => choice.choiceId)).not.toContain(
+      "compliance_plea_deal",
+    );
+
+    const withCompliance = findIncidentCandidate(
+      prepSkyscraperContext({ roomTemplateId: "room/compliance_office:tier_1" }),
+      "incident/borough-contracts-hearing",
+    );
+    expect(withCompliance.choices.map((choice) => choice.choiceId)).toContain(
+      "compliance_plea_deal",
+    );
+  });
+
+  it("binds fixed-faction skyscraper incidents to their authored faction instead of the active sponsor", () => {
+    const sponsorDemand = findIncidentCandidate(
+      prepSkyscraperContext({
+        sponsorFactionId: "faction/labor-safety",
+        roomTemplateId: "room/executive_office:tier_1",
+      }),
+      "incident/sponsor-prestige-demand",
+    );
+
+    expect(sponsorDemand.boundContext.factionId).toBe("faction/borough-contracts");
   });
 
   it("emits an event-log entry when an incident is queued", () => {

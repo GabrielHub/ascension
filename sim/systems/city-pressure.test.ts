@@ -8,6 +8,8 @@ import {
 } from "../components/city-state";
 import {
   applyCityPressureOutcome,
+  applyFactionScrutinyDelta,
+  applyFactionStandingDelta,
   computeCityContractModifiers,
   emitCityPressureEvents,
   selectDistrictForConcept,
@@ -386,6 +388,148 @@ describe("city-pressure", () => {
       tickCityPressureDecay(state, 60, 2105);
 
       expect(state.districts["district/lower-east-side"].recentContractCount).toBe(1);
+    });
+  });
+
+  // ── Compliance Office scrutiny decay ───────────────────────────────────
+
+  describe("compliance office scrutiny decay", () => {
+    it("adds extra scrutiny decay beyond baseline when active", () => {
+      const baseline = createDefaultCityState();
+      baseline.factions["faction/city-licensing"].scrutiny = 50;
+      tickCityPressureDecay(baseline, 60, 1000);
+
+      const withCompliance = createDefaultCityState();
+      withCompliance.factions["faction/city-licensing"].scrutiny = 50;
+      tickCityPressureDecay(withCompliance, 60, 1000, { complianceOfficeActive: true });
+
+      const baselineDrop = 50 - baseline.factions["faction/city-licensing"].scrutiny;
+      const complianceDrop = 50 - withCompliance.factions["faction/city-licensing"].scrutiny;
+      expect(complianceDrop).toBeGreaterThan(baselineDrop);
+    });
+
+    it("bounds compliance decay so scrutiny does not go negative", () => {
+      const state = createDefaultCityState();
+      state.factions["faction/city-licensing"].scrutiny = 0.2;
+      tickCityPressureDecay(state, 600, 1000, { complianceOfficeActive: true });
+      expect(state.factions["faction/city-licensing"].scrutiny).toBe(0);
+    });
+
+    it("applies across every faction that has scrutiny", () => {
+      const state = createDefaultCityState();
+      for (const faction of Object.values(state.factions)) {
+        faction.scrutiny = 40;
+      }
+      tickCityPressureDecay(state, 120, 2000, { complianceOfficeActive: true });
+      for (const faction of Object.values(state.factions)) {
+        expect(faction.scrutiny).toBeLessThan(40);
+      }
+    });
+
+    it("skips compliance decay while the faction is inside its scrutiny cooldown", () => {
+      const state = createDefaultCityState();
+      state.factions["faction/city-licensing"].scrutiny = 40;
+      state.factions["faction/city-licensing"].cooldownUntilTick = 5000;
+      state.factions["faction/labor-safety"].scrutiny = 40;
+      state.factions["faction/labor-safety"].cooldownUntilTick = 0;
+
+      tickCityPressureDecay(state, 60, 1000, { complianceOfficeActive: true });
+
+      const licensingDrop = 40 - state.factions["faction/city-licensing"].scrutiny;
+      const laborDrop = 40 - state.factions["faction/labor-safety"].scrutiny;
+      expect(laborDrop).toBeGreaterThan(licensingDrop);
+    });
+
+    it("clamps compliance decay per tick so large deltas do not erase scrutiny in one step", () => {
+      const state = createDefaultCityState();
+      state.factions["faction/city-licensing"].scrutiny = 80;
+      tickCityPressureDecay(state, 6000, 1000, { complianceOfficeActive: true });
+      expect(state.factions["faction/city-licensing"].scrutiny).toBeGreaterThan(0);
+    });
+  });
+
+  // ── Executive Office standing multiplier ──────────────────────────────
+
+  describe("executive office standing multiplier", () => {
+    it("scales positive sponsor standing gains when the executive office is active", () => {
+      const baseline = createDefaultCityState();
+      applyCityPressureOutcome(
+        baseline,
+        "district/lower-east-side",
+        "faction/city-licensing",
+        "boss_defeated",
+        100,
+      );
+
+      const boosted = createDefaultCityState();
+      applyCityPressureOutcome(
+        boosted,
+        "district/lower-east-side",
+        "faction/city-licensing",
+        "boss_defeated",
+        100,
+        { executiveOfficeBonus: true },
+      );
+
+      expect(boosted.factions["faction/city-licensing"].standing).toBeGreaterThan(
+        baseline.factions["faction/city-licensing"].standing,
+      );
+    });
+
+    it("does not scale negative sponsor standing deltas", () => {
+      const baseline = createDefaultCityState();
+      applyCityPressureOutcome(
+        baseline,
+        "district/lower-east-side",
+        "faction/city-licensing",
+        "mixed",
+        200,
+      );
+
+      const boosted = createDefaultCityState();
+      applyCityPressureOutcome(
+        boosted,
+        "district/lower-east-side",
+        "faction/city-licensing",
+        "mixed",
+        200,
+        { executiveOfficeBonus: true },
+      );
+
+      expect(boosted.factions["faction/city-licensing"].standing).toBe(
+        baseline.factions["faction/city-licensing"].standing,
+      );
+    });
+  });
+
+  // ── Faction effect entry points ───────────────────────────────────────
+
+  describe("faction-effect helpers", () => {
+    it("applies a standing delta and clamps into range", () => {
+      const state = createDefaultCityState();
+      applyFactionStandingDelta(state, "faction/city-licensing", 20);
+      expect(state.factions["faction/city-licensing"].standing).toBe(20);
+
+      applyFactionStandingDelta(state, "faction/city-licensing", 200);
+      expect(state.factions["faction/city-licensing"].standing).toBe(100);
+
+      applyFactionStandingDelta(state, "faction/city-licensing", -400);
+      expect(state.factions["faction/city-licensing"].standing).toBe(-100);
+    });
+
+    it("applies a scrutiny delta and clamps at zero", () => {
+      const state = createDefaultCityState();
+      applyFactionScrutinyDelta(state, "faction/labor-safety", 15);
+      expect(state.factions["faction/labor-safety"].scrutiny).toBe(15);
+
+      applyFactionScrutinyDelta(state, "faction/labor-safety", -100);
+      expect(state.factions["faction/labor-safety"].scrutiny).toBe(0);
+    });
+
+    it("returns false when the faction id is unknown", () => {
+      const state = createDefaultCityState();
+      expect(applyFactionStandingDelta(state, "faction/nonexistent", 10)).toBe(false);
+      expect(applyFactionScrutinyDelta(state, "faction/nonexistent", 10)).toBe(false);
     });
   });
 });

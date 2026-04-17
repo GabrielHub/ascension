@@ -315,6 +315,27 @@ function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly s
     ];
   }
 
+  if (room.templateId === "room/executive_office:tier_1") {
+    return [
+      "When operational, scales positive faction standing deltas from contract outcomes by +40%. Faction reps that used to file complaints now take meetings in a suite with the guild mark on the door.",
+      "Anchors sponsor-demand and press-exposure incidents so prestige-tier conversations land in a room built to handle them.",
+    ];
+  }
+
+  if (room.templateId === "room/compliance_office:tier_1") {
+    return [
+      "When operational, bleeds regulator scrutiny every hour across all five factions on top of the baseline decay, and softens scandal-category incidents so audits, labor-safety reviews, and hearings fire less often (not never).",
+      `Unlocks the plea-deal path in borough hearings and keeps ${guildName}'s paperwork in a state that can survive a regulator showing up unannounced.`,
+    ];
+  }
+
+  if (room.templateId === "room/war_room:tier_1") {
+    return [
+      "When operational, stacks a x1.5 multiplier on top of the Briefing Room's opportunity and boss intel bonuses — compounds with Prep Room for the full endgame readout.",
+      "Enables the counter-op choice in rival-guild poaching incidents so the tower can hit back instead of matching the offer.",
+    ];
+  }
+
   // ── Bodega rooms ─────────────────────────────────────────────────────
   if (room.templateId === "room/register:tier_1") {
     return [

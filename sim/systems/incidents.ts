@@ -31,9 +31,15 @@ import {
   BODEGA_BACK_OFFICE_TEMPLATE_ID,
   clamp,
   getCurrentAbsoluteMinute,
+  hasOperationalRoomTemplate,
   hasStaffedOperationalRoomTemplate,
   pushRuntimeEvent,
 } from "./commands";
+import {
+  applyFactionScrutinyDelta,
+  applyFactionStandingDelta,
+  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+} from "./city-pressure";
 import {
   applyRoomCultureShiftFromIncident,
   applySocialRecoveryAfterDistrictWin,
@@ -71,11 +77,21 @@ export type ConsequenceKind =
   | "team_cohesion_delta"
   | "injury_progression"
   | "departure_risk"
-  | "contract_pressure_delta";
+  | "contract_pressure_delta"
+  | "faction_standing_delta"
+  | "faction_scrutiny_delta";
+
+export type ConsequenceTargetRef =
+  | "subject_a"
+  | "subject_b"
+  | "guild"
+  | "team"
+  | "room"
+  | `faction:${string}`;
 
 export interface ConsequenceEffect {
   kind: ConsequenceKind;
-  targetRef: "subject_a" | "subject_b" | "guild" | "team" | "room";
+  targetRef: ConsequenceTargetRef;
   value: number;
 }
 
@@ -85,6 +101,7 @@ export interface IncidentChoice {
   description: string;
   consequenceSummary: string;
   requirements?: readonly string[];
+  requiredOperationalRoomTemplateIds?: readonly string[];
   effects: readonly ConsequenceEffect[];
 }
 
@@ -103,6 +120,7 @@ export interface IncidentTemplate {
   briefingTemplate: string;
   requiredBuildingIds?: readonly string[];
   preferredRoomTemplateIds?: readonly string[];
+  fixedFactionId?: string;
   presenterId?: string;
   presenterExpression?: string;
   choices: readonly IncidentChoice[];
@@ -187,6 +205,15 @@ const SCANDAL_INCIDENT_CATEGORIES = new Set([
   "borough_hearing",
   "district_backlash",
 ]);
+
+// Selection-weight multiplier applied to scandal-category incidents when
+// the Compliance Office is operational. Softens but never hides — the
+// regulator still shows up, just less often.
+const COMPLIANCE_OFFICE_SCANDAL_WEIGHT_MULTIPLIER = 0.55;
+
+// Boost applied to an eligible template's weight when the skyscraper
+// room referenced in preferredRoomTemplateIds is currently operational.
+const PREFERRED_ROOM_WEIGHT_MULTIPLIER = 1.6;
 
 // ── Authored incident library ────────────────────────────────────────────
 
@@ -2145,10 +2172,376 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
       },
     ],
   },
+
+  // ── Skyscraper institutional pressure ────────────────────────────────
+  // These templates are gated to the skyscraper and compose new pressure
+  // tags (rivalry / exposure / prestige) on top of the existing family.
+  // Each pairs with an Executive Floor room so compliance / executive /
+  // war-room framing is picked when the relevant room is operational.
+  {
+    id: "incident/licensing-bureau-audit",
+    name: "Licensing Bureau Audit",
+    category: "licensing_audit",
+    tags: ["skyscraper", "compliance", "audit", "faction"],
+    weight: 22,
+    triggerFamily: "compliance_pressure",
+    pressureTags: ["pressure:regulatory", "pressure:exposure"],
+    pressureThreshold: 55,
+    requiredContext: ["faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.05,
+    briefingTemplate:
+      "The Licensing Bureau has booked an on-site audit of {guildName}. Two auditors, three days of records review, and a public finding at the end. The Compliance Office can absorb the hit — quietly paying the fee is the other option.",
+    requiredBuildingIds: ["building/skyscraper"],
+    preferredRoomTemplateIds: ["room/compliance_office:tier_1"],
+    fixedFactionId: "faction/city-licensing",
+    choices: [
+      {
+        choiceId: "settlement_fee",
+        label: "Pay the Settlement Fee",
+        description: "Cut the cheque, close the file, keep the finding off the record.",
+        consequenceSummary: "Cash hit, scrutiny drops, standing unchanged.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -220 },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: -14,
+          },
+        ],
+      },
+      {
+        choiceId: "cooperate_fully",
+        label: "Cooperate Fully",
+        description:
+          "Open the files. The Compliance Office can defend the paperwork. Scrutiny eases, standing improves.",
+        consequenceSummary: "Minor rep cost, scrutiny drops hard, standing nudges up.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -1 },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: -18,
+          },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: 5,
+          },
+        ],
+      },
+      {
+        choiceId: "contest_the_audit",
+        label: "Contest the Audit",
+        description:
+          "File a formal challenge. The paperwork is defensible, and the Bureau knows it. No cost, but scrutiny escalates if they push back.",
+        consequenceSummary: "Free today, heavy scrutiny escalation, standing damaged.",
+        effects: [
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: 16,
+          },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: -10,
+          },
+          { kind: "contract_pressure_delta", targetRef: "guild", value: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/sponsor-prestige-demand",
+    name: "Sponsor Prestige Demand",
+    category: "sponsor_ultimatum",
+    tags: ["skyscraper", "sponsor", "prestige", "faction"],
+    weight: 20,
+    triggerFamily: "sponsor_demand",
+    pressureTags: ["pressure:prestige", "pressure:reputation"],
+    pressureThreshold: 50,
+    requiredContext: ["faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.1,
+    briefingTemplate:
+      "{faction} wants {guildName} on the record as the sponsor's preferred guild. A public endorsement in exchange for a visible show of loyalty — a conspicuous commitment to their political agenda. The Executive Office was built for exactly this kind of conversation.",
+    requiredBuildingIds: ["building/skyscraper"],
+    preferredRoomTemplateIds: ["room/executive_office:tier_1"],
+    fixedFactionId: "faction/borough-contracts",
+    choices: [
+      {
+        choiceId: "accept_endorsement",
+        label: "Accept the Endorsement",
+        description:
+          "Stand with the sponsor. Publicly, on the record, with the {guildName} mark next to theirs.",
+        consequenceSummary: "Standing climbs, reputation lifts, scrutiny unmoved.",
+        effects: [
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 14,
+          },
+          { kind: "reputation_delta", targetRef: "guild", value: 4 },
+        ],
+      },
+      {
+        choiceId: "quiet_favor",
+        label: "Offer a Quiet Favor",
+        description:
+          "No public tie, but deliver something private the sponsor can use. A handshake deal, not a press release.",
+        consequenceSummary: "Modest standing lift, treasury cost, no scrutiny spike.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -90 },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 6,
+          },
+        ],
+      },
+      {
+        choiceId: "decline_politely",
+        label: "Decline Politely",
+        description:
+          "{guildName} stays out of their politics. The sponsor will not forget — and neither will the watchdogs who noticed the request in the first place.",
+        consequenceSummary: "Standing falls with the sponsor; scrutiny climbs across regulators.",
+        effects: [
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: -8,
+          },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 10,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/rival-guild-poaching-push",
+    name: "Rival Guild Poaching Push",
+    category: "rival_poaching",
+    tags: ["skyscraper", "rival", "roster", "faction"],
+    weight: 18,
+    triggerFamily: "rival_poaching",
+    pressureTags: ["pressure:rivalry", "pressure:loyalty"],
+    pressureThreshold: 50,
+    requiredContext: ["operator_a"],
+    cooldownMinutes: 2160,
+    noveltyWeight: 1.2,
+    briefingTemplate:
+      "A rival tower across the river is running a coordinated poaching campaign against {guildName}. {operator_a} is the first name on their list — the offer is already on the table. The War Room can plan a counter-op. Or the guild can absorb the loss.",
+    requiredBuildingIds: ["building/skyscraper"],
+    preferredRoomTemplateIds: ["room/war_room:tier_1"],
+    choices: [
+      {
+        choiceId: "war_room_counter_op",
+        label: "Run a Counter-Op",
+        description:
+          "War Room plans a quiet counter-move against the rival's pipeline. The hit lands on them, not on {guildName}.",
+        consequenceSummary: "Loyalty steadies, rival leverage cut back, intel gained.",
+        requiredOperationalRoomTemplateIds: ["room/war_room:tier_1"],
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 8 },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/rival-guild-market",
+            value: -10,
+          },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/rival-guild-market",
+            value: -6,
+          },
+          { kind: "intel_delta", targetRef: "guild", value: 6 },
+        ],
+      },
+      {
+        choiceId: "match_the_offer",
+        label: "Match the Offer",
+        description:
+          "Pay whatever the rival is paying, plus a little more. {operator_a} stays, but the budget line bleeds.",
+        consequenceSummary: "Treasury hit, loyalty shore-up, rival unimpeded.",
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -160 },
+          { kind: "loyalty_delta", targetRef: "subject_a", value: 5 },
+        ],
+      },
+      {
+        choiceId: "let_them_walk",
+        label: "Let Them Walk",
+        description:
+          "If the offer is that good, matching it only buys more of the same later. Accept the loss and plan around it.",
+        consequenceSummary: "Loyalty collapses, departure risk spikes, rival leverage surges.",
+        effects: [
+          { kind: "loyalty_delta", targetRef: "subject_a", value: -10 },
+          { kind: "departure_risk", targetRef: "subject_a", value: 30 },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/rival-guild-market",
+            value: -4,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/borough-contracts-hearing",
+    name: "Borough Contracts Hearing",
+    category: "borough_hearing",
+    tags: ["skyscraper", "borough", "hearing", "faction"],
+    weight: 18,
+    triggerFamily: "district_fallout",
+    pressureTags: ["pressure:regulatory", "pressure:reputation", "pressure:exposure"],
+    pressureThreshold: 50,
+    requiredContext: ["faction"],
+    cooldownMinutes: 2880,
+    noveltyWeight: 1.0,
+    briefingTemplate:
+      "The Borough Contracts Authority has scheduled a review hearing on {guildName}'s recent work. The Compliance Office has kept the paperwork clean — a plea deal is on the table if the room is open for one.",
+    requiredBuildingIds: ["building/skyscraper"],
+    preferredRoomTemplateIds: ["room/compliance_office:tier_1"],
+    fixedFactionId: "faction/borough-contracts",
+    choices: [
+      {
+        choiceId: "full_hearing",
+        label: "Sit Through the Full Hearing",
+        description:
+          "Face the panel. Answer the questions. Let the record speak for itself — win or lose.",
+        consequenceSummary: "Standing recovers if clean, reputation holds steady.",
+        effects: [
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 8,
+          },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: -6,
+          },
+        ],
+      },
+      {
+        choiceId: "compliance_plea_deal",
+        label: "Take the Plea Deal",
+        description:
+          "Compliance Office negotiates down to a consent decree. Quiet fee, quiet record, no public testimony.",
+        consequenceSummary: "Cash hit, scrutiny eased, standing mostly preserved.",
+        requiredOperationalRoomTemplateIds: ["room/compliance_office:tier_1"],
+        effects: [
+          { kind: "treasury_delta", targetRef: "guild", value: -140 },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: -12,
+          },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 2,
+          },
+        ],
+      },
+      {
+        choiceId: "skip_the_hearing",
+        label: "Skip the Hearing",
+        description:
+          "Send a lawyer with a written response. The board notes the absence. So does the press.",
+        consequenceSummary: "Standing drops, reputation falls, scrutiny climbs.",
+        effects: [
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: -12,
+          },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 10,
+          },
+          { kind: "reputation_delta", targetRef: "guild", value: -3 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incident/press-exposure-story",
+    name: "Press Exposure Story",
+    category: "regulatory_scrutiny",
+    tags: ["skyscraper", "press", "exposure", "faction"],
+    weight: 20,
+    triggerFamily: "faction_pressure",
+    pressureTags: ["pressure:exposure", "pressure:reputation"],
+    pressureThreshold: 45,
+    requiredContext: ["faction"],
+    cooldownMinutes: 2160,
+    noveltyWeight: 1.15,
+    briefingTemplate:
+      "A city desk reporter is running a story about {guildName}'s rise into the tower. Standard exposure piece — some flattering, some not. The framing is negotiable. The regulators read the paper.",
+    requiredBuildingIds: ["building/skyscraper"],
+    preferredRoomTemplateIds: ["room/executive_office:tier_1"],
+    fixedFactionId: "faction/city-licensing",
+    choices: [
+      {
+        choiceId: "go_on_the_record",
+        label: "Go On the Record",
+        description:
+          "Sit for the interview in the Executive Office. Reputation climbs on a positive framing, but the Licensing Bureau starts paying closer attention.",
+        consequenceSummary: "Reputation lift, regulatory scrutiny climbs.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: 6 },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: 10,
+          },
+        ],
+      },
+      {
+        choiceId: "off_the_record_background",
+        label: "Off-the-Record Background",
+        description:
+          "Quiet background briefing, no quotes. The story still runs, but the tone is neutral. Standing with the sponsor lifts for handling it professionally.",
+        consequenceSummary: "Standing lifts with the sponsor, scrutiny and reputation hold.",
+        effects: [
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/borough-contracts",
+            value: 6,
+          },
+          {
+            kind: "faction_scrutiny_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: 3,
+          },
+        ],
+      },
+      {
+        choiceId: "decline_comment",
+        label: "Decline to Comment",
+        description:
+          "No interview, no background. The story runs anyway, framed by the reporter's assumptions. Reputation takes a hit. Scrutiny stays flat.",
+        consequenceSummary: "Reputation falls, standing dips across regulators.",
+        effects: [
+          { kind: "reputation_delta", targetRef: "guild", value: -5 },
+          {
+            kind: "faction_standing_delta",
+            targetRef: "faction:faction/city-licensing",
+            value: -4,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export function validateIncidentTemplates(
-  registry: Pick<TemplateRegistry, "buildingById" | "roomById" | "presenterById">,
+  registry: Pick<TemplateRegistry, "buildingById" | "roomById" | "presenterById" | "factionById">,
 ): void {
   const issues: string[] = [];
 
@@ -2165,11 +2558,23 @@ export function validateIncidentTemplates(
       }
     });
 
+    if (template.fixedFactionId && !registry.factionById.has(template.fixedFactionId)) {
+      issues.push(`${template.id} references unknown fixed faction "${template.fixedFactionId}".`);
+    }
+
     if (template.presenterId && !registry.presenterById.has(template.presenterId)) {
       issues.push(`${template.id} references unknown presenter "${template.presenterId}".`);
     }
 
     template.choices.forEach((choice) => {
+      choice.requiredOperationalRoomTemplateIds?.forEach((roomTemplateId) => {
+        if (!registry.roomById.has(roomTemplateId)) {
+          issues.push(
+            `${template.id}:${choice.choiceId} references unknown required room "${roomTemplateId}".`,
+          );
+        }
+      });
+
       choice.effects.forEach((effect) => {
         if (effect.targetRef === "subject_a" && !template.requiredContext.includes("operator_a")) {
           issues.push(
@@ -2183,6 +2588,30 @@ export function validateIncidentTemplates(
         }
         if (effect.targetRef === "room" && !template.requiredContext.includes("room")) {
           issues.push(`${template.id}:${choice.choiceId} targets room without requiring room.`);
+        }
+        if (typeof effect.targetRef === "string" && effect.targetRef.startsWith("faction:")) {
+          const factionId = effect.targetRef.slice("faction:".length);
+          if (!registry.factionById.has(factionId)) {
+            issues.push(
+              `${template.id}:${choice.choiceId} references unknown faction "${factionId}".`,
+            );
+          }
+          if (
+            effect.kind !== "faction_standing_delta" &&
+            effect.kind !== "faction_scrutiny_delta"
+          ) {
+            issues.push(
+              `${template.id}:${choice.choiceId} targets faction but uses non-faction kind "${effect.kind}".`,
+            );
+          }
+        }
+        if (
+          (effect.kind === "faction_standing_delta" || effect.kind === "faction_scrutiny_delta") &&
+          !(typeof effect.targetRef === "string" && effect.targetRef.startsWith("faction:"))
+        ) {
+          issues.push(
+            `${template.id}:${choice.choiceId} uses ${effect.kind} with non-faction targetRef "${effect.targetRef}".`,
+          );
         }
       });
     });
@@ -2359,6 +2788,9 @@ function buildEligibleIncidentTemplates(
       const recentCount = recentFamilyCounts.get(template.triggerFamily) ?? 0;
       if (recentCount >= 2) return false;
     }
+    if (getAvailableIncidentChoices(context, template).length === 0) {
+      return false;
+    }
     return true;
   });
 }
@@ -2371,6 +2803,24 @@ export function isIncidentOnCooldown(
   const lastUsed = state.cooldowns[template.id];
   if (lastUsed === undefined) return false;
   return currentMinute - lastUsed < template.cooldownMinutes;
+}
+
+export function computeIncidentTemplateSelectionWeight(
+  context: SimSystemContext,
+  template: IncidentTemplate,
+): number {
+  let weight = template.weight * template.noveltyWeight;
+  const complianceOperational = hasOperationalRoomTemplate(
+    context,
+    SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+  );
+  if (complianceOperational && SCANDAL_INCIDENT_CATEGORIES.has(template.category)) {
+    weight *= COMPLIANCE_OFFICE_SCANDAL_WEIGHT_MULTIPLIER;
+  }
+  if (template.preferredRoomTemplateIds?.some((id) => hasOperationalRoomTemplate(context, id))) {
+    weight *= PREFERRED_ROOM_WEIGHT_MULTIPLIER;
+  }
+  return weight;
 }
 
 export function selectIncidentCandidate(
@@ -2389,11 +2839,12 @@ export function selectIncidentCandidate(
   );
   const weighted: WeightedItem<IncidentTemplate>[] = eligible.map((t) => ({
     item: t,
-    weight: t.weight * t.noveltyWeight,
+    weight: computeIncidentTemplateSelectionWeight(context, t),
   }));
 
   const result = weightedChoice(rng, weighted);
   const template = result.outcome;
+  const availableChoices = getAvailableIncidentChoices(context, template);
 
   // Bind concrete subjects
   const boundContext = bindIncidentSubjects(context, template);
@@ -2406,7 +2857,7 @@ export function selectIncidentCandidate(
     tags: [...template.tags],
     triggerFamily: template.triggerFamily,
     boundContext,
-    choices: template.choices,
+    choices: availableChoices,
     presenterId: template.presenterId,
     presenterExpression: template.presenterExpression,
     createdAtMinute: currentMinute,
@@ -2623,16 +3074,20 @@ function bindIncidentSubjects(
 
   // Bind faction from active contract sponsor or highest-scrutiny faction
   if (template.requiredContext.includes("faction")) {
-    const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
-    if (contractSite?.sponsorFactionId) {
-      factionId = contractSite.sponsorFactionId;
-    } else if (context.runtimeState.cityState) {
-      const factions = Object.values(context.runtimeState.cityState.factions);
-      const highest = factions.reduce<(typeof factions)[0] | undefined>(
-        (best, f) => (!best || f.scrutiny > best.scrutiny ? f : best),
-        undefined,
-      );
-      factionId = highest?.factionId;
+    if (template.fixedFactionId) {
+      factionId = template.fixedFactionId;
+    } else {
+      const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
+      if (contractSite?.sponsorFactionId) {
+        factionId = contractSite.sponsorFactionId;
+      } else if (context.runtimeState.cityState) {
+        const factions = Object.values(context.runtimeState.cityState.factions);
+        const highest = factions.reduce<(typeof factions)[0] | undefined>(
+          (best, f) => (!best || f.scrutiny > best.scrutiny ? f : best),
+          undefined,
+        );
+        factionId = highest?.factionId;
+      }
     }
   }
 
@@ -2661,6 +3116,21 @@ function bindIncidentSubjects(
     factionId,
     bossId: undefined,
   };
+}
+
+function getAvailableIncidentChoices(
+  context: SimSystemContext,
+  template: IncidentTemplate,
+): readonly IncidentChoice[] {
+  return template.choices.filter((choice) => {
+    if (!choice.requiredOperationalRoomTemplateIds?.length) {
+      return true;
+    }
+
+    return choice.requiredOperationalRoomTemplateIds.every((roomTemplateId) =>
+      hasOperationalRoomTemplate(context, roomTemplateId),
+    );
+  });
 }
 
 // ── Incident resolution ──────────────────────────────────────────────────
@@ -2942,9 +3412,34 @@ function applyConsequenceEffect(
       }
       break;
     }
+    case "faction_standing_delta": {
+      const cityState = context.runtimeState.cityState;
+      if (!cityState) break;
+      const factionId = resolveFactionTarget(effect.targetRef);
+      if (factionId) {
+        applyFactionStandingDelta(cityState, factionId, effect.value);
+      }
+      break;
+    }
+    case "faction_scrutiny_delta": {
+      const cityState = context.runtimeState.cityState;
+      if (!cityState) break;
+      const factionId = resolveFactionTarget(effect.targetRef);
+      if (factionId) {
+        applyFactionScrutinyDelta(cityState, factionId, effect.value);
+      }
+      break;
+    }
     default:
       break;
   }
+}
+
+function resolveFactionTarget(targetRef: ConsequenceEffect["targetRef"]): string | undefined {
+  if (typeof targetRef === "string" && targetRef.startsWith("faction:")) {
+    return targetRef.slice("faction:".length);
+  }
+  return undefined;
 }
 
 function resolveEffectTarget(incident: PendingIncident, targetRef: string): string | undefined {

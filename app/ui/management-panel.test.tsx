@@ -8,6 +8,15 @@ import { createBootstrapSimulation } from "sim";
 import { ManagementPanel } from "./management-panel";
 import { buildCityPressureView, buildHqViewFromPhase1, type GameCallbacks } from "./view-models";
 
+const DEFAULT_GUILD = {
+  guildName: "Red Hook Guild",
+  playerName: "Testing",
+  treasury: 0,
+  reputation: 0,
+  intel: 0,
+  pressure: 0,
+} as const;
+
 const callbacks: GameCallbacks = {
   tick: () => {},
   setRoomActive: () => {},
@@ -58,6 +67,7 @@ describe("management panel", () => {
 
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={hq.guild}
         guildName={hq.guild.guildName}
         policies={hq.policies}
         contractLifecycle={hq.contractLifecycle}
@@ -90,6 +100,7 @@ describe("management panel", () => {
   it("disables field objectives during active contracts and explains why", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Guild Slot 1"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="active"
@@ -130,6 +141,7 @@ describe("management panel", () => {
   it("shows the hidden skyscraper gate copy while Porter's is the active HQ", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="idle"
@@ -163,6 +175,7 @@ describe("management panel", () => {
   it("shows the permanent badge once the guild has moved into the skyscraper", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="idle"
@@ -194,6 +207,7 @@ describe("management panel", () => {
   it("shows the next Porter's campaign step after relocation", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="bidding"
@@ -317,6 +331,7 @@ describe("management panel", () => {
   it("includes Machine Shop as the final Porter's campaign step", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="bidding"
@@ -405,6 +420,7 @@ describe("management panel", () => {
   it("renders the city-pressure summary when active district and faction pressure exists", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
+        guild={DEFAULT_GUILD}
         guildName="Red Hook Guild"
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="bidding"
