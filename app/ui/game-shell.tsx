@@ -130,6 +130,10 @@ const SKYSCRAPER_FLOOR_LABELS: Record<number, string> = {
   1: "Ops",
   2: "Recovery",
   3: "Logistics",
+  5: "Nightlife",
+  6: "Training",
+  7: "Executive",
+  8: "Penthouse",
   4: "Rooftop",
 };
 const PERSISTENT_GUIDANCE_COMPLETION_KINDS = new Set([
@@ -1524,6 +1528,16 @@ export function GameShell() {
       operators: enrichOperatorsWithAutonomy(hqBase.operators, phase2),
     };
   }, [hqBase, phase2]);
+  const orderedFloorIndices = useMemo(() => {
+    if (!hq) return [];
+    return hq.building.floorOrder && hq.building.floorOrder.length > 0
+      ? [...hq.building.floorOrder]
+      : Array.from({ length: hq.building.floorCount }, (_, index) => index);
+  }, [hq]);
+  const activeFloorOrderIndex = useMemo(() => {
+    if (!hq || orderedFloorIndices.length === 0) return 0;
+    return Math.max(0, orderedFloorIndices.indexOf(hq.building.activeFloorIndex));
+  }, [hq, orderedFloorIndices]);
 
   const operatorNameById = useMemo(() => {
     if (!hq) return new Map<string, string>();
@@ -2027,15 +2041,17 @@ export function GameShell() {
                       data-testid="floor-step-previous"
                       aria-label="Go to previous floor"
                       className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
-                      disabled={hq.building.activeFloorIndex === 0}
+                      disabled={activeFloorOrderIndex === 0}
                       onClick={() =>
-                        callbacks.setActiveFloor(Math.max(0, hq.building.activeFloorIndex - 1))
+                        callbacks.setActiveFloor(
+                          orderedFloorIndices[Math.max(0, activeFloorOrderIndex - 1)] ?? 0,
+                        )
                       }
                     >
                       <span aria-hidden="true">↓</span>
                     </button>
                     <div className="flex items-center gap-1">
-                      {Array.from({ length: hq.building.floorCount }, (_, floorIndex) => {
+                      {orderedFloorIndices.map((floorIndex) => {
                         const label =
                           hq.building.id === "building/porters"
                             ? (PORTERS_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
@@ -2063,10 +2079,12 @@ export function GameShell() {
                       data-testid="floor-step-next"
                       aria-label="Go to next floor"
                       className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
-                      disabled={hq.building.activeFloorIndex >= hq.building.floorCount - 1}
+                      disabled={activeFloorOrderIndex >= orderedFloorIndices.length - 1}
                       onClick={() =>
                         callbacks.setActiveFloor(
-                          Math.min(hq.building.floorCount - 1, hq.building.activeFloorIndex + 1),
+                          orderedFloorIndices[
+                            Math.min(orderedFloorIndices.length - 1, activeFloorOrderIndex + 1)
+                          ] ?? hq.building.activeFloorIndex,
                         )
                       }
                     >

@@ -15,8 +15,8 @@ describe("template registry", () => {
 
     expect(registry.resources).toHaveLength(3);
     expect(registry.buildings).toHaveLength(3);
-    expect(registry.rooms).toHaveLength(30);
-    expect(registry.upgrades).toHaveLength(13);
+    expect(registry.rooms).toHaveLength(40);
+    expect(registry.upgrades).toHaveLength(17);
     expect(registry.missions).toHaveLength(3);
     expect(registry.events).toHaveLength(25);
     expect(registry.items).toHaveLength(166);

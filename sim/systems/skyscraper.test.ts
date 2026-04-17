@@ -14,6 +14,10 @@ import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import { deriveRecruitRank, visitorQualityToRank } from "lib/visitor-rank";
 import { getAvailableContractRanksForReputation } from "./contract-economy";
 import { siteConceptTemplates } from "content/templates/site-concepts";
+import { applySimCommand } from "./commands";
+import { createSimTestContext } from "./test-context";
+import { BuildingAuthority, GuildState, RoomInstance } from "../components";
+import type { SimSystemContext } from "./types";
 
 // ── Skyscraper building template ────────────────────────────────────────
 
@@ -28,9 +32,14 @@ describe("skyscraper building template", () => {
     expect(skyscraper!.recruitmentQualityBonus).toBe(2);
   });
 
-  it("exposes no building upgrades in the baseline stack", () => {
+  it("exposes the four expansion-floor upgrades in narrative order", () => {
     const skyscraper = registry.buildingById.get("building/skyscraper");
-    expect(skyscraper!.upgradeIds).toEqual([]);
+    expect(skyscraper!.upgradeIds).toEqual([
+      "upgrade/building/skyscraper:nightlife_floor",
+      "upgrade/building/skyscraper:specialist_training_floor",
+      "upgrade/building/skyscraper:executive_floor",
+      "upgrade/building/skyscraper:penthouse",
+    ]);
   });
 });
 
@@ -44,7 +53,7 @@ describe("skyscraper room templates", () => {
     "room/situation_room:tier_1",
     "room/clinic:tier_1",
     "room/dojo:tier_1",
-    "room/lounge:tier_1",
+    "room/crew_lounge:tier_1",
     "room/supply_hall:tier_1",
     "room/fabrication_bay:tier_1",
     "room/rooftop_helipad:tier_1",
@@ -293,5 +302,391 @@ describe("rank-aware recruit generation", () => {
   it("still defaults to F-rank when no rank is provided (legacy callers)", () => {
     const legacy = deriveOperatorCombatDefaults("role:scout");
     expect(legacy.rank).toBe("f");
+  });
+});
+
+// ── Skyscraper expansion-floor room templates ───────────────────────────
+
+describe("skyscraper expansion-floor room templates", () => {
+  const expansionRoomIds = [
+    "room/club:tier_1",
+    "room/green_room:tier_1",
+    "room/drill_floor:tier_1",
+    "room/recon_course:tier_1",
+    "room/trauma_bay:tier_1",
+    "room/executive_office:tier_1",
+    "room/compliance_office:tier_1",
+    "room/war_room:tier_1",
+    "room/sky_lounge:tier_1",
+    "room/private_cellar:tier_1",
+  ];
+
+  it("registers every expansion-floor room template", () => {
+    for (const id of expansionRoomIds) {
+      expect(registry.roomById.has(id)).toBe(true);
+    }
+  });
+
+  it("scopes every expansion-floor room to building/skyscraper", () => {
+    for (const id of expansionRoomIds) {
+      const room = registry.roomById.get(id)!;
+      expect(room.availableInBuildings).toEqual(["building/skyscraper"]);
+    }
+  });
+
+  it("tags The Club and The Sky Lounge as recruitment surfaces", () => {
+    expect(registry.roomById.get("room/club:tier_1")!.tags).toContain("ops:recruitment");
+    expect(registry.roomById.get("room/sky_lounge:tier_1")!.tags).toContain("ops:recruitment");
+  });
+
+  it("tags every specialist-training room with the training tag", () => {
+    for (const id of [
+      "room/drill_floor:tier_1",
+      "room/recon_course:tier_1",
+      "room/trauma_bay:tier_1",
+    ]) {
+      expect(registry.roomById.get(id)!.tags).toContain("room:training");
+    }
+  });
+
+  it("tags The Trauma Bay with both training and medical staffing", () => {
+    const trauma = registry.roomById.get("room/trauma_bay:tier_1")!;
+    expect(trauma.tags).toContain("room:training");
+    expect(trauma.tags).toContain("staff:medical");
+  });
+
+  it("keeps The Crew Lounge and The Sky Lounge as distinct identities", () => {
+    expect(registry.roomById.has("room/crew_lounge:tier_1")).toBe(true);
+    expect(registry.roomById.has("room/sky_lounge:tier_1")).toBe(true);
+    expect(registry.roomById.get("room/crew_lounge:tier_1")!.tags).toContain("room:recovery");
+    expect(registry.roomById.get("room/sky_lounge:tier_1")!.tags).toContain("ops:recruitment");
+  });
+});
+
+// ── Skyscraper expansion-floor upgrades ─────────────────────────────────
+
+describe("skyscraper expansion upgrades", () => {
+  it("Nightlife unlocks The Club and The Green Room with no prior tier requirement", () => {
+    const upgrade = registry.upgradeById.get("upgrade/building/skyscraper:nightlife_floor")!;
+    const tierGate = upgrade.requirements.find((req) => req.type === "building_tier_min");
+    expect(tierGate).toBeUndefined();
+    const unlocks = upgrade.effects.filter((e) => e.type === "unlock_room_template");
+    expect(unlocks.map((e) => (e as { roomId: string }).roomId)).toEqual([
+      "room/club:tier_1",
+      "room/green_room:tier_1",
+    ]);
+  });
+
+  it("Specialist Training requires tier 2 and unlocks all three role-specific rooms", () => {
+    const upgrade = registry.upgradeById.get(
+      "upgrade/building/skyscraper:specialist_training_floor",
+    )!;
+    const tierGate = upgrade.requirements.find((req) => req.type === "building_tier_min") as
+      | { minimum: number }
+      | undefined;
+    expect(tierGate?.minimum).toBe(2);
+    const unlocks = upgrade.effects.filter((e) => e.type === "unlock_room_template");
+    expect(unlocks.map((e) => (e as { roomId: string }).roomId).sort()).toEqual([
+      "room/drill_floor:tier_1",
+      "room/recon_course:tier_1",
+      "room/trauma_bay:tier_1",
+    ]);
+  });
+
+  it("Executive requires tier 3 and unlocks the executive, compliance, and war rooms", () => {
+    const upgrade = registry.upgradeById.get("upgrade/building/skyscraper:executive_floor")!;
+    const tierGate = upgrade.requirements.find((req) => req.type === "building_tier_min") as
+      | { minimum: number }
+      | undefined;
+    expect(tierGate?.minimum).toBe(3);
+    const unlocks = upgrade.effects.filter((e) => e.type === "unlock_room_template");
+    expect(unlocks.map((e) => (e as { roomId: string }).roomId).sort()).toEqual([
+      "room/compliance_office:tier_1",
+      "room/executive_office:tier_1",
+      "room/war_room:tier_1",
+    ]);
+  });
+
+  it("Penthouse requires tier 4 and unlocks the Sky Lounge and Private Cellar", () => {
+    const upgrade = registry.upgradeById.get("upgrade/building/skyscraper:penthouse")!;
+    const tierGate = upgrade.requirements.find((req) => req.type === "building_tier_min") as
+      | { minimum: number }
+      | undefined;
+    expect(tierGate?.minimum).toBe(4);
+    const unlocks = upgrade.effects.filter((e) => e.type === "unlock_room_template");
+    expect(unlocks.map((e) => (e as { roomId: string }).roomId).sort()).toEqual([
+      "room/private_cellar:tier_1",
+      "room/sky_lounge:tier_1",
+    ]);
+  });
+
+  it("upgrade costs scale monotonically across the four-step arc", () => {
+    const cashByUpgrade = (
+      [
+        "upgrade/building/skyscraper:nightlife_floor",
+        "upgrade/building/skyscraper:specialist_training_floor",
+        "upgrade/building/skyscraper:executive_floor",
+        "upgrade/building/skyscraper:penthouse",
+      ] as const
+    ).map((id) => {
+      const upgrade = registry.upgradeById.get(id)!;
+      const cashReq = upgrade.requirements.find(
+        (req) => req.type === "resource_min" && req.resourceId === "resource/cash",
+      ) as { minimum: number } | undefined;
+      return cashReq!.minimum;
+    });
+    for (let i = 1; i < cashByUpgrade.length; i++) {
+      expect(cashByUpgrade[i]).toBeGreaterThan(cashByUpgrade[i - 1]);
+    }
+  });
+
+  it("fully expanded skyscraper grows by 10 room slots and 13 operator slots", () => {
+    let rooms = registry.buildingById.get("building/skyscraper")!.baseRoomSlots;
+    let ops = registry.buildingById.get("building/skyscraper")!.baseOperatorSlots;
+    for (const upgradeId of registry.buildingById.get("building/skyscraper")!.upgradeIds) {
+      for (const effect of registry.upgradeById.get(upgradeId)!.effects) {
+        if (effect.type === "add_room_slot") rooms += effect.amount;
+        if (effect.type === "grant_operator_slot") ops += effect.amount;
+      }
+    }
+    expect(rooms).toBe(11 + 10);
+    expect(ops).toBe(18 + 13);
+  });
+});
+
+// ── Skyscraper expansion-floor layout ───────────────────────────────────
+
+describe("skyscraper expansion layout stages", () => {
+  it("baseline tier 1 stays at five floors", () => {
+    expect(getBuildingFloors("building/skyscraper", 1)).toHaveLength(5);
+  });
+
+  it("each tier upgrade adds exactly one floor to the tower", () => {
+    expect(getBuildingFloors("building/skyscraper", 2)).toHaveLength(6);
+    expect(getBuildingFloors("building/skyscraper", 3)).toHaveLength(7);
+    expect(getBuildingFloors("building/skyscraper", 4)).toHaveLength(8);
+    expect(getBuildingFloors("building/skyscraper", 5)).toHaveLength(9);
+  });
+
+  it("expansion floors get unique floor indices 5-8", () => {
+    const fullStack = getBuildingFloors("building/skyscraper", 5);
+    const indices = fullStack.map((floor) => floor.floorIndex).sort((a, b) => a - b);
+    expect(indices).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
+  it("every expansion floor lives in the tower-core stack group", () => {
+    for (const tier of [2, 3, 4, 5]) {
+      const floors = getBuildingFloors("building/skyscraper", tier);
+      const expansionFloor = floors.find((floor) => floor.floorIndex === tier + 3)!;
+      expect(expansionFloor.stackGroupId).toBe("tower-core");
+    }
+  });
+
+  it("the Rooftop stays in its own stack group at every tier", () => {
+    for (const tier of [1, 2, 3, 4, 5]) {
+      const rooftop = getBuildingFloors("building/skyscraper", tier).find(
+        (floor) => floor.floorIndex === 4,
+      )!;
+      expect(rooftop.stackGroupId).toBe("rooftop");
+    }
+  });
+
+  it("renders all tower-core floors together when viewing any tower-core floor", () => {
+    const visibleFromLobby = getVisibleBuildingFloors("building/skyscraper", 0, 5).map(
+      (floor) => floor.floorIndex,
+    );
+    expect(visibleFromLobby).toEqual([0, 1, 2, 3, 5, 6, 7, 8]);
+  });
+
+  it("keeps the Rooftop on its own when viewed", () => {
+    expect(
+      getVisibleBuildingFloors("building/skyscraper", 4, 5).map((floor) => floor.floorIndex),
+    ).toEqual([4]);
+  });
+
+  it("every expansion floor seeds at least one starter room", () => {
+    for (const floorIndex of [5, 6, 7, 8]) {
+      const floor = getBuildingLayout("building/skyscraper", floorIndex, 5)!;
+      const starterSlots = floor.slots.filter((slot) => slot.startingTemplateId);
+      expect(starterSlots.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("every expansion floor's starter slots reference templates available in the skyscraper", () => {
+    for (const floorIndex of [5, 6, 7, 8]) {
+      const floor = getBuildingLayout("building/skyscraper", floorIndex, 5)!;
+      for (const slot of floor.slots) {
+        if (!slot.startingTemplateId) continue;
+        const template = registry.roomById.get(slot.startingTemplateId)!;
+        expect(template.availableInBuildings).toContain("building/skyscraper");
+      }
+    }
+  });
+});
+
+// ── Skyscraper expansion purchase flow ─────────────────────────────────
+
+function createSkyscraperUpgradeContext(
+  options: { treasury?: number; reputation?: number; appliedUpgradeIds?: string[] } = {},
+): SimSystemContext {
+  const skyscraperIndex = registry.buildingIndexById.get("building/skyscraper")!;
+  return createSimTestContext({
+    registry,
+    guild: {
+      treasury: options.treasury ?? 50_000,
+      // Cumulative reputation across all four expansion upgrades is 620, and
+      // requirements consume reputation when applied — give the harness enough
+      // headroom to walk the full arc without re-earning rep between steps.
+      reputation: options.reputation ?? 2000,
+      intel: 0,
+    },
+    building: {
+      activeBuildingTemplateIndex: skyscraperIndex,
+      activeBuildingTier: 1,
+      activeFloorIndex: 0,
+      roomSlotCount: 11,
+      operatorSlotCount: 18,
+      appliedUpgradeIds: options.appliedUpgradeIds ?? [],
+    },
+  });
+}
+
+describe("skyscraper floor purchase flow", () => {
+  it("buying Nightlife bumps tier, opens the new floor, and seeds its starter rooms", () => {
+    const context = createSkyscraperUpgradeContext();
+    const buildingEntity = context.singletonEntities.building;
+
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:nightlife_floor",
+    });
+
+    expect(BuildingAuthority.activeBuildingTier[buildingEntity]).toBe(2);
+    expect(BuildingAuthority.appliedUpgradeIds[buildingEntity]).toContain(
+      "upgrade/building/skyscraper:nightlife_floor",
+    );
+
+    const floors = getBuildingFloors("building/skyscraper", 2);
+    expect(floors.map((f) => f.floorIndex).sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+
+    const placedTemplateIds = context.runtimeState.roomEntities
+      .map((entity) => registry.rooms[RoomInstance.templateIndex[entity]]!.id)
+      .sort();
+    expect(placedTemplateIds).toEqual(["room/club:tier_1", "room/green_room:tier_1"]);
+    for (const entity of context.runtimeState.roomEntities) {
+      expect(RoomInstance.floorIndex[entity]).toBe(5);
+    }
+  });
+
+  it("refuses to buy Specialist Training before Nightlife is applied", () => {
+    const context = createSkyscraperUpgradeContext();
+    const buildingEntity = context.singletonEntities.building;
+
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:specialist_training_floor",
+    });
+
+    expect(BuildingAuthority.appliedUpgradeIds[buildingEntity]).not.toContain(
+      "upgrade/building/skyscraper:specialist_training_floor",
+    );
+    expect(BuildingAuthority.activeBuildingTier[buildingEntity]).toBe(1);
+    expect(context.runtimeState.roomEntities.length).toBe(0);
+  });
+
+  it("refuses to buy Penthouse straight from baseline", () => {
+    const context = createSkyscraperUpgradeContext();
+    const buildingEntity = context.singletonEntities.building;
+
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:penthouse",
+    });
+
+    expect(BuildingAuthority.appliedUpgradeIds[buildingEntity]).not.toContain(
+      "upgrade/building/skyscraper:penthouse",
+    );
+    expect(BuildingAuthority.activeBuildingTier[buildingEntity]).toBe(1);
+  });
+
+  it("walks the full four-step upgrade arc and reaches a 9-floor tower", () => {
+    const context = createSkyscraperUpgradeContext();
+    const buildingEntity = context.singletonEntities.building;
+
+    for (const upgradeId of [
+      "upgrade/building/skyscraper:nightlife_floor",
+      "upgrade/building/skyscraper:specialist_training_floor",
+      "upgrade/building/skyscraper:executive_floor",
+      "upgrade/building/skyscraper:penthouse",
+    ] as const) {
+      applySimCommand(context, { type: "sim/purchase-building-upgrade", upgradeId });
+    }
+
+    expect(BuildingAuthority.activeBuildingTier[buildingEntity]).toBe(5);
+    expect(BuildingAuthority.appliedUpgradeIds[buildingEntity]).toEqual([
+      "upgrade/building/skyscraper:nightlife_floor",
+      "upgrade/building/skyscraper:specialist_training_floor",
+      "upgrade/building/skyscraper:executive_floor",
+      "upgrade/building/skyscraper:penthouse",
+    ]);
+
+    expect(getBuildingFloors("building/skyscraper", 5)).toHaveLength(9);
+
+    const placedTemplateIds = context.runtimeState.roomEntities
+      .map((entity) => registry.rooms[RoomInstance.templateIndex[entity]]!.id)
+      .sort();
+    expect(placedTemplateIds).toEqual([
+      "room/club:tier_1",
+      "room/compliance_office:tier_1",
+      "room/drill_floor:tier_1",
+      "room/executive_office:tier_1",
+      "room/green_room:tier_1",
+      "room/private_cellar:tier_1",
+      "room/recon_course:tier_1",
+      "room/sky_lounge:tier_1",
+      "room/trauma_bay:tier_1",
+      "room/war_room:tier_1",
+    ]);
+  });
+
+  it("debits the treasury by the upgrade cash cost", () => {
+    const context = createSkyscraperUpgradeContext({ treasury: 2000 });
+    const guildEntity = context.singletonEntities.guild;
+
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:nightlife_floor",
+    });
+
+    expect(BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building]).toContain(
+      "upgrade/building/skyscraper:nightlife_floor",
+    );
+    expect(GuildState.treasury[guildEntity]).toBe(500);
+  });
+
+  it("upgrade IDs round-trip through a JSON snapshot", () => {
+    const context = createSkyscraperUpgradeContext();
+    const buildingEntity = context.singletonEntities.building;
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:nightlife_floor",
+    });
+    applySimCommand(context, {
+      type: "sim/purchase-building-upgrade",
+      upgradeId: "upgrade/building/skyscraper:specialist_training_floor",
+    });
+
+    const snapshot = JSON.parse(
+      JSON.stringify({
+        appliedUpgradeIds: BuildingAuthority.appliedUpgradeIds[buildingEntity],
+        activeBuildingTier: BuildingAuthority.activeBuildingTier[buildingEntity],
+      }),
+    );
+
+    expect(snapshot.appliedUpgradeIds).toEqual([
+      "upgrade/building/skyscraper:nightlife_floor",
+      "upgrade/building/skyscraper:specialist_training_floor",
+    ]);
+    expect(snapshot.activeBuildingTier).toBe(3);
   });
 });

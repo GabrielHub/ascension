@@ -325,6 +325,154 @@ function PortersCampaignCard({
   );
 }
 
+type SkyscraperFloorUpgradeCopy = {
+  readonly id: string;
+  readonly shortName: string;
+  readonly whyNow: string;
+  readonly unlockPreview: string;
+};
+
+const SKYSCRAPER_FLOOR_UPGRADES: readonly SkyscraperFloorUpgradeCopy[] = [
+  {
+    id: "upgrade/building/skyscraper:nightlife_floor",
+    shortName: "Nightlife",
+    whyNow:
+      "Better recruits arrive before the institution learns to handle them. Nightlife opens the room prospects come to because the guild is a name people recognize.",
+    unlockPreview: "Unlocks: The Club, The Green Room",
+  },
+  {
+    id: "upgrade/building/skyscraper:specialist_training_floor",
+    shortName: "Training",
+    whyNow:
+      "Operators are starting to outgrow the general dojo. Specialist Training is where field leads, scouts, and medics push past the conditioning ceiling.",
+    unlockPreview: "Unlocks: The Drill Floor, The Recon Course, The Trauma Bay",
+  },
+  {
+    id: "upgrade/building/skyscraper:executive_floor",
+    shortName: "Executive",
+    whyNow:
+      "The guild is visible enough that institutional pressure has started to land. Executive opens the rooms where that pressure gets handled instead of ignored.",
+    unlockPreview: "Unlocks: The Executive Office, The Compliance Office, The War Room",
+  },
+  {
+    id: "upgrade/building/skyscraper:penthouse",
+    shortName: "Penthouse",
+    whyNow:
+      "A-rank prospects do not get pitched in a club. The Penthouse closes the recruitment ladder with the room that finishes the conversation.",
+    unlockPreview: "Unlocks: The Sky Lounge, The Private Cellar",
+  },
+];
+
+function SkyscraperFloorArcCard({ upgrades }: { upgrades: HqViewModel["upgrades"] }) {
+  type ArcEntry = {
+    readonly upgrade: HqViewModel["upgrades"][number];
+    readonly copy: SkyscraperFloorUpgradeCopy;
+  };
+  const orderedEntries: readonly ArcEntry[] = SKYSCRAPER_FLOOR_UPGRADES.flatMap((copy) => {
+    const upgrade = upgrades.find((u) => u.id === copy.id);
+    return upgrade ? [{ upgrade, copy }] : [];
+  });
+  const nextUpgradeIndex = orderedEntries.findIndex((entry) => !entry.upgrade.isApplied);
+  const nextEntry = nextUpgradeIndex === -1 ? null : orderedEntries[nextUpgradeIndex];
+  const nextUpgrade = nextEntry?.upgrade ?? null;
+
+  const whyNow = nextEntry?.copy.whyNow ?? "Every floor in the tower is online.";
+  const unlockPreview = nextEntry?.copy.unlockPreview ?? "Impact: every expansion floor is online.";
+
+  return (
+    <section
+      className="glass-card space-y-3 rounded-2xl p-4"
+      data-testid="management-skyscraper-floor-arc"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-medium text-silver-bright">Skyscraper Floor Arc</h4>
+          <p className="mt-1 text-sm leading-relaxed text-silver/55">
+            The tower opens with five floors and grows by acquiring four more. Each upgrade leases
+            and fits out the next floor, ready to use the moment the contractors leave.
+          </p>
+        </div>
+        <span className={`badge ${nextUpgrade ? "badge-gold" : "badge-slate"}`}>
+          {nextUpgrade ? `Step ${nextUpgradeIndex + 1} of ${orderedEntries.length}` : "Complete"}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-0 px-2">
+        {orderedEntries.map(({ upgrade, copy }, index) => {
+          const isComplete = upgrade.isApplied;
+          const isCurrent = index === nextUpgradeIndex;
+          return (
+            <div key={upgrade.id} className="flex flex-1 items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors duration-300 ${
+                    isComplete
+                      ? "bg-gold shadow-[0_0_6px_rgba(200,168,76,0.4)]"
+                      : isCurrent
+                        ? "border border-gold bg-[rgba(200,168,76,0.15)]"
+                        : "border border-[rgba(200,168,76,0.15)] bg-[rgba(6,6,8,0.5)]"
+                  }`}
+                />
+                <span
+                  className={`text-xs tracking-[0.06em] ${
+                    isComplete
+                      ? "text-gold/80"
+                      : isCurrent
+                        ? "text-silver-bright"
+                        : "text-silver/35"
+                  }`}
+                >
+                  {copy.shortName}
+                </span>
+              </div>
+              {index < orderedEntries.length - 1 && (
+                <div
+                  className={`mx-1 mt-[-1.125rem] h-px flex-1 ${
+                    isComplete ? "bg-gold/40" : "bg-[rgba(200,168,76,0.08)]"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
+        <p className="text-xs uppercase tracking-[0.14em] text-gold/55">
+          {nextUpgrade ? "Next floor to acquire" : "Tower status"}
+        </p>
+        <p className="mt-1 text-sm text-silver-bright">
+          {nextUpgrade ? nextUpgrade.name : "Every expansion floor is online."}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-silver/65">
+          {nextUpgrade
+            ? nextUpgrade.description
+            : "Nightlife, Specialist Training, Executive, and Penthouse are all leased and outfitted."}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Why now</p>
+        <p className="text-sm leading-relaxed text-silver/65">{whyNow}</p>
+        <p className="text-sm leading-relaxed text-gold/70">{unlockPreview}</p>
+      </div>
+
+      {nextUpgrade && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm leading-relaxed text-silver/50">
+            {nextUpgrade.isAffordable
+              ? "Affordable now. Purchase it from the Rooms panel on any selected room card."
+              : "Not affordable yet. The card updates as soon as the treasury and reputation clear the cost."}
+          </p>
+          <span className={`badge ${nextUpgrade.isAffordable ? "badge-gold" : "badge-slate"}`}>
+            {nextUpgrade.isAffordable ? "Affordable" : "Saving"}
+          </span>
+        </div>
+      )}
+    </section>
+  );
+}
+
 const RELOCATION_FLAVOR_BY_BUILDING: Record<
   string,
   {
@@ -586,6 +734,8 @@ export function ManagementPanel({
       {building.id === "building/porters" && (
         <PortersCampaignCard rooms={rooms} upgrades={upgrades} operators={operators} />
       )}
+
+      {building.id === "building/skyscraper" && <SkyscraperFloorArcCard upgrades={upgrades} />}
 
       <div className="grid gap-3 xl:grid-cols-2">
         {SHIPPED_POLICY_IDS.map((policyId) => {

@@ -279,12 +279,12 @@ export const roomTemplates = [
     availableInBuildings: ["building/skyscraper"],
   },
   {
-    id: "room/lounge:tier_1",
+    id: "room/crew_lounge:tier_1",
     kind: "room",
-    name: "The Lounge",
+    name: "The Crew Lounge",
     tags: ["room:social", "room:recovery"],
     description:
-      "A staff-only lounge on the recovery floor — upholstered couches, dim lighting, and a window wall looking over the skyline. No customers, no public floor. Just somewhere operators can sit and breathe between shifts.",
+      "A crew lounge on the recovery floor — upholstered couches, dim lighting, and a window wall looking over the skyline. No customers, no public floor. Just somewhere operators can sit and breathe between shifts.",
     tier: 1,
     baseCapacity: 3,
     availableInBuildings: ["building/skyscraper"],
@@ -331,6 +331,120 @@ export const roomTemplates = [
       "A rooftop terrace ringed by planters and low walls, with a view that stretches across the skyline. Quiet, open, and the only place in the tower where the city feels like an audience instead of a workload. Downtime lands differently up here.",
     tier: 1,
     baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  // ── Skyscraper Nightlife floor ───────────────────────────────────────
+  {
+    id: "room/club:tier_1",
+    kind: "room",
+    name: "The Club",
+    tags: ["room:social", "ops:recruitment"],
+    description:
+      "A leased nightlife space inside the tower — sprung floor, full-spec sound, a glass mezzanine over the dance floor, and a marquee outside that finally has the guild's name on it. Recruitment moves out of Porter's bar and into a room where the prospects came because they recognize the brand.",
+    tier: 1,
+    baseCapacity: 5,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/green_room:tier_1",
+    kind: "room",
+    name: "The Green Room",
+    tags: ["room:social", "room:recovery"],
+    description:
+      "Backstage decompression off the club — couches, a private bar, lockers, and a door the public never sees. The operators who work the floor for a shift come back here to come down before the city gets them again.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  // ── Skyscraper Specialist Training floor ─────────────────────────────
+  {
+    id: "room/drill_floor:tier_1",
+    kind: "room",
+    name: "The Drill Floor",
+    tags: ["room:training", "role:field_lead"],
+    description:
+      "An open-bay training floor configured for field-lead drills — squad movement lanes, comms benches, and a scenario board that gets rewritten between sessions. The dojo teaches conditioning; this room teaches command under load.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/recon_course:tier_1",
+    kind: "room",
+    name: "The Recon Course",
+    tags: ["room:training", "role:scout"],
+    description:
+      "A built-out scout course — sightline rigs, climb walls, low-light corridors, and a movement maze that gets rebuilt every few weeks. The kind of training a generalist gym cannot host, for the operators who already know how to read a room before walking into it.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/trauma_bay:tier_1",
+    kind: "room",
+    name: "The Trauma Bay",
+    tags: ["room:training", "staff:medical", "role:medic"],
+    description:
+      "A simulation suite with a real surgical light, training mannequins, and a wall of timed scenarios. Medics come here to run trauma calls under pressure instead of learning them in the field. The clinic patches operators; this room sharpens the people who do the patching.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  // ── Skyscraper Executive floor ───────────────────────────────────────
+  {
+    id: "room/executive_office:tier_1",
+    kind: "room",
+    name: "The Executive Office",
+    tags: ["room:operations", "staff:admin", "ops:intel"],
+    description:
+      "{playerName}'s office on the executive floor — a corner suite with a wide desk, a meeting table for four, and a glass door with the {guildName} mark on it. Faction reps come here. So do regulators. The first room in the tower where the player's name is on the door.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/compliance_office:tier_1",
+    kind: "room",
+    name: "The Compliance Office",
+    tags: ["room:operations", "staff:admin"],
+    description:
+      "A side office on the executive floor stacked with filing cabinets, a secure terminal, and a calendar full of audit windows. Where the guild keeps its paperwork in a state that can survive a regulator showing up unannounced.",
+    tier: 1,
+    baseCapacity: 2,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/war_room:tier_1",
+    kind: "room",
+    name: "The War Room",
+    tags: ["room:operations", "ops:intel"],
+    description:
+      "A sealed planning suite with a wall-sized city display, a long table, and hardline comms gear. The situation room handles day-to-day raids; this room is where the high-end contracts get planned with the door closed.",
+    tier: 1,
+    baseCapacity: 4,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  // ── Skyscraper Penthouse floor ───────────────────────────────────────
+  {
+    id: "room/sky_lounge:tier_1",
+    kind: "room",
+    name: "The Sky Lounge",
+    tags: ["room:social", "ops:recruitment"],
+    description:
+      "An exclusive top-floor lounge — low lighting, deep chairs, a long bar, and a window wall that opens onto the skyline. The recruitment room for prospects who would never set foot in a club. Quiet conversations, slow drinks, and the kind of pitch that ends with a signature.",
+    tier: 1,
+    baseCapacity: 3,
+    availableInBuildings: ["building/skyscraper"],
+  },
+  {
+    id: "room/private_cellar:tier_1",
+    kind: "room",
+    name: "The Private Cellar",
+    tags: ["room:social", "ops:recruitment"],
+    description:
+      "A small room off the Sky Lounge — a single round table, racked bottles along one wall, and a door that closes properly. Where a Sky Lounge conversation moves once both sides have decided they want to finish it in private.",
+    tier: 1,
+    baseCapacity: 2,
     availableInBuildings: ["building/skyscraper"],
   },
 ] satisfies readonly RoomTemplate[];

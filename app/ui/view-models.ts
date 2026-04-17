@@ -103,7 +103,9 @@ export interface BuildingViewModel {
   description: string;
   tier: number;
   activeFloorIndex: number;
+  activeFloorDisplayNumber?: number;
   floorCount: number;
+  floorOrder?: readonly number[];
   usedRoomSlots: number;
   totalRoomSlots: number;
   operatorSlots: number;
@@ -132,6 +134,7 @@ export interface RoomViewModel {
   description: string;
   tier: number;
   floorIndex: number;
+  floorDisplayNumber?: number;
   slotId: string;
   roomStateId: string;
   capacity: number;
@@ -155,6 +158,7 @@ export interface ExpansionSlotViewModel {
   label: string;
   kind: "available" | "locked";
   floorIndex: number;
+  floorDisplayNumber?: number;
   slotId: string;
   footprint: RoomFootprintViewModel;
 }
@@ -866,6 +870,18 @@ function getOrderedBuildingSlots(
   );
 }
 
+function getFloorDisplayNumbers(
+  buildingId: string,
+  buildingTier: number,
+): ReadonlyMap<number, number> {
+  return new Map(
+    getBuildingFloors(buildingId, buildingTier).map((floor, index) => [
+      floor.floorIndex,
+      index + 1,
+    ]),
+  );
+}
+
 function buildExpansionSlots(
   buildingId: string,
   buildingTier: number,
@@ -874,6 +890,7 @@ function buildExpansionSlots(
   occupiedSlotKeys: ReadonlySet<string>,
 ): ExpansionSlotViewModel[] {
   const orderedSlots = getOrderedBuildingSlots(buildingId, buildingTier);
+  const floorDisplayNumbers = getFloorDisplayNumbers(buildingId, buildingTier);
   const unlockedSlotKeys = new Set(
     orderedSlots
       .slice(0, Math.max(roomSlotCount, occupiedSlotKeys.size))
@@ -898,6 +915,7 @@ function buildExpansionSlots(
         label: `${kind === "available" ? "Open" : "Locked"} ${formatSlotLabel(slot.slotId)}`,
         kind,
         floorIndex: slot.floorIndex,
+        floorDisplayNumber: floorDisplayNumbers.get(slot.floorIndex) ?? slot.floorIndex + 1,
         slotId: slot.slotId,
         footprint: slot.footprint,
       };
@@ -1189,10 +1207,11 @@ export function buildHqViewFromPhase1(
   const buildingTemplate =
     registry.buildingById.get(view.building.activeBuildingId) ?? registry.buildings[0];
   const activeFloorIndex = view.building.activeFloorIndex;
-  const floorCount = Math.max(
-    view.building.floorCount,
-    getBuildingFloors(buildingTemplate.id, view.building.tier).length || 1,
+  const floorOrder = getBuildingFloors(buildingTemplate.id, view.building.tier).map(
+    (floor) => floor.floorIndex,
   );
+  const floorDisplayNumbers = getFloorDisplayNumbers(buildingTemplate.id, view.building.tier);
+  const floorCount = Math.max(view.building.floorCount, floorOrder.length || 1);
 
   const rooms: RoomViewModel[] = view.rooms.map((room) => {
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
@@ -1205,6 +1224,7 @@ export function buildHqViewFromPhase1(
       description: formatIdentityText(template.description ?? "", identity),
       tier: room.tier,
       floorIndex: room.floorIndex,
+      floorDisplayNumber: floorDisplayNumbers.get(room.floorIndex) ?? room.floorIndex + 1,
       slotId: room.slotId,
       roomStateId: room.roomStateId,
       capacity: room.capacity,
@@ -1409,7 +1429,9 @@ export function buildHqViewFromPhase1(
       description: formatIdentityText(buildingTemplate.description ?? "", identity),
       tier: view.building.tier,
       activeFloorIndex,
+      activeFloorDisplayNumber: floorDisplayNumbers.get(activeFloorIndex) ?? activeFloorIndex + 1,
       floorCount,
+      floorOrder,
       usedRoomSlots: view.building.roomsUsed,
       totalRoomSlots: view.building.roomSlotCount,
       operatorSlots: view.building.operatorSlotCount,
@@ -1681,10 +1703,15 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
   const buildingTemplate =
     registry.buildingById.get(snapshot.building.activeBuildingId) ?? registry.buildings[0];
   const activeFloorIndex = snapshot.building.activeFloorIndex ?? 0;
-  const floorCount = Math.max(
-    getBuildingFloors(buildingTemplate.id, snapshot.building.activeBuildingTier).length || 1,
-    1,
+  const floorOrder = getBuildingFloors(
+    buildingTemplate.id,
+    snapshot.building.activeBuildingTier,
+  ).map((floor) => floor.floorIndex);
+  const floorDisplayNumbers = getFloorDisplayNumbers(
+    buildingTemplate.id,
+    snapshot.building.activeBuildingTier,
   );
+  const floorCount = Math.max(floorOrder.length || 1, 1);
 
   const rooms: RoomViewModel[] = snapshot.rooms.map((room) => {
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
@@ -1697,6 +1724,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       description: formatIdentityText(template.description ?? "", identity),
       tier: room.tier,
       floorIndex: room.floorIndex,
+      floorDisplayNumber: floorDisplayNumbers.get(room.floorIndex) ?? room.floorIndex + 1,
       slotId: room.slotId,
       roomStateId: room.roomStateId,
       capacity: room.capacity,
@@ -1915,7 +1943,9 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       description: formatIdentityText(buildingTemplate.description ?? "", identity),
       tier: snapshot.building.activeBuildingTier,
       activeFloorIndex,
+      activeFloorDisplayNumber: floorDisplayNumbers.get(activeFloorIndex) ?? activeFloorIndex + 1,
       floorCount,
+      floorOrder,
       usedRoomSlots: snapshot.rooms.filter((room) => room.floorIndex === activeFloorIndex).length,
       totalRoomSlots: snapshot.building.roomSlotCount,
       operatorSlots: snapshot.building.operatorSlotCount,

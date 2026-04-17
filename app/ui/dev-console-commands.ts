@@ -1,3 +1,4 @@
+import { getBuildingFloors } from "content/building-layouts";
 import { siteConceptById } from "content/templates/site-concepts";
 import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { isPolicyId, isValidPolicyValue, type PolicyId, type PolicyValue } from "lib/policies";
@@ -568,9 +569,10 @@ const COMMANDS: DevConsoleCommand[] = [
       if (args.length < 1) return err("Usage: /floor <number>");
       const num = parseInt(args[0], 10);
       if (!Number.isFinite(num) || num < 1) return err(`Invalid floor: ${args[0]}`);
-      const floorIndex = num - 1;
-      const { floorCount } = ctx.session.phase1View.building;
-      if (floorIndex >= floorCount)
+      const { activeBuildingId, tier, floorCount } = ctx.session.phase1View.building;
+      const floorOrder = getBuildingFloors(activeBuildingId, tier).map((floor) => floor.floorIndex);
+      const floorIndex = floorOrder[num - 1];
+      if (floorIndex === undefined)
         return err(`Floor ${num} does not exist (building has ${floorCount} floors)`);
       void ctx.session.commands.setActiveFloor({ floorIndex });
       return ok(`Active floor set to ${num}`);
@@ -1493,9 +1495,12 @@ const COMMANDS: DevConsoleCommand[] = [
 
       switch (category) {
         case "rooms": {
+          const floorOrder = getBuildingFloors(pv.building.activeBuildingId, pv.building.tier).map(
+            (floor) => floor.floorIndex,
+          );
           const lines = pv.rooms.map(
             (r) =>
-              `  ${r.id} [${r.templateId}] F${r.floorIndex + 1} ${r.isOperational ? "ON" : "OFF"} ${r.occupancy}/${r.capacity}`,
+              `  ${r.id} [${r.templateId}] F${Math.max(1, floorOrder.indexOf(r.floorIndex) + 1)} ${r.isOperational ? "ON" : "OFF"} ${r.occupancy}/${r.capacity}`,
           );
           return info(`Rooms (${pv.rooms.length})`, lines.join("\n") || "  (none)");
         }

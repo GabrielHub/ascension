@@ -330,7 +330,7 @@ const SKYSCRAPER_RECOVERY: BuildingFloorLayout = {
       row: 2,
       cols: 2,
       rows: 5,
-      startingTemplateId: "room/lounge:tier_1",
+      startingTemplateId: "room/crew_lounge:tier_1",
     },
   ],
 };
@@ -387,6 +387,133 @@ const SKYSCRAPER_ROOFTOP: BuildingFloorLayout = {
   ],
 };
 
+// ── Skyscraper expansion floors ─────────────────────────────────────────
+//
+// Acquired via the four building upgrades. Each floor slots into the
+// `tower-core` stack between Logistics (stackLayer 3) and the Rooftop (its
+// own stack group). The narrative order from low to high is:
+//   Nightlife → Specialist Training → Executive → Penthouse.
+
+const SKYSCRAPER_NIGHTLIFE: BuildingFloorLayout = {
+  floorIndex: 5,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 4,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/club",
+      col: 1,
+      row: 2,
+      cols: 7,
+      rows: 5,
+      startingTemplateId: "room/club:tier_1",
+    },
+    {
+      slotId: "slot/green-room",
+      col: 8,
+      row: 2,
+      cols: 3,
+      rows: 5,
+      startingTemplateId: "room/green_room:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_SPECIALIST_TRAINING: BuildingFloorLayout = {
+  floorIndex: 6,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 5,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/drill-floor",
+      col: 1,
+      row: 2,
+      cols: 4,
+      rows: 5,
+      startingTemplateId: "room/drill_floor:tier_1",
+    },
+    {
+      slotId: "slot/recon-course",
+      col: 5,
+      row: 2,
+      cols: 3,
+      rows: 5,
+      startingTemplateId: "room/recon_course:tier_1",
+    },
+    {
+      slotId: "slot/trauma-bay",
+      col: 8,
+      row: 2,
+      cols: 3,
+      rows: 5,
+      startingTemplateId: "room/trauma_bay:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_EXECUTIVE: BuildingFloorLayout = {
+  floorIndex: 7,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 6,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/executive-office",
+      col: 1,
+      row: 2,
+      cols: 4,
+      rows: 5,
+      startingTemplateId: "room/executive_office:tier_1",
+    },
+    {
+      slotId: "slot/compliance-office",
+      col: 5,
+      row: 2,
+      cols: 2,
+      rows: 5,
+      startingTemplateId: "room/compliance_office:tier_1",
+    },
+    {
+      slotId: "slot/war-room",
+      col: 7,
+      row: 2,
+      cols: 4,
+      rows: 5,
+      startingTemplateId: "room/war_room:tier_1",
+    },
+  ],
+};
+
+const SKYSCRAPER_PENTHOUSE: BuildingFloorLayout = {
+  floorIndex: 8,
+  elevationBandId: "mid-tower",
+  stackGroupId: "tower-core",
+  stackLayer: 7,
+  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  slots: [
+    {
+      slotId: "slot/sky-lounge",
+      col: 1,
+      row: 2,
+      cols: 7,
+      rows: 5,
+      startingTemplateId: "room/sky_lounge:tier_1",
+    },
+    {
+      slotId: "slot/private-cellar",
+      col: 8,
+      row: 2,
+      cols: 3,
+      rows: 5,
+      startingTemplateId: "room/private_cellar:tier_1",
+    },
+  ],
+};
+
 export const SKYSCRAPER_LAYOUT: BuildingLayoutDefinition = {
   buildingId: "building/skyscraper",
   stages: [
@@ -398,6 +525,60 @@ export const SKYSCRAPER_LAYOUT: BuildingLayoutDefinition = {
         SKYSCRAPER_OPERATIONS,
         SKYSCRAPER_RECOVERY,
         SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_ROOFTOP,
+      ],
+    },
+    {
+      stageId: "skyscraper/nightlife",
+      minimumTier: 2,
+      floors: [
+        SKYSCRAPER_LOBBY,
+        SKYSCRAPER_OPERATIONS,
+        SKYSCRAPER_RECOVERY,
+        SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_NIGHTLIFE,
+        SKYSCRAPER_ROOFTOP,
+      ],
+    },
+    {
+      stageId: "skyscraper/specialist-training",
+      minimumTier: 3,
+      floors: [
+        SKYSCRAPER_LOBBY,
+        SKYSCRAPER_OPERATIONS,
+        SKYSCRAPER_RECOVERY,
+        SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_NIGHTLIFE,
+        SKYSCRAPER_SPECIALIST_TRAINING,
+        SKYSCRAPER_ROOFTOP,
+      ],
+    },
+    {
+      stageId: "skyscraper/executive",
+      minimumTier: 4,
+      floors: [
+        SKYSCRAPER_LOBBY,
+        SKYSCRAPER_OPERATIONS,
+        SKYSCRAPER_RECOVERY,
+        SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_NIGHTLIFE,
+        SKYSCRAPER_SPECIALIST_TRAINING,
+        SKYSCRAPER_EXECUTIVE,
+        SKYSCRAPER_ROOFTOP,
+      ],
+    },
+    {
+      stageId: "skyscraper/penthouse",
+      minimumTier: 5,
+      floors: [
+        SKYSCRAPER_LOBBY,
+        SKYSCRAPER_OPERATIONS,
+        SKYSCRAPER_RECOVERY,
+        SKYSCRAPER_LOGISTICS,
+        SKYSCRAPER_NIGHTLIFE,
+        SKYSCRAPER_SPECIALIST_TRAINING,
+        SKYSCRAPER_EXECUTIVE,
+        SKYSCRAPER_PENTHOUSE,
         SKYSCRAPER_ROOFTOP,
       ],
     },

@@ -275,7 +275,7 @@ describe("legacy save hydration", () => {
           },
           {
             id: "room-instance/lounge",
-            templateId: "room/lounge:tier_1",
+            templateId: "room/crew_lounge:tier_1",
             tier: 1,
             capacity: 4,
             occupancy: 0,

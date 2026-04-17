@@ -138,7 +138,9 @@ function RoomCard({
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-        <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
+        <span className="badge badge-slate">
+          Floor {room.floorDisplayNumber ?? room.floorIndex + 1}
+        </span>
         <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
         <Tooltip content={`Reserved vs active footprint: ${formatFootprintLabel(room)}`}>
           <span className="badge badge-slate">{formatFootprintLabel(room)}</span>
@@ -198,7 +200,9 @@ function ExpansionSlotCard({
           <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-          <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+          <span className="badge badge-slate">
+            Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
+          </span>
           <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
           <Tooltip content="Reserved interior footprint">
             <span className="badge badge-slate">
@@ -219,7 +223,9 @@ function ExpansionSlotCard({
               Place a room
             </span>
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-              <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+              <span className="badge badge-slate">
+                Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
+              </span>
               <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
             </div>
           </div>
@@ -265,7 +271,9 @@ function ExpansionSlotCard({
         <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-        <span className="badge badge-slate">Floor {slot.floorIndex + 1}</span>
+        <span className="badge badge-slate">
+          Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
+        </span>
         <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
         <Tooltip content="Reserved interior footprint">
           <span className="badge badge-slate">

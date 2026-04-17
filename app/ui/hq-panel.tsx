@@ -16,7 +16,17 @@ function buildCultureMap(
 
 const FLOOR_BADGES: Record<string, Record<number, string>> = {
   "building/porters": { 0: "Public", 1: "Private", 2: "Waterfront" },
-  "building/skyscraper": { 0: "Public", 1: "Ops", 2: "Recovery", 3: "Logistics", 4: "Rooftop" },
+  "building/skyscraper": {
+    0: "Public",
+    1: "Ops",
+    2: "Recovery",
+    3: "Logistics",
+    5: "Nightlife",
+    6: "Training",
+    7: "Executive",
+    8: "Penthouse",
+    4: "Rooftop",
+  },
 };
 
 const FLOOR_DESCRIPTIONS: Record<string, Record<number, string>> = {
@@ -28,8 +38,12 @@ const FLOOR_DESCRIPTIONS: Record<string, Record<number, string>> = {
   "building/skyscraper": {
     0: "Lobby — polished stone, tall glass, and the reception desk that says the guild finally has an address worth printing.",
     1: "Operations — open bullpen, glass-walled situation room, and a corkboard that takes up half a corridor. Contracts live here now.",
-    2: "Recovery and training — a proper clinic, a full dojo, and a staff lounge with a skyline view. The floor that stops turning operators into attrition.",
+    2: "Recovery and training — a proper clinic, a full dojo, and a crew lounge with a skyline view. The floor that stops turning operators into attrition.",
     3: "Logistics — supply hall, secure cage, and the fabrication bay that took over where the dockside workshop left off.",
+    5: "Nightlife — club floor, backstage green room, and enough marquee glow to make prospects feel like they arrived somewhere the city already knows.",
+    6: "Specialist training — role-specific drill space for field leads, scouts, and medics whose ceilings are now too high for the general dojo.",
+    7: "Executive — office, compliance desk, and war room. The floor where the guild stops improvising and starts reading like an institution.",
+    8: "Penthouse — private lounge, cellar, skyline glass, and the quiet top-floor rooms used to close the kind of recruitment conversation that does not happen in public.",
     4: "Rooftop — helipad, sky garden, and quiet sky. Fast departures one direction, decompression the other.",
   },
 };
@@ -88,7 +102,8 @@ export function HqPanel({ hq, callbacks, focus, onFocusChange, roomCultures = []
               {hq.building.name}
             </h2>
             <span className="text-xs tabular-nums text-silver/60">
-              Floor {hq.building.activeFloorIndex + 1}/{hq.building.floorCount}
+              Floor {hq.building.activeFloorDisplayNumber ?? hq.building.activeFloorIndex + 1}/
+              {hq.building.floorCount}
             </span>
             {floorBadge && <span className="badge badge-slate">{floorBadge}</span>}
           </div>

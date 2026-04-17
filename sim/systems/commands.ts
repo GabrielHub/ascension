@@ -45,6 +45,7 @@ import {
   isLootAutomationEnabled,
   setLootAutomationEnabled,
 } from "./loot-automation";
+import { refreshBuildingAuthoritySystem } from "./building-progression";
 import { recordGuidanceInteraction } from "./guidance";
 import {
   AssignmentState,
@@ -1335,6 +1336,16 @@ function getBuildingUpgradeEventMessage(upgradeId: string): string | null {
       return "The Remodel is done. New fixtures, better lighting, and the kind of space people want to stay in.";
     case "upgrade/building/porters:waterfront":
       return "The Waterfront is open. Harbor-side staging and downtime with a view.";
+    case "upgrade/building/porters:machine_shop":
+      return "Machine Shop online. The guild can fabricate durable gear from site materials now.";
+    case "upgrade/building/skyscraper:nightlife_floor":
+      return "Nightlife Floor open. The marquee out front has the guild's name on it now.";
+    case "upgrade/building/skyscraper:specialist_training_floor":
+      return "Specialist Training Floor online. Field leads, scouts, and medics finally have rooms built for them.";
+    case "upgrade/building/skyscraper:executive_floor":
+      return "Executive Floor open. The guild has its own corner office, compliance suite, and war room.";
+    case "upgrade/building/skyscraper:penthouse":
+      return "Penthouse open. The Sky Lounge takes recruitment to the top of the tower.";
     default:
       return null;
   }
@@ -1501,7 +1512,8 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
-      if (upgrade.targetId !== getActiveBuildingTemplate(context).id) {
+      const activeBuildingTemplate = getActiveBuildingTemplate(context);
+      if (upgrade.targetId !== activeBuildingTemplate.id) {
         return;
       }
 
@@ -1518,9 +1530,46 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
         return;
       }
 
+      const previousFloorIndices = new Set(
+        getBuildingFloors(
+          activeBuildingTemplate.id,
+          BuildingAuthority.activeBuildingTier[buildingEntity],
+        ).map((floor) => floor.floorIndex),
+      );
+
       applyCosts(context, costs);
       BuildingAuthority.appliedUpgradeIds[buildingEntity] = [...appliedUpgradeIds, upgrade.id];
       recordGuidanceInteraction(context.runtimeState.guidanceState, "upgrade_purchase", upgrade.id);
+
+      // Recompute derived authority state immediately so the new tier,
+      // unlocked templates, and slot count are visible to the placement
+      // logic that seeds starter rooms below.
+      refreshBuildingAuthoritySystem(context);
+
+      const newFloors = getBuildingFloors(
+        activeBuildingTemplate.id,
+        BuildingAuthority.activeBuildingTier[buildingEntity],
+      );
+      for (const floor of newFloors) {
+        if (previousFloorIndices.has(floor.floorIndex)) continue;
+        for (const slot of floor.slots) {
+          if (!slot.startingTemplateId) continue;
+          const template = context.registry.roomById.get(slot.startingTemplateId);
+          if (!template) continue;
+          createRoomInstanceEntity(
+            context,
+            template.id,
+            {
+              floorIndex: floor.floorIndex,
+              slotId: slot.slotId,
+              reservedFootprint: { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows },
+            },
+            undefined,
+            { isRequestedActive: true },
+          );
+        }
+      }
+
       const eventMessage = getBuildingUpgradeEventMessage(upgrade.id);
       if (eventMessage) {
         pushRuntimeEvent(context, {

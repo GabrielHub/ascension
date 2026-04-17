@@ -280,9 +280,9 @@ function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly s
     ];
   }
 
-  if (room.templateId === "room/lounge:tier_1") {
+  if (room.templateId === "room/crew_lounge:tier_1") {
     return [
-      "A dedicated staff lounge separates decompression from the public floor. Morale and loyalty stabilize when operators have somewhere to sit that is not also a work surface.",
+      "A dedicated crew lounge separates decompression from the public floor. Morale and loyalty stabilize when operators have somewhere to sit that is not also a work surface.",
       "Gives the recovery floor a social anchor that keeps the tower from feeling clinical.",
     ];
   }
@@ -655,7 +655,9 @@ export function RoomDetailPanel({
           <p className="mt-2 text-sm leading-relaxed text-silver/65">{room.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <span className="badge badge-slate">{getRoomStateLabel(room.roomStateId)}</span>
-            <span className="badge badge-slate">Floor {room.floorIndex + 1}</span>
+            <span className="badge badge-slate">
+              Floor {room.floorDisplayNumber ?? room.floorIndex + 1}
+            </span>
             <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
             <Tooltip
               content={`Reserved ${formatFootprintLabel(room.reservedFootprint)}; active ${formatFootprintLabel(room.activeFootprint)}`}

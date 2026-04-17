@@ -345,6 +345,10 @@ const LEGACY_ROOM_TEMPLATE_ID_MAP: Readonly<Record<string, string>> = {
   "room/sparring_room:tier_1": "room/supply_closet:tier_1",
 };
 
+const LEGACY_SKYSCRAPER_ROOM_TEMPLATE_ID_MAP: Readonly<Record<string, string>> = {
+  "room/lounge:tier_1": "room/crew_lounge:tier_1",
+};
+
 function mapLegacyContentId(id: string, legacyMap: Readonly<Record<string, string>>): string {
   return legacyMap[id] ?? id;
 }
@@ -522,6 +526,18 @@ function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
           roomRecord.templateId = mappedRoomId;
           changed = true;
           canonicalizeBodegaSlice = true;
+        }
+      } else if (
+        sanitizedBuildingId === "building/skyscraper" &&
+        typeof roomRecord.templateId === "string"
+      ) {
+        const mappedRoomId = mapLegacyContentId(
+          roomRecord.templateId,
+          LEGACY_SKYSCRAPER_ROOM_TEMPLATE_ID_MAP,
+        );
+        if (mappedRoomId !== roomRecord.templateId) {
+          roomRecord.templateId = mappedRoomId;
+          changed = true;
         }
       }
 

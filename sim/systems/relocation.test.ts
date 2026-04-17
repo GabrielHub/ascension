@@ -1140,10 +1140,10 @@ describe("skyscraper relocation handoff", () => {
     expect(placedTemplateIds).toEqual([
       "room/bullpen:tier_1",
       "room/clinic:tier_1",
+      "room/crew_lounge:tier_1",
       "room/dojo:tier_1",
       "room/fabrication_bay:tier_1",
       "room/lobby:tier_1",
-      "room/lounge:tier_1",
       "room/reception:tier_1",
       "room/rooftop_helipad:tier_1",
       "room/situation_room:tier_1",

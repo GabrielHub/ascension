@@ -50,7 +50,12 @@ export const buildingTemplates = [
     baseTier: 1,
     baseRoomSlots: 11,
     baseOperatorSlots: 18,
-    upgradeIds: [],
+    upgradeIds: [
+      "upgrade/building/skyscraper:nightlife_floor",
+      "upgrade/building/skyscraper:specialist_training_floor",
+      "upgrade/building/skyscraper:executive_floor",
+      "upgrade/building/skyscraper:penthouse",
+    ],
     contractRankCeiling: "c",
     baseIncome: 60,
     recruitmentQualityBonus: 2,
