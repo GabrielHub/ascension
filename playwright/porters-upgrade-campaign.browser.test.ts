@@ -203,6 +203,34 @@ async function placeNextRoom(page: Page, roomName: string): Promise<BrowserTestS
   );
 }
 
+async function placeNextRoomOnFloors(
+  page: Page,
+  roomName: string,
+  floors: number[],
+): Promise<BrowserTestSnapshot> {
+  const buildCardText = roomName.startsWith("The ") ? roomName.slice(4) : roomName;
+
+  await openHqCategory(page, "rooms");
+  for (const floorNumber of floors) {
+    await setFloor(page, floorNumber);
+    const buildCard = page
+      .locator("button.glass-card-inset")
+      .filter({ hasText: buildCardText })
+      .first();
+    if ((await buildCard.count()) === 0) {
+      continue;
+    }
+
+    await buildCard.click();
+    await page.getByRole("button", { exact: true, name: roomName }).click();
+    return waitForSnapshot(page, `${roomName} placed`, (snapshot) =>
+      snapshot.rooms.some((room) => room.name === roomName),
+    );
+  }
+
+  throw new Error(`Unable to find a placement slot for ${roomName}.`);
+}
+
 async function activateRoom(
   page: Page,
   floorNumber: number,
@@ -262,6 +290,104 @@ async function advanceOneHour(page: Page): Promise<BrowserTestSnapshot> {
   );
 }
 
+async function loadSeededPortersSave(page: Page): Promise<BrowserTestSnapshot> {
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.evaluate(async () => {
+    const driver = (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__;
+    await driver?.resetSaveSlots();
+    await driver?.seedPortersUpgradeCampaignSave("slot/1");
+  });
+
+  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  await waitForDriver(page);
+  await page.locator('[data-testid="slot-load"][data-slot-id="slot/1"]').click();
+  await page.getByTestId("game-shell").waitFor({ state: "visible" });
+
+  return waitForSnapshot(
+    page,
+    "Porters campaign seed",
+    (next) =>
+      next.building.activeBuildingId === "building/porters" &&
+      next.contracts.postedContractIds.length > 0,
+  );
+}
+
+async function openDevConsole(page: Page): Promise<void> {
+  await page.keyboard.press("`");
+  await page.getByTestId("dev-console").waitFor({ state: "visible" });
+}
+
+async function runDevConsoleCommand(page: Page, command: string): Promise<void> {
+  await openDevConsole(page);
+  const input = page.getByTestId("dev-console-input");
+  await input.fill(command);
+  await input.press("Enter");
+  await page.waitForFunction(
+    (expected) =>
+      document
+        .querySelector('[data-testid="dev-console-transcript"]')
+        ?.textContent?.includes(expected) ?? false,
+    command,
+  );
+
+  const consolePanel = page.getByTestId("dev-console");
+  if (await consolePanel.isVisible().catch(() => false)) {
+    await page.keyboard.press("Escape");
+    await consolePanel.waitFor({ state: "hidden" });
+  }
+}
+
+async function runDevConsoleCommandAndReadOutput(page: Page, command: string): Promise<string> {
+  await openDevConsole(page);
+  const input = page.getByTestId("dev-console-input");
+  await input.fill(command);
+  await input.press("Enter");
+  await page.waitForFunction(
+    (expected) =>
+      document
+        .querySelector('[data-testid="dev-console-transcript"]')
+        ?.textContent?.includes(expected) ?? false,
+    command,
+  );
+  const transcriptText = await page.evaluate(
+    () => document.querySelector('[data-testid="dev-console-transcript"]')?.textContent ?? "",
+  );
+
+  const consolePanel = page.getByTestId("dev-console");
+  if (await consolePanel.isVisible().catch(() => false)) {
+    await page.keyboard.press("Escape");
+    await consolePanel.waitFor({ state: "hidden" });
+  }
+
+  return transcriptText;
+}
+
+function getInventoryQuantity(snapshot: BrowserTestSnapshot, itemId: string): number {
+  return snapshot.inventory.find((stack) => stack.itemId === itemId)?.quantity ?? 0;
+}
+
+async function getLogisticsStaffIds(page: Page): Promise<string[]> {
+  const transcript = await runDevConsoleCommandAndReadOutput(page, "inspect staff");
+  return [...transcript.matchAll(/(staff\/[^\s]+).*?\[staff:logistics\]/g)].map(
+    (match) => match[1],
+  );
+}
+
+async function resolveInterruptionWithFirstChoice(page: Page): Promise<BrowserTestSnapshot> {
+  const before = await getSnapshot(page);
+  if (!before.interruption || before.interruption.choiceLabels.length === 0) {
+    throw new Error("Expected an active interruption with at least one choice.");
+  }
+
+  await page.locator('[role="dialog"] button').first().click();
+  return waitForSnapshot(
+    page,
+    "interruption resolved",
+    (snapshot) => snapshot.interruption?.instanceId !== before.interruption?.instanceId,
+  );
+}
+
 let browser: Browser;
 let context: BrowserContext;
 let page: Page;
@@ -316,26 +442,7 @@ const describeBrowser = RUN_BROWSER_TEST ? describe.sequential : describe.skip;
 
 describeBrowser("Porters upgrade campaign browser path", () => {
   it("verifies the post-relocation Porters upgrade arc and room usage in the real browser runtime", async () => {
-    await page.goto(BASE_URL, { waitUntil: "networkidle" });
-    await waitForDriver(page);
-    await page.evaluate(async () => {
-      const driver = (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__;
-      await driver?.resetSaveSlots();
-      await driver?.seedPortersUpgradeCampaignSave("slot/1");
-    });
-
-    await page.goto(BASE_URL, { waitUntil: "networkidle" });
-    await waitForDriver(page);
-    await page.locator('[data-testid="slot-load"][data-slot-id="slot/1"]').click();
-    await page.getByTestId("game-shell").waitFor({ state: "visible" });
-
-    let snapshot = await waitForSnapshot(
-      page,
-      "Porters campaign seed",
-      (next) =>
-        next.building.activeBuildingId === "building/porters" &&
-        next.contracts.postedContractIds.length > 0,
-    );
+    let snapshot = await loadSeededPortersSave(page);
     expect(snapshot.upgrades.appliedIds).toEqual([]);
     expect(snapshot.contracts.contractBriefing).toBeNull();
 
@@ -373,7 +480,7 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     );
     snapshot = await placeNextRoom(page, "The Break Room");
     expect(snapshot.rooms.some((room) => room.templateId === "room/break_room:tier_1")).toBe(true);
-    await activateRoom(page, 2, "The Briefing Room");
+    snapshot = await activateRoom(page, 2, "The Briefing Room");
     await captureScreenshot(page, "porters-campaign-upstairs");
 
     await purchaseBuildingUpgrade(
@@ -388,15 +495,63 @@ describeBrowser("Porters upgrade campaign browser path", () => {
       "The Waterfront",
       "upgrade/building/porters:waterfront",
     );
+    snapshot = await purchaseBuildingUpgrade(
+      page,
+      "The Office",
+      "Machine Shop",
+      "upgrade/building/porters:machine_shop",
+    );
+    expect(snapshot.upgrades.appliedIds).toContain("upgrade/building/porters:machine_shop");
 
     await setFloor(page, 3);
     snapshot = await placeNextRoom(page, "The Dock");
     expect(snapshot.rooms.some((room) => room.templateId === "room/dock:tier_1")).toBe(true);
     snapshot = await placeNextRoom(page, "The Deck");
     expect(snapshot.rooms.some((room) => room.templateId === "room/deck:tier_1")).toBe(true);
+    snapshot = await placeNextRoomOnFloors(page, "The Workshop", [3, 2, 1]);
+    expect(snapshot.rooms.some((room) => room.templateId === "room/workshop:tier_1")).toBe(true);
     await activateRoom(page, 3, "The Dock");
     await activateRoom(page, 3, "The Deck");
+    const workshopFloorNumber =
+      (snapshot.rooms.find((room) => room.templateId === "room/workshop:tier_1")?.floorIndex ?? 0) +
+      1;
+    snapshot = await activateRoom(page, workshopFloorNumber, "The Workshop");
     await captureScreenshot(page, "porters-campaign-waterfront");
+
+    await openHqCategory(page, "rooms");
+    await setFloor(page, workshopFloorNumber);
+    await selectRoom(page, "The Workshop");
+    const breachHammerCard = page
+      .locator(".glass-card-inset")
+      .filter({ hasText: "Breach Hammer Assembly" })
+      .first();
+    await breachHammerCard.getByText("Blocked by:", { exact: false }).waitFor({ state: "visible" });
+    expect(await breachHammerCard.textContent()).toContain("assigned logistics staff");
+
+    const workshopRoomId = snapshot.rooms.find(
+      (room) => room.templateId === "room/workshop:tier_1",
+    )?.id;
+    expect(workshopRoomId).toBeTruthy();
+    const logisticsStaffIds = await getLogisticsStaffIds(page);
+    expect(logisticsStaffIds.length).toBeGreaterThan(0);
+    await runDevConsoleCommand(page, `staff assign ${logisticsStaffIds[0]} ${workshopRoomId}`);
+    snapshot = await waitForSnapshot(page, "workshop staffed", (next) =>
+      next.rooms.some((room) => room.id === workshopRoomId && room.isOperational),
+    );
+
+    const breachHammerBefore = getInventoryQuantity(snapshot, "weapon/breach-hammer");
+    const fangBefore = getInventoryQuantity(snapshot, "loot/monster-part/fang");
+    await openHqCategory(page, "rooms");
+    await setFloor(page, workshopFloorNumber);
+    await selectRoom(page, "The Workshop");
+    await page.getByRole("button", { name: "Craft 1x Breach Hammer" }).click();
+    snapshot = await waitForSnapshot(
+      page,
+      "breach hammer crafted",
+      (next) => getInventoryQuantity(next, "weapon/breach-hammer") > breachHammerBefore,
+    );
+    expect(getInventoryQuantity(snapshot, "weapon/breach-hammer")).toBe(breachHammerBefore + 1);
+    expect(getInventoryQuantity(snapshot, "loot/monster-part/fang")).toBeLessThan(fangBefore);
 
     await openOperationsContractBoard(page);
     await page.getByTestId("contract-bid-button").first().click();
@@ -407,6 +562,16 @@ describeBrowser("Porters upgrade campaign browser path", () => {
         next.contracts.contractLifecycle === "active" && next.contracts.contractBriefing !== null,
     );
     expect(snapshot.contracts.contractBriefing).not.toBeNull();
+
+    await runDevConsoleCommand(page, "incident trigger");
+    snapshot = await waitForSnapshot(
+      page,
+      "incident interruption",
+      (next) => next.interruption?.payloadKind === "incident",
+    );
+    expect(snapshot.interruption?.title).toBeTruthy();
+    snapshot = await resolveInterruptionWithFirstChoice(page);
+    expect(snapshot.eventLog.some((entry) => entry.kind === "incident_resolved")).toBe(true);
 
     const baselineRaidSummaryCount = snapshot.contracts.raidSummaryCount;
     for (let hour = 0; hour < 48; hour += 1) {
@@ -424,6 +589,43 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     expect(snapshot.contracts.latestRaidSummaryFactors).toEqual(
       expect.arrayContaining(["dock:staged", "deck:aired_out"]),
     );
+
+    await runDevConsoleCommand(page, "boss-commitment");
+    snapshot = await waitForSnapshot(
+      page,
+      "boss commitment interruption",
+      (next) => next.interruption?.payloadKind === "raid_boss_commitment",
+    );
+    await page.getByRole("button", { name: /Commit/i }).click();
+    const encounterSurface = page.getByTestId("encounter-surface");
+    await encounterSurface.waitFor({ state: "visible" });
+    expect(await encounterSurface.textContent()).toContain("Phase");
+
     await captureScreenshot(page, "porters-campaign-proof");
   }, 180_000);
+
+  it("verifies the encounter expansion flow in the real browser runtime", async () => {
+    await loadSeededPortersSave(page);
+
+    await runDevConsoleCommand(page, "encounter force-site site/collapsed-customs-house");
+
+    const encounterSurface = page.getByTestId("encounter-surface");
+    await encounterSurface.waitFor({ state: "visible" });
+    expect(await encounterSurface.textContent()).toContain("The Excise Officer");
+    expect(await encounterSurface.textContent()).toContain("Phase 1/3");
+
+    const priorityTargetCard = page
+      .locator("button.enc-intervention-card")
+      .filter({ hasText: "Priority Target Designation" });
+    await priorityTargetCard.click();
+    expect(await priorityTargetCard.isDisabled()).toBe(true);
+
+    await page.getByRole("button", { exact: true, name: "Pause" }).click();
+    await page.waitForFunction(() => {
+      const surface = document.querySelector('[data-testid="encounter-surface"]');
+      return surface?.textContent?.includes("Paused") ?? false;
+    });
+
+    await captureScreenshot(page, "encounter-expansion-proof");
+  }, 120_000);
 });

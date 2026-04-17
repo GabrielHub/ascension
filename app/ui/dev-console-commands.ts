@@ -1,3 +1,4 @@
+import { siteConceptById } from "content/templates/site-concepts";
 import { resolveTimeOfDayPhase, type HqTimeOfDayPhase } from "lib/hq-time-phase";
 import { isPolicyId, isValidPolicyValue, type PolicyId, type PolicyValue } from "lib/policies";
 import type { HqDebugOverlays, HqWorldSnapshot } from "render";
@@ -43,6 +44,7 @@ type DevConsoleSession = Pick<
   | "lifecycle"
   | "mode"
   | "phase1View"
+  | "registry"
   | "slotId"
   | "state"
   | "worldSnapshot"
@@ -1223,6 +1225,139 @@ const COMMANDS: DevConsoleCommand[] = [
       return ok(`Used intervention ${args[0]}`);
     },
   },
+  {
+    name: "encounter force-boss",
+    family: "Encounter",
+    args: "<bossId>",
+    help: "Force the next boss commitment to use a specific boss ID",
+    examples: [
+      "/encounter force-boss boss/the-excise-officer",
+      "/encounter force-boss boss/the-yardmaster",
+    ],
+    execute: (args, ctx) => {
+      if (args.length < 1) return err("Usage: /encounter force-boss <bossId>");
+      const bossId = args[0];
+      if (!ctx.session.registry.bossById.has(bossId)) {
+        const available = [...ctx.session.registry.bossById.keys()]
+          .filter((id) => id.startsWith("boss/the-"))
+          .join(", ");
+        return err(`Unknown boss: ${bossId}. Available: ${available}`);
+      }
+      const operatorIds = resolveDevEncounterOperatorIds(ctx);
+      void ctx.session.commands.dispatch({
+        type: "sim/encounter-start",
+        activeRaidId: "dev-forced-raid",
+        contractSiteId: "dev-forced-site",
+        missionId: "mission/clearance",
+        teamId: "dev-forced-team",
+        operatorIds,
+        bossId,
+      });
+      return ok(`Forced boss encounter: ${bossId}`);
+    },
+  },
+  {
+    name: "encounter force-site",
+    family: "Encounter",
+    args: "<siteConceptId>",
+    help: "List site concepts or force a boss encounter from a specific site",
+    examples: ["/encounter force-site site/collapsed-customs-house", "/encounter force-site list"],
+    execute: (args, ctx) => {
+      if (args.length < 1 || args[0] === "list") {
+        const sites = [...siteConceptById.keys()].join(", ");
+        return info("Available site concepts", sites);
+      }
+      const siteId = args[0];
+      const site = siteConceptById.get(siteId);
+      if (!site) {
+        return err(`Unknown site: ${siteId}. Use '/encounter force-site list' to see options.`);
+      }
+      const operatorIds = resolveDevEncounterOperatorIds(ctx);
+      void ctx.session.commands.dispatch({
+        type: "sim/encounter-start",
+        activeRaidId: "dev-forced-raid",
+        contractSiteId: siteId,
+        missionId: "mission/clearance",
+        teamId: "dev-forced-team",
+        operatorIds,
+        bossId: site.bossId,
+      });
+      return ok(`Forced encounter from site ${site.name} — boss: ${site.bossId}`);
+    },
+  },
+  {
+    name: "encounter replay-seed",
+    family: "Encounter",
+    args: "<seed> [bossId]",
+    help: "Replay an encounter with a specific RNG seed (default boss: tunneler-brood-mother)",
+    examples: ["/encounter replay-seed 42", "/encounter replay-seed 12345 boss/the-yardmaster"],
+    execute: (args, ctx) => {
+      if (args.length < 1) return err("Usage: /encounter replay-seed <seed> [bossId]");
+      const seed = parseInt(args[0], 10);
+      if (isNaN(seed)) return err("Seed must be a number");
+      const bossId = args[1] ?? "boss/tunneler-brood-mother";
+      if (!ctx.session.registry.bossById.has(bossId)) {
+        return err(`Unknown boss: ${bossId}`);
+      }
+      const operatorIds = resolveDevEncounterOperatorIds(ctx);
+      void ctx.session.commands.dispatch({
+        type: "sim/encounter-start",
+        activeRaidId: `dev-replay-${seed}`,
+        contractSiteId: "dev-replay-site",
+        missionId: "mission/clearance",
+        teamId: "dev-replay-team",
+        operatorIds,
+        bossId,
+      });
+      return ok(`Started encounter replay with seed context: raid=${seed}, boss=${bossId}`);
+    },
+  },
+  {
+    name: "encounter dump-phases",
+    family: "Encounter",
+    args: "",
+    help: "Print encounter phase transitions and intervention usage from the current encounter log",
+    examples: ["/encounter dump-phases"],
+    execute: (_args, ctx) => {
+      const encounter = ctx.session.phase1View.encounter;
+      if (!encounter) return err("No active encounter");
+      const transitions: typeof encounter.recentLog = [];
+      const interventions: typeof encounter.recentLog = [];
+      const passives: typeof encounter.recentLog = [];
+      for (const entry of encounter.recentLog) {
+        if (entry.actionKind === "phase_transition") {
+          transitions.push(entry);
+        } else if (entry.actionKind === "intervention") {
+          interventions.push(entry);
+        } else if (entry.actionKind === "passive_trigger") {
+          passives.push(entry);
+        }
+      }
+      const lines = [
+        `Boss: ${encounter.bossName} (${encounter.bossDefinitionId})`,
+        `Status: ${encounter.status} | Round ${encounter.currentRound} | Phase ${encounter.currentPhaseIndex + 1}/${encounter.phaseCount}`,
+        `HP: ${Math.round(encounter.bossHpFraction * 100)}%`,
+        "",
+        `Phase Transitions (${transitions.length}):`,
+        ...transitions.map(
+          (t) => `  R${t.round}: ${t.abilityId} → targets: [${t.targetIds.join(", ")}]`,
+        ),
+        "",
+        `Interventions Used (${interventions.length}):`,
+        ...interventions.map(
+          (i) =>
+            `  R${i.round}: ${i.abilityId} → ${i.effects.map((e) => `${e.effectKind}:${e.value}`).join(", ")}`,
+        ),
+        "",
+        `Reaction Hooks Fired (${passives.length}):`,
+        ...passives.map(
+          (p) => `  R${p.round}: ${p.abilityId} → targets: [${p.targetIds.join(", ")}]`,
+        ),
+      ];
+      console.log("[dev-console:encounter-phases]", lines.join("\n"));
+      return ok("Phase/intervention dump", lines.join("\n"));
+    },
+  },
 
   // ── Guidance, Interruptions & Debug ────────────────────────────────────
   {
@@ -1612,6 +1747,13 @@ const COMMANDS: DevConsoleCommand[] = [
 // ---------------------------------------------------------------------------
 // Entity resolution helpers
 // ---------------------------------------------------------------------------
+
+function resolveDevEncounterOperatorIds(ctx: DevConsoleContext): string[] {
+  return (ctx.session.worldSnapshot.operators ?? [])
+    .filter((op) => op.lifecycle.status === "active")
+    .slice(0, 3)
+    .map((op) => op.id);
+}
 
 function resolveAmount(raw: string, current: number): number | null {
   if (raw.startsWith("+") || raw.startsWith("-")) {

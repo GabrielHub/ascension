@@ -732,6 +732,7 @@ function FocusedRoomOverlay({
   roomUpgrades,
   callbacks,
   roomCulture,
+  reserveRoomsPanelSpace,
   onDismiss,
 }: {
   guildName: string;
@@ -740,10 +741,17 @@ function FocusedRoomOverlay({
   roomUpgrades: readonly UpgradeViewModel[];
   callbacks: GameCallbacks;
   roomCulture: RoomCultureViewModel | null;
+  reserveRoomsPanelSpace: boolean;
   onDismiss: () => void;
 }) {
+  const maxHeightClass = reserveRoomsPanelSpace
+    ? "max-h-[calc(100vh-380px)]"
+    : "max-h-[calc(100vh-120px)]";
+
   return (
-    <div className="glass-card pointer-events-auto animate-enter flex max-h-[calc(100vh-120px)] w-[36rem] flex-col overflow-hidden">
+    <div
+      className={`glass-card pointer-events-auto animate-enter flex w-[36rem] flex-col overflow-hidden ${maxHeightClass}`}
+    >
       <div className="flex-1 overflow-y-auto px-5 py-4">
         <RoomDetailPanel
           guildName={guildName}
@@ -2275,6 +2283,7 @@ export function GameShell() {
                 roomUpgrades={focusedRoomUpgrades}
                 callbacks={callbacks}
                 roomCulture={focusedRoomCulture}
+                reserveRoomsPanelSpace={activeTab === "hq" && hqCategory === "rooms"}
                 onDismiss={() => setFocus(null)}
               />
             )}

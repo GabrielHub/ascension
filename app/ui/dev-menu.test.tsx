@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
+import { templateRegistry } from "content/templates";
 import { DevConsole } from "./dev-menu";
 
 describe("dev console", () => {
@@ -59,6 +60,7 @@ describe("dev console", () => {
             encounter: null,
             operators: [],
           },
+          registry: templateRegistry,
           state: { hqWorldSnapshot: null },
           worldSnapshot: { staff: [], activeRaidPackets: [] },
         }}

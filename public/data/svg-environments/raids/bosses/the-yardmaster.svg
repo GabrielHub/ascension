@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="ym-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#c87838" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#180c04" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#060404" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ym-iron" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#6a6a68"/>
+      <stop offset="50%" stop-color="#3a3a38"/>
+      <stop offset="100%" stop-color="#1a1a18"/>
+    </linearGradient>
+    <linearGradient id="ym-rust" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c86838"/>
+      <stop offset="50%" stop-color="#8a4418"/>
+      <stop offset="100%" stop-color="#4a2208"/>
+    </linearGradient>
+    <linearGradient id="ym-vest" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#4a4038"/>
+      <stop offset="50%" stop-color="#2a2418"/>
+      <stop offset="100%" stop-color="#141008"/>
+    </linearGradient>
+    <linearGradient id="ym-lantern-glass" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f4c848" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#c86818" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="ym-ember" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f4a828" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#c86818" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#4a2208" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ym-glow">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ym-spark">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="96" ry="134" fill="url(#ym-aura)"/>
+
+  <!-- Rail tracks running across the ground behind the figure -->
+  <rect x="0" y="262" width="200" height="3" rx="0.3" fill="#4a4238" stroke="#2a2218" stroke-width="0.4"/>
+  <rect x="0" y="270" width="200" height="3" rx="0.3" fill="#4a4238" stroke="#2a2218" stroke-width="0.4"/>
+  <!-- Rail ties -->
+  <rect x="10" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="30" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="50" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="70" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="90" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="110" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="130" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="150" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="170" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+  <rect x="190" y="260" width="4" height="16" fill="#3a2818" stroke="#1a1408" stroke-width="0.3"/>
+
+  <!-- Rust streaks on the rails -->
+  <path d="M 0 263 Q 40 262 80 264 Q 120 265 160 263 Q 180 262 200 264" fill="none" stroke="#8a4418" stroke-width="0.4" opacity="0.6"/>
+
+  <!-- Sparks floating in the air — friction from the rails -->
+  <circle cx="24" cy="44" r="0.8" fill="#f4c848" opacity="0.85" filter="url(#ym-spark)"/>
+  <circle cx="42" cy="28" r="0.6" fill="#f4a828" opacity="0.8" filter="url(#ym-spark)"/>
+  <circle cx="168" cy="36" r="0.7" fill="#f4c848" opacity="0.85" filter="url(#ym-spark)"/>
+  <circle cx="178" cy="52" r="0.6" fill="#f4a828" opacity="0.75" filter="url(#ym-spark)"/>
+  <circle cx="14" cy="120" r="0.7" fill="#f4c848" opacity="0.7" filter="url(#ym-spark)"/>
+  <circle cx="186" cy="148" r="0.6" fill="#f4a828" opacity="0.7" filter="url(#ym-spark)"/>
+  <circle cx="36" cy="200" r="0.5" fill="#f4c848" opacity="0.6" filter="url(#ym-spark)"/>
+  <circle cx="164" cy="220" r="0.6" fill="#f4a828" opacity="0.65" filter="url(#ym-spark)"/>
+
+  <!-- Feet — iron-shod railway boots fused to the tracks -->
+  <path d="M 68 240 L 62 256 L 62 262 L 90 262 L 90 240 Z" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.8"/>
+  <path d="M 110 240 L 110 262 L 138 262 L 138 256 L 132 240 Z" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.8"/>
+  <!-- Iron sole plates -->
+  <rect x="62" y="258" width="28" height="4" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.3"/>
+  <rect x="110" y="258" width="28" height="4" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.3"/>
+  <!-- Boot rivets -->
+  <circle cx="68" cy="248" r="0.8" fill="#1a1408"/>
+  <circle cx="84" cy="248" r="0.8" fill="#1a1408"/>
+  <circle cx="116" cy="248" r="0.8" fill="#1a1408"/>
+  <circle cx="132" cy="248" r="0.8" fill="#1a1408"/>
+
+  <!-- Legs — thick iron-plated work trousers -->
+  <rect x="72" y="206" width="22" height="36" rx="1" fill="url(#ym-vest)" stroke="#0a0a08" stroke-width="0.7"/>
+  <rect x="106" y="206" width="22" height="36" rx="1" fill="url(#ym-vest)" stroke="#0a0a08" stroke-width="0.7"/>
+  <!-- Leg armor bands -->
+  <rect x="70" y="218" width="26" height="3" rx="0.5" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.3"/>
+  <rect x="104" y="218" width="26" height="3" rx="0.5" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.3"/>
+
+  <!-- Main body — heavy layered work vest over thick torso -->
+  <path d="
+    M 58 100
+    L 64 90 L 78 84 L 100 80 L 122 84 L 136 90 L 142 100
+    L 148 128 L 152 158 L 152 188 L 148 210
+    L 52 210 L 48 188 L 48 158 L 52 128 Z
+  " fill="url(#ym-vest)" stroke="#0a0a08" stroke-width="1.2"/>
+
+  <!-- Leather vest over work shirt -->
+  <path d="
+    M 68 92
+    L 74 88 L 100 84 L 126 88 L 132 92
+    L 136 120 L 138 150 L 136 180 L 132 200
+    L 68 200 L 64 180 L 62 150 L 64 120 Z
+  " fill="#2a1e14" stroke="#1a1008" stroke-width="0.8"/>
+  <!-- Vest front seam -->
+  <line x1="100" y1="86" x2="100" y2="200" stroke="#1a1008" stroke-width="0.5"/>
+  <!-- Vest pockets -->
+  <rect x="72" y="130" width="18" height="14" rx="1" fill="none" stroke="#3a2818" stroke-width="0.5"/>
+  <rect x="110" y="130" width="18" height="14" rx="1" fill="none" stroke="#3a2818" stroke-width="0.5"/>
+  <!-- Pocket flap stitching -->
+  <line x1="74" y1="132" x2="88" y2="132" stroke="#3a2818" stroke-width="0.3"/>
+  <line x1="112" y1="132" x2="126" y2="132" stroke="#3a2818" stroke-width="0.3"/>
+
+  <!-- Chain watch fob hanging from vest -->
+  <path d="M 96 134 Q 92 142 96 148 Q 100 152 96 160" fill="none" stroke="#c8a848" stroke-width="0.6"/>
+  <circle cx="96" cy="162" r="2" fill="url(#ym-rust)" stroke="#5a3818" stroke-width="0.3"/>
+
+  <!-- Heavy belt with tool loops -->
+  <rect x="54" y="188" width="92" height="6" rx="1" fill="#3a2818" stroke="#1a1008" stroke-width="0.5"/>
+  <circle cx="64" cy="191" r="0.6" fill="#1a1008"/>
+  <circle cx="80" cy="191" r="0.6" fill="#1a1008"/>
+  <circle cx="100" cy="191" r="0.6" fill="#1a1008"/>
+  <circle cx="120" cy="191" r="0.6" fill="#1a1008"/>
+  <circle cx="136" cy="191" r="0.6" fill="#1a1008"/>
+
+  <!-- HEAD — flat-topped railway cap, weathered face, steel-gray stubble -->
+  <!-- Cap -->
+  <rect x="76" y="36" width="48" height="14" rx="2" fill="#2a2418" stroke="#1a1008" stroke-width="0.6"/>
+  <!-- Cap bill -->
+  <path d="M 72 50 Q 100 56 128 50 L 126 53 Q 100 58 74 53 Z" fill="#1a1408" stroke="#0a0808" stroke-width="0.4"/>
+  <!-- Cap badge — iron wheel -->
+  <circle cx="100" cy="43" r="3.5" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.5"/>
+  <circle cx="100" cy="43" r="2" fill="none" stroke="#4a4a48" stroke-width="0.3"/>
+  <line x1="100" y1="40" x2="100" y2="46" stroke="#4a4a48" stroke-width="0.3"/>
+  <line x1="97" y1="43" x2="103" y2="43" stroke="#4a4a48" stroke-width="0.3"/>
+
+  <!-- Face — broad, craggy, ruddy from heat -->
+  <ellipse cx="100" cy="64" rx="16" ry="12" fill="#c8a878" stroke="#6a5038" stroke-width="0.5"/>
+  <!-- Heavy brows -->
+  <path d="M 86 58 Q 92 56 98 59" fill="none" stroke="#3a2818" stroke-width="0.9"/>
+  <path d="M 102 59 Q 108 56 114 58" fill="none" stroke="#3a2818" stroke-width="0.9"/>
+  <!-- Eyes — ember orange, glowing with heat -->
+  <ellipse cx="92" cy="62" rx="3" ry="2" fill="#f4e8c8" stroke="#3a2818" stroke-width="0.3"/>
+  <circle cx="92" cy="62" r="1.2" fill="#c86818" filter="url(#ym-spark)"/>
+  <circle cx="92" cy="62" r="0.5" fill="#f4c848"/>
+  <ellipse cx="108" cy="62" rx="3" ry="2" fill="#f4e8c8" stroke="#3a2818" stroke-width="0.3"/>
+  <circle cx="108" cy="62" r="1.2" fill="#c86818" filter="url(#ym-spark)"/>
+  <circle cx="108" cy="62" r="0.5" fill="#f4c848"/>
+  <!-- Nose — broad, broken -->
+  <path d="M 100 62 L 97 70 L 100 72 L 103 70 Z" fill="#b89068" stroke="#6a5038" stroke-width="0.3"/>
+  <!-- Mouth — set jaw, determined -->
+  <path d="M 94 74 L 106 74" stroke="#5a3828" stroke-width="0.7"/>
+  <!-- Stubble -->
+  <circle cx="90" cy="72" r="0.3" fill="#4a3828" opacity="0.6"/>
+  <circle cx="94" cy="76" r="0.3" fill="#4a3828" opacity="0.6"/>
+  <circle cx="106" cy="76" r="0.3" fill="#4a3828" opacity="0.6"/>
+  <circle cx="110" cy="72" r="0.3" fill="#4a3828" opacity="0.6"/>
+
+  <!-- Left arm — massive, holding the SIGNAL LANTERN -->
+  <path d="M 46 104 L 34 118 L 24 140 L 18 168 L 16 184 L 22 186 L 32 170 L 42 146 L 52 122 Z" fill="url(#ym-vest)" stroke="#0a0a08" stroke-width="0.7"/>
+  <!-- Rolled sleeves showing thick forearms -->
+  <rect x="14" y="180" width="14" height="4" rx="0.5" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.3"/>
+  <!-- Hand -->
+  <ellipse cx="20" cy="194" rx="6" ry="4.5" fill="#c8a878" stroke="#6a5038" stroke-width="0.5"/>
+
+  <!-- SIGNAL LANTERN — massive, burning with wrong fire -->
+  <rect x="12" y="196" width="16" height="6" rx="1" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.5"/>
+  <!-- Lantern cage -->
+  <rect x="8" y="202" width="24" height="30" rx="2" fill="none" stroke="url(#ym-iron)" stroke-width="1.2"/>
+  <!-- Cage bars -->
+  <line x1="14" y1="202" x2="14" y2="232" stroke="#4a4a48" stroke-width="0.5"/>
+  <line x1="20" y1="202" x2="20" y2="232" stroke="#4a4a48" stroke-width="0.5"/>
+  <line x1="26" y1="202" x2="26" y2="232" stroke="#4a4a48" stroke-width="0.5"/>
+  <!-- Lantern band -->
+  <rect x="8" y="216" width="24" height="2" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- The flame inside — ember orange, unnaturally bright -->
+  <ellipse cx="20" cy="217" rx="8" ry="10" fill="url(#ym-ember)" filter="url(#ym-glow)"/>
+  <ellipse cx="20" cy="215" rx="4" ry="6" fill="#f4c848" opacity="0.85"/>
+  <ellipse cx="20" cy="213" rx="2" ry="3" fill="#ffffff" opacity="0.9"/>
+  <!-- Lantern base -->
+  <rect x="10" y="232" width="20" height="4" rx="1" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.4"/>
+  <!-- Lantern handle -->
+  <path d="M 14 196 Q 20 188 26 196" fill="none" stroke="url(#ym-iron)" stroke-width="1.2"/>
+
+  <!-- Light cone from lantern -->
+  <path d="M 20 210 L 4 240 L 36 240 Z" fill="#f4c848" opacity="0.08"/>
+
+  <!-- Right arm — THE SWITCH LEVER fused to the forearm -->
+  <path d="M 154 104 L 166 118 L 176 140 L 182 168 L 184 184 L 178 186 L 168 170 L 158 146 L 148 122 Z" fill="url(#ym-vest)" stroke="#0a0a08" stroke-width="0.7"/>
+  <!-- Iron bracer where arm meets lever -->
+  <rect x="174" y="180" width="14" height="5" rx="0.5" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.5"/>
+  <!-- Iron rivets at fusion point -->
+  <circle cx="178" cy="182" r="0.8" fill="#1a1a18"/>
+  <circle cx="184" cy="182" r="0.8" fill="#1a1a18"/>
+
+  <!-- SWITCH LEVER — massive iron lever extending from the fused arm -->
+  <rect x="178" y="138" width="8" height="52" rx="1" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.8"/>
+  <!-- Lever grip ball -->
+  <circle cx="182" cy="136" r="5" fill="url(#ym-rust)" stroke="#2a1408" stroke-width="0.8"/>
+  <circle cx="182" cy="136" r="2.5" fill="url(#ym-iron)"/>
+  <!-- Lever pivot plate -->
+  <rect x="172" y="186" width="20" height="8" rx="1" fill="url(#ym-iron)" stroke="#1a1a18" stroke-width="0.6"/>
+  <circle cx="182" cy="190" r="3" fill="#2a2a28" stroke="#1a1a18" stroke-width="0.4"/>
+  <circle cx="182" cy="190" r="1" fill="url(#ym-rust)"/>
+  <!-- Lever base bolts -->
+  <circle cx="176" cy="190" r="0.7" fill="#1a1a18"/>
+  <circle cx="188" cy="190" r="0.7" fill="#1a1a18"/>
+
+  <!-- Rails growing from the figure's back — twisted, wrong -->
+  <path d="M 68 100 Q 48 80 40 50 Q 36 30 44 14" fill="none" stroke="#4a4238" stroke-width="2.5"/>
+  <path d="M 132 100 Q 152 80 160 50 Q 164 30 156 14" fill="none" stroke="#4a4238" stroke-width="2.5"/>
+  <!-- Rail rust -->
+  <path d="M 68 100 Q 48 80 40 50" fill="none" stroke="#8a4418" stroke-width="0.5" opacity="0.5"/>
+  <path d="M 132 100 Q 152 80 160 50" fill="none" stroke="#8a4418" stroke-width="0.5" opacity="0.5"/>
+
+  <!-- Switch point — a junction where the back-rails split -->
+  <path d="M 44 14 L 30 4" fill="none" stroke="#4a4238" stroke-width="2"/>
+  <path d="M 44 14 L 54 4" fill="none" stroke="#4a4238" stroke-width="1.5"/>
+  <path d="M 156 14 L 170 4" fill="none" stroke="#4a4238" stroke-width="2"/>
+  <path d="M 156 14 L 146 4" fill="none" stroke="#4a4238" stroke-width="1.5"/>
+
+  <!-- Heat shimmer around the figure -->
+  <path d="M 40 100 Q 38 90 42 80 Q 40 70 44 60" fill="none" stroke="#c86838" stroke-width="0.3" opacity="0.3"/>
+  <path d="M 160 100 Q 162 90 158 80 Q 160 70 156 60" fill="none" stroke="#c86838" stroke-width="0.3" opacity="0.3"/>
+</svg>

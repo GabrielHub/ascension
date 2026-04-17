@@ -7,7 +7,7 @@ import {
 } from "../sim/tools/midgame-economy-ledger";
 
 const outputDirectory = path.resolve("reports/economy");
-const ledgerPath = path.join(outputDirectory, "midgame-ledger.v1.json");
+const ledgerPath = path.join(outputDirectory, "midgame-ledger.v2.json");
 const reportPath = path.join(outputDirectory, "midgame-report.md");
 
 const artifacts = buildMidgameEconomyArtifacts();

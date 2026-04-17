@@ -27,6 +27,11 @@ const BOSS_ART_MAP: Record<string, string> = {
   "boss/the-lift-operator": "/data/svg-environments/raids/bosses/the-lift-operator.svg",
   "boss/the-ballast-master": "/data/svg-environments/raids/bosses/the-ballast-master.svg",
   "boss/the-signalman": "/data/svg-environments/raids/bosses/the-signalman.svg",
+  // ── Encounter-expansion D-rank bosses ─────────────────────────────────
+  "boss/the-excise-officer": "/data/svg-environments/raids/bosses/the-excise-officer.svg",
+  "boss/the-yardmaster": "/data/svg-environments/raids/bosses/the-yardmaster.svg",
+  "boss/the-regulator": "/data/svg-environments/raids/bosses/the-regulator.svg",
+  "boss/the-surveyor": "/data/svg-environments/raids/bosses/the-surveyor.svg",
 };
 
 /** Resolve a boss's encounter portrait SVG path, or null for unknown bosses. */

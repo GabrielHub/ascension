@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { templateRegistry } from "content/templates";
 import { saveStorage } from "save";
 
 import {
@@ -29,6 +30,7 @@ function createContext(): DevConsoleContext {
         lastProbe: null,
         requests: new Map(),
       },
+      registry: templateRegistry,
       commands: {
         dispatch,
         tick: vi.fn(() => Promise.resolve()),
@@ -257,6 +259,60 @@ describe("dev console commands", () => {
     expect(writeSaveGame.mock.calls[0]?.[0].metadata.guildName).toBe("Testing Guild");
     expect(writeSaveGame.mock.calls[0]?.[0].metadata.playerName).toBe("Test");
     expect(locationAssign).toHaveBeenCalledWith("/game?mode=load&slot=slot%2F2");
+  });
+
+  it("starts a forced encounter for a specific boss", () => {
+    const ctx = createContext();
+
+    const result = executeConsoleCommand("/encounter force-boss boss/the-yardmaster", ctx);
+
+    expect(result.status).toBe("ok");
+    expect(result.message).toContain("boss/the-yardmaster");
+    expect(ctx.session.commands.dispatch).toHaveBeenCalledWith({
+      type: "sim/encounter-start",
+      activeRaidId: "dev-forced-raid",
+      contractSiteId: "dev-forced-site",
+      missionId: "mission/clearance",
+      teamId: "dev-forced-team",
+      operatorIds: [],
+      bossId: "boss/the-yardmaster",
+    });
+  });
+
+  it("starts a forced encounter from a specific site concept", () => {
+    const ctx = createContext();
+
+    const result = executeConsoleCommand("/encounter force-site site/collapsed-customs-house", ctx);
+
+    expect(result.status).toBe("ok");
+    expect(result.message).toContain("Collapsed Customs House");
+    expect(ctx.session.commands.dispatch).toHaveBeenCalledWith({
+      type: "sim/encounter-start",
+      activeRaidId: "dev-forced-raid",
+      contractSiteId: "site/collapsed-customs-house",
+      missionId: "mission/clearance",
+      teamId: "dev-forced-team",
+      operatorIds: [],
+      bossId: "boss/the-excise-officer",
+    });
+  });
+
+  it("starts a replay encounter using the provided seed context", () => {
+    const ctx = createContext();
+
+    const result = executeConsoleCommand("/encounter replay-seed 4242 boss/the-regulator", ctx);
+
+    expect(result.status).toBe("ok");
+    expect(result.message).toContain("raid=4242");
+    expect(ctx.session.commands.dispatch).toHaveBeenCalledWith({
+      type: "sim/encounter-start",
+      activeRaidId: "dev-replay-4242",
+      contractSiteId: "dev-replay-site",
+      missionId: "mission/clearance",
+      teamId: "dev-replay-team",
+      operatorIds: [],
+      bossId: "boss/the-regulator",
+    });
   });
 
   it("rejects invalid seed slots before scheduling a save", () => {

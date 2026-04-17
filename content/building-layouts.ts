@@ -207,6 +207,15 @@ const PORTERS_WATERFRONT: BuildingFloorLayout = {
   ],
 };
 
+const PORTERS_WATERFRONT_MACHINE_SHOP: BuildingFloorLayout = {
+  ...PORTERS_WATERFRONT,
+  shell: { col: 0, row: 0, cols: 12, rows: 12 },
+  slots: [
+    ...PORTERS_WATERFRONT.slots,
+    { slotId: "slot/workshop", col: 0, row: 4, cols: 12, rows: 4 },
+  ],
+};
+
 export const PORTERS_LAYOUT: BuildingLayoutDefinition = {
   buildingId: "building/porters",
   stages: [
@@ -224,6 +233,11 @@ export const PORTERS_LAYOUT: BuildingLayoutDefinition = {
       stageId: "porters/waterfront",
       minimumTier: 5,
       floors: [PORTERS_GROUND, PORTERS_UPPER, PORTERS_WATERFRONT],
+    },
+    {
+      stageId: "porters/machine-shop",
+      minimumTier: 6,
+      floors: [PORTERS_GROUND, PORTERS_UPPER, PORTERS_WATERFRONT_MACHINE_SHOP],
     },
   ],
 };

@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <defs>
+    <radialGradient id="sv-aura" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#c8a868" stop-opacity="0.12"/>
+      <stop offset="55%" stop-color="#181410" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#060604" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sv-concrete" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#8a8a88"/>
+      <stop offset="50%" stop-color="#5a5a58"/>
+      <stop offset="100%" stop-color="#2a2a28"/>
+    </linearGradient>
+    <linearGradient id="sv-vest" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f48818"/>
+      <stop offset="50%" stop-color="#c86808"/>
+      <stop offset="100%" stop-color="#8a4804"/>
+    </linearGradient>
+    <linearGradient id="sv-rebar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a6848"/>
+      <stop offset="50%" stop-color="#5a3828"/>
+      <stop offset="100%" stop-color="#2a1808"/>
+    </linearGradient>
+    <linearGradient id="sv-brass-survey" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4b868"/>
+      <stop offset="50%" stop-color="#a88838"/>
+      <stop offset="100%" stop-color="#685018"/>
+    </linearGradient>
+    <radialGradient id="sv-laser" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff3838" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#c81818" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#580808" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sv-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sv-dust">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Aura -->
+  <ellipse cx="100" cy="140" rx="96" ry="134" fill="url(#sv-aura)"/>
+
+  <!-- Background overpass infrastructure — concrete pillars and road deck -->
+  <!-- Left pillar -->
+  <rect x="4" y="0" width="18" height="280" fill="url(#sv-concrete)" stroke="#1a1a18" stroke-width="0.6" opacity="0.4"/>
+  <!-- Rebar exposed in pillar cracks -->
+  <line x1="10" y1="40" x2="10" y2="80" stroke="url(#sv-rebar)" stroke-width="0.6" opacity="0.6"/>
+  <line x1="16" y1="60" x2="16" y2="100" stroke="url(#sv-rebar)" stroke-width="0.5" opacity="0.55"/>
+  <!-- Right pillar -->
+  <rect x="178" y="0" width="18" height="280" fill="url(#sv-concrete)" stroke="#1a1a18" stroke-width="0.6" opacity="0.4"/>
+  <line x1="184" y1="30" x2="184" y2="70" stroke="url(#sv-rebar)" stroke-width="0.6" opacity="0.6"/>
+  <line x1="190" y1="50" x2="190" y2="90" stroke="url(#sv-rebar)" stroke-width="0.5" opacity="0.55"/>
+
+  <!-- Concrete dust motes falling -->
+  <circle cx="32" cy="40" r="0.6" fill="#a8a8a0" opacity="0.6" filter="url(#sv-dust)"/>
+  <circle cx="48" cy="60" r="0.5" fill="#a8a8a0" opacity="0.55" filter="url(#sv-dust)"/>
+  <circle cx="168" cy="50" r="0.6" fill="#a8a8a0" opacity="0.6" filter="url(#sv-dust)"/>
+  <circle cx="152" cy="36" r="0.5" fill="#a8a8a0" opacity="0.5" filter="url(#sv-dust)"/>
+  <circle cx="40" cy="200" r="0.5" fill="#a8a8a0" opacity="0.5" filter="url(#sv-dust)"/>
+  <circle cx="160" cy="220" r="0.6" fill="#a8a8a0" opacity="0.5" filter="url(#sv-dust)"/>
+
+  <!-- Cracks in the ground beneath -->
+  <path d="M 60 268 L 70 262 L 82 270 L 96 264 L 108 272 L 120 266 L 130 270 L 140 264" fill="none" stroke="#3a3a38" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Feet — heavy steel-toe work boots on cracked asphalt -->
+  <path d="M 66 242 L 60 256 L 60 264 L 88 264 L 88 242 Z" fill="#3a3228" stroke="#1a1408" stroke-width="0.8"/>
+  <path d="M 112 242 L 112 264 L 140 264 L 140 256 L 134 242 Z" fill="#3a3228" stroke="#1a1408" stroke-width="0.8"/>
+  <!-- Steel toe caps -->
+  <path d="M 60 258 Q 68 262 76 258" fill="none" stroke="#6a6a68" stroke-width="0.8"/>
+  <path d="M 124 258 Q 132 262 140 258" fill="none" stroke="#6a6a68" stroke-width="0.8"/>
+
+  <!-- Legs — heavy work pants with reflective tape -->
+  <rect x="70" y="206" width="22" height="38" rx="1" fill="#3a3a38" stroke="#1a1a18" stroke-width="0.7"/>
+  <rect x="108" y="206" width="22" height="38" rx="1" fill="#3a3a38" stroke="#1a1a18" stroke-width="0.7"/>
+  <!-- Reflective tape bands -->
+  <rect x="68" y="228" width="26" height="2" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3" opacity="0.85"/>
+  <rect x="106" y="228" width="26" height="2" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3" opacity="0.85"/>
+
+  <!-- Main body — heavy work shirt under hi-vis vest -->
+  <path d="
+    M 58 100
+    L 64 90 L 80 84 L 100 80 L 120 84 L 136 90 L 142 100
+    L 148 128 L 150 158 L 150 188 L 146 210
+    L 54 210 L 50 188 L 50 158 L 52 128 Z
+  " fill="#3a3a38" stroke="#1a1a18" stroke-width="1"/>
+
+  <!-- Hi-vis safety vest -->
+  <path d="
+    M 68 92
+    L 76 88 L 100 84 L 124 88 L 132 92
+    L 136 120 L 138 148 L 136 176 L 132 200
+    L 68 200 L 64 176 L 62 148 L 64 120 Z
+  " fill="url(#sv-vest)" stroke="#8a4804" stroke-width="0.8"/>
+  <!-- Vest reflective stripes -->
+  <rect x="66" y="118" width="68" height="3" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3"/>
+  <rect x="66" y="154" width="68" height="3" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3"/>
+  <!-- Vest diagonal stripe -->
+  <path d="M 72 92 L 132 172" stroke="#c8c8c0" stroke-width="2.5" opacity="0.9"/>
+  <path d="M 68 92 L 128 172" stroke="#c8c8c0" stroke-width="2.5" opacity="0.9"/>
+  <!-- Vest front zipper -->
+  <line x1="100" y1="88" x2="100" y2="200" stroke="#5a3808" stroke-width="0.8"/>
+
+  <!-- Pocket with tape measure -->
+  <rect x="110" y="128" width="16" height="18" rx="1" fill="#a86808" stroke="#5a3808" stroke-width="0.5"/>
+  <rect x="112" y="130" width="12" height="4" rx="0.5" fill="#f4d848" stroke="#8a7808" stroke-width="0.3"/>
+
+  <!-- Tool belt -->
+  <rect x="56" y="190" width="88" height="6" rx="1" fill="#3a2818" stroke="#1a1008" stroke-width="0.5"/>
+  <!-- Hanging plumb bob -->
+  <line x1="70" y1="196" x2="70" y2="212" stroke="#6a6a68" stroke-width="0.4"/>
+  <path d="M 68 212 L 72 212 L 70 218 Z" fill="url(#sv-brass-survey)" stroke="#5a4818" stroke-width="0.3"/>
+
+  <!-- HEAD — hard hat, safety glasses, grim expression -->
+  <!-- Hard hat -->
+  <path d="M 72 50 Q 72 30 100 22 Q 128 30 128 50 L 128 56 L 72 56 Z" fill="#f4f4e8" stroke="#c8c8b0" stroke-width="0.8"/>
+  <!-- Hard hat brim -->
+  <path d="M 68 56 Q 100 62 132 56 L 130 59 Q 100 64 70 59 Z" fill="#e8e8d8" stroke="#a8a898" stroke-width="0.4"/>
+  <!-- Hard hat ridge -->
+  <path d="M 74 40 Q 100 34 126 40" fill="none" stroke="#d8d8c8" stroke-width="0.5"/>
+  <!-- Hard hat front sticker — orange company diamond -->
+  <path d="M 96 36 L 100 32 L 104 36 L 100 40 Z" fill="url(#sv-vest)" stroke="#8a4804" stroke-width="0.4"/>
+
+  <!-- Face — weathered, square-jawed, squinting -->
+  <ellipse cx="100" cy="66" rx="15" ry="11" fill="#b89878" stroke="#6a5038" stroke-width="0.4"/>
+  <!-- Safety glasses -->
+  <rect x="82" y="60" width="36" height="8" rx="3" fill="none" stroke="#4a4a48" stroke-width="1"/>
+  <!-- Left lens -->
+  <ellipse cx="92" cy="64" rx="5" ry="3.5" fill="#e8e8d8" stroke="#4a4a48" stroke-width="0.5" opacity="0.6"/>
+  <circle cx="92" cy="64" r="1.5" fill="#4a3828"/>
+  <circle cx="92" cy="64" r="0.6" fill="#8a6838"/>
+  <!-- Right lens -->
+  <ellipse cx="108" cy="64" rx="5" ry="3.5" fill="#e8e8d8" stroke="#4a4a48" stroke-width="0.5" opacity="0.6"/>
+  <circle cx="108" cy="64" r="1.5" fill="#4a3828"/>
+  <circle cx="108" cy="64" r="0.6" fill="#8a6838"/>
+  <!-- Bridge -->
+  <line x1="97" y1="64" x2="103" y2="64" stroke="#4a4a48" stroke-width="0.6"/>
+  <!-- Nose -->
+  <path d="M 100 66 L 98 72 L 100 74 L 102 72 Z" fill="#a88868" stroke="#6a5038" stroke-width="0.3"/>
+  <!-- Mouth — tight, set -->
+  <path d="M 94 76 L 106 76" stroke="#5a3828" stroke-width="0.6"/>
+  <!-- Jaw stubble shadow -->
+  <path d="M 86 72 Q 86 80 100 82 Q 114 80 114 72" fill="none" stroke="#8a7858" stroke-width="0.3"/>
+
+  <!-- Left arm — holding a clipboard -->
+  <path d="M 46 104 L 34 118 L 24 140 L 18 166 L 16 182 L 22 184 L 32 168 L 42 144 L 52 120 Z" fill="#3a3a38" stroke="#1a1a18" stroke-width="0.7"/>
+  <!-- Rolled sleeve -->
+  <rect x="14" y="178" width="14" height="3" rx="0.5" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3"/>
+  <!-- Hand -->
+  <ellipse cx="20" cy="192" rx="6" ry="4.5" fill="#b89878" stroke="#6a5038" stroke-width="0.5"/>
+  <!-- CLIPBOARD -->
+  <rect x="6" y="194" width="28" height="36" rx="1" fill="#6a5838" stroke="#3a2818" stroke-width="0.6"/>
+  <rect x="8" y="198" width="24" height="28" rx="0.5" fill="#e8dcc0" stroke="#a89878" stroke-width="0.3"/>
+  <!-- Clipboard clip -->
+  <rect x="16" y="192" width="8" height="4" rx="0.5" fill="#8a8a88" stroke="#4a4a48" stroke-width="0.3"/>
+  <!-- Survey notes -->
+  <line x1="10" y1="202" x2="30" y2="202" stroke="#3a2818" stroke-width="0.3"/>
+  <line x1="10" y1="206" x2="28" y2="206" stroke="#3a2818" stroke-width="0.3"/>
+  <line x1="10" y1="210" x2="26" y2="210" stroke="#3a2818" stroke-width="0.3"/>
+  <line x1="10" y1="214" x2="30" y2="214" stroke="#3a2818" stroke-width="0.3"/>
+  <line x1="10" y1="218" x2="24" y2="218" stroke="#3a2818" stroke-width="0.3"/>
+  <!-- Red marks on the clipboard — survey points -->
+  <circle cx="16" cy="206" r="0.8" fill="#c81818"/>
+  <circle cx="24" cy="210" r="0.8" fill="#c81818"/>
+  <circle cx="12" cy="218" r="0.8" fill="#c81818"/>
+
+  <!-- Right arm — raised, operating the THEODOLITE -->
+  <path d="M 154 104 L 166 114 L 174 130 L 178 148 L 180 160 L 174 162 L 168 146 L 160 128 L 150 112 Z" fill="#3a3a38" stroke="#1a1a18" stroke-width="0.7"/>
+  <rect x="170" y="156" width="14" height="3" rx="0.5" fill="#c8c8c0" stroke="#8a8a80" stroke-width="0.3"/>
+  <ellipse cx="178" cy="168" rx="6" ry="4.5" fill="#b89878" stroke="#6a5038" stroke-width="0.5"/>
+
+  <!-- THE THEODOLITE — massive survey instrument, the signature weapon -->
+  <!-- Tripod legs -->
+  <line x1="168" y1="200" x2="154" y2="250" stroke="#5a4828" stroke-width="2"/>
+  <line x1="178" y1="200" x2="178" y2="256" stroke="#5a4828" stroke-width="2"/>
+  <line x1="188" y1="200" x2="198" y2="252" stroke="#5a4828" stroke-width="2"/>
+  <!-- Tripod feet -->
+  <circle cx="154" cy="252" r="2" fill="url(#sv-brass-survey)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="178" cy="258" r="2" fill="url(#sv-brass-survey)" stroke="#3a2808" stroke-width="0.3"/>
+  <circle cx="198" cy="254" r="2" fill="url(#sv-brass-survey)" stroke="#3a2808" stroke-width="0.3"/>
+  <!-- Tripod head plate -->
+  <ellipse cx="178" cy="198" rx="14" ry="4" fill="url(#sv-brass-survey)" stroke="#3a2808" stroke-width="0.6"/>
+
+  <!-- Theodolite body — telescope and bearing -->
+  <rect x="166" y="170" width="24" height="30" rx="2" fill="url(#sv-brass-survey)" stroke="#3a2808" stroke-width="0.8"/>
+  <!-- Scope barrel -->
+  <rect x="152" y="176" width="52" height="10" rx="1.5" fill="url(#sv-concrete)" stroke="#2a2a28" stroke-width="0.6"/>
+  <!-- Scope lens — glowing red, the piercing line -->
+  <circle cx="152" cy="181" r="4" fill="#1a0808" stroke="url(#sv-brass-survey)" stroke-width="0.8"/>
+  <circle cx="152" cy="181" r="2.5" fill="url(#sv-laser)" filter="url(#sv-glow)"/>
+  <circle cx="152" cy="181" r="1" fill="#ff8888"/>
+  <!-- Scope eyepiece -->
+  <rect x="202" y="178" width="4" height="6" rx="0.5" fill="#2a2a28" stroke="#1a1a18" stroke-width="0.3"/>
+  <!-- Bearing dial -->
+  <circle cx="178" cy="186" r="5" fill="#2a2a28" stroke="url(#sv-brass-survey)" stroke-width="0.5"/>
+  <circle cx="178" cy="186" r="3.5" fill="none" stroke="#685018" stroke-width="0.3"/>
+  <!-- Dial markings -->
+  <line x1="178" y1="181.5" x2="178" y2="183" stroke="#a88838" stroke-width="0.3"/>
+  <line x1="178" y1="189" x2="178" y2="190.5" stroke="#a88838" stroke-width="0.3"/>
+  <line x1="173.5" y1="186" x2="175" y2="186" stroke="#a88838" stroke-width="0.3"/>
+  <line x1="181" y1="186" x2="182.5" y2="186" stroke="#a88838" stroke-width="0.3"/>
+  <!-- Needle -->
+  <line x1="178" y1="186" x2="175" y2="183" stroke="#c81818" stroke-width="0.5"/>
+
+  <!-- LASER SURVEY LINE — red beam shooting from the theodolite scope across the scene -->
+  <line x1="148" y1="181" x2="0" y2="181" stroke="#ff3838" stroke-width="0.6" opacity="0.85" filter="url(#sv-glow)"/>
+  <line x1="148" y1="181" x2="0" y2="181" stroke="#ffffff" stroke-width="0.2" opacity="0.7"/>
+  <!-- Laser impact glow on the far wall -->
+  <circle cx="4" cy="181" r="3" fill="url(#sv-laser)" filter="url(#sv-glow)"/>
+
+  <!-- BARRIER FRAGMENT summons — chunks of concrete floating nearby -->
+  <!-- Fragment 1 — above left -->
+  <path d="M 30 100 L 42 96 L 48 104 L 44 114 L 32 112 Z" fill="url(#sv-concrete)" stroke="#2a2a28" stroke-width="0.6"/>
+  <line x1="34" y1="102" x2="38" y2="110" stroke="url(#sv-rebar)" stroke-width="0.5"/>
+  <line x1="40" y1="98" x2="44" y2="108" stroke="url(#sv-rebar)" stroke-width="0.4"/>
+
+  <!-- Fragment 2 — lower left -->
+  <path d="M 24 160 L 34 154 L 40 162 L 36 170 L 26 168 Z" fill="url(#sv-concrete)" stroke="#2a2a28" stroke-width="0.6"/>
+  <line x1="28" y1="158" x2="34" y2="166" stroke="url(#sv-rebar)" stroke-width="0.4"/>
+
+  <!-- Rebar bristles sticking out of the fragments -->
+  <line x1="30" y1="96" x2="26" y2="90" stroke="url(#sv-rebar)" stroke-width="0.6"/>
+  <line x1="48" y1="104" x2="52" y2="100" stroke="url(#sv-rebar)" stroke-width="0.5"/>
+
+  <!-- Asphalt and concrete debris around the feet -->
+  <path d="M 50 262 L 56 258 L 62 262" fill="url(#sv-concrete)" stroke="#2a2a28" stroke-width="0.4" opacity="0.7"/>
+  <path d="M 138 260 L 144 256 L 150 262" fill="url(#sv-concrete)" stroke="#2a2a28" stroke-width="0.4" opacity="0.7"/>
+
+  <!-- Survey stakes driven into the ground — marking territory -->
+  <rect x="44" y="258" width="2" height="14" fill="#f48818" stroke="#8a4804" stroke-width="0.3"/>
+  <rect x="154" y="256" width="2" height="16" fill="#f48818" stroke="#8a4804" stroke-width="0.3"/>
+  <!-- Fluorescent flagging tape on stakes -->
+  <path d="M 46 258 Q 50 256 54 258 Q 52 260 46 258" fill="#f4d848" opacity="0.85"/>
+  <path d="M 156 256 Q 160 254 164 256 Q 162 258 156 256" fill="#f4d848" opacity="0.85"/>
+</svg>

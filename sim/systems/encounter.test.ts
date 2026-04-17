@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { siteConceptById } from "content/templates/site-concepts";
 import { createBootstrapSimulation } from "sim";
 import {
   validateKitTemplates,
@@ -603,6 +604,164 @@ describe("encounter simulation", () => {
       finalStatus: encounter!.status,
     };
   }
+
+  // ── Encounter expansion tests ─────────────────────────────────────────
+
+  it("resolves all new D-rank encounter-expansion bosses", () => {
+    const newBossIds = [
+      "boss/the-excise-officer",
+      "boss/the-yardmaster",
+      "boss/the-regulator",
+      "boss/the-surveyor",
+    ];
+    for (const bossId of newBossIds) {
+      const def = getBossEncounterDefinition(templateRegistry, "mission/clearance", bossId);
+      expect(def, `Missing encounter definition for ${bossId}`).toBeDefined();
+      expect(def!.phases.length).toBeGreaterThanOrEqual(3);
+      expect(def!.actions.length).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("creates and runs encounters for all new expansion bosses", () => {
+    const newBossIds = [
+      "boss/the-excise-officer",
+      "boss/the-yardmaster",
+      "boss/the-regulator",
+      "boss/the-surveyor",
+    ];
+    for (const bossId of newBossIds) {
+      const { encounter } = createTestEncounter("mission/clearance", bossId);
+      expect(encounter, `Failed to create encounter for ${bossId}`).not.toBeNull();
+      startEncounter(encounter!);
+      advanceEncounterRound(encounter!);
+      expect(encounter!.encounterLog.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("fires on_ally_defeat reaction when a summon is killed", () => {
+    const { encounter } = createTestEncounter("mission/clearance", "boss/the-excise-officer");
+    startEncounter(encounter!);
+
+    const summonActor = createSummonActor({
+      actorId: "actor:summon:test-ally-defeat",
+      currentHp: 1,
+      maxHp: 20,
+      baseThreat: 999,
+    });
+    encounter!.actors[summonActor.actorId] = summonActor;
+
+    const firstAlly = Object.values(encounter!.actors).find(
+      (a) => a.side === "ally" && a.condition === "alive",
+    )!;
+    firstAlly.initiative = 999;
+    firstAlly.baseAttack = 200;
+    firstAlly.skillId = undefined;
+    firstAlly.ultimateId = undefined;
+
+    for (const actor of Object.values(encounter!.actors)) {
+      if (actor.actorId !== firstAlly.actorId) {
+        actor.initiative = 1;
+      }
+    }
+
+    const logBefore = encounter!.encounterLog.length;
+    advanceEncounterTurn(encounter!);
+    advanceEncounterTurn(encounter!);
+
+    expect(encounter!.actors[summonActor.actorId]?.condition).toBe("incapacitated");
+    const reactionLogs = encounter!.encounterLog
+      .slice(logBefore)
+      .filter(
+        (e) => e.actionKind === "passive_trigger" && e.abilityId === "on_ally_defeat:boss_self",
+      );
+    expect(reactionLogs).toHaveLength(1);
+  });
+
+  it("fires on_intervention_used reaction when an intervention is used", () => {
+    // Use the-yardmaster which has on_intervention_used reaction
+    const { encounter } = createTestEncounter("mission/clearance", "boss/the-yardmaster");
+    startEncounter(encounter!);
+
+    const logBefore = encounter!.encounterLog.length;
+    const result = useIntervention(encounter!, "intel_reveal");
+    expect(result).toBe(true);
+
+    // Check that the intervention was logged AND a passive_trigger reaction followed
+    const newEntries = encounter!.encounterLog.slice(logBefore);
+    const interventionLog = newEntries.find((e) => e.actionKind === "intervention");
+    expect(interventionLog).toBeDefined();
+
+    const reactionLog = newEntries.find((e) => e.actionKind === "passive_trigger");
+    expect(reactionLog).toBeDefined();
+    expect(reactionLog!.abilityId).toContain("on_intervention_used");
+  });
+
+  it("uses new managerial interventions: priority_target, field_rotation, district_intel_reserve", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    // priority_target
+    const ptUsage = encounter!.interventions.find((i) => i.interventionId === "priority_target");
+    expect(ptUsage).toBeDefined();
+    expect(ptUsage!.usesRemaining).toBe(1);
+    const ptResult = useIntervention(encounter!, "priority_target");
+    expect(ptResult).toBe(true);
+    const { boss } = getActors(encounter!);
+    expect(boss.activeStatuses.some((s) => s.statusId === "marked")).toBe(true);
+
+    // field_rotation
+    const frResult = useIntervention(encounter!, "field_rotation");
+    expect(frResult).toBe(true);
+
+    // district_intel_reserve
+    const dirResult = useIntervention(encounter!, "district_intel_reserve");
+    expect(dirResult).toBe(true);
+    const { allies } = getActors(encounter!);
+    expect(allies.some((a) => a.activeStatuses.some((s) => s.statusId === "guarded"))).toBe(true);
+  });
+
+  it("generates transcript entries for phase transitions in expansion bosses", () => {
+    const { encounter } = createTestEncounter("mission/clearance", "boss/the-regulator");
+    startEncounter(encounter!);
+
+    const { boss } = getActors(encounter!);
+    boss.currentHp = Math.floor(boss.maxHp * 0.5);
+    boss.baseDefense = 999;
+
+    advanceEncounterRound(encounter!);
+
+    const phaseTransitions = encounter!.encounterLog.filter(
+      (e) => e.actionKind === "phase_transition",
+    );
+    expect(encounter!.currentPhaseIndex).toBeGreaterThanOrEqual(1);
+    expect(phaseTransitions.length).toBeGreaterThanOrEqual(1);
+    expect(phaseTransitions[0]?.abilityId).toBe("phase-1");
+  });
+
+  it("registers the new expansion sites with valid enemy families", () => {
+    const newSiteIds = [
+      "site/collapsed-customs-house",
+      "site/rift-cracked-switchyard",
+      "site/shuttered-transformer-vault",
+      "site/suspended-overpass-segment",
+    ];
+
+    for (const siteId of newSiteIds) {
+      const site = siteConceptById.get(siteId);
+      expect(site, `Missing site concept ${siteId}`).toBeDefined();
+
+      if (!site) {
+        continue;
+      }
+
+      for (const familyId of site.enemyFamilyIds) {
+        expect(
+          templateRegistry.enemyFamilyById.has(familyId),
+          `Missing enemy family ${familyId} in site ${siteId}`,
+        ).toBe(true);
+      }
+    }
+  });
 });
 
 // ── Interruption queue ───────────────────────────────────────────────────
