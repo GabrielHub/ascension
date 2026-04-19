@@ -195,18 +195,7 @@ function OperatorIdentityPreview({
 
       {previewVisitor ? (
         <div className="glass-card-inset rounded-xl px-2.5 py-2">
-          <VisitorRow
-            visitor={previewVisitor}
-            replaceableOperators={[]}
-            showReplacePicker={false}
-            onToggleReplacePicker={() => {}}
-            onAccept={() => {}}
-            onDefer={() => {}}
-            onReject={() => {}}
-            onReplace={() => {}}
-            onDismiss={() => {}}
-            rejectReputationDelta={0}
-          />
+          <VisitorRow visitor={previewVisitor} />
         </div>
       ) : null}
       <div className="space-y-3 rounded-xl border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.45)] p-4">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import type { BuildType } from "./_svg-shared";
@@ -22,6 +22,7 @@ import {
   getEnvLightingPreset,
   resolveShellAssetUrl,
 } from "./environment-parts";
+import { useLazyVisible, useSvgFetch } from "./_svg-preview";
 import { SceneContractSummary } from "./svg-asset-viewer-page";
 import { glassCardNavyClass, tabButtonClass } from "./styles";
 
@@ -45,58 +46,8 @@ const ASSET_CLASS_DESCRIPTIONS: Record<AssetClass, string> = {
     "Scene-first HQ review — approved room scenes in recipes/ plus shell, structural, prop, and background support assets",
 };
 
-// ──────────────────────────────────────────────────────────────────────────
-// Shared: SVG fetch for environment assets
-// ──────────────────────────────────────────────────────────────────────────
-
-function useSvgFetch(src: string, enabled: boolean) {
-  const [svgText, setSvgText] = useState<string | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!enabled) return;
-    setSvgText(null);
-    setError(false);
-    let cancelled = false;
-    fetch(src)
-      .then((r) => {
-        if (!r.ok) throw new Error(`${r.status}`);
-        return r.text();
-      })
-      .then((text) => {
-        if (!cancelled) setSvgText(text);
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [src, enabled]);
-
-  return { svgText, error };
-}
-
 function LazySvgPreview({ src, alt, className }: { src: string; alt: string; className?: string }) {
-  const [visible, setVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
+  const { ref, visible } = useLazyVisible();
   const { svgText, error } = useSvgFetch(src, visible);
 
   if (error) {

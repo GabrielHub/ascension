@@ -41,6 +41,7 @@ import { titleCase } from "./_glossary";
 import { resolveOperatorBuild } from "./operator-build";
 import { getRecipeById } from "./operator-parts";
 import { PortraitFromRecipe, type AppearanceRecipe } from "./_portrait-parts";
+import { useLazyVisible, useSvgFetch } from "./_svg-preview";
 
 type FamilyFilter = "" | SvgAssetFamily;
 type ViewMode = "grid" | "detail";
@@ -95,6 +96,37 @@ interface ViewerFilters {
   category: string;
   room: string;
   search: string;
+}
+
+interface CommandStripModel {
+  search: string;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  usage: SvgAssetUsage;
+  viewMode: ViewMode;
+  disabledDetail: boolean;
+  sort: SortKey;
+  lighting: string;
+  zoom: number;
+  showGrid: boolean;
+  showIsoAxes: boolean;
+  navCollapsed: boolean;
+  inspectorCollapsed: boolean;
+  pinnedCount: number;
+  resultCount: number;
+}
+
+interface CommandStripActions {
+  onSearchChange: (next: string) => void;
+  onUsageChange: (next: SvgAssetUsage) => void;
+  onViewModeChange: (next: ViewMode) => void;
+  onSortChange: (next: SortKey) => void;
+  onLightingChange: (next: string) => void;
+  onZoomChange: (next: number) => void;
+  onShowGridChange: (next: boolean) => void;
+  onShowIsoAxesChange: (next: boolean) => void;
+  onNavCollapsedChange: (next: boolean) => void;
+  onInspectorCollapsedChange: (next: boolean) => void;
+  onClearPinned: () => void;
 }
 
 const ENV_CATEGORY_LABELS: Record<EnvPartMeta["category"], string> = {
@@ -385,6 +417,22 @@ function clampViewerZoom(nextZoom: number): number {
   return Math.max(0.25, Math.min(4, Number(nextZoom.toFixed(2))));
 }
 
+function getAdjacentRecordId(
+  records: readonly ViewerRecord[],
+  currentId: string | null,
+  direction: 1 | -1,
+): string | null {
+  if (records.length === 0) return null;
+  if (!currentId) return records[0]?.id ?? null;
+
+  const index = records.findIndex((record) => record.id === currentId);
+  if (index === -1) return records[0]?.id ?? null;
+
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= records.length) return null;
+  return records[nextIndex]?.id ?? null;
+}
+
 function sortRecords(records: readonly ViewerRecord[], sortKey: SortKey): ViewerRecord[] {
   const copy = [...records];
   const statusWeight = (status: SvgAssetStatus) => (status === "approved" ? 0 : 1);
@@ -518,83 +566,6 @@ function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode
   return familyNodes;
 }
 
-const svgFetchCache = new Map<string, Promise<string>>();
-
-function fetchSvgCached(src: string): Promise<string> {
-  const cached = svgFetchCache.get(src);
-  if (cached) return cached;
-  const promise = fetch(src)
-    .then((response) => {
-      if (!response.ok) throw new Error(`${response.status}`);
-      return response.text();
-    })
-    .finally(() => {
-      // Keep the cache scoped to in-flight requests so local SVG edits still refresh without a hard
-      // reload while duplicate consumers share the same fetch.
-      svgFetchCache.delete(src);
-    })
-    .catch((error) => {
-      throw error;
-    });
-  svgFetchCache.set(src, promise);
-  return promise;
-}
-
-function useSvgFetch(src: string | null) {
-  const [svgText, setSvgText] = useState<string | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!src) {
-      setSvgText(null);
-      setError(false);
-      return;
-    }
-
-    setSvgText(null);
-    setError(false);
-    let cancelled = false;
-
-    fetchSvgCached(src)
-      .then((text) => {
-        if (!cancelled) setSvgText(text);
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
-
-  return { svgText, error };
-}
-
-function useLazyVisible() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element || visible) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [visible]);
-
-  return { ref, visible };
-}
-
 function EyebrowLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <span
@@ -697,6 +668,61 @@ function StatusPill({ status, usage }: { status: SvgAssetStatus; usage: SvgAsset
         {usage}
       </span>
     </span>
+  );
+}
+
+function ComparePinButton({
+  isPinned,
+  onToggle,
+  testId,
+  labelMode = "short",
+  className = "",
+}: {
+  isPinned: boolean;
+  onToggle: () => void;
+  testId: string;
+  labelMode?: "short" | "full";
+  className?: string;
+}) {
+  const tone = isPinned
+    ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
+    : labelMode === "full"
+      ? "border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] text-silver/75 hover:border-gold/30 hover:text-gold"
+      : "border-[rgba(200,168,76,0.1)] text-silver/55 hover:border-gold/30 hover:text-gold";
+  const layout =
+    labelMode === "full"
+      ? "justify-center rounded-md px-3 py-2 uppercase tracking-[0.1em]"
+      : "rounded px-2 py-1";
+  const label =
+    labelMode === "full"
+      ? isPinned
+        ? "pinned to compare"
+        : "pin to compare"
+      : isPinned
+        ? "pinned"
+        : "pin";
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={isPinned}
+      aria-label={isPinned ? "Unpin from compare" : "Pin to compare"}
+      data-testid={testId}
+      className={`inline-flex items-center gap-1 border text-xs transition-colors ${layout} ${tone} ${className}`.trim()}
+    >
+      <svg
+        viewBox="0 0 12 12"
+        className={labelMode === "full" ? "h-3 w-3" : "h-2.5 w-2.5"}
+        fill={isPinned ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.3"
+        aria-hidden
+      >
+        <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
+      </svg>
+      {label}
+    </button>
   );
 }
 
@@ -1033,57 +1059,11 @@ function ViewToggle({
 }
 
 function CommandStrip({
-  search,
-  onSearchChange,
-  searchInputRef,
-  usage,
-  onUsageChange,
-  viewMode,
-  onViewModeChange,
-  disabledDetail,
-  sort,
-  onSortChange,
-  lighting,
-  onLightingChange,
-  zoom,
-  onZoomChange,
-  showGrid,
-  onShowGridChange,
-  showIsoAxes,
-  onShowIsoAxesChange,
-  navCollapsed,
-  onNavCollapsedChange,
-  inspectorCollapsed,
-  onInspectorCollapsedChange,
-  selectedCount,
-  resultCount,
-  onClearSelection,
+  model,
+  actions,
 }: {
-  search: string;
-  onSearchChange: (next: string) => void;
-  searchInputRef: React.RefObject<HTMLInputElement | null>;
-  usage: SvgAssetUsage;
-  onUsageChange: (next: SvgAssetUsage) => void;
-  viewMode: ViewMode;
-  onViewModeChange: (next: ViewMode) => void;
-  disabledDetail: boolean;
-  sort: SortKey;
-  onSortChange: (next: SortKey) => void;
-  lighting: string;
-  onLightingChange: (next: string) => void;
-  zoom: number;
-  onZoomChange: (next: number) => void;
-  showGrid: boolean;
-  onShowGridChange: (next: boolean) => void;
-  showIsoAxes: boolean;
-  onShowIsoAxesChange: (next: boolean) => void;
-  navCollapsed: boolean;
-  onNavCollapsedChange: (next: boolean) => void;
-  inspectorCollapsed: boolean;
-  onInspectorCollapsedChange: (next: boolean) => void;
-  selectedCount: number;
-  resultCount: number;
-  onClearSelection: () => void;
+  model: CommandStripModel;
+  actions: CommandStripActions;
 }) {
   return (
     <div
@@ -1092,15 +1072,15 @@ function CommandStrip({
     >
       <button
         type="button"
-        onClick={() => onNavCollapsedChange(!navCollapsed)}
-        aria-label={navCollapsed ? "Expand library navigator" : "Collapse library navigator"}
-        aria-pressed={navCollapsed}
+        onClick={() => actions.onNavCollapsedChange(!model.navCollapsed)}
+        aria-label={model.navCollapsed ? "Expand library navigator" : "Collapse library navigator"}
+        aria-pressed={model.navCollapsed}
         data-testid="svg-nav-collapse"
         className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] text-silver/55 transition-colors hover:border-gold/30 hover:text-gold"
       >
         <svg
           viewBox="0 0 12 12"
-          className={`h-3 w-3 transition-transform ${navCollapsed ? "" : "rotate-180"}`}
+          className={`h-3 w-3 transition-transform ${model.navCollapsed ? "" : "rotate-180"}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -1109,51 +1089,59 @@ function CommandStrip({
           <path d="M8 3l-4 3 4 3" />
         </svg>
       </button>
-      <SearchField value={search} onChange={onSearchChange} inputRef={searchInputRef} />
+      <SearchField
+        value={model.search}
+        onChange={actions.onSearchChange}
+        inputRef={model.searchInputRef}
+      />
       <SegmentedControl
         label="Usage"
-        value={usage}
+        value={model.usage}
         options={USAGE_OPTIONS}
-        onChange={onUsageChange}
+        onChange={actions.onUsageChange}
         testIdPrefix="svg-usage"
       />
-      <ViewToggle value={viewMode} onChange={onViewModeChange} disabledDetail={disabledDetail} />
-      <SortControl value={sort} onChange={onSortChange} />
-      <LightingPopover activeId={lighting} onChange={onLightingChange} />
+      <ViewToggle
+        value={model.viewMode}
+        onChange={actions.onViewModeChange}
+        disabledDetail={model.disabledDetail}
+      />
+      <SortControl value={model.sort} onChange={actions.onSortChange} />
+      <LightingPopover activeId={model.lighting} onChange={actions.onLightingChange} />
       <div className="inline-flex items-center gap-1">
         <OverlayToggle
           label="Grid"
-          active={showGrid}
-          onChange={onShowGridChange}
+          active={model.showGrid}
+          onChange={actions.onShowGridChange}
           testId="svg-toggle-grid"
         />
         <OverlayToggle
           label="Axes"
-          active={showIsoAxes}
-          onChange={onShowIsoAxesChange}
+          active={model.showIsoAxes}
+          onChange={actions.onShowIsoAxesChange}
           testId="svg-toggle-axes"
         />
       </div>
-      <ZoomPod zoom={zoom} onZoomChange={onZoomChange} />
+      <ZoomPod zoom={model.zoom} onZoomChange={actions.onZoomChange} />
 
       <div className="ml-auto flex items-center gap-2 text-xs text-silver/55">
         <span data-testid="svg-result-count" className="tabular-nums">
           <span className="font-[family-name:var(--font-display)] text-silver-bright">
-            {resultCount}
+            {model.resultCount}
           </span>
           <span className="ml-1">in view</span>
         </span>
-        {selectedCount > 0 && (
+        {model.pinnedCount > 0 && (
           <>
             <span className="h-3 w-px bg-[rgba(200,168,76,0.14)]" />
             <button
               type="button"
-              onClick={onClearSelection}
+              onClick={actions.onClearPinned}
               data-testid="svg-clear-selection"
               className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.14)] bg-[rgba(200,168,76,0.06)] px-2 py-1 text-gold transition-colors hover:border-gold/40"
               aria-label="Clear pinned selection"
             >
-              <span className="tabular-nums">{selectedCount}</span>
+              <span className="tabular-nums">{model.pinnedCount}</span>
               <span>pinned</span>
               <svg
                 viewBox="0 0 12 12"
@@ -1170,15 +1158,17 @@ function CommandStrip({
         )}
         <button
           type="button"
-          onClick={() => onInspectorCollapsedChange(!inspectorCollapsed)}
-          aria-label={inspectorCollapsed ? "Expand inspector" : "Collapse inspector"}
-          aria-pressed={inspectorCollapsed}
+          onClick={() => actions.onInspectorCollapsedChange(!model.inspectorCollapsed)}
+          aria-label={model.inspectorCollapsed ? "Expand inspector" : "Collapse inspector"}
+          aria-pressed={model.inspectorCollapsed}
           data-testid="svg-inspector-collapse"
           className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] text-silver/55 transition-colors hover:border-gold/30 hover:text-gold"
         >
           <svg
             viewBox="0 0 12 12"
-            className={`h-3 w-3 transition-transform ${inspectorCollapsed ? "rotate-180" : ""}`}
+            className={`h-3 w-3 transition-transform ${
+              model.inspectorCollapsed ? "rotate-180" : ""
+            }`}
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
@@ -1503,7 +1493,7 @@ function ThumbnailSvg({
   preset: EnvLightingPreset;
 }) {
   const { ref, visible } = useLazyVisible();
-  const { svgText, error } = useSvgFetch(visible ? src : null);
+  const { svgText, error } = useSvgFetch(src, visible);
 
   return (
     <div
@@ -1607,30 +1597,12 @@ function ThumbnailCard({
         >
           open detail →
         </button>
-        <button
-          type="button"
-          onClick={onTogglePin}
-          aria-pressed={isPinned}
-          aria-label={isPinned ? "Unpin from compare" : "Pin to compare"}
-          data-testid={`svg-card-pin-${record.id}`}
-          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors ${
-            isPinned
-              ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
-              : "border-[rgba(200,168,76,0.1)] text-silver/55 hover:border-gold/30 hover:text-gold"
-          }`}
-        >
-          <svg
-            viewBox="0 0 12 12"
-            className="h-2.5 w-2.5"
-            fill={isPinned ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth="1.3"
-            aria-hidden
-          >
-            <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
-          </svg>
-          {isPinned ? "pinned" : "pin"}
-        </button>
+        <ComparePinButton
+          isPinned={isPinned}
+          onToggle={onTogglePin}
+          testId={`svg-card-pin-${record.id}`}
+          className="px-2 py-0.5"
+        />
       </div>
     </div>
   );
@@ -1690,6 +1662,19 @@ function BrowseGrid({
   );
 }
 
+const hqRoomPreviewSnapshotCache = new Map<string, HqWorldSnapshot | null>();
+
+function getHqRoomBindingSnapshotCacheKey(binding: HqRoomSceneBinding): string {
+  return [
+    binding.id,
+    binding.buildingId,
+    binding.templateId,
+    binding.roomStateId,
+    binding.slotId,
+    binding.floorIndex,
+  ].join("|");
+}
+
 function buildHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapshot | null {
   const template = templateRegistry.roomById.get(binding.templateId);
   const building = templateRegistry.buildingById.get(binding.buildingId);
@@ -1726,6 +1711,16 @@ function buildHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapsho
   return createHqWorldSnapshot(building.name, geometry, [], 480, binding.buildingId);
 }
 
+function getHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapshot | null {
+  const cacheKey = getHqRoomBindingSnapshotCacheKey(binding);
+  const cached = hqRoomPreviewSnapshotCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const snapshot = buildHqRoomBindingSnapshot(binding);
+  hqRoomPreviewSnapshotCache.set(cacheKey, snapshot);
+  return snapshot;
+}
+
 function HqRoomFitCanvas({
   binding,
   showIsoAxes,
@@ -1733,7 +1728,7 @@ function HqRoomFitCanvas({
   binding: HqRoomSceneBinding;
   showIsoAxes: boolean;
 }) {
-  const snapshot = useMemo(() => buildHqRoomBindingSnapshot(binding), [binding]);
+  const snapshot = useMemo(() => getHqRoomBindingSnapshot(binding), [binding]);
   if (!snapshot) {
     return (
       <div className="flex h-full items-center justify-center text-xs text-silver/50">
@@ -1967,30 +1962,7 @@ function DetailHeader({
         >
           <span aria-hidden>▸</span>
         </button>
-        <button
-          type="button"
-          onClick={onTogglePin}
-          aria-pressed={isPinned}
-          aria-label={isPinned ? "Unpin from compare" : "Pin to compare"}
-          data-testid="svg-detail-pin"
-          className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs transition-colors ${
-            isPinned
-              ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
-              : "border-[rgba(200,168,76,0.1)] text-silver/55 hover:border-gold/30 hover:text-gold"
-          }`}
-        >
-          <svg
-            viewBox="0 0 12 12"
-            className="h-2.5 w-2.5"
-            fill={isPinned ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth="1.3"
-            aria-hidden
-          >
-            <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
-          </svg>
-          {isPinned ? "pinned" : "pin"}
-        </button>
+        <ComparePinButton isPinned={isPinned} onToggle={onTogglePin} testId="svg-detail-pin" />
       </div>
     </div>
   );
@@ -2389,29 +2361,12 @@ function InspectorRail({
           )}
 
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={onTogglePin}
-              aria-pressed={isPinned}
-              data-testid="svg-inspector-pin"
-              className={`inline-flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-colors ${
-                isPinned
-                  ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
-                  : "border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] text-silver/75 hover:border-gold/30 hover:text-gold"
-              }`}
-            >
-              <svg
-                viewBox="0 0 12 12"
-                className="h-3 w-3"
-                fill={isPinned ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="1.3"
-                aria-hidden
-              >
-                <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
-              </svg>
-              {isPinned ? "pinned to compare" : "pin to compare"}
-            </button>
+            <ComparePinButton
+              isPinned={isPinned}
+              onToggle={onTogglePin}
+              testId="svg-inspector-pin"
+              labelMode="full"
+            />
           </div>
 
           {violations > 0 && (
@@ -2740,14 +2695,10 @@ export function SvgAssetContractPanel() {
 
   const handleNextPrev = useCallback(
     (direction: 1 | -1) => {
-      if (!focusedRecord) return;
-      const index = sortedRecords.findIndex((r) => r.id === focusedRecord.id);
-      if (index === -1) return;
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= sortedRecords.length) return;
-      setFocusedId(sortedRecords[nextIndex].id);
+      const nextId = getAdjacentRecordId(sortedRecords, focusedRecord?.id ?? null, direction);
+      if (nextId) setFocusedId(nextId);
     },
-    [focusedRecord, sortedRecords],
+    [sortedRecords, focusedRecord],
   );
 
   const handleCompareAllSiblings = useCallback(() => {
@@ -2801,41 +2752,44 @@ export function SvgAssetContractPanel() {
   }, [focusedRecord, handleNextPrev, handleTogglePin, viewMode]);
 
   const showCompareView = viewMode === "detail" && pinnedRecords.length >= 2;
+  const commandStripModel: CommandStripModel = {
+    search,
+    searchInputRef,
+    usage,
+    viewMode,
+    disabledDetail: !focusedRecord,
+    sort: sortKey,
+    lighting: lightingPresetId,
+    zoom,
+    showGrid,
+    showIsoAxes,
+    navCollapsed,
+    inspectorCollapsed,
+    pinnedCount: pinnedRecords.length,
+    resultCount: sortedRecords.length,
+  };
+  const commandStripActions: CommandStripActions = {
+    onSearchChange: setSearch,
+    onUsageChange: (next) => {
+      setUsage(next);
+      setCategory("");
+      setRoom("");
+      setFocusedId(null);
+    },
+    onViewModeChange: setViewMode,
+    onSortChange: setSortKey,
+    onLightingChange: setLightingPresetId,
+    onZoomChange: setZoom,
+    onShowGridChange: setShowGrid,
+    onShowIsoAxesChange: setShowIsoAxes,
+    onNavCollapsedChange: setNavCollapsed,
+    onInspectorCollapsedChange: setInspectorCollapsed,
+    onClearPinned: handleClearPinned,
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-void" data-testid="svg-panel">
-      <CommandStrip
-        search={search}
-        onSearchChange={setSearch}
-        searchInputRef={searchInputRef}
-        usage={usage}
-        onUsageChange={(next) => {
-          setUsage(next);
-          setCategory("");
-          setRoom("");
-          setFocusedId(null);
-        }}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        disabledDetail={!focusedRecord}
-        sort={sortKey}
-        onSortChange={setSortKey}
-        lighting={lightingPresetId}
-        onLightingChange={setLightingPresetId}
-        zoom={zoom}
-        onZoomChange={setZoom}
-        showGrid={showGrid}
-        onShowGridChange={setShowGrid}
-        showIsoAxes={showIsoAxes}
-        onShowIsoAxesChange={setShowIsoAxes}
-        navCollapsed={navCollapsed}
-        onNavCollapsedChange={setNavCollapsed}
-        inspectorCollapsed={inspectorCollapsed}
-        onInspectorCollapsedChange={setInspectorCollapsed}
-        selectedCount={pinnedRecords.length}
-        resultCount={sortedRecords.length}
-        onClearSelection={handleClearPinned}
-      />
+      <CommandStrip model={commandStripModel} actions={commandStripActions} />
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {!navCollapsed && (

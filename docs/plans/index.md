@@ -6,10 +6,14 @@ This folder is reserved for active execution plans only. Completed work should b
 
 The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
 
-There are two active checked-in plans right now:
+There are four active checked-in plans right now:
 
 - [Porter's Room Asset Remediation](./porters-room-asset-remediation.md) — concrete Porter's room-package cleanup for missing roots, scenes, shell, structure, and viewer/runtime parity
 - [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — prerequisite work for the tower package: scene-builder support, shell sizing, and elevation-band definition before room-scene production
+- [Operations UI Cascade Refactor](./operations-ui-cascade-refactor.md) — apply the same right-anchored cascading panel model to Contracts, Active, Opportunities, and History so Operations no longer depends on the older monolithic bottom-panel composition
+- [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
+
+The HQ UI Cascade Refactor shipped: HQ now uses one right-anchored cascading panel stack for rooms, people, management, teams, inventory, and market. Room slots, staff assignment, visitor recruitment/replace, and the floor switcher all run through the cascade or a floating HQ-world control, so the plan has been retired.
 
 ## Shared Execution Contract
 

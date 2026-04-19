@@ -40,7 +40,12 @@ import { ManagementPanel } from "./management-panel";
 import { MarketPanel } from "./market-panel";
 import { OperatorPortrait } from "./operator-portrait";
 import { OperatorCombatSummary } from "./operator-combat-summary";
-import { RoomCultureBadges, RoomDetailPanel } from "./room-detail-panel";
+import {
+  RoomCultureBadges,
+  RoomDetailPanel,
+  RoomStaffingBody,
+  RoomUpgradesBody,
+} from "./room-detail-panel";
 import { OperationsPanel } from "./raid-panel";
 import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
 import { RaidWorldView } from "./raid-world-view";
@@ -48,6 +53,17 @@ import { RosterPanel } from "./roster-panel";
 import { SettingsModal } from "./settings-modal";
 import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
+import { PanelFrame, PanelStack, type PanelStackEntry } from "./_panel-stack";
+import {
+  categoryFromStack,
+  closeAt,
+  effectiveFocusFromStack,
+  rootEntryForCategory,
+  setBranchAt,
+  stackFromFocus,
+  type HqCategory,
+  type StackFocusEntry,
+} from "./_hq-focus-stack";
 import { useEventLog } from "./use-event-log";
 import {
   getRecoveryStateSummary,
@@ -58,7 +74,7 @@ import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
 import { GuidanceHost } from "./guidance-host";
 import { AnchorRegistryProvider, useAnchorRegistry, useGuidanceAnchor } from "./guidance-anchor";
-import { getCultureSummaryLabel, getRoleMeta, getSpecialtyMeta } from "./_glossary";
+import { getCultureSummaryLabel, getRoleMeta, getSpecialtyMeta, getTagMeta } from "./_glossary";
 import {
   emptyStateClass,
   emptyStateIconClass,
@@ -205,7 +221,6 @@ export async function resolveInterruptionAction(
 
 // ── Category definitions ─────────────────────────────────────────────────
 
-type HqCategory = "rooms" | "roster" | "management" | "teams" | "inventory" | "market";
 type OpsCategory = "contract" | "active" | "opportunities" | "history";
 
 const HQ_CATEGORIES: readonly { id: HqCategory; label: string; icon: string }[] = [
@@ -306,6 +321,14 @@ export function buildGameCallbacks(
     },
   };
 }
+
+const HIREABLE_STAFF_ROLES = [
+  "staff:admin",
+  "staff:reception",
+  "staff:logistics",
+  "staff:medical",
+  "staff:maintenance",
+] as const;
 
 const OPS_CATEGORIES: readonly { id: OpsCategory; label: string; icon: string }[] = [
   { id: "contract", label: "Contract", icon: "\u2691" },
@@ -498,7 +521,7 @@ function FocusedOperatorOverlay({
   );
 
   return (
-    <div className="glass-card pointer-events-auto animate-enter flex max-h-[calc(100vh-120px)] w-[26rem] flex-col overflow-hidden">
+    <div className="glass-card pointer-events-auto animate-enter flex h-full max-h-full w-full min-h-0 flex-col overflow-hidden">
       <div className="flex items-start justify-between gap-3 border-b border-[rgba(200,168,76,0.08)] p-4 pb-3">
         <div className="flex items-start gap-3">
           <OperatorPortrait
@@ -743,8 +766,9 @@ function FocusedRoomOverlay({
   roomUpgrades,
   callbacks,
   roomCulture,
-  reserveRoomsPanelSpace,
   onDismiss,
+  onOpenUpgrades,
+  onOpenStaffing,
 }: {
   guildName: string;
   room: RoomViewModel;
@@ -752,17 +776,12 @@ function FocusedRoomOverlay({
   roomUpgrades: readonly UpgradeViewModel[];
   callbacks: GameCallbacks;
   roomCulture: RoomCultureViewModel | null;
-  reserveRoomsPanelSpace: boolean;
   onDismiss: () => void;
+  onOpenUpgrades?: () => void;
+  onOpenStaffing?: () => void;
 }) {
-  const maxHeightClass = reserveRoomsPanelSpace
-    ? "max-h-[calc(100vh-380px)]"
-    : "max-h-[calc(100vh-120px)]";
-
   return (
-    <div
-      className={`glass-card pointer-events-auto animate-enter flex w-[36rem] flex-col overflow-hidden ${maxHeightClass}`}
-    >
+    <div className="glass-card pointer-events-auto animate-enter flex h-full max-h-full w-full min-h-0 flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto px-5 py-4">
         <RoomDetailPanel
           guildName={guildName}
@@ -772,6 +791,8 @@ function FocusedRoomOverlay({
           callbacks={callbacks}
           roomCulture={roomCulture}
           onClose={onDismiss}
+          onOpenUpgrades={onOpenUpgrades}
+          onOpenStaffing={onOpenStaffing}
         />
       </div>
     </div>
@@ -784,26 +805,23 @@ function FocusedVisitorOverlay({
   visitor,
   policies,
   rosterFull,
-  replaceableOperators,
   onRecruit,
   onDeferVisitor,
   onDismissVisitor,
-  onReplaceRecruit,
+  onOpenReplacePicker,
   onDismissRecruit,
   onClose,
 }: {
   visitor: VisitorViewModel;
   policies: PolicyState;
   rosterFull: boolean;
-  replaceableOperators: readonly OperatorViewModel[];
   onRecruit: () => void;
   onDeferVisitor: () => void;
   onDismissVisitor: () => void;
-  onReplaceRecruit: (operatorId: string) => void;
+  onOpenReplacePicker: () => void;
   onDismissRecruit: () => void;
   onClose: () => void;
 }) {
-  const [showReplacementPicker, setShowReplacementPicker] = useState(false);
   const patienceMinutes = Math.max(0, Math.ceil(visitor.patience));
   const patienceHours = Math.floor(patienceMinutes / 60);
   const patienceRemainder = patienceMinutes % 60;
@@ -815,7 +833,7 @@ function FocusedVisitorOverlay({
   const personaHooks = visitor.personaHooks ?? [];
 
   return (
-    <div className="glass-card pointer-events-auto animate-enter w-72 border-[rgba(232,170,60,0.1)] p-4">
+    <div className="glass-card pointer-events-auto animate-enter flex h-full w-full min-h-0 flex-col overflow-y-auto border-[rgba(232,170,60,0.1)] p-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
@@ -964,14 +982,11 @@ function FocusedVisitorOverlay({
         >
           <button
             type="button"
+            data-testid="visitor-primary-action"
             className="btn-primary flex-1"
             disabled={!visitor.canAccept && !visitor.canReplace}
             onClick={
-              visitor.canAccept
-                ? onRecruit
-                : visitor.canReplace
-                  ? () => setShowReplacementPicker((current) => !current)
-                  : undefined
+              visitor.canAccept ? onRecruit : visitor.canReplace ? onOpenReplacePicker : undefined
             }
           >
             {visitor.canAccept ? "Recruit" : visitor.canReplace ? "Replace" : "Full"}
@@ -1019,37 +1034,6 @@ function FocusedVisitorOverlay({
           </Tooltip>
         )}
       </div>
-
-      {showReplacementPicker && visitor.canReplace && replaceableOperators.length > 0 && (
-        <div className="mt-3 rounded-lg border border-[rgba(232,170,60,0.12)] bg-[rgba(232,170,60,0.04)] px-3 py-2">
-          <div className="text-xs uppercase tracking-[0.12em] text-[rgba(232,170,60,0.7)]">
-            Replace Operator
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {replaceableOperators.map((operator) => (
-              <Tooltip
-                key={operator.id}
-                content={
-                  operator.canBeReplaced
-                    ? `Dismiss ${operator.name} and recruit ${visitor.name}`
-                    : operator.replaceLockedReason || "Unavailable"
-                }
-              >
-                <button
-                  type="button"
-                  className={`btn-ghost px-2 py-0.5 text-sm ${
-                    operator.canBeReplaced ? "" : "cursor-not-allowed text-silver/30"
-                  }`}
-                  disabled={!operator.canBeReplaced}
-                  onClick={() => onReplaceRecruit(operator.id)}
-                >
-                  {operator.name}
-                </button>
-              </Tooltip>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1107,6 +1091,567 @@ function TeamsCard({ teams }: { teams: readonly TeamViewModel[] }) {
   );
 }
 
+// ── HQ cascade stack rendering ──────────────────────────────────────────
+
+interface HqStackRenderContext {
+  stack: readonly StackFocusEntry[];
+  hq: NonNullable<ReturnType<typeof buildHqViewFromPhase1>>;
+  teams: readonly TeamViewModel[];
+  roomCultures: readonly RoomCultureViewModel[];
+  inventory: readonly InventoryItemViewModel[];
+  lootAutomation: LootAutomationViewModel | null;
+  equipment: readonly EquipmentViewModel[];
+  marketItems: readonly MarketItemViewModel[];
+  cityPressure: ReturnType<typeof buildCityPressureView>;
+  callbacks: GameCallbacks;
+  handleOperatorInspectedGuidance: () => void;
+  handleFocusChange: (focus: FocusPayload | null) => void;
+  onCloseAt: (index: number) => void;
+  onOpenBranch: (parentIndex: number, branch: StackFocusEntry | null) => void;
+}
+
+function entryKey(entry: StackFocusEntry, index: number): string {
+  switch (entry.kind) {
+    case "room":
+      return `${index}:room:${entry.roomId}`;
+    case "operator":
+      return `${index}:operator:${entry.operatorId}`;
+    case "staff":
+      return `${index}:staff:${entry.staffId}`;
+    case "visitor":
+      return `${index}:visitor:${entry.visitorId}`;
+    case "team":
+      return `${index}:team:${entry.teamId}`;
+    case "room-upgrades":
+      return `${index}:room-upgrades:${entry.roomId}`;
+    case "room-staffing":
+      return `${index}:room-staffing:${entry.roomId}`;
+    case "place-room":
+      return `${index}:place-room:${entry.slotId}`;
+    case "replace-operator":
+      return `${index}:replace-operator:${entry.visitorId}`;
+    case "hire-staff":
+      return `${index}:hire-staff`;
+    default:
+      return `${index}:${entry.kind}`;
+  }
+}
+
+function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
+  const {
+    stack,
+    hq,
+    teams,
+    roomCultures,
+    inventory,
+    lootAutomation,
+    equipment,
+    marketItems,
+    cityPressure,
+    callbacks,
+    handleOperatorInspectedGuidance,
+    handleFocusChange,
+    onCloseAt,
+    onOpenBranch,
+  } = ctx;
+
+  return stack
+    .map((entry, index): PanelStackEntry | null => {
+      const close = () => onCloseAt(index);
+
+      switch (entry.kind) {
+        case "rooms-root":
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[28rem]",
+            content: (
+              <PanelFrame
+                testId="panel-rooms-root"
+                title={hq.building.name}
+                subtitle={`Floor ${hq.building.activeFloorDisplayNumber ?? hq.building.activeFloorIndex + 1} / ${hq.building.floorCount}`}
+                onClose={close}
+              >
+                <HqPanel
+                  hq={hq}
+                  focus={effectiveFocusFromStack(stack)}
+                  onFocusChange={handleFocusChange}
+                  onOpenPlaceRoom={(slot) =>
+                    onOpenBranch(index, {
+                      kind: "place-room",
+                      slotId: slot.id,
+                      floorIndex: slot.floorIndex,
+                    })
+                  }
+                />
+              </PanelFrame>
+            ),
+          };
+
+        case "room": {
+          const room = hq.rooms.find((r) => r.id === entry.roomId);
+          if (!room) return null;
+          const roomUpgrades = hq.roomUpgrades.filter((u) => u.targetId === room.templateId);
+          const roomCulture = roomCultures.find((c) => c.roomId === room.id) ?? null;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[30rem]",
+            content: (
+              <FocusedRoomOverlay
+                guildName={hq.guild.guildName}
+                room={room}
+                buildingUpgrades={hq.upgrades}
+                roomUpgrades={roomUpgrades}
+                callbacks={callbacks}
+                roomCulture={roomCulture}
+                onDismiss={close}
+                onOpenUpgrades={() =>
+                  onOpenBranch(index, { kind: "room-upgrades", roomId: room.id })
+                }
+                onOpenStaffing={() =>
+                  onOpenBranch(index, { kind: "room-staffing", roomId: room.id })
+                }
+              />
+            ),
+          };
+        }
+
+        case "room-upgrades": {
+          const room = hq.rooms.find((r) => r.id === entry.roomId);
+          if (!room) return null;
+          const roomUpgrades = hq.roomUpgrades.filter((u) => u.targetId === room.templateId);
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-room-upgrades"
+                title="Upgrades"
+                subtitle={room.name}
+                onClose={close}
+              >
+                <RoomUpgradesBody
+                  room={room}
+                  buildingUpgrades={hq.upgrades}
+                  roomUpgrades={roomUpgrades}
+                  callbacks={callbacks}
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "room-staffing": {
+          const room = hq.rooms.find((r) => r.id === entry.roomId);
+          if (!room) return null;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[22rem]",
+            content: (
+              <PanelFrame
+                testId="panel-room-staffing"
+                title="Staffing"
+                subtitle={room.name}
+                onClose={close}
+              >
+                <RoomStaffingBody room={room} staff={hq.staff} callbacks={callbacks} />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "place-room": {
+          const slot = hq.expansionSlots.find((s) => s.id === entry.slotId);
+          if (!slot) return null;
+          const templates = hq.placeableRoomTemplates;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[20rem]",
+            content: (
+              <PanelFrame
+                testId="panel-place-room"
+                title="Place Room"
+                subtitle={slot.label}
+                onClose={close}
+              >
+                {templates.length > 0 ? (
+                  <div className="space-y-2">
+                    {templates.map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        className="btn-primary w-full px-2.5 py-1.5 text-left text-xs"
+                        onClick={() => {
+                          callbacks.placeRoom(tpl.id, slot.floorIndex, slot.slotId);
+                          onCloseAt(index);
+                        }}
+                      >
+                        {tpl.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-silver/50">No room templates unlocked yet.</p>
+                )}
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "people-root": {
+          const branchEntry = stack[index + 1];
+          const branchOperatorId = branchEntry?.kind === "operator" ? branchEntry.operatorId : null;
+          const branchStaffId = branchEntry?.kind === "staff" ? branchEntry.staffId : null;
+          const branchVisitorId = branchEntry?.kind === "visitor" ? branchEntry.visitorId : null;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[26rem]",
+            content: (
+              <PanelFrame
+                testId="panel-people-root"
+                title="Roster & Visitors"
+                subtitle={`${hq.rosterPressure.livingOperatorCount}/${hq.rosterPressure.operatorCapacity} operators`}
+                onClose={close}
+              >
+                <RosterPanel
+                  operators={hq.operators}
+                  staff={hq.staff}
+                  visitors={hq.visitors}
+                  callbacks={callbacks}
+                  rosterPressure={hq.rosterPressure}
+                  policies={hq.policies}
+                  focusedOperatorId={branchOperatorId}
+                  focusedStaffId={branchStaffId}
+                  focusedVisitorId={branchVisitorId}
+                  onSelectOperator={(operatorId) => {
+                    const isSame = branchOperatorId === operatorId;
+                    handleOperatorInspectedGuidance();
+                    onOpenBranch(
+                      index,
+                      isSame
+                        ? null
+                        : {
+                            kind: "operator",
+                            operatorId,
+                            highlightBounds: null,
+                          },
+                    );
+                  }}
+                  onSelectStaff={(staffId) => {
+                    const isSame = branchStaffId === staffId;
+                    onOpenBranch(
+                      index,
+                      isSame
+                        ? null
+                        : {
+                            kind: "staff",
+                            staffId,
+                            highlightBounds: null,
+                          },
+                    );
+                  }}
+                  onSelectVisitor={(visitorId) => {
+                    const isSame = branchVisitorId === visitorId;
+                    onOpenBranch(
+                      index,
+                      isSame
+                        ? null
+                        : {
+                            kind: "visitor",
+                            visitorId,
+                            highlightBounds: null,
+                          },
+                    );
+                  }}
+                  onOpenHireStaff={() =>
+                    onOpenBranch(
+                      index,
+                      branchEntry?.kind === "hire-staff" ? null : { kind: "hire-staff" },
+                    )
+                  }
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "operator": {
+          const operator = hq.operators.find((o) => o.id === entry.operatorId);
+          if (!operator) return null;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <FocusedOperatorOverlay
+                operator={operator}
+                policies={hq.policies}
+                relationships={hq.relationships}
+                teams={teams}
+                roomCultures={roomCultures}
+                onDismiss={close}
+              />
+            ),
+          };
+        }
+
+        case "staff": {
+          const staff = hq.staff.find((s) => s.id === entry.staffId);
+          if (!staff) return null;
+          const assignedRoom =
+            staff.assignmentKind === "room"
+              ? (hq.rooms.find((r) => r.id === staff.assignmentTargetId) ?? null)
+              : null;
+          const assignableRooms = hq.rooms.filter(
+            (r) =>
+              r.isActive &&
+              r.requiredStaffTag === staff.roleTag &&
+              r.assignedStaffCount < r.capacity,
+          );
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[22rem]",
+            content: (
+              <PanelFrame
+                testId="panel-staff-detail"
+                title={staff.name}
+                subtitle={staff.status}
+                onClose={close}
+              >
+                <div className="space-y-3 text-sm text-silver/80">
+                  <div className="space-y-1 text-xs text-silver/60">
+                    <div>
+                      <span className="uppercase tracking-[0.12em] text-gold/60">Role</span>{" "}
+                      <span className="text-silver-bright">{staff.roleTag}</span>
+                    </div>
+                    <div>
+                      <span className="uppercase tracking-[0.12em] text-gold/60">Wage</span>{" "}
+                      <span className="text-silver-bright">${staff.wage}/day</span>
+                    </div>
+                    <div>
+                      <span className="uppercase tracking-[0.12em] text-gold/60">Assignment</span>{" "}
+                      <span className="text-silver-bright">
+                        {assignedRoom ? assignedRoom.name : staff.assignmentKind}
+                      </span>
+                    </div>
+                  </div>
+                  {assignedRoom && (
+                    <button
+                      type="button"
+                      data-testid="staff-unassign"
+                      className="btn-ghost w-full px-2 py-1 text-xs"
+                      onClick={() => callbacks.assignStaff(staff.id, undefined)}
+                    >
+                      Unassign from {assignedRoom.name}
+                    </button>
+                  )}
+                  <div className="space-y-1.5">
+                    <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
+                      Assign to Room
+                    </div>
+                    {assignableRooms.length > 0 ? (
+                      <div className="space-y-1">
+                        {assignableRooms.map((room) => (
+                          <button
+                            key={room.id}
+                            type="button"
+                            data-testid="staff-assign-room"
+                            data-room-id={room.id}
+                            className="btn-ghost w-full px-2 py-1 text-left text-xs"
+                            onClick={() => callbacks.assignStaff(staff.id, room.id)}
+                          >
+                            {room.name} ({room.assignedStaffCount}/{room.capacity})
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-silver/40">No rooms match this role right now.</p>
+                    )}
+                  </div>
+                </div>
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "visitor": {
+          const visitor = hq.visitors.find((v) => v.id === entry.visitorId);
+          if (!visitor) return null;
+          const rosterFull = hq.rosterPressure.vacancyCount <= 0;
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[22rem]",
+            content: (
+              <FocusedVisitorOverlay
+                visitor={visitor}
+                policies={hq.policies}
+                rosterFull={rosterFull}
+                onRecruit={() => {
+                  callbacks.acceptRecruit(visitor.id);
+                  close();
+                }}
+                onDeferVisitor={() => {
+                  callbacks.deferRecruit(visitor.id);
+                  close();
+                }}
+                onDismissVisitor={() => {
+                  callbacks.rejectRecruit(visitor.id);
+                  close();
+                }}
+                onOpenReplacePicker={() =>
+                  onOpenBranch(index, { kind: "replace-operator", visitorId: visitor.id })
+                }
+                onDismissRecruit={() => {
+                  callbacks.dismissRecruit(visitor.id);
+                  close();
+                }}
+                onClose={close}
+              />
+            ),
+          };
+        }
+
+        case "management-root":
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[32rem]",
+            content: (
+              <PanelFrame testId="panel-management-root" title="Management" onClose={close}>
+                <ManagementPanel
+                  guild={hq.guild}
+                  policies={hq.policies}
+                  contractLifecycle={hq.contractLifecycle}
+                  building={hq.building}
+                  rooms={hq.rooms}
+                  upgrades={hq.upgrades}
+                  operators={hq.operators}
+                  relocationGate={hq.relocationGate}
+                  callbacks={callbacks}
+                  cityPressure={cityPressure}
+                />
+              </PanelFrame>
+            ),
+          };
+
+        case "teams-root":
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[22rem]",
+            content: (
+              <PanelFrame testId="panel-teams-root" title="Recurring Teams" onClose={close}>
+                <TeamsCard teams={teams} />
+              </PanelFrame>
+            ),
+          };
+
+        case "inventory-root":
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[30rem]",
+            content: (
+              <PanelFrame testId="panel-inventory-root" title="Inventory" onClose={close}>
+                <InventoryPanel
+                  inventory={inventory}
+                  lootAutomation={lootAutomation}
+                  equipment={equipment}
+                  marketItems={marketItems}
+                  callbacks={callbacks}
+                />
+              </PanelFrame>
+            ),
+          };
+
+        case "market-root":
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[28rem]",
+            content: (
+              <PanelFrame testId="panel-market-root" title="Market" onClose={close}>
+                <MarketPanel
+                  marketItems={marketItems}
+                  inventory={inventory}
+                  guild={hq.guild}
+                  day={hq.time.day}
+                  callbacks={callbacks}
+                />
+              </PanelFrame>
+            ),
+          };
+
+        case "replace-operator": {
+          const visitor = hq.visitors.find((v) => v.id === entry.visitorId);
+          if (!visitor) return null;
+          const candidates = hq.operators.filter((op) => op.canBeReplaced);
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[18rem]",
+            content: (
+              <PanelFrame
+                testId="panel-replace-operator"
+                title="Replace"
+                subtitle={visitor.name}
+                onClose={close}
+              >
+                {candidates.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {candidates.map((op) => (
+                      <button
+                        key={op.id}
+                        type="button"
+                        data-testid="replace-operator-candidate"
+                        data-operator-id={op.id}
+                        className="btn-ghost w-full px-2 py-1 text-left text-xs"
+                        onClick={() => {
+                          callbacks.replaceRecruit(visitor.id, op.id);
+                          onCloseAt(0);
+                        }}
+                      >
+                        {op.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-silver/50">No operators can be replaced right now.</p>
+                )}
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "hire-staff": {
+          return {
+            id: entryKey(entry, index),
+            widthClass: "w-[18rem]",
+            content: (
+              <PanelFrame testId="panel-hire-staff" title="Hire Staff" onClose={close}>
+                <div className="space-y-1.5">
+                  {HIREABLE_STAFF_ROLES.map((roleTag) => (
+                    <button
+                      key={roleTag}
+                      type="button"
+                      data-testid="hire-staff-role"
+                      data-role-tag={roleTag}
+                      className="btn-ghost w-full px-2 py-1 text-left text-xs"
+                      onClick={() => {
+                        callbacks.hireStaff(roleTag);
+                        close();
+                      }}
+                    >
+                      {getTagMeta(roleTag).label}
+                    </button>
+                  ))}
+                </div>
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "team":
+          // Team entries are operations-side; never reach HQ stack. Return null defensively.
+          return null;
+      }
+    })
+    .filter((entry): entry is PanelStackEntry => entry !== null);
+}
+
 // ── Main shell component ─────────────────────────────────────────────────
 
 export function GameShell() {
@@ -1116,12 +1661,42 @@ export function GameShell() {
   const { settings, updateSettings, resetSettings } = useGameSettings();
   const initialNavigation = getDefaultShellNavigation(request);
   const [activeTab, setActiveTab] = useState<ShellTab>(initialNavigation.activeTab);
-  const [hqCategory, setHqCategory] = useState<HqCategory | null>(initialNavigation.hqCategory);
   const [opsCategory, setOpsCategory] = useState<OpsCategory | null>(initialNavigation.opsCategory);
   const [activeModal, setActiveModal] = useState<ActiveGameModal>(null);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const [debugOverlays, setDebugOverlays] = useState<HqDebugOverlays>({});
-  const [focus, setFocus] = useState<FocusPayload | null>(null);
+  const [hqFocusStack, setHqFocusStack] = useState<StackFocusEntry[]>(() =>
+    initialNavigation.hqCategory ? [rootEntryForCategory(initialNavigation.hqCategory)] : [],
+  );
+  const [raidFocus, setRaidFocus] = useState<FocusPayload | null>(null);
+  const hqCategory = useMemo<HqCategory | null>(
+    () => categoryFromStack(hqFocusStack),
+    [hqFocusStack],
+  );
+  const hqEffectiveFocus = useMemo<FocusPayload | null>(
+    () => effectiveFocusFromStack(hqFocusStack),
+    [hqFocusStack],
+  );
+  const focus: FocusPayload | null = activeTab === "hq" ? hqEffectiveFocus : raidFocus;
+  const setFocus = useCallback(
+    (next: FocusPayload | null | ((prev: FocusPayload | null) => FocusPayload | null)) => {
+      if (activeTab === "hq") {
+        setHqFocusStack((prev) => {
+          const current = effectiveFocusFromStack(prev);
+          const resolved = typeof next === "function" ? next(current) : next;
+          if (resolved) return stackFromFocus(resolved);
+          const category = categoryFromStack(prev);
+          return category ? [rootEntryForCategory(category)] : [];
+        });
+        return;
+      }
+      setRaidFocus((prev) => (typeof next === "function" ? next(prev) : next));
+    },
+    [activeTab],
+  );
+  const setHqCategory = useCallback((next: HqCategory | null) => {
+    setHqFocusStack(next ? [rootEntryForCategory(next)] : []);
+  }, []);
   const [audioState, setAudioState] = useState<AudioEngineState>("suspended");
   const audioEngineRef = useRef<AudioEngine | null>(null);
   const activeInterruption = session?.phase1View.activeInterruption ?? null;
@@ -1145,13 +1720,20 @@ export function GameShell() {
   useEffect(() => {
     const nextNavigation = getDefaultShellNavigation(request);
     setActiveTab(nextNavigation.activeTab);
-    setHqCategory(nextNavigation.hqCategory);
+    setHqFocusStack(
+      nextNavigation.hqCategory ? [rootEntryForCategory(nextNavigation.hqCategory)] : [],
+    );
     setOpsCategory(nextNavigation.opsCategory);
-    setFocus(null);
+    setRaidFocus(null);
   }, [request.mode, request.slotId]);
 
   useEffect(() => {
-    setFocus(null);
+    setHqFocusStack((prev) => {
+      if (prev.length === 0) return prev;
+      const category = categoryFromStack(prev);
+      return category ? [rootEntryForCategory(category)] : [];
+    });
+    setRaidFocus(null);
     const engine = audioEngineRef.current;
     if (engine && prevTabRef.current !== activeTab) {
       if (activeTab === "hq") {
@@ -1639,19 +2221,19 @@ export function GameShell() {
     (newFocus: FocusPayload | null) => {
       setFocus(newFocus);
       if (newFocus?.targetKind === "room" && hq) {
-        setHqCategory("rooms");
         const room = hq.rooms.find((r) => r.id === newFocus.targetId);
         if (room && room.floorIndex !== hq.building.activeFloorIndex) {
           callbacks.setActiveFloor(room.floorIndex);
         }
-      } else if (newFocus?.targetKind === "operator" || newFocus?.targetKind === "staff") {
-        setHqCategory("roster");
       }
     },
-    [hq, callbacks],
+    [hq, callbacks, setFocus],
   );
 
-  const navActions = useMemo(() => ({ setActiveTab, setHqCategory, setOpsCategory, setFocus }), []);
+  const navActions = useMemo(
+    () => ({ setActiveTab, setHqCategory, setOpsCategory, setFocus }),
+    [setHqCategory, setFocus],
+  );
   const handleEventLogClick = useCallback(
     (entry: { targetKind?: string; targetId?: string; kind: string }) => {
       handleEventLogEntryClick(entry as Parameters<typeof handleEventLogEntryClick>[0], navActions);
@@ -1757,7 +2339,7 @@ export function GameShell() {
           return;
       }
     },
-    [setFocus],
+    [setFocus, setHqCategory],
   );
 
   useEffect(() => {
@@ -1848,30 +2430,21 @@ export function GameShell() {
     }
   }, [focus, guidanceBeat, session, suspendFocusedGuidanceBeat]);
 
-  const handleSelectOperator = useCallback(
-    (operatorId: string) => {
-      setFocus((prev) =>
-        prev?.targetKind === "operator" && prev.targetId === operatorId
-          ? null
-          : { targetKind: "operator", targetId: operatorId, highlightBounds: null },
-      );
+  const handleOperatorInspectedGuidance = useCallback(() => {
+    if (
+      !session ||
+      suspendFocusedGuidanceBeat ||
+      guidanceBeat?.completionKind !== "operator_inspected"
+    ) {
+      return;
+    }
 
-      if (
-        !session ||
-        suspendFocusedGuidanceBeat ||
-        guidanceBeat?.completionKind !== "operator_inspected"
-      ) {
-        return;
-      }
-
-      void session.commands.dispatch({
-        type: "sim/guidance-complete",
-        beatId: guidanceBeat.beatId,
-        signal: "operator_inspected",
-      });
-    },
-    [guidanceBeat, session, suspendFocusedGuidanceBeat],
-  );
+    void session.commands.dispatch({
+      type: "sim/guidance-complete",
+      beatId: guidanceBeat.beatId,
+      signal: "operator_inspected",
+    });
+  }, [guidanceBeat, session, suspendFocusedGuidanceBeat]);
 
   useEffect(() => {
     if (!session || !activeGuidanceInterruption || !suppressTutorialInterruption) {
@@ -1940,30 +2513,10 @@ export function GameShell() {
     [focusedRaidState],
   );
 
-  const focusedOperator = useMemo(() => {
-    if (!hq || activeTab !== "hq" || focus?.targetKind !== "operator") return null;
-    return hq.operators.find((operator) => operator.id === focus.targetId) ?? null;
-  }, [hq, activeTab, focus]);
-  const focusedRoom = useMemo(() => {
-    if (!hq || activeTab !== "hq" || focus?.targetKind !== "room") return null;
-    return hq.rooms.find((room) => room.id === focus.targetId) ?? null;
-  }, [hq, activeTab, focus]);
-  const focusedVisitor = useMemo(() => {
-    if (!hq || activeTab !== "hq" || focus?.targetKind !== "visitor") return null;
-    return hq.visitors.find((v) => v.id === focus.targetId) ?? null;
-  }, [hq, activeTab, focus]);
   const focusedRaidTeam = useMemo(() => {
     if (activeTab !== "operations" || focus?.targetKind !== "team") return null;
     return raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null;
   }, [raidWorldSnapshot, activeTab, focus]);
-  const focusedRoomUpgrades = useMemo(() => {
-    if (!hq || !focusedRoom) return [];
-    return hq.roomUpgrades.filter((upgrade) => upgrade.targetId === focusedRoom.templateId);
-  }, [hq, focusedRoom]);
-  const focusedRoomCulture = useMemo(() => {
-    if (!focusedRoom) return null;
-    return roomCultures.find((roomCulture) => roomCulture.roomId === focusedRoom.id) ?? null;
-  }, [roomCultures, focusedRoom]);
 
   if (status === "error") {
     return (
@@ -1975,7 +2528,6 @@ export function GameShell() {
     return <LoadingShell />;
   }
 
-  const focusedOperatorId = focus?.targetKind === "operator" ? focus.targetId : null;
   const persistenceTimestamp = formatPersistenceTimestamp(session.persistence.lastSavedAt);
   const persistenceLabel =
     session.isPreview || !session.isSaveBacked
@@ -2033,65 +2585,6 @@ export function GameShell() {
                   <span className="badge badge-gold">T{hq.building.tier}</span>
                 </Tooltip>
                 <span className="hidden text-sm text-silver/48 sm:inline">{hq.building.name}</span>
-                {hq.building.floorCount > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs uppercase tracking-[0.15em] text-gold/60">Floor</span>
-                    <button
-                      type="button"
-                      data-testid="floor-step-previous"
-                      aria-label="Go to previous floor"
-                      className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
-                      disabled={activeFloorOrderIndex === 0}
-                      onClick={() =>
-                        callbacks.setActiveFloor(
-                          orderedFloorIndices[Math.max(0, activeFloorOrderIndex - 1)] ?? 0,
-                        )
-                      }
-                    >
-                      <span aria-hidden="true">↓</span>
-                    </button>
-                    <div className="flex items-center gap-1">
-                      {orderedFloorIndices.map((floorIndex) => {
-                        const label =
-                          hq.building.id === "building/porters"
-                            ? (PORTERS_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
-                            : hq.building.id === "building/skyscraper"
-                              ? (SKYSCRAPER_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
-                              : String(floorIndex + 1);
-                        return (
-                          <button
-                            key={floorIndex}
-                            type="button"
-                            className={`rounded-full border px-2 py-1 text-xs uppercase tracking-[0.12em] transition-colors ${
-                              hq.building.activeFloorIndex === floorIndex
-                                ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
-                                : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
-                            }`}
-                            onClick={() => callbacks.setActiveFloor(floorIndex)}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      type="button"
-                      data-testid="floor-step-next"
-                      aria-label="Go to next floor"
-                      className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/55 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
-                      disabled={activeFloorOrderIndex >= orderedFloorIndices.length - 1}
-                      onClick={() =>
-                        callbacks.setActiveFloor(
-                          orderedFloorIndices[
-                            Math.min(orderedFloorIndices.length - 1, activeFloorOrderIndex + 1)
-                          ] ?? hq.building.activeFloorIndex,
-                        )
-                      }
-                    >
-                      <span aria-hidden="true">↑</span>
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Separator */}
@@ -2322,91 +2815,136 @@ export function GameShell() {
             </div>
           )}
 
-          {/* ── Right column: event log + focus panels ── */}
-          <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
+          {/* ── Left column: event log ── */}
+          <div className="pointer-events-none absolute left-4 top-[92px] z-20 flex flex-col items-start gap-2">
             <div ref={eventLogAnchorRef}>
               <EventLog entries={eventLog} onEntryClick={handleEventLogClick} />
             </div>
-
-            {focusedRoom && (
-              <FocusedRoomOverlay
-                guildName={hq.guild.guildName}
-                room={focusedRoom}
-                buildingUpgrades={hq.upgrades}
-                roomUpgrades={focusedRoomUpgrades}
-                callbacks={callbacks}
-                roomCulture={focusedRoomCulture}
-                reserveRoomsPanelSpace={activeTab === "hq" && hqCategory === "rooms"}
-                onDismiss={() => setFocus(null)}
-              />
-            )}
-
-            {focusedOperator && (
-              <FocusedOperatorOverlay
-                operator={focusedOperator}
-                policies={hq.policies}
-                relationships={hq.relationships}
-                teams={teams}
-                roomCultures={roomCultures}
-                onDismiss={() => setFocus(null)}
-              />
-            )}
-
-            {focusedVisitor && (
-              <FocusedVisitorOverlay
-                visitor={focusedVisitor}
-                policies={hq.policies}
-                rosterFull={hq.rosterPressure.vacancyCount <= 0}
-                replaceableOperators={
-                  focusedVisitor ? hq.operators.filter((operator) => operator.canBeReplaced) : []
-                }
-                onRecruit={() => {
-                  callbacks.acceptRecruit(focusedVisitor.id);
-                  setFocus(null);
-                }}
-                onDeferVisitor={() => {
-                  callbacks.deferRecruit(focusedVisitor.id);
-                  setFocus(null);
-                }}
-                onDismissVisitor={() => {
-                  callbacks.rejectRecruit(focusedVisitor.id);
-                  setFocus(null);
-                }}
-                onReplaceRecruit={(operatorId) => {
-                  callbacks.replaceRecruit(focusedVisitor.id, operatorId);
-                  setFocus(null);
-                }}
-                onDismissRecruit={() => {
-                  callbacks.dismissRecruit(focusedVisitor.id);
-                  setFocus(null);
-                }}
-                onClose={() => setFocus(null)}
-              />
-            )}
-
-            {focusedRaidTeam && focus && (
-              <>
-                <RaidFocusFrame
-                  team={focusedRaidTeam}
-                  getOperatorName={(id) =>
-                    hq.operators.find((operator) => operator.id === id)?.name ?? null
-                  }
-                  operatorStatuses={focusedRaidOperatorStatuses}
-                  encounter={focusedRaidState?.encounter ?? null}
-                  onDismiss={() => setFocus(null)}
-                />
-                <div
-                  className={`${glassPanelClass} pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl`}
-                >
-                  <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
-                </div>
-              </>
-            )}
           </div>
 
-          {/* ── Bottom panel (slides up when category selected) ── */}
-          {((activeTab === "hq" && hqCategory !== null) ||
-            (activeTab === "operations" && opsCategory !== null)) && (
+          {/* ── Floating HQ-world floor switcher ── */}
+          {activeTab === "hq" && hq.building.floorCount > 1 && (
+            <div
+              className={`${glassPanelClass} pointer-events-auto animate-enter absolute left-1/2 top-[92px] z-30 flex -translate-x-1/2 items-center gap-1 rounded-full px-2 py-1`}
+              data-testid="floor-switcher"
+              role="group"
+              aria-label="Floor navigation"
+            >
+              <span className="pl-1 pr-0.5 text-xs uppercase tracking-[0.15em] text-gold/70">
+                Floor
+              </span>
+              <button
+                type="button"
+                data-testid="floor-step-previous"
+                aria-label="Go to previous floor"
+                className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/70 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={activeFloorOrderIndex === 0}
+                onClick={() =>
+                  callbacks.setActiveFloor(
+                    orderedFloorIndices[Math.max(0, activeFloorOrderIndex - 1)] ?? 0,
+                  )
+                }
+              >
+                <span aria-hidden="true">↓</span>
+              </button>
+              <div className="flex items-center gap-0.5">
+                {orderedFloorIndices.map((floorIndex) => {
+                  const label =
+                    hq.building.id === "building/porters"
+                      ? (PORTERS_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
+                      : hq.building.id === "building/skyscraper"
+                        ? (SKYSCRAPER_FLOOR_LABELS[floorIndex] ?? String(floorIndex + 1))
+                        : String(floorIndex + 1);
+                  const isActive = hq.building.activeFloorIndex === floorIndex;
+                  return (
+                    <button
+                      key={floorIndex}
+                      type="button"
+                      data-testid="floor-select"
+                      data-floor-index={floorIndex}
+                      aria-pressed={isActive}
+                      className={`rounded-full border px-2 py-1 text-xs uppercase tracking-[0.12em] transition-colors ${
+                        isActive
+                          ? "border-[rgba(200,168,76,0.28)] bg-[rgba(200,168,76,0.12)] text-gold"
+                          : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] text-silver/55 hover:text-silver-bright"
+                      }`}
+                      onClick={() => callbacks.setActiveFloor(floorIndex)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                data-testid="floor-step-next"
+                aria-label="Go to next floor"
+                className="rounded-full border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] px-2 py-1 text-xs text-silver/70 transition-colors hover:text-silver-bright disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={activeFloorOrderIndex >= orderedFloorIndices.length - 1}
+                onClick={() =>
+                  callbacks.setActiveFloor(
+                    orderedFloorIndices[
+                      Math.min(orderedFloorIndices.length - 1, activeFloorOrderIndex + 1)
+                    ] ?? hq.building.activeFloorIndex,
+                  )
+                }
+              >
+                <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+          )}
+
+          {/* ── Right column: operations focus panels ── */}
+          {activeTab === "operations" && focusedRaidTeam && focus && (
+            <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
+              <RaidFocusFrame
+                team={focusedRaidTeam}
+                getOperatorName={(id) =>
+                  hq.operators.find((operator) => operator.id === id)?.name ?? null
+                }
+                operatorStatuses={focusedRaidOperatorStatuses}
+                encounter={focusedRaidState?.encounter ?? null}
+                onDismiss={() => setFocus(null)}
+              />
+              <div
+                className={`${glassPanelClass} pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl`}
+              >
+                <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "hq" && hqFocusStack.length > 0 && (
+            <div
+              className="pointer-events-none absolute bottom-10 left-4 right-4 top-[92px] z-20 flex min-h-0 flex-col items-stretch justify-end"
+              data-testid="hq-cascade-anchor"
+            >
+              <PanelStack
+                testId="hq-cascade"
+                className="max-h-full"
+                entries={buildHqStackEntries({
+                  stack: hqFocusStack,
+                  hq,
+                  teams,
+                  roomCultures,
+                  inventory,
+                  lootAutomation,
+                  equipment,
+                  marketItems,
+                  cityPressure,
+                  callbacks,
+                  handleOperatorInspectedGuidance,
+                  handleFocusChange,
+                  onCloseAt: (index) => setHqFocusStack((prev) => closeAt(prev, index)),
+                  onOpenBranch: (parentIndex, branch) =>
+                    setHqFocusStack((prev) => setBranchAt(prev, parentIndex, branch)),
+                })}
+                onClose={(index) => setHqFocusStack((prev) => closeAt(prev, index))}
+              />
+            </div>
+          )}
+
+          {activeTab === "operations" && opsCategory !== null && (
             <div
               className={`${glassPanelClass} pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto rounded-xl p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]`}
             >
@@ -2414,72 +2952,10 @@ export function GameShell() {
                 className="flex items-start gap-3"
                 data-testid="shell-bottom-panel"
                 data-active-tab={activeTab}
-                data-active-category={activeTab === "hq" ? (hqCategory ?? "") : (opsCategory ?? "")}
+                data-active-category={opsCategory ?? ""}
               >
                 <div className="min-w-0 flex-1">
-                  {activeTab === "hq" && hqCategory === "rooms" && (
-                    <HqPanel
-                      hq={hq}
-                      callbacks={callbacks}
-                      focus={focus}
-                      onFocusChange={handleFocusChange}
-                      roomCultures={roomCultures}
-                    />
-                  )}
-                  {activeTab === "hq" && hqCategory === "roster" && (
-                    <RosterPanel
-                      operators={hq.operators}
-                      staff={hq.staff}
-                      visitors={hq.visitors}
-                      rooms={hq.rooms}
-                      callbacks={callbacks}
-                      rosterPressure={hq.rosterPressure}
-                      policies={hq.policies}
-                      focusedOperatorId={focusedOperatorId}
-                      onSelectOperator={handleSelectOperator}
-                    />
-                  )}
-                  {activeTab === "hq" && hqCategory === "management" && (
-                    <ManagementPanel
-                      guild={hq.guild}
-                      policies={hq.policies}
-                      contractLifecycle={hq.contractLifecycle}
-                      building={hq.building}
-                      rooms={hq.rooms}
-                      upgrades={hq.upgrades}
-                      operators={hq.operators}
-                      relocationGate={hq.relocationGate}
-                      callbacks={callbacks}
-                      cityPressure={cityPressure}
-                    />
-                  )}
-                  {activeTab === "hq" && hqCategory === "teams" && (
-                    <div className="animate-enter space-y-3">
-                      <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-                        Recurring Teams
-                      </h3>
-                      <TeamsCard teams={teams} />
-                    </div>
-                  )}
-                  {activeTab === "hq" && hqCategory === "inventory" && (
-                    <InventoryPanel
-                      inventory={inventory}
-                      lootAutomation={lootAutomation}
-                      equipment={equipment}
-                      marketItems={marketItems}
-                      callbacks={callbacks}
-                    />
-                  )}
-                  {activeTab === "hq" && hqCategory === "market" && (
-                    <MarketPanel
-                      marketItems={marketItems}
-                      inventory={inventory}
-                      guild={hq.guild}
-                      day={hq.time.day}
-                      callbacks={callbacks}
-                    />
-                  )}
-                  {activeTab === "operations" && opsCategory && callbacks && (
+                  {callbacks && (
                     <div
                       ref={
                         opsCategory === "contract"
@@ -2501,14 +2977,10 @@ export function GameShell() {
                     </div>
                   )}
                 </div>
-                {/* Collapse chevron — in-flow, rightmost element at header level */}
                 <button
                   type="button"
                   className="btn-ghost shrink-0 px-1.5 py-0.5 text-silver/50 hover:text-gold"
-                  onClick={() => {
-                    if (activeTab === "hq") setHqCategory(null);
-                    else setOpsCategory(null);
-                  }}
+                  onClick={() => setOpsCategory(null)}
                   aria-label="Collapse panel"
                 >
                   <svg

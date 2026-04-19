@@ -8,8 +8,7 @@
   <polygon points="200,16 392,112 392,196 200,100"
     fill="#352616" stroke="#281e14" stroke-width="1"/>
   <!-- Wall panel grooves -->
-  <line x1="248,40" y1="40" x2="248,124" y2="124" stroke="#281e14" stroke-width="0.5"
-    x1="248" y1="40" x2="248" y2="124"/>
+  <line x1="248" y1="40" x2="248" y2="124" stroke="#281e14" stroke-width="0.5"/>
   <line x1="296" y1="64" x2="296" y2="148" stroke="#281e14" stroke-width="0.5"/>
   <line x1="344" y1="88" x2="344" y2="172" stroke="#281e14" stroke-width="0.5"/>
 

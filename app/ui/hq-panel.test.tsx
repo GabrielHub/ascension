@@ -6,35 +6,7 @@ import type { FocusPayload } from "render";
 import { createBootstrapSimulation } from "sim";
 
 import { HqPanel } from "./hq-panel";
-import { buildHqViewFromPhase1, type GameCallbacks, type HqViewModel } from "./view-models";
-
-const callbacks: GameCallbacks = {
-  tick: () => {},
-  setRoomActive: () => {},
-  setPolicy: () => {},
-  setLootFilterEnabled: () => {},
-  initiateRelocation: () => {},
-  purchaseBuildingUpgrade: () => {},
-  purchaseRoomUpgrade: () => {},
-  acceptRecruit: () => {},
-  deferRecruit: () => {},
-  rejectRecruit: () => {},
-  replaceRecruit: () => {},
-  dismissRecruit: () => {},
-  hireStaff: () => {},
-  assignStaff: () => {},
-  placeRoom: () => {},
-  setActiveFloor: () => {},
-  buyItem: () => {},
-  sellItem: () => {},
-  equipItem: () => {},
-  autoAssignAccessory: () => {},
-  unequipItem: () => {},
-  bidContract: () => {},
-  advanceContract: () => {},
-  prepConsumable: () => {},
-  craftDurable: () => {},
-};
+import { buildHqViewFromPhase1, type HqViewModel } from "./view-models";
 
 describe("hq panel", () => {
   it("keeps selected room detail out of the bottom panel so shell focus owns the detail view", () => {
@@ -52,16 +24,14 @@ describe("hq panel", () => {
       highlightBounds: null,
     };
 
-    const html = renderToStaticMarkup(
-      <HqPanel hq={hq} callbacks={callbacks} focus={focus} roomCultures={[]} />,
-    );
+    const html = renderToStaticMarkup(<HqPanel hq={hq} focus={focus} onOpenPlaceRoom={() => {}} />);
 
     expect(html).toContain(selectedRoom.name);
     expect(html).not.toContain("Why This Room Matters");
     expect(html).not.toContain('aria-label="Close room detail"');
   });
 
-  it("renders skyscraper expansion floors using display order instead of raw floor indices", () => {
+  it("renders the bodega floor list with no chrome — floor header belongs to the panel frame", () => {
     const hq: HqViewModel = {
       guild: {
         guildName: "Ascension",
@@ -117,12 +87,11 @@ describe("hq panel", () => {
       relocationGate: null,
     };
 
-    const html = renderToStaticMarkup(
-      <HqPanel hq={hq} callbacks={callbacks} focus={null} roomCultures={[]} />,
-    );
+    const html = renderToStaticMarkup(<HqPanel hq={hq} focus={null} onOpenPlaceRoom={() => {}} />);
 
-    expect(html).toContain("Floor 5/6");
-    expect(html).toContain("Nightlife");
-    expect(html).toContain("club floor");
+    expect(html).toContain("No rooms are placed on this floor yet.");
+    // Floor chrome lives in the PanelFrame wrapper now; HqPanel must not repeat it.
+    expect(html).not.toContain("Floor 5/6");
+    expect(html).not.toContain("Ascension Tower");
   });
 });

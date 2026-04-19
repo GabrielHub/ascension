@@ -1,21 +1,5 @@
-import { useState } from "react";
-
-import { formatSlotLabel } from "lib/hq-room-state";
-
-import type {
-  ExpansionSlotViewModel,
-  PlaceableRoomTemplate,
-  RoomCultureViewModel,
-  RoomViewModel,
-} from "./view-models";
+import type { ExpansionSlotViewModel, RoomViewModel } from "./view-models";
 import { Tooltip } from "./_tooltip";
-import { getSignalMeta, getTagMeta, getToneMeta } from "./_glossary";
-
-function formatFootprintLabel(room: RoomViewModel): string {
-  const reserved = `${room.reservedFootprint.cols}x${room.reservedFootprint.rows}`;
-  const active = `${room.activeFootprint.cols}x${room.activeFootprint.rows}`;
-  return reserved === active ? reserved : `${reserved} -> ${active}`;
-}
 
 export function getRoomProgressRatio(room: RoomViewModel): number {
   if (!room.requiredStaffTag) {
@@ -77,100 +61,57 @@ function RoomCard({
   room,
   isSelected,
   onSelect,
-  culture,
 }: {
   room: RoomViewModel;
   isSelected: boolean;
   onSelect: () => void;
-  culture?: RoomCultureViewModel;
 }) {
   const occupancyRatio = getRoomProgressRatio(room);
   const upgradeCount = room.appliedUpgradeIds.length;
-  const staffTagMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
-  const highlightTags = room.tags.filter(
-    (tag) => tag.startsWith("room:") || tag.startsWith("staff:") || tag.startsWith("ops:"),
-  );
 
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`glass-card group relative w-full cursor-pointer p-3 text-left transition-all duration-300 ${
-        isSelected ? "border-[rgba(200,168,76,0.3)] shadow-[0_0_24px_rgba(200,168,76,0.1)]" : ""
+      className={`glass-card group relative w-full cursor-pointer px-3 py-2 text-left transition-all duration-200 ${
+        isSelected ? "border-[rgba(200,168,76,0.3)] shadow-[0_0_18px_rgba(200,168,76,0.08)]" : ""
       }`}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <StatusDot room={room} />
-        <span className="min-w-0 truncate text-sm font-medium text-silver-bright">{room.name}</span>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {upgradeCount > 0 && (
-            <Tooltip content={`${upgradeCount} upgrade${upgradeCount > 1 ? "s" : ""} applied`}>
-              <span className="badge badge-gold">+{upgradeCount}</span>
-            </Tooltip>
-          )}
-          <Tooltip content="Room tier - higher tiers unlock upgrades">
-            <span className="badge badge-gold">T{room.tier}</span>
-          </Tooltip>
-          <Tooltip
-            content={
-              room.requiredStaffTag
-                ? "Assigned staff / staffing needed for full output"
-                : "This room does not need dedicated staff to function"
-            }
-          >
-            <span
-              className={`text-xs tabular-nums ${room.isOperational ? "text-gold" : "text-gold/70"}`}
-            >
-              {getRoomStaffingLabel(room)}
-            </span>
-          </Tooltip>
-        </div>
-      </div>
-
-      <div className="mt-1.5 flex items-center gap-2">
-        <p className="min-w-0 truncate text-sm leading-snug text-silver/50">{room.description}</p>
-        {highlightTags.slice(0, 2).map((tag) => (
-          <Tooltip key={tag} content={getTagMeta(tag).tip}>
-            <span className="badge badge-slate shrink-0">{getTagMeta(tag).label}</span>
-          </Tooltip>
-        ))}
-        {!room.isActive && <span className="shrink-0 text-sm text-silver/40">Inactive</span>}
-      </div>
-
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-        <span className="badge badge-slate">
-          Floor {room.floorDisplayNumber ?? room.floorIndex + 1}
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-silver-bright">
+          {room.name}
         </span>
-        <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
-        <Tooltip content={`Reserved vs active footprint: ${formatFootprintLabel(room)}`}>
-          <span className="badge badge-slate">{formatFootprintLabel(room)}</span>
-        </Tooltip>
-        {staffTagMeta ? (
-          <Tooltip content={staffTagMeta.tip}>
-            <span className="badge badge-slate">{staffTagMeta.label}</span>
+        {upgradeCount > 0 && (
+          <Tooltip content={`${upgradeCount} upgrade${upgradeCount > 1 ? "s" : ""} applied`}>
+            <span className="badge badge-gold shrink-0">+{upgradeCount}</span>
           </Tooltip>
-        ) : (
-          <span className="badge badge-slate">No dedicated staff</span>
         )}
+        <Tooltip content="Room tier — higher tiers unlock upgrades">
+          <span className="badge badge-gold shrink-0">T{room.tier}</span>
+        </Tooltip>
+        <Tooltip
+          content={
+            room.requiredStaffTag
+              ? "Assigned staff / capacity"
+              : "This room runs without dedicated staff"
+          }
+        >
+          <span
+            className={`shrink-0 text-xs tabular-nums ${
+              room.isOperational ? "text-gold" : "text-gold/60"
+            }`}
+          >
+            {getRoomStaffingLabel(room)}
+          </span>
+        </Tooltip>
       </div>
 
-      {culture && (
-        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-silver/45">
-          <Tooltip content={getToneMeta(culture.tone || "neutral").tip} side="top">
-            <span>{getToneMeta(culture.tone || "neutral").label}</span>
-          </Tooltip>
-          {culture.signals[0] && (
-            <>
-              <span className="opacity-40">&middot;</span>
-              <Tooltip content={getSignalMeta(culture.signals[0]).tip} side="top">
-                <span>{getSignalMeta(culture.signals[0]).label}</span>
-              </Tooltip>
-            </>
-          )}
-        </div>
+      {!room.isActive && (
+        <div className="mt-1 text-xs uppercase tracking-[0.12em] text-silver/40">Inactive</div>
       )}
 
-      <div className="mt-2 h-0.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
+      <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
         <div
           className="h-full rounded-full bg-gold/40 transition-all duration-500"
           style={{ width: `${occupancyRatio * 100}%` }}
@@ -182,80 +123,18 @@ function RoomCard({
 
 function ExpansionSlotCard({
   slot,
-  placeableTemplates,
-  onPlaceRoom,
+  onOpenPlaceRoom,
 }: {
   slot: ExpansionSlotViewModel;
-  placeableTemplates: readonly PlaceableRoomTemplate[];
-  onPlaceRoom: (templateId: string, floorIndex: number, slotId: string) => void;
+  onOpenPlaceRoom: (slot: ExpansionSlotViewModel) => void;
 }) {
-  const [showPicker, setShowPicker] = useState(false);
   const isAvailable = slot.kind === "available";
 
   if (!isAvailable) {
     return (
-      <div className="glass-card-inset flex min-w-0 flex-col gap-2 p-3 opacity-65">
-        <div className="flex items-center gap-2">
-          <span className="badge badge-slate uppercase tracking-[0.14em]">Locked</span>
-          <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-          <span className="badge badge-slate">
-            Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
-          </span>
-          <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
-          <Tooltip content="Reserved interior footprint">
-            <span className="badge badge-slate">
-              {slot.footprint.cols}x{slot.footprint.rows}
-            </span>
-          </Tooltip>
-        </div>
-      </div>
-    );
-  }
-
-  if (showPicker) {
-    return (
-      <div className="glass-card-inset min-w-0 p-3">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/80">
-              Place a room
-            </span>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-              <span className="badge badge-slate">
-                Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
-              </span>
-              <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="text-sm text-silver/60 hover:text-gold/80"
-            onClick={() => setShowPicker(false)}
-          >
-            cancel
-          </button>
-        </div>
-        {placeableTemplates.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {placeableTemplates.map((template) => (
-              <button
-                key={template.id}
-                type="button"
-                className="btn-primary px-2.5 py-1.5 text-sm"
-                onClick={() => {
-                  onPlaceRoom(template.id, slot.floorIndex, slot.slotId);
-                  setShowPicker(false);
-                }}
-              >
-                {template.name}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-xs text-silver/50">No room templates are unlocked yet.</div>
-        )}
+      <div className="glass-card-inset flex min-w-0 items-center gap-2 px-3 py-2 opacity-60">
+        <span className="badge badge-slate">Locked</span>
+        <span className="min-w-0 flex-1 truncate text-sm text-silver/70">{slot.label}</span>
       </div>
     );
   }
@@ -263,94 +142,62 @@ function ExpansionSlotCard({
   return (
     <button
       type="button"
-      className="glass-card-inset flex min-w-0 cursor-pointer flex-col gap-2 p-3 text-left opacity-85 transition-opacity hover:opacity-100"
-      onClick={() => setShowPicker(true)}
+      data-testid="expansion-slot-available"
+      data-slot-id={slot.slotId}
+      className="glass-card-inset flex min-w-0 cursor-pointer items-center gap-2 px-3 py-2 text-left opacity-90 transition-opacity hover:opacity-100"
+      onClick={() => onOpenPlaceRoom(slot)}
     >
-      <div className="flex items-center gap-2">
-        <span className="badge badge-gold uppercase tracking-[0.14em]">Open</span>
-        <span className="min-w-0 truncate text-sm text-silver-bright">{slot.label}</span>
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
-        <span className="badge badge-slate">
-          Floor {slot.floorDisplayNumber ?? slot.floorIndex + 1}
-        </span>
-        <span className="badge badge-slate">{formatSlotLabel(slot.slotId)}</span>
-        <Tooltip content="Reserved interior footprint">
-          <span className="badge badge-slate">
-            {slot.footprint.cols}x{slot.footprint.rows}
-          </span>
-        </Tooltip>
-      </div>
-      <div className="text-xs uppercase tracking-[0.15em] text-gold/70">Build room</div>
+      <span className="badge badge-gold">Open</span>
+      <span className="min-w-0 flex-1 truncate text-sm text-silver-bright">{slot.label}</span>
+      <span className="shrink-0 text-xs uppercase tracking-[0.15em] text-gold/70">build →</span>
     </button>
   );
+}
+
+interface BodegaFloorProps {
+  rooms: readonly RoomViewModel[];
+  expansionSlots: readonly ExpansionSlotViewModel[];
+  selectedRoomId: string | null;
+  onSelectRoom: (roomId: string) => void;
+  onOpenPlaceRoom: (slot: ExpansionSlotViewModel) => void;
 }
 
 export function BodegaFloor({
   rooms,
   expansionSlots,
-  placeableTemplates,
   selectedRoomId,
   onSelectRoom,
-  onPlaceRoom,
-  cultureMap,
+  onOpenPlaceRoom,
 }: BodegaFloorProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-gold/70">
-            Current Floor Rooms
-          </h3>
-          <span className="text-xs text-silver/55">
-            {rooms.length} room{rooms.length === 1 ? "" : "s"}
-          </span>
+    <div className="space-y-3">
+      {rooms.length > 0 ? (
+        <div className="space-y-1.5">
+          {rooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              room={room}
+              isSelected={selectedRoomId === room.id}
+              onSelect={() => onSelectRoom(room.id)}
+            />
+          ))}
         </div>
-        <div className="space-y-2">
-          {rooms.length > 0 ? (
-            rooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                isSelected={selectedRoomId === room.id}
-                onSelect={() => onSelectRoom(room.id)}
-                culture={cultureMap?.get(room.id)}
-              />
-            ))
-          ) : (
-            <div className="glass-card-inset p-4 text-sm text-silver/50">
-              No rooms are placed on this floor yet.
-            </div>
-          )}
+      ) : (
+        <div className="glass-card-inset p-3 text-sm text-silver/50">
+          No rooms are placed on this floor yet.
         </div>
-      </section>
+      )}
 
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-gold/70">
-            Available Slots
-          </h3>
-          <span className="text-xs text-silver/55">
-            {expansionSlots.length} slot{expansionSlots.length === 1 ? "" : "s"}
-          </span>
+      {expansionSlots.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="pt-1 text-xs font-medium uppercase tracking-[0.18em] text-gold/55">
+            Available slots
+          </div>
+          {expansionSlots.map((slot) => (
+            <ExpansionSlotCard key={slot.id} slot={slot} onOpenPlaceRoom={onOpenPlaceRoom} />
+          ))}
         </div>
-        <div className="space-y-2">
-          {expansionSlots.length > 0 ? (
-            expansionSlots.map((slot) => (
-              <ExpansionSlotCard
-                key={slot.id}
-                slot={slot}
-                placeableTemplates={placeableTemplates}
-                onPlaceRoom={onPlaceRoom}
-              />
-            ))
-          ) : (
-            <div className="glass-card-inset p-4 text-sm text-silver/50">
-              No expansion slots are available on this floor.
-            </div>
-          )}
-        </div>
-      </section>
+      )}
     </div>
   );
 }

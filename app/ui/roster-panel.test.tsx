@@ -119,7 +119,6 @@ describe("roster panel", () => {
         ]}
         staff={[]}
         visitors={[]}
-        rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 2,
@@ -142,7 +141,7 @@ describe("roster panel", () => {
     expect(html).toContain("line-through");
   });
 
-  it("disables recruiting when the operator roster is full", () => {
+  it("renders visitors as compact cascade-entry rows without inline action buttons", () => {
     const html = renderToStaticMarkup(
       <RosterPanel
         operators={[makeOperator({ id: "operator/active", name: "Active" })]}
@@ -152,12 +151,16 @@ describe("roster panel", () => {
             id: "visitor/test",
             name: "Nika Voss",
             desiredRoleTag: "role:medic",
+            specialtyTag: "",
             patience: 18,
             quality: 61,
             expectedLoyalty: 53,
             projectedMorale: 61,
             projectedLoyalty: 77,
             presetId: "kael-001",
+            personaSummary: null,
+            personaHooks: [],
+            identitySource: "deterministic",
             rank: "b",
             queueState: "active",
             canAccept: false,
@@ -168,7 +171,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 1,
@@ -180,15 +182,22 @@ describe("roster panel", () => {
           replacementPressureLevel: "stable",
         }}
         policies={DEFAULT_POLICY_STATE}
+        onSelectVisitor={() => {}}
       />,
     );
 
     expect(html).toContain("Roster full");
-    expect(html).toContain("disabled");
-    expect(html).toContain(">Full<");
+    expect(html).toContain('data-testid="visitor-row"');
+    expect(html).toContain('data-testid="visitor-open"');
+    // Inline recruit/defer/pass/replace buttons belong to the visitor-detail cascade
+    // branch now, not the people-root directory row.
+    expect(html).not.toMatch(/data-testid="visitor-recruit"/);
+    expect(html).not.toMatch(/data-testid="visitor-pass"/);
+    expect(html).not.toContain(">defer<");
+    expect(html).not.toContain("Replace Operator");
   });
 
-  it("surfaces recovery and recruitment policy context in ordinary roster play", () => {
+  it("surfaces recruitment policy context while keeping visitor rows inert", () => {
     const html = renderToStaticMarkup(
       <RosterPanel
         operators={[
@@ -207,12 +216,16 @@ describe("roster panel", () => {
             id: "visitor/selective",
             name: "Nika Voss",
             desiredRoleTag: "role:medic",
+            specialtyTag: "",
             patience: 90,
             quality: 61,
             expectedLoyalty: 53,
             projectedMorale: 61,
             projectedLoyalty: 77,
             presetId: "kael-001",
+            personaSummary: null,
+            personaHooks: [],
+            identitySource: "deterministic",
             rank: "b",
             queueState: "active",
             canAccept: true,
@@ -223,7 +236,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 2,
@@ -244,19 +256,59 @@ describe("roster panel", () => {
       />,
     );
 
-    expect(html).toContain("Daily Routine");
-    expect(html).toContain("Welfare Priority");
-    expect(html).toContain("Recruitment Policy");
+    expect(html).toContain("Recruitment:");
     expect(html).toContain("Selective Intake");
-    expect(html).toContain("Visitor volume is lower than usual.");
-    expect(html).toContain("Quality 61");
+    expect(html).toContain("Q61");
     expect(html).toContain("2h patience");
     expect(html).toContain("Injured (7h)");
     expect(html).toContain('data-operator-id="operator/recovering"');
     expect(html).toContain("shadow-[inset_2px_0_0_var(--color-gold)]");
+    // Long-form policy explanations live in Management now, not inside the roster cascade.
+    expect(html).not.toContain("Daily Routine");
+    expect(html).not.toContain("Visitor volume is lower than usual.");
   });
 
-  it("renders deferred reserve actions when overflow is being curated", () => {
+  it("renders staff rows as cascade-entry buttons without inline assignment expanders", () => {
+    const html = renderToStaticMarkup(
+      <RosterPanel
+        operators={[]}
+        staff={[
+          {
+            id: "staff/a",
+            name: "Alina",
+            roleTag: "staff:medical",
+            status: "idle",
+            wage: 80,
+            assignmentKind: "idle",
+            assignmentTargetId: "",
+          },
+        ]}
+        visitors={[]}
+        callbacks={callbacks}
+        rosterPressure={{
+          operatorCapacity: 1,
+          livingOperatorCount: 0,
+          vacancyCount: 1,
+          deferredVisitorCapacity: 1,
+          unavailableOperatorIds: [],
+          recentDeathOperatorIds: [],
+          replacementPressureLevel: "stable",
+        }}
+        policies={DEFAULT_POLICY_STATE}
+        onSelectStaff={() => {}}
+        onOpenHireStaff={() => {}}
+      />,
+    );
+
+    expect(html).toContain('data-testid="staff-row"');
+    expect(html).toContain('data-staff-id="staff/a"');
+    expect(html).toContain('data-testid="staff-open-hire"');
+    // Assignment picker / unassign lives in the staff cascade branch, not inline.
+    expect(html).not.toContain(">unassign<");
+    expect(html).not.toContain("/day");
+  });
+
+  it("renders deferred reserve rows as plain cascade entries", () => {
     const html = renderToStaticMarkup(
       <RosterPanel
         operators={[makeOperator({ id: "operator/active", name: "Active" })]}
@@ -266,12 +318,16 @@ describe("roster panel", () => {
             id: "visitor/deferred",
             name: "Deferred Recruit",
             desiredRoleTag: "role:medic",
+            specialtyTag: "",
             patience: 120,
             quality: 68,
             expectedLoyalty: 58,
             projectedMorale: 66,
             projectedLoyalty: 80,
             presetId: "kael-001",
+            personaSummary: null,
+            personaHooks: [],
+            identitySource: "deterministic",
             rank: "c",
             queueState: "deferred",
             canAccept: false,
@@ -282,7 +338,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        rooms={[]}
         callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 1,
@@ -294,12 +349,15 @@ describe("roster panel", () => {
           replacementPressureLevel: "stable",
         }}
         policies={DEFAULT_POLICY_STATE}
+        onSelectVisitor={() => {}}
       />,
     );
 
     expect(html).toContain("Deferred (1)");
     expect(html).toContain("Deferred Recruit");
-    expect(html).toContain(">dismiss<");
-    expect(html).toContain(">Replace<");
+    // No inline dismiss action — that belongs to the cascade branch.
+    expect(html).not.toContain(">dismiss<");
+    // No inline replace-operator picker — that also belongs to the cascade branch.
+    expect(html).not.toContain("Replace Operator");
   });
 });

@@ -59,15 +59,6 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
 
   return (
     <div className="animate-enter" data-testid="market-panel">
-      {/* Header row */}
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">Market</h3>
-        <span className="text-sm tabular-nums text-gold" data-testid="market-treasury">
-          ${guild.treasury}
-        </span>
-      </div>
-
-      {/* Search */}
       <div className="relative mb-3">
         <input
           type="text"
@@ -88,8 +79,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
         )}
       </div>
 
-      {/* Responsive columns */}
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         {/* Buy column */}
         <div className="min-w-0">
           <div className="mb-1.5 flex items-center gap-2 px-1">
@@ -113,7 +103,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <ItemCategoryIcon category={item.category} />
-                          <span className="min-w-0 truncate text-xs text-silver-bright">
+                          <span className="min-w-0 flex-1 truncate text-xs text-silver-bright">
                             {item.name}
                           </span>
                           <ItemRankBadge rank={item.rank} />
@@ -151,8 +141,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
           </div>
         </div>
 
-        {/* Vertical divider */}
-        <div className="relative min-w-0 border-t border-gold/6 pt-3 xl:border-l xl:border-t-0 xl:pl-3 xl:pt-0">
+        <div className="relative min-w-0 border-t border-gold/6 pt-3">
           {/* Sell column */}
           <div className="mb-1.5 flex items-center gap-2 px-1">
             <span className="text-sm uppercase tracking-[0.15em] text-gold/60">
@@ -174,7 +163,7 @@ export function MarketPanel({ marketItems, inventory, guild, day, callbacks }: M
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <ItemCategoryIcon category={inv.category} />
-                          <span className="min-w-0 truncate text-xs text-silver-bright">
+                          <span className="min-w-0 flex-1 truncate text-xs text-silver-bright">
                             {inv.name}
                           </span>
                           <ItemRankBadge rank={inv.rank} />

@@ -866,19 +866,11 @@ export function ManagementPanel({
 
   return (
     <div className="animate-enter space-y-4" data-testid="management-panel">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            Management
-          </h3>
-          <p className="mt-1 text-sm text-silver/55">
-            Standing policies shape how {guildName} behaves between incidents.
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <span className="badge badge-slate">{formatContractLifecycle(contractLifecycle)}</span>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-3">
         <RelocationCard
           building={building}
           guildName={guildName}
@@ -898,7 +890,7 @@ export function ManagementPanel({
 
       {building.id === "building/skyscraper" && <SkyscraperFloorArcCard upgrades={upgrades} />}
 
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-3">
         {SHIPPED_POLICY_IDS.map((policyId) => {
           const metadata = getPolicyMetadata(policyId);
           const currentValue = policies[policyId];
@@ -910,24 +902,9 @@ export function ManagementPanel({
               data-testid={`management-policy-${policyId}`}
               className="glass-card space-y-3 rounded-2xl p-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h4 className="text-sm font-medium text-silver-bright">{metadata.label}</h4>
-                  <p className="mt-1 text-sm leading-relaxed text-silver/55">{metadata.question}</p>
-                </div>
-                <div className="min-w-[8rem] shrink-0 text-right">
-                  <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Current policy</p>
-                  <p className="mt-1 text-sm text-gold">
-                    {getPolicyOptionLabel(policyId, currentValue)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Current tradeoff</p>
-                <p className="mt-1 text-sm leading-relaxed text-silver/65">
-                  {getPolicyOptionTradeoff(policyId, currentValue)}
-                </p>
+              <div>
+                <h4 className="text-sm font-medium text-silver-bright">{metadata.label}</h4>
+                <p className="mt-1 text-sm leading-relaxed text-silver/55">{metadata.question}</p>
               </div>
 
               {availability.reason && (

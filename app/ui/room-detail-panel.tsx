@@ -4,6 +4,7 @@ import type {
   PrepRecipeViewModel,
   RoomCultureViewModel,
   RoomViewModel,
+  StaffViewModel,
   UpgradeViewModel,
 } from "./view-models";
 import { ItemCategoryIcon, ItemRankBadge, StatEffectChips } from "./item-surface";
@@ -16,7 +17,7 @@ import {
   getTagMeta,
   getToneMeta,
 } from "./_glossary";
-import { formatSlotLabel, getRoomStateLabel } from "lib/hq-room-state";
+import { getRoomStateLabel } from "lib/hq-room-state";
 import { getRoomProgressRatio, getRoomStatusTip } from "./bodega-floor";
 import { progressBarFillClass } from "./styles";
 
@@ -28,24 +29,8 @@ interface RoomDetailPanelProps {
   callbacks: GameCallbacks;
   roomCulture?: RoomCultureViewModel | null;
   onClose?: () => void;
-}
-
-const ROOM_REASON_TAG = {
-  recruitment: "ops:recruitment",
-  intel: "ops:intel",
-  staging: "ops:staging",
-  recovery: "room:recovery",
-  social: "room:social",
-  training: "room:training",
-  staffing: "room:staffing",
-  operations: "room:operations",
-} as const;
-
-function hasRoomReasonTag(
-  room: RoomViewModel,
-  tag: (typeof ROOM_REASON_TAG)[keyof typeof ROOM_REASON_TAG],
-): boolean {
-  return room.tags.includes(tag);
+  onOpenUpgrades?: () => void;
+  onOpenStaffing?: () => void;
 }
 
 function UpgradeCard({
@@ -146,282 +131,8 @@ export function RoomCultureBadges({
   );
 }
 
-function formatFootprintLabel(footprint: {
-  col: number;
-  row: number;
-  cols: number;
-  rows: number;
-}): string {
-  return `${footprint.cols}x${footprint.rows} @ ${footprint.col},${footprint.row}`;
-}
-
 function getRoomStaffingPercent(room: RoomViewModel): number {
   return getRoomProgressRatio(room) * 100;
-}
-
-function getRoomWhyItMatters(room: RoomViewModel, guildName: string): readonly string[] {
-  if (room.templateId === "room/office:tier_1") {
-    return [
-      "Turns Porter's contract board into filed dossiers with cleaner risk reads, clearer site traits, and earlier boss names.",
-      `Keeps the business side of ${guildName} organized enough that better opportunities stay readable instead of speculative.`,
-    ];
-  }
-
-  if (room.templateId === "room/briefing_room:tier_1") {
-    return [
-      "Adds a real secured-contract briefing layer so active jobs expose site context before teams deploy.",
-      "Feeds boss prep and launch notes into raids so post-bid planning is visible instead of implied.",
-    ];
-  }
-
-  if (room.templateId === "room/infirmary:tier_1") {
-    return [
-      "Cuts injury recovery time and softens the post-raid medical bill so hurt operators return to duty cleaner.",
-      "Makes Porter's recovery feel clinical instead of improvised by turning treatment into real upstairs support.",
-    ];
-  }
-
-  if (room.templateId === "room/break_room:tier_1") {
-    return [
-      "Adds private decompression away from customers, which steadies morale and loyalty after rough shifts.",
-      "Gives stressed operators somewhere to reset that the public floor cannot replace.",
-    ];
-  }
-
-  if (room.templateId === "room/dock:tier_1") {
-    return [
-      "Turns the waterfront into real launch throughput by shortening departures and tightening raid staging.",
-      "Makes the Waterfront upgrade operational instead of decorative by changing how teams leave the building.",
-    ];
-  }
-
-  if (room.templateId === "room/deck:tier_1") {
-    return [
-      "Turns downtime into a waterfront morale reset that hits differently from generic bar noise or public seating.",
-      "Gives Porter's a real harbor-side decompression space, so returns feel better than just surviving the shift.",
-    ];
-  }
-
-  if (room.templateId === "room/floor:tier_1") {
-    return [
-      "The public dining room keeps regulars coming through the door, which means steady income and a social buffer between operators and the street.",
-      `Doubles as low-key recovery space — operators decompress over food without needing a medical room or a private conversation.`,
-    ];
-  }
-
-  if (room.templateId === "room/bar:tier_1") {
-    return [
-      "The bar is Porter's recruitment engine. Prospects show up for the atmosphere and leave having met the guild.",
-      `Keeps ${guildName}'s public face active so the recruit pipeline does not depend on cold outreach or word of mouth alone.`,
-    ];
-  }
-
-  if (room.templateId === "room/gym:tier_1") {
-    return [
-      "The first real training room in the guild's history. Operators build physical readiness between contracts instead of showing up cold.",
-      "Training gains feed directly into raid performance — stronger, faster, and more durable operators survive what the bodega crew could not.",
-    ];
-  }
-
-  if (room.templateId === "room/stockroom:tier_1") {
-    return [
-      "Proper logistics space means loadouts get staged cleanly and inventory stops disappearing into unorganized piles.",
-      `Keeps ${guildName}'s supply chain from bottlenecking growth as the roster and contract volume scale up.`,
-    ];
-  }
-
-  if (room.templateId === "room/prep_room:tier_1") {
-    return [
-      "Turns salvaged monster drops into field consumables that give deployed teams a real edge — stat buffs before the fight starts.",
-      "The prep room is where Porter's consumable pipeline lives. Without it, loot drops stay raw and teams go out unbuffed.",
-    ];
-  }
-
-  // ── Skyscraper rooms ─────────────────────────────────────────────────
-  if (room.templateId === "room/lobby:tier_1") {
-    return [
-      "The lobby is the guild's public face. Walk-in traffic, prospects, and clients all pass the reception desk before anyone gets further into the tower.",
-      `Scales ${guildName}'s recruitment funnel from bar-room pitches to institutional visibility — a real front door instead of a back counter.`,
-    ];
-  }
-
-  if (room.templateId === "room/reception:tier_1") {
-    return [
-      "The front desk turns walk-in traffic into filed paperwork instead of lost prospects. Badges, calls, and intake routing live here.",
-      `Gives ${guildName} a dedicated administrative screen between the street and the operations floor.`,
-    ];
-  }
-
-  if (room.templateId === "room/bullpen:tier_1") {
-    return [
-      "The bullpen is where contract research, intel triage, and day-to-day operations coordination happen in one visible room instead of split across makeshift offices.",
-      "Turns scattered admin into a real operations floor that can handle more contracts in parallel.",
-    ];
-  }
-
-  if (room.templateId === "room/situation_room:tier_1") {
-    return [
-      "The situation room takes secured contracts and turns them into briefed plans with projectors, maps, and a full squad in chairs.",
-      "Moves pre-deploy planning from an improvised conversation at the bar into a real operations surface.",
-    ];
-  }
-
-  if (room.templateId === "room/clinic:tier_1") {
-    return [
-      "A proper clinic accelerates recovery and raises the ceiling on what serious injuries the guild can take without burning operators out of rotation.",
-      `Replaces Porter's infirmary with something that actually looks like medical infrastructure, so ${guildName} stops trading health for throughput.`,
-    ];
-  }
-
-  if (room.templateId === "room/dojo:tier_1") {
-    return [
-      "The dojo is a full training floor — mats, equipment, and coaching that actually deepens raid readiness between contracts.",
-      "Training bonuses accrue faster here than the Porter's gym ever supported, so the roster improves even when contracts are quiet.",
-    ];
-  }
-
-  if (room.templateId === "room/crew_lounge:tier_1") {
-    return [
-      "A dedicated crew lounge separates decompression from the public floor. Morale and loyalty stabilize when operators have somewhere to sit that is not also a work surface.",
-      "Gives the recovery floor a social anchor that keeps the tower from feeling clinical.",
-    ];
-  }
-
-  if (room.templateId === "room/supply_hall:tier_1") {
-    return [
-      "The supply hall is where loadouts get assembled and staged for deployment without tripping over the bar or the office.",
-      "Keeps logistics and raid staging from bottlenecking the operations floor as contract volume grows.",
-    ];
-  }
-
-  if (room.templateId === "room/fabrication_bay:tier_1") {
-    return [
-      "The fabrication bay is the tower's durable-gear workshop — a real machine shop sealed inside the logistics floor instead of tacked on behind a dock.",
-      "Picks up where Porter's workshop left off, with higher-tier crafting support and no weather or salt to fight.",
-    ];
-  }
-
-  if (room.templateId === "room/rooftop_helipad:tier_1") {
-    return [
-      "The helipad lets teams cross the city fast instead of fighting street traffic. Rooftop deployment turns the tower into a real forward base.",
-      "Staging departures from the roof keeps the supply hall unclogged and puts teams on-site before the incident window closes.",
-    ];
-  }
-
-  if (room.templateId === "room/sky_garden:tier_1") {
-    return [
-      "A rooftop decompression space with a skyline view. Downtime up here moves morale and loyalty harder than any indoor room in the tower.",
-      "Gives the guild a prestige social surface that reads as institutional reach, not repurposed back-of-house.",
-    ];
-  }
-
-  if (room.templateId === "room/executive_office:tier_1") {
-    return [
-      "When operational, scales positive faction standing deltas from contract outcomes by +40%. Faction reps that used to file complaints now take meetings in a suite with the guild mark on the door.",
-      "Anchors sponsor-demand and press-exposure incidents so prestige-tier conversations land in a room built to handle them.",
-    ];
-  }
-
-  if (room.templateId === "room/compliance_office:tier_1") {
-    return [
-      "When operational, bleeds regulator scrutiny every hour across all five factions on top of the baseline decay, and softens scandal-category incidents so audits, labor-safety reviews, and hearings fire less often (not never).",
-      `Unlocks the plea-deal path in borough hearings and keeps ${guildName}'s paperwork in a state that can survive a regulator showing up unannounced.`,
-    ];
-  }
-
-  if (room.templateId === "room/war_room:tier_1") {
-    return [
-      "When operational, stacks a x1.5 multiplier on top of the Briefing Room's opportunity and boss intel bonuses — compounds with Prep Room for the full endgame readout.",
-      "Enables the counter-op choice in rival-guild poaching incidents so the tower can hit back instead of matching the offer.",
-    ];
-  }
-
-  // ── Bodega rooms ─────────────────────────────────────────────────────
-  if (room.templateId === "room/register:tier_1") {
-    return [
-      "The checkout counter doubles as the intake desk. Contracts, recruits, and daily walk-ins all come through the same register.",
-      `Keeps ${guildName}'s administrative pipeline running even when the space is shared with actual customers buying sandwiches.`,
-    ];
-  }
-
-  if (room.templateId === "room/counter:tier_1") {
-    return [
-      "The deli counter is where foot traffic turns into recruit prospects. People come in for lunch and leave knowing the guild exists.",
-      "Low-key recruitment that works because the bodega is already a neighborhood fixture, not because anyone is pitching.",
-    ];
-  }
-
-  if (room.templateId === "room/dining_area:tier_1") {
-    return [
-      "The dining area is recovery, social space, and medical overflow all in one. Operators decompress over food because there is nowhere else.",
-      "Every function shares the same folding chairs and fluorescent light. It works, but nothing here is dedicated.",
-    ];
-  }
-
-  if (room.templateId === "room/supply_closet:tier_1") {
-    return [
-      "One closet for all the gear, consumables, and paperwork that does not fit behind the counter.",
-      `Keeps ${guildName}'s logistics from spilling into the customer-facing floor, barely.`,
-    ];
-  }
-
-  if (room.templateId === "room/back_office:tier_1") {
-    return [
-      "A real desk behind a door that closes. Contract details stay private and the filing gets slightly more organized.",
-      `Gives ${guildName} an admin space that is not also a lunch counter or a storage shelf.`,
-    ];
-  }
-
-  if (room.templateId === "room/backstock:tier_1") {
-    return [
-      "Extra storage that used to be part of the neighboring unit. Gear and supplies finally have room to breathe.",
-      "Reduces the bottleneck where everything was crammed into the original supply closet.",
-    ];
-  }
-
-  if (room.templateId === "room/alley_staging:tier_1") {
-    return [
-      "The back alley turned into a staging area. Teams assemble and check loadouts before heading out.",
-      "Not glamorous, but it is the first space where raid prep is not competing with lunch service.",
-    ];
-  }
-
-  const reasons: string[] = [];
-
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.recruitment)) {
-    reasons.push(
-      "Keeps the recruit pipeline visible by turning walk-in traffic into operator prospects.",
-    );
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.intel)) {
-    reasons.push("Improves contract reading and administrative control around available work.");
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.staging)) {
-    reasons.push("Supports raid prep so deployed teams leave ready instead of improvised.");
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.recovery)) {
-    reasons.push(
-      "Creates space for recovery pressure, morale resets, and post-raid decompression.",
-    );
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.social)) {
-    reasons.push("Supports morale and relationship stability between raids.");
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.training)) {
-    reasons.push(
-      "Builds bounded physical readiness for raids through drills, not attunement changes or rank ups.",
-    );
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.staffing)) {
-    reasons.push(
-      "Protects inventory and staffing throughput so logistics does not bottleneck growth.",
-    );
-  }
-  if (hasRoomReasonTag(room, ROOM_REASON_TAG.operations)) {
-    reasons.push(`Handles the business side of ${guildName} so the rest of the loop stays open.`);
-  }
-
-  return reasons.slice(0, 2);
 }
 
 function PrepRecipeCard({
@@ -622,20 +333,21 @@ function CraftRecipeCard({
 }
 
 export function RoomDetailPanel({
-  guildName = "the guild",
   room,
   buildingUpgrades,
   roomUpgrades,
   callbacks,
   roomCulture,
   onClose,
+  onOpenUpgrades,
+  onOpenStaffing,
 }: RoomDetailPanelProps) {
   if (!room) return null;
 
   const occupancyPct = getRoomStaffingPercent(room);
-  const whyItMatters = getRoomWhyItMatters(room, guildName);
   const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
   const training = room.training;
+  const hasAnyUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
 
   const stateBadge = room.isOperational
     ? { label: "Operational", cls: "badge badge-gold", tip: getRoomStatusTip(room) }
@@ -674,20 +386,10 @@ export function RoomDetailPanel({
             </Tooltip>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-silver/65">{room.description}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <span className="badge badge-slate">{getRoomStateLabel(room.roomStateId)}</span>
-            <span className="badge badge-slate">
-              Floor {room.floorDisplayNumber ?? room.floorIndex + 1}
-            </span>
-            <span className="badge badge-slate">{formatSlotLabel(room.slotId)}</span>
-            <Tooltip
-              content={`Reserved ${formatFootprintLabel(room.reservedFootprint)}; active ${formatFootprintLabel(room.activeFootprint)}`}
-            >
-              <span className="badge badge-slate">
-                {room.reservedFootprint.cols}×{room.reservedFootprint.rows} /{" "}
-                {room.activeFootprint.cols}×{room.activeFootprint.rows}
-              </span>
-            </Tooltip>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-silver/55">
+            <span>{getRoomStateLabel(room.roomStateId)}</span>
+            <span className="opacity-40">·</span>
+            <span>Floor {room.floorDisplayNumber ?? room.floorIndex + 1}</span>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -788,51 +490,45 @@ export function RoomDetailPanel({
         </p>
       </section>
 
-      {whyItMatters.length > 0 && (
-        <section className="space-y-2.5">
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-            Why This Room Matters
-          </h4>
-          <div className="space-y-2">
-            {whyItMatters.map((reason) => (
-              <p key={reason} className="text-sm leading-relaxed text-silver/70">
-                {reason}
-              </p>
-            ))}
-          </div>
+      {(onOpenUpgrades || onOpenStaffing) && (
+        <section className="flex flex-wrap gap-1.5">
+          {onOpenStaffing && room.requiredStaffTag && (
+            <button
+              type="button"
+              className="btn-ghost px-3 py-1.5 text-xs"
+              data-testid="room-open-staffing"
+              onClick={onOpenStaffing}
+            >
+              Staffing →
+            </button>
+          )}
+          {onOpenUpgrades && hasAnyUpgrades && (
+            <button
+              type="button"
+              className="btn-ghost px-3 py-1.5 text-xs"
+              data-testid="room-open-upgrades"
+              onClick={onOpenUpgrades}
+            >
+              Upgrades →
+            </button>
+          )}
         </section>
-      )}
-
-      {room.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {room.tags.map((tag) => {
-            const meta = getTagMeta(tag);
-            return (
-              <Tooltip key={tag} content={meta.tip}>
-                <span className="badge badge-slate">{meta.label}</span>
-              </Tooltip>
-            );
-          })}
-        </div>
       )}
 
       {roomCulture && (
-        <section className="space-y-2.5">
-          <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
-            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-              Room Culture
-            </h4>
-          </Tooltip>
-          <div className="glass-card-inset space-y-2.5 p-4">
-            <div className="flex items-baseline gap-3">
-              <span className="text-xs uppercase tracking-[0.12em] text-gold/60">Tone</span>
-              <span className="text-sm text-silver-bright">
-                {getCultureSummaryLabel(roomCulture.summary)}
-              </span>
-            </div>
-            <RoomCultureBadges culture={roomCulture} />
+        <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/65">
+            <span className="uppercase tracking-[0.12em] text-gold/60">Culture</span>
+            <span className="text-silver-bright">
+              {getCultureSummaryLabel(roomCulture.summary)}
+            </span>
+            {roomCulture.signals.slice(0, 2).map((signal) => (
+              <Tooltip key={signal} content={getSignalMeta(signal).tip} side="top">
+                <span className="text-silver/55">· {getSignalMeta(signal).label}</span>
+              </Tooltip>
+            ))}
           </div>
-        </section>
+        </Tooltip>
       )}
 
       {training && (
@@ -885,44 +581,6 @@ export function RoomDetailPanel({
         </section>
       )}
 
-      {buildingUpgrades.length > 0 && (
-        <section className="space-y-2.5">
-          <Tooltip content="Upgrades that improve the whole building" side="top">
-            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-              Building Upgrades
-            </h4>
-          </Tooltip>
-          <div className="space-y-2.5">
-            {buildingUpgrades.map((u) => (
-              <UpgradeCard
-                key={u.id}
-                upgrade={u}
-                onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {roomUpgrades.length > 0 && (
-        <section className="space-y-2.5">
-          <Tooltip content="Upgrades specific to this room" side="top">
-            <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-              Room Upgrades
-            </h4>
-          </Tooltip>
-          <div className="space-y-2.5">
-            {roomUpgrades.map((u) => (
-              <UpgradeCard
-                key={u.id}
-                upgrade={u}
-                onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {room.prepRecipes.length > 0 && (
         <section className="space-y-2.5">
           <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
@@ -956,6 +614,175 @@ export function RoomDetailPanel({
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+export function RoomUpgradesBody({
+  room,
+  buildingUpgrades,
+  roomUpgrades,
+  callbacks,
+}: {
+  room: RoomViewModel;
+  buildingUpgrades: readonly UpgradeViewModel[];
+  roomUpgrades: readonly UpgradeViewModel[];
+  callbacks: GameCallbacks;
+}) {
+  if (buildingUpgrades.length === 0 && roomUpgrades.length === 0) {
+    return <p className="text-sm text-silver/50">No upgrades available for this room right now.</p>;
+  }
+
+  return (
+    <div className="animate-enter space-y-5">
+      {buildingUpgrades.length > 0 && (
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Building Upgrades
+          </h4>
+          <div className="space-y-2.5">
+            {buildingUpgrades.map((u) => (
+              <UpgradeCard
+                key={u.id}
+                upgrade={u}
+                onPurchase={() => callbacks.purchaseBuildingUpgrade(u.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {roomUpgrades.length > 0 && (
+        <section className="space-y-2.5">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
+            Room Upgrades
+          </h4>
+          <div className="space-y-2.5">
+            {roomUpgrades.map((u) => (
+              <UpgradeCard
+                key={u.id}
+                upgrade={u}
+                onPurchase={() => callbacks.purchaseRoomUpgrade(room.id, u.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+export function RoomStaffingBody({
+  room,
+  staff,
+  callbacks,
+}: {
+  room: RoomViewModel;
+  staff: readonly StaffViewModel[];
+  callbacks: GameCallbacks;
+}) {
+  const requiredTag = room.requiredStaffTag;
+  if (!requiredTag) {
+    return (
+      <p className="text-sm text-silver/55">
+        This room runs without dedicated staff. Activate it and its benefits become available.
+      </p>
+    );
+  }
+
+  const requiredMeta = getTagMeta(requiredTag);
+  const assignedStaff = staff.filter(
+    (s) => s.assignmentKind === "room" && s.assignmentTargetId === room.id,
+  );
+  const availableStaff = staff.filter(
+    (s) =>
+      s.roleTag === requiredTag &&
+      !(s.assignmentKind === "room" && s.assignmentTargetId === room.id),
+  );
+
+  return (
+    <div className="animate-enter space-y-4">
+      <section className="space-y-2">
+        <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+          Required Role
+        </h4>
+        <div className="flex items-center gap-2 text-sm text-silver/80">
+          <span className="badge badge-slate">{requiredMeta.label}</span>
+          <span className="tabular-nums text-silver/60">
+            {room.assignedStaffCount}/{room.capacity} assigned
+          </span>
+        </div>
+        <p className="text-xs leading-relaxed text-silver/55">{requiredMeta.tip}</p>
+      </section>
+
+      <section className="space-y-2">
+        <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+          Currently Assigned
+        </h4>
+        {assignedStaff.length > 0 ? (
+          <ul className="space-y-1">
+            {assignedStaff.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center justify-between rounded-lg bg-[rgba(6,6,8,0.4)] px-3 py-1.5"
+              >
+                <span className="text-sm text-silver-bright">{s.name}</span>
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-0.5 text-xs"
+                  onClick={() => callbacks.assignStaff(s.id, undefined)}
+                >
+                  unassign
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-silver/50">No staff assigned to this room yet.</p>
+        )}
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
+            Available
+          </h4>
+          <button
+            type="button"
+            className="btn-primary px-2.5 py-1 text-xs"
+            onClick={() => callbacks.hireStaff(requiredTag)}
+          >
+            Hire {requiredMeta.label}
+          </button>
+        </div>
+        {availableStaff.length > 0 ? (
+          <ul className="space-y-1">
+            {availableStaff.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center justify-between rounded-lg bg-[rgba(6,6,8,0.4)] px-3 py-1.5"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-silver-bright">{s.name}</div>
+                  <div className="text-xs text-silver/55">{s.status}</div>
+                </div>
+                <button
+                  type="button"
+                  disabled={room.assignedStaffCount >= room.capacity}
+                  className="btn-ghost px-2 py-0.5 text-xs disabled:opacity-50"
+                  onClick={() => callbacks.assignStaff(s.id, room.id)}
+                >
+                  assign
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-silver/50">
+            No {requiredMeta.label} staff hired yet. Hire one to staff this room.
+          </p>
+        )}
+      </section>
     </div>
   );
 }

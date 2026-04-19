@@ -81,11 +81,11 @@ describe("room detail panel", () => {
     expect(html).toContain("Roster Avg");
     expect(html).toContain("+20%");
     expect(html).toContain("Rose Vega, Ivo Mercer are on the current training block.");
-    expect(html).toContain("physical readiness between contracts");
+    expect(html).toContain("Strength, Speed, Endurance, and Resilience");
     expect(html).not.toContain("once training comes online");
   });
 
-  it("describes the real Porter's office and briefing benefits", () => {
+  it("drops the long-form prose in favour of compact identity and state", () => {
     const officeHtml = renderToStaticMarkup(
       <RoomDetailPanel
         guildName="Porter's"
@@ -101,92 +101,11 @@ describe("room detail panel", () => {
         callbacks={callbacks}
       />,
     );
-    const briefingHtml = renderToStaticMarkup(
-      <RoomDetailPanel
-        guildName="Porter's"
-        room={makeTrainingRoom({
-          id: "room-instance/briefing",
-          templateId: "room/briefing_room:tier_1",
-          name: "The Briefing Room",
-          tags: ["room:operations", "ops:intel"],
-          training: undefined,
-        })}
-        buildingUpgrades={[]}
-        roomUpgrades={[]}
-        callbacks={callbacks}
-      />,
-    );
 
-    expect(officeHtml).toContain("filed dossiers");
-    expect(briefingHtml).toContain("secured-contract briefing layer");
-  });
-
-  it("describes the differentiated recovery and waterfront rooms", () => {
-    const infirmaryHtml = renderToStaticMarkup(
-      <RoomDetailPanel
-        guildName="Porter's"
-        room={makeTrainingRoom({
-          id: "room-instance/infirmary",
-          templateId: "room/infirmary:tier_1",
-          name: "The Infirmary",
-          tags: ["room:recovery", "staff:medical"],
-          training: undefined,
-        })}
-        buildingUpgrades={[]}
-        roomUpgrades={[]}
-        callbacks={callbacks}
-      />,
-    );
-    const breakRoomHtml = renderToStaticMarkup(
-      <RoomDetailPanel
-        guildName="Porter's"
-        room={makeTrainingRoom({
-          id: "room-instance/break-room",
-          templateId: "room/break_room:tier_1",
-          name: "The Break Room",
-          tags: ["room:social", "room:recovery"],
-          training: undefined,
-        })}
-        buildingUpgrades={[]}
-        roomUpgrades={[]}
-        callbacks={callbacks}
-      />,
-    );
-    const dockHtml = renderToStaticMarkup(
-      <RoomDetailPanel
-        guildName="Porter's"
-        room={makeTrainingRoom({
-          id: "room-instance/dock",
-          templateId: "room/dock:tier_1",
-          name: "The Dock",
-          tags: ["room:operations", "ops:staging"],
-          training: undefined,
-        })}
-        buildingUpgrades={[]}
-        roomUpgrades={[]}
-        callbacks={callbacks}
-      />,
-    );
-    const deckHtml = renderToStaticMarkup(
-      <RoomDetailPanel
-        guildName="Porter's"
-        room={makeTrainingRoom({
-          id: "room-instance/deck",
-          templateId: "room/deck:tier_1",
-          name: "The Deck",
-          tags: ["room:social"],
-          training: undefined,
-        })}
-        buildingUpgrades={[]}
-        roomUpgrades={[]}
-        callbacks={callbacks}
-      />,
-    );
-
-    expect(infirmaryHtml).toContain("Cuts injury recovery time");
-    expect(breakRoomHtml).toContain("private decompression");
-    expect(dockHtml).toContain("shortening departures");
-    expect(deckHtml).toContain("waterfront morale reset");
+    expect(officeHtml).toContain("The Office");
+    // Steady-state panels must not carry the retired "Why this room matters" essays.
+    expect(officeHtml).not.toContain("Why This Room Matters");
+    expect(officeHtml).not.toContain("filed dossiers");
   });
 
   it("renders a close control when the detail surface is hosted in the shell overlay", () => {
