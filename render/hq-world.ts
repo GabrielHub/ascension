@@ -10,6 +10,11 @@ import {
   getHqEnvironmentRenderConfigForBuilding,
   type HqEnvironmentAssetRoots,
 } from "lib/hq-environment-manifest";
+import {
+  HQ_PROP_ASSET_PATHS,
+  type HqFallbackPropAssetKey,
+  resolveHqRoomSceneAssetUrl,
+} from "lib/svg-asset-contract";
 import { resolveTimeOfDayPhase } from "lib/hq-time-phase";
 
 import { buildNavigationGraph } from "./navigation";
@@ -55,74 +60,7 @@ function getBuildingRenderConfig(buildingId?: string) {
   );
 }
 
-/** Standard scene spec for a 4×3 room using the shared HQ scene-system convention. */
-function sceneSpec(filename: string): SceneAssetSpec {
-  return {
-    filename,
-    svgOriginX: SCENE_ORIGIN_X,
-    svgOriginY: SCENE_ORIGIN_Y,
-    svgWidth: SCENE_VIEWBOX.width,
-    svgHeight: SCENE_VIEWBOX.height,
-    viewBoxMinX: SCENE_VIEWBOX.minX,
-    viewBoxMinY: SCENE_VIEWBOX.minY,
-  };
-}
-
 // ── Prop / scenery asset URLs ─────────────────────────────────────────────
-
-const PROP_ASSET_PATHS = {
-  // Furniture
-  desk: "props/iso-desk-reception.svg",
-  chair: "props/iso-chair-office.svg",
-  cabinet: "props/iso-cabinet-filing.svg",
-  table: "props/iso-table-folding.svg",
-  couch: "props/iso-couch-worn.svg",
-  stool: "props/iso-stool-bar.svg",
-  counter: "props/iso-counter-reception.svg",
-  // Medical
-  bed: "props/iso-bed-medical.svg",
-  medCabinet: "props/iso-cabinet-medical.svg",
-  ivStand: "props/iso-iv-stand.svg",
-  curtain: "props/iso-curtain-medical.svg",
-  trayMedical: "props/iso-tray-medical.svg",
-  bandages: "props/iso-bandages-box.svg",
-  // Wall-mounted
-  sign: "props/iso-sign-neon.svg",
-  light: "props/iso-light-pendant.svg",
-  shelf: "props/iso-shelf-wall.svg",
-  corkboard: "props/iso-board-cork.svg",
-  clock: "props/iso-clock-wall.svg",
-  phone: "props/iso-phone-wall.svg",
-  poster: "props/iso-poster-wanted.svg",
-  monitor: "props/iso-screen-monitor.svg",
-  // Floor items
-  plant: "props/iso-plant-potted.svg",
-  mat: "props/iso-mat-floor.svg",
-  rug: "props/iso-rug-floor.svg",
-  box: "props/iso-box-cardboard.svg",
-  bucket: "props/iso-bucket.svg",
-  radio: "props/iso-radio-boombox.svg",
-  waterCooler: "props/iso-cooler-water.svg",
-  clipboard: "props/iso-clipboard-stack.svg",
-  bottles: "props/iso-bottles-shelf.svg",
-  register: "props/iso-register-cash.svg",
-  punchBag: "props/iso-bag-punching.svg",
-  bench: "background/iso-bg-bench.svg",
-  // Bodega-specific props
-  coffeeMachine: "props/iso-coffee-machine.svg",
-  menuBoard: "props/iso-menu-board.svg",
-  microwave: "props/iso-microwave.svg",
-  mopBroom: "props/iso-mop-broom.svg",
-  pickledEggs: "props/iso-jar-pickled-eggs.svg",
-  deliCase: "props/iso-deli-case.svg",
-  firstAid: "props/iso-firstaid-wall.svg",
-  milkCrate: "props/iso-crate-milk.svg",
-  gearCrate: "props/iso-crate-gear.svg",
-  guildLicense: "props/iso-license-guild.svg",
-  posterMotivational: "props/iso-poster-motivational.svg",
-  ceilingFan: "props/iso-fan-ceiling.svg",
-  foodDebris: "props/iso-food-debris.svg",
-} as const;
 
 const PROP_SVG_VIEWBOX = {
   bandages: [0, 0, 36, 28],
@@ -171,12 +109,9 @@ const PROP_SVG_VIEWBOX = {
   table: [12, 24, 72, 66],
   trayMedical: [0, 0, 48, 56],
   waterCooler: [0, 0, 44, 72],
-} as const satisfies Record<
-  keyof typeof PROP_ASSET_PATHS,
-  readonly [number, number, number, number]
->;
+} as const satisfies Record<HqFallbackPropAssetKey, readonly [number, number, number, number]>;
 
-function getPropSvgMeta(assetKey: keyof typeof PROP_ASSET_PATHS): HqSvgPlacementMeta {
+function getPropSvgMeta(assetKey: HqFallbackPropAssetKey): HqSvgPlacementMeta {
   const viewBox = PROP_SVG_VIEWBOX[assetKey];
   const [minX, minY, width, height] = viewBox;
   return {
@@ -187,7 +122,7 @@ function getPropSvgMeta(assetKey: keyof typeof PROP_ASSET_PATHS): HqSvgPlacement
 }
 
 function derivePropSpriteScale(
-  assetKey: keyof typeof PROP_ASSET_PATHS,
+  assetKey: HqFallbackPropAssetKey,
   legacyWidth: number,
   legacyHeight: number,
 ): number {
@@ -208,7 +143,7 @@ interface RoomPalette {
 }
 
 interface RecipePropPlacement {
-  assetKey: keyof typeof PROP_ASSET_PATHS;
+  assetKey: HqFallbackPropAssetKey;
   relCol: number;
   relRow: number;
   /** Sprite-box width used to derive svgMeta scale. */
@@ -220,30 +155,11 @@ interface RecipePropPlacement {
   offsetY?: number;
 }
 
-/** Pre-composed scene SVG that replaces individual prop sprites for a room. */
-interface SceneAssetSpec {
-  filename: string;
-  /** X coordinate of the isometric origin inside the SVG's own coordinate space. */
-  svgOriginX: number;
-  /** Y coordinate of the isometric origin inside the SVG's own coordinate space. */
-  svgOriginY: number;
-  /** viewBox width */
-  svgWidth: number;
-  /** viewBox height */
-  svgHeight: number;
-  /** viewBox minX */
-  viewBoxMinX: number;
-  /** viewBox minY */
-  viewBoxMinY: number;
-}
-
 interface RoomRecipe {
   palette: RoomPalette;
   inactivePalette: RoomPalette;
   openings: readonly { side: HqWallSide; cellOffset: number }[];
   props: readonly RecipePropPlacement[];
-  /** When present, a single composed SVG replaces the individual props array. */
-  sceneAsset?: SceneAssetSpec;
 }
 
 const INACTIVE_PALETTE: RoomPalette = {
@@ -259,7 +175,6 @@ const REGISTER_RECIPE: RoomRecipe = {
   palette: { floor: "#3c2a16", wallLeft: "#2c2014", wallRight: "#352616" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: sceneSpec("scene-the-register.svg"),
   props: [
     // HERO: Reception counter — center, divides clerk from customer
     { assetKey: "counter", relCol: 0.5, relRow: 0.55, width: 120, height: 83, zIndex: 40 },
@@ -329,7 +244,6 @@ const COUNTER_RECIPE: RoomRecipe = {
   palette: { floor: "#3a2818", wallLeft: "#2c2014", wallRight: "#342416" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: sceneSpec("scene-the-counter.svg"),
   props: [
     // HERO: Deli case — long glass-fronted counter, dominates the room
     { assetKey: "deliCase", relCol: 0.48, relRow: 0.55, width: 120, height: 82, zIndex: 40 },
@@ -424,7 +338,6 @@ const SUPPLY_CLOSET_RECIPE: RoomRecipe = {
   palette: { floor: "#302418", wallLeft: "#261e14", wallRight: "#2c2218" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
-  sceneAsset: sceneSpec("scene-supply-closet.svg"),
   props: [
     // HERO: Shelf against back-right wall (packed with gear)
     { assetKey: "shelf", relCol: 0.75, relRow: 0.18, width: 52, height: 70, zIndex: 34 },
@@ -830,17 +743,6 @@ const TEMPLATE_RECIPES: Record<string, RoomRecipe> = {
   "room/deck:tier_1": PORTERS_DECK_RECIPE,
 };
 
-// Room-state scene overrides: maps roomStateId to a scene SVG filename.
-// When a room has been upgraded, its roomStateId changes (e.g. "room-state/register:2")
-// and the renderer swaps in the upgraded scene SVG.
-const ROOM_STATE_SCENES: Record<string, string> = {
-  "room-state/register:2": "scene-the-register-2.svg",
-  "room-state/counter:2": "scene-the-counter-2.svg",
-  "room-state/dining-area:2": "scene-the-dining-area-2.svg",
-  "room-state/dining-area:3": "scene-the-dining-area-3.svg",
-  "room-state/supply-closet:2": "scene-supply-closet-2.svg",
-};
-
 // Function-tag fallback recipes: used when no template-specific recipe exists.
 // Union hall and later-tier rooms resolve through here.
 const ROOM_RECIPES: Record<string, RoomRecipe> = {
@@ -851,12 +753,8 @@ const ROOM_RECIPES: Record<string, RoomRecipe> = {
   "room:training": TRAINING_RECIPE,
 };
 
-function getRecipe(templateId: string, functionTag: string, roomStateId?: string): RoomRecipe {
-  const base = TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
-  if (roomStateId && ROOM_STATE_SCENES[roomStateId]) {
-    return { ...base, sceneAsset: sceneSpec(ROOM_STATE_SCENES[roomStateId]) };
-  }
-  return base;
+function getRecipe(templateId: string, functionTag: string): RoomRecipe {
+  return TEMPLATE_RECIPES[templateId] ?? ROOM_RECIPES[functionTag] ?? DEFAULT_RECIPE;
 }
 
 // ── Seed type ─────────────────────────────────────────────────────────────
@@ -1330,10 +1228,10 @@ export function projectStaticPlacement(
 }
 
 function resolvePropAssetUrl(
-  assetKey: keyof typeof PROP_ASSET_PATHS,
+  assetKey: HqFallbackPropAssetKey,
   assetRoots: HqEnvironmentAssetRoots,
 ): string {
-  return `${assetRoots.partsRoot}/${PROP_ASSET_PATHS[assetKey]}`;
+  return `${assetRoots.partsRoot}/${HQ_PROP_ASSET_PATHS[assetKey]}`;
 }
 
 function buildRoomProps(
@@ -1342,24 +1240,37 @@ function buildRoomProps(
   originY: number,
   floorOffsets: ReadonlyMap<number, HqFloorOffset>,
   assetRoots: HqEnvironmentAssetRoots,
+  buildingId: string,
 ): HqSpritePlacement[] {
   const props: HqSpritePlacement[] = [];
 
   for (const room of rooms) {
     const floorOrigin = getFloorOrigin(originX, originY, room.floorIndex, floorOffsets);
-    const recipe = getRecipe(room.templateId, room.functionTag, room.roomStateId);
+    const recipe = getRecipe(room.templateId, room.functionTag);
     const reserved = room.reservedFootprint;
     const active = room.activeFootprint;
     const activeTopCorner = projectIso(active.col, active.row, floorOrigin.x, floorOrigin.y);
     const roomOpacity = room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35;
 
-    if (recipe.sceneAsset) {
-      // Room scene: unified scene-origin projection
-      const scene = recipe.sceneAsset;
+    const resolvedSceneUrl = resolveHqRoomSceneAssetUrl(
+      buildingId,
+      room.templateId,
+      room.roomStateId,
+    );
+
+    if (resolvedSceneUrl) {
+      const scene = {
+        svgOriginX: SCENE_ORIGIN_X,
+        svgOriginY: SCENE_ORIGIN_Y,
+        svgWidth: SCENE_VIEWBOX.width,
+        svgHeight: SCENE_VIEWBOX.height,
+        viewBoxMinX: SCENE_VIEWBOX.minX,
+        viewBoxMinY: SCENE_VIEWBOX.minY,
+      };
       const placement: HqStaticPlacementDef = {
         id: `${room.id}/scene`,
         assetId: "",
-        assetUrl: `${assetRoots.recipesRoot}/${scene.filename}`,
+        assetUrl: resolvedSceneUrl,
         kind: "room-scene",
         col: reserved.col,
         row: reserved.row,
@@ -1681,6 +1592,7 @@ export function composeHqWorldGeometry(
     originY,
     floorOffsets,
     getBuildingRenderConfig(options.buildingId).paths,
+    options.buildingId ?? "building/bodega",
   );
   const scenery = buildExteriorScenery(options.buildingId, originX, originY);
 

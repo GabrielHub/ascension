@@ -45,6 +45,39 @@ describe("HQ world navigation", () => {
     );
   });
 
+  it("uses the shared scene contract for upgraded room-state scene swaps", () => {
+    const geometry = composeHqWorldGeometry([
+      createRoomSeed({
+        roomStateId: "room-state/register:2",
+      }),
+    ]);
+
+    expect(geometry.roomProps).toHaveLength(1);
+    expect(geometry.roomProps[0]?.assetUrl).toBe(
+      "/data/svg-environments/hq/bodega/recipes/scene-the-register-2.svg",
+    );
+  });
+
+  it("resolves the dining area tier 1 room through the shared scene contract", () => {
+    const geometry = composeHqWorldGeometry([
+      createRoomSeed({
+        id: "room-instance/dining",
+        templateId: "room/dining_area:tier_1",
+        roomStateId: "room-state/dining-area:1",
+        slotId: "slot/dining-area",
+        name: "The Dining Area",
+        functionTag: "room:recovery",
+        reservedFootprint: { col: 1, row: 15, cols: 8, rows: 3 },
+        activeFootprint: { col: 1, row: 15, cols: 8, rows: 3 },
+      }),
+    ]);
+
+    expect(geometry.roomProps).toHaveLength(1);
+    expect(geometry.roomProps[0]?.assetUrl).toBe(
+      "/data/svg-environments/hq/bodega/recipes/scene-the-dining-area.svg",
+    );
+  });
+
   it("tracks reserved shell bounds separately from active room bounds", () => {
     const geometry = composeHqWorldGeometry([
       createRoomSeed({

@@ -8,6 +8,7 @@ import type { SimSystemContext } from "./types";
 
 export const SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID = "room/compliance_office:tier_1";
 export const SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID = "room/executive_office:tier_1";
+export const SKYSCRAPER_WAR_ROOM_TEMPLATE_ID = "room/war_room:tier_1";
 
 // Bounded so compliance alone cannot zero out regulator pressure — aggressive
 // scrutiny gain still outpaces the compliance slack.

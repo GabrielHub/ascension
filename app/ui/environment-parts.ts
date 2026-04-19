@@ -384,10 +384,8 @@ export function envPartSvgPath(
     if (part.category === "scene") {
       return `${index.paths.recipesRoot}/${filename}.svg`;
     }
-
     return `${index.paths.partsRoot}/${part.id}.svg`;
   }
-
   return `${index.paths.referenceRoot}/${filename}.svg`;
 }
 

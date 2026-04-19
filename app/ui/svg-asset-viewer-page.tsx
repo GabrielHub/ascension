@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 import { getSceneReviewContract } from "./environment-parts";
-import { SvgFileCatalogPanel } from "./svg-file-catalog-panel";
+import { SvgAssetContractPanel } from "./svg-asset-contract-panel";
 
 // ── Re-exported for svg-playground-page ──────────────────────────────────
 
@@ -64,14 +64,14 @@ export function SvgAssetViewerPage() {
             SVG Asset Viewer
           </h1>
           <span className="hidden text-xs text-silver/30 sm:block">
-            Catalog from <code className="text-gold/40">public/data/**/*.svg</code>
+            Contract-backed runtime and library preview
           </span>
           <Link to="/svg-playground" className="btn-ghost text-xs">
             playground &rarr;
           </Link>
         </div>
       </header>
-      <SvgFileCatalogPanel />
+      <SvgAssetContractPanel />
     </div>
   );
 }

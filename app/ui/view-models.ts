@@ -31,6 +31,11 @@ import {
 } from "sim";
 import { districtTemplates } from "content/templates/districts";
 import { getTrainingDerivedBonus, getTrainingStatusLabel } from "sim/systems/training";
+import {
+  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
+} from "sim/systems/city-pressure";
 import { getBuildingFloors } from "content/building-layouts";
 import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
 import { visitorQualityToRank } from "lib/visitor-rank";
@@ -818,10 +823,24 @@ export function buildCityPressureView(
 }
 
 const VISIBLE_INSTITUTION_SKYSCRAPER_ROOM_TEMPLATE_IDS = [
-  "room/executive_office:tier_1",
-  "room/compliance_office:tier_1",
-  "room/war_room:tier_1",
+  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
 ] as const;
+
+const VISIBLE_INSTITUTION_PRESTIGE_SCORE_THRESHOLD = 62;
+const VISIBLE_INSTITUTION_RECOGNIZED_SCORE_THRESHOLD = 34;
+
+const REPUTATION_SCORE_WEIGHT = 0.45;
+const STANDING_SCORE_WEIGHT = 0.4;
+const TIER_BONUS_WEIGHT = 0.15;
+const REPUTATION_SCALE = 0.8;
+const STANDING_SCORE_SCALE = 0.5;
+const TIER_BONUS_PER_TIER = 10;
+const TIER_BONUS_CAP = 50;
+
+const PRESSURE_THREAT_SCRUTINY_THRESHOLD = 30;
+const PRESSURE_THREAT_LEVERAGE_THRESHOLD = 25;
 
 export function buildVisibleInstitutionView(
   reputation: number,
@@ -836,14 +855,21 @@ export function buildVisibleInstitutionView(
       ? institutionFactions.reduce((sum, f) => sum + f.standing, 0) / institutionFactions.length
       : 0;
 
-  const repScore = Math.max(0, Math.min(100, reputation * 0.8));
-  const standingScore = Math.max(0, Math.min(100, (averageStanding + 100) * 0.5));
-  const tierBonus = buildingId === "building/skyscraper" ? Math.min(50, buildingTier * 10) : 0;
-  const score = Math.round(repScore * 0.45 + standingScore * 0.4 + tierBonus * 0.15);
+  const repScore = Math.max(0, Math.min(100, reputation * REPUTATION_SCALE));
+  const standingScore = Math.max(0, Math.min(100, (averageStanding + 100) * STANDING_SCORE_SCALE));
+  const tierBonus =
+    buildingId === "building/skyscraper"
+      ? Math.min(TIER_BONUS_CAP, buildingTier * TIER_BONUS_PER_TIER)
+      : 0;
+  const score = Math.round(
+    repScore * REPUTATION_SCORE_WEIGHT +
+      standingScore * STANDING_SCORE_WEIGHT +
+      tierBonus * TIER_BONUS_WEIGHT,
+  );
 
   let band: VisibleInstitutionBand;
-  if (score >= 62) band = "prestige";
-  else if (score >= 34) band = "recognized";
+  if (score >= VISIBLE_INSTITUTION_PRESTIGE_SCORE_THRESHOLD) band = "prestige";
+  else if (score >= VISIBLE_INSTITUTION_RECOGNIZED_SCORE_THRESHOLD) band = "recognized";
   else band = "emerging";
 
   const cooldownFactionIds = cityPressure.factions
@@ -857,13 +883,18 @@ export function buildVisibleInstitutionView(
 
   const pressureThreats: string[] = [];
   const cityLicensingHighScrutiny = cityPressure.factions.some(
-    (f) => f.factionId === "faction/city-licensing" && f.scrutiny >= 30,
+    (f) =>
+      f.factionId === "faction/city-licensing" && f.scrutiny >= PRESSURE_THREAT_SCRUTINY_THRESHOLD,
   );
   const boroughContractsHighScrutiny = cityPressure.factions.some(
-    (f) => f.factionId === "faction/borough-contracts" && f.scrutiny >= 30,
+    (f) =>
+      f.factionId === "faction/borough-contracts" &&
+      f.scrutiny >= PRESSURE_THREAT_SCRUTINY_THRESHOLD,
   );
   const rivalLeverageHigh = cityPressure.factions.some(
-    (f) => f.factionId === "faction/rival-guild-market" && f.leverage >= 25,
+    (f) =>
+      f.factionId === "faction/rival-guild-market" &&
+      f.leverage >= PRESSURE_THREAT_LEVERAGE_THRESHOLD,
   );
   if (cityLicensingHighScrutiny) pressureThreats.push("Licensing audit");
   if (boroughContractsHighScrutiny) pressureThreats.push("Borough hearing");

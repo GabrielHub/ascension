@@ -6,7 +6,7 @@ export function meta() {
     {
       name: "description",
       content:
-        "Browse the full shipped SVG catalog — operator parts, HQ scenes, raid art, reference assets, and supporting environment files.",
+        "Preview live, library, and reference SVG assets through the shared runtime contract for HQ, raids, and operator rendering.",
     },
   ];
 }

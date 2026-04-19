@@ -9,6 +9,7 @@
 // Imported via content mirror; the canonical copy in public/ is served at runtime by URL.
 import partsIndexData from "../../content/data/operator-parts-index.json";
 import operatorRecipesData from "../../content/data/operator-recipes.json";
+import { resolveOperatorPartAssetUrl } from "lib/svg-asset-contract";
 
 // ── Types matching the locked metadata shape ─────────────────────────────
 
@@ -167,7 +168,11 @@ export function findPartById(
 
 /** Resolve the public asset path for a part SVG. */
 export function partSvgPath(partId: string): string {
-  return `/data/svg-parts/operators/parts/${partId}.svg`;
+  const assetUrl = resolveOperatorPartAssetUrl(partId);
+  if (!assetUrl) {
+    throw new Error(`Missing contracted operator SVG asset for ${partId}`);
+  }
+  return assetUrl;
 }
 
 // ── Composition helpers ──────────────────────────────────────────────────

@@ -11,6 +11,12 @@ import {
 } from "lib/policies";
 
 import {
+  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
+} from "sim/systems/city-pressure";
+
+import {
   buildVisibleInstitutionView,
   type CityPressureView,
   type GameCallbacks,
@@ -22,7 +28,6 @@ import { getTagMeta } from "./_glossary";
 
 interface ManagementPanelProps {
   guild: HqViewModel["guild"];
-  guildName: HqViewModel["guild"]["guildName"];
   policies: HqViewModel["policies"];
   contractLifecycle: HqViewModel["contractLifecycle"];
   building: HqViewModel["building"];
@@ -648,15 +653,15 @@ function RelocationCard({
 }
 
 const SKYSCRAPER_EXECUTIVE_ROOM_META: Record<string, { label: string; summary: string }> = {
-  "room/executive_office:tier_1": {
+  [SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID]: {
     label: "Executive Office",
     summary: "Scales positive standing gains from contract outcomes (+40%).",
   },
-  "room/compliance_office:tier_1": {
+  [SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID]: {
     label: "Compliance Office",
     summary: "Bleeds faction scrutiny each hour and softens scandal incidents.",
   },
-  "room/war_room:tier_1": {
+  [SKYSCRAPER_WAR_ROOM_TEMPLATE_ID]: {
     label: "War Room",
     summary: "Stacks x1.5 on briefing-room intel and unlocks counter-op framing.",
   },
@@ -837,7 +842,6 @@ function CityPressureSummaryCard({
 
 export function ManagementPanel({
   guild,
-  guildName,
   policies,
   contractLifecycle,
   building,
@@ -848,6 +852,7 @@ export function ManagementPanel({
   callbacks,
   cityPressure,
 }: ManagementPanelProps) {
+  const guildName = guild.guildName;
   const institution =
     building.id === "building/skyscraper" && cityPressure
       ? buildVisibleInstitutionView(

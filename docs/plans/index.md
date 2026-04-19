@@ -4,11 +4,12 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, and the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse) are all shipped and folded back into the roadmap. The active planning focus is now wiring institutional-pressure consequences onto the Executive Floor rooms the expansion arc delivered.
+The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
 
-Current checked-in execution slices:
+There are two active checked-in plans right now:
 
-- [Skyscraper Prestige Pressure](./skyscraper-prestige-pressure.md)
+- [Porter's Room Asset Remediation](./porters-room-asset-remediation.md) — concrete Porter's room-package cleanup for missing roots, scenes, shell, structure, and viewer/runtime parity
+- [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — prerequisite work for the tower package: scene-builder support, shell sizing, and elevation-band definition before room-scene production
 
 ## Shared Execution Contract
 

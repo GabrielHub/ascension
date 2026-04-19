@@ -7,6 +7,7 @@
  */
 
 import raidManifestData from "../../../content/data/raid-environment-index.json";
+import { resolveRaidPartAssetUrl } from "lib/svg-asset-contract";
 
 // ── Types matching the raid asset metadata shape ─────────────────────
 
@@ -59,14 +60,6 @@ const CATEGORY_PREFIX: Record<RaidPartCategory, string> = {
   "fog-treatment": "fog",
   marker: "marker",
   enemy: "enemy",
-};
-
-const CATEGORY_APPROVED_DIR: Record<RaidPartCategory, string> = {
-  tile: "parts/tiles",
-  feature: "parts/features",
-  "fog-treatment": "parts/fog",
-  marker: "parts/markers",
-  enemy: "enemies",
 };
 
 /** Validate an entire raid parts index. Returns an empty array if valid. */
@@ -152,17 +145,11 @@ export function findRaidPartById(
 /** Resolve the public asset path for a raid part SVG.
  *  Exploration assets live in reference/; approved assets are in parts/. */
 export function raidPartSvgPath(part: RaidPartMeta): string {
-  const filename = part.id.replace(/\//g, "-");
-  if (part.status !== "approved") {
-    return `/data/svg-environments/raids/reference/${filename}.svg`;
+  const assetUrl = resolveRaidPartAssetUrl(part.id);
+  if (!assetUrl) {
+    throw new Error(`Missing contracted raid SVG asset for ${part.id}`);
   }
-
-  const basename = part.id.split("/").pop();
-  if (!basename) {
-    return `/data/svg-environments/raids/reference/${filename}.svg`;
-  }
-
-  return `/data/svg-environments/raids/${CATEGORY_APPROVED_DIR[part.category]}/${basename}.svg`;
+  return assetUrl;
 }
 
 // ── Loaded index access ─────────────────────────────────────────────

@@ -2442,7 +2442,6 @@ export function GameShell() {
                   {activeTab === "hq" && hqCategory === "management" && (
                     <ManagementPanel
                       guild={hq.guild}
-                      guildName={hq.guild.guildName}
                       policies={hq.policies}
                       contractLifecycle={hq.contractLifecycle}
                       building={hq.building}

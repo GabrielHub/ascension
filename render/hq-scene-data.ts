@@ -16,6 +16,8 @@
  * - `footprintCols`/`footprintRows` are builder metadata (not used by renderer).
  */
 
+import { resolveHqEnvironmentAssetUrl } from "lib/svg-asset-contract";
+
 import type { HqSceneComposition, HqStaticPlacementDef } from "./types";
 
 // Exported from the scene builder. Keep this composition aligned with the
@@ -1528,7 +1530,27 @@ const EXTERIOR_SCENES: Readonly<Record<string, HqSceneComposition>> = {
   "building/porters": PORTERS_EXTERIOR_SCENE,
 };
 
+function resolveScenePlacementAssetUrl(
+  buildingId: string,
+  placement: HqStaticPlacementDef,
+): HqStaticPlacementDef {
+  return {
+    ...placement,
+    assetUrl: resolveHqEnvironmentAssetUrl(buildingId, placement.assetId) ?? placement.assetUrl,
+  };
+}
+
 /** Return the exterior scene composition for a building, or undefined if none exists. */
 export function getExteriorScene(buildingId: string): HqSceneComposition | undefined {
-  return EXTERIOR_SCENES[buildingId];
+  const scene = EXTERIOR_SCENES[buildingId];
+  if (!scene) {
+    return undefined;
+  }
+
+  return {
+    ...scene,
+    placements: scene.placements.map((placement) =>
+      resolveScenePlacementAssetUrl(buildingId, placement),
+    ),
+  };
 }

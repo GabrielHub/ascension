@@ -117,6 +117,7 @@ import {
   applyCityPressureOutcome,
   emitCityPressureEvents,
   SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
+  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
   type CityPressureOutcome,
 } from "./city-pressure";
 import { FIRST_RAID_RETURN_BEAT_ID } from "./guidance-beats";
@@ -200,7 +201,6 @@ const PORTERS_INFIRMARY_TEMPLATE_ID = "room/infirmary:tier_1";
 const PORTERS_BREAK_ROOM_TEMPLATE_ID = "room/break_room:tier_1";
 const PORTERS_DOCK_TEMPLATE_ID = "room/dock:tier_1";
 const PORTERS_DECK_TEMPLATE_ID = "room/deck:tier_1";
-const SKYSCRAPER_WAR_ROOM_TEMPLATE_ID = "room/war_room:tier_1";
 const WAR_ROOM_BRIEFING_MULTIPLIER = 1.5;
 
 export interface RaidReadinessSignal {
@@ -268,21 +268,23 @@ export function getContractBriefingState(
   }
 
   const warRoomActive = hasOperationalRoomTemplate(context, SKYSCRAPER_WAR_ROOM_TEMPLATE_ID);
+  const withWarRoom = (base: number): number =>
+    warRoomActive ? Math.round(base * WAR_ROOM_BRIEFING_MULTIPLIER) : base;
 
   if (hasOperationalRoomTemplate(context, PORTERS_PREP_ROOM_TEMPLATE_ID)) {
     return {
       source: "briefing_room_and_prep",
       status: "drilled",
-      opportunityIntelBonus: warRoomActive ? Math.round(16 * WAR_ROOM_BRIEFING_MULTIPLIER) : 16,
-      bossIntelBonus: warRoomActive ? Math.round(30 * WAR_ROOM_BRIEFING_MULTIPLIER) : 30,
+      opportunityIntelBonus: withWarRoom(16),
+      bossIntelBonus: withWarRoom(30),
     };
   }
 
   return {
     source: "briefing_room",
     status: "briefed",
-    opportunityIntelBonus: warRoomActive ? Math.round(8 * WAR_ROOM_BRIEFING_MULTIPLIER) : 8,
-    bossIntelBonus: warRoomActive ? Math.round(15 * WAR_ROOM_BRIEFING_MULTIPLIER) : 15,
+    opportunityIntelBonus: withWarRoom(8),
+    bossIntelBonus: withWarRoom(15),
   };
 }
 

@@ -103,6 +103,8 @@ The guild's third and final headquarters is a midtown office tower the player pu
 
 Unlike the bodega and Porter's, the skyscraper does not become a different building over time. It expands. The player acquires additional floors and fits them out, and the building's identity grows by accumulation: more services, more presence, more institutional weight. The skyscraper is the last headquarters. Everything past it is content layered on top of this one tower.
 
+The intended visual read is not "a nicer building on another block." It is a headquarters far above the street, high enough that the city below feels distant. The guild is no longer embedded in a storefront block or on a waterfront. It owns space in a tower that dominates the skyline and keeps pushing upward as more floors are acquired.
+
 ### Skyscraper Atmosphere
 
 - An institutional lobby with a real reception desk and a guard who knows everyone's name.
@@ -110,19 +112,24 @@ Unlike the bodega and Porter's, the skyscraper does not become a different build
 - An operations floor behind a keycard door that nobody is supposed to wander into.
 - Floors above that smell like fresh paint, then like coffee, then like a clinic, depending on which one the elevator stops at.
 - The kind of quiet that only happens in a building tall enough to put weather between you and the street.
+- The feeling that the guild is suspended over the city instead of sitting inside it. Rooftops, clouds, neighboring towers, and reflected sky matter more than sidewalks or curb clutter.
 
 ### Skyscraper Exterior By Time Of Day
 
-The skyscraper should feel like a real midtown tower at every hour.
+The skyscraper should feel like a real midtown tower at every hour, and it should feel high above the ground. The visual language is not street dressing. It is altitude, weather, neighboring towers, and the city far below.
 
-- **Sunrise.** Pale sky, first commuters on the street below, the building's mirrored glass picking up cold pink light, lobby lights on but the upper floors still dark.
-- **Day.** Full midtown legibility. Surrounding towers, traffic, foot circulation. The building reads as one of many, not a singular landmark.
-- **Sunset.** Warm reflective glass, long shadows from neighbors, upper floors catching gold while the street goes blue.
-- **Night.** Lit windows on selected floors, lobby visible from the street, neighboring towers as silhouettes with their own lit grids.
+- **Sunrise.** Pale sky, cold pink light on mirrored glass, cloud haze below some floors, neighboring towers catching the same dawn before the streets are fully readable.
+- **Day.** Strong skyline legibility, nearby towers, air traffic, rooftop machinery, and atmospheric depth. The city is present, but mostly as distant geometry far below the tower.
+- **Sunset.** Warm reflective glass, long shadow bands cast from neighboring high-rises, gold hitting the upper faces while the city floor drops into blue haze.
+- **Night.** Lit windows on owned floors, aviation lights, neighboring towers as illuminated grids, and a sense of height from darkness and city-glow below instead of street-level signage.
+
+Street-level decoration language from the bodega and Porter's does not belong here. No sidewalks, curb clutter, dock props, or harbor dressing should be carrying the skyscraper's visual identity except where a specific ground-entry floor deliberately needs that read.
 
 ### Skyscraper Floor Stack
 
 The tower has a fixed canonical floor list. The player starts with the baseline five floors at relocation and acquires the upper four floors over the course of the endgame.
+
+The tower should feel massive. Floor plates are much larger than the bodega or Porter's, and the isometric view should let the tower itself dominate the composition. The baseline room-box language still applies, but each room should read as one square inside a much larger square floor rather than as a tiny low-rise cutaway.
 
 **Baseline floors (shipped at relocation).**
 
@@ -179,6 +186,8 @@ Floor acquisition is sequential. The Nightlife Floor opens first because better 
 - **Floors have identity.** Every floor is a named space with deliberate room composition. Generic "floor N" packages are not allowed.
 - **Starter rooms ship with floors.** New floors arrive with their starter rooms in place. Empty floors break the legibility precedent.
 - **Rooftop stays at the top.** Acquired floors slot into the tower core; the rooftop remains the visual cap.
+- **The tower reads as altitude, not as street frontage.** Ordinary skyscraper backdrop packages should be built from sky, neighboring towers, rooftop machinery, and distant city read, not from sidewalk or harbor decoration.
+- **Vertical navigation is part of the building fantasy.** Moving between floors and understanding where the player is in the tower must feel deliberate, not like reusing the simpler low-rise floor switch from Porter's.
 
 ## Room Flavor And Tier Progression
 

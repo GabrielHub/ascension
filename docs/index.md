@@ -18,8 +18,8 @@ Documentation is intentionally narrow.
 
 ## Planned Work
 
-- The next product work is the third and final headquarters: an expandable skyscraper that becomes the campaign's long-tail endgame home.
-- The first skyscraper slice should establish the HQ baseline and endgame-entry band, not attempt the full forever loop in one pass.
+- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, and Executive Floor institutional-pressure slice are all shipped.
+- The next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped institutional pressure.
 - Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
 - Active execution should stay split into narrow checked-in slices under `docs/plans/` rather than another umbrella phase doc.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
@@ -37,7 +37,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  There is no active checked-in plan right now; completed work should already be reflected back into the roadmap and product docs.
+  There is no active checked-in plan right now; the Executive Floor institutional-pressure slice is shipped and folded back into the roadmap.
 
 ### Research
 

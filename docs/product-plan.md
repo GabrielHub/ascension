@@ -7,7 +7,7 @@ This document is now a stable hub. The canonical product-plan content lives unde
 - The shipped product baseline already includes the full bodega campaign closeout, relocation into Porter's, multi-floor HQ support, onboarding, incidents, boss encounter handoff, browser and desktop hosting, and the first optional local-first AI surfaces.
 - Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth are all shipped in the current baseline.
 - Midgame remediation is complete. The shipped Porter's loop now has stronger browser coverage, deterministic D-rank reporting, tuned workshop economics, and the narrow readability fixes required by that verification pass.
-- Current planned work is no longer "stabilize the Porter's baseline at all." The next product-facing work is the third and final headquarters: an expandable skyscraper that starts the endgame, plus the rank/content bridge needed to make that HQ viable before wider optional AI content.
+- The skyscraper HQ baseline, first C-rank endgame-entry band, four-step floor expansion arc, and Executive Floor institutional-pressure slice are all shipped. The next product-facing work is fanning out to the remaining expansion-floor consequence slices (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and, on top of shipped institutional pressure, the first B-rank content packet.
 
 ## Read Order
 

@@ -1,47 +1,6 @@
-/** Boss encounter art resolver — maps bossId to encounter-grade SVG portrait paths. */
-
-const BOSS_ART_MAP: Record<string, string> = {
-  "boss/the-dispatcher": "/data/svg-environments/raids/bosses/the-dispatcher.svg",
-  "boss/the-superintendent": "/data/svg-environments/raids/bosses/the-superintendent.svg",
-  "boss/the-super": "/data/svg-environments/raids/bosses/the-superintendent.svg",
-  "boss/tunneler-brood-mother": "/data/svg-environments/raids/bosses/tunneler-brood-mother.svg",
-  "boss/sewer-warden": "/data/svg-environments/raids/bosses/sewer-warden.svg",
-  "boss/phantom-stalker": "/data/svg-environments/raids/bosses/phantom-stalker.svg",
-  "boss/the-curator": "/data/svg-environments/raids/bosses/the-curator.svg",
-  "boss/the-attendant": "/data/svg-environments/raids/bosses/the-attendant.svg",
-  "boss/the-referee": "/data/svg-environments/raids/bosses/the-referee.svg",
-  "boss/the-stockkeeper": "/data/svg-environments/raids/bosses/the-stockkeeper.svg",
-  "boss/the-manicurist": "/data/svg-environments/raids/bosses/the-manicurist.svg",
-  "boss/the-inspector": "/data/svg-environments/raids/bosses/the-inspector.svg",
-  "boss/the-appraiser": "/data/svg-environments/raids/bosses/the-appraiser.svg",
-  "boss/the-projectionist": "/data/svg-environments/raids/bosses/the-projectionist.svg",
-  "boss/the-valve-master": "/data/svg-environments/raids/bosses/the-valve-master.svg",
-  "boss/the-astronomer": "/data/svg-environments/raids/bosses/the-astronomer.svg",
-  "boss/the-engineer": "/data/svg-environments/raids/bosses/the-engineer.svg",
-  "boss/the-director": "/data/svg-environments/raids/bosses/the-director.svg",
-  "boss/the-researcher": "/data/svg-environments/raids/bosses/the-researcher.svg",
-  // ── Porter's-era D-rank bosses ──────────────────────────────────────
-  "boss/the-dockmaster": "/data/svg-environments/raids/bosses/the-dockmaster.svg",
-  "boss/the-manifest-clerk": "/data/svg-environments/raids/bosses/the-manifest-clerk.svg",
-  "boss/the-revenue-agent": "/data/svg-environments/raids/bosses/the-revenue-agent.svg",
-  "boss/the-lift-operator": "/data/svg-environments/raids/bosses/the-lift-operator.svg",
-  "boss/the-ballast-master": "/data/svg-environments/raids/bosses/the-ballast-master.svg",
-  "boss/the-signalman": "/data/svg-environments/raids/bosses/the-signalman.svg",
-  // ── Encounter-expansion D-rank bosses ─────────────────────────────────
-  "boss/the-excise-officer": "/data/svg-environments/raids/bosses/the-excise-officer.svg",
-  "boss/the-yardmaster": "/data/svg-environments/raids/bosses/the-yardmaster.svg",
-  "boss/the-regulator": "/data/svg-environments/raids/bosses/the-regulator.svg",
-  "boss/the-surveyor": "/data/svg-environments/raids/bosses/the-surveyor.svg",
-  // ── Skyscraper-era C-rank bosses ──────────────────────────────────────
-  "boss/the-market-maker": "/data/svg-environments/raids/bosses/the-market-maker.svg",
-  "boss/the-concierge-prime": "/data/svg-environments/raids/bosses/the-concierge-prime.svg",
-  "boss/the-foreman-prime": "/data/svg-environments/raids/bosses/the-foreman-prime.svg",
-  "boss/the-stationmaster": "/data/svg-environments/raids/bosses/the-stationmaster.svg",
-  "boss/the-curator-prime": "/data/svg-environments/raids/bosses/the-curator-prime.svg",
-  "boss/the-altitude-keeper": "/data/svg-environments/raids/bosses/the-altitude-keeper.svg",
-};
+import { resolveBossArtAssetUrl } from "lib/svg-asset-contract";
 
 /** Resolve a boss's encounter portrait SVG path, or null for unknown bosses. */
 export function getBossArtPath(bossDefinitionId: string): string | null {
-  return BOSS_ART_MAP[bossDefinitionId] ?? null;
+  return resolveBossArtAssetUrl(bossDefinitionId);
 }

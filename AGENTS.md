@@ -48,13 +48,74 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Keep `docs/` for roadmap, future-facing questions, and research only.
 - Keep repo workflow rules in `AGENTS.md` and `CLAUDE.md`.
 
-## Room Scene SVG Rules
+## HQ SVG Asset Contract
 
-- HQ room interiors use pre-composed scene SVGs containing props only (furniture, fixtures, decorations)
-- Scene SVGs must never include walls, floors, tile grids, or structural elements — those are engine-rendered
-- All props inside scene SVGs must be isometric — flat camera-facing rectangles are never valid
-- Reference fixtures (full room with walls/floors) are exploration/preview artifacts only, not production output
-- See `docs/product/asset-production.md` HQ Isometric Contract for the full production pipeline
+- HQ SVG work must follow `docs/product/asset-production.md` and `docs/product/presentation.md`.
+- For runtime-facing placement data, `content/data/hq-environment-index.json` is the source of truth for the current HQ grid, scene origin, viewBox, room footprint, asset roots, and shell-relative backdrop zones.
+- Do not invent a new camera, grid, room footprint, origin, viewBox, or anchor convention per asset. Read the active building contract first and match it exactly.
+- HQ assets use one canonical angled/isometric 2:1 presentation language. Horizontal edges follow the shared tile axes and verticals stay vertical.
+- If an HQ asset only looks correct in isolation, on a blank canvas, or from a different camera angle, it is not production-ready.
+
+### HQ Asset Family Boundaries
+
+- Shell/perimeter assets own the building envelope, cutaway silhouette, and exterior shell read.
+- Structural assets own floors, walls, corners, thresholds, doors, and windows. Those are engine-rendered building parts, not room-scene art.
+- Reference fixtures may include a full room box with walls and floor, but they are exploration/preview artifacts only and must never be treated as approved runtime room art.
+- Room scene SVGs are the approved production room-interior asset: one pre-composed SVG per room containing furniture, fixtures, and decorations only.
+- Background/surroundings assets own shell-relative exterior context such as neighboring buildings, harbor/street dressing, skyline, rooftop machinery, and scale cues. They must not duplicate shell, structure, or room-scene responsibilities.
+- Individual prop SVGs are for non-room uses or deliberate exterior composition. Room furniture should normally be authored inside the room's pre-composed scene SVG, not shipped as floating standalone room pieces.
+- When remediating HQ rooms, treat the currently shipped HQ exterior/background asset language as the positive reference for projection discipline and grounding. Do not treat current room scenes as authoritative if they violate the contract.
+
+### HQ Grid Fit And Geometry Rules
+
+- Every line that is meant to follow the floor plane must be exactly parallel to one of the two canonical isometric axes. "Almost parallel" is a failure.
+- In screen space, horizontal footprint edges must follow the canonical 2:1 isometric directions only. Do not introduce near-iso slants, ad hoc skew angles, or perspective convergence.
+- Upright edges stay vertical. Do not lean walls, posts, cabinets, or furniture supports unless the object is intentionally damaged and the lean is clearly authored.
+- Grounded rectangles on the floor plane must read as isometric parallelograms aligned to the tile axes, never as front-on rectangles.
+- Circular forms on the floor or top planes must read as isometric ellipses, not literal circles. Top ellipses should respect the canonical 2:1 compression.
+- Asset bases and footprints must snap cleanly to the shared room/grid logic. If the footprint cannot be described cleanly on the tile axes, the asset is off-contract.
+- Do not eyeball fit against a screenshot alone. Check the asset against the shared grid/scene contract in the viewer, builder, or in-engine composition.
+
+### HQ Room Scene Rules
+
+- HQ room interiors use pre-composed scene SVGs containing props only.
+- Scene SVGs must never include walls, floors, tile grids, measurements, labels, room-box outlines, or other structural elements.
+- Recipe previews for rooms must show the full room box first. Approved production output is the props-only scene extracted from that preview.
+- Every object inside a room scene must align to the canonical tile axes and read in isometric 2:1 projection, including wall-adjacent assets.
+- Flat camera-facing rectangles, front-on cabinets, straight-on posters pretending to be furniture, and top-down symbols are never valid HQ room assets.
+- Room layouts must preserve circulation and wall clearance on the shared room footprint. Furniture that only fits by cheating the angle or sliding off-axis is invalid.
+- Scene SVGs must be validated over engine-rendered walls and floors and next to neighboring rooms. If a room breaks when snapped into the real layout, reject it.
+
+### HQ Background And Exterior Rules
+
+- Exterior/background assets are shell-relative layers, not generic filler dropped anywhere that looks empty.
+- Background assets must reinforce the building's site context and time-of-day package without redefining the building structure.
+- Background assets must align to the same isometric axes as the shell and room system.
+- Background assets must not introduce a second fake floor plane, horizon, or camera angle.
+- Skyscraper backgrounds are altitude-first: neighboring towers, haze, rooftop machinery, aircraft cues, and city-glow below. Do not backslide into sidewalk, curb-clutter, or harbor language unless the view is explicitly a ground-entry package.
+
+### Grounding And Shadow Rules
+
+- HQ assets must feel grounded on the shared plane. Bases, feet, posts, wheels, and support points should meet the implied floor or ground contact cleanly.
+- Prefer cel shading, face shading, overlap, and material/value separation over baked cast shadows for depth cues.
+- Do not bake broad oval drop shadows, detached shadow pads, or fuzzy underlays that make props look like they are floating above the grid.
+- Small contact or occlusion shadowing that is tight to the asset footprint is acceptable. Large cast-light decisions belong to runtime lighting/backdrop treatment, not arbitrary per-asset shadow blobs.
+- Asset shading must not imply a conflicting sun direction or a different ground plane from the rest of the HQ composition.
+
+### HQ Acceptance Checks
+
+- Reject the asset if any intended parallel floor-plane edges drift off the canonical grid axes.
+- Reject the asset if its footprint does not sit cleanly on the room/grid contract when previewed in context.
+- Reject the asset if depth is carried by a flat front-facing rectangle instead of isometric planes.
+- Reject the asset if shadows do more work than the form shading and make the object read as pasted-on or hovering.
+- Reject the asset if it looks correct only as a standalone illustration and not when layered into the actual HQ composition.
+
+### Required HQ SVG Workflow
+
+- Before authoring HQ assets, read the relevant building/room canon in `docs/world/`, then the HQ asset rules in `docs/product/asset-production.md` and `docs/product/presentation.md`, then the active building contract in `content/data/hq-environment-index.json`.
+- For rooms, produce the reference fixture/recipe preview first, then extract the props-only scene SVG.
+- For surroundings/backgrounds, lock the shell-relative composition zones before producing final SVG layers.
+- Review HQ SVGs in the asset viewer/playground and in the actual game composition before treating them as approved.
 
 ## Forbidden Mistakes
 
@@ -66,6 +127,10 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - `as any`
 - walls, floors, or structural elements inside room scene SVGs
 - flat camera-facing props (non-isometric rectangles) in any HQ asset
+- detached oval drop shadows or fuzzy shadow pads that make HQ assets float
+- inventing per-asset HQ grid/origin/viewBox/footprint rules instead of using `content/data/hq-environment-index.json`
+- treating a full-room illustration or reference fixture as approved runtime room-scene output
+- background assets that duplicate shell/interior structure responsibilities
 - font sizes below `text-xs` (0.75rem / 12px)
 
 ## UI Rule

@@ -20,6 +20,7 @@ import type {
   RaidTeamMarker,
   RaidWorldSnapshot,
 } from "render";
+import { resolveRaidPartAssetUrl } from "lib/svg-asset-contract";
 
 import { getRaidGoalPresentation } from "./raid-world/raid-goals";
 import { getLoadedRaidParts } from "./raid-world";
@@ -72,7 +73,7 @@ function resolveEnemyFamilyAssetPath(familyId: string | undefined): string | nul
     return null;
   }
 
-  return `/data/svg-environments/raids/enemies/${slug}.svg`;
+  return resolveRaidPartAssetUrl(part.id);
 }
 
 // ── Fog grid cell ─────────────────────────────────────────────────────

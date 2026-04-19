@@ -71,6 +71,9 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Those exterior sets should own the sky treatment, neighboring-building read, exterior emissives, and street-level decorative dressing around the HQ shell. They should not duplicate the engine-rendered room structure or interior scene SVG responsibilities.
 - Exterior packages should attach to abstract shell-relative zones such as `fore`, `left-flank`, `right-flank`, `rear`, `above-shell`, and `below-shell`, so the same composition model works for a bodega, Porter's, and a late-game tower.
 - Taller buildings should also support reusable elevation bands rather than exact one-off floor numbers. The preferred future contract is floor-aware but reusable: several nearby floors can share the same surrounding package when their outside read is materially similar.
+- The skyscraper should not inherit low-rise exterior assumptions. Its normal packages should read as very high above ground level: neighboring towers, clouds, haze, rooftop machinery, aircraft or air-traffic cues, and distant city-glow below. Street clutter, sidewalks, or waterfront props belong only to deliberate ground-entry views, not to the ordinary tower package.
+- The skyscraper should read as massive. The isometric framing should let the tower shell and its giant square floor plates dominate more of the composition than the low-rise headquarters do.
+- Multi-floor tower navigation is its own presentation problem. A late-game skyscraper that keeps acquiring floors should not rely on the same viewing and floor-switching assumptions used for Porter's. The product needs a dedicated tower navigation and floor-context model.
 
 ## Raid Presentation Direction
 

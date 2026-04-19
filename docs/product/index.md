@@ -9,7 +9,7 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 - The repo already ships the baseline game loop through the bodega arc, relocation into Porter's, multi-floor HQ support, management/onboarding/interruption surfaces, and the initial optional local-first AI runtime contract.
 - Phase 4 midgame breadth is shipped: external pressure, encounter and incident expansion, Porter's-era content remediation, and durable crafting now exist in the baseline product.
 - Midgame remediation is shipped: the Porter's loop now has stronger browser coverage, deterministic D-rank reporting, tuned workshop economics, and the narrow readability fixes required by that verification pass.
-- The next product work is the third and final headquarters: an expandable skyscraper that starts the endgame, plus the narrow rank/content bridge that makes that HQ playable.
+- The skyscraper HQ baseline, the first C-rank endgame-entry band, the floor expansion arc, and the Executive Floor institutional-pressure slice are all shipped. The next product work is fanning out to the remaining expansion-floor consequence slices (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped institutional pressure.
 
 ## File Map
 
@@ -46,9 +46,8 @@ The game should make the player feel all of the following:
 
 - Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
 - Broaden the late-bodega content pool only if later repeated-campaign evidence shows collapse into the same few recruits, sites, loadouts, and pressure patterns.
-- Expand from the shipped Porter's baseline into the final skyscraper HQ, with early owned floors that change spatial and staffing decisions before the loop widens into repeatable floor acquisition.
-- Extend the shipped multi-floor HQ model so the skyscraper can reuse exterior surroundings across similar elevation bands instead of requiring bespoke art for every floor.
-- Grow skyscraper pressure through stronger reputation, regulation, competition, and factional response once the Porter's-era pressure band is stable.
+- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse across shared elevation bands.
+- Grow skyscraper pressure further through stronger reputation, regulation, competition, and factional response on top of the shipped Executive Floor institutional-pressure slice.
 - Push operator social memory, injury, recovery, and retention further so roster management stays central.
 - Increase mission and event variety without losing the observational, non-direct-control identity.
 
