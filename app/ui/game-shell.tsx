@@ -46,8 +46,19 @@ import {
   RoomStaffingBody,
   RoomUpgradesBody,
 } from "./room-detail-panel";
-import { OperationsPanel } from "./raid-panel";
-import { RaidEventFeed, RaidFocusFrame } from "./raid-world";
+import {
+  ActiveRootBody,
+  ContractReviewBody,
+  ContractSiteBody,
+  ContractsRootBody,
+  HistoryRootBody,
+  OpportunitiesRootBody,
+  OpportunityDetailBody,
+  PostingBoardBody,
+  PostingDetailBody,
+  RaidSummaryDetailBody,
+  TeamDetailBody,
+} from "./operations-panels";
 import { RaidWorldView } from "./raid-world-view";
 import { RosterPanel } from "./roster-panel";
 import { SettingsModal } from "./settings-modal";
@@ -55,15 +66,25 @@ import { StatBar } from "./_stat-bar";
 import { Tooltip } from "./_tooltip";
 import { PanelFrame, PanelStack, type PanelStackEntry } from "./_panel-stack";
 import {
-  categoryFromStack,
-  closeAt,
-  effectiveFocusFromStack,
-  rootEntryForCategory,
-  setBranchAt,
-  stackFromFocus,
+  categoryFromStack as hqCategoryFromStack,
+  closeAt as hqCloseAt,
+  effectiveFocusFromStack as hqEffectiveFocusFromStack,
+  rootEntryForCategory as hqRootEntryForCategory,
+  setBranchAt as hqSetBranchAt,
+  stackFromFocus as hqStackFromFocus,
   type HqCategory,
   type StackFocusEntry,
 } from "./_hq-focus-stack";
+import {
+  categoryFromStack as opsCategoryFromStack,
+  closeAt as opsCloseAt,
+  effectiveFocusFromStack as opsEffectiveFocusFromStack,
+  rootEntryForCategory as opsRootEntryForCategory,
+  setBranchAt as opsSetBranchAt,
+  stackFromFocus as opsStackFromFocus,
+  type OpsCategory,
+  type OpsStackEntry,
+} from "./_ops-focus-stack";
 import { useEventLog } from "./use-event-log";
 import {
   getRecoveryStateSummary,
@@ -96,18 +117,22 @@ import {
 } from "./view-models";
 import type {
   EquipmentViewModel,
+  EventLogEntry,
   GameCallbacks,
   InventoryItemViewModel,
   LootAutomationViewModel,
   MarketItemViewModel,
+  OperationsViewModel,
   OperatorViewModel,
   RelationshipViewModel,
   RoomCultureViewModel,
   RoomViewModel,
+  RosterPressureViewModel,
   TeamViewModel,
   UpgradeViewModel,
   VisitorViewModel,
 } from "./view-models";
+import type { FocusOperatorStatus } from "./raid-world/raid-focus-frame";
 
 /** Build context-aware world effects with focus dimming. */
 function buildContextEffects(
@@ -220,8 +245,6 @@ export async function resolveInterruptionAction(
 }
 
 // ── Category definitions ─────────────────────────────────────────────────
-
-type OpsCategory = "contract" | "active" | "opportunities" | "history";
 
 const HQ_CATEGORIES: readonly { id: HqCategory; label: string; icon: string }[] = [
   { id: "rooms", label: "Rooms", icon: "\u25A3" },
@@ -1173,7 +1196,7 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
               >
                 <HqPanel
                   hq={hq}
-                  focus={effectiveFocusFromStack(stack)}
+                  focus={hqEffectiveFocusFromStack(stack)}
                   onFocusChange={handleFocusChange}
                   onOpenPlaceRoom={(slot) =>
                     onOpenBranch(index, {
@@ -1652,6 +1675,391 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
     .filter((entry): entry is PanelStackEntry => entry !== null);
 }
 
+// ── Operations cascade stack rendering ──────────────────────────────────
+
+interface OpsStackRenderContext {
+  stack: readonly OpsStackEntry[];
+  operations: OperationsViewModel;
+  guildName: string;
+  operators: readonly OperatorViewModel[];
+  rosterPressure: RosterPressureViewModel;
+  raidWorldSnapshot: RaidWorldSnapshot | null;
+  focusedRaidState: RuntimeSession["state"]["phase1View"]["activeRaids"][number] | null;
+  focusedRaidOperatorStatuses: ReadonlyMap<string, FocusOperatorStatus> | undefined;
+  callbacks: GameCallbacks;
+  contractRootAnchorRef: React.RefObject<HTMLDivElement | null>;
+  historyRootAnchorRef: React.RefObject<HTMLDivElement | null>;
+  onCloseAt: (index: number) => void;
+  onOpenBranch: (parentIndex: number, branch: OpsStackEntry | null) => void;
+  onReplaceRoot: (next: OpsStackEntry | null) => void;
+}
+
+function opsEntryKey(entry: OpsStackEntry, index: number): string {
+  switch (entry.kind) {
+    case "team":
+      return `${index}:team:${entry.teamId}`;
+    case "posting":
+      return `${index}:posting:${entry.postingId}`;
+    case "opportunity":
+      return `${index}:opportunity:${entry.opportunityId}`;
+    case "raid-summary":
+      return `${index}:raid-summary:${entry.summaryId}`;
+    default:
+      return `${index}:${entry.kind}`;
+  }
+}
+
+function buildOpsStackEntries(ctx: OpsStackRenderContext): PanelStackEntry[] {
+  const {
+    stack,
+    operations,
+    guildName,
+    operators,
+    rosterPressure,
+    raidWorldSnapshot,
+    focusedRaidState,
+    focusedRaidOperatorStatuses,
+    callbacks,
+    contractRootAnchorRef,
+    historyRootAnchorRef,
+    onCloseAt,
+    onOpenBranch,
+    onReplaceRoot,
+  } = ctx;
+
+  return stack
+    .map((entry, index): PanelStackEntry | null => {
+      const close = () => onCloseAt(index);
+      const branchEntry = stack[index + 1];
+
+      switch (entry.kind) {
+        case "contract-root": {
+          const site = operations.contractSite;
+          const subtitle = site
+            ? `${site.siteConceptName} — ${site.missionName}`
+            : operations.contractLifecycle === "bidding"
+              ? `${operations.postedContracts.length} postings on the board`
+              : operations.contractLifecycle === "resolved"
+                ? "Contract resolved — awaiting advance"
+                : "Awaiting board refresh";
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[26rem]",
+            content: (
+              <PanelFrame
+                testId="panel-contract-root"
+                title="Contracts"
+                subtitle={subtitle}
+                onClose={close}
+              >
+                <div ref={contractRootAnchorRef}>
+                  <ContractsRootBody
+                    operations={operations}
+                    onOpenPostingBoard={() =>
+                      onOpenBranch(
+                        index,
+                        branchEntry?.kind === "posting-board" ? null : { kind: "posting-board" },
+                      )
+                    }
+                    onOpenReview={() =>
+                      onOpenBranch(
+                        index,
+                        branchEntry?.kind === "contract-review"
+                          ? null
+                          : { kind: "contract-review" },
+                      )
+                    }
+                    onOpenSite={() =>
+                      onOpenBranch(
+                        index,
+                        branchEntry?.kind === "contract-site" ? null : { kind: "contract-site" },
+                      )
+                    }
+                    onOpenActiveOperation={() => onReplaceRoot({ kind: "active-root" })}
+                    onAdvance={callbacks.advanceContract}
+                  />
+                </div>
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "posting-board": {
+          const selectedPostingId = branchEntry?.kind === "posting" ? branchEntry.postingId : null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[22rem]",
+            content: (
+              <PanelFrame
+                testId="panel-posting-board"
+                title="Board"
+                subtitle={`${operations.postedContracts.length} postings`}
+                onClose={close}
+              >
+                <PostingBoardBody
+                  postings={operations.postedContracts}
+                  selectedPostingId={selectedPostingId}
+                  onSelect={(postingId) =>
+                    onOpenBranch(
+                      index,
+                      selectedPostingId === postingId ? null : { kind: "posting", postingId },
+                    )
+                  }
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "posting": {
+          const posting = operations.postedContracts.find((p) => p.postingId === entry.postingId);
+          if (!posting) return null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[26rem]",
+            content: (
+              <PanelFrame
+                testId="panel-posting-detail"
+                title={posting.siteConceptName}
+                subtitle={posting.missionName}
+                onClose={close}
+              >
+                <PostingDetailBody
+                  posting={posting}
+                  onBid={(postingId) => {
+                    callbacks.bidContract(postingId);
+                    onCloseAt(1);
+                  }}
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "contract-review": {
+          const result = operations.contractResult;
+          if (!result) return null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-contract-review"
+                title="Contract Review"
+                subtitle={result.siteConceptName}
+                onClose={close}
+              >
+                <ContractReviewBody
+                  result={result}
+                  onAdvance={() => {
+                    callbacks.advanceContract();
+                    onCloseAt(1);
+                  }}
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "contract-site": {
+          const site = operations.contractSite;
+          if (!site) return null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[26rem]",
+            content: (
+              <PanelFrame
+                testId="panel-contract-site"
+                title="Site Details"
+                subtitle={site.siteConceptName}
+                onClose={close}
+              >
+                <ContractSiteBody contract={site} />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "active-root": {
+          const activeCount = operations.activeRaids.length;
+          const subtitle = operations.contractSite
+            ? `${operations.contractSite.siteConceptName} · ${activeCount} active raid${activeCount === 1 ? "" : "s"}`
+            : activeCount > 0
+              ? `${activeCount} active raid${activeCount === 1 ? "" : "s"}`
+              : "No active raids";
+          const focusedTeamId = branchEntry?.kind === "team" ? branchEntry.teamId : null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-active-root"
+                title="Active Operation"
+                subtitle={subtitle}
+                onClose={close}
+              >
+                <ActiveRootBody
+                  operations={operations}
+                  operators={operators}
+                  focusedTeamId={focusedTeamId}
+                  onOpenTeam={(teamId) =>
+                    onOpenBranch(
+                      index,
+                      focusedTeamId === teamId
+                        ? null
+                        : { kind: "team", teamId, highlightBounds: null },
+                    )
+                  }
+                  onOpenSite={() =>
+                    onOpenBranch(
+                      index,
+                      branchEntry?.kind === "contract-site" ? null : { kind: "contract-site" },
+                    )
+                  }
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "team": {
+          const raid = operations.activeRaids.find((r) => r.id === entry.teamId);
+          if (!raid) return null;
+          const raidTeamMarker =
+            raidWorldSnapshot?.teams.find((t) => t.teamId === entry.teamId) ?? null;
+          const encounter = focusedRaidState?.encounter ?? null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[28rem]",
+            content: (
+              <PanelFrame
+                testId="panel-team-detail"
+                title={raid.missionName}
+                subtitle={raid.location || undefined}
+                onClose={close}
+              >
+                <TeamDetailBody
+                  raid={raid}
+                  raidTeamMarker={raidTeamMarker}
+                  operators={operators}
+                  operatorStatuses={focusedRaidOperatorStatuses}
+                  encounter={encounter}
+                  onDismissFocus={close}
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "opportunities-root": {
+          const selectedOpportunityId =
+            branchEntry?.kind === "opportunity" ? branchEntry.opportunityId : null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-opportunities-root"
+                title="Opportunities"
+                subtitle={`${operations.opportunities.length} posted`}
+                onClose={close}
+              >
+                <OpportunitiesRootBody
+                  guildName={guildName}
+                  opportunities={operations.opportunities}
+                  rosterPressure={rosterPressure}
+                  operators={operators}
+                  selectedOpportunityId={selectedOpportunityId}
+                  onSelect={(opportunityId) =>
+                    onOpenBranch(
+                      index,
+                      selectedOpportunityId === opportunityId
+                        ? null
+                        : { kind: "opportunity", opportunityId },
+                    )
+                  }
+                />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "opportunity": {
+          const opportunity = operations.opportunities.find(
+            (opp) => opp.id === entry.opportunityId,
+          );
+          if (!opportunity) return null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-opportunity-detail"
+                title={opportunity.missionName}
+                subtitle={opportunity.location || undefined}
+                onClose={close}
+              >
+                <OpportunityDetailBody opportunity={opportunity} />
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "history-root": {
+          const selectedSummaryId =
+            branchEntry?.kind === "raid-summary" ? branchEntry.summaryId : null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[24rem]",
+            content: (
+              <PanelFrame
+                testId="panel-history-root"
+                title="Raid History"
+                subtitle={`${operations.raidHistory.length} recorded`}
+                onClose={close}
+              >
+                <div ref={historyRootAnchorRef}>
+                  <HistoryRootBody
+                    history={operations.raidHistory}
+                    selectedSummaryId={selectedSummaryId}
+                    onSelect={(summaryId) =>
+                      onOpenBranch(
+                        index,
+                        selectedSummaryId === summaryId
+                          ? null
+                          : { kind: "raid-summary", summaryId },
+                      )
+                    }
+                  />
+                </div>
+              </PanelFrame>
+            ),
+          };
+        }
+
+        case "raid-summary": {
+          const summary = operations.raidHistory.find((s) => s.id === entry.summaryId);
+          if (!summary) return null;
+          return {
+            id: opsEntryKey(entry, index),
+            widthClass: "w-[26rem]",
+            content: (
+              <PanelFrame
+                testId="panel-raid-summary-detail"
+                title={summary.missionName}
+                subtitle={summary.location || undefined}
+                onClose={close}
+              >
+                <RaidSummaryDetailBody summary={summary} />
+              </PanelFrame>
+            ),
+          };
+        }
+      }
+    })
+    .filter((entry): entry is PanelStackEntry => entry !== null);
+}
+
 // ── Main shell component ─────────────────────────────────────────────────
 
 export function GameShell() {
@@ -1661,41 +2069,61 @@ export function GameShell() {
   const { settings, updateSettings, resetSettings } = useGameSettings();
   const initialNavigation = getDefaultShellNavigation(request);
   const [activeTab, setActiveTab] = useState<ShellTab>(initialNavigation.activeTab);
-  const [opsCategory, setOpsCategory] = useState<OpsCategory | null>(initialNavigation.opsCategory);
   const [activeModal, setActiveModal] = useState<ActiveGameModal>(null);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const [debugOverlays, setDebugOverlays] = useState<HqDebugOverlays>({});
   const [hqFocusStack, setHqFocusStack] = useState<StackFocusEntry[]>(() =>
-    initialNavigation.hqCategory ? [rootEntryForCategory(initialNavigation.hqCategory)] : [],
+    initialNavigation.hqCategory ? [hqRootEntryForCategory(initialNavigation.hqCategory)] : [],
   );
-  const [raidFocus, setRaidFocus] = useState<FocusPayload | null>(null);
+  const [opsFocusStack, setOpsFocusStack] = useState<OpsStackEntry[]>(() =>
+    initialNavigation.opsCategory ? [opsRootEntryForCategory(initialNavigation.opsCategory)] : [],
+  );
   const hqCategory = useMemo<HqCategory | null>(
-    () => categoryFromStack(hqFocusStack),
+    () => hqCategoryFromStack(hqFocusStack),
     [hqFocusStack],
+  );
+  const opsCategory = useMemo<OpsCategory | null>(
+    () => opsCategoryFromStack(opsFocusStack),
+    [opsFocusStack],
   );
   const hqEffectiveFocus = useMemo<FocusPayload | null>(
-    () => effectiveFocusFromStack(hqFocusStack),
+    () => hqEffectiveFocusFromStack(hqFocusStack),
     [hqFocusStack],
   );
-  const focus: FocusPayload | null = activeTab === "hq" ? hqEffectiveFocus : raidFocus;
+  const opsEffectiveFocus = useMemo<FocusPayload | null>(
+    () => opsEffectiveFocusFromStack(opsFocusStack),
+    [opsFocusStack],
+  );
+  const focus: FocusPayload | null = activeTab === "hq" ? hqEffectiveFocus : opsEffectiveFocus;
   const setFocus = useCallback(
-    (next: FocusPayload | null | ((prev: FocusPayload | null) => FocusPayload | null)) => {
-      if (activeTab === "hq") {
-        setHqFocusStack((prev) => {
-          const current = effectiveFocusFromStack(prev);
-          const resolved = typeof next === "function" ? next(current) : next;
-          if (resolved) return stackFromFocus(resolved);
-          const category = categoryFromStack(prev);
-          return category ? [rootEntryForCategory(category)] : [];
-        });
+    (next: FocusPayload | null) => {
+      if (next === null) {
+        if (activeTab === "hq") {
+          setHqFocusStack((prev) => {
+            const category = hqCategoryFromStack(prev);
+            return category ? [hqRootEntryForCategory(category)] : [];
+          });
+        } else {
+          setOpsFocusStack((prev) => {
+            const category = opsCategoryFromStack(prev);
+            return category ? [opsRootEntryForCategory(category)] : [];
+          });
+        }
         return;
       }
-      setRaidFocus((prev) => (typeof next === "function" ? next(prev) : next));
+      if (next.targetKind === "team") {
+        setOpsFocusStack(opsStackFromFocus(next));
+        return;
+      }
+      setHqFocusStack(hqStackFromFocus(next));
     },
     [activeTab],
   );
   const setHqCategory = useCallback((next: HqCategory | null) => {
-    setHqFocusStack(next ? [rootEntryForCategory(next)] : []);
+    setHqFocusStack(next ? [hqRootEntryForCategory(next)] : []);
+  }, []);
+  const setOpsCategory = useCallback((next: OpsCategory | null) => {
+    setOpsFocusStack(next ? [opsRootEntryForCategory(next)] : []);
   }, []);
   const [audioState, setAudioState] = useState<AudioEngineState>("suspended");
   const audioEngineRef = useRef<AudioEngine | null>(null);
@@ -1721,19 +2149,24 @@ export function GameShell() {
     const nextNavigation = getDefaultShellNavigation(request);
     setActiveTab(nextNavigation.activeTab);
     setHqFocusStack(
-      nextNavigation.hqCategory ? [rootEntryForCategory(nextNavigation.hqCategory)] : [],
+      nextNavigation.hqCategory ? [hqRootEntryForCategory(nextNavigation.hqCategory)] : [],
     );
-    setOpsCategory(nextNavigation.opsCategory);
-    setRaidFocus(null);
+    setOpsFocusStack(
+      nextNavigation.opsCategory ? [opsRootEntryForCategory(nextNavigation.opsCategory)] : [],
+    );
   }, [request.mode, request.slotId]);
 
   useEffect(() => {
     setHqFocusStack((prev) => {
       if (prev.length === 0) return prev;
-      const category = categoryFromStack(prev);
-      return category ? [rootEntryForCategory(category)] : [];
+      const category = hqCategoryFromStack(prev);
+      return category ? [hqRootEntryForCategory(category)] : [];
     });
-    setRaidFocus(null);
+    setOpsFocusStack((prev) => {
+      if (prev.length === 0) return prev;
+      const category = opsCategoryFromStack(prev);
+      return category ? [opsRootEntryForCategory(category)] : [];
+    });
     const engine = audioEngineRef.current;
     if (engine && prevTabRef.current !== activeTab) {
       if (activeTab === "hq") {
@@ -2231,12 +2664,24 @@ export function GameShell() {
   );
 
   const navActions = useMemo(
-    () => ({ setActiveTab, setHqCategory, setOpsCategory, setFocus }),
-    [setHqCategory, setFocus],
+    () => ({
+      setActiveTab,
+      setHqCategory,
+      setOpsCategory,
+      setFocus,
+      openOpsTeam: (teamId: string) =>
+        setOpsFocusStack([
+          { kind: "active-root" },
+          { kind: "team", teamId, highlightBounds: null },
+        ]),
+      openOpsHistorySummary: (summaryId: string) =>
+        setOpsFocusStack([{ kind: "history-root" }, { kind: "raid-summary", summaryId }]),
+    }),
+    [setHqCategory, setFocus, setOpsCategory],
   );
   const handleEventLogClick = useCallback(
-    (entry: { targetKind?: string; targetId?: string; kind: string }) => {
-      handleEventLogEntryClick(entry as Parameters<typeof handleEventLogEntryClick>[0], navActions);
+    (entry: EventLogEntry) => {
+      handleEventLogEntryClick(entry, navActions);
     },
     [handleEventLogEntryClick, navActions],
   );
@@ -2512,11 +2957,6 @@ export function GameShell() {
         : undefined,
     [focusedRaidState],
   );
-
-  const focusedRaidTeam = useMemo(() => {
-    if (activeTab !== "operations" || focus?.targetKind !== "team") return null;
-    return raidWorldSnapshot?.teams.find((team) => team.teamId === focus.targetId) ?? null;
-  }, [raidWorldSnapshot, activeTab, focus]);
 
   if (status === "error") {
     return (
@@ -2894,26 +3334,6 @@ export function GameShell() {
             </div>
           )}
 
-          {/* ── Right column: operations focus panels ── */}
-          {activeTab === "operations" && focusedRaidTeam && focus && (
-            <div className="pointer-events-none absolute right-4 top-[92px] z-20 flex flex-col items-end gap-2">
-              <RaidFocusFrame
-                team={focusedRaidTeam}
-                getOperatorName={(id) =>
-                  hq.operators.find((operator) => operator.id === id)?.name ?? null
-                }
-                operatorStatuses={focusedRaidOperatorStatuses}
-                encounter={focusedRaidState?.encounter ?? null}
-                onDismiss={() => setFocus(null)}
-              />
-              <div
-                className={`${glassPanelClass} pointer-events-auto animate-enter w-80 rounded-xl p-4 shadow-xl`}
-              >
-                <RaidEventFeed events={focusedRaidState?.recentEvents ?? []} />
-              </div>
-            </div>
-          )}
-
           {activeTab === "hq" && hqFocusStack.length > 0 && (
             <div
               className="pointer-events-none absolute bottom-10 left-4 right-4 top-[92px] z-20 flex min-h-0 flex-col items-stretch justify-end"
@@ -2935,71 +3355,42 @@ export function GameShell() {
                   callbacks,
                   handleOperatorInspectedGuidance,
                   handleFocusChange,
-                  onCloseAt: (index) => setHqFocusStack((prev) => closeAt(prev, index)),
+                  onCloseAt: (index) => setHqFocusStack((prev) => hqCloseAt(prev, index)),
                   onOpenBranch: (parentIndex, branch) =>
-                    setHqFocusStack((prev) => setBranchAt(prev, parentIndex, branch)),
+                    setHqFocusStack((prev) => hqSetBranchAt(prev, parentIndex, branch)),
                 })}
-                onClose={(index) => setHqFocusStack((prev) => closeAt(prev, index))}
+                onClose={(index) => setHqFocusStack((prev) => hqCloseAt(prev, index))}
               />
             </div>
           )}
 
-          {activeTab === "operations" && opsCategory !== null && (
+          {activeTab === "operations" && opsFocusStack.length > 0 && (
             <div
-              className={`${glassPanelClass} pointer-events-auto animate-slide-up absolute bottom-10 left-0 right-0 z-10 max-h-[45vh] overflow-y-auto rounded-xl p-4 shadow-[0_-8px_40px_rgba(0,0,0,0.4)]`}
+              className="pointer-events-none absolute bottom-10 left-4 right-4 top-[92px] z-20 flex min-h-0 flex-col items-stretch justify-end"
+              data-testid="ops-cascade-anchor"
             >
-              <div
-                className="flex items-start gap-3"
-                data-testid="shell-bottom-panel"
-                data-active-tab={activeTab}
-                data-active-category={opsCategory ?? ""}
-              >
-                <div className="min-w-0 flex-1">
-                  {callbacks && (
-                    <div
-                      ref={
-                        opsCategory === "contract"
-                          ? contractBoardAnchorRef
-                          : opsCategory === "history"
-                            ? opsHistoryPanelAnchorRef
-                            : undefined
-                      }
-                    >
-                      <OperationsPanel
-                        guildName={hq.guild.guildName}
-                        operations={operations}
-                        operators={hq.operators}
-                        rosterPressure={hq.rosterPressure}
-                        focus={focus}
-                        activeCategory={opsCategory}
-                        callbacks={callbacks}
-                      />
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="btn-ghost shrink-0 px-1.5 py-0.5 text-silver/50 hover:text-gold"
-                  onClick={() => setOpsCategory(null)}
-                  aria-label="Collapse panel"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 6L8 10L12 6"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
+              <PanelStack
+                testId="ops-cascade"
+                className="max-h-full"
+                entries={buildOpsStackEntries({
+                  stack: opsFocusStack,
+                  operations,
+                  guildName: hq.guild.guildName,
+                  operators: hq.operators,
+                  rosterPressure: hq.rosterPressure,
+                  raidWorldSnapshot,
+                  focusedRaidState,
+                  focusedRaidOperatorStatuses,
+                  callbacks,
+                  contractRootAnchorRef: contractBoardAnchorRef,
+                  historyRootAnchorRef: opsHistoryPanelAnchorRef,
+                  onCloseAt: (index) => setOpsFocusStack((prev) => opsCloseAt(prev, index)),
+                  onOpenBranch: (parentIndex, branch) =>
+                    setOpsFocusStack((prev) => opsSetBranchAt(prev, parentIndex, branch)),
+                  onReplaceRoot: (next) => setOpsFocusStack(next ? [next] : []),
+                })}
+                onClose={(index) => setOpsFocusStack((prev) => opsCloseAt(prev, index))}
+              />
             </div>
           )}
 

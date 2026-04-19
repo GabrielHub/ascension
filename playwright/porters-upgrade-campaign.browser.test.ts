@@ -17,6 +17,7 @@ type BrowserTestWindow = Window & {
   __ASCENSION_BROWSER_TEST__?: {
     getSnapshot(): BrowserTestSnapshot | null;
     resetSaveSlots(): Promise<void>;
+    runDevCommand(command: string): { detail?: string; message: string; status: string } | null;
     listSlots(): Promise<
       Array<{
         slotId: string;
@@ -133,16 +134,28 @@ async function openHqCategory(
   page: Page,
   category: "rooms" | "management",
 ): Promise<BrowserTestSnapshot> {
-  let snapshot = await getSnapshot(page);
+  const panelByCategory = {
+    management: "panel-management-root",
+    rooms: "panel-rooms-root",
+  } as const;
+  const panel = page.getByTestId(panelByCategory[category]);
+  const snapshot = await getSnapshot(page);
   if (snapshot.navigation.activeTab !== "hq") {
     await page.getByTestId("shell-tab-hq").click({ force: true });
   }
-  snapshot = await getSnapshot(page);
-  if (snapshot.navigation.hqCategory !== category) {
+  const panelVisible = await panel.isVisible().catch(() => false);
+  if (!panelVisible) {
     await page.getByTestId(`hq-category-${category}`).click({ force: true });
+    try {
+      await panel.waitFor({ state: "visible", timeout: 5_000 });
+    } catch {
+      await closeRoomPanels(page);
+      await page.getByTestId(`hq-category-${category}`).click({ force: true });
+      await panel.waitFor({ state: "visible", timeout: 15_000 });
+    }
   }
 
-  return waitForSnapshot(page, `hq ${category}`, (next) => next.navigation.hqCategory === category);
+  return getSnapshot(page);
 }
 
 async function openOperationsContractBoard(page: Page): Promise<BrowserTestSnapshot> {
@@ -184,9 +197,13 @@ async function purchaseBuildingUpgrade(
   upgradeName: string,
   upgradeId: string,
 ): Promise<BrowserTestSnapshot> {
+  await closeRoomPanels(page);
   await openHqCategory(page, "rooms");
   await selectRoom(page, roomName);
+  await page.getByTestId("room-open-upgrades").waitFor({ state: "visible", timeout: 15_000 });
+  await page.getByTestId("room-open-upgrades").click();
   const purchaseButton = page
+    .getByTestId("panel-room-upgrades")
     .locator(".glass-card-inset")
     .filter({ hasText: upgradeName })
     .getByRole("button", { exact: true, name: "Purchase" });
@@ -198,18 +215,40 @@ async function purchaseBuildingUpgrade(
 }
 
 async function setFloor(page: Page, floorNumber: number): Promise<void> {
+  const targetFloorIndex = floorNumber - 1;
+  const before = await getSnapshot(page);
+  if (before.building.activeFloorIndex === targetFloorIndex) {
+    return;
+  }
   const portersLabels: Record<number, string> = { 1: "Ground", 2: "Upper", 3: "Waterfront" };
   const namedLabel = portersLabels[floorNumber];
   const button = namedLabel
     ? page.getByRole("button", { exact: true, name: namedLabel })
     : page.getByRole("button", { exact: true, name: String(floorNumber) });
   await button.first().click();
-  await page.waitForTimeout(200);
+  await waitForSnapshot(
+    page,
+    `floor ${floorNumber}`,
+    (snapshot) => snapshot.building.activeFloorIndex === targetFloorIndex,
+  );
+}
+
+async function closeRoomPanels(page: Page): Promise<void> {
+  const upgradesClose = page.getByTestId("panel-room-upgrades-close");
+  if (await upgradesClose.isVisible().catch(() => false)) {
+    await upgradesClose.click();
+  }
+
+  const roomClose = page.getByRole("button", { name: "Close room detail" });
+  if (await roomClose.isVisible().catch(() => false)) {
+    await roomClose.click();
+  }
 }
 
 async function placeNextRoom(page: Page, roomName: string): Promise<BrowserTestSnapshot> {
-  const buildCardText = roomName.startsWith("The ") ? roomName.slice(4) : roomName;
-  await page.locator("button.glass-card-inset").filter({ hasText: buildCardText }).first().click();
+  await closeRoomPanels(page);
+  await openHqCategory(page, "rooms");
+  await page.getByTestId("expansion-slot-available").first().click();
   await page.getByRole("button", { exact: true, name: roomName }).click();
   return waitForSnapshot(page, `${roomName} placed`, (snapshot) =>
     snapshot.rooms.some((room) => room.name === roomName),
@@ -221,20 +260,16 @@ async function placeNextRoomOnFloors(
   roomName: string,
   floors: number[],
 ): Promise<BrowserTestSnapshot> {
-  const buildCardText = roomName.startsWith("The ") ? roomName.slice(4) : roomName;
-
+  await closeRoomPanels(page);
   await openHqCategory(page, "rooms");
   for (const floorNumber of floors) {
     await setFloor(page, floorNumber);
-    const buildCard = page
-      .locator("button.glass-card-inset")
-      .filter({ hasText: buildCardText })
-      .first();
-    if ((await buildCard.count()) === 0) {
+    const expansionSlot = page.getByTestId("expansion-slot-available").first();
+    if ((await expansionSlot.count()) === 0) {
       continue;
     }
 
-    await buildCard.click();
+    await expansionSlot.click();
     await page.getByRole("button", { exact: true, name: roomName }).click();
     return waitForSnapshot(page, `${roomName} placed`, (snapshot) =>
       snapshot.rooms.some((room) => room.name === roomName),
@@ -422,54 +457,33 @@ async function loadSkyscraperReadyPortersSave(page: Page): Promise<BrowserTestSn
   );
 }
 
-async function openDevConsole(page: Page): Promise<void> {
-  await page.keyboard.press("`");
-  await page.getByTestId("dev-console").waitFor({ state: "visible" });
-}
-
 async function runDevConsoleCommand(page: Page, command: string): Promise<void> {
-  await openDevConsole(page);
-  const input = page.getByTestId("dev-console-input");
-  await input.fill(command);
-  await input.press("Enter");
-  await page.waitForFunction(
-    (expected) =>
-      document
-        .querySelector('[data-testid="dev-console-transcript"]')
-        ?.textContent?.includes(expected) ?? false,
+  const result = await page.evaluate(
+    (input) =>
+      (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__?.runDevCommand(input) ?? null,
     command,
   );
-
-  const consolePanel = page.getByTestId("dev-console");
-  if (await consolePanel.isVisible().catch(() => false)) {
-    await page.keyboard.press("Escape");
-    await consolePanel.waitFor({ state: "hidden" });
+  if (!result || result.status === "error") {
+    throw new Error(
+      `Dev command failed: ${command}${result?.message ? ` (${result.message})` : ""}`,
+    );
   }
+  await page.waitForTimeout(200);
 }
 
 async function runDevConsoleCommandAndReadOutput(page: Page, command: string): Promise<string> {
-  await openDevConsole(page);
-  const input = page.getByTestId("dev-console-input");
-  await input.fill(command);
-  await input.press("Enter");
-  await page.waitForFunction(
-    (expected) =>
-      document
-        .querySelector('[data-testid="dev-console-transcript"]')
-        ?.textContent?.includes(expected) ?? false,
+  const result = await page.evaluate(
+    (input) =>
+      (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__?.runDevCommand(input) ?? null,
     command,
   );
-  const transcriptText = await page.evaluate(
-    () => document.querySelector('[data-testid="dev-console-transcript"]')?.textContent ?? "",
-  );
-
-  const consolePanel = page.getByTestId("dev-console");
-  if (await consolePanel.isVisible().catch(() => false)) {
-    await page.keyboard.press("Escape");
-    await consolePanel.waitFor({ state: "hidden" });
+  if (!result || result.status === "error") {
+    throw new Error(
+      `Dev command failed: ${command}${result?.message ? ` (${result.message})` : ""}`,
+    );
   }
-
-  return transcriptText;
+  await page.waitForTimeout(200);
+  return result.detail ?? result.message;
 }
 
 function getInventoryQuantity(snapshot: BrowserTestSnapshot, itemId: string): number {
@@ -590,9 +604,13 @@ describeBrowser("Porters upgrade campaign browser path", () => {
 
     await openHqCategory(page, "rooms");
     await page.getByRole("button", { exact: true, name: "Rooftop" }).click();
+    snapshot = await waitForSnapshot(
+      page,
+      "skyscraper rooftop selected",
+      (next) => next.building.activeFloorIndex === 4,
+    );
     await waitForRoomCard(page, "The Helipad");
     await waitForRoomCard(page, "The Sky Garden");
-    await page.getByText("Floor 5/5", { exact: true }).waitFor({ state: "visible" });
     await captureScreenshot(page, "skyscraper-relocation-landed");
 
     await page.reload({ waitUntil: "networkidle" });
@@ -612,24 +630,33 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     const previousFloorButton = page.getByTestId("floor-step-previous");
     const nextFloorButton = page.getByTestId("floor-step-next");
 
+    let snapshot = await getSnapshot(page);
+    expect(snapshot.building.activeFloorIndex).toBe(0);
     await waitForRoomCard(page, "The Floor");
     await waitForRoomCard(page, "The Bar");
-    await page.getByText("Floor 1/2", { exact: true }).waitFor({ state: "visible" });
     expect(await previousFloorButton.isDisabled()).toBe(true);
     expect(await nextFloorButton.isDisabled()).toBe(false);
     await captureScreenshot(page, "porters-floor-stepper-ground");
 
     await nextFloorButton.click();
+    snapshot = await waitForSnapshot(
+      page,
+      "Porters upper floor",
+      (next) => next.building.activeFloorIndex === 1,
+    );
     await waitForRoomCard(page, "The Office");
     await waitForRoomCard(page, "The Prep Room");
-    await page.getByText("Floor 2/2", { exact: true }).waitFor({ state: "visible" });
     expect(await previousFloorButton.isDisabled()).toBe(false);
     expect(await nextFloorButton.isDisabled()).toBe(true);
     await captureScreenshot(page, "porters-floor-stepper-upper");
 
     await previousFloorButton.click();
+    snapshot = await waitForSnapshot(
+      page,
+      "Porters ground floor",
+      (next) => next.building.activeFloorIndex === 0,
+    );
     await waitForRoomCard(page, "The Floor");
-    await page.getByText("Floor 1/2", { exact: true }).waitFor({ state: "visible" });
     expect(await previousFloorButton.isDisabled()).toBe(true);
     expect(await nextFloorButton.isDisabled()).toBe(false);
   }, 120_000);
@@ -747,7 +774,12 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     expect(getInventoryQuantity(snapshot, "loot/monster-part/fang")).toBeLessThan(fangBefore);
 
     await openOperationsContractBoard(page);
-    await page.getByTestId("contract-bid-button").first().click();
+    await page
+      .getByTestId("panel-contract-root")
+      .getByRole("button", { name: /browse postings/i })
+      .click();
+    await page.getByTestId("panel-posting-board").getByTestId("contract-card").first().click();
+    await page.getByTestId("contract-bid-button").click();
     snapshot = await waitForSnapshot(
       page,
       "Porters contract with briefing",

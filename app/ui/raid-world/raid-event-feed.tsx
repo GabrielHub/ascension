@@ -5,8 +5,6 @@
  * encounters, discoveries, loot pickups, team state changes, and
  * goal transitions. Compact glass card style.
  *
- * Distinct from raid-log.tsx which shows completed raid history.
- *
  * Presentation-only — typed intents, no gameplay mutation.
  */
 

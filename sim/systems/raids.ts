@@ -2283,6 +2283,8 @@ function finalizeRaidPacket(
     kind: "raid_result",
     message: `${missionLabel} ${getRaidResultSummaryLabel(res.result)} (${res.reputationDelta >= 0 ? "+" : ""}${res.reputationDelta} rep, ${res.cashDelta >= 0 ? "+" : ""}${res.cashDelta} cash, ${getPolicyOptionLabel("contractPosture", activePolicies.contractPosture)} posture)`,
     accent: res.result === "failure" ? "magma" : res.result === "mixed" ? "ember" : "gold",
+    targetKind: "team",
+    targetId: packet.id,
   });
 
   packet.resolutionPacket.operatorOutcomes.forEach((outcome) => {

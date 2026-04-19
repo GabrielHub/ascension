@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { RuntimeSession } from "app/features/runtime/session";
 
@@ -15,6 +15,8 @@ interface EventLogNavActions {
   setHqCategory: (cat: HqCategory | null) => void;
   setOpsCategory: (cat: OpsCategory | null) => void;
   setFocus: (payload: { targetKind: string; targetId: string } | null) => void;
+  openOpsTeam: (teamId: string) => void;
+  openOpsHistorySummary: (summaryId: string) => void;
 }
 
 const MAX_ENTRIES = 80;
@@ -39,6 +41,46 @@ const VALID_KINDS: Set<string> = new Set<EventLogKind>([
 
 export function normalizeEventLogKind(kind: string): EventLogKind {
   return VALID_KINDS.has(kind) ? (kind as EventLogKind) : "event_change";
+}
+
+export function handleEventLogEntryClick(entry: EventLogEntry, actions: EventLogNavActions): void {
+  if (!entry.targetKind) return;
+
+  if (entry.targetKind === "team") {
+    if (!entry.targetId) {
+      actions.setActiveTab("operations");
+      actions.setOpsCategory("history");
+      return;
+    }
+
+    if (entry.kind === "team_departure" || entry.kind === "team_status") {
+      actions.setActiveTab("operations");
+      actions.openOpsTeam(entry.targetId);
+      return;
+    }
+
+    if (entry.kind === "team_return" || entry.kind === "raid_result") {
+      actions.setActiveTab("operations");
+      actions.openOpsHistorySummary(entry.targetId);
+      return;
+    }
+
+    actions.setActiveTab("operations");
+    actions.setOpsCategory("history");
+    return;
+  }
+
+  if (!entry.targetId) {
+    return;
+  }
+
+  actions.setActiveTab("hq");
+  if (entry.targetKind === "room") {
+    actions.setHqCategory("rooms");
+  } else if (entry.targetKind === "operator") {
+    actions.setHqCategory("roster");
+  }
+  actions.setFocus({ targetKind: entry.targetKind, targetId: entry.targetId });
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────
@@ -88,41 +130,5 @@ export function useEventLog(session: RuntimeSession | null) {
     setEntries((prev) => [...prev, ...newEntries].slice(-MAX_ENTRIES));
   }, [session, session?.state]);
 
-  const handleEntryClick = useCallback((entry: EventLogEntry, actions: EventLogNavActions) => {
-    if (!entry.targetKind) return;
-
-    if (entry.targetKind === "team") {
-      if (entry.kind === "team_status") {
-        actions.setActiveTab("hq");
-        actions.setHqCategory("teams");
-        actions.setFocus(null);
-        return;
-      }
-
-      if (entry.kind === "team_departure" && entry.targetId) {
-        actions.setActiveTab("operations");
-        actions.setOpsCategory("active");
-        actions.setFocus({ targetKind: entry.targetKind, targetId: entry.targetId });
-        return;
-      }
-
-      actions.setActiveTab("operations");
-      actions.setOpsCategory("history");
-      return;
-    }
-
-    if (!entry.targetId) {
-      return;
-    }
-
-    actions.setActiveTab("hq");
-    if (entry.targetKind === "room") {
-      actions.setHqCategory("rooms");
-    } else if (entry.targetKind === "operator") {
-      actions.setHqCategory("roster");
-    }
-    actions.setFocus({ targetKind: entry.targetKind, targetId: entry.targetId });
-  }, []);
-
-  return { entries, handleEntryClick };
+  return { entries, handleEntryClick: handleEventLogEntryClick };
 }

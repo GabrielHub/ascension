@@ -180,10 +180,24 @@ async function main() {
     }
     await harness.waitForSelector('[data-testid="operations-panel"][data-category="contract"]');
 
+    await harness.waitForSelector('[data-testid="panel-contract-root"] button:not([disabled])');
+    await harness.runScript(`
+      const root = document.querySelector('[data-testid="panel-contract-root"]');
+      const browseButton = root
+        ? Array.from(root.querySelectorAll("button")).find((btn) => /browse postings/i.test(btn.textContent ?? ""))
+        : null;
+      if (!browseButton) throw new Error("Browse postings action missing from contract root.");
+      browseButton.click();
+    `);
+    await harness.waitForSelector(
+      '[data-testid="panel-posting-board"] [data-testid="contract-card"]',
+    );
+    await harness.click('[data-testid="panel-posting-board"] [data-testid="contract-card"]');
+    await harness.waitForSelector('[data-testid="contract-bid-button"]');
     assert.equal(
       await harness.exists('[data-testid="contract-bid-button"]'),
       true,
-      "Expected at least one contract bid action in a new desktop session.",
+      "Expected a contract bid action inside the posting detail panel.",
     );
     await harness.click('[data-testid="contract-bid-button"]');
     await waitForCondition(

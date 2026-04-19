@@ -18,6 +18,11 @@ import {
 } from "sim";
 import { createPortersUpgradeCampaignSeedWorld } from "sim/tools/porters-upgrade-campaign";
 import { OPENING_BEAT_IDS } from "sim/systems/guidance-beats";
+import {
+  executeConsoleCommand,
+  type DevConsoleResult,
+  type DevConsoleContext,
+} from "app/ui/dev-console-commands";
 
 type ActiveTab = "hq" | "operations";
 type HqCategory = "rooms" | "roster" | "management" | "teams" | "inventory" | "market" | null;
@@ -422,6 +427,7 @@ declare global {
       getSnapshot(): BrowserTestSnapshot | null;
       listSlots(): ReturnType<typeof listStartScreenSaveSlots>;
       resetSaveSlots(): Promise<void>;
+      runDevCommand(command: string): DevConsoleResult | null;
       seedNewGameSave(slotId?: SaveSlotId, seed?: number): Promise<void>;
       seedRelocationReadySave(slotId?: SaveSlotId): Promise<void>;
       seedPortersUpgradeCampaignSave(slotId?: SaveSlotId): Promise<void>;
@@ -430,7 +436,8 @@ declare global {
 }
 
 let latestSnapshot: BrowserTestSnapshot | null = null;
-let latestSnapshotSource: BrowserDriverPayload | null = null;
+let latestPayload: BrowserDriverPayload | null = null;
+let driverDebugOverlays: HqDebugOverlays = {};
 
 function readGuidanceState(session: RuntimeSession): BrowserDriverGuidanceState {
   const raw = (session.worldSnapshot as Record<string, unknown>).guidanceState;
@@ -690,7 +697,7 @@ export function updateBrowserTestSnapshot(payload: BrowserDriverPayload | null):
     return;
   }
 
-  latestSnapshotSource = payload;
+  latestPayload = payload;
   if (!payload) {
     latestSnapshot = null;
   }
@@ -703,9 +710,8 @@ export function registerBrowserTestDriver(): void {
 
   window.__ASCENSION_BROWSER_TEST__ = {
     getSnapshot() {
-      if (latestSnapshotSource) {
-        latestSnapshot = buildSnapshot(latestSnapshotSource);
-        latestSnapshotSource = null;
+      if (latestPayload) {
+        latestSnapshot = buildSnapshot(latestPayload);
       }
       return latestSnapshot;
     },
@@ -719,6 +725,22 @@ export function registerBrowserTestDriver(): void {
           .filter((slot) => slot.state === "occupied")
           .map((slot) => deleteStartScreenSaveSlot(slot.slotId)),
       );
+    },
+    runDevCommand(command) {
+      if (!latestPayload) {
+        return null;
+      }
+
+      const ctx: DevConsoleContext = {
+        session: latestPayload.session,
+        debugOverlays: driverDebugOverlays,
+        setDebugOverlays(next) {
+          driverDebugOverlays = next;
+        },
+        eventLogEntries: latestPayload.eventLog,
+      };
+
+      return executeConsoleCommand(command, ctx);
     },
     async seedRelocationReadySave(slotId = "slot/1") {
       await seedRelocationReadySave(slotId);

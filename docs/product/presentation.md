@@ -29,11 +29,11 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 
 ## Overlay UI Direction
 
-- HQ and raid screens should expose only one primary management category at a time rather than leaving multiple large control surfaces open simultaneously.
-- The top edge should own compact category buttons or tabs that swap the active management card set without obscuring the world-first base view.
-- The right edge should be reserved for the persistent event log in both HQ and raid contexts. That rail is the always-on notice surface and should not be displaced by unrelated management panes.
-- The bottom edge should hold the currently active card stack for the selected category, focused world target, or clicked event-log item.
-- World focus, category switches, and event-log clicks should all converge on the same active-card system rather than spawning disconnected parallel panels.
+- HQ and Operations screens should expose only one primary management category at a time rather than leaving multiple large control surfaces open simultaneously.
+- The top edge should own compact category buttons or tabs that swap the active management stack without obscuring the world-first base view.
+- HQ and Operations share one right-anchored cascading panel shell. Category pills open a compact root panel; deeper actions branch horizontally into adjacent panels rather than inflating the root. `Esc` closes the rightmost panel, and closing a parent truncates every panel to its right.
+- The persistent event log is the always-on notice rail. It must not be displaced by the cascade stack or other management panes.
+- World focus, category switches, and event-log clicks should all converge on the same cascade stack rather than spawning disconnected parallel panels.
 - Event-log entries should be actionable when possible: clicking a room, operator, team, or completed raid entry should open or focus the relevant card or summary surface.
 - The event log should capture every player-noticeable state change worth reacting to, including departures, returns, injuries, deaths, morale or loyalty threshold shifts, staffing changes, resource swings, active-event changes, and lightweight raid-result updates.
 - The event log is the passive notice rail, not the only event surface. Major incidents should be allowed to take over the screen with a blocking modal when the player must make a decision before simulation continues.
@@ -42,8 +42,8 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 - Interruption-backed narrative surfaces may optionally render an authored presenter portrait and name beside the existing text-and-choice payload. When no presenter is bound, the layout must fall back cleanly to the current text-only presentation.
 - Raid boss commitment is a shipped use case for this interruption layer. When a team commits to the boss, the presentation can stop the game, foreground that team and site, and pull the player into the moment instead of burying it in the right-rail log.
 - The layout target is modern and minimal, but not empty: the world stays readable behind the glass UI while the player still has a stable place to look for what just changed.
-- Category selection is toggle-dismissible: clicking the already-active category pill collapses the bottom panel and returns to the full world view.
-- Shell chrome surfaces use shared CSS classes (`.glass-panel`, `.glass-panel-subtle`) to keep opacity and blur values consistent across header, nav, bottom panel, and event log rail.
+- Category selection is toggle-dismissible: clicking the already-active category pill collapses the cascade stack and returns to the full world view.
+- Shell chrome surfaces use shared CSS classes (`.glass-panel`, `.glass-panel-subtle`) to keep opacity and blur values consistent across header, nav, cascade panels, and event log rail.
 
 ## HQ Environment Presentation Language
 

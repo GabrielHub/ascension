@@ -116,7 +116,8 @@ The implementation itself is the source of truth. This section is organized by s
 ### UI & Presentation
 
 - The bodega renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, staff, and visitor markers.
-- HQ and raid overlays use glass-card presentation, focused bottom-card inspection, compact category switching, and a persistent right-side event log.
+- HQ and Operations overlays use a shared right-anchored cascading panel shell: category pills open a compact root, deeper actions branch horizontally into adjacent panels, `Esc` closes the rightmost panel, and closing a parent truncates every panel to its right.
+- Glass-card presentation and compact category switching remain the baseline visual language; the event log rail persists as an always-on notice surface alongside the cascade stack.
 - The event log is the always-on notice surface for departures, returns, injuries, deaths, morale/loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
 - The management panel surfaces relocation readiness, blockers, building name, floor zone badges, atmospheric floor descriptions, and building-aware "Why This Room Matters" copy for all 18 shipped rooms.

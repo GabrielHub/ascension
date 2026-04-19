@@ -17,6 +17,7 @@ type BrowserTestWindow = Window & {
   __ASCENSION_BROWSER_TEST__?: {
     getSnapshot(): BrowserTestSnapshot | null;
     resetSaveSlots(): Promise<void>;
+    runDevCommand(command: string): { detail?: string; message: string; status: string } | null;
     seedNewGameSave(slotId?: string, seed?: number): Promise<void>;
     seedRelocationReadySave(slotId?: string): Promise<void>;
     seedPortersUpgradeCampaignSave(slotId?: string): Promise<void>;
@@ -154,89 +155,33 @@ function recordCheckpoint(label: string, snapshot: BrowserTestSnapshot): void {
   });
 }
 
-async function openDevConsole(page: Page): Promise<void> {
-  const consoleEl = page.getByTestId("dev-console");
-  if (await consoleEl.isVisible().catch(() => false)) return;
-
-  // Wait for any interruptions to fully clear from the runtime overlay
-  await page.waitForTimeout(300);
-
-  await page.keyboard.press("`");
-  try {
-    await consoleEl.waitFor({ state: "visible", timeout: 3_000 });
-  } catch {
-    // The backtick key is blocked by interruptions/encounters/modals.
-    // Wait longer for state to settle and retry.
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(500);
-
-    // Check if there's still an interruption blocking the key
-    const hasInterruption = await page.evaluate(() => {
-      const dialog = document.querySelector('[role="dialog"]');
-      return dialog !== null && dialog.getAttribute("data-testid") !== "dev-console";
-    });
-    if (hasInterruption) {
-      // Try clicking the first button in the dialog to dismiss it
-      const dialogButton = page
-        .locator('[role="dialog"]:not([data-testid="dev-console"]) button')
-        .first();
-      if (await dialogButton.isVisible().catch(() => false)) {
-        await dialogButton.click();
-        await page.waitForTimeout(500);
-      }
-    }
-
-    await page.keyboard.press("`");
-    await consoleEl.waitFor({ state: "visible", timeout: 5_000 });
-  }
-}
-
 async function runDevConsoleCommand(page: Page, command: string): Promise<void> {
-  await openDevConsole(page);
-  const input = page.getByTestId("dev-console-input");
-  await input.fill(command);
-  await input.press("Enter");
-  // Wait for the input to clear (indicating command was processed)
-  await page.waitForFunction(
-    () => {
-      const el = document.querySelector('[data-testid="dev-console-input"]') as HTMLInputElement;
-      return el && el.value === "";
-    },
-    undefined,
-    { timeout: 10_000 },
+  const result = await page.evaluate(
+    (input) =>
+      (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__?.runDevCommand(input) ?? null,
+    command,
   );
-  // Small delay for the command's effects to propagate
-  await page.waitForTimeout(200);
-  const consolePanel = page.getByTestId("dev-console");
-  if (await consolePanel.isVisible().catch(() => false)) {
-    await page.keyboard.press("Escape");
-    await consolePanel.waitFor({ state: "hidden" }).catch(() => {});
+  if (!result || result.status === "error") {
+    throw new Error(
+      `Dev command failed: ${command}${result?.message ? ` (${result.message})` : ""}`,
+    );
   }
+  await page.waitForTimeout(200);
 }
 
 async function runDevConsoleCommandAndReadOutput(page: Page, command: string): Promise<string> {
-  await openDevConsole(page);
-  const input = page.getByTestId("dev-console-input");
-  await input.fill(command);
-  await input.press("Enter");
-  await page.waitForFunction(
-    () => {
-      const el = document.querySelector('[data-testid="dev-console-input"]') as HTMLInputElement;
-      return el && el.value === "";
-    },
-    undefined,
-    { timeout: 10_000 },
+  const result = await page.evaluate(
+    (input) =>
+      (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__?.runDevCommand(input) ?? null,
+    command,
   );
   await page.waitForTimeout(200);
-  const transcriptText = await page.evaluate(
-    () => document.querySelector('[data-testid="dev-console-transcript"]')?.textContent ?? "",
-  );
-  const consolePanel = page.getByTestId("dev-console");
-  if (await consolePanel.isVisible().catch(() => false)) {
-    await page.keyboard.press("Escape");
-    await consolePanel.waitFor({ state: "hidden" }).catch(() => {});
+  if (!result || result.status === "error") {
+    throw new Error(
+      `Dev command failed: ${command}${result?.message ? ` (${result.message})` : ""}`,
+    );
   }
-  return transcriptText;
+  return result.detail ?? result.message;
 }
 
 async function clearInterruptions(page: Page, maxAttempts = 5): Promise<BrowserTestSnapshot> {
@@ -285,7 +230,12 @@ async function bidOnFirstPostedContract(page: Page): Promise<BrowserTestSnapshot
     (s) => s.navigation.activeTab === "operations" && s.navigation.opsCategory === "contract",
   );
 
-  await page.getByTestId("contract-bid-button").first().click();
+  await page
+    .getByTestId("panel-contract-root")
+    .getByRole("button", { name: /browse postings/i })
+    .click();
+  await page.getByTestId("panel-posting-board").getByTestId("contract-card").first().click();
+  await page.getByTestId("contract-bid-button").click();
   return waitForSnapshot(
     page,
     "contract active after bid",
