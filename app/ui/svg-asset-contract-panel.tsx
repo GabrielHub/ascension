@@ -1,10 +1,19 @@
-import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 
 import { templateRegistry } from "content/templates";
 import {
   createHqWorldSnapshot,
   HqWorldCanvas,
   composeHqWorldGeometry,
+  type HqDebugOverlays,
   type HqWorldSnapshot,
 } from "render";
 import {
@@ -34,8 +43,31 @@ import { getRecipeById } from "./operator-parts";
 import { PortraitFromRecipe, type AppearanceRecipe } from "./_portrait-parts";
 
 type FamilyFilter = "" | SvgAssetFamily;
+type ViewMode = "grid" | "detail";
+type SortKey = "label-asc" | "label-desc" | "category" | "status" | "usage";
 
 type ViewerRecordKind = "asset" | "binding";
+const ROOM_SCENE_CATEGORY_KEY = "hq-room-scene";
+const ROOM_SCENE_DEBUG_OVERLAYS = {
+  showRoomBounds: true,
+  showFootprints: false,
+  showActiveBounds: false,
+  showRoomLabels: false,
+} satisfies HqDebugOverlays;
+
+const USAGE_OPTIONS: readonly { value: SvgAssetUsage; label: string; hint: string }[] = [
+  { value: "live", label: "Live", hint: "Runtime-bound assets" },
+  { value: "library", label: "Library", hint: "Approved reusable inventory" },
+  { value: "reference", label: "Reference", hint: "Research and review artifacts" },
+];
+
+const SORT_OPTIONS: readonly { value: SortKey; label: string }[] = [
+  { value: "label-asc", label: "Name (A → Z)" },
+  { value: "label-desc", label: "Name (Z → A)" },
+  { value: "category", label: "Category" },
+  { value: "status", label: "Status (approved first)" },
+  { value: "usage", label: "Usage" },
+];
 
 interface ViewerRecord {
   kind: ViewerRecordKind;
@@ -78,6 +110,16 @@ function getEnvCategoryLabel(category: EnvPartMeta["category"]): string {
   return ENV_CATEGORY_LABELS[category] ?? titleCase(category.replace(/-/g, " "));
 }
 
+function getHqCategory(category: EnvPartMeta["category"]): {
+  key: string;
+  label: string;
+} {
+  return {
+    key: category === "scene" ? ROOM_SCENE_CATEGORY_KEY : `hq-${category}`,
+    label: getEnvCategoryLabel(category),
+  };
+}
+
 function getSourcePathFromBinding(binding: SvgRuntimeBinding): string | null {
   if ("assetId" in binding) {
     return binding.assetId;
@@ -97,13 +139,10 @@ function getBindingCategory(
   label: string;
 } {
   if (binding.kind === "hq-room-scene") {
-    return { key: "hq-room-scene", label: "Room Scenes" };
+    return { key: ROOM_SCENE_CATEGORY_KEY, label: "Room Scenes" };
   }
   if (binding.kind === "hq-environment" && envPart) {
-    return {
-      key: `hq-${envPart.category}`,
-      label: getEnvCategoryLabel(envPart.category),
-    };
+    return getHqCategory(envPart.category);
   }
   if (binding.kind === "operator-recipe") {
     return { key: "operator-recipe", label: "Operator Recipes" };
@@ -125,10 +164,7 @@ function getAssetCategory(
   label: string;
 } {
   if (envPart) {
-    return {
-      key: `hq-${envPart.category}`,
-      label: getEnvCategoryLabel(envPart.category),
-    };
+    return getHqCategory(envPart.category);
   }
 
   const label =
@@ -246,37 +282,45 @@ export function buildSvgAssetViewerRecords(
     };
   });
 
-  const assetRecords = assets.map((asset) => {
-    const envPart = envPartsBySourcePath.get(asset.sourcePath) ?? null;
-    const category = getAssetCategory(asset, envPart);
-    const roomFamily = envPart?.roomFamily ?? null;
-    const compareGroupKey =
-      envPart?.category === "scene" ? `scene:${roomFamily ?? asset.id}` : null;
+  const liveBindingSourcePaths = new Set(
+    bindingRecords
+      .map((record) => record.sourcePath)
+      .filter((sourcePath): sourcePath is string => Boolean(sourcePath)),
+  );
 
-    const record: ViewerRecord = {
-      kind: "asset",
-      id: asset.id,
-      label: asset.label,
-      family: asset.family,
-      usage: asset.usage,
-      status: asset.status,
-      detail: `${category.label} • ${asset.groups.primary}${asset.groups.secondary ? ` • ${asset.groups.secondary}` : ""}`,
-      categoryKey: category.key,
-      categoryLabel: category.label,
-      roomFamily,
-      buildingId: null,
-      compareGroupKey,
-      sourcePath: asset.sourcePath,
-      searchText: "",
-      asset,
-      envPart,
-    };
+  const assetRecords = assets
+    .filter((asset) => asset.usage !== "live" || !liveBindingSourcePaths.has(asset.sourcePath))
+    .map((asset) => {
+      const envPart = envPartsBySourcePath.get(asset.sourcePath) ?? null;
+      const category = getAssetCategory(asset, envPart);
+      const roomFamily = envPart?.roomFamily ?? null;
+      const compareGroupKey =
+        envPart?.category === "scene" ? `scene:${roomFamily ?? asset.id}` : null;
 
-    return {
-      ...record,
-      searchText: buildViewerRecordSearchText(record),
-    };
-  });
+      const record: ViewerRecord = {
+        kind: "asset",
+        id: asset.id,
+        label: asset.label,
+        family: asset.family,
+        usage: asset.usage,
+        status: asset.status,
+        detail: `${category.label} • ${asset.groups.primary}${asset.groups.secondary ? ` • ${asset.groups.secondary}` : ""}`,
+        categoryKey: category.key,
+        categoryLabel: category.label,
+        roomFamily,
+        buildingId: null,
+        compareGroupKey,
+        sourcePath: asset.sourcePath,
+        searchText: "",
+        asset,
+        envPart,
+      };
+
+      return {
+        ...record,
+        searchText: buildViewerRecordSearchText(record),
+      };
+    });
 
   return [...bindingRecords, ...assetRecords].sort(
     (left, right) =>
@@ -322,187 +366,46 @@ export function getRoomSceneComparisonIds(
 
   return records
     .filter((candidate) => candidate.compareGroupKey === record.compareGroupKey)
+    .sort((left, right) => {
+      const leftLevel =
+        left.binding?.kind === "hq-room-scene"
+          ? Number.parseInt(left.binding.roomStateId.split(":").pop() ?? "0", 10)
+          : 0;
+      const rightLevel =
+        right.binding?.kind === "hq-room-scene"
+          ? Number.parseInt(right.binding.roomStateId.split(":").pop() ?? "0", 10)
+          : 0;
+
+      return leftLevel - rightLevel || left.label.localeCompare(right.label);
+    })
     .map((candidate) => candidate.id);
 }
 
-function useSvgFetch(src: string | null) {
-  const [svgText, setSvgText] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+function clampViewerZoom(nextZoom: number): number {
+  return Math.max(0.25, Math.min(4, Number(nextZoom.toFixed(2))));
+}
 
-  useEffect(() => {
-    if (!src) {
-      setSvgText(null);
-      setError(false);
-      return;
+function sortRecords(records: readonly ViewerRecord[], sortKey: SortKey): ViewerRecord[] {
+  const copy = [...records];
+  const statusWeight = (status: SvgAssetStatus) => (status === "approved" ? 0 : 1);
+  const usageWeight = (usage: SvgAssetUsage) =>
+    usage === "live" ? 0 : usage === "library" ? 1 : 2;
+  copy.sort((a, b) => {
+    switch (sortKey) {
+      case "label-desc":
+        return b.label.localeCompare(a.label);
+      case "category":
+        return a.categoryLabel.localeCompare(b.categoryLabel) || a.label.localeCompare(b.label);
+      case "status":
+        return statusWeight(a.status) - statusWeight(b.status) || a.label.localeCompare(b.label);
+      case "usage":
+        return usageWeight(a.usage) - usageWeight(b.usage) || a.label.localeCompare(b.label);
+      case "label-asc":
+      default:
+        return a.label.localeCompare(b.label);
     }
-
-    setSvgText(null);
-    setError(false);
-    let cancelled = false;
-
-    fetch(src)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`${response.status}`);
-        }
-        return response.text();
-      })
-      .then((text) => {
-        if (!cancelled) {
-          setSvgText(text);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError(true);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
-
-  return { svgText, error };
-}
-
-function SearchInput({ value, onChange }: { value: string; onChange: (next: string) => void }) {
-  return (
-    <div className="relative">
-      <svg
-        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gold/40"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        <circle cx="6.5" cy="6.5" r="5" />
-        <path d="M10.5 10.5L14.5 14.5" />
-      </svg>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="Search by name, room, tag, source path..."
-        className="w-full rounded-lg border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] py-2 pl-8 pr-8 text-xs text-silver-bright placeholder:text-silver/50 outline-none transition-colors focus:border-gold/40"
-      />
-      {value && (
-        <button
-          type="button"
-          onClick={() => onChange("")}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-silver/55 transition-colors hover:text-silver-bright"
-          aria-label="Clear search"
-        >
-          <svg
-            viewBox="0 0 12 12"
-            className="h-3 w-3"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <path d="M2 2l8 8M10 2l-8 8" />
-          </svg>
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Select({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  options: readonly { value: string; label: string }[];
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-[0.12em] text-gold/70">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] px-2.5 py-2 text-xs text-silver-bright outline-none transition-colors focus:border-gold/40 [&>option]:bg-void"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function MetadataRow({
-  label,
-  value,
-  children,
-}: {
-  label: string;
-  value?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="w-24 shrink-0 text-xs font-medium uppercase tracking-[0.1em] text-gold/70">
-        {label}
-      </span>
-      <div className="min-w-0 flex-1 text-xs text-silver-bright">{value ?? children}</div>
-    </div>
-  );
-}
-
-function RecordListItem({
-  record,
-  isPrimary,
-  isSelected,
-  onSelect,
-}: {
-  record: ViewerRecord;
-  isPrimary: boolean;
-  isSelected: boolean;
-  onSelect: (event: MouseEvent<HTMLButtonElement>) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
-        isPrimary
-          ? "border-gold/30 bg-[rgba(200,168,76,0.08)]"
-          : isSelected
-            ? "border-[rgba(200,168,76,0.16)] bg-[rgba(200,168,76,0.04)]"
-            : "border-transparent bg-[rgba(6,6,8,0.2)] hover:border-[rgba(200,168,76,0.1)] hover:bg-[rgba(200,168,76,0.03)]"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div
-            className={`truncate text-xs font-medium ${isPrimary ? "text-gold" : "text-silver-bright"}`}
-          >
-            {record.label}
-          </div>
-          <div className="mt-1 flex flex-wrap gap-1">
-            <span className="badge badge-slate text-xs">{record.family}</span>
-            <span className="badge badge-gold text-xs">{record.usage}</span>
-            <span className="badge badge-slate text-xs">{record.categoryLabel}</span>
-            {record.roomFamily && (
-              <span className="badge badge-slate text-xs">{record.roomFamily}</span>
-            )}
-          </div>
-        </div>
-        {isSelected && (
-          <span className="rounded-full border border-gold/20 bg-[rgba(200,168,76,0.08)] px-2 py-0.5 text-xs text-gold">
-            selected
-          </span>
-        )}
-      </div>
-      <div className="mt-2 truncate text-xs text-silver/45">{record.detail}</div>
-    </button>
-  );
+  });
+  return copy;
 }
 
 function stageBaseWidthForRecord(record: ViewerRecord): number {
@@ -522,6 +425,957 @@ function stageBaseWidthForRecord(record: ViewerRecord): number {
   return 560;
 }
 
+function getRoomStateLevel(record: ViewerRecord): number {
+  if (record.binding?.kind === "hq-room-scene") {
+    return Number.parseInt(record.binding.roomStateId.split(":").pop() ?? "0", 10) || 0;
+  }
+  return 0;
+}
+
+function familyLabel(family: FamilyFilter): string {
+  return family === "" ? "All families" : titleCase(family);
+}
+
+interface NavigatorTreeNode {
+  key: string;
+  testId: string;
+  label: string;
+  count: number;
+  filters: { family: FamilyFilter; category: string; room: string };
+  children: NavigatorTreeNode[];
+}
+
+function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode[] {
+  const byFamily = new Map<SvgAssetFamily, ViewerRecord[]>();
+  for (const record of records) {
+    const list = byFamily.get(record.family) ?? [];
+    list.push(record);
+    byFamily.set(record.family, list);
+  }
+
+  const families: SvgAssetFamily[] = ["hq", "raid", "operator"];
+  const familyNodes: NavigatorTreeNode[] = [];
+
+  for (const family of families) {
+    const familyRecords = byFamily.get(family) ?? [];
+    if (familyRecords.length === 0) continue;
+
+    const byCategory = new Map<string, { label: string; records: ViewerRecord[] }>();
+    for (const record of familyRecords) {
+      const bucket = byCategory.get(record.categoryKey);
+      if (bucket) {
+        bucket.records.push(record);
+      } else {
+        byCategory.set(record.categoryKey, { label: record.categoryLabel, records: [record] });
+      }
+    }
+
+    const categoryNodes: NavigatorTreeNode[] = [];
+    const sortedCategories = [...byCategory.entries()].sort((a, b) =>
+      a[1].label.localeCompare(b[1].label),
+    );
+
+    for (const [categoryKey, bucket] of sortedCategories) {
+      const rooms = new Map<string, ViewerRecord[]>();
+      for (const record of bucket.records) {
+        if (!record.roomFamily) continue;
+        const list = rooms.get(record.roomFamily) ?? [];
+        list.push(record);
+        rooms.set(record.roomFamily, list);
+      }
+
+      const roomNodes: NavigatorTreeNode[] = [...rooms.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([roomFamily, roomRecords]) => ({
+          key: `${family}:${categoryKey}:${roomFamily}`,
+          testId: `svg-nav-${family}-${categoryKey}-${roomFamily}`,
+          label: titleCase(roomFamily.replace(/_/g, " ")),
+          count: roomRecords.length,
+          filters: { family, category: categoryKey, room: roomFamily },
+          children: [],
+        }));
+
+      categoryNodes.push({
+        key: `${family}:${categoryKey}`,
+        testId: `svg-nav-${family}-${categoryKey}`,
+        label: bucket.label,
+        count: bucket.records.length,
+        filters: { family, category: categoryKey, room: "" },
+        children: roomNodes,
+      });
+    }
+
+    familyNodes.push({
+      key: family,
+      testId: `svg-nav-${family}`,
+      label: family === "hq" ? "HQ" : titleCase(family),
+      count: familyRecords.length,
+      filters: { family, category: "", room: "" },
+      children: categoryNodes,
+    });
+  }
+
+  return familyNodes;
+}
+
+const svgFetchCache = new Map<string, Promise<string>>();
+
+function fetchSvgCached(src: string): Promise<string> {
+  const cached = svgFetchCache.get(src);
+  if (cached) return cached;
+  const promise = fetch(src)
+    .then((response) => {
+      if (!response.ok) throw new Error(`${response.status}`);
+      return response.text();
+    })
+    .finally(() => {
+      // Keep the cache scoped to in-flight requests so local SVG edits still refresh without a hard
+      // reload while duplicate consumers share the same fetch.
+      svgFetchCache.delete(src);
+    })
+    .catch((error) => {
+      throw error;
+    });
+  svgFetchCache.set(src, promise);
+  return promise;
+}
+
+function useSvgFetch(src: string | null) {
+  const [svgText, setSvgText] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!src) {
+      setSvgText(null);
+      setError(false);
+      return;
+    }
+
+    setSvgText(null);
+    setError(false);
+    let cancelled = false;
+
+    fetchSvgCached(src)
+      .then((text) => {
+        if (!cancelled) setSvgText(text);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return { svgText, error };
+}
+
+function useLazyVisible() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || visible) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return { ref, visible };
+}
+
+function EyebrowLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <span
+      className={`text-xs font-medium uppercase tracking-[0.14em] text-gold/65 ${className}`.trim()}
+    >
+      {children}
+    </span>
+  );
+}
+
+function CopyButton({ value, label, testId }: { value: string; label: string; testId: string }) {
+  const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const handle = useCallback(() => {
+    if (!value || !navigator.clipboard?.writeText) return;
+    void navigator.clipboard
+      .writeText(value)
+      .then(() => {
+        if (resetTimerRef.current !== null) {
+          window.clearTimeout(resetTimerRef.current);
+        }
+        setCopied(true);
+        resetTimerRef.current = window.setTimeout(() => setCopied(false), 1200);
+      })
+      .catch(() => {
+        setCopied(false);
+      });
+  }, [value]);
+
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      aria-label={`Copy ${label}`}
+      data-testid={testId}
+      className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] px-1.5 py-0.5 text-xs text-silver/60 transition-colors hover:border-gold/40 hover:text-gold"
+    >
+      <svg
+        viewBox="0 0 12 12"
+        className="h-3 w-3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      >
+        <rect x="2.5" y="2.5" width="6" height="7" rx="1" />
+        <path d="M4.5 4.5H5.5M4.5 6.5H6.5M4.5 8.5H6" />
+      </svg>
+      <span>{copied ? "copied" : "copy"}</span>
+    </button>
+  );
+}
+
+function KeyHint({ keys, label }: { keys: string[]; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-silver/40">
+      {keys.map((key) => (
+        <kbd
+          key={key}
+          className="inline-flex h-4 min-w-[1rem] items-center justify-center rounded border border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.6)] px-1 font-[family-name:var(--font-sans)] text-xs text-silver/70"
+        >
+          {key}
+        </kbd>
+      ))}
+      <span className="lowercase">{label}</span>
+    </span>
+  );
+}
+
+function StatusPill({ status, usage }: { status: SvgAssetStatus; usage: SvgAssetUsage }) {
+  const statusTone =
+    status === "approved"
+      ? "text-gold border-gold/25 bg-[rgba(200,168,76,0.12)]"
+      : "text-ember border-[rgba(212,84,30,0.3)] bg-[rgba(212,84,30,0.08)]";
+  const usageTone =
+    usage === "live"
+      ? "text-frost border-[rgba(110,184,224,0.3)] bg-[rgba(110,184,224,0.08)]"
+      : usage === "library"
+        ? "text-silver border-[rgba(200,168,76,0.12)] bg-[rgba(42,53,85,0.3)]"
+        : "text-silver/70 border-[rgba(42,53,85,0.4)] bg-[rgba(42,53,85,0.2)]";
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span
+        className={`inline-flex items-center rounded-sm border px-1.5 py-[1px] text-xs font-medium uppercase tracking-[0.1em] ${statusTone}`}
+      >
+        {status}
+      </span>
+      <span
+        className={`inline-flex items-center rounded-sm border px-1.5 py-[1px] text-xs font-medium uppercase tracking-[0.1em] ${usageTone}`}
+      >
+        {usage}
+      </span>
+    </span>
+  );
+}
+
+function SearchField({
+  value,
+  onChange,
+  inputRef,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  return (
+    <div className="relative flex-1 min-w-[14rem]">
+      <svg
+        className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gold/45"
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        aria-hidden
+      >
+        <circle cx="6.5" cy="6.5" r="5" />
+        <path d="M10.5 10.5L14.5 14.5" />
+      </svg>
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search name · room · tag · source path"
+        spellCheck={false}
+        data-testid="svg-search"
+        aria-label="Search assets and runtime bindings"
+        className="w-full rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] py-2 pl-9 pr-14 text-xs text-silver-bright placeholder:text-silver/45 outline-none transition-colors focus:border-gold/45"
+      />
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 hidden items-center gap-1 text-xs text-silver/35 sm:inline-flex">
+        <kbd className="inline-flex h-4 min-w-[1rem] items-center justify-center rounded border border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.6)] px-1 text-silver/70">
+          /
+        </kbd>
+      </span>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute right-8 top-1/2 -translate-y-1/2 text-silver/55 transition-colors hover:text-silver-bright"
+          aria-label="Clear search"
+          data-testid="svg-search-clear"
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className="h-3 w-3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M2 2l8 8M10 2l-8 8" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SegmentedControl<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  testIdPrefix,
+}: {
+  label: string;
+  value: T;
+  options: readonly { value: T; label: string; hint?: string }[];
+  onChange: (next: T) => void;
+  testIdPrefix: string;
+}) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="inline-flex items-stretch overflow-hidden rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] p-0.5"
+    >
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <button
+            key={option.value || "_any"}
+            role="radio"
+            aria-checked={active}
+            data-testid={`${testIdPrefix}-${option.value || "all"}`}
+            onClick={() => onChange(option.value)}
+            title={option.hint ?? option.label}
+            className={`relative px-2.5 py-1.5 text-xs font-medium uppercase tracking-[0.1em] transition-colors ${
+              active
+                ? "bg-[rgba(200,168,76,0.14)] text-gold"
+                : "text-silver/55 hover:text-silver-bright"
+            } rounded-[4px]`}
+            type="button"
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SortControl({ value, onChange }: { value: SortKey; onChange: (next: SortKey) => void }) {
+  return (
+    <label className="inline-flex items-center gap-2">
+      <span className="text-xs font-medium uppercase tracking-[0.1em] text-gold/60">Sort</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value as SortKey)}
+        data-testid="svg-sort"
+        aria-label="Sort records"
+        className="rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] px-2 py-1.5 text-xs text-silver-bright outline-none transition-colors focus:border-gold/40 [&>option]:bg-void"
+      >
+        {SORT_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function LightingPopover({
+  activeId,
+  onChange,
+}: {
+  activeId: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const active = getEnvLightingPreset(activeId);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: globalThis.MouseEvent) => {
+      const target = event.target as Node | null;
+      if (target && !rootRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        data-testid="svg-lighting-toggle"
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] px-2.5 py-1.5 text-xs text-silver-bright transition-colors hover:border-gold/40"
+      >
+        <span
+          className="h-3 w-3 rounded-full border"
+          style={{ backgroundColor: active.background, borderColor: active.border }}
+          aria-hidden
+        />
+        <span className="uppercase tracking-[0.1em] text-gold/70">Light</span>
+        <span className="text-silver/75">{active.label}</span>
+        <svg
+          viewBox="0 0 10 6"
+          className={`h-2 w-2 text-silver/55 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          aria-hidden
+        >
+          <path d="M1 1l4 4 4-4" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          aria-label="Lighting presets"
+          className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.95)] p-1 shadow-[0_12px_48px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        >
+          {ENV_LIGHTING_PRESETS.map((preset) => {
+            const current = preset.id === activeId;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={current}
+                data-testid={`svg-lighting-${preset.id}`}
+                onClick={() => {
+                  onChange(preset.id);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs transition-colors ${
+                  current
+                    ? "bg-[rgba(200,168,76,0.12)] text-gold"
+                    : "text-silver/70 hover:bg-[rgba(200,168,76,0.06)] hover:text-silver-bright"
+                }`}
+              >
+                <span
+                  className="h-3 w-3 rounded-sm border"
+                  style={{ backgroundColor: preset.background, borderColor: preset.border }}
+                  aria-hidden
+                />
+                <span>{preset.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ZoomPod({ zoom, onZoomChange }: { zoom: number; onZoomChange: (next: number) => void }) {
+  return (
+    <div className="inline-flex items-stretch overflow-hidden rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] text-xs">
+      <button
+        type="button"
+        onClick={() => onZoomChange(clampViewerZoom(zoom - 0.25))}
+        className="px-2 py-1.5 text-silver/60 transition-colors hover:text-gold"
+        aria-label="Zoom out"
+        data-testid="svg-zoom-out"
+      >
+        −
+      </button>
+      <span
+        className="flex min-w-[3.5rem] items-center justify-center border-x border-[rgba(200,168,76,0.08)] px-2 font-[family-name:var(--font-display)] tabular-nums text-silver-bright"
+        data-testid="svg-zoom-value"
+        aria-live="polite"
+      >
+        {Math.round(zoom * 100)}%
+      </span>
+      <button
+        type="button"
+        onClick={() => onZoomChange(clampViewerZoom(zoom + 0.25))}
+        className="px-2 py-1.5 text-silver/60 transition-colors hover:text-gold"
+        aria-label="Zoom in"
+        data-testid="svg-zoom-in"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        onClick={() => onZoomChange(1)}
+        className="border-l border-[rgba(200,168,76,0.08)] px-2 py-1.5 text-silver/55 uppercase tracking-[0.1em] transition-colors hover:text-gold"
+        aria-label="Reset zoom to 100%"
+        data-testid="svg-zoom-fit"
+      >
+        fit
+      </button>
+    </div>
+  );
+}
+
+function ViewToggle({
+  value,
+  onChange,
+  disabledDetail,
+}: {
+  value: ViewMode;
+  onChange: (next: ViewMode) => void;
+  disabledDetail: boolean;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="View mode"
+      className="inline-flex items-stretch overflow-hidden rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] p-0.5"
+    >
+      {(["grid", "detail"] as const).map((mode) => {
+        const active = mode === value;
+        const isDisabled = mode === "detail" && disabledDetail;
+        return (
+          <button
+            key={mode}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            disabled={isDisabled}
+            data-testid={`svg-view-${mode}`}
+            onClick={() => !isDisabled && onChange(mode)}
+            className={`flex items-center gap-1 rounded-[4px] px-2.5 py-1.5 text-xs font-medium uppercase tracking-[0.1em] transition-colors ${
+              active
+                ? "bg-[rgba(200,168,76,0.14)] text-gold"
+                : isDisabled
+                  ? "text-silver/25"
+                  : "text-silver/55 hover:text-silver-bright"
+            }`}
+          >
+            {mode === "grid" ? (
+              <>
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  aria-hidden
+                >
+                  <rect x="1" y="1" width="4" height="4" rx="0.5" />
+                  <rect x="7" y="1" width="4" height="4" rx="0.5" />
+                  <rect x="1" y="7" width="4" height="4" rx="0.5" />
+                  <rect x="7" y="7" width="4" height="4" rx="0.5" />
+                </svg>
+                Grid
+              </>
+            ) : (
+              <>
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  aria-hidden
+                >
+                  <rect x="1" y="1" width="10" height="7" rx="0.5" />
+                  <path d="M1 10H11" />
+                </svg>
+                Detail
+              </>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CommandStrip({
+  search,
+  onSearchChange,
+  searchInputRef,
+  usage,
+  onUsageChange,
+  viewMode,
+  onViewModeChange,
+  disabledDetail,
+  sort,
+  onSortChange,
+  lighting,
+  onLightingChange,
+  zoom,
+  onZoomChange,
+  showGrid,
+  onShowGridChange,
+  showIsoAxes,
+  onShowIsoAxesChange,
+  navCollapsed,
+  onNavCollapsedChange,
+  inspectorCollapsed,
+  onInspectorCollapsedChange,
+  selectedCount,
+  resultCount,
+  onClearSelection,
+}: {
+  search: string;
+  onSearchChange: (next: string) => void;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  usage: SvgAssetUsage;
+  onUsageChange: (next: SvgAssetUsage) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (next: ViewMode) => void;
+  disabledDetail: boolean;
+  sort: SortKey;
+  onSortChange: (next: SortKey) => void;
+  lighting: string;
+  onLightingChange: (next: string) => void;
+  zoom: number;
+  onZoomChange: (next: number) => void;
+  showGrid: boolean;
+  onShowGridChange: (next: boolean) => void;
+  showIsoAxes: boolean;
+  onShowIsoAxesChange: (next: boolean) => void;
+  navCollapsed: boolean;
+  onNavCollapsedChange: (next: boolean) => void;
+  inspectorCollapsed: boolean;
+  onInspectorCollapsedChange: (next: boolean) => void;
+  selectedCount: number;
+  resultCount: number;
+  onClearSelection: () => void;
+}) {
+  return (
+    <div
+      className="flex flex-wrap items-center gap-2 border-b border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.7)] px-4 py-2 backdrop-blur-xl"
+      data-testid="svg-command-strip"
+    >
+      <button
+        type="button"
+        onClick={() => onNavCollapsedChange(!navCollapsed)}
+        aria-label={navCollapsed ? "Expand library navigator" : "Collapse library navigator"}
+        aria-pressed={navCollapsed}
+        data-testid="svg-nav-collapse"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] text-silver/55 transition-colors hover:border-gold/30 hover:text-gold"
+      >
+        <svg
+          viewBox="0 0 12 12"
+          className={`h-3 w-3 transition-transform ${navCollapsed ? "" : "rotate-180"}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          aria-hidden
+        >
+          <path d="M8 3l-4 3 4 3" />
+        </svg>
+      </button>
+      <SearchField value={search} onChange={onSearchChange} inputRef={searchInputRef} />
+      <SegmentedControl
+        label="Usage"
+        value={usage}
+        options={USAGE_OPTIONS}
+        onChange={onUsageChange}
+        testIdPrefix="svg-usage"
+      />
+      <ViewToggle value={viewMode} onChange={onViewModeChange} disabledDetail={disabledDetail} />
+      <SortControl value={sort} onChange={onSortChange} />
+      <LightingPopover activeId={lighting} onChange={onLightingChange} />
+      <div className="inline-flex items-center gap-1">
+        <OverlayToggle
+          label="Grid"
+          active={showGrid}
+          onChange={onShowGridChange}
+          testId="svg-toggle-grid"
+        />
+        <OverlayToggle
+          label="Axes"
+          active={showIsoAxes}
+          onChange={onShowIsoAxesChange}
+          testId="svg-toggle-axes"
+        />
+      </div>
+      <ZoomPod zoom={zoom} onZoomChange={onZoomChange} />
+
+      <div className="ml-auto flex items-center gap-2 text-xs text-silver/55">
+        <span data-testid="svg-result-count" className="tabular-nums">
+          <span className="font-[family-name:var(--font-display)] text-silver-bright">
+            {resultCount}
+          </span>
+          <span className="ml-1">in view</span>
+        </span>
+        {selectedCount > 0 && (
+          <>
+            <span className="h-3 w-px bg-[rgba(200,168,76,0.14)]" />
+            <button
+              type="button"
+              onClick={onClearSelection}
+              data-testid="svg-clear-selection"
+              className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.14)] bg-[rgba(200,168,76,0.06)] px-2 py-1 text-gold transition-colors hover:border-gold/40"
+              aria-label="Clear pinned selection"
+            >
+              <span className="tabular-nums">{selectedCount}</span>
+              <span>pinned</span>
+              <svg
+                viewBox="0 0 12 12"
+                className="h-2.5 w-2.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden
+              >
+                <path d="M2 2l8 8M10 2l-8 8" />
+              </svg>
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => onInspectorCollapsedChange(!inspectorCollapsed)}
+          aria-label={inspectorCollapsed ? "Expand inspector" : "Collapse inspector"}
+          aria-pressed={inspectorCollapsed}
+          data-testid="svg-inspector-collapse"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] text-silver/55 transition-colors hover:border-gold/30 hover:text-gold"
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className={`h-3 w-3 transition-transform ${inspectorCollapsed ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden
+          >
+            <path d="M8 3l-4 3 4 3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NavigatorNode({
+  node,
+  level,
+  isActive,
+  onSelect,
+}: {
+  node: NavigatorTreeNode;
+  level: number;
+  isActive: (key: string) => boolean;
+  onSelect: (node: NavigatorTreeNode) => void;
+}) {
+  const [expanded, setExpanded] = useState(level === 0);
+  const active = isActive(node.key);
+  const hasChildren = node.children.length > 0;
+
+  return (
+    <li>
+      <div className="flex items-center">
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label={`${expanded ? "Collapse" : "Expand"} ${node.label}`}
+            className="mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded text-silver/45 hover:text-gold"
+            data-testid={`${node.testId}-toggle`}
+          >
+            <svg
+              viewBox="0 0 10 10"
+              className={`h-2.5 w-2.5 transition-transform ${expanded ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              aria-hidden
+            >
+              <path d="M3 1l4 4-4 4" />
+            </svg>
+          </button>
+        ) : (
+          <span className="mr-1 inline-block w-5 shrink-0" aria-hidden />
+        )}
+        <button
+          type="button"
+          role="treeitem"
+          aria-selected={active}
+          aria-expanded={hasChildren ? expanded : undefined}
+          onClick={() => onSelect(node)}
+          data-testid={node.testId}
+          className={`group flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 pl-2 pr-2 text-left text-xs transition-colors ${
+            active
+              ? "bg-[rgba(200,168,76,0.1)] text-gold"
+              : "text-silver/70 hover:bg-[rgba(200,168,76,0.04)] hover:text-silver-bright"
+          }`}
+          style={{ paddingLeft: `${0.5 + level * 0.75}rem` }}
+        >
+          <span
+            className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+              active ? "bg-gold" : "bg-[rgba(200,168,76,0.3)]"
+            }`}
+            aria-hidden
+          />
+          <span className="min-w-0 flex-1 truncate">{node.label}</span>
+          <span className={`tabular-nums text-xs ${active ? "text-gold/80" : "text-silver/40"}`}>
+            {node.count}
+          </span>
+        </button>
+      </div>
+      {hasChildren && expanded && (
+        <ul role="group" className="mt-0.5 space-y-0.5">
+          {node.children.map((child) => (
+            <NavigatorNode
+              key={child.key}
+              node={child}
+              level={level + 1}
+              isActive={isActive}
+              onSelect={onSelect}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+function NavigatorRail({
+  tree,
+  activeKey,
+  onSelect,
+  onReset,
+  totalCount,
+}: {
+  tree: NavigatorTreeNode[];
+  activeKey: string;
+  onSelect: (filters: { family: FamilyFilter; category: string; room: string }) => void;
+  onReset: () => void;
+  totalCount: number;
+}) {
+  const isActive = useCallback((key: string) => key === activeKey, [activeKey]);
+
+  return (
+    <aside
+      className="flex min-h-0 w-full shrink-0 flex-col border-r border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] lg:w-[16rem]"
+      data-testid="svg-nav"
+      aria-label="Asset library navigator"
+    >
+      <div className="flex items-center justify-between border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+        <div>
+          <EyebrowLabel>Library</EyebrowLabel>
+          <button
+            type="button"
+            onClick={onReset}
+            data-testid="svg-nav-all"
+            className={`mt-1 flex items-baseline gap-2 text-left font-[family-name:var(--font-display)] text-sm font-light tracking-[0.08em] transition-colors ${
+              activeKey === "__all__" ? "text-gold" : "text-silver-bright hover:text-gold"
+            }`}
+          >
+            <span>All families</span>
+            <span className="text-xs text-silver/40 tabular-nums">{totalCount}</span>
+          </button>
+        </div>
+      </div>
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <ul
+          role="tree"
+          aria-label="Records grouped by family → category → room"
+          className="space-y-0.5"
+        >
+          {tree.map((node) => (
+            <NavigatorNode
+              key={node.key}
+              node={node}
+              level={0}
+              isActive={isActive}
+              onSelect={(n) => onSelect(n.filters)}
+            />
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  );
+}
+
+function IsoGridBackdrop() {
+  return (
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+      <defs>
+        <pattern
+          id="iso-tile-grid"
+          x="50%"
+          y="50%"
+          width="48"
+          height="24"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M0 12 L24 0 L48 12 L24 24 Z"
+            fill="none"
+            stroke="rgba(200,168,76,0.32)"
+            strokeWidth="0.7"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#iso-tile-grid)" />
+    </svg>
+  );
+}
+
+function IsoAxesOverlay() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox="0 0 200 200"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden
+    >
+      <g stroke="rgba(110,184,224,0.65)" strokeWidth="0.5" fill="none">
+        <path d="M100 100 L180 140" />
+        <path d="M100 100 L20 140" />
+        <path d="M100 100 L100 20" />
+      </g>
+      <circle cx="100" cy="100" r="1.5" fill="rgba(200,168,76,0.9)" />
+    </svg>
+  );
+}
+
 function SvgStage({
   src,
   alt,
@@ -529,6 +1383,11 @@ function SvgStage({
   preset,
   width,
   minHeightClass = "min-h-[24rem]",
+  onZoomChange,
+  testId = "svg-stage",
+  fillHeight = false,
+  showGrid = true,
+  showIsoAxes = false,
 }: {
   src: string | null;
   alt: string;
@@ -536,24 +1395,87 @@ function SvgStage({
   preset: EnvLightingPreset;
   width: number;
   minHeightClass?: string;
+  onZoomChange?: (next: number) => void;
+  testId?: string;
+  fillHeight?: boolean;
+  showGrid?: boolean;
+  showIsoAxes?: boolean;
 }) {
   const { svgText, error } = useSvgFetch(src);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const panState = useRef<{ x: number; y: number; sx: number; sy: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const zoomRef = useRef(zoom);
+  const onZoomChangeRef = useRef(onZoomChange);
+  zoomRef.current = zoom;
+  onZoomChangeRef.current = onZoomChange;
+
+  const onMouseDown = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (!container) return;
+    panState.current = {
+      x: event.clientX,
+      y: event.clientY,
+      sx: container.scrollLeft,
+      sy: container.scrollTop,
+    };
+    setDragging(true);
+  }, []);
+
+  const onMouseMove = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const state = panState.current;
+    const container = containerRef.current;
+    if (!state || !container) return;
+    container.scrollLeft = state.sx - (event.clientX - state.x);
+    container.scrollTop = state.sy - (event.clientY - state.y);
+  }, []);
+
+  const onMouseEnd = useCallback(() => {
+    panState.current = null;
+    setDragging(false);
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const handleWheel = (event: WheelEvent) => {
+      const cb = onZoomChangeRef.current;
+      if (!cb) return;
+      event.preventDefault();
+      cb(clampViewerZoom(zoomRef.current * (event.deltaY > 0 ? 0.9 : 1.1)));
+    };
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, []);
 
   return (
     <div
-      className={`relative overflow-auto rounded-xl border ${minHeightClass}`}
-      style={{ backgroundColor: preset.background, borderColor: preset.border }}
+      ref={containerRef}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseEnd}
+      onMouseLeave={onMouseEnd}
+      className={`relative overflow-auto rounded-lg border ${
+        fillHeight ? "h-full min-h-0" : minHeightClass
+      } ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+      style={{
+        backgroundColor: preset.background,
+        borderColor: preset.border,
+      }}
+      data-testid={testId}
     >
+      {showGrid && <IsoGridBackdrop />}
+      {showIsoAxes && <IsoAxesOverlay />}
       <div className="flex min-h-full min-w-full items-center justify-center p-6">
         {!src ? (
-          <div className="text-sm text-silver/45">Preview unavailable</div>
+          <div className="text-xs text-silver/45">Preview unavailable</div>
         ) : error ? (
-          <div className="text-sm text-silver/45">Failed to load SVG preview</div>
+          <div className="text-xs text-silver/45">Failed to load SVG</div>
         ) : !svgText ? (
           <div className="h-2 w-2 animate-pulse rounded-full bg-gold/30" />
         ) : (
           <div
-            className="[&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+            className="pointer-events-none relative select-none [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
             style={{ width: `${Math.round(width * zoom)}px` }}
             role="img"
             aria-label={alt}
@@ -563,7 +1485,7 @@ function SvgStage({
       </div>
       {preset.overlay && (
         <div
-          className="pointer-events-none absolute inset-0 rounded-xl"
+          className="pointer-events-none absolute inset-0"
           style={{ backgroundColor: preset.overlay }}
         />
       )}
@@ -571,55 +1493,261 @@ function SvgStage({
   );
 }
 
-function HqRoomBindingPreview({ binding }: { binding: HqRoomSceneBinding }) {
-  const snapshot = useMemo<HqWorldSnapshot | null>(() => {
-    const template = templateRegistry.roomById.get(binding.templateId);
-    const building = templateRegistry.buildingById.get(binding.buildingId);
-    const previewFootprint = getHqBindingPreviewFootprint(binding);
-    if (!template || !building || !previewFootprint) {
-      return null;
-    }
+function ThumbnailSvg({
+  src,
+  alt,
+  preset,
+}: {
+  src: string | null;
+  alt: string;
+  preset: EnvLightingPreset;
+}) {
+  const { ref, visible } = useLazyVisible();
+  const { svgText, error } = useSvgFetch(visible ? src : null);
 
-    const functionTag = template.tags.find((tag) => tag.startsWith("room:")) ?? "room:operations";
-    const geometry = composeHqWorldGeometry(
-      [
-        {
-          id: `preview/${binding.id}`,
-          templateId: binding.templateId,
-          roomStateId: binding.roomStateId,
-          slotId: binding.slotId,
-          floorIndex: binding.floorIndex,
-          name: template.name,
-          tier: 1,
-          isRequestedActive: true,
-          isOperational: true,
-          functionTag,
-          reservedFootprint: previewFootprint.reservedFootprint,
-          activeFootprint: previewFootprint.activeFootprint,
-        },
-      ],
-      {
-        buildingId: binding.buildingId,
-        buildingTier: 1,
-        floorIndex: binding.floorIndex,
-      },
-    );
+  return (
+    <div
+      ref={ref}
+      className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded border"
+      style={{ backgroundColor: preset.background, borderColor: preset.border }}
+    >
+      {!src ? (
+        <span className="text-xs text-silver/40">no preview</span>
+      ) : error ? (
+        <span className="text-xs text-silver/40">failed</span>
+      ) : !svgText ? (
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold/40" />
+      ) : (
+        <div
+          className="h-full w-full p-2 [&>svg]:h-full [&>svg]:w-full"
+          role="img"
+          aria-label={alt}
+          dangerouslySetInnerHTML={{ __html: svgText }}
+        />
+      )}
+      {preset.overlay && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ backgroundColor: preset.overlay }}
+        />
+      )}
+    </div>
+  );
+}
 
-    return createHqWorldSnapshot(building.name, geometry, [], 480, binding.buildingId);
-  }, [binding]);
+function ThumbnailCard({
+  record,
+  isFocused,
+  isPinned,
+  preset,
+  onFocus,
+  onTogglePin,
+  onOpenDetail,
+}: {
+  record: ViewerRecord;
+  isFocused: boolean;
+  isPinned: boolean;
+  preset: EnvLightingPreset;
+  onFocus: () => void;
+  onTogglePin: () => void;
+  onOpenDetail: () => void;
+}) {
+  return (
+    <div
+      className={`group relative flex flex-col gap-2 rounded-lg border p-3 transition-colors ${
+        isFocused
+          ? "border-gold/50 bg-[rgba(200,168,76,0.06)]"
+          : isPinned
+            ? "border-[rgba(200,168,76,0.25)] bg-[rgba(200,168,76,0.03)]"
+            : "border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] hover:border-[rgba(200,168,76,0.18)] hover:bg-[rgba(200,168,76,0.03)]"
+      }`}
+      data-testid={`svg-card-${record.id}`}
+      data-focused={isFocused ? "true" : undefined}
+      data-pinned={isPinned ? "true" : undefined}
+    >
+      <button
+        type="button"
+        onClick={onFocus}
+        onDoubleClick={onOpenDetail}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onOpenDetail();
+          }
+        }}
+        aria-label={`Focus ${record.label}`}
+        data-testid={`svg-card-select-${record.id}`}
+        className="flex flex-col gap-2 text-left"
+      >
+        <ThumbnailSvg src={record.sourcePath} alt={record.label} preset={preset} />
+        <div className="min-w-0">
+          <div
+            className={`truncate font-[family-name:var(--font-display)] text-sm font-light tracking-[0.03em] ${
+              isFocused ? "text-gold" : "text-silver-bright"
+            }`}
+          >
+            {record.label}
+          </div>
+          <div className="mt-0.5 truncate text-xs text-silver/50">{record.detail}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1">
+          <StatusPill status={record.status} usage={record.usage} />
+          <span className="badge badge-slate text-xs">{record.categoryLabel}</span>
+          {record.roomFamily && (
+            <span className="badge badge-slate text-xs">{record.roomFamily}</span>
+          )}
+        </div>
+      </button>
+      <div className="flex items-center justify-between border-t border-[rgba(200,168,76,0.06)] pt-2">
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          className="text-xs text-gold/70 transition-colors hover:text-gold"
+          data-testid={`svg-card-open-${record.id}`}
+        >
+          open detail →
+        </button>
+        <button
+          type="button"
+          onClick={onTogglePin}
+          aria-pressed={isPinned}
+          aria-label={isPinned ? "Unpin from compare" : "Pin to compare"}
+          data-testid={`svg-card-pin-${record.id}`}
+          className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors ${
+            isPinned
+              ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
+              : "border-[rgba(200,168,76,0.1)] text-silver/55 hover:border-gold/30 hover:text-gold"
+          }`}
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className="h-2.5 w-2.5"
+            fill={isPinned ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="1.3"
+            aria-hidden
+          >
+            <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
+          </svg>
+          {isPinned ? "pinned" : "pin"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-  if (!snapshot) {
+function BrowseGrid({
+  records,
+  focusedId,
+  pinnedIds,
+  preset,
+  onFocus,
+  onTogglePin,
+  onOpenDetail,
+}: {
+  records: readonly ViewerRecord[];
+  focusedId: string | null;
+  pinnedIds: ReadonlySet<string>;
+  preset: EnvLightingPreset;
+  onFocus: (id: string) => void;
+  onTogglePin: (id: string) => void;
+  onOpenDetail: (id: string) => void;
+}) {
+  if (records.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-silver/50">
-        HQ preview unavailable
+      <div
+        className="m-6 flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.4)] p-12 text-center text-xs text-silver/45"
+        data-testid="svg-grid-empty"
+      >
+        <span className="font-[family-name:var(--font-display)] text-sm text-silver-bright">
+          No records match the current filters
+        </span>
+        <span>Try clearing the search or switching usage.</span>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full min-h-[18rem] overflow-hidden rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.45)]">
-      <HqWorldCanvas snapshot={snapshot} />
+    <div
+      className="grid min-h-0 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-3 overflow-y-auto p-5"
+      data-testid="svg-grid"
+      role="list"
+    >
+      {records.map((record) => (
+        <div role="listitem" key={record.id}>
+          <ThumbnailCard
+            record={record}
+            isFocused={focusedId === record.id}
+            isPinned={pinnedIds.has(record.id)}
+            preset={preset}
+            onFocus={() => onFocus(record.id)}
+            onTogglePin={() => onTogglePin(record.id)}
+            onOpenDetail={() => onOpenDetail(record.id)}
+          />
+        </div>
+      ))}
     </div>
+  );
+}
+
+function buildHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapshot | null {
+  const template = templateRegistry.roomById.get(binding.templateId);
+  const building = templateRegistry.buildingById.get(binding.buildingId);
+  const previewFootprint = getHqBindingPreviewFootprint(binding);
+  if (!template || !building || !previewFootprint) {
+    return null;
+  }
+
+  const functionTag = template.tags.find((tag) => tag.startsWith("room:")) ?? "room:operations";
+  const geometry = composeHqWorldGeometry(
+    [
+      {
+        id: `preview/${binding.id}`,
+        templateId: binding.templateId,
+        roomStateId: binding.roomStateId,
+        slotId: binding.slotId,
+        floorIndex: binding.floorIndex,
+        name: template.name,
+        tier: 1,
+        isRequestedActive: true,
+        isOperational: true,
+        functionTag,
+        reservedFootprint: previewFootprint.reservedFootprint,
+        activeFootprint: previewFootprint.activeFootprint,
+      },
+    ],
+    {
+      buildingId: binding.buildingId,
+      buildingTier: 1,
+      floorIndex: binding.floorIndex,
+    },
+  );
+
+  return createHqWorldSnapshot(building.name, geometry, [], 480, binding.buildingId);
+}
+
+function HqRoomFitCanvas({
+  binding,
+  showIsoAxes,
+}: {
+  binding: HqRoomSceneBinding;
+  showIsoAxes: boolean;
+}) {
+  const snapshot = useMemo(() => buildHqRoomBindingSnapshot(binding), [binding]);
+  if (!snapshot) {
+    return (
+      <div className="flex h-full items-center justify-center text-xs text-silver/50">
+        HQ preview unavailable
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="absolute inset-0">
+        <HqWorldCanvas snapshot={snapshot} debugOverlays={ROOM_SCENE_DEBUG_OVERLAYS} />
+      </div>
+      {showIsoAxes && <IsoAxesOverlay />}
+    </>
   );
 }
 
@@ -631,7 +1759,7 @@ function OperatorRecipePreview({
   const recipe = getRecipeById(binding.recipeId);
   if (!recipe) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-silver/50">
+      <div className="flex items-center justify-center rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.45)] p-8 text-xs text-silver/50">
         Operator recipe unavailable
       </div>
     );
@@ -641,9 +1769,9 @@ function OperatorRecipePreview({
   const build = resolveOperatorBuild("role:general", recipe.id);
 
   return (
-    <div className="flex h-full items-center justify-center p-6">
-      <div className="flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] p-6 md:flex-row md:items-center">
-        <div className="flex flex-col items-center gap-3">
+    <div className="rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] p-5">
+      <div className="flex flex-col gap-5 md:flex-row md:items-center">
+        <div className="flex shrink-0 flex-col items-center gap-2">
           <div className="h-40 w-[calc(120*10rem/160)] overflow-hidden rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.6)]">
             <PortraitFromRecipe
               recipe={typedRecipe}
@@ -651,30 +1779,39 @@ function OperatorRecipePreview({
               label={`${recipe.name} portrait`}
             />
           </div>
-          <span className="text-xs text-silver/55">Recipe preview</span>
+          <EyebrowLabel>Recipe preview</EyebrowLabel>
         </div>
-        <div className="min-w-0 flex-1 space-y-2 text-sm text-silver/70">
-          <div className="text-base font-medium text-silver-bright">{recipe.name}</div>
-          <div>
-            <span className="text-gold/70">recipe:</span> {recipe.id}
+        <div className="min-w-0 flex-1 space-y-1.5 text-xs text-silver/75">
+          <div className="font-[family-name:var(--font-display)] text-base text-silver-bright">
+            {recipe.name}
           </div>
           <div>
-            <span className="text-gold/70">head:</span> {recipe.headShape}
+            <span className="text-gold/70">recipe </span>
+            <code className="text-silver-bright">{recipe.id}</code>
           </div>
           <div>
-            <span className="text-gold/70">hair:</span> {recipe.hair}
+            <span className="text-gold/70">head </span>
+            {recipe.headShape}
           </div>
           <div>
-            <span className="text-gold/70">eyes:</span> {recipe.eyes}
+            <span className="text-gold/70">hair </span>
+            {recipe.hair}
           </div>
           <div>
-            <span className="text-gold/70">face:</span> {recipe.faceDetail}
+            <span className="text-gold/70">eyes </span>
+            {recipe.eyes}
           </div>
           <div>
-            <span className="text-gold/70">body:</span> {recipe.bodySilhouette}
+            <span className="text-gold/70">face </span>
+            {recipe.faceDetail}
           </div>
           <div>
-            <span className="text-gold/70">build:</span> {build}
+            <span className="text-gold/70">body </span>
+            {recipe.bodySilhouette}
+          </div>
+          <div>
+            <span className="text-gold/70">build </span>
+            {build}
           </div>
         </div>
       </div>
@@ -682,300 +1819,766 @@ function OperatorRecipePreview({
   );
 }
 
-function RecordMetadata({ record, preset }: { record: ViewerRecord; preset: EnvLightingPreset }) {
+function SiblingFilmstrip({
+  siblings,
+  focusedId,
+  preset,
+  onSelect,
+  onCompareAll,
+}: {
+  siblings: readonly ViewerRecord[];
+  focusedId: string | null;
+  preset: EnvLightingPreset;
+  onSelect: (id: string) => void;
+  onCompareAll: () => void;
+}) {
+  if (siblings.length <= 1) return null;
+
   return (
-    <div className="space-y-3 rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)] p-4">
-      <MetadataRow label="Category" value={record.categoryLabel} />
-      <MetadataRow label="Family" value={record.family} />
-      <MetadataRow label="Usage" value={record.usage} />
-      <MetadataRow label="Status" value={record.status} />
-      <MetadataRow label="Lighting" value={preset.label} />
-      {record.roomFamily && <MetadataRow label="Room" value={record.roomFamily} />}
-      {record.buildingId && <MetadataRow label="Building" value={record.buildingId} />}
-      <MetadataRow label="Source">
-        <span className="break-all">{record.sourcePath ?? "runtime-only preview"}</span>
-      </MetadataRow>
-      <MetadataRow label="Id">
-        <span className="break-all">{record.id}</span>
-      </MetadataRow>
-      {record.kind === "binding" && (
-        <MetadataRow label="Binding" value={record.binding?.kind ?? "unknown"} />
-      )}
-      {record.kind === "asset" && (
-        <MetadataRow label="Role" value={record.asset?.contractRole ?? "unknown"} />
-      )}
-      {record.envPart && (
-        <MetadataRow label="Tags">
-          <div className="flex flex-wrap gap-1">
-            {record.envPart.tags.map((tag) => (
-              <span key={tag} className="badge badge-gold text-xs">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </MetadataRow>
-      )}
+    <div
+      className="rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)]"
+      data-testid="svg-filmstrip"
+    >
+      <div className="flex items-baseline justify-between gap-3 border-b border-[rgba(200,168,76,0.06)] px-4 py-2">
+        <div className="flex items-baseline gap-2">
+          <EyebrowLabel>Progression</EyebrowLabel>
+          <span className="text-xs text-silver/50">
+            {siblings.length} room states on the same upgrade path
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onCompareAll}
+          data-testid="svg-filmstrip-compare-all"
+          className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.14)] bg-[rgba(200,168,76,0.06)] px-2 py-1 text-xs text-gold transition-colors hover:border-gold/40"
+        >
+          compare all tiers
+        </button>
+      </div>
+      <div className="flex gap-3 overflow-x-auto p-3">
+        {siblings.map((sibling) => {
+          const level = getRoomStateLevel(sibling);
+          const active = focusedId === sibling.id;
+          return (
+            <button
+              key={sibling.id}
+              type="button"
+              onClick={() => onSelect(sibling.id)}
+              aria-pressed={active}
+              data-testid={`svg-filmstrip-item-${sibling.id}`}
+              className={`group flex w-40 shrink-0 flex-col gap-2 rounded-md border p-2 text-left transition-colors ${
+                active
+                  ? "border-gold/50 bg-[rgba(200,168,76,0.08)]"
+                  : "border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] hover:border-[rgba(200,168,76,0.22)]"
+              }`}
+            >
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-xs uppercase tracking-[0.12em] text-gold/70">
+                  Tier {level || "—"}
+                </span>
+                {active && <span className="text-xs text-gold">●</span>}
+              </div>
+              <ThumbnailSvg src={sibling.sourcePath} alt={sibling.label} preset={preset} />
+              <div className="truncate text-xs text-silver-bright">{sibling.label}</div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function RecordComparisonCard({
+function DetailHeader({
+  record,
+  onBackToGrid,
+  onTogglePin,
+  isPinned,
+  hasPrev,
+  hasNext,
+  onPrev,
+  onNext,
+}: {
+  record: ViewerRecord;
+  onBackToGrid: () => void;
+  onTogglePin: () => void;
+  isPinned: boolean;
+  hasPrev: boolean;
+  hasNext: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 border-b border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] px-5 py-3">
+      <button
+        type="button"
+        onClick={onBackToGrid}
+        data-testid="svg-detail-back"
+        className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] px-2 py-1 text-xs text-silver/70 transition-colors hover:border-gold/30 hover:text-gold"
+      >
+        <span aria-hidden>←</span>
+        <span>grid</span>
+      </button>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h2
+            className="truncate font-[family-name:var(--font-display)] text-base font-light tracking-[0.06em] text-silver-bright"
+            data-testid="svg-detail-title"
+          >
+            {record.label}
+          </h2>
+          <StatusPill status={record.status} usage={record.usage} />
+        </div>
+        <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-silver/50">
+          <span>{record.categoryLabel}</span>
+          {record.roomFamily && (
+            <>
+              <span>·</span>
+              <span>{record.roomFamily}</span>
+            </>
+          )}
+          {record.buildingId && (
+            <>
+              <span>·</span>
+              <span className="font-[family-name:var(--font-sans)] tracking-normal">
+                {record.buildingId}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={!hasPrev}
+          aria-label="Previous record"
+          data-testid="svg-detail-prev"
+          className="inline-flex items-center rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] px-2 py-1 text-xs text-silver/60 transition-colors enabled:hover:border-gold/30 enabled:hover:text-gold disabled:opacity-40"
+        >
+          <span aria-hidden>◂</span>
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!hasNext}
+          aria-label="Next record"
+          data-testid="svg-detail-next"
+          className="inline-flex items-center rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] px-2 py-1 text-xs text-silver/60 transition-colors enabled:hover:border-gold/30 enabled:hover:text-gold disabled:opacity-40"
+        >
+          <span aria-hidden>▸</span>
+        </button>
+        <button
+          type="button"
+          onClick={onTogglePin}
+          aria-pressed={isPinned}
+          aria-label={isPinned ? "Unpin from compare" : "Pin to compare"}
+          data-testid="svg-detail-pin"
+          className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs transition-colors ${
+            isPinned
+              ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
+              : "border-[rgba(200,168,76,0.1)] text-silver/55 hover:border-gold/30 hover:text-gold"
+          }`}
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className="h-2.5 w-2.5"
+            fill={isPinned ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="1.3"
+            aria-hidden
+          >
+            <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
+          </svg>
+          {isPinned ? "pinned" : "pin"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OverlayToggle({
+  label,
+  active,
+  onChange,
+  testId,
+}: {
+  label: string;
+  active: boolean;
+  onChange: (next: boolean) => void;
+  testId: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      onClick={() => onChange(!active)}
+      data-testid={testId}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium uppercase tracking-[0.08em] transition-colors ${
+        active
+          ? "border-gold/40 bg-[rgba(200,168,76,0.12)] text-gold"
+          : "border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.6)] text-silver/55 hover:text-silver-bright"
+      }`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-gold" : "bg-[rgba(200,168,76,0.3)]"}`}
+        aria-hidden
+      />
+      {label}
+    </button>
+  );
+}
+
+function DetailWorkbench({
   record,
   preset,
+  zoom,
+  onZoomChange,
+  siblings,
+  onSelectSibling,
+  onCompareAllSiblings,
+  showGrid,
+  showIsoAxes,
 }: {
   record: ViewerRecord;
   preset: EnvLightingPreset;
-}) {
-  if (record.binding?.kind === "operator-recipe") {
-    return (
-      <div className="overflow-hidden rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)]">
-        <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-          <div className="text-sm font-medium text-silver-bright">{record.label}</div>
-          <div className="mt-1 text-xs text-silver/45">{record.detail}</div>
-        </div>
-        <div className="h-[22rem]">
-          <OperatorRecipePreview binding={record.binding} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)]">
-      <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-        <div className="text-sm font-medium text-silver-bright">{record.label}</div>
-        <div className="mt-1 flex flex-wrap gap-1">
-          <span className="badge badge-gold text-xs">{record.categoryLabel}</span>
-          {record.roomFamily && (
-            <span className="badge badge-slate text-xs">{record.roomFamily}</span>
-          )}
-          <span className="badge badge-slate text-xs">{record.status}</span>
-        </div>
-      </div>
-      <div className="p-4">
-        <SvgStage
-          src={record.sourcePath}
-          alt={record.label}
-          zoom={1}
-          preset={preset}
-          width={stageBaseWidthForRecord(record)}
-          minHeightClass="min-h-[16rem]"
-        />
-        <div className="mt-3 text-xs text-silver/50">{record.detail}</div>
-      </div>
-    </div>
-  );
-}
-
-function DetailPanel({
-  records,
-  primaryRecord,
-  preset,
-  zoom,
-}: {
-  records: readonly ViewerRecord[];
-  primaryRecord: ViewerRecord | null;
-  preset: EnvLightingPreset;
-  zoom: number;
-}) {
-  if (!primaryRecord) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-silver/45">
-        Select a contracted asset or live binding
-      </div>
-    );
-  }
-
-  if (records.length > 1) {
-    const allRoomStates = records.every((record) => record.binding?.kind === "hq-room-scene");
-    const compareLabel =
-      allRoomStates && primaryRecord.roomFamily
-        ? `${primaryRecord.roomFamily} room states`
-        : `${records.length} selected records`;
-
-    return (
-      <div className="h-full overflow-y-auto p-5">
-        <div className="mb-5">
-          <h3 className="font-[family-name:var(--font-display)] text-base font-light tracking-[0.12em] text-silver-bright">
-            Compare {compareLabel}
-          </h3>
-          <p className="mt-1 text-xs text-silver/45">
-            Lighting applies to raw SVG previews so you can check contrast and silhouette under
-            different review conditions.
-          </p>
-        </div>
-        <div className="grid gap-4 xl:grid-cols-2">
-          {records.map((record) => (
-            <RecordComparisonCard key={record.id} record={record} preset={preset} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (primaryRecord.binding?.kind === "operator-recipe") {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto">
-          <OperatorRecipePreview binding={primaryRecord.binding} />
-        </div>
-        <div className="border-t border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] px-5 py-4">
-          <RecordMetadata record={primaryRecord} preset={preset} />
-        </div>
-      </div>
-    );
-  }
-
-  if (primaryRecord.binding?.kind === "hq-room-scene") {
-    return (
-      <div className="h-full overflow-y-auto p-5">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
-          <div className="space-y-5">
-            <div>
-              <div className="mb-2 text-xs uppercase tracking-[0.14em] text-gold/70">
-                Raw Room Scene
-              </div>
-              <SvgStage
-                src={primaryRecord.sourcePath}
-                alt={primaryRecord.label}
-                zoom={zoom}
-                preset={preset}
-                width={stageBaseWidthForRecord(primaryRecord)}
-                minHeightClass="min-h-[28rem]"
-              />
-            </div>
-            <RecordMetadata record={primaryRecord} preset={preset} />
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="mb-2 text-xs uppercase tracking-[0.14em] text-gold/70">
-                Runtime Room Fit
-              </div>
-              <HqRoomBindingPreview binding={primaryRecord.binding} />
-              <p className="mt-2 text-xs text-silver/45">
-                Drag to pan the runtime composition and use the mouse wheel over the canvas to zoom.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full overflow-y-auto p-5">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
-        <div>
-          <SvgStage
-            src={primaryRecord.sourcePath}
-            alt={primaryRecord.label}
-            zoom={zoom}
-            preset={preset}
-            width={stageBaseWidthForRecord(primaryRecord)}
-            minHeightClass="min-h-[28rem]"
-          />
-        </div>
-        <RecordMetadata record={primaryRecord} preset={preset} />
-      </div>
-    </div>
-  );
-}
-
-function PreviewToolbar({
-  selectedCount,
-  zoom,
-  onZoomChange,
-  lightingPresetId,
-  onLightingPresetChange,
-  canCompareRoomStates,
-  onCompareRoomStates,
-  onShowSingle,
-}: {
-  selectedCount: number;
   zoom: number;
   onZoomChange: (next: number) => void;
-  lightingPresetId: string;
-  onLightingPresetChange: (next: string) => void;
-  canCompareRoomStates: boolean;
-  onCompareRoomStates: () => void;
-  onShowSingle: () => void;
+  siblings: readonly ViewerRecord[];
+  onSelectSibling: (id: string) => void;
+  onCompareAllSiblings: () => void;
+  showGrid: boolean;
+  showIsoAxes: boolean;
+}) {
+  const binding = record.binding;
+  const isRoomScene = binding?.kind === "hq-room-scene";
+  const isEnvBinding = binding?.kind === "hq-environment";
+  const isOperatorRecipe = binding?.kind === "operator-recipe";
+
+  const stage = isRoomScene ? (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <EyebrowLabel>Placed In Building</EyebrowLabel>
+        <span className="text-xs text-silver/40">live HQ composition</span>
+      </div>
+      <div className="relative flex-1 min-h-0 overflow-hidden rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.45)]">
+        <HqRoomFitCanvas binding={binding} showIsoAxes={showIsoAxes} />
+      </div>
+      <p className="text-xs text-silver/45">
+        Dashed gold outline marks the room slot on the HQ grid.
+      </p>
+    </div>
+  ) : isOperatorRecipe ? (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+      <EyebrowLabel>Recipe Composition</EyebrowLabel>
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <OperatorRecipePreview binding={binding} />
+      </div>
+    </div>
+  ) : (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <EyebrowLabel>{isEnvBinding ? "Placed On Grid" : "Asset"}</EyebrowLabel>
+        <span className="text-xs text-silver/40">wheel · zoom / drag · pan</span>
+      </div>
+      <SvgStage
+        src={record.sourcePath}
+        alt={record.label}
+        zoom={zoom}
+        preset={preset}
+        width={stageBaseWidthForRecord(record)}
+        fillHeight
+        showGrid={showGrid}
+        showIsoAxes={showIsoAxes}
+        onZoomChange={onZoomChange}
+        testId="svg-detail-stage"
+      />
+      {isEnvBinding && (
+        <p className="text-xs text-silver/45">
+          Background asset on an isometric grid. Toggle axes in the toolbar to verify footprint
+          edges, legs, and bases snap to the canonical 2:1 grid.
+        </p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
+        {stage}
+        {siblings.length > 1 && (
+          <SiblingFilmstrip
+            siblings={siblings}
+            focusedId={record.id}
+            preset={preset}
+            onSelect={onSelectSibling}
+            onCompareAll={onCompareAllSiblings}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CompareTile({
+  record,
+  preset,
+  zoom,
+  onZoomChange,
+  onOpenDetail,
+  onUnpin,
+  showGrid,
+  showIsoAxes,
+}: {
+  record: ViewerRecord;
+  preset: EnvLightingPreset;
+  zoom: number;
+  onZoomChange: (next: number) => void;
+  onOpenDetail: () => void;
+  onUnpin: () => void;
+  showGrid: boolean;
+  showIsoAxes: boolean;
+}) {
+  const binding = record.binding;
+  const isRoomScene = binding?.kind === "hq-room-scene";
+  const isOperatorRecipe = binding?.kind === "operator-recipe";
+
+  const level = isRoomScene ? getRoomStateLevel(record) : 0;
+
+  const body = isRoomScene ? (
+    <div className="relative flex-1 min-h-0 overflow-hidden rounded-md border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.45)]">
+      <HqRoomFitCanvas binding={binding} showIsoAxes={showIsoAxes} />
+    </div>
+  ) : isOperatorRecipe ? (
+    <div className="flex-1 min-h-0 overflow-y-auto">
+      <OperatorRecipePreview binding={binding} />
+    </div>
+  ) : (
+    <div className="flex-1 min-h-0">
+      <SvgStage
+        src={record.sourcePath}
+        alt={record.label}
+        zoom={zoom}
+        preset={preset}
+        width={stageBaseWidthForRecord(record)}
+        fillHeight
+        showGrid={showGrid}
+        showIsoAxes={showIsoAxes}
+        onZoomChange={onZoomChange}
+        testId={`svg-compare-stage-${record.id}`}
+      />
+    </div>
+  );
+
+  return (
+    <div
+      className="flex h-full w-[38rem] shrink-0 flex-col overflow-hidden rounded-xl border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.35)]"
+      data-testid={`svg-compare-tile-${record.id}`}
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-[rgba(200,168,76,0.06)] px-4 py-2.5">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            {level > 0 && (
+              <span className="rounded border border-gold/25 bg-[rgba(200,168,76,0.08)] px-1.5 py-[1px] text-xs font-medium uppercase tracking-[0.12em] text-gold">
+                Tier {level}
+              </span>
+            )}
+            <div className="truncate font-[family-name:var(--font-display)] text-sm font-light tracking-[0.04em] text-silver-bright">
+              {record.label}
+            </div>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <StatusPill status={record.status} usage={record.usage} />
+            <span className="badge badge-slate text-xs">{record.categoryLabel}</span>
+            {record.roomFamily && (
+              <span className="badge badge-slate text-xs">{record.roomFamily}</span>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={onOpenDetail}
+            className="rounded border border-[rgba(200,168,76,0.12)] bg-[rgba(200,168,76,0.04)] px-2 py-1 text-xs text-gold/80 transition-colors hover:border-gold/30 hover:text-gold"
+            data-testid={`svg-compare-open-${record.id}`}
+          >
+            open
+          </button>
+          <button
+            type="button"
+            onClick={onUnpin}
+            aria-label="Unpin from compare"
+            data-testid={`svg-compare-unpin-${record.id}`}
+            className="rounded border border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] px-1.5 py-1 text-xs text-silver/55 transition-colors hover:border-[rgba(212,84,30,0.35)] hover:text-ember"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">{body}</div>
+    </div>
+  );
+}
+
+function CompareView({
+  records,
+  preset,
+  zoom,
+  onZoomChange,
+  onOpenDetail,
+  onUnpin,
+  showGrid,
+  showIsoAxes,
+}: {
+  records: readonly ViewerRecord[];
+  preset: EnvLightingPreset;
+  zoom: number;
+  onZoomChange: (next: number) => void;
+  onOpenDetail: (id: string) => void;
+  onUnpin: (id: string) => void;
+  showGrid: boolean;
+  showIsoAxes: boolean;
+}) {
+  if (records.length === 0) return null;
+  const allRoomStates = records.every((record) => record.binding?.kind === "hq-room-scene");
+  const label = allRoomStates
+    ? `${records[0].label.replace(/\s+\d+$/, "")} · ${records.length} tiers`
+    : `${records.length} pinned records`;
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col" data-testid="svg-compare">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] px-5 py-2.5">
+        <div>
+          <EyebrowLabel>Compare</EyebrowLabel>
+          <h2 className="font-[family-name:var(--font-display)] text-base font-light tracking-[0.06em] text-silver-bright">
+            {label}
+          </h2>
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden p-4">
+        {records.map((record) => (
+          <CompareTile
+            key={record.id}
+            record={record}
+            preset={preset}
+            zoom={zoom}
+            onZoomChange={onZoomChange}
+            onOpenDetail={() => onOpenDetail(record.id)}
+            onUnpin={() => onUnpin(record.id)}
+            showGrid={showGrid}
+            showIsoAxes={showIsoAxes}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InspectorRow({
+  label,
+  value,
+  children,
+  testId,
+}: {
+  label: string;
+  value?: string;
+  children?: ReactNode;
+  testId?: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.35)] px-5 py-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="font-[family-name:var(--font-display)] text-sm font-light tracking-[0.15em] text-gold">
-            Runtime-Authoritative Asset Preview
-          </div>
-          <p className="mt-1 text-xs text-silver/45">
-            Contract-backed review with room-state comparison, lighting presets, and raw SVG zoom.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {canCompareRoomStates && selectedCount <= 1 && (
-            <button
-              type="button"
-              onClick={onCompareRoomStates}
-              className="rounded-lg border border-[rgba(200,168,76,0.12)] bg-[rgba(200,168,76,0.06)] px-3 py-2 text-gold transition-colors hover:border-gold/30 hover:bg-[rgba(200,168,76,0.1)]"
-            >
-              compare room states
-            </button>
-          )}
-          {selectedCount > 1 && (
-            <button
-              type="button"
-              onClick={onShowSingle}
-              className="rounded-lg border border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] px-3 py-2 text-silver/70 transition-colors hover:border-gold/20 hover:text-silver-bright"
-            >
-              show single
-            </button>
-          )}
+    <div className="grid grid-cols-[5.25rem_minmax(0,1fr)] items-start gap-3">
+      <EyebrowLabel>{label}</EyebrowLabel>
+      <div className="min-w-0 text-xs text-silver-bright" data-testid={testId}>
+        {value ?? children}
+      </div>
+    </div>
+  );
+}
+
+function InspectorRail({
+  record,
+  preset,
+  violations,
+  isPinned,
+  onTogglePin,
+}: {
+  record: ViewerRecord | null;
+  preset: EnvLightingPreset;
+  violations: number;
+  isPinned: boolean;
+  onTogglePin: () => void;
+}) {
+  return (
+    <aside
+      className="flex min-h-0 w-full shrink-0 flex-col border-l border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.4)] lg:w-[22rem]"
+      data-testid="svg-inspector"
+      aria-label="Record inspector"
+    >
+      <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+        <EyebrowLabel>Inspector</EyebrowLabel>
+        <div className="mt-1 text-xs text-silver/55">
+          {record ? "Focused record metadata and actions" : "Select a record to inspect"}
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {ENV_LIGHTING_PRESETS.map((preset) => (
+      {!record ? (
+        <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-silver/45">
+          Click a card or a tree node, then select a record to see its dossier here.
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <div>
+            <h3
+              className="font-[family-name:var(--font-display)] text-base font-light tracking-[0.06em] text-silver-bright"
+              data-testid="svg-inspector-label"
+            >
+              {record.label}
+            </h3>
+            <div className="mt-1 text-xs text-silver/55">{record.detail}</div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              <StatusPill status={record.status} usage={record.usage} />
+              <span className="badge badge-slate text-xs">{record.categoryLabel}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.35)] p-3">
+            <InspectorRow label="Family" value={titleCase(record.family)} />
+            <InspectorRow label="Lighting" value={preset.label} />
+            {record.roomFamily && <InspectorRow label="Room" value={record.roomFamily} />}
+            {record.buildingId && <InspectorRow label="Building" value={record.buildingId} />}
+            <InspectorRow label="Id" testId="svg-inspector-id">
+              <div className="flex items-start gap-2">
+                <code className="break-all font-[family-name:var(--font-sans)] text-xs text-silver-bright">
+                  {record.id}
+                </code>
+                <CopyButton value={record.id} label="id" testId="svg-inspector-copy-id" />
+              </div>
+            </InspectorRow>
+            <InspectorRow label="Source" testId="svg-inspector-source">
+              <div className="flex items-start gap-2">
+                <code className="break-all font-[family-name:var(--font-sans)] text-xs text-silver-bright">
+                  {record.sourcePath ?? "runtime-only preview"}
+                </code>
+                {record.sourcePath && (
+                  <CopyButton
+                    value={record.sourcePath}
+                    label="source path"
+                    testId="svg-inspector-copy-path"
+                  />
+                )}
+              </div>
+            </InspectorRow>
+            {record.kind === "binding" && (
+              <InspectorRow label="Binding" value={record.binding?.kind ?? "unknown"} />
+            )}
+            {record.kind === "asset" && (
+              <InspectorRow label="Role" value={record.asset?.contractRole ?? "unknown"} />
+            )}
+          </div>
+
+          {record.envPart && record.envPart.tags.length > 0 && (
+            <div className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.35)] p-3">
+              <EyebrowLabel>Tags</EyebrowLabel>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {record.envPart.tags.map((tag) => (
+                  <span key={tag} className="badge badge-gold text-xs">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
             <button
-              key={preset.id}
               type="button"
-              onClick={() => onLightingPresetChange(preset.id)}
-              className={`rounded px-2.5 py-1 text-xs transition-colors ${
-                lightingPresetId === preset.id
-                  ? "bg-[rgba(200,168,76,0.12)] text-gold"
-                  : "text-silver/50 hover:bg-[rgba(200,168,76,0.06)] hover:text-silver-bright"
+              onClick={onTogglePin}
+              aria-pressed={isPinned}
+              data-testid="svg-inspector-pin"
+              className={`inline-flex items-center justify-center gap-1 rounded-md border px-3 py-2 text-xs uppercase tracking-[0.1em] transition-colors ${
+                isPinned
+                  ? "border-gold/40 bg-[rgba(200,168,76,0.14)] text-gold"
+                  : "border-[rgba(200,168,76,0.12)] bg-[rgba(6,6,8,0.5)] text-silver/75 hover:border-gold/30 hover:text-gold"
               }`}
             >
-              {preset.label}
+              <svg
+                viewBox="0 0 12 12"
+                className="h-3 w-3"
+                fill={isPinned ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.3"
+                aria-hidden
+              >
+                <path d="M6 1.5l1.3 2.7 2.95.42-2.13 2.08.5 2.93L6 8.27l-2.62 1.38.5-2.93L1.75 4.62l2.95-.42z" />
+              </svg>
+              {isPinned ? "pinned to compare" : "pin to compare"}
             </button>
-          ))}
+          </div>
+
+          {violations > 0 && (
+            <div className="rounded-lg border border-[rgba(212,84,30,0.2)] bg-[rgba(120,24,24,0.18)] px-3 py-2 text-xs text-silver/75">
+              <span className="font-[family-name:var(--font-display)] text-ember">
+                {violations}
+              </span>
+              <span className="ml-1.5">
+                contract violation{violations === 1 ? "" : "s"} recorded in the registry
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-silver/55">
-          <span>Zoom {Math.round(zoom * 100)}%</span>
-          <button
-            type="button"
-            onClick={() => onZoomChange(Math.max(0.5, Number((zoom - 0.25).toFixed(2))))}
-            className="rounded border border-[rgba(200,168,76,0.12)] px-2 py-1 transition-colors hover:border-gold/30 hover:text-silver-bright"
-            aria-label="Zoom out"
-          >
-            -
-          </button>
-          <button
-            type="button"
-            onClick={() => onZoomChange(1)}
-            className="rounded border border-[rgba(200,168,76,0.12)] px-2 py-1 transition-colors hover:border-gold/30 hover:text-silver-bright"
-          >
-            reset
-          </button>
-          <button
-            type="button"
-            onClick={() => onZoomChange(Math.min(3, Number((zoom + 0.25).toFixed(2))))}
-            className="rounded border border-[rgba(200,168,76,0.12)] px-2 py-1 transition-colors hover:border-gold/30 hover:text-silver-bright"
-            aria-label="Zoom in"
-          >
-            +
-          </button>
-        </div>
+      )}
+    </aside>
+  );
+}
+
+function CompareDock({
+  records,
+  focusedId,
+  preset,
+  onFocus,
+  onUnpin,
+  onClear,
+  onOpenCompareView,
+}: {
+  records: readonly ViewerRecord[];
+  focusedId: string | null;
+  preset: EnvLightingPreset;
+  onFocus: (id: string) => void;
+  onUnpin: (id: string) => void;
+  onClear: () => void;
+  onOpenCompareView: () => void;
+}) {
+  if (records.length < 2) return null;
+
+  return (
+    <div
+      className="flex items-center gap-3 border-t border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.7)] px-4 py-2 backdrop-blur-xl"
+      data-testid="svg-compare-dock"
+    >
+      <div className="flex shrink-0 flex-col">
+        <EyebrowLabel>Compare set</EyebrowLabel>
+        <span className="text-xs tabular-nums text-silver/55">{records.length} pinned</span>
       </div>
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+        {records.map((record) => {
+          const active = focusedId === record.id;
+          return (
+            <div
+              key={record.id}
+              className={`group flex shrink-0 items-center gap-2 rounded-md border px-2 py-1 transition-colors ${
+                active
+                  ? "border-gold/40 bg-[rgba(200,168,76,0.08)]"
+                  : "border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] hover:border-[rgba(200,168,76,0.22)]"
+              }`}
+              data-testid={`svg-compare-item-${record.id}`}
+            >
+              <button
+                type="button"
+                onClick={() => onFocus(record.id)}
+                className="flex items-center gap-2"
+                aria-label={`Focus ${record.label}`}
+              >
+                <div className="h-8 w-8 overflow-hidden rounded">
+                  <ThumbnailSvg src={record.sourcePath} alt={record.label} preset={preset} />
+                </div>
+                <span
+                  className={`max-w-[9rem] truncate text-xs ${active ? "text-gold" : "text-silver-bright"}`}
+                >
+                  {record.label}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onUnpin(record.id)}
+                aria-label={`Unpin ${record.label}`}
+                data-testid={`svg-compare-unpin-${record.id}`}
+                className="text-silver/45 hover:text-ember"
+              >
+                <svg
+                  viewBox="0 0 12 12"
+                  className="h-2.5 w-2.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden
+                >
+                  <path d="M2 2l8 8M10 2l-8 8" />
+                </svg>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenCompareView}
+          data-testid="svg-compare-open"
+          className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.14)] bg-[rgba(200,168,76,0.06)] px-2 py-1 text-xs text-gold transition-colors hover:border-gold/40"
+        >
+          compare →
+        </button>
+        <button
+          type="button"
+          onClick={onClear}
+          data-testid="svg-compare-clear"
+          className="inline-flex items-center gap-1 rounded border border-[rgba(200,168,76,0.1)] bg-[rgba(6,6,8,0.5)] px-2 py-1 text-xs text-silver/60 transition-colors hover:border-[rgba(212,84,30,0.3)] hover:text-ember"
+        >
+          clear
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StatusBar({
+  resultCount,
+  totalCount,
+  pinnedCount,
+  violations,
+  activeNavLabel,
+}: {
+  resultCount: number;
+  totalCount: number;
+  pinnedCount: number;
+  violations: number;
+  activeNavLabel: string;
+}) {
+  return (
+    <div
+      className="flex flex-wrap items-center gap-4 border-t border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.8)] px-4 py-1.5 text-xs text-silver/50"
+      data-testid="svg-status-bar"
+    >
+      <span className="tabular-nums">
+        <span className="text-silver-bright">{resultCount}</span>
+        <span className="mx-1">/</span>
+        <span>{totalCount}</span>
+        <span className="ml-1">records</span>
+      </span>
+      <span className="h-3 w-px bg-[rgba(200,168,76,0.12)]" />
+      <span>
+        scope <span className="text-silver/75">{activeNavLabel}</span>
+      </span>
+      {pinnedCount > 0 && (
+        <>
+          <span className="h-3 w-px bg-[rgba(200,168,76,0.12)]" />
+          <span className="tabular-nums text-gold/75">{pinnedCount} pinned</span>
+        </>
+      )}
+      {violations > 0 && (
+        <>
+          <span className="h-3 w-px bg-[rgba(200,168,76,0.12)]" />
+          <span className="text-ember">
+            {violations} contract violation{violations === 1 ? "" : "s"}
+          </span>
+        </>
+      )}
+      <span className="ml-auto hidden items-center gap-3 md:inline-flex">
+        <KeyHint keys={["/"]} label="search" />
+        <KeyHint keys={["g"]} label="toggle view" />
+        <KeyHint keys={["j", "k"]} label="navigate" />
+        <KeyHint keys={["p"]} label="pin" />
+        <KeyHint keys={["esc"]} label="clear" />
+      </span>
     </div>
   );
 }
@@ -986,9 +2589,18 @@ export function SvgAssetContractPanel() {
   const [category, setCategory] = useState("");
   const [room, setRoom] = useState("");
   const [search, setSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<SortKey>("label-asc");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [lightingPresetId, setLightingPresetId] = useState("neutral");
   const [zoom, setZoom] = useState(1);
+  const [showGrid, setShowGrid] = useState(true);
+  const [showIsoAxes, setShowIsoAxes] = useState(false);
+  const [navCollapsed, setNavCollapsed] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const violations = useMemo(() => getSvgContractViolations(), []);
   const liveBindings = useMemo(() => getSvgRuntimeBindings(), []);
@@ -1000,7 +2612,12 @@ export function SvgAssetContractPanel() {
     [assets, envParts, liveBindings],
   );
 
-  const records = useMemo(
+  const usageRecords = useMemo(
+    () => allRecords.filter((r) => r.usage === usage),
+    [allRecords, usage],
+  );
+
+  const filteredRecords = useMemo(
     () =>
       filterSvgAssetViewerRecords(allRecords, {
         usage,
@@ -1012,206 +2629,310 @@ export function SvgAssetContractPanel() {
     [allRecords, category, family, room, search, usage],
   );
 
-  const categoryOptions = useMemo(() => {
-    const options = allRecords
-      .filter((record) => record.usage === usage)
-      .filter((record) => !family || record.family === family)
-      .map((record) => ({ value: record.categoryKey, label: record.categoryLabel }));
-    return [
-      { value: "", label: "All Categories" },
-      ...new Map(options.map((option) => [option.value, option])).values(),
-    ].sort((left, right) => left.label.localeCompare(right.label));
-  }, [allRecords, family, usage]);
-
-  const roomOptions = useMemo(() => {
-    const rooms = allRecords
-      .filter((record) => record.usage === usage)
-      .filter((record) => !family || record.family === family)
-      .filter((record) => !category || record.categoryKey === category)
-      .map((record) => record.roomFamily)
-      .filter((roomFamily): roomFamily is string => !!roomFamily);
-    return [
-      { value: "", label: "All Rooms" },
-      ...[...new Set(rooms)].sort().map((value) => ({ value, label: value })),
-    ];
-  }, [allRecords, category, family, usage]);
-
-  const selectedRecords = records.filter((record) => selectedIds.has(record.id));
-  const primaryRecord = selectedRecords[0] ?? records[0] ?? null;
-  const roomComparisonIds = useMemo(
-    () => getRoomSceneComparisonIds(records, primaryRecord),
-    [primaryRecord, records],
+  const sortedRecords = useMemo(
+    () => sortRecords(filteredRecords, sortKey),
+    [filteredRecords, sortKey],
   );
+
+  const navigatorTree = useMemo(() => buildNavigatorTree(usageRecords), [usageRecords]);
+
+  const activeNavKey = useMemo(() => {
+    if (!family) return "__all__";
+    if (!category) return family;
+    if (!room) return `${family}:${category}`;
+    return `${family}:${category}:${room}`;
+  }, [family, category, room]);
+
+  const activeNavLabel = useMemo(() => {
+    if (activeNavKey === "__all__") return familyLabel(family);
+    const fam = family ? titleCase(family) : "All";
+    if (!category) return fam;
+    const catNode = navigatorTree
+      .find((n) => n.key === family)
+      ?.children.find((c) => c.key === `${family}:${category}`);
+    if (!room) return `${fam} · ${catNode?.label ?? category}`;
+    return `${fam} · ${catNode?.label ?? category} · ${titleCase(room.replace(/_/g, " "))}`;
+  }, [activeNavKey, category, family, navigatorTree, room]);
+
+  const recordsById = useMemo(
+    () => new Map(allRecords.map((record) => [record.id, record])),
+    [allRecords],
+  );
+
+  const focusedRecord = useMemo(() => {
+    if (focusedId) {
+      const match = recordsById.get(focusedId);
+      if (match) return match;
+    }
+    return sortedRecords[0] ?? null;
+  }, [recordsById, focusedId, sortedRecords]);
+
+  const pinnedRecords = useMemo(
+    () => allRecords.filter((r) => pinnedIds.has(r.id)),
+    [allRecords, pinnedIds],
+  );
+
+  const roomComparisonIds = useMemo(
+    () => getRoomSceneComparisonIds(allRecords, focusedRecord),
+    [allRecords, focusedRecord],
+  );
+
+  const roomComparisonRecords = useMemo(() => {
+    if (roomComparisonIds.length === 0) return [];
+    const ordered: ViewerRecord[] = [];
+    for (const id of roomComparisonIds) {
+      const record = recordsById.get(id);
+      if (record) ordered.push(record);
+    }
+    return ordered;
+  }, [recordsById, roomComparisonIds]);
+
   const preset = getEnvLightingPreset(lightingPresetId);
 
   useEffect(() => {
     setZoom(1);
-  }, [primaryRecord?.id, selectedRecords.length]);
+  }, [focusedRecord?.id]);
+
+  useEffect(() => {
+    if (!focusedId) return;
+    if (pinnedIds.has(focusedId)) return;
+    if (!sortedRecords.some((r) => r.id === focusedId)) {
+      setFocusedId(sortedRecords[0]?.id ?? null);
+    }
+  }, [focusedId, pinnedIds, sortedRecords]);
+
+  const handleNavigate = useCallback(
+    (filters: { family: FamilyFilter; category: string; room: string }) => {
+      setFamily(filters.family);
+      setCategory(filters.category);
+      setRoom(filters.room);
+    },
+    [],
+  );
+
+  const handleNavReset = useCallback(() => {
+    setFamily("");
+    setCategory("");
+    setRoom("");
+  }, []);
+
+  const handleTogglePin = useCallback((id: string) => {
+    setPinnedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleClearPinned = useCallback(() => setPinnedIds(new Set()), []);
+
+  const handleFocus = useCallback((id: string) => {
+    setFocusedId(id);
+  }, []);
+
+  const handleOpenDetail = useCallback((id: string) => {
+    setFocusedId(id);
+    setViewMode("detail");
+  }, []);
+
+  const handleBackToGrid = useCallback(() => setViewMode("grid"), []);
+
+  const handleNextPrev = useCallback(
+    (direction: 1 | -1) => {
+      if (!focusedRecord) return;
+      const index = sortedRecords.findIndex((r) => r.id === focusedRecord.id);
+      if (index === -1) return;
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= sortedRecords.length) return;
+      setFocusedId(sortedRecords[nextIndex].id);
+    },
+    [focusedRecord, sortedRecords],
+  );
+
+  const handleCompareAllSiblings = useCallback(() => {
+    if (roomComparisonIds.length < 2) return;
+    setPinnedIds(new Set(roomComparisonIds));
+    setViewMode("detail");
+  }, [roomComparisonIds]);
+
+  const handleOpenCompareView = useCallback(() => {
+    if (pinnedRecords.length >= 2) setViewMode("detail");
+  }, [pinnedRecords.length]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (event.key === "/" && !typing) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+      if (typing) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === "Escape") {
+        setPinnedIds(new Set());
+        setFocusedId(null);
+        if (viewMode === "detail") setViewMode("grid");
+      } else if (event.key === "g") {
+        setViewMode((m) => (m === "grid" ? "detail" : "grid"));
+      } else if (event.key === "j") {
+        handleNextPrev(1);
+      } else if (event.key === "k") {
+        handleNextPrev(-1);
+      } else if (event.key === "p" && focusedRecord) {
+        handleTogglePin(focusedRecord.id);
+      } else if (event.key === "+" || event.key === "=") {
+        setZoom((z) => clampViewerZoom(z + 0.25));
+      } else if (event.key === "-" || event.key === "_") {
+        setZoom((z) => clampViewerZoom(z - 0.25));
+      } else if (event.key === "0") {
+        setZoom(1);
+      } else if (event.key === "Enter" && focusedRecord && viewMode === "grid") {
+        setViewMode("detail");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusedRecord, handleNextPrev, handleTogglePin, viewMode]);
+
+  const showCompareView = viewMode === "detail" && pinnedRecords.length >= 2;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-      <aside className="flex min-h-0 w-full shrink-0 flex-col border-b border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.3)] lg:w-[28rem] lg:border-b-0 lg:border-r">
-        <div className="space-y-3 border-b border-[rgba(200,168,76,0.06)] p-4">
-          <SearchInput value={search} onChange={setSearch} />
-          <div className="grid grid-cols-2 gap-2">
-            <Select
-              label="Usage"
-              value={usage}
-              onChange={(next) => {
-                setUsage(next as SvgAssetUsage);
-                setCategory("");
-                setRoom("");
-                setSelectedIds(new Set());
-              }}
-              options={[
-                { value: "live", label: "Live Assets" },
-                { value: "library", label: "Library Assets" },
-                { value: "reference", label: "Reference Assets" },
-              ]}
-            />
-            <Select
-              label="Family"
-              value={family}
-              onChange={(next) => {
-                setFamily(next as FamilyFilter);
-                setCategory("");
-                setRoom("");
-                setSelectedIds(new Set());
-              }}
-              options={[
-                { value: "", label: "All Families" },
-                { value: "hq", label: "HQ" },
-                { value: "raid", label: "Raids" },
-                { value: "operator", label: "Operators" },
-              ]}
-            />
-            <Select
-              label="Category"
-              value={category}
-              onChange={(next) => {
-                setCategory(next);
-                setRoom("");
-                setSelectedIds(new Set());
-              }}
-              options={categoryOptions}
-            />
-            <Select
-              label="Room"
-              value={room}
-              onChange={(next) => {
-                setRoom(next);
-                setSelectedIds(new Set());
-              }}
-              options={roomOptions}
-            />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="text-silver/55">
-              {records.length} result{records.length === 1 ? "" : "s"}
-              {selectedRecords.length > 0 ? ` • ${selectedRecords.length} selected` : ""}
-            </span>
-            <div className="flex items-center gap-2">
-              {(search || category || room || family !== "hq" || usage !== "live") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsage("live");
-                    setFamily("hq");
-                    setCategory("");
-                    setRoom("");
-                    setSearch("");
-                    setSelectedIds(new Set());
-                  }}
-                  className="text-gold/70 transition-colors hover:text-gold"
-                >
-                  clear filters
-                </button>
-              )}
-              {records.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedIds(new Set(records.map((record) => record.id)))}
-                  className="text-gold/70 transition-colors hover:text-gold"
-                >
-                  select all
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2 text-xs text-silver/65">
-            <span className="text-gold">Contract viewer:</span> runtime bindings stay authoritative,
-            but the room and asset review controls are back so you can search, filter, compare, and
-            iterate without leaving the contract-backed surface.
-          </div>
-          {violations.length > 0 && (
-            <div className="rounded-lg border border-[rgba(200,96,96,0.18)] bg-[rgba(120,24,24,0.18)] px-3 py-2 text-xs text-silver/70">
-              <span className="text-gold">{violations.length}</span> contract violation
-              {violations.length === 1 ? "" : "s"} detected.
-            </div>
-          )}
-          <div className="text-xs text-silver/45">
-            Click selects a single record. Ctrl/Cmd-click builds a compare set for side-by-side
-            review.
-          </div>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-void" data-testid="svg-panel">
+      <CommandStrip
+        search={search}
+        onSearchChange={setSearch}
+        searchInputRef={searchInputRef}
+        usage={usage}
+        onUsageChange={(next) => {
+          setUsage(next);
+          setCategory("");
+          setRoom("");
+          setFocusedId(null);
+        }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        disabledDetail={!focusedRecord}
+        sort={sortKey}
+        onSortChange={setSortKey}
+        lighting={lightingPresetId}
+        onLightingChange={setLightingPresetId}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        showGrid={showGrid}
+        onShowGridChange={setShowGrid}
+        showIsoAxes={showIsoAxes}
+        onShowIsoAxesChange={setShowIsoAxes}
+        navCollapsed={navCollapsed}
+        onNavCollapsedChange={setNavCollapsed}
+        inspectorCollapsed={inspectorCollapsed}
+        onInspectorCollapsedChange={setInspectorCollapsed}
+        selectedCount={pinnedRecords.length}
+        resultCount={sortedRecords.length}
+        onClearSelection={handleClearPinned}
+      />
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <div className="space-y-2">
-            {records.length > 0 ? (
-              records.map((record) => (
-                <RecordListItem
-                  key={record.id}
-                  record={record}
-                  isPrimary={primaryRecord?.id === record.id}
-                  isSelected={selectedIds.has(record.id)}
-                  onSelect={(event) => {
-                    if (event.ctrlKey || event.metaKey) {
-                      setSelectedIds((previous) => {
-                        const next = new Set(previous);
-                        if (next.has(record.id)) {
-                          next.delete(record.id);
-                        } else {
-                          next.add(record.id);
-                        }
-                        return next;
-                      });
-                      return;
-                    }
-                    setSelectedIds(new Set([record.id]));
-                  }}
-                />
-              ))
-            ) : (
-              <div className="rounded-lg border border-[rgba(200,168,76,0.06)] bg-[rgba(6,6,8,0.2)] px-3 py-4 text-sm text-silver/45">
-                No contracted records match the current filters.
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <PreviewToolbar
-          selectedCount={selectedRecords.length}
-          zoom={zoom}
-          onZoomChange={setZoom}
-          lightingPresetId={lightingPresetId}
-          onLightingPresetChange={setLightingPresetId}
-          canCompareRoomStates={roomComparisonIds.length > 1}
-          onCompareRoomStates={() => setSelectedIds(new Set(roomComparisonIds))}
-          onShowSingle={() => primaryRecord && setSelectedIds(new Set([primaryRecord.id]))}
-        />
-        <div className="min-h-0 flex-1 bg-[rgba(6,6,8,0.45)]">
-          <DetailPanel
-            records={
-              selectedRecords.length > 1 ? selectedRecords : primaryRecord ? [primaryRecord] : []
-            }
-            primaryRecord={primaryRecord}
-            preset={preset}
-            zoom={zoom}
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {!navCollapsed && (
+          <NavigatorRail
+            tree={navigatorTree}
+            activeKey={activeNavKey}
+            onSelect={handleNavigate}
+            onReset={handleNavReset}
+            totalCount={usageRecords.length}
           />
-        </div>
-      </section>
+        )}
+
+        <section className="flex min-w-0 min-h-0 flex-1 flex-col border-x border-[rgba(200,168,76,0.06)] lg:border-x">
+          {showCompareView ? (
+            <CompareView
+              records={pinnedRecords}
+              preset={preset}
+              zoom={zoom}
+              onZoomChange={setZoom}
+              onOpenDetail={(id) => {
+                setFocusedId(id);
+                setPinnedIds(new Set([id]));
+              }}
+              onUnpin={handleTogglePin}
+              showGrid={showGrid}
+              showIsoAxes={showIsoAxes}
+            />
+          ) : viewMode === "detail" && focusedRecord ? (
+            (() => {
+              const focusedIndex = sortedRecords.findIndex((r) => r.id === focusedRecord.id);
+              return (
+                <>
+                  <DetailHeader
+                    record={focusedRecord}
+                    onBackToGrid={handleBackToGrid}
+                    onTogglePin={() => handleTogglePin(focusedRecord.id)}
+                    isPinned={pinnedIds.has(focusedRecord.id)}
+                    hasPrev={focusedIndex > 0}
+                    hasNext={focusedIndex >= 0 && focusedIndex < sortedRecords.length - 1}
+                    onPrev={() => handleNextPrev(-1)}
+                    onNext={() => handleNextPrev(1)}
+                  />
+                  <DetailWorkbench
+                    record={focusedRecord}
+                    preset={preset}
+                    zoom={zoom}
+                    onZoomChange={setZoom}
+                    siblings={roomComparisonRecords}
+                    onSelectSibling={(id) => setFocusedId(id)}
+                    onCompareAllSiblings={handleCompareAllSiblings}
+                    showGrid={showGrid}
+                    showIsoAxes={showIsoAxes}
+                  />
+                </>
+              );
+            })()
+          ) : (
+            <BrowseGrid
+              records={sortedRecords}
+              focusedId={focusedRecord?.id ?? null}
+              pinnedIds={pinnedIds}
+              preset={preset}
+              onFocus={handleFocus}
+              onTogglePin={handleTogglePin}
+              onOpenDetail={handleOpenDetail}
+            />
+          )}
+
+          <CompareDock
+            records={pinnedRecords}
+            focusedId={focusedRecord?.id ?? null}
+            preset={preset}
+            onFocus={(id) => setFocusedId(id)}
+            onUnpin={handleTogglePin}
+            onClear={handleClearPinned}
+            onOpenCompareView={handleOpenCompareView}
+          />
+        </section>
+
+        {!inspectorCollapsed && (
+          <InspectorRail
+            record={focusedRecord}
+            preset={preset}
+            violations={violations.length}
+            isPinned={focusedRecord ? pinnedIds.has(focusedRecord.id) : false}
+            onTogglePin={() => focusedRecord && handleTogglePin(focusedRecord.id)}
+          />
+        )}
+      </div>
+
+      <StatusBar
+        resultCount={sortedRecords.length}
+        totalCount={usageRecords.length}
+        pinnedCount={pinnedRecords.length}
+        violations={violations.length}
+        activeNavLabel={activeNavLabel}
+      />
     </div>
   );
 }

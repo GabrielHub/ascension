@@ -2404,35 +2404,42 @@ function drawDebugOverlays(
   snapshot: HqWorldSnapshot,
   overlays: HqDebugOverlays,
 ): void {
+  const showActiveBounds = overlays.showActiveBounds !== false;
+  const showRoomLabels = overlays.showRoomLabels !== false;
+
   if (overlays.showRoomBounds) {
     for (const room of snapshot.rooms) {
       ctx.save();
-      // Active bounds (cyan)
-      ctx.strokeStyle = "rgba(0, 200, 255, 0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(
-        room.activeBounds.x,
-        room.activeBounds.y,
-        room.activeBounds.width,
-        room.activeBounds.height,
-      );
+      if (showActiveBounds) {
+        // Active bounds (cyan)
+        ctx.strokeStyle = "rgba(0, 200, 255, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(
+          room.activeBounds.x,
+          room.activeBounds.y,
+          room.activeBounds.width,
+          room.activeBounds.height,
+        );
+      }
       // Reserved bounds (yellow dashed)
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = "rgba(255, 200, 0, 0.35)";
       ctx.strokeRect(room.bounds.x, room.bounds.y, room.bounds.width, room.bounds.height);
       ctx.setLineDash([]);
-      // Room label
-      ctx.fillStyle = "rgba(0, 200, 255, 0.7)";
-      ctx.font = `600 8px ${FONT_FAMILY}`;
-      ctx.fillText(room.label, room.activeBounds.x + 2, room.activeBounds.y - 3);
-      // Room state ID
-      ctx.fillStyle = "rgba(200, 168, 76, 0.6)";
-      ctx.font = `400 7px ${FONT_FAMILY}`;
-      ctx.fillText(
-        room.roomStateId,
-        room.activeBounds.x + 2,
-        room.activeBounds.y + room.activeBounds.height + 9,
-      );
+      if (showRoomLabels) {
+        // Room label
+        ctx.fillStyle = "rgba(0, 200, 255, 0.7)";
+        ctx.font = `600 8px ${FONT_FAMILY}`;
+        ctx.fillText(room.label, room.activeBounds.x + 2, room.activeBounds.y - 3);
+        // Room state ID
+        ctx.fillStyle = "rgba(200, 168, 76, 0.6)";
+        ctx.font = `400 7px ${FONT_FAMILY}`;
+        ctx.fillText(
+          room.roomStateId,
+          room.activeBounds.x + 2,
+          room.activeBounds.y + room.activeBounds.height + 9,
+        );
+      }
       ctx.restore();
     }
   }
@@ -2446,38 +2453,42 @@ function drawDebugOverlays(
       ctx.lineWidth = 1;
       drawPolygonOutline(ctx, room.floorPoints, "rgba(255, 200, 0, 0.3)");
       ctx.setLineDash([]);
-      // Active footprint floor diamond (cyan, brighter)
-      ctx.strokeStyle = "rgba(0, 200, 255, 0.4)";
-      ctx.lineWidth = 1.5;
-      // Just draw active bounds outline
-      ctx.strokeRect(
-        room.activeBounds.x,
-        room.activeBounds.y,
-        room.activeBounds.width,
-        room.activeBounds.height,
-      );
-      // Footprint label
-      const fp = room.reservedFootprint;
-      const afp = room.activeFootprint;
-      ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
-      ctx.font = `400 7px ${FONT_FAMILY}`;
-      ctx.fillText(
-        `reserved: ${fp.cols}x${fp.rows} @(${fp.col},${fp.row})`,
-        room.bounds.x + 2,
-        room.bounds.y + room.bounds.height + 9,
-      );
-      if (
-        afp.cols !== fp.cols ||
-        afp.rows !== fp.rows ||
-        afp.col !== fp.col ||
-        afp.row !== fp.row
-      ) {
-        ctx.fillStyle = "rgba(0, 200, 255, 0.5)";
-        ctx.fillText(
-          `active: ${afp.cols}x${afp.rows} @(${afp.col},${afp.row})`,
-          room.bounds.x + 2,
-          room.bounds.y + room.bounds.height + 18,
+      if (showActiveBounds) {
+        // Active footprint floor diamond (cyan, brighter)
+        ctx.strokeStyle = "rgba(0, 200, 255, 0.4)";
+        ctx.lineWidth = 1.5;
+        // Just draw active bounds outline
+        ctx.strokeRect(
+          room.activeBounds.x,
+          room.activeBounds.y,
+          room.activeBounds.width,
+          room.activeBounds.height,
         );
+      }
+      if (showRoomLabels) {
+        // Footprint label
+        const fp = room.reservedFootprint;
+        const afp = room.activeFootprint;
+        ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
+        ctx.font = `400 7px ${FONT_FAMILY}`;
+        ctx.fillText(
+          `reserved: ${fp.cols}x${fp.rows} @(${fp.col},${fp.row})`,
+          room.bounds.x + 2,
+          room.bounds.y + room.bounds.height + 9,
+        );
+        if (
+          afp.cols !== fp.cols ||
+          afp.rows !== fp.rows ||
+          afp.col !== fp.col ||
+          afp.row !== fp.row
+        ) {
+          ctx.fillStyle = "rgba(0, 200, 255, 0.5)";
+          ctx.fillText(
+            `active: ${afp.cols}x${afp.rows} @(${afp.col},${afp.row})`,
+            room.bounds.x + 2,
+            room.bounds.y + room.bounds.height + 18,
+          );
+        }
       }
       ctx.restore();
     }
@@ -2896,6 +2907,8 @@ export interface HqDebugOverlays {
   showFootprints?: boolean;
   showAnchors?: boolean;
   showPointerCoords?: boolean;
+  showActiveBounds?: boolean;
+  showRoomLabels?: boolean;
 }
 
 interface HqWorldCanvasProps {
