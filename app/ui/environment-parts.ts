@@ -423,19 +423,3 @@ export function getLoadedEnvParts(buildingId = "building/bodega"): readonly EnvP
 export function defaultPresetId(): string {
   return ENV_LIGHTING_PRESETS[0].id;
 }
-
-/** Resolve the retained building shell asset URL. */
-export function resolveShellAssetUrl(buildingId = "building/bodega"): string {
-  const parts = getLoadedEnvParts(buildingId);
-  const renderConfig =
-    getHqEnvironmentRenderConfigForBuilding(buildingId) ?? getHqEnvironmentRenderConfig();
-  const shell = parts.find((part) => part.category === "shell");
-  if (shell) {
-    return envPartSvgPath(shell, getLoadedEnvPartsIndex(buildingId));
-  }
-
-  const buildingShellUrl = `${renderConfig.paths.partsRoot}/shell/iso-${renderConfig.building}-shell.svg`;
-  return renderConfig.building === "bodega"
-    ? buildingShellUrl
-    : `${renderConfig.paths.partsRoot}/shell/iso-bodega-shell.svg`;
-}

@@ -13,7 +13,6 @@ import {
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
   defaultPresetId,
-  resolveShellAssetUrl,
   type EnvPartMeta,
   type EnvPartsIndex,
 } from "./environment-parts";
@@ -30,8 +29,6 @@ describe("validateEnvPartsIndex against shipped index", () => {
   it("shipped index contains at least one part per category", () => {
     const parts = getLoadedEnvParts();
     const categories = new Set(parts.map((p) => p.category));
-    expect(categories).toContain("shell");
-    expect(categories).toContain("structure");
     expect(categories).toContain("prop");
     expect(categories).toContain("scene");
     expect(categories).toContain("background");
@@ -152,15 +149,15 @@ describe("searchEnvParts", () => {
   const parts = getLoadedEnvParts();
 
   it("filters by category", () => {
-    const shells = searchEnvParts(parts, { category: "shell" });
-    expect(shells.length).toBeGreaterThan(0);
-    expect(shells.every((p) => p.category === "shell")).toBe(true);
+    const props = searchEnvParts(parts, { category: "prop" });
+    expect(props.length).toBeGreaterThan(0);
+    expect(props.every((p) => p.category === "prop")).toBe(true);
   });
 
   it("filters by scale", () => {
-    const building = searchEnvParts(parts, { scale: "building" });
-    expect(building.length).toBeGreaterThan(0);
-    expect(building.every((p) => p.scale === "building")).toBe(true);
+    const backdrops = searchEnvParts(parts, { scale: "backdrop" });
+    expect(backdrops.length).toBeGreaterThan(0);
+    expect(backdrops.every((p) => p.scale === "backdrop")).toBe(true);
   });
 
   it("filters by room family", () => {
@@ -182,7 +179,7 @@ describe("searchEnvParts", () => {
   });
 
   it("returns empty for impossible filter", () => {
-    const none = searchEnvParts(parts, { category: "shell", roomFamily: "infirmary" });
+    const none = searchEnvParts(parts, { category: "background", roomFamily: "infirmary" });
     expect(none).toEqual([]);
   });
 
@@ -217,9 +214,9 @@ describe("findEnvPartById", () => {
   const parts = getLoadedEnvParts();
 
   it("finds a known part", () => {
-    const result = findEnvPartById(parts, "shell/iso-bodega-shell");
+    const result = findEnvPartById(parts, "props/iso-desk-reception");
     expect(result).toBeDefined();
-    expect(result!.category).toBe("shell");
+    expect(result!.category).toBe("prop");
   });
 
   it("returns undefined for unknown id", () => {
@@ -376,6 +373,13 @@ describe("shipped index style", () => {
     );
     expect(staleIds).toEqual([]);
   });
+
+  it("does not retain shell or structure assets in the bodega contract", () => {
+    const parts = getLoadedEnvParts();
+
+    expect(parts.some((part) => part.category === "shell")).toBe(false);
+    expect(parts.some((part) => part.category === "structure")).toBe(false);
+  });
 });
 
 describe("envPartSvgPath", () => {
@@ -435,13 +439,13 @@ describe("envPartSvgPath", () => {
     );
   });
 
-  it("returns parts path for shipped approved assets", () => {
+  it("returns parts path for shipped approved prop assets", () => {
     const parts = getLoadedEnvParts();
-    const shell = findEnvPartById(parts, "shell/iso-bodega-shell");
-    expect(shell).toBeDefined();
-    expect(shell!.status).toBe("approved");
-    expect(envPartSvgPath(shell!)).toBe(
-      "/data/svg-environments/hq/bodega/parts/shell/iso-bodega-shell.svg",
+    const prop = findEnvPartById(parts, "props/iso-desk-reception");
+    expect(prop).toBeDefined();
+    expect(prop!.status).toBe("approved");
+    expect(envPartSvgPath(prop!)).toBe(
+      "/data/svg-environments/hq/bodega/parts/props/iso-desk-reception.svg",
     );
   });
 });
@@ -501,18 +505,6 @@ describe("promoted asset status", () => {
     const approved = searchEnvParts(parts, { status: "approved" });
     expect(approved.length).toBeGreaterThan(0);
     expect(approved.every((p) => p.status === "approved")).toBe(true);
-  });
-});
-
-describe("resolveShellAssetUrl", () => {
-  it("returns a valid parts URL for the bodega shell", () => {
-    const url = resolveShellAssetUrl();
-    expect(url).toContain("/parts/shell/iso-bodega-shell.svg");
-  });
-
-  it("falls back to the shared shell when a building does not ship its own shell asset yet", () => {
-    const url = resolveShellAssetUrl("building/porters");
-    expect(url).toContain("/parts/shell/iso-bodega-shell.svg");
   });
 });
 

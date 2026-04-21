@@ -49,9 +49,6 @@ const HQ_TILE_HEIGHT = HQ_ENVIRONMENT.composition.tileHeight;
 const HQ_WALL_HEIGHT = HQ_ENVIRONMENT.composition.wallHeight;
 const WORLD_MARGIN_X = 100;
 const WORLD_MARGIN_Y = 80;
-const SCENE_ORIGIN_X = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[0];
-const SCENE_ORIGIN_Y = HQ_ENVIRONMENT.composition.sceneSystem.canonicalOrigin[1];
-const SCENE_VIEWBOX = HQ_ENVIRONMENT.composition.sceneSystem.canonicalViewBox;
 const STACKED_FLOOR_OFFSET_Y = HQ_WALL_HEIGHT + 12;
 
 function getBuildingRenderConfig(buildingId?: string) {
@@ -1243,6 +1240,7 @@ function buildRoomProps(
   buildingId: string,
 ): HqSpritePlacement[] {
   const props: HqSpritePlacement[] = [];
+  const sceneSystem = getBuildingRenderConfig(buildingId).composition.sceneSystem;
 
   for (const room of rooms) {
     const floorOrigin = getFloorOrigin(originX, originY, room.floorIndex, floorOffsets);
@@ -1259,21 +1257,25 @@ function buildRoomProps(
     );
 
     if (resolvedSceneUrl) {
+      // Room scenes are authored in a canonical footprint (usually 4x3). Center that
+      // authored frame within the runtime slot so wider/taller rooms still align.
+      const sceneAnchorCol = reserved.col + (reserved.cols - sceneSystem.roomFootprint.cols) / 2;
+      const sceneAnchorRow = reserved.row + (reserved.rows - sceneSystem.roomFootprint.rows) / 2;
       const scene = {
-        svgOriginX: SCENE_ORIGIN_X,
-        svgOriginY: SCENE_ORIGIN_Y,
-        svgWidth: SCENE_VIEWBOX.width,
-        svgHeight: SCENE_VIEWBOX.height,
-        viewBoxMinX: SCENE_VIEWBOX.minX,
-        viewBoxMinY: SCENE_VIEWBOX.minY,
+        svgOriginX: sceneSystem.canonicalOrigin[0],
+        svgOriginY: sceneSystem.canonicalOrigin[1],
+        svgWidth: sceneSystem.canonicalViewBox.width,
+        svgHeight: sceneSystem.canonicalViewBox.height,
+        viewBoxMinX: sceneSystem.canonicalViewBox.minX,
+        viewBoxMinY: sceneSystem.canonicalViewBox.minY,
       };
       const placement: HqStaticPlacementDef = {
         id: `${room.id}/scene`,
         assetId: "",
         assetUrl: resolvedSceneUrl,
         kind: "room-scene",
-        col: reserved.col,
-        row: reserved.row,
+        col: sceneAnchorCol,
+        row: sceneAnchorRow,
         anchorMode: "scene-origin",
         width: scene.svgWidth,
         height: scene.svgHeight,

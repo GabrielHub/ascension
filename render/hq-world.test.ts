@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+
 import { composeHqWorldGeometry, createHqWorldSnapshot } from "./hq-world";
 
 function createRoomSeed(
@@ -76,6 +78,39 @@ describe("HQ world navigation", () => {
     expect(geometry.roomProps[0]?.assetUrl).toBe(
       "/data/svg-environments/hq/bodega/recipes/scene-the-dining-area.svg",
     );
+  });
+
+  it("centers room-scene assets inside non-canonical slot sizes", () => {
+    const renderConfig = getHqEnvironmentRenderConfig().composition;
+    const sceneSystem = renderConfig.sceneSystem;
+    const cases = [
+      { cols: 8, rows: 3 },
+      { cols: 6, rows: 6 },
+    ];
+
+    for (const footprint of cases) {
+      const geometry = composeHqWorldGeometry([
+        createRoomSeed({
+          id: `room-instance/register-${footprint.cols}x${footprint.rows}`,
+          reservedFootprint: { col: 2, row: 2, cols: footprint.cols, rows: footprint.rows },
+          activeFootprint: { col: 2, row: 2, cols: footprint.cols, rows: footprint.rows },
+        }),
+      ]);
+
+      const room = geometry.rooms[0]!;
+      const scene = geometry.roomProps[0]!;
+      const dc = (footprint.cols - sceneSystem.roomFootprint.cols) / 2;
+      const dr = (footprint.rows - sceneSystem.roomFootprint.rows) / 2;
+      const expectedOffsetX =
+        -(sceneSystem.canonicalOrigin[0] - sceneSystem.canonicalViewBox.minX) +
+        (dc - dr) * (renderConfig.tileWidth / 2);
+      const expectedOffsetY =
+        -(sceneSystem.canonicalOrigin[1] - sceneSystem.canonicalViewBox.minY) +
+        (dc + dr) * (renderConfig.tileHeight / 2);
+
+      expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(expectedOffsetX, 6);
+      expect(scene.y - room.floorPoints[0]!.y).toBeCloseTo(expectedOffsetY, 6);
+    }
   });
 
   it("tracks reserved shell bounds separately from active room bounds", () => {

@@ -39,6 +39,13 @@ describe("svg asset contract", () => {
     );
   });
 
+  it("does not resolve removed shell or structure review artifacts", () => {
+    expect(resolveHqEnvironmentAssetUrl("building/bodega", "shell/iso-bodega-shell")).toBeNull();
+    expect(resolveHqEnvironmentAssetUrl("building/bodega", "structure/iso-door-interior")).toBe(
+      null,
+    );
+  });
+
   it("keeps live operator recipes and library gear in the same registry", () => {
     const bindings = getSvgRuntimeBindings();
     const assets = getSvgAssets();

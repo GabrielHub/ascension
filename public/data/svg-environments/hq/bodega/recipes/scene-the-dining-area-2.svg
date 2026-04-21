@@ -1,23 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
   <!-- Props-only scene layer: The Dining Area — Tier 2 (Functional)
-       Three battered folding tables in a receding row along the depth
-       (c-r = constant) axis, each with two mismatched wooden chairs on
-       their world-west and world-east sides. Keeps the tier-1 folding-
-       table language but fills the dining corner with more seating.
+       Three folding tables spaced along building **row** (screen vector
+       (+48,+24) per tile — the long axis of the 8×3 dining slot).
+       Shared translate(-18,9) nudges all three along **+col** ((-48,+24) per tile)
+       so the run sits on the slot centerline.
        Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
-       Table A top center (236,154) — iso(1.5, 0.75).
-       Table B top center (236,190) — iso(2.25, 1.5).
-       Table C top center (236,226) — iso(3.0, 2.25).
+       Table A — drawn first (back). Table B — center.
+       Table C — closest.
        Depth order: A-west chair → A table → A-east chair →
                     B-west chair → B table → B-east chair →
                     C-west chair → C table → C-east chair. -->
 
   <!-- ====================================================================
-       TABLE A CLUSTER — back-most, iso(1.5, 0.75)
-       Table top center (236,154). Corners: back(236,136) right(272,154)
-       front(236,172) left(200,154). Floor center (236,176).
+       TABLE A CLUSTER — low-row end of the slot (back in depth order)
        ==================================================================== -->
-
+  <g transform="translate(-132 -48)">
   <!-- Chair A-west — seat top (207,152), floor (207,162), backrest on world-west (screen-NW). Drawn first: tucks under table. -->
   <line x1="219" y1="155" x2="219" y2="162" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
   <line x1="207" y1="161" x2="207" y2="168" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
@@ -83,13 +80,12 @@
     fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
   <line x1="266" y1="172" x2="276" y2="167" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
   <line x1="266" y1="177" x2="276" y2="172" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+  </g>
 
   <!-- ====================================================================
-       TABLE B CLUSTER — middle, iso(2.25, 1.5)
-       Table top center (236,190). Corners: back(236,172) right(272,190)
-       front(236,208) left(200,190). Floor center (236,212).
+       TABLE B CLUSTER — mid slot on the row axis (+ shared col centering)
        ==================================================================== -->
-
+  <g transform="translate(-12 -24)">
   <!-- Chair B-west — seat top (207,188), floor (207,198) -->
   <line x1="219" y1="191" x2="219" y2="198" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
   <line x1="207" y1="197" x2="207" y2="204" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
@@ -155,13 +151,12 @@
     fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
   <line x1="266" y1="208" x2="276" y2="203" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
   <line x1="266" y1="213" x2="276" y2="208" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+  </g>
 
   <!-- ====================================================================
-       TABLE C CLUSTER — front-most, iso(3.0, 2.25)
-       Table top center (236,226). Corners: back(236,208) right(272,226)
-       front(236,244) left(200,226). Floor center (236,248).
+       TABLE C CLUSTER — high-row end of the slot (closest to camera)
        ==================================================================== -->
-
+  <g transform="translate(108 0)">
   <!-- Chair C-west — seat top (207,224), floor (207,234) -->
   <line x1="219" y1="227" x2="219" y2="234" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
   <line x1="207" y1="233" x2="207" y2="240" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
@@ -224,4 +219,5 @@
     fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
   <line x1="266" y1="244" x2="276" y2="239" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
   <line x1="266" y1="249" x2="276" y2="244" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+  </g>
 </svg>

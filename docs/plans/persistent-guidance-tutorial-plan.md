@@ -1,6 +1,6 @@
 # Persistent Guidance And Rewarded Tutorial Plan
 
-Scope: define the follow-up system that replaces one-off onboarding copy with a persistent, rewarded, narrative guidance layer. This plan covers the guidance product and UI architecture. It does not re-litigate the HQ or Operations shell refactors, but it must integrate cleanly with both.
+Scope: define the follow-up system that replaces one-off onboarding copy with a persistent, rewarded, narrative guidance layer. This plan covers the guidance product and UI architecture. It does not re-litigate the HQ or Operations shell refactors, but it must integrate cleanly with both. The intended player-facing scope is the full hand-held campaign from the opening bodega through Porter's and into the first stable skyscraper handoff.
 
 ## Goal
 
@@ -8,7 +8,9 @@ Build a modern idle-game-style guidance system that:
 
 - is always present during early and midgame
 - always offers the next meaningful goal
+- acts as a constant recommendation rail through the full bodega and Porter's playthrough instead of fading after the opening
 - explains every player-facing upgrade, room, and feature introduction through rewarded objectives instead of stuffing permanent prose into steady-state panels
+- tells the player which room unlock, room upgrade, or systems investment should come next when multiple valid options exist
 - uses narrative framing so the guidance feels like an authored hand, not just a checklist
 - continues across the full headquarters arc until the repeatable skyscraper endgame is firmly established
 - tapers only once the player has reached the repeatable skyscraper loop and no longer needs constant hand-holding
@@ -21,8 +23,10 @@ The intended model is closer to modern idle and incremental games than to a shor
 
 - every meaningful system introduction is attached to an objective
 - every player-facing upgrade unlock is attached to an objective or explicit follow-up objective step
+- every major room and room-upgrade band has a recommended first-purchase path rather than leaving new players to infer build order from static UI text
 - every objective explains why the system matters in plain language
 - objectives pay out meaningful rewards on completion
+- objective rewards should often tee up the next recommendation so the player feels a continuous push forward
 - objective chains continue as new rooms, upgrades, mechanics, and buildings unlock
 - the player should rarely be without a recommended next step before the repeatable skyscraper endgame
 
@@ -73,7 +77,8 @@ The system exists so that steady-state UI can stay lean:
 - `app/ui/interruption-host.tsx` supports blocking narrative delivery.
 - Opening guidance, narrative presenters, and save-safe authored beats already exist.
 - The current system is still closer to authored onboarding beats than to a persistent objective rail.
-- “Why this room matters” style explanation is still partially carried by steady-state management UI and room surfaces.
+- The current system does not yet act like a full-campaign recommendation engine for room order, upgrade order, or relocation readiness.
+- "Why this room matters" style explanation is still partially carried by steady-state management UI and room surfaces.
 
 ## Target End State
 
@@ -96,6 +101,7 @@ It should:
 
 - stay visible during ordinary play
 - show the current objective title, concise explanation, and reward
+- show the recommended next spend, unlock, upgrade, or action when the player has multiple plausible choices
 - show progress when progress is measurable
 - allow expansion into a richer detail panel when needed
 - coexist with the new HQ and Operations cascade shell instead of fighting for the same space
@@ -110,8 +116,9 @@ The system should support long-form authored chains, not isolated tutorial flags
 Examples:
 
 - open first room -> staff it -> use its feature -> buy its first upgrade
+- stabilize the bodega -> unlock the next support room -> buy the first high-leverage upgrade -> use the newly enabled loop
 - meet recruiting -> recruit first operator -> fill roster pressure -> resolve first replacement tension
-- relocate to Porter's -> learn floor switching -> place / activate new room types -> use new management pressure
+- relocate to Porter's -> learn floor switching -> unlock the first recommended Porter's room upgrade path -> use the new management and staging pressure correctly
 - reach skyscraper -> unlock first new floor -> learn expansion cadence -> learn floor-specific consequences -> stabilize repeatable endgame loop
 
 Every chain should have:
@@ -120,6 +127,8 @@ Every chain should have:
 - explicit completion conditions
 - reward rules
 - next-step handoff
+
+The chain design should treat the bodega and Porter's bands as one continuous hand-held campaign, not as separate tutorial eras. The skyscraper handoff is the final payoff of that campaign, not the point where guidance first becomes strategic.
 
 ### Endgame Taper
 
@@ -137,6 +146,7 @@ The guidance layer should become the main explanation surface for:
 
 - why a newly unlocked room matters
 - why an upgrade matters now
+- why this upgrade should come before the other currently available upgrades
 - why a new system was unlocked
 - what changed after relocation or building advancement
 - why the player should care about a newly surfaced pressure, opportunity, or management tool
@@ -158,8 +168,10 @@ The system must be able to introduce:
 - every new headquarters phase
 - every room family the player is expected to use
 - every room upgrade path the player can purchase
+- the recommended order of first purchases within the bodega and Porter's room / upgrade ladders
 - floor expansion milestones
 - room-specific first-use expectations
+- relocation readiness and the reason the next building move is worth making now
 
 ### Roster And Staffing
 
@@ -214,6 +226,7 @@ Each objective should define:
 - concise player-facing explanation
 - reward payload
 - completion condition contract
+- recommended next investment or action, when the objective is teaching prioritization rather than only first use
 - optional focus target / anchor target
 - escalation mode rules: persistent, focused, blocking
 - retirement / skip / replacement rules
@@ -226,6 +239,7 @@ At minimum, the matrix should answer:
 
 - which objective introduces this upgrade or feature
 - which reward is attached to that teaching step
+- what the intended recommendation order is relative to sibling upgrades or unlocks
 - what progression stage gates it
 - whether the step is persistent-only, focused, or blocking
 - whether the step has already been superseded by a later chain
@@ -249,6 +263,7 @@ Rules:
 - rewards must be meaningful enough to teach that objectives matter
 - rewards must not become the dominant exploit surface
 - rewards must scale with progression stage
+- rewards should frequently help fund or unlock the next recommended step so the campaign keeps its idle-game push-forward rhythm
 - claim / grant behavior must be save-safe and deterministic
 
 ### Narrative Voice
@@ -327,13 +342,16 @@ The UI owns presentation and typed intents only. Objective completion and reward
 
 ## Phased Rollout
 
-### Phase 0 — Product Audit
+### Phase 0 - Product Audit
 
-- Inventory every current “why this matters,” onboarding, first-use explanation, and tutorial beat.
+- Inventory every current "why this matters," onboarding, first-use explanation, and tutorial beat.
 - Inventory every shipped player-facing upgrade and feature unlock that needs an explanatory step.
+- Inventory the intended recommended room and upgrade order for the bodega and Porter's, including where the current product leaves that order implicit.
 - Group them into one continuous campaign arc:
   - opening HQ
+  - full bodega progression
   - Porter's
+  - skyscraper handoff
   - skyscraper climb
   - repeatable skyscraper endgame
 - Identify which explanations should move out of room / management UI once the guidance system exists.
@@ -344,20 +362,21 @@ Exit criteria:
 - a concrete upgrade-by-upgrade coverage list exists
 - no major system is left without an intended teaching moment
 
-### Phase 1 — Objective Data And Runtime Contract
+### Phase 1 - Objective Data And Runtime Contract
 
 - Define the objective record schema and progression-chain schema.
 - Define authoritative completion signals and reward-grant routing.
 - Define objective replacement / retirement rules for relocation and building advancement.
+- Define how recommendation-order metadata is authored so the runtime can say "do this upgrade next" without putting gameplay authority in React.
 
 Exit criteria:
 
 - the system can represent a long-running objective chain without relying on ad hoc per-screen logic
 
-### Phase 2 — Persistent Guide Card Shell
+### Phase 2 - Persistent Guide Card Shell
 
 - Build the always-on guide card UI.
-- Support compact state, expanded state, reward read, and progress read.
+- Support compact state, expanded state, reward read, progress read, and a clear "recommended next" read.
 - Decide and implement the coexistence lane with the event log and cascade panels.
 
 Exit criteria:
@@ -374,19 +393,22 @@ Exit criteria:
 
 - persistent, focused, and blocking guidance all derive from the same authored progression system
 
-### Phase 4 — Bodega And Porter's Coverage
+### Phase 4 - Bodega And Porter's Coverage
 
-- Convert the early and midgame teaching surface into rewarded objective chains.
+- Convert the bodega and Porter's teaching surface into rewarded objective chains.
+- Author the full bodega recommendation rail so a new player is continuously guided through the intended room and room-upgrade order.
+- Author the Porter's recommendation rail so new rooms, staffing pressure, training, recovery, staging, and workshop investment are introduced in a deliberate order.
 - Remove duplicated explanation from steady-state UI only after equivalent or better guidance coverage exists.
 
 Exit criteria:
 
-- a new player can move through the early campaign with a constant guided next step
+- a new player can move through the full bodega and Porter's campaign with a constant guided next step
+- the system can explicitly recommend first upgrade order instead of only describing unlocked options
 
-### Phase 5 — Skyscraper Coverage
+### Phase 5 - Skyscraper Coverage
 
 - Add objective chains for:
-  - relocation arrival
+  - relocation arrival and handoff payoff
   - first new tower systems
   - floor expansion ladder
   - later management pressure
@@ -394,6 +416,7 @@ Exit criteria:
 
 Exit criteria:
 
+- guidance carries the player cleanly out of Porter's and into the first stable skyscraper loop without a hand-holding gap
 - guidance remains active through the full climb into the repeatable skyscraper loop
 
 ### Phase 6 — Taper And Long-Run Behavior
@@ -448,6 +471,7 @@ Exit criteria:
 
 When this plan is complete:
 
-- the room-management UI should no longer need permanent “why this matters” essays
+- the room-management UI should no longer need permanent "why this matters" essays
 - the player should rarely be without a recommended next objective before the repeatable skyscraper endgame
+- the player should receive explicit recommendations for which room unlocks and room upgrades to do first throughout the bodega and Porter's bands
 - tutorial logic should read as one campaign-long guidance system rather than scattered onboarding patches

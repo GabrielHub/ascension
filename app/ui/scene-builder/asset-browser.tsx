@@ -62,8 +62,6 @@ const CATEGORIES: { value: AssetFilterCategory; label: string }[] = [
   { value: "prop", label: "Props" },
   { value: "background", label: "BG" },
   { value: "scene", label: "Scenes" },
-  { value: "structure", label: "Struct" },
-  { value: "shell", label: "Shell" },
 ];
 
 const STATUS_OPTIONS: { value: AssetFilterStatus; label: string }[] = [

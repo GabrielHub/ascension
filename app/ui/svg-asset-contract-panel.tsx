@@ -1356,10 +1356,29 @@ function IsoAxesOverlay() {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden
     >
-      <g stroke="rgba(110,184,224,0.65)" strokeWidth="0.5" fill="none">
+      <g stroke="rgba(110,184,224,0.65)" strokeWidth="0.5" fill="none" strokeLinecap="round">
         <path d="M100 100 L180 140" />
         <path d="M100 100 L20 140" />
         <path d="M100 100 L100 20" />
+      </g>
+      <g
+        fill="rgba(224,232,236,0.96)"
+        fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+        fontSize="2.8"
+        letterSpacing="0.18"
+        paintOrder="stroke"
+        stroke="rgba(8,10,14,0.9)"
+        strokeWidth="0.7"
+      >
+        <text x="183" y="142" textAnchor="start">
+          x (row+)
+        </text>
+        <text x="17" y="142" textAnchor="end">
+          y (col+)
+        </text>
+        <text x="103" y="18" textAnchor="start">
+          z (up+)
+        </text>
       </g>
       <circle cx="100" cy="100" r="1.5" fill="rgba(200,168,76,0.9)" />
     </svg>

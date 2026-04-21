@@ -20,7 +20,6 @@ import {
   envPartSvgPath,
   ENV_LIGHTING_PRESETS,
   getEnvLightingPreset,
-  resolveShellAssetUrl,
 } from "./environment-parts";
 import { useLazyVisible, useSvgFetch } from "./_svg-preview";
 import { SceneContractSummary } from "./svg-asset-viewer-page";
@@ -43,7 +42,7 @@ const ASSET_CLASS_DESCRIPTIONS: Record<AssetClass, string> = {
   operators:
     "Recipe-driven modular portraits — one builder and one appearance contract for authored and future generated operators",
   "hq-environment":
-    "Scene-first HQ review — approved room scenes in recipes/ plus shell, structural, prop, and background support assets",
+    "Scene-first HQ review — approved room scenes in recipes/ plus prop, background, and actor-marker support assets",
 };
 
 function LazySvgPreview({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -400,14 +399,7 @@ const ENV_CATEGORY_DESCRIPTIONS: Record<EnvPartCategory, string> = {
     "In-world operator/staff chibi tokens — recipe-derived identity at HQ zoom scales",
 };
 
-const ENV_CATEGORY_ORDER: EnvPartCategory[] = [
-  "shell",
-  "scene",
-  "structure",
-  "prop",
-  "background",
-  "actor-marker",
-];
+const ENV_CATEGORY_ORDER: EnvPartCategory[] = ["scene", "prop", "background", "actor-marker"];
 
 const HQ_BUILDINGS = [
   { id: "building/bodega", label: "Bodega" },
@@ -754,21 +746,20 @@ function SceneReviewBoard({
   partsIndex: ReturnType<typeof getLoadedEnvPartsIndex>;
   preset: EnvLightingPreset;
 }) {
-  const shellSrc = resolveShellAssetUrl(buildingId);
   const contract = getSceneReviewContract(buildingId);
   const sceneGroups = buildSceneReviewGroups(parts);
   const supportAssets = [
     parts.find((part) => part.category === "prop" && part.status === "approved"),
-    parts.find((part) => part.category === "structure" && part.status === "approved"),
+    parts.find((part) => part.category === "background" && part.status === "approved"),
   ]
     .filter((part): part is EnvPartMeta => part !== undefined)
     .map((part) => ({
-      label: part.category === "prop" ? "Featured Prop" : "Featured Structure",
+      label: part.category === "prop" ? "Featured Prop" : "Featured Background",
       detail: part.id,
       description:
         part.category === "prop"
           ? "Standalone prop review stays available alongside the scene-first room workflow."
-          : "Structural geometry remains visible so shell-adjacent support checks stay in the same tool.",
+          : "Exterior context remains reviewable alongside room scenes without promoting room-box or structural reference art.",
       previewSrc: envPartSvgPath(part, partsIndex),
     }));
 
@@ -780,46 +771,20 @@ function SceneReviewBoard({
         </h2>
         <p className="mt-1 text-xs text-silver/60">
           Approved HQ room scenes are props-only compositions in <code>recipes/</code>, reviewed
-          against the shared room contract and supported by shell, structural, prop, and background
-          assets.
+          against the shared room contract and supported by prop and background assets.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-silver/50">
-          The runtime keeps the shell separate. Room scenes are the review anchor, and their
-          metadata must stay aligned with the canonical geometry so new states can be reviewed
-          without depending on new art.
+          Room scenes are the review anchor, and their metadata must stay aligned with the canonical
+          geometry so new states can be reviewed without depending on room-box or structural
+          reference artifacts.
         </p>
       </div>
 
-      <div className="grid gap-4 border-b border-[rgba(200,168,76,0.04)] px-6 py-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
-            Building Shell Backdrop
-          </p>
-          <div className="flex justify-center">
-            <div
-              className="relative h-48 w-full max-w-[420px] overflow-hidden rounded-lg border"
-              style={{ backgroundColor: preset.background, borderColor: preset.border }}
-            >
-              <LazySvgPreview
-                src={shellSrc}
-                alt={`${contract.building} shell`}
-                className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
-              />
-              {preset.overlay && (
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{ backgroundColor: preset.overlay }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-        <div>
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
-            Canonical Scene Geometry
-          </p>
-          <SceneContractSummary contract={contract} />
-        </div>
+      <div className="border-b border-[rgba(200,168,76,0.04)] px-6 py-5">
+        <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-gold/50">
+          Canonical Scene Geometry
+        </p>
+        <SceneContractSummary contract={contract} />
       </div>
 
       <div className="px-6 py-5">
@@ -1038,12 +1003,12 @@ function HqEnvironmentPlayground() {
             geometry contract.
           </p>
           <p>
-            {buildingLabel} uses the same review shell: scenes stay primary, while structure, props,
-            and background elements remain searchable support inventory. Actor markers are still
-            in-world operator tokens at HQ zoom scales.
+            {buildingLabel} keeps the same scene-first review model: props, background elements, and
+            actor markers remain searchable support inventory, while room-box and structural
+            reference artifacts stay out of the approved HQ library.
           </p>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {ENV_CATEGORY_ORDER.map((cat) => {
             const count = partsByCategory.get(cat)?.length ?? 0;
             return (
@@ -1101,18 +1066,17 @@ function HqEnvironmentPlayground() {
         </h2>
         <div className="mt-4 space-y-3 text-xs leading-relaxed text-silver">
           <p>
-            <strong className="text-gold">Promoted assets:</strong> Shell, room scene, structure,
-            prop, and background assets have been promoted to{" "}
-            <span className="badge badge-gold text-xs">approved</span> status and copied from{" "}
-            <code className="text-gold/70">reference/</code> into canonical{" "}
+            <strong className="text-gold">Promoted assets:</strong> Room scene, prop, and background
+            assets have been promoted to <span className="badge badge-gold text-xs">approved</span>{" "}
+            status and copied from <code className="text-gold/70">reference/</code> into canonical{" "}
             <code className="text-gold/70">parts/</code> and{" "}
             <code className="text-gold/70">recipes/</code> directories. Actor markers remain in
             exploration.
           </p>
           <p>
             <strong className="text-gold">Composition:</strong> The HQ world canvas now renders a
-            scene-first composition. Scene metadata owns the room-state contract, while structure,
-            prop, and background SVGs stay available for support checks.
+            scene-first composition. Scene metadata owns the room-state contract, while prop and
+            background SVGs stay available for support checks.
           </p>
           <p>
             <strong className="text-gold">Scale readability:</strong> Each asset is shown at

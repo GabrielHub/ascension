@@ -121,12 +121,12 @@ The HQ pipeline has stricter rules because the room system only works if every a
 
 - The HQ uses one canonical angled/isometric presentation language.
 - All floor edges, wall edges, openings, props, and facing directions must align to the same tile axes.
-- Door, threshold, window, and wall anchors must be defined against the shared room footprint, not eyeballed per SVG.
+- Door, threshold, window, and wall anchors must be defined against the shared room footprint contract, not eyeballed per SVG.
 - Recipe previews for HQ rooms must show the full room box, not only floating props.
 - Room interior props are authored as pre-composed scene SVGs — a single SVG per room containing all furniture, fixtures, and decorations hand-arranged for composition quality.
 - Scene SVGs must contain props only. Walls, floors, tile grids, and structural elements are engine-rendered and must never be duplicated inside scene SVGs.
 - Every non-actor HQ SVG rendered into world space must go through one canonical static placement contract driven by grid coordinates plus SVG metadata.
-- Scene SVGs use a canonical coordinate system aligned to the shared isometric grid (origin, viewBox, and tile dimensions defined in the render engine) so the engine can place them correctly within the building.
+- Scene SVGs use a canonical coordinate system aligned to the shared isometric grid (origin, viewBox, and tile dimensions defined in the render engine). Runtime placement must center that canonical scene frame into the room slot footprint so non-canonical slot sizes (wider, taller, or square rooms) still align without per-SVG hacks.
 - Full monolithic room SVGs that include their own walls and floors remain valid as exploration/reference artifacts but are not approved production output.
 - Individual prop SVGs remain valid production assets for exterior use and for room recipes that still intentionally use prop composition, but they must still be placed through the same canonical HQ SVG scene contract.
 

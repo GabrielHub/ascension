@@ -86,6 +86,14 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 - Room layouts must preserve circulation and wall clearance on the shared room footprint. Furniture that only fits by cheating the angle or sliding off-axis is invalid.
 - Scene SVGs must be validated over engine-rendered walls and floors and next to neighboring rooms. If a room breaks when snapped into the real layout, reject it.
 
+### HQ Room Scene Alignment Checklist
+
+- Treat `content/data/hq-environment-index.json` scene-system values (`canonicalOrigin`, `canonicalViewBox`, `roomFootprint`) as the source of truth for room-scene placement.
+- Scene SVGs are authored in a canonical room-scene frame; runtime placement must center that canonical frame inside the actual slot footprint when slot size differs.
+- For alignment bugs, debug in this order: (1) runtime contract/placement math, (2) slot vs active footprint inputs, (3) SVG internal composition.
+- Do not "fix" systemic centering issues with one-off per-room renderer offsets or ad hoc camera tweaks.
+- After any placement change, validate at least one non-canonical slot size (wider/taller/square) via tests plus in-engine preview before sign-off.
+
 ### HQ Background And Exterior Rules
 
 - Exterior/background assets are shell-relative layers, not generic filler dropped anywhere that looks empty.

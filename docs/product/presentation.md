@@ -48,7 +48,7 @@ This file owns future-facing visual, presentation, and approval-loop direction f
 ## HQ Environment Presentation Language
 
 - Canonical HQ direction is angled/isometric interior presentation with a visible room box, not a flat plan or side cutaway.
-- HQ room modules must share one canonical footprint and one canonical isometric grid so adjacent rooms can snap together cleanly inside the building shell.
+- HQ room scenes must be authored against one canonical scene footprint and one canonical isometric grid, while runtime placement must center that canonical scene frame inside the actual slot footprint so rooms of different sizes (including larger or square slots) still compose correctly.
 - HQ management overlays should favor a top-nav plus bottom-card arrangement, with the event log fixed on the right, so room, staff, operator, and roster management do not sprawl across several competing panes.
 - HQ visual composition must be layered rather than monolithic:
   - shell/perimeter assets own the building envelope and cutaway silhouette

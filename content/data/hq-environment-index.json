@@ -33,46 +33,6 @@
       },
       "parts": [
         {
-          "id": "shell/iso-bodega-shell",
-          "category": "shell",
-          "tags": ["interior", "isometric", "building", "cutaway", "room-box", "reference-only"],
-          "scale": "building",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "structure/iso-wall-corner",
-          "category": "structure",
-          "tags": ["wall", "corner", "isometric", "reusable"],
-          "scale": "structure",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "structure/iso-floor-concrete",
-          "category": "structure",
-          "tags": ["floor", "concrete", "isometric", "reusable"],
-          "scale": "structure",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "structure/iso-door-interior",
-          "category": "structure",
-          "tags": ["door", "interior", "isometric", "passage"],
-          "scale": "structure",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "structure/iso-window-barred",
-          "category": "structure",
-          "tags": ["window", "barred", "isometric", "security"],
-          "scale": "structure",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
           "id": "props/iso-desk-reception",
           "category": "prop",
           "tags": ["desk", "counter", "reception", "furniture", "isometric"],

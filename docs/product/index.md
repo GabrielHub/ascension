@@ -19,6 +19,10 @@ Use the roadmap for rollout order and deferred-depth staging. Use the world foun
 - [Gameplay Systems](./gameplay-systems.md)
 - [Content Taxonomy](./content-taxonomy.md)
 
+## Implementation Guidance Note
+
+- For HQ room-scene alignment guardrails (canonical scene frame, slot-centering behavior, and verification order), also follow the `HQ Room Scene Alignment Checklist` in both `AGENTS.md` and `CLAUDE.md`.
+
 ## Premise
 
 Ascension is a management sim about building a dungeon-clearing guild in near-future New York City. The player starts with a shabby improvised headquarters and grows toward civic, commercial, and supernatural relevance. The fantasy is not direct combat. The fantasy is recognition, leverage, logistics, and upward mobility.
