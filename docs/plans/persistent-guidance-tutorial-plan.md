@@ -111,8 +111,10 @@ It should:
 - show the recommended next spend, unlock, upgrade, or action when the player has multiple plausible choices
 - show progress when progress is measurable
 - allow expansion into a richer detail panel when needed
-- coexist with the new HQ and Operations cascade shell instead of fighting for the same space
-- be movable or intentionally placeable if that is the cleanest long-term answer
+- start at the top-center of the screen by default
+- be user-draggable so the player can move it wherever they want on the screen
+- remain present on headquarters, operations, and boss-commitment combat surfaces
+- render above ordinary shell UI and play surfaces while still yielding to blocking narrative and interruption modals
 
 This is the replacement home for much of the “why this matters” explanation that should leave room panels.
 
@@ -292,8 +294,14 @@ Rules:
 
 - before the skyscraper endgame is established, the player should always have a recommended next goal, even when that goal is as small as equipping a new weapon or selling recovered loot
 - the player still gets new-goal guidance for fresh systems and major expansion milestones
-- the system stops feeling like constant hand-holding once the repeatable skyscraper loop is established
+- the system stops feeling like constant hand-holding once the player reaches the authored `freeform established` chain at the skyscraper's intended `A-rank` endgame band
 - strategic reminders, optional longer-term goals, and prestige-scale suggestions can remain, but the player should not feel tutorial-led forever
+
+Implementation target:
+
+- this guidance plan is intended to ship against a fuller skyscraper package that extends through `A-rank` content
+- the guide rail should therefore complete when the player reaches the skyscraper `A-rank` band and satisfies the authored freeform-establishment chain
+- the current repo ceiling is lower today, but the plan should still define the intended final target rather than the temporary shipped limit
 
 ## What Guidance Should Explain
 
@@ -384,6 +392,7 @@ Each objective should define:
 
 - stable id
 - chain / chapter membership
+- objective kind: `tutorial` or `guide`
 - building / progression stage gating
 - presenter / narrative voice
 - short title
@@ -394,6 +403,58 @@ Each objective should define:
 - optional focus target / anchor target
 - escalation mode rules: persistent, focused, blocking
 - retirement / skip / replacement rules
+
+#### Objective Kinds And Claim Flow
+
+The guide chain should not break just because the player gets ahead of it. Objective behavior should follow idle-game guide conventions.
+
+##### Tutorial Events
+
+Tutorial events are one-time teaching moments. They exist to teach a feature, milestone, or system introduction once over the life of the campaign.
+
+Examples:
+
+- recruit an operator of a given rank for the first time
+- unlock or upgrade a specific room
+- hire the first staff member of a given role
+- complete a one-time building progression milestone
+
+Rules:
+
+- if a tutorial event's condition is already satisfied when it becomes current, it should auto-complete immediately
+- auto-complete does not auto-claim the reward
+- the player should be able to claim the reward manually
+- after the reward is claimed, the chain should advance to the next objective
+- if the next objective is also already satisfied and is also a tutorial event, it should auto-complete in turn so the player can keep claiming forward until the chain reaches an unfinished tutorial event or an active guide event
+
+##### Guide Events
+
+Guide events are active goals that progress the game through live player action while that guide step is active.
+
+Examples:
+
+- defeat enemies
+- clear the current boss dungeon
+- make a target amount of cash while the event is active
+- recruit a new operator from the current live queue
+- finish the currently active raid
+
+Rules:
+
+- guide events do not auto-complete from historical progress
+- the required action must happen while the guide event is the active step
+- once completed, the player claims the reward and the chain advances normally
+
+##### Reward Claim Contract
+
+Rewards are manually claimed even when the underlying objective auto-completes.
+
+Rules:
+
+- completion and claiming are separate states
+- tutorial events may complete automatically, but they still wait in a claimable state until the player collects the reward
+- claiming the reward is what advances the chain to the next objective
+- chain progression should continue through already-satisfied tutorial events without forcing the player to replay obsolete actions
 
 ### Recommendation Authority
 
@@ -473,9 +534,15 @@ This model keeps campaign order authored while still allowing the runtime to beh
 
 ### Coverage Matrix
 
-The implementation must maintain an explicit coverage matrix mapping shipped player-facing upgrades and feature unlocks to guidance objectives.
+The implementation must maintain explicit coverage mapping from shipped player-facing upgrades and feature unlocks to guidance objectives, but that mapping should not live as a second authored artifact.
 
-At minimum, the matrix should answer:
+Single-source-of-truth rule:
+
+- objective data is the source of truth
+- each tutorial event or guide event should declare which player-facing room, upgrade, feature intro, or system milestone it covers
+- any coverage table used in docs or tooling should be generated or derived from the objective data rather than maintained separately
+
+At minimum, the derived coverage view should answer:
 
 - which objective introduces this upgrade or feature
 - which reward is attached to that teaching step
@@ -485,7 +552,11 @@ At minimum, the matrix should answer:
 - whether the step is persistent-only, focused, or blocking
 - whether the step has already been superseded by a later chain
 
-The system is not complete if a player-facing upgrade or feature is live in the product but absent from the coverage matrix.
+Enforcement rule:
+
+- add a test that compares shipped teachable content against the declared objective coverage
+- if a player-facing room, upgrade, feature intro, or required system milestone ships without objective coverage, the test should fail
+- agents can use code inspection, playthroughs, economy evaluation, and tuning passes to decide which events should exist, but once decided they must be encoded in the objective data itself
 
 ### Reward Contract
 
@@ -518,6 +589,25 @@ The plan should support:
 - recurring guide voices where that helps continuity
 - narrative re-framing of mechanical objectives
 
+Named presenter roster assumed by this plan:
+
+- `presenter/assistant` — Mara Cordero
+  - default campaign anchor for contracts, staffing, management, and fallback operational briefings
+- `presenter/cook` — Rafi Alvarez
+  - food quality, hospitality, morale-through-hospitality, and kitchen-adjacent consequence beats
+- `presenter/bartender` — Sloane Becker
+  - recruitment reads, front-of-house social pressure, and public-facing nightlife or regular-pressure beats
+- `presenter/vicente-ortega` — Vicente Ortega
+  - gear readiness, loot triage, inventory flow, stock pressure, workshop/fabrication, and practical field-prep beats
+- `presenter/dr-june-park` — Dr. June Park
+  - injury, recovery, treatment, infirmary/trauma support, and post-mission medical consequence beats
+
+Presenter assignment rule:
+
+- these presenters are not locked to one headquarters
+- they should persist across bodega, Porter's, and skyscraper progression wherever their feature domain is the right voice
+- every authored tutorial event or guide event should either name one of these presenters explicitly or inherit a clear fallback presenter rather than defaulting to anonymous copy
+
 The result should feel like campaign guidance, not generic live-ops chores.
 
 ## UI Architecture
@@ -531,6 +621,9 @@ Primary steady-state UI:
 - reward visibility always present
 - progress visibility whenever measurable
 - click / expand path into richer detail
+- top-center default spawn position
+- draggable placement that the player can adjust during play
+- high ordinary UI stack order so the card remains visible across headquarters, operations, and boss-commitment combat surfaces
 
 ### Focused Guidance
 
@@ -565,7 +658,54 @@ The persistent guide card must coexist with:
 - event log
 - interruption surfaces
 
-The guidance plan must not assume it can occupy the same corner already reserved for these systems without a deliberate layout decision.
+Coexistence contract:
+
+- the card defaults to top-center when first shown
+- the player may drag the card anywhere on the screen
+- the card should render above ordinary shell UI, including HQ cascades, Operations surfaces, event log surfaces, and boss-commitment combat HUD
+- blocking narrative and interruption modals should still render above the card
+- shell refactors must not assume permanent ownership of the guide card's default region, because the card is player-positionable rather than fixed-lane shell UI
+
+### Runtime Mode Rules
+
+The guidance system must behave differently across real progression, sandbox preview, and testing/dev states. Those differences should be explicit rather than incidental.
+
+#### New Game
+
+- full tutorial-event and guide-event progression is active
+- opening narrative seeds, pacing rewards, and AI suppression rules all apply
+- this is the canonical player-facing progression path
+
+#### Load Existing Save
+
+- restore the saved tutorial / guide state exactly when the save already contains it
+- loading must never silently replay already-earned tutorial rewards
+
+#### Preview / Sandbox Mode
+
+- persistent tutorial-event and guide-event progression is suppressed
+- no opening-chain rewards, tutorial claims, or deterministic narrative seeds should fire
+- interruption and incident systems may still appear when the sandbox state itself requires them, but the long-form campaign rail should stay out of the way
+- preview exists to inspect and interact with systems, not to represent canonical campaign progression
+
+#### Dev-Console-Forced States
+
+- dev commands may reset or force guidance state for testing
+- those commands are test affordances, not player-facing progression rules
+- forced dev state should not redefine campaign pacing assumptions or authored ordering
+- the dev console should stay usable by AI agents and human testers for rapid iteration, which means keeping a small set of typed guidance commands available instead of building a second bespoke debug UI
+- recommended minimum dev-console support:
+  - reset the current tutorial / guide chain
+  - jump to a named tutorial event or guide event
+  - mark the current event complete without changing authored ordering
+  - claim the current reward and advance
+- these commands should drive the same authoritative guidance state machine the game uses normally rather than mutating ad hoc UI-only flags
+
+#### Browser Automation And Deterministic Harnesses
+
+- tests should be able to start with guidance disabled, active at a known event, or completed through a known milestone
+- deterministic harnesses should seed the required guidance state explicitly rather than relying on incidental runtime timing
+- automation should verify both canonical campaign behavior and sandbox-with-guidance-suppressed behavior where relevant
 
 ## State And Simulation Contract
 
@@ -613,6 +753,8 @@ Exit criteria:
 - Define the canonical zero-state new-game contract and the bootstrap rewards / costs that move the player from empty HQ plus zero operators into the first stable loop quickly.
 - Define objective replacement / retirement rules for relocation and building advancement.
 - Define how recommendation-order metadata is authored so the runtime can say "do this upgrade next" without putting gameplay authority in React.
+- Own the balance and tuning work required for the guide rail to function, including opening reward ladder values, early upgrade timing, and progression pacing into Porter's and the skyscraper.
+- Expect iterative implementation: author the initial rail, play through it, tune rewards / costs / pacing, and repeat until the guidance, economy, and balance feel coherent together.
 
 Exit criteria:
 
@@ -633,6 +775,7 @@ Exit criteria:
 - Re-thread current spotlight beats through objective definitions.
 - Re-thread current blocking narrative briefings through the same authored objective ladder where appropriate.
 - Keep the existing good parts of `guidance-host` and `interruption-host`, but stop treating them as isolated onboarding islands.
+- Replace the current tutorial guidance structure wholesale wherever the new authored system covers the same player need.
 
 Exit criteria:
 
@@ -708,7 +851,7 @@ These questions must be resolved before implementation claims can be considered 
 ### Opening Contract
 
 1. **Zero-roster opening vs. bodega baseline.**
-   The plan currently proposes a zero-state opening with no pre-existing operators, but the product canon and shipped bootstrap have historically started the player in a working bodega with a small starter roster. If the opening contract changes, world canon, bootstrap data, pacing targets, and save migration behavior all need to change together. If the product keeps physical bodega spaces on day one, the plan must state whether those spaces are merely present as shell/slot identity or already gameplay-functional rooms.
+   The plan currently proposes a zero-state opening with no pre-existing operators, but the product canon and shipped bootstrap have historically started the player in a working bodega with a small starter roster. If the opening contract changes, world canon, bootstrap data, and pacing targets all need to change together. If the product keeps physical bodega spaces on day one, the plan must state whether those spaces are merely present as shell/slot identity or already gameplay-functional rooms.
 
 2. **Day-one room semantics.**
    If the bodega still physically exists on day one, what does the player actually start with?
@@ -738,79 +881,17 @@ These questions must be resolved before implementation claims can be considered 
 
 ### UI And Shell Coexistence
 
-6. **Persistent guide card lane.**
-   The plan acknowledges coexistence risk but does not assign an actual lane. The card must have a deliberate placement contract relative to:
-   - HQ cascade shell
-   - Operations cascade shell
-   - event log
-   - interruption surfaces
-     This needs a concrete desktop placement rule and a narrow-screen fallback rule before Phase 2.
-
-7. **Movable vs. fixed placement.**
-   The current wording says the guide card may be movable or intentionally placeable. That is not a product decision. The plan should explicitly say whether the card is fixed-position UI, user-movable UI, or panel-stack-aware contextual UI.
-
-8. **HQ/Operations shell prerequisite.**
-   The plan assumes it can integrate with the final shell model, but HQ and Operations shell decisions must actually be stable first. Phase 2 should name the final coexistence dependency instead of assuming the shell contract will be settled in time.
+6. **Screen-layout compatibility.**
+   HQ, Operations, and boss-commitment screen layouts must explicitly support the draggable guide card contract. The plan should name this as a compatibility requirement rather than assuming the guide will naturally survive future layout work. At minimum, those layouts must preserve:
+   - guide visibility above ordinary UI
+   - guide drag interaction and click interaction
+   - modal priority for blocking narrative / interruption surfaces only
 
 ### Objective Lifecycle And Endgame Taper
 
-9. **Taper trigger for the repeatable skyscraper loop.**
-   "Once the repeatable skyscraper loop is established" is currently a slogan, not a signal. The plan needs an authoritative condition such as:
-   - authored chain-completion id
-   - floor-count threshold
-   - successful-contract threshold
-   - new long-run-state flag derived from runtime progression
-
-10. **Objective retirement, replacement, and reward-claim rules.**
-    The plan names retirement and replacement as required, but it does not say:
-    - what happens to completed-but-unclaimed rewards
-    - whether retired objectives ever re-surface after save/load
-    - whether replacement is silent, narrated, or interruption-backed
-    - whether a superseded objective is marked completed, retired, or skipped
-
-11. **Objective lifecycle model.**
-    The plan should define the actual states an objective can occupy, for example:
-    - active
-    - completed awaiting claim
-    - claimed
-    - retired
-    - superseded
-    - skipped
-      Without that, relocation and migration behavior remain ambiguous.
-
 ### Coverage, Migration, And Enforcement
 
-12. **Coverage matrix format and enforcement.**
-    The plan says the system is incomplete if a live player-facing upgrade or feature is absent from the coverage matrix, but it does not specify:
-    - where the matrix lives
-    - whether it is authored data, generated output, or both
-    - what test or CI rule fails when coverage is missing
-
-13. **Preview, sandbox, and dev-state rules.**
-    The plan explicitly punts suppression, seeding, and deterministic advancement rules. It needs to define how the persistent guidance system behaves in:
-    - real new game
-    - load of an existing save
-    - preview / sandbox mode
-    - dev-console-forced states
-    - browser automation and deterministic test harnesses
-
-14. **Migration path for existing campaigns.**
-    Players with mid-run saves need a documented first-load rule. The plan should state whether migration:
-    - retroactively grants earlier chain rewards
-    - marks earlier stages as superseded
-    - starts at the current building/stage entry objective
-    - replays or skips onboarding beats
-
-15. **Phase 3 mapping artifact.**
-    The rollout currently audits existing beats and later re-threads them, but it does not require an intermediate checked mapping of current coachmarks, briefings, interruptions, and prose explanations to target objective ids or explicit deletion. Without that artifact, coverage claims are easy to overstate.
-
 ### Balance, Content, And Narrative
-
-16. **Balance-pass ownership.**
-    The plan says rewards, opening currency, and unlock costs should be tuned together, but it does not explicitly scope the balance pass that makes that true. The rollout should either own that work or name it as a prerequisite owned elsewhere.
-
-17. **Narrative presenter roster for guidance.**
-    The plan refers to a superior, fixer, mentor, or house voice, but it does not enumerate the actual presenter roster or domains that own those voices across bodega, Porter's, and skyscraper progression. That needs a concrete presenter coverage pass before large-scale objective authoring.
 
 ## Out Of Scope
 
