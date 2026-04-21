@@ -732,7 +732,7 @@ const COMMANDS: DevConsoleCommand[] = [
     family: "Rooms",
     args: "<room> <upgradeId>",
     help: "Purchase a room upgrade",
-    examples: ["/upgrade room room/0 upgrade/room/back_office:secure_filing"],
+    examples: ["/upgrade room room/0 upgrade/room/register:records_wall"],
     execute: (args, ctx) => {
       if (args.length < 2) return err("Usage: /upgrade room <roomId> <upgradeId>");
       const roomId = resolveRoomId(args[0], ctx);

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
   <!-- Props-only scene layer: The Register — State 2 (Records Wall)
-       Upgraded from base state: dedicated records wall, organized filing,
-       proper intake processing station. Still a bodega, but functional.
-       No walls, floor, tile grid, or labels.
-       Origin (200,100). -->
+       Upgraded from tier 1: same counter and backbar footprint, but with
+       organized intake storage, cleaner presentation, and dedicated admin
+       surfaces. No walls, floor, tile grid, or labels. -->
+  <g transform="translate(20 -14)">
 
-  <!-- == CEILING FAN (same as base — works sometimes) =================== -->
+  <!-- == CEILING FAN =================================================== -->
   <ellipse cx="260" cy="44" rx="4" ry="1.5" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
   <line x1="260" y1="44" x2="260" y2="48" stroke="#3a3838" stroke-width="1.2"/>
   <ellipse cx="260" cy="49" rx="5" ry="2.5" fill="#333030" stroke="#252525" stroke-width="0.6"/>
@@ -13,139 +13,186 @@
   <polygon points="255,49 240,52 241,54 256,50" fill="#342c20" stroke="#2c2418" stroke-width="0.3" opacity="0.85"/>
   <polygon points="260,51 264,56 262,57 258,57 256,56" fill="#3a3020" stroke="#302818" stroke-width="0.3" opacity="0.8"/>
   <polygon points="260,47 264,43 262,42 258,42 256,43" fill="#342c20" opacity="0.7"/>
-  <line x1="263" y1="51" x2="264" y2="56" stroke="#4a4a52" stroke-width="0.5"/>
-  <circle cx="264" cy="57" r="0.8" fill="#4a4a52"/>
 
-  <!-- == HERO: RECEPTION COUNTER (same as base) ========================= -->
-  <polygon points="157,146 301,218 272,232 128,160"
-    fill="#3a3020" stroke="#2c2418" stroke-width="0.8"/>
-  <polygon points="128,160 272,232 272,258 128,186"
-    fill="#2c2418" stroke="#241c12" stroke-width="0.6"/>
-  <polygon points="301,218 272,232 272,258 301,244"
-    fill="#302818" stroke="#241c12" stroke-width="0.6"/>
-  <line x1="164" y1="172" x2="236" y2="244" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="200" y1="186" x2="254" y2="250" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="157" y1="146" x2="301" y2="218" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <!-- == BACKBAR: SAME FOOTPRINT, UPGRADED INTO RECORDS WALL ========== -->
+  <polygon points="220,104 346,167 322,179 196,116"
+    fill="#575149" stroke="#37322d" stroke-width="0.8"/>
+  <polygon points="196,116 322,179 322,228 196,165"
+    fill="#47423d" stroke="#302c28" stroke-width="0.7"/>
+  <polygon points="346,167 322,179 322,228 346,216"
+    fill="#35312d" stroke="#272421" stroke-width="0.6"/>
+  <line x1="196" y1="131" x2="322" y2="194" stroke="#2e2a27" stroke-width="0.7"/>
+  <line x1="196" y1="146" x2="322" y2="209" stroke="#2e2a27" stroke-width="0.7"/>
+  <line x1="196" y1="161" x2="322" y2="224" stroke="#2e2a27" stroke-width="0.7"/>
+  <line x1="232" y1="134" x2="232" y2="184" stroke="#2f2b27" stroke-width="0.5"/>
+  <line x1="268" y1="152" x2="268" y2="201" stroke="#2f2b27" stroke-width="0.5"/>
+  <line x1="300" y1="168" x2="300" y2="217" stroke="#2f2b27" stroke-width="0.5"/>
+  <line x1="220" y1="104" x2="346" y2="167" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
 
-  <!-- == CASH REGISTER (on counter, same) =============================== -->
-  <polygon points="225,155 249,167 240,171 216,159"
-    fill="#2a2830" stroke="#222028" stroke-width="0.5"/>
-  <polygon points="216,159 240,171 240,181 216,169"
-    fill="#222028" stroke="#1c1a22" stroke-width="0.4"/>
-  <polygon points="249,167 240,171 240,181 249,177"
-    fill="#26242c" stroke="#1c1a22" stroke-width="0.4"/>
-  <rect x="220" y="152" width="12" height="4" rx="0.5" fill="rgba(100,180,120,0.15)"/>
-  <line x1="224" y1="176" x2="234" y2="176" stroke="#c8a84c" stroke-width="0.8" opacity="0.3"/>
+  <!-- Top shelf: active folders and permit trays -->
+  <polygon points="202,122 220,131 220,135 202,126" fill="#c4b28e"/>
+  <polygon points="222,132 240,141 240,145 222,136" fill="#7fa26f"/>
+  <polygon points="242,142 260,151 260,155 242,146" fill="#5f84b7"/>
+  <polygon points="262,152 280,161 280,165 262,156" fill="#d19a53"/>
+  <polygon points="282,162 300,171 300,175 282,166" fill="#b05c50"/>
+  <polygon points="302,172 316,179 316,183 302,176" fill="#9da765"/>
+  <line x1="204" y1="125" x2="218" y2="132" stroke="rgba(70,55,34,0.3)" stroke-width="0.5"/>
+  <line x1="224" y1="135" x2="238" y2="142" stroke="rgba(40,55,36,0.28)" stroke-width="0.5"/>
+  <line x1="244" y1="145" x2="258" y2="152" stroke="rgba(36,46,68,0.26)" stroke-width="0.5"/>
 
-  <!-- == PICKLED-EGG JAR (on counter) =================================== -->
-  <polygon points="256,168 268,174 264,176 252,170" fill="#3a3828" opacity="0.4"/>
-  <polygon points="258,167 269,173 265,175 254,169" fill="#3c3a28" opacity="0.3"/>
-  <rect x="258" y="160" width="8" height="10" fill="#2a3030" opacity="0.9"/>
-  <ellipse cx="262" cy="170" rx="4" ry="1.5" fill="#2a3030" stroke="#222828" stroke-width="0.3"/>
-  <ellipse cx="262" cy="160" rx="4" ry="1.5" fill="#323a3a" stroke="#2a3030" stroke-width="0.3"/>
-  <rect x="259" y="162" width="6" height="6" fill="rgba(120,110,50,0.12)"/>
-  <ellipse cx="261" cy="164" rx="1.5" ry="1" fill="rgba(200,195,170,0.2)"/>
-  <ellipse cx="264" cy="166" rx="1.5" ry="1.2" fill="rgba(200,195,170,0.18)"/>
-  <ellipse cx="262" cy="159" rx="3.5" ry="1.2" fill="#3a3020" stroke="#302818" stroke-width="0.3"/>
+  <!-- Middle shelf: intake bins with label rails -->
+  <polygon points="202,138 220,147 220,152 202,143" fill="#d8d5ce" opacity="0.78"/>
+  <polygon points="222,148 240,157 240,162 222,153" fill="#bfc9d6" opacity="0.72"/>
+  <polygon points="242,158 260,167 260,172 242,163" fill="#c9b7a2" opacity="0.72"/>
+  <polygon points="262,168 280,177 280,182 262,173" fill="#d5d8c8" opacity="0.68"/>
+  <polygon points="282,178 300,187 300,192 282,183" fill="#c8c0af" opacity="0.7"/>
+  <polygon points="302,188 318,196 318,201 302,193" fill="#b7c2a8" opacity="0.68"/>
+  <line x1="205" y1="143" x2="216" y2="148" stroke="rgba(200,168,76,0.2)" stroke-width="0.7"/>
+  <line x1="245" y1="163" x2="256" y2="168" stroke="rgba(200,168,76,0.16)" stroke-width="0.7"/>
+  <line x1="285" y1="183" x2="296" y2="188" stroke="rgba(200,168,76,0.16)" stroke-width="0.7"/>
 
-  <!-- == STOOL (behind counter, same) =================================== -->
-  <line x1="228" y1="170" x2="230" y2="155" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="240" y1="170" x2="238" y2="155" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="224" y1="168" x2="230" y2="155" stroke="#3a3020" stroke-width="1"/>
-  <line x1="244" y1="168" x2="238" y2="155" stroke="#3a3020" stroke-width="1"/>
-  <line x1="227" y1="164" x2="241" y2="164" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="234" cy="153" rx="8" ry="4" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
+  <!-- Lower shelf: archive drawers -->
+  <polygon points="204,153 224,163 224,168 204,158" fill="#3a3b40"/>
+  <polygon points="226,164 246,174 246,179 226,169" fill="#34373b"/>
+  <polygon points="248,175 268,185 268,190 248,180" fill="#3a3d42"/>
+  <polygon points="270,186 290,196 290,201 270,191" fill="#36393d"/>
+  <polygon points="292,197 310,206 310,211 292,202" fill="#3c3f44"/>
+  <line x1="208" y1="160" x2="220" y2="166" stroke="rgba(200,168,76,0.18)" stroke-width="0.75"/>
+  <line x1="230" y1="171" x2="242" y2="177" stroke="rgba(200,168,76,0.14)" stroke-width="0.75"/>
+  <line x1="272" y1="192" x2="284" y2="198" stroke="rgba(200,168,76,0.14)" stroke-width="0.75"/>
 
-  <!-- == RECORDS WALL (UPGRADE) — replaces old shelf + bottles rack ===== -->
-  <!-- Large wall-mounted filing system with labeled sections -->
-  <!-- Back panel -->
-  <polygon points="264,86 378,143 354,155 240,98"
-    fill="#3a3838" stroke="#252525" stroke-width="0.7"/>
-  <polygon points="378,143 354,155 354,210 378,198"
-    fill="#333030" stroke="#252525" stroke-width="0.6"/>
-  <polygon points="240,98 354,155 354,210 240,153"
-    fill="#3a3838" stroke="#252525" stroke-width="0.7"/>
-  <!-- Shelf dividers -->
-  <line x1="240" y1="112" x2="354" y2="169" stroke="#2a2a2a" stroke-width="0.6"/>
-  <line x1="240" y1="126" x2="354" y2="183" stroke="#2a2a2a" stroke-width="0.6"/>
-  <line x1="240" y1="140" x2="354" y2="197" stroke="#2a2a2a" stroke-width="0.6"/>
-  <!-- Vertical dividers -->
-  <line x1="278" y1="104" x2="278" y2="159" stroke="#2a2a2a" stroke-width="0.4"/>
-  <line x1="316" y1="118" x2="316" y2="176" stroke="#2a2a2a" stroke-width="0.4"/>
+  <!-- Hanging intake trays -->
+  <polygon points="216,112 232,120 228,122 212,114" fill="#21262b"/>
+  <polygon points="212,114 228,122 228,139 212,131" fill="#242a30"/>
+  <polygon points="230,121 246,129 242,131 226,123" fill="#242a30"/>
+  <polygon points="226,123 242,131 242,148 226,140" fill="#262d33"/>
+  <polygon points="246,129 262,137 258,139 242,131" fill="#242a30"/>
+  <polygon points="242,131 258,139 258,154 242,146" fill="#262d33"/>
+  <line x1="220" y1="121" x2="220" y2="134" stroke="rgba(220,220,220,0.12)" stroke-width="0.8"/>
+  <line x1="236" y1="129" x2="236" y2="143" stroke="rgba(200,168,76,0.18)" stroke-width="0.8"/>
+  <line x1="252" y1="137" x2="252" y2="150" stroke="rgba(110,150,210,0.16)" stroke-width="0.8"/>
 
-  <!-- File folders (organized by color — labeled sections) -->
-  <!-- Top shelf: active contracts (manila) -->
-  <polygon points="244,100 270,113 270,112 244,99" fill="#4a4030" opacity="0.8"/>
-  <polygon points="246,101 268,113 268,110 246,98" fill="#3c3624" opacity="0.6"/>
-  <polygon points="282,108 308,121 308,112 282,99" fill="#3a3020" opacity="0.7"/>
-  <polygon points="284,107 306,119 306,110 284,98" fill="#342c1a" opacity="0.5"/>
-  <polygon points="320,122 346,135 346,126 320,113" fill="#2a3828" opacity="0.7"/>
-  <polygon points="322,121 344,133 344,124 322,112" fill="#243020" opacity="0.5"/>
-  <!-- Second shelf: intake records (color-coded tabs) -->
-  <polygon points="242,114 264,125 264,126 242,115" fill="#382a2a" opacity="0.7"/>
-  <polygon points="266,122 288,133 288,126 266,115" fill="#2a2a38" opacity="0.6"/>
-  <polygon points="290,128 312,139 312,132 290,121" fill="#302c24" opacity="0.6"/>
-  <polygon points="314,134 338,146 338,140 314,128" fill="#28302c" opacity="0.6"/>
-  <polygon points="340,142 354,148 354,142 340,136" fill="#3a3828" opacity="0.5"/>
-  <!-- Third shelf: personnel files -->
-  <polygon points="244,130 268,142 268,140 244,128" fill="#3c3020" opacity="0.7"/>
-  <polygon points="272,136 296,148 296,142 272,130" fill="#2c3020" opacity="0.6"/>
-  <polygon points="300,144 324,156 324,150 300,138" fill="#302c24" opacity="0.6"/>
-  <!-- Bottom shelf: archive boxes -->
-  <polygon points="242,144 262,154 262,156 242,146" fill="#302820" opacity="0.8"/>
-  <polygon points="264,150 284,160 284,162 264,152" fill="#2a2828" opacity="0.7"/>
-  <polygon points="286,156 306,166 306,168 286,158" fill="#302820" opacity="0.7"/>
+  <!-- Right-top lockbox -->
+  <polygon points="300,112 320,122 316,124 296,114" fill="#6b562c" stroke="#544320" stroke-width="0.35"/>
+  <polygon points="296,114 316,124 316,138 296,128" fill="#5a4826" stroke="#47381d" stroke-width="0.35"/>
+  <polygon points="320,122 316,124 316,138 320,136" fill="#4a3a1f" stroke="#3c3019" stroke-width="0.35"/>
+  <rect x="304" y="123" width="4" height="2" rx="0.3" fill="#c8a84c" opacity="0.24"/>
 
-  <!-- Colored tab labels (gold accent strip on edge) -->
-  <line x1="244" y1="100" x2="244" y2="112" stroke="#c8a84c" stroke-width="0.8" opacity="0.2"/>
-  <line x1="282" y1="108" x2="282" y2="119" stroke="#c8a84c" stroke-width="0.8" opacity="0.2"/>
-  <line x1="320" y1="122" x2="320" y2="133" stroke="#c8a84c" stroke-width="0.8" opacity="0.15"/>
+  <!-- == HERO: CHECKOUT COUNTER — SAME FOOTPRINT, CLEANER FINISH ====== -->
+  <polygon points="166,156 278,212 256,223 144,167"
+    fill="#305d50" stroke="#214438" stroke-width="0.8"/>
+  <polygon points="144,167 256,223 256,245 144,189"
+    fill="#714f35" stroke="#4d3522" stroke-width="0.7"/>
+  <polygon points="278,212 256,223 256,245 278,234"
+    fill="#533924" stroke="#3a281a" stroke-width="0.6"/>
+  <polygon points="166,156 278,212 278,217 166,161"
+    fill="#23483c" opacity="0.42"/>
+  <line x1="166" y1="156" x2="278" y2="212" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+  <line x1="144" y1="167" x2="256" y2="223" stroke="rgba(255,255,255,0.05)" stroke-width="0.35"/>
+  <line x1="172" y1="159" x2="270" y2="208" stroke="rgba(200,168,76,0.1)" stroke-width="0.7"/>
 
-  <!-- == CLIPBOARD STAND (on counter, organized intake) ================= -->
-  <!-- Post/stand -->
-  <line x1="178" y1="154" x2="178" y2="138" stroke="#3a3838" stroke-width="1.5"/>
-  <!-- Clipboard -->
-  <polygon points="172,138 184,144 180,146 168,140"
+  <!-- Customer-facing display shelf -->
+  <polygon points="162,186 235,222 235,233 162,197"
+    fill="#523823" stroke="#372718" stroke-width="0.45"/>
+  <polygon points="167,189 229,220 229,229 167,198"
+    fill="#2d1d12" stroke="#563d27" stroke-width="0.35"/>
+  <polygon points="172,191 184,197 184,202 172,196" fill="#ece6d7"/>
+  <polygon points="187,199 199,205 199,210 187,204" fill="#ce5d47"/>
+  <polygon points="202,206 214,212 214,217 202,211" fill="#e7bf56"/>
+  <polygon points="217,214 229,220 229,225 217,219" fill="#86b96a"/>
+  <line x1="166" y1="188" x2="232" y2="221" stroke="rgba(200,168,76,0.12)" stroke-width="0.7"/>
+
+  <!-- Register cluster: same anchor, expanded tooling -->
+  <polygon points="184,160 210,173 200,178 174,165"
+    fill="#2a2830" stroke="#1f1d25" stroke-width="0.5"/>
+  <polygon points="174,165 200,178 200,189 174,176"
+    fill="#212028" stroke="#191820" stroke-width="0.4"/>
+  <polygon points="210,173 200,178 200,189 210,184"
+    fill="#25242c" stroke="#191820" stroke-width="0.4"/>
+  <rect x="178" y="155" width="16" height="5.5" rx="0.7" fill="#15181a"/>
+  <rect x="180" y="156" width="12" height="3.5" rx="0.5" fill="rgba(100,180,120,0.18)"/>
+  <line x1="184" y1="157" x2="184" y2="159" stroke="rgba(100,180,120,0.28)" stroke-width="0.6"/>
+  <line x1="187" y1="157" x2="187" y2="159" stroke="rgba(100,180,120,0.22)" stroke-width="0.6"/>
+  <line x1="190" y1="157" x2="190" y2="159" stroke="rgba(100,180,120,0.22)" stroke-width="0.6"/>
+  <line x1="184" y1="184" x2="196" y2="184" stroke="#c8a84c" stroke-width="0.9" opacity="0.28"/>
+
+  <!-- Receipt printer -->
+  <polygon points="208,169 220,175 214,178 202,172" fill="#30343a" stroke="#22252a" stroke-width="0.35"/>
+  <polygon points="202,172 214,178 214,184 202,178" fill="#292d33" stroke="#1f2328" stroke-width="0.35"/>
+  <polygon points="220,175 214,178 214,184 220,181" fill="#24272d" stroke="#1f2328" stroke-width="0.35"/>
+  <rect x="206" y="167" width="5" height="3" rx="0.4" fill="#e5e1d3" opacity="0.72"/>
+
+  <!-- Contract tray -->
+  <polygon points="156,163 176,173 170,176 150,166" fill="#4b3a29" stroke="#342718" stroke-width="0.35"/>
+  <polygon points="150,166 170,176 170,181 150,171" fill="#392c1f" stroke="#2b2118" stroke-width="0.35"/>
+  <polygon points="152,166 168,174 168,178 152,170" fill="#d2cab8" opacity="0.65"/>
+  <line x1="154" y1="168" x2="166" y2="174" stroke="rgba(120,96,58,0.3)" stroke-width="0.45"/>
+
+  <!-- Pickled-egg jar -->
+  <ellipse cx="214" cy="171" rx="5" ry="2" fill="rgba(50,44,34,0.35)"/>
+  <rect x="210" y="161" width="8" height="10" fill="#2a3030" opacity="0.9"/>
+  <ellipse cx="214" cy="171" rx="4" ry="1.5" fill="#2a3030" stroke="#222828" stroke-width="0.3"/>
+  <ellipse cx="214" cy="161" rx="4" ry="1.5" fill="#323a3a" stroke="#2a3030" stroke-width="0.3"/>
+  <rect x="211" y="163" width="6" height="6" fill="rgba(120,110,50,0.12)"/>
+  <ellipse cx="213" cy="165" rx="1.4" ry="1" fill="rgba(200,195,170,0.2)"/>
+  <ellipse cx="216" cy="167" rx="1.4" ry="1.1" fill="rgba(200,195,170,0.18)"/>
+  <ellipse cx="214" cy="160" rx="3.5" ry="1.2" fill="#3a3020" stroke="#302818" stroke-width="0.3"/>
+
+  <!-- Phone / intercom -->
+  <polygon points="228,179 240,185 234,188 222,182" fill="#23272d" stroke="#1b1f24" stroke-width="0.35"/>
+  <polygon points="222,182 234,188 234,193 222,187" fill="#1d2127" stroke="#161a1f" stroke-width="0.35"/>
+  <line x1="228" y1="181" x2="235" y2="185" stroke="rgba(120,170,220,0.24)" stroke-width="0.5"/>
+
+  <!-- Clipboard stand -->
+  <line x1="160" y1="170" x2="160" y2="149" stroke="#3a3838" stroke-width="1.4"/>
+  <polygon points="154,149 166,155 162,157 150,151"
     fill="#3c3020" stroke="#2c2418" stroke-width="0.3"/>
-  <!-- Paper lines -->
-  <line x1="170" y1="140" x2="180" y2="145" stroke="rgba(200,168,76,0.08)" stroke-width="0.3"/>
-  <line x1="170" y1="142" x2="178" y2="146" stroke="rgba(200,168,76,0.06)" stroke-width="0.3"/>
+  <line x1="153" y1="151" x2="162" y2="156" stroke="rgba(200,168,76,0.12)" stroke-width="0.35"/>
+  <line x1="153" y1="153" x2="160" y2="156.5" stroke="rgba(200,168,76,0.08)" stroke-width="0.35"/>
 
-  <!-- == GUILD LICENSE (on left wall — same position) =================== -->
-  <polygon points="118,100 134,107 128,110 112,103"
+  <!-- == WALL DOCUMENTS =============================================== -->
+  <!-- Guild license -->
+  <polygon points="120,108 136,116 130,119 114,111"
     fill="#2c2818" stroke="#241e12" stroke-width="0.4"/>
-  <polygon points="112,103 128,110 128,118 112,111"
+  <polygon points="114,111 130,119 130,129 114,121"
     fill="#26221a" stroke="#1e1a12" stroke-width="0.3"/>
-  <polygon points="134,107 128,110 128,118 134,115"
+  <polygon points="136,116 130,119 130,129 136,126"
     fill="#2c2818" stroke="#1e1a12" stroke-width="0.3"/>
-  <!-- Frame accent -->
-  <line x1="118" y1="100" x2="134" y2="107" stroke="#c8a84c" stroke-width="0.4" opacity="0.15"/>
-  <!-- Stamp/seal -->
-  <circle cx="124" cy="113" r="2" fill="rgba(200,168,76,0.08)" stroke="#c8a84c" stroke-width="0.3" opacity="0.2"/>
+  <line x1="120" y1="108" x2="136" y2="116" stroke="#c8a84c" stroke-width="0.4" opacity="0.15"/>
+  <circle cx="126" cy="123" r="2" fill="rgba(200,168,76,0.08)" stroke="#c8a84c" stroke-width="0.3" opacity="0.2"/>
 
-  <!-- == CORK BOARD (on right wall — now more organized) ================ -->
-  <polygon points="336,100 362,113 356,116 330,103"
+  <!-- Notice board -->
+  <polygon points="316,118 342,131 336,134 310,121"
     fill="#3a3020" stroke="#302818" stroke-width="0.4"/>
-  <polygon points="330,103 356,116 356,128 330,115"
+  <polygon points="310,121 336,134 336,148 310,135"
     fill="#342c20" stroke="#2c2418" stroke-width="0.3"/>
-  <polygon points="362,113 356,116 356,128 362,125"
+  <polygon points="342,131 336,134 336,148 342,145"
     fill="#3a3020" stroke="#2c2418" stroke-width="0.3"/>
-  <!-- Pinned documents (neater than base) -->
-  <polygon points="334,106 344,111 344,116 334,111" fill="#3c3828" opacity="0.4"/>
-  <polygon points="346,112 354,116 354,120 346,116" fill="#383428" opacity="0.35"/>
-  <polygon points="336,114 348,120 348,124 336,118" fill="#3a3828" opacity="0.3"/>
-  <!-- Pins -->
-  <circle cx="338" cy="107" r="0.6" fill="#c8a84c" opacity="0.3"/>
-  <circle cx="350" cy="113" r="0.6" fill="#8a3030" opacity="0.3"/>
-  <circle cx="340" cy="115" r="0.6" fill="#c8a84c" opacity="0.25"/>
+  <polygon points="314,124 324,129 324,133 314,128" fill="#d6cfbf" opacity="0.35"/>
+  <polygon points="326,130 334,134 334,138 326,134" fill="#b8c6d5" opacity="0.32"/>
+  <polygon points="316,133 328,139 328,143 316,137" fill="#c9c2af" opacity="0.28"/>
+  <circle cx="318" cy="125" r="0.6" fill="#c8a84c" opacity="0.3"/>
+  <circle cx="330" cy="131" r="0.6" fill="#8a3030" opacity="0.3"/>
+  <circle cx="320" cy="134" r="0.6" fill="#c8a84c" opacity="0.25"/>
 
-  <!-- == FILING BOX (replaces cardboard box — organized) ================ -->
-  <polygon points="104,188 118,195 112,198 98,191"
+  <!-- == FLOOR ORGANIZATION =========================================== -->
+  <!-- Labeled intake crate -->
+  <polygon points="112,206 126,213 120,216 106,209"
     fill="#2a3028" stroke="#222820" stroke-width="0.4"/>
-  <polygon points="98,191 112,198 112,208 98,201"
+  <polygon points="106,209 120,216 120,228 106,221"
     fill="#243028" stroke="#1e261e" stroke-width="0.4"/>
-  <polygon points="118,195 112,198 112,208 118,205"
+  <polygon points="126,213 120,216 120,228 126,225"
     fill="#1e261e" stroke="#1e261e" stroke-width="0.4"/>
-  <!-- Label -->
-  <rect x="100" y="196" width="6" height="2" rx="0.2" fill="rgba(200,168,76,0.08)"/>
+  <rect x="109" y="214" width="6" height="2" rx="0.2" fill="rgba(200,168,76,0.12)"/>
+
+  <!-- Small lockbox by the records wall -->
+  <polygon points="252,185 266,192 260,195 246,188"
+    fill="#2e4c59" stroke="#223745" stroke-width="0.35"/>
+  <polygon points="246,188 260,195 260,204 246,197"
+    fill="#263f4a" stroke="#1b2d35" stroke-width="0.35"/>
+  <polygon points="266,192 260,195 260,204 266,201"
+    fill="#223743" stroke="#1b2d35" stroke-width="0.35"/>
+  <rect x="252" y="194" width="4" height="2" rx="0.3" fill="#c8a84c" opacity="0.24"/>
+
+  </g>
 </svg>

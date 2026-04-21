@@ -8,8 +8,10 @@ Build a modern idle-game-style guidance system that:
 
 - is always present during early and midgame
 - always offers the next meaningful goal
+- behaves like a modern idle-game guide rail where the player is continually pointed at the next useful action, spend, or payoff until the skyscraper HQ establishes the repeatable endgame
 - acts as a constant recommendation rail through the full bodega and Porter's playthrough instead of fading after the opening
 - explains every player-facing upgrade, room, and feature introduction through rewarded objectives instead of stuffing permanent prose into steady-state panels
+- starts a new campaign from a true zero-state onboarding baseline with no prebuilt gameplay rooms, no pre-existing operators, and a fast first-use bootstrap
 - tells the player which room unlock, room upgrade, or systems investment should come next when multiple valid options exist
 - uses narrative framing so the guidance feels like an authored hand, not just a checklist
 - continues across the full headquarters arc until the repeatable skyscraper endgame is firmly established
@@ -24,11 +26,13 @@ The intended model is closer to modern idle and incremental games than to a shor
 - every meaningful system introduction is attached to an objective
 - every player-facing upgrade unlock is attached to an objective or explicit follow-up objective step
 - every major room and room-upgrade band has a recommended first-purchase path rather than leaving new players to infer build order from static UI text
+- every room unlock and every room upgrade the player is expected to buy for progression is explicitly tutorialized as part of the intended balance rail
 - every objective explains why the system matters in plain language
 - objectives pay out meaningful rewards on completion
 - objective rewards should often tee up the next recommendation so the player feels a continuous push forward
 - objective chains continue as new rooms, upgrades, mechanics, and buildings unlock
 - the player should rarely be without a recommended next step before the repeatable skyscraper endgame
+- the "next step" can be small or large: finish a raid, secure the next contract, unlock a room, buy an upgrade, equip a weapon, sell excess gear, or make the next balance-critical spend
 
 The guidance layer should carry the long-form explanation currently leaking into room panels, room culture blurbs, and other steady-state UI surfaces.
 
@@ -56,6 +60,8 @@ The game should feel like it always has a live narrative operator in the player�
 
 That guidance should begin in the opening HQ, continue through Porter's, continue through the skyscraper climb, and only relax once the player has reached the repeatable skyscraper endgame loop.
 
+The tutorial is therefore not just an opener. It is the campaign guide layer through the entire climb into the skyscraper headquarters, where it can finally taper from prescriptive tutoring into long-run strategic nudges for the endless-style endgame.
+
 The system exists so that steady-state UI can stay lean:
 
 - room panels explain current state and available actions
@@ -70,6 +76,7 @@ The system exists so that steady-state UI can stay lean:
 5. **Lean steady-state UI.** Explanatory prose should migrate out of permanent room and category panels whenever guidance can carry it better.
 6. **Save-safe and stage-aware.** Objective progress, reward claims, retirements, and chain advancement must survive save/load, relocation, and building changes.
 7. **Do not over-hand-hold forever.** Guidance stays strong through the climb, then relaxes once the player is established in the repeatable skyscraper endgame.
+8. **Start blank, bootstrap fast.** A new campaign should not begin with already-solved room or roster state; the opening chain must build the first room, first operator, and first workable loop quickly enough that "from scratch" feels motivating rather than stalled.
 
 ## Current State
 
@@ -109,15 +116,33 @@ It should:
 
 This is the replacement home for much of the “why this matters” explanation that should leave room panels.
 
+### Blank-Slate Opening Contract
+
+The opening of a new campaign should be treated as part of the authored guidance rail, not as a pre-solved baseline.
+
+Rules:
+
+- the canonical player-facing start state has no pre-existing operators
+- the canonical player-facing start state has no prebuilt gameplay-functional rooms or purchased room upgrades
+- the canonical player-facing start state may still show the building's physical spaces and designated room slots, but those spaces are not gameplay-live rooms until unlocked through the guide rail
+- the tutorial owns the bootstrap order for the first room unlock, first operator recruit, first staffed capability, and first upgrade purchase
+- the opening must still get the player to meaningful action quickly; "start from scratch" is a pacing rule, not permission for a slow cold open
+- early objective rewards, starting currency, and unlock costs should be tuned together so the tutorial sequence doubles as an intentional balance pass instead of a separate teaching layer
+- if the fiction still needs the bodega's physical spaces to exist on day one, they should read as unfitted or inactive shells until the guided chain makes them gameplay-live rather than appearing as already-solved room progression
+- starter spaces should stay visually present while their room art and room-dependent UI remain hidden or locked until the relevant guide milestone unlocks them
+- designated authored slots should remain canonical. When a layout slot names a starter room identity, the opening guide should unlock that room into its intended slot rather than allowing arbitrary starter-room placement across the shell
+- staff hiring is part of the mandatory opening rail, not a hidden baseline. Staff-gated rooms should introduce the hiring and assignment flow through explicit objectives before those rooms are expected to carry core progression
+- opening pacing may seed one-time starter candidate pools when the first recruitment room or first staff-gated room becomes gameplay-live, but the guide should still make the player perform the actual hire rather than granting free staff invisibly
+
 ### Objective Chains
 
 The system should support long-form authored chains, not isolated tutorial flags.
 
 Examples:
 
-- open first room -> staff it -> use its feature -> buy its first upgrade
+- start with an unfitted bodega shell -> unlock first room -> recruit first operator -> staff the first workable loop -> buy the first room upgrade
 - stabilize the bodega -> unlock the next support room -> buy the first high-leverage upgrade -> use the newly enabled loop
-- meet recruiting -> recruit first operator -> fill roster pressure -> resolve first replacement tension
+- meet recruiting -> recruit first operator -> fill first roster pressure -> resolve first replacement tension
 - relocate to Porter's -> learn floor switching -> unlock the first recommended Porter's room upgrade path -> use the new management and staging pressure correctly
 - reach skyscraper -> unlock first new floor -> learn expansion cadence -> learn floor-specific consequences -> stabilize repeatable endgame loop
 
@@ -128,6 +153,135 @@ Every chain should have:
 - reward rules
 - next-step handoff
 
+#### Canonical Bodega Opening Rail
+
+The bodega opening should be authored around the first stable loop, not merely the first technically legal sequence of actions. The guide must explicitly weave room unlocks, recruiting, contracts, raids, recovery, staffing, and the first upgrade into one continuous bootstrap chain.
+
+Recommended canonical order:
+
+1. unlock the `Counter` in its authored starter slot
+2. when the first recruitment room becomes gameplay-live, seed a one-time starter recruit candidate pool so the player does not wait on normal visitor cadence
+3. recruit the first operator
+4. recruit the second operator
+5. secure the first contract
+6. prepare and launch the first raid
+7. resolve the first raid return and use that payoff to introduce recovery pressure
+8. unlock the `Dining Area` in its authored starter slot so the loop becomes sustainable
+9. introduce the first staff-gated room through a hireable staff candidate seed, not a free invisible grant
+10. hire and assign the first reception staff member
+11. unlock and activate the `Register` in its authored starter slot
+12. introduce the first guided upgrade purchase
+13. unlock `Supply Closet` later as the next logistics-support step rather than part of the minimum first loop
+
+Design rules for this opening rail:
+
+- the guide should teach the real interaction flow, not skip it with invisible state grants
+- one-time candidate seeding is allowed to fix bootstrap pacing, but the player should still perform recruit and hire actions personally
+- contract selection, raid launch, raid return, and first recovery should all appear as explicit guide beats, not assumed background systems
+- the first stable loop should include enough recruiting, raiding, recovery, and storefront setup that the player understands how the guild actually functions before the guide broadens into recommendation mode
+- opening objective rewards should function as a reward ladder: each early payout should materially help fund the next guided action instead of sitting beside it as unrelated bonus currency
+
+#### First Upgrade Contract
+
+The first guided upgrade in the bodega opening should be `upgrade/room/dining_area:first_aid_station`.
+
+Why this is the right first-upgrade contract under the current gameplay rules:
+
+- it matches the new authored opening order, where `Dining Area` is introduced before `Register`
+- it is the cheapest early room upgrade on the opening path at `130 cash / 4 reputation` in `content/templates/upgrades.ts`
+- it reinforces the first real pain point the player experiences after the first raid return: recovery pressure
+- it improves recovery directly instead of teaching a more abstract economy or attraction modifier before the player has felt the need for it
+- it does not require staff to become meaningful, so it remains compatible with the zero-staff opening rail
+
+The early income-upgrade band should still exist, but it should follow this first recovery upgrade rather than replacing it. After the player understands recovery and has staffed the `Register`, the next guided upgrade band can move into:
+
+- `upgrade/room/counter:hot_coffee`
+- `upgrade/room/register:records_wall`
+- `upgrade/building/bodega:frontage`
+
+Those later upgrades are better treated as the first explicit income-and-attraction recommendation band, not as the first upgrade the player ever buys.
+
+#### Opening Reward Ladder
+
+Opening rewards should be derived deterministically from the next guided goal rather than authored as disconnected bounty amounts.
+
+Rules:
+
+- each opening objective should ask: "what does the player need in order to credibly start or complete the next guided step?"
+- rewards may fully fund the next action when the design wants an idle-game-style instant payoff beat
+- rewards may also provide only the next meaningful tranche when the design wants the player to combine the reward with contract income, loot sales, or another guided action
+- early rewards should be tuned so players feel continuous forward motion even if they make one or two reasonable side spends between milestones
+- the reward ladder should be derived from current unlock costs, staffing costs, contract entry pressure, and the intended first-upgrade timing window rather than from arbitrary round numbers
+- when the next milestone is blocked by a specific missing requirement, the reward should usually cover that requirement directly or bring the player visibly within reach of it
+
+Recommended opening-floor targets under the current bodega rules:
+
+- the opening treasury floor only needs to cover the first contract filing buffer, because `Counter` placement and recruit acceptance are currently free actions
+- the first staff-hire floor should account for `staff:reception` hiring cost, which is currently `33 cash`
+- the first-upgrade floor should account for `upgrade/room/dining_area:first_aid_station`, which is currently `130 cash` and `4 reputation`
+- the first-raid-return objective should therefore normalize the player toward a treasury floor high enough to reach `First-Aid Station` immediately or after one small additional spend, even if the contract outcome was merely acceptable rather than ideal
+- early reward logic should top the player up to these floor targets rather than paying a single flat amount regardless of current treasury, outcome variance, or already-completed side gains
+
+Recommended initial numeric targets for the first implementation pass:
+
+- opening / inheritance start: normalize to roughly `30 cash` so the player can afford an opening contract filing without the rail feeling brittle
+- after first raid return: normalize to at least `100 cash` and `4 reputation` so the player can unlock recovery, hire reception, and stay within visible reach of the first upgrade
+- after first reception hire or `Register` activation: normalize to roughly `145 cash` so the player can buy `First-Aid Station` immediately while retaining a small treasury buffer
+
+These are opening-balance starter targets, not immutable forever numbers. They should move only if the underlying costs, bid envelope, or early-upgrade ordering changes.
+
+#### Cold-Start Pacing Contract
+
+The early game should move the player through bodega and Porter's quickly because the long-run strategic game lives in the skyscraper. The goal is not to stretch the opening for its own sake. The goal is to keep the player continuously acting, continuously learning, and continuously unlocking the next useful thing without tipping into informational overload.
+
+Initial pacing targets for implementation and playtest:
+
+- first guided action available immediately on new game
+- first recruit candidate visible within the first `2-3` objectives
+- first recruit accepted within roughly the first `5` minutes of active play
+- first contract secured within roughly the first `10` minutes of active play
+- first raid launched within roughly the first `15` minutes of active play
+- first meaningful stable loop established within roughly the first `20-30` minutes of active play
+- bodega campaign completed quickly enough that a successful first-session player can reasonably expect to reach Porter's without the opening feeling like the whole game
+- Porter's should expand the player's understanding of staffing, training, recovery, staging, and room specialization, but it should still feel like a guided ramp into skyscraper freeform rather than a second long tutorial campaign
+
+Evaluation rules:
+
+- early and midgame should feel like a continuous chain of actions, not long idle waits between teachable moments
+- if players are stalling because the next room, hire, contract, or upgrade is too far away, pacing has failed
+- if players are receiving multiple new systems before they have used the previous one at least once, pacing has also failed
+- these targets are a starting envelope for playtesting and iteration, not a permanent balance truth
+
+#### Early Narrative Event Seeding
+
+The early campaign should not rely on the persistent card alone. A small number of seeded narrative events should be used to frame the bootstrap and teach new consequence categories.
+
+Required early beats:
+
+- inheritance / desperate-start framing for the handed-down bodega and the decision to form the guild
+- first-contract briefing
+- first meaningful setback or consequence event after the player has enough context to understand it
+- first raid return payoff / fallout framing
+
+Rules:
+
+- these beats should use the same authored guidance ladder rather than living as disconnected one-off interruptions
+- the bodega presenter anchor should default to `presenter/assistant` unless a more specific domain presenter is deliberately introduced
+- seeded narrative events should be deterministic in the opening path so the guide teaches a stable sequence before the sandbox of later systems opens up
+- incidents that teach a new category of risk should be surfaced as explicit guide beats, not left to feel like random punishment
+
+#### AI Feature Gating During Guided Progression
+
+Optional AI-generated surfaces should stay disabled during the strict opening rail until the player is far enough along that generated variety cannot undermine the guide's authored teaching sequence.
+
+Rules:
+
+- the game must remain fully playable with authored content only
+- opening-path guidance should assume authored copy and deterministic identity surfaces, not generated output
+- if the player manually enables AI generation from the start, the opening rail should still override that toggle and suppress optional AI-generated visitor identities and incident framing until the opening bootstrap is complete and the player has reached the first stable bodega loop
+- once AI surfaces are allowed, they should vary presentation only; they must not replace gameplay-authoritative completion checks, objective ordering, or reward logic
+- when AI is disabled or unavailable, the runtime should fall back cleanly to authored copy rather than changing progression behavior
+
 The chain design should treat the bodega and Porter's bands as one continuous hand-held campaign, not as separate tutorial eras. The skyscraper handoff is the final payoff of that campaign, not the point where guidance first becomes strategic.
 
 ### Endgame Taper
@@ -136,6 +290,7 @@ The system should remain active through the skyscraper climb, but its tone and d
 
 Rules:
 
+- before the skyscraper endgame is established, the player should always have a recommended next goal, even when that goal is as small as equipping a new weapon or selling recovered loot
 - the player still gets new-goal guidance for fresh systems and major expansion milestones
 - the system stops feeling like constant hand-holding once the repeatable skyscraper loop is established
 - strategic reminders, optional longer-term goals, and prestige-scale suggestions can remain, but the player should not feel tutorial-led forever
@@ -166,9 +321,11 @@ This map is the safety contract. The persistent system is not done unless it can
 The system must be able to introduce:
 
 - every new headquarters phase
+- every first-time room unlock required to turn an empty starting headquarters into a functioning guild
 - every room family the player is expected to use
 - every room upgrade path the player can purchase
 - the recommended order of first purchases within the bodega and Porter's room / upgrade ladders
+- the fact that room unlock order and room-upgrade order are part of balance, not optional flavor copy
 - floor expansion milestones
 - room-specific first-use expectations
 - relocation readiness and the reason the next building move is worth making now
@@ -177,6 +334,7 @@ The system must be able to introduce:
 
 The system must be able to introduce:
 
+- zero-roster startup and first operator acquisition
 - first recruit
 - first staff hire
 - first replacement pressure
@@ -189,6 +347,8 @@ The system must be able to introduce:
 
 - posted-contract bidding
 - active-operation monitoring
+- finishing the current raid and converting it into the next recommended operational step
+- securing the next contract when the active operation resolves
 - opportunity surfaces
 - result review and consequence understanding
 - newer operational systems added after the HQ shell is stable
@@ -197,7 +357,11 @@ The system must be able to introduce:
 
 The system must be able to introduce:
 
+- equipping newly acquired gear when that is the best immediate progression step
 - market use
+- one-time manual item selling so the player learns how liquidation works at all
+- one-time loot-filter introduction so the player understands how repetitive junk cleanup can be automated
+- selling obsolete gear or loot when that is the recommended economy action, using the same source-of-truth filter the runtime uses for loot automation rather than a separate tutorial heuristic
 - workshop / fabrication use
 - recipe unlocks
 - spending tradeoffs
@@ -231,6 +395,82 @@ Each objective should define:
 - escalation mode rules: persistent, focused, blocking
 - retirement / skip / replacement rules
 
+### Recommendation Authority
+
+Recommendation authority is hybrid.
+
+The system must not rely on pure authored priority metadata alone, and it must not let runtime heuristics freely choose the campaign order. The intended model is:
+
+- authored milestone order defines the canonical teaching rail
+- runtime completion signals determine whether the current milestone is already satisfied
+- runtime recommendation logic chooses the best concrete action inside the current milestone's allowed recommendation set
+
+#### Authored Milestone Rail
+
+The campaign owns an explicit ordered rail of milestone objectives such as:
+
+- first contract
+- first recruit
+- first staffed workable loop
+- first upgrade
+- relocation readiness
+- first Porter's investment band
+- skyscraper arrival and first stable expansion loop
+
+These milestones define what the game is teaching now. Runtime logic may not skip ahead to teach a later system unless the current milestone has already been satisfied and advanced.
+
+#### Completion Predicate Contract
+
+Each milestone must have an authoritative completion predicate driven by gameplay state or typed gameplay events.
+
+Rules:
+
+- if the player has already satisfied the milestone, the guide should auto-complete or supersede it instead of forcing a replay of the expected action
+- completion checks must be gameplay-authoritative, not inferred from local UI state
+- the milestone rail should tolerate out-of-order player action without losing the authored campaign sequence
+
+#### Dynamic Recommendation Slots
+
+A milestone may expose a bounded allowed action set rather than one single hardcoded button path.
+
+Examples:
+
+- `secure_contract`
+- `finish_active_raid`
+- `equip_operator`
+- `sell_loot`
+- `buy_recommended_upgrade`
+- `assign_staff`
+- `activate_room`
+
+Runtime recommendation logic may choose the best currently valid action from that bounded set based on live state. Runtime recommendation logic may not recommend arbitrary actions outside the current milestone's authored allowance.
+
+#### Arbitration Rule
+
+The tie-break rule is:
+
+- authored milestone order decides which campaign phase is currently active
+- runtime decides which exact actionable recommendation to surface within that active milestone
+- runtime urgency may auto-complete, skip, or collapse already-satisfied substeps
+- runtime urgency may not silently replace the authored milestone rail with a different progression order
+
+In short:
+
+- authoring owns what the player is being taught now
+- runtime owns how the current teachable step is concretized against live state
+
+#### Auto-Completion And Skip Behavior
+
+The guide should behave like an exact authored rail that tolerates players getting ahead of it.
+
+Rules:
+
+- if a key milestone is already complete when it becomes current, mark it complete immediately and hand off to the next milestone
+- if a player partially satisfies a later recommendation early, preserve that state and avoid re-teaching it as mandatory busywork
+- the system may narrate an auto-completion or use a lightweight handoff, but it should not force the player backward into already-solved tutorial work
+
+This model keeps campaign order authored while still allowing the runtime to behave intelligently when the player front-runs the guide.
+
 ### Coverage Matrix
 
 The implementation must maintain an explicit coverage matrix mapping shipped player-facing upgrades and feature unlocks to guidance objectives.
@@ -240,6 +480,7 @@ At minimum, the matrix should answer:
 - which objective introduces this upgrade or feature
 - which reward is attached to that teaching step
 - what the intended recommendation order is relative to sibling upgrades or unlocks
+- what opening-state assumption the step depends on, including whether it is part of the mandatory bootstrap path from zero rooms / zero operators
 - what progression stage gates it
 - whether the step is persistent-only, focused, or blocking
 - whether the step has already been superseded by a later chain
@@ -335,6 +576,7 @@ Rules:
 - progress state must be save-safe
 - objective completion must be driven by authoritative gameplay state or typed gameplay events, not by UI guesswork
 - reward grants must route through authoritative systems
+- the canonical new-game path must start from zero recruited operators and zero gameplay-functional built rooms / purchased room upgrades unless a later product doc explicitly changes that contract
 - relocation and building upgrades must be able to retire, replace, or advance objective chains cleanly
 - preview / dev / browser-test modes need explicit rules for suppression, seeding, and deterministic advancement
 
@@ -346,6 +588,7 @@ The UI owns presentation and typed intents only. Objective completion and reward
 
 - Inventory every current "why this matters," onboarding, first-use explanation, and tutorial beat.
 - Inventory every shipped player-facing upgrade and feature unlock that needs an explanatory step.
+- Inventory every room, upgrade, operator, and resource grant the current start state gives the player for free, and decide which of those should become guided bootstrap beats instead.
 - Inventory the intended recommended room and upgrade order for the bodega and Porter's, including where the current product leaves that order implicit.
 - Group them into one continuous campaign arc:
   - opening HQ
@@ -360,12 +603,14 @@ Exit criteria:
 
 - a concrete feature-by-feature coverage list exists
 - a concrete upgrade-by-upgrade coverage list exists
+- the opening zero-state bootstrap path is explicitly defined
 - no major system is left without an intended teaching moment
 
 ### Phase 1 - Objective Data And Runtime Contract
 
 - Define the objective record schema and progression-chain schema.
 - Define authoritative completion signals and reward-grant routing.
+- Define the canonical zero-state new-game contract and the bootstrap rewards / costs that move the player from empty HQ plus zero operators into the first stable loop quickly.
 - Define objective replacement / retirement rules for relocation and building advancement.
 - Define how recommendation-order metadata is authored so the runtime can say "do this upgrade next" without putting gameplay authority in React.
 
@@ -396,14 +641,17 @@ Exit criteria:
 ### Phase 4 - Bodega And Porter's Coverage
 
 - Convert the bodega and Porter's teaching surface into rewarded objective chains.
-- Author the full bodega recommendation rail so a new player is continuously guided through the intended room and room-upgrade order.
+- Author the full bodega recommendation rail so a new player is continuously guided from zero rooms and zero operators through the intended room and room-upgrade order.
 - Author the Porter's recommendation rail so new rooms, staffing pressure, training, recovery, staging, and workshop investment are introduced in a deliberate order.
+- Ensure every room upgrade that is part of the intended progression path is taught, rewarded, and balance-authored through the same chain rather than left as an unguided shop choice.
 - Remove duplicated explanation from steady-state UI only after equivalent or better guidance coverage exists.
 
 Exit criteria:
 
 - a new player can move through the full bodega and Porter's campaign with a constant guided next step
 - the system can explicitly recommend first upgrade order instead of only describing unlocked options
+- the opening tutorial and the early balance envelope are aligned rather than tuned as separate layers
+- the guide rail can continuously hand the player from one concrete action to the next, including raid completion, contract selection, equipment changes, and sell / spend decisions
 
 ### Phase 5 - Skyscraper Coverage
 
@@ -447,10 +695,122 @@ Exit criteria:
 ## Risks
 
 - **Noise fatigue.** If rewards and reminders are too constant without pacing discipline, the system will feel spammy instead of helpful.
+- **Cold-start drag.** A zero-state opening can feel punitive if the first room, first recruit, and first actionable loop take too long to arrive.
 - **Authority drift.** If objective completion is inferred from UI state instead of gameplay-authoritative signals, save safety and determinism will degrade.
 - **Layout collision.** A persistent guide card can fight the event log or the new cascade shell if coexistence is not designed deliberately.
 - **Content debt.** This plan is partly a content-production plan. A weak objective catalog will undermine the architecture.
 - **Panel backslide.** If the guidance system slips, teams will be tempted to stuff explanation back into room and management panels.
+
+## Open Questions And Unresolved Decisions
+
+These questions must be resolved before implementation claims can be considered closed. Some are hard product decisions; others are required artifacts or dependencies that the rollout phases must name explicitly.
+
+### Opening Contract
+
+1. **Zero-roster opening vs. bodega baseline.**
+   The plan currently proposes a zero-state opening with no pre-existing operators, but the product canon and shipped bootstrap have historically started the player in a working bodega with a small starter roster. If the opening contract changes, world canon, bootstrap data, pacing targets, and save migration behavior all need to change together. If the product keeps physical bodega spaces on day one, the plan must state whether those spaces are merely present as shell/slot identity or already gameplay-functional rooms.
+
+2. **Day-one room semantics.**
+   If the bodega still physically exists on day one, what does the player actually start with?
+   - default room slots only
+   - inactive room shells
+   - some gameplay-live rooms and some inactive rooms
+     The answer affects bootstrap data, room activation rules, art states, and the meaning of the HQ environment contract.
+
+3. **Cold-start pacing target.**
+   A blanker opening is only acceptable if the plan defines concrete pacing goals:
+   - time or actions to first meaningful loop
+   - objectives before first contract
+   - objectives before first recruit
+   - first actionable spend window
+     Phase 4 cannot be evaluated on feel alone.
+
+### Recommendation Authority
+
+4. **Who owns "recommended next."**
+   The plan currently mixes authored recommendation order with live-state recommendations such as finishing a raid, selling excess gear, or making a balance-critical spend. It must explicitly choose one of:
+   - authored ordering only
+   - runtime recommendation only
+   - hybrid authored rail plus runtime arbitration
+
+5. **Hybrid arbitration rule.**
+   If recommendation authority is hybrid, what wins when authored teaching order and live-state urgency disagree? The plan needs an explicit tie-break rule so the runtime does not silently become the actual design authority.
+
+### UI And Shell Coexistence
+
+6. **Persistent guide card lane.**
+   The plan acknowledges coexistence risk but does not assign an actual lane. The card must have a deliberate placement contract relative to:
+   - HQ cascade shell
+   - Operations cascade shell
+   - event log
+   - interruption surfaces
+     This needs a concrete desktop placement rule and a narrow-screen fallback rule before Phase 2.
+
+7. **Movable vs. fixed placement.**
+   The current wording says the guide card may be movable or intentionally placeable. That is not a product decision. The plan should explicitly say whether the card is fixed-position UI, user-movable UI, or panel-stack-aware contextual UI.
+
+8. **HQ/Operations shell prerequisite.**
+   The plan assumes it can integrate with the final shell model, but HQ and Operations shell decisions must actually be stable first. Phase 2 should name the final coexistence dependency instead of assuming the shell contract will be settled in time.
+
+### Objective Lifecycle And Endgame Taper
+
+9. **Taper trigger for the repeatable skyscraper loop.**
+   "Once the repeatable skyscraper loop is established" is currently a slogan, not a signal. The plan needs an authoritative condition such as:
+   - authored chain-completion id
+   - floor-count threshold
+   - successful-contract threshold
+   - new long-run-state flag derived from runtime progression
+
+10. **Objective retirement, replacement, and reward-claim rules.**
+    The plan names retirement and replacement as required, but it does not say:
+    - what happens to completed-but-unclaimed rewards
+    - whether retired objectives ever re-surface after save/load
+    - whether replacement is silent, narrated, or interruption-backed
+    - whether a superseded objective is marked completed, retired, or skipped
+
+11. **Objective lifecycle model.**
+    The plan should define the actual states an objective can occupy, for example:
+    - active
+    - completed awaiting claim
+    - claimed
+    - retired
+    - superseded
+    - skipped
+      Without that, relocation and migration behavior remain ambiguous.
+
+### Coverage, Migration, And Enforcement
+
+12. **Coverage matrix format and enforcement.**
+    The plan says the system is incomplete if a live player-facing upgrade or feature is absent from the coverage matrix, but it does not specify:
+    - where the matrix lives
+    - whether it is authored data, generated output, or both
+    - what test or CI rule fails when coverage is missing
+
+13. **Preview, sandbox, and dev-state rules.**
+    The plan explicitly punts suppression, seeding, and deterministic advancement rules. It needs to define how the persistent guidance system behaves in:
+    - real new game
+    - load of an existing save
+    - preview / sandbox mode
+    - dev-console-forced states
+    - browser automation and deterministic test harnesses
+
+14. **Migration path for existing campaigns.**
+    Players with mid-run saves need a documented first-load rule. The plan should state whether migration:
+    - retroactively grants earlier chain rewards
+    - marks earlier stages as superseded
+    - starts at the current building/stage entry objective
+    - replays or skips onboarding beats
+
+15. **Phase 3 mapping artifact.**
+    The rollout currently audits existing beats and later re-threads them, but it does not require an intermediate checked mapping of current coachmarks, briefings, interruptions, and prose explanations to target objective ids or explicit deletion. Without that artifact, coverage claims are easy to overstate.
+
+### Balance, Content, And Narrative
+
+16. **Balance-pass ownership.**
+    The plan says rewards, opening currency, and unlock costs should be tuned together, but it does not explicitly scope the balance pass that makes that true. The rollout should either own that work or name it as a prerequisite owned elsewhere.
+
+17. **Narrative presenter roster for guidance.**
+    The plan refers to a superior, fixer, mentor, or house voice, but it does not enumerate the actual presenter roster or domains that own those voices across bodega, Porter's, and skyscraper progression. That needs a concrete presenter coverage pass before large-scale objective authoring.
 
 ## Out Of Scope
 
@@ -472,6 +832,9 @@ Exit criteria:
 When this plan is complete:
 
 - the room-management UI should no longer need permanent "why this matters" essays
+- the canonical opening should begin from zero operators and zero gameplay-functional room progression, while still reaching a meaningful first loop quickly
 - the player should rarely be without a recommended next objective before the repeatable skyscraper endgame
 - the player should receive explicit recommendations for which room unlocks and room upgrades to do first throughout the bodega and Porter's bands
+- every room upgrade in the intended progression path should be part of the guidance chain, which means early tutorial pacing and early balance are authored together
+- the tutorial should read as a modern idle-game guide rail that always has another useful goal ready until the skyscraper headquarters has become the stable repeatable endgame home
 - tutorial logic should read as one campaign-long guidance system rather than scattered onboarding patches

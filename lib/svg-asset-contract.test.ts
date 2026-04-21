@@ -33,6 +33,30 @@ describe("svg asset contract", () => {
     ).toBe("/data/svg-environments/hq/bodega/recipes/scene-the-register-2.svg");
   });
 
+  it("resolves annex and extension bodega room scenes through the contract", () => {
+    expect(
+      resolveHqRoomSceneAssetUrl(
+        "building/bodega",
+        "room/back_office:tier_1",
+        "room-state/back_office:1",
+      ),
+    ).toBe("/data/svg-environments/hq/bodega/recipes/scene-the-back-office.svg");
+    expect(
+      resolveHqRoomSceneAssetUrl(
+        "building/bodega",
+        "room/backstock:tier_1",
+        "room-state/backstock:1",
+      ),
+    ).toBe("/data/svg-environments/hq/bodega/recipes/scene-the-backstock.svg");
+    expect(
+      resolveHqRoomSceneAssetUrl(
+        "building/bodega",
+        "room/alley_staging:tier_1",
+        "room-state/alley_staging:1",
+      ),
+    ).toBe("/data/svg-environments/hq/bodega/recipes/scene-the-alley.svg");
+  });
+
   it("shares fallback HQ prop asset paths between runtime and contract bindings", () => {
     expect(resolveHqEnvironmentAssetUrl("building/bodega", "desk")).toBe(
       `/data/svg-environments/hq/bodega/parts/${HQ_PROP_ASSET_PATHS.desk}`,

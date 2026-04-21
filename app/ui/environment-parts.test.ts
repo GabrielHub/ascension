@@ -320,6 +320,9 @@ describe("scene review helpers", () => {
     const groups = buildSceneReviewGroups(getLoadedEnvParts());
 
     expect(groups.map((group) => group.label)).toEqual([
+      "Alley",
+      "Back Office",
+      "Backstock",
       "Counter",
       "Dining Area",
       "Register",
@@ -339,6 +342,15 @@ describe("scene review helpers", () => {
     expect(registerGroup.steps[0].part?.id).toBe("recipes/scene-the-register");
     expect(registerGroup.steps[1].part?.id).toBe("recipes/scene-the-register-2");
     expect(registerGroup.steps[2].isPlaceholder).toBe(true);
+    expect(groups.find((group) => group.label === "Back Office")?.steps[0].part?.id).toBe(
+      "recipes/scene-the-back-office",
+    );
+    expect(groups.find((group) => group.label === "Backstock")?.steps[0].part?.id).toBe(
+      "recipes/scene-the-backstock",
+    );
+    expect(groups.find((group) => group.label === "Alley")?.steps[0].part?.id).toBe(
+      "recipes/scene-the-alley",
+    );
   });
 
   it("formats scene series labels for review", () => {

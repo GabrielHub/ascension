@@ -388,6 +388,38 @@
           "status": "approved"
         },
         {
+          "id": "recipes/scene-the-back-office",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "office", "operations", "annex"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-backstock",
+          "category": "scene",
+          "tags": ["room", "interior", "props-only", "bodega", "storage", "staffing", "annex"],
+          "scale": "room",
+          "roomFamily": "staffing",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-alley",
+          "category": "scene",
+          "tags": [
+            "room",
+            "interior",
+            "props-only",
+            "bodega",
+            "staging",
+            "operations",
+            "extension"
+          ],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
           "id": "actor-markers/marker-chibi-broad",
           "category": "actor-marker",
           "tags": ["chibi", "token", "operator", "broad", "in-world"],

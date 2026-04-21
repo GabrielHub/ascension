@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Alley
+       Sparse back-exit staging room for the bodega.
+       The room should read as pre-departure prep, not storage overflow:
+       one rally board, one loadout table, one supply rack, one hydration point.
+       No walls, floors, tile grid, or labels. -->
+
+  <!-- == Rally board ==================================================== -->
+  <polygon points="214,116 248,133 256,129 222,112"
+    fill="#7a5b38" stroke="#553d24" stroke-width="0.55"/>
+  <polygon points="214,116 248,133 248,168 214,151"
+    fill="#8c6740" stroke="#604428" stroke-width="0.5"/>
+  <polygon points="248,133 256,129 256,164 248,168"
+    fill="#735437" stroke="#503920" stroke-width="0.45"/>
+  <line x1="222" y1="156" x2="222" y2="183" stroke="#353a42" stroke-width="2.1"/>
+  <line x1="244" y1="167" x2="244" y2="189" stroke="#353a42" stroke-width="2.1"/>
+  <line x1="214" y1="116" x2="248" y2="133" stroke="rgba(255,255,255,0.05)" stroke-width="0.35"/>
+  <line x1="216" y1="151" x2="230" y2="158" stroke="rgba(90,55,24,0.2)" stroke-width="0.35"/>
+  <line x1="220" y1="182" x2="232" y2="176" stroke="#353a42" stroke-width="1.5"/>
+  <line x1="242" y1="189" x2="254" y2="183" stroke="#353a42" stroke-width="1.5"/>
+  <polygon points="220,126 232,132 232,142 220,136"
+    fill="#e7dfcf" stroke="#bcae96" stroke-width="0.25"/>
+  <polygon points="234,133 246,139 246,149 234,143"
+    fill="#d0d5dc" opacity="0.85"/>
+  <line x1="228" y1="127" x2="228" y2="143" stroke="#b73c3c" stroke-width="1"/>
+  <line x1="240" y1="138" x2="240" y2="152" stroke="#376b48" stroke-width="1"/>
+
+  <!-- == Supply rack ==================================================== -->
+  <polygon points="290,112 346,140 326,150 270,122"
+    fill="#3b3938" stroke="#282625" stroke-width="0.6"/>
+  <polygon points="270,122 326,150 326,202 270,174"
+    fill="#474443" stroke="#302d2b" stroke-width="0.55"/>
+  <polygon points="346,140 326,150 326,202 346,192"
+    fill="#302c2a" stroke="#24201e" stroke-width="0.5"/>
+  <line x1="270" y1="141" x2="326" y2="169" stroke="#2b2826" stroke-width="0.5"/>
+  <line x1="270" y1="160" x2="326" y2="188" stroke="#2b2826" stroke-width="0.5"/>
+  <line x1="292" y1="123" x2="292" y2="186" stroke="#2b2826" stroke-width="0.45"/>
+  <polygon points="278,131 296,140 296,146 278,137" fill="#6d7a4c"/>
+  <polygon points="300,142 318,151 318,157 300,148" fill="#c7ccd3"/>
+  <polygon points="278,152 300,163 300,170 278,159" fill="#3d4856"/>
+  <polygon points="304,165 322,174 322,181 304,172" fill="#7c5a3a"/>
+
+  <!-- == Hero loadout table ============================================ -->
+  <line x1="210" y1="163" x2="210" y2="178" stroke="#241c12" stroke-width="2"/>
+  <polygon points="172,179 236,211 236,214 172,182"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
+  <polygon points="274,192 236,211 236,214 274,195"
+    fill="#302818" stroke="#241c12" stroke-width="0.5"/>
+  <polygon points="210,160 274,192 236,211 172,179"
+    fill="#64513d" stroke="#433527" stroke-width="0.75"/>
+  <line x1="210" y1="160" x2="172" y2="179" stroke="rgba(255,255,255,0.06)" stroke-width="0.45"/>
+  <line x1="210" y1="160" x2="274" y2="192" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+  <line x1="190" y1="170" x2="242" y2="196" stroke="#433527" stroke-width="0.3" opacity="0.25"/>
+  <line x1="172" y1="182" x2="172" y2="197" stroke="#241c12" stroke-width="2"/>
+  <line x1="274" y1="195" x2="274" y2="210" stroke="#241c12" stroke-width="2"/>
+  <line x1="236" y1="214" x2="236" y2="229" stroke="#241c12" stroke-width="2"/>
+  <line x1="172" y1="190" x2="274" y2="190" stroke="#241c12" stroke-width="0.6" opacity="0.55"/>
+
+  <!-- map sheet -->
+  <polygon points="198,172 226,186 216,191 188,177"
+    fill="#ddd5c5" stroke="#b7a891" stroke-width="0.25"/>
+  <line x1="198" y1="177" x2="214" y2="185" stroke="#9a8f7e" stroke-width="0.25"/>
+  <!-- route folder -->
+  <polygon points="228,186 254,199 246,203 220,190"
+    fill="#43566b" stroke="#2b3948" stroke-width="0.3"/>
+  <!-- radio -->
+  <polygon points="212,164 228,172 220,176 204,168"
+    fill="#2f343a" stroke="#20242a" stroke-width="0.3"/>
+  <polygon points="204,168 220,176 220,184 204,176"
+    fill="#333941" stroke="#23272d" stroke-width="0.3"/>
+  <circle cx="210" cy="174" r="2" fill="#1c1f24"/>
+  <circle cx="216" cy="177" r="2" fill="#1c1f24"/>
+  <line x1="223" y1="167" x2="231" y2="159" stroke="#59616a" stroke-width="1"/>
+</svg>

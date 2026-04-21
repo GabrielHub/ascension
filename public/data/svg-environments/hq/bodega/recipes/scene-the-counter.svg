@@ -15,97 +15,62 @@
 
   <!-- == HERO: DELI DISPLAY CASE ======================================= -->
   <!-- Glass-fronted counter with visible food. Scratched but functional. -->
+  <!-- Shifted up 30 px in screen-y so the footprint is centered in slot,
+       matching scene-the-counter-2 placement. -->
   <!-- Case top surface -->
-  <polygon points="140,148 296,226 264,242 108,164"
+  <polygon points="160,118 296,186 268,200 132,132"
     fill="#3a3020" stroke="#2c2418" stroke-width="0.7"/>
   <!-- Front face (below glass) -->
-  <polygon points="108,164 264,242 264,264 108,186"
+  <polygon points="132,132 268,200 268,222 132,154"
     fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
   <!-- Right end face -->
-  <polygon points="296,226 264,242 264,264 296,248"
+  <polygon points="296,186 268,200 268,222 296,208"
     fill="#302818" stroke="#241c12" stroke-width="0.5"/>
   <!-- Glass display front (angled, translucent) -->
-  <polygon points="108,164 264,242 264,230 108,152"
+  <polygon points="132,132 268,200 268,188 132,120"
     fill="rgba(60,80,90,0.12)" stroke="rgba(80,100,110,0.2)" stroke-width="0.5"/>
   <!-- Glass reflections -->
-  <line x1="120" y1="158" x2="160" y2="178" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
-  <line x1="190" y1="200" x2="230" y2="220" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+  <line x1="142" y1="126" x2="178" y2="144" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+  <line x1="200" y1="162" x2="238" y2="181" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
   <!-- Glass scratches -->
-  <line x1="145" y1="170" x2="152" y2="174" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
+  <line x1="164" y1="149" x2="170" y2="152" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
   <!-- Food silhouettes inside case -->
-  <polygon points="130,172 160,188 156,190 126,174"
+  <polygon points="150,148 177,161 173,164 146,150"
     fill="rgba(180,150,100,0.12)" stroke="rgba(160,130,80,0.08)" stroke-width="0.3"/>
-  <polygon points="170,190 200,206 196,208 166,192"
+  <polygon points="185,165 212,178 208,181 181,167"
     fill="rgba(80,130,80,0.1)" stroke="rgba(60,110,60,0.08)" stroke-width="0.3"/>
-  <polygon points="148,182 180,198 177,200 145,184"
+  <polygon points="163,157 192,171 189,173 160,159"
     fill="rgba(160,80,70,0.1)" stroke="rgba(140,60,50,0.06)" stroke-width="0.3"/>
   <!-- Steel top rail -->
-  <line x1="108" y1="152" x2="264" y2="230" stroke="#4a4a52" stroke-width="1"/>
+  <line x1="132" y1="120" x2="268" y2="188" stroke="#4a4a52" stroke-width="1"/>
   <!-- Panel grooves -->
-  <line x1="148" y1="178" x2="148" y2="200" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="188" y1="198" x2="188" y2="220" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="228" y1="218" x2="228" y2="240" stroke="#241c12" stroke-width="0.4"/>
+  <line x1="170" y1="151" x2="170" y2="172" stroke="#241c12" stroke-width="0.4"/>
+  <line x1="206" y1="169" x2="206" y2="190" stroke="#241c12" stroke-width="0.4"/>
+  <line x1="242" y1="187" x2="242" y2="208" stroke="#241c12" stroke-width="0.4"/>
   <!-- Top edge highlight -->
-  <line x1="140" y1="148" x2="296" y2="226" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-
-  <!-- == COFFEE MACHINE (behind counter) =============================== -->
-  <!-- Body -->
-  <polygon points="172,118 190,127 202,121 184,112"
-    fill="#2a2830" stroke="#222028" stroke-width="0.5"/>
-  <polygon points="172,118 190,127 190,148 172,139"
-    fill="#26242c" stroke="#1c1a22" stroke-width="0.4"/>
-  <polygon points="190,127 202,121 202,142 190,148"
-    fill="#222028" stroke="#1c1a22" stroke-width="0.4"/>
-  <!-- Water reservoir -->
-  <polygon points="174,114 184,119 190,115 180,110"
-    fill="#1e2028" stroke="#1a1a22" stroke-width="0.3"/>
-  <!-- Warming plate + carafe -->
-  <polygon points="176,139 190,146 198,142 184,135"
-    fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
-  <polygon points="180,134 188,138 192,136 184,132"
-    fill="#1a2028" stroke="#222830" stroke-width="0.3"/>
-  <polygon points="180,134 188,138 188,144 180,140"
-    fill="#1e242e" opacity="0.8"/>
-  <!-- Power light -->
-  <circle cx="200" cy="126" r="1" fill="rgba(200,60,60,0.3)"/>
-  <!-- Drip stain -->
-  <line x1="184" y1="140" x2="188" y2="142" stroke="rgba(30,16,8,0.3)" stroke-width="0.6"/>
-
-  <!-- == SHELF (behind counter, supplies) ============================== -->
-  <polygon points="340,124 372,140 352,150 320,134"
-    fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
-  <polygon points="372,140 352,150 352,196 372,186"
-    fill="#333030" stroke="#252525" stroke-width="0.5"/>
-  <polygon points="320,134 352,150 352,196 320,180"
-    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
-  <line x1="320" y1="148" x2="352" y2="162" stroke="#2a2a2a" stroke-width="0.5"/>
-  <line x1="320" y1="162" x2="352" y2="176" stroke="#2a2a2a" stroke-width="0.5"/>
-  <!-- Cups, napkins on shelf -->
-  <polygon points="324,138 336,144 336,152 324,146" fill="#c8c4b8" opacity="0.08"/>
-  <polygon points="326,152 338,158 338,164 326,158" fill="#302c24" opacity="0.5"/>
-  <polygon points="330,166 342,172 342,176 330,170" fill="#28302c" opacity="0.5"/>
+  <line x1="160" y1="118" x2="296" y2="186" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
 
   <!-- == CUSTOMER STOOLS =============================================== -->
   <!-- Stool 1 -->
-  <line x1="140" y1="218" x2="142" y2="204" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="150" y1="218" x2="148" y2="204" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="137" y1="214" x2="142" y2="204" stroke="#3a3020" stroke-width="1"/>
-  <line x1="153" y1="214" x2="148" y2="204" stroke="#3a3020" stroke-width="1"/>
-  <line x1="139" y1="212" x2="151" y2="212" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="145" cy="202" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
+  <line x1="164" y1="196" x2="166" y2="182" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="174" y1="196" x2="172" y2="182" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="161" y1="192" x2="166" y2="182" stroke="#3a3020" stroke-width="1"/>
+  <line x1="177" y1="192" x2="172" y2="182" stroke="#3a3020" stroke-width="1"/>
+  <line x1="163" y1="190" x2="175" y2="190" stroke="#2c2418" stroke-width="0.8"/>
+  <ellipse cx="169" cy="180" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
   <!-- Stool 2 -->
-  <line x1="200" y1="248" x2="202" y2="234" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="210" y1="248" x2="208" y2="234" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="197" y1="244" x2="202" y2="234" stroke="#3a3020" stroke-width="1"/>
-  <line x1="213" y1="244" x2="208" y2="234" stroke="#3a3020" stroke-width="1"/>
-  <line x1="199" y1="242" x2="211" y2="242" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="205" cy="232" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
+  <line x1="220" y1="220" x2="222" y2="206" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="230" y1="220" x2="228" y2="206" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="217" y1="216" x2="222" y2="206" stroke="#3a3020" stroke-width="1"/>
+  <line x1="233" y1="216" x2="228" y2="206" stroke="#3a3020" stroke-width="1"/>
+  <line x1="219" y1="214" x2="231" y2="214" stroke="#2c2418" stroke-width="0.8"/>
+  <ellipse cx="225" cy="204" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
 
-  <!-- == PLANT (near entrance, scrappy) ================================ -->
-  <polygon points="82,186 88,189 94,186 88,183" fill="#2c2218"/>
-  <polygon points="82,186 88,189 88,196 82,193" fill="#3d2c20" stroke="#231e18" stroke-width="0.3"/>
-  <polygon points="94,186 88,189 88,196 94,193" fill="#2c2218" stroke="#231e18" stroke-width="0.3"/>
-  <ellipse cx="88" cy="178" rx="8" ry="7" fill="#1a3028"/>
-  <ellipse cx="84" cy="175" rx="4" ry="5" fill="#1a3028"/>
-  <ellipse cx="92" cy="176" rx="3.5" ry="4" fill="#1c3830"/>
+  <!-- == PLANT (front-left of counter, scrappy) ======================== -->
+  <polygon points="130,168 136,171 142,168 136,165" fill="#2c2218"/>
+  <polygon points="130,168 136,171 136,178 130,175" fill="#3d2c20" stroke="#231e18" stroke-width="0.3"/>
+  <polygon points="142,168 136,171 136,178 142,175" fill="#2c2218" stroke="#231e18" stroke-width="0.3"/>
+  <ellipse cx="136" cy="159" rx="8" ry="7" fill="#1a3028"/>
+  <ellipse cx="132" cy="156" rx="4" ry="5" fill="#1a3028"/>
+  <ellipse cx="140" cy="157" rx="3.5" ry="4" fill="#1c3830"/>
 </svg>

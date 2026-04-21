@@ -288,6 +288,30 @@ const HQ_ROOM_SCENE_BINDINGS = [
     floorIndex: 0,
     assetId: "/data/svg-environments/hq/bodega/recipes/scene-supply-closet-2.svg",
   },
+  {
+    buildingId: "building/bodega",
+    templateId: "room/back_office:tier_1",
+    roomStateId: "room-state/back_office:1",
+    slotId: "slot/back-room-right",
+    floorIndex: 0,
+    assetId: "/data/svg-environments/hq/bodega/recipes/scene-the-back-office.svg",
+  },
+  {
+    buildingId: "building/bodega",
+    templateId: "room/backstock:tier_1",
+    roomStateId: "room-state/backstock:1",
+    slotId: "slot/storage-left",
+    floorIndex: 0,
+    assetId: "/data/svg-environments/hq/bodega/recipes/scene-the-backstock.svg",
+  },
+  {
+    buildingId: "building/bodega",
+    templateId: "room/alley_staging:tier_1",
+    roomStateId: "room-state/alley_staging:1",
+    slotId: "slot/storage-right",
+    floorIndex: 0,
+    assetId: "/data/svg-environments/hq/bodega/recipes/scene-the-alley.svg",
+  },
 ] as const;
 
 const BOSS_ART_ASSET_PATHS: Record<string, string> = {

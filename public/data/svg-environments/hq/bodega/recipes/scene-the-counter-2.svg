@@ -1,165 +1,110 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
-  <!-- Props-only scene layer: The Counter — State 2 (Hot Coffee)
-       Upgraded from base state: working coffee service, cleaner counter,
-       organized condiment station, warm service atmosphere.
-       No walls, floor, tile grid, or labels.
-       Origin (200,100). -->
+  <!-- Props-only scene layer: The Counter — State 2 (Upgraded Deli)
+       Wood base with a proper glass display case sitting directly on the
+       counter top (shared iso edges — no floating glass). Illuminated
+       interior reveals organized food trays; polished steel rim caps the
+       top edges. Shifted toward room center along -x / -y so footprint is
+       centered within the 4x3 operations slot.
+       Props only: counter, stools, plant. No walls, floor, or labels.
+       Origin (200,100). Canonical iso 2:1 throughout. -->
 
-  <!-- == CEILING FAN ===================================================== -->
-  <ellipse cx="260" cy="44" rx="4" ry="1.5" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
-  <line x1="260" y1="44" x2="260" y2="48" stroke="#3a3838" stroke-width="1.2"/>
-  <ellipse cx="260" cy="49" rx="5" ry="2.5" fill="#333030" stroke="#252525" stroke-width="0.6"/>
-  <polygon points="265,49 280,52 279,54 264,50" fill="#3a3020" opacity="0.85"/>
-  <polygon points="255,49 240,52 241,54 256,50" fill="#342c20" opacity="0.85"/>
-  <polygon points="260,51 264,56 262,57 258,57 256,56" fill="#3a3020" opacity="0.8"/>
-  <polygon points="260,47 264,43 262,42 258,42 256,43" fill="#342c20" opacity="0.7"/>
+  <!-- == COUNTER: WOOD TOP (horizontal plane, base of glass case) ====== -->
+  <polygon points="160,118 296,186 268,200 132,132"
+    fill="#4a3a24" stroke="#2c2418" stroke-width="0.7"/>
+  <!-- Grain sheen along the 2:1 iso axis -->
+  <line x1="160" y1="118" x2="296" y2="186" stroke="rgba(255,228,180,0.12)" stroke-width="0.6"/>
+  <line x1="180" y1="128" x2="276" y2="176" stroke="rgba(255,228,180,0.05)" stroke-width="0.4"/>
+  <!-- Warm interior glow on the wood top, seen through the glass -->
+  <polygon points="160,118 296,186 268,200 132,132"
+    fill="rgba(255,220,160,0.10)"/>
 
-  <!-- == HERO: DELI DISPLAY CASE (cleaner, better-maintained) =========== -->
-  <!-- Case top surface -->
-  <polygon points="140,148 296,226 264,242 108,164"
-    fill="#3c3422" stroke="#2c2418" stroke-width="0.7"/>
-  <!-- Front face -->
-  <polygon points="108,164 264,242 264,264 108,186"
-    fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
-  <!-- Right end face -->
-  <polygon points="296,226 264,242 264,264 296,248"
-    fill="#302818" stroke="#241c12" stroke-width="0.5"/>
-  <!-- Glass display front (cleaner, less scratched) -->
-  <polygon points="108,164 264,242 264,230 108,152"
-    fill="rgba(60,80,90,0.14)" stroke="rgba(80,100,110,0.22)" stroke-width="0.5"/>
-  <!-- Glass reflections (stronger — cleaned) -->
-  <line x1="120" y1="158" x2="170" y2="183" stroke="rgba(255,255,255,0.1)" stroke-width="0.7"/>
-  <line x1="190" y1="200" x2="240" y2="225" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-  <!-- Food silhouettes inside case (more variety, better arranged) -->
-  <polygon points="130,172 160,188 156,190 126,174"
-    fill="rgba(180,150,100,0.14)" stroke="rgba(160,130,80,0.1)" stroke-width="0.3"/>
-  <polygon points="170,190 200,206 196,208 166,192"
-    fill="rgba(80,130,80,0.12)" stroke="rgba(60,110,60,0.1)" stroke-width="0.3"/>
-  <polygon points="148,182 180,198 177,200 145,184"
-    fill="rgba(160,80,70,0.12)" stroke="rgba(140,60,50,0.08)" stroke-width="0.3"/>
-  <polygon points="208,204 238,218 234,220 204,206"
-    fill="rgba(200,170,100,0.1)" stroke="rgba(180,150,80,0.08)" stroke-width="0.3"/>
-  <!-- Steel top rail (polished) -->
-  <line x1="108" y1="152" x2="264" y2="230" stroke="#4a4a52" stroke-width="1.2"/>
-  <!-- Panel grooves -->
-  <line x1="148" y1="178" x2="148" y2="200" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="188" y1="198" x2="188" y2="220" stroke="#241c12" stroke-width="0.4"/>
-  <line x1="228" y1="218" x2="228" y2="240" stroke="#241c12" stroke-width="0.4"/>
-  <!-- Top edge highlight -->
-  <line x1="140" y1="148" x2="296" y2="226" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+  <!-- == FOOD TRAYS (inside case, on wood top, iso-aligned) ============ -->
+  <!-- Tray 1 — sandwiches -->
+  <polygon points="155,125 195,145 188,149 148,129"
+    fill="rgba(210,180,130,0.42)" stroke="rgba(180,150,100,0.35)" stroke-width="0.4"/>
+  <line x1="156" y1="127" x2="189" y2="144" stroke="rgba(140,100,60,0.4)" stroke-width="0.4"/>
+  <line x1="158" y1="130" x2="191" y2="147" stroke="rgba(90,60,40,0.35)" stroke-width="0.4"/>
+  <!-- Tray 2 — meats -->
+  <polygon points="201,148 241,168 234,172 194,152"
+    fill="rgba(150,60,55,0.4)" stroke="rgba(120,40,40,0.35)" stroke-width="0.4"/>
+  <line x1="203" y1="150" x2="235" y2="166" stroke="rgba(180,80,70,0.4)" stroke-width="0.4"/>
+  <line x1="205" y1="153" x2="237" y2="169" stroke="rgba(100,40,30,0.35)" stroke-width="0.4"/>
+  <!-- Tray 3 — cheese -->
+  <polygon points="165,142 195,157 188,160 158,145"
+    fill="rgba(230,205,120,0.4)" stroke="rgba(200,170,90,0.3)" stroke-width="0.3"/>
+  <line x1="172" y1="146" x2="185" y2="153" stroke="rgba(200,170,90,0.3)" stroke-width="0.3"/>
+  <!-- Tray 4 — greens / olives -->
+  <polygon points="210,166 250,186 243,190 203,170"
+    fill="rgba(80,120,70,0.38)" stroke="rgba(60,100,50,0.3)" stroke-width="0.3"/>
+  <line x1="213" y1="168" x2="245" y2="184" stroke="rgba(100,140,80,0.4)" stroke-width="0.4"/>
 
-  <!-- == UPGRADED COFFEE MACHINE (working, warm glow) =================== -->
-  <!-- Body (slightly larger, better maintained) -->
-  <polygon points="168,114 190,125 204,118 182,107"
-    fill="#2c2830" stroke="#222028" stroke-width="0.5"/>
-  <polygon points="168,114 190,125 190,148 168,137"
-    fill="#28262e" stroke="#1c1a22" stroke-width="0.4"/>
-  <polygon points="190,125 204,118 204,141 190,148"
-    fill="#222028" stroke="#1c1a22" stroke-width="0.4"/>
-  <!-- Water reservoir (cleaner) -->
-  <polygon points="170,110 184,117 192,112 178,105"
-    fill="#1e2028" stroke="#1a1a22" stroke-width="0.3"/>
-  <!-- Warming plate + carafe (with coffee inside) -->
-  <polygon points="172,137 190,146 200,140 182,131"
-    fill="#3a3838" stroke="#252525" stroke-width="0.4"/>
-  <polygon points="178,132 188,137 192,135 182,130"
-    fill="#1a1820" stroke="#222830" stroke-width="0.3"/>
-  <polygon points="178,132 188,137 188,143 178,138"
-    fill="#1e1820" opacity="0.85"/>
-  <!-- Coffee visible through carafe -->
-  <polygon points="180,134 186,137 186,141 180,138"
-    fill="rgba(60,30,10,0.2)"/>
-  <!-- Power light (active green — working!) -->
-  <circle cx="200" cy="124" r="1.2" fill="rgba(100,200,100,0.4)"/>
-  <!-- Steam wisps (coffee is hot) -->
-  <path d="M184,128 Q183,124 185,120" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
-  <path d="M187,126 Q186,122 188,118" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.6"/>
+  <!-- == GLASS DISPLAY CASE ============================================ -->
+  <!-- Rises 22 px vertically from the wood top. Each glass panel shares
+       its bottom edge with a corresponding edge of the wood top. -->
 
-  <!-- == CONDIMENT STATION (new — next to coffee) ======================= -->
-  <!-- Small tray with sugar, stirrers, napkins -->
-  <polygon points="210,128 226,136 220,139 204,131"
-    fill="#3a3020" stroke="#2c2418" stroke-width="0.4"/>
-  <!-- Sugar dispenser -->
-  <polygon points="208,128 214,131 214,126 208,123"
-    fill="#3a3838" stroke="#333030" stroke-width="0.3"/>
-  <ellipse cx="211" cy="122" rx="3" ry="1" fill="#3a3838" stroke="#333030" stroke-width="0.2"/>
-  <!-- Stirrer cup -->
-  <ellipse cx="220" cy="133" rx="2.5" ry="1" fill="#3a3838" stroke="#333030" stroke-width="0.2"/>
-  <ellipse cx="220" cy="130" rx="2.5" ry="1" fill="#3a3838"/>
-  <!-- Stirrer sticks poking out -->
-  <line x1="219" y1="130" x2="218" y2="126" stroke="#3a3020" stroke-width="0.6"/>
-  <line x1="221" y1="130" x2="222" y2="125" stroke="#342c20" stroke-width="0.6"/>
+  <!-- Right side glass (bottom edge = wood top right edge) -->
+  <polygon points="296,186 268,200 268,178 296,164"
+    fill="rgba(80,110,130,0.18)" stroke="rgba(140,170,190,0.4)" stroke-width="0.5"/>
+  <!-- Glass top (horizontal, at case peak) -->
+  <polygon points="160,96 296,164 268,178 132,110"
+    fill="rgba(80,110,130,0.12)" stroke="rgba(140,170,190,0.35)" stroke-width="0.5"/>
+  <!-- Front glass (bottom edge = wood top front edge) -->
+  <polygon points="132,132 268,200 268,178 132,110"
+    fill="rgba(80,110,130,0.14)" stroke="rgba(140,170,190,0.5)" stroke-width="0.6"/>
+  <!-- Polished front-glass highlights -->
+  <line x1="140" y1="116" x2="180" y2="136" stroke="rgba(255,255,255,0.24)" stroke-width="0.8"/>
+  <line x1="200" y1="146" x2="244" y2="168" stroke="rgba(255,255,255,0.16)" stroke-width="0.6"/>
+  <line x1="150" y1="122" x2="172" y2="133" stroke="rgba(255,255,255,0.1)" stroke-width="0.4"/>
 
-  <!-- == TIP JAR (on counter, near register side) ======================= -->
-  <ellipse cx="296" cy="220" rx="5" ry="2" fill="#2a3030" stroke="#222828" stroke-width="0.3"/>
-  <rect x="291" y="212" width="10" height="8" fill="rgba(40,60,60,0.3)"/>
-  <ellipse cx="296" cy="212" rx="5" ry="2" fill="#323a3a" stroke="#2a3030" stroke-width="0.3"/>
-  <ellipse cx="296" cy="212" rx="3.5" ry="1.2" fill="#1a2028"/>
-  <!-- A couple coins/bills -->
-  <rect x="293" y="214" width="3" height="1" rx="0.2" fill="rgba(200,168,76,0.1)"/>
-  <circle cx="297" cy="215" r="0.8" fill="rgba(200,168,76,0.08)"/>
+  <!-- Polished steel rim along the four top edges of the case -->
+  <line x1="160" y1="96" x2="296" y2="164" stroke="#8a8a92" stroke-width="1.4"/>
+  <line x1="132" y1="110" x2="268" y2="178" stroke="#7a7a82" stroke-width="1.2"/>
+  <line x1="160" y1="96" x2="132" y2="110" stroke="#7a7a82" stroke-width="1.2"/>
+  <line x1="296" y1="164" x2="268" y2="178" stroke="#7a7a82" stroke-width="1.2"/>
+  <line x1="160" y1="95" x2="296" y2="163" stroke="rgba(255,255,255,0.35)" stroke-width="0.5"/>
 
-  <!-- == SHELF (behind counter, neater) ================================= -->
-  <polygon points="340,124 372,140 352,150 320,134"
-    fill="#3a3838" stroke="#252525" stroke-width="0.5"/>
-  <polygon points="372,140 352,150 352,196 372,186"
-    fill="#333030" stroke="#252525" stroke-width="0.5"/>
-  <polygon points="320,134 352,150 352,196 320,180"
-    fill="#3a3838" stroke="#252525" stroke-width="0.6"/>
-  <line x1="320" y1="148" x2="352" y2="162" stroke="#2a2a2a" stroke-width="0.5"/>
-  <line x1="320" y1="162" x2="352" y2="176" stroke="#2a2a2a" stroke-width="0.5"/>
-  <!-- Stacked cups (neater) -->
-  <polygon points="324,138 336,144 336,148 324,142" fill="#c8c4b8" opacity="0.1"/>
-  <polygon points="338,142 348,147 348,148 338,143" fill="#c8c4b8" opacity="0.08"/>
-  <!-- Napkin holder -->
-  <polygon points="326,152 338,158 338,162 326,156" fill="#302c24" opacity="0.6"/>
-  <!-- Utensils tray -->
-  <polygon points="330,166 342,172 342,176 330,170" fill="#28302c" opacity="0.5"/>
+  <!-- == WOOD BASE FACES (below the counter top) ======================= -->
+  <!-- Front face: top edge shares wood top's front edge -->
+  <polygon points="132,132 268,200 268,222 132,154"
+    fill="#2a1f12" stroke="#1c140a" stroke-width="0.6"/>
+  <!-- Right end face: top edge shares wood top's right edge -->
+  <polygon points="268,200 296,186 296,208 268,222"
+    fill="#241a0e" stroke="#1c140a" stroke-width="0.5"/>
+  <!-- Vertical plank grooves -->
+  <line x1="170" y1="151" x2="170" y2="173" stroke="#1c140a" stroke-width="0.4"/>
+  <line x1="206" y1="169" x2="206" y2="191" stroke="#1c140a" stroke-width="0.4"/>
+  <line x1="242" y1="187" x2="242" y2="209" stroke="#1c140a" stroke-width="0.4"/>
 
-  <!-- == CUSTOMER STOOLS (same) ========================================= -->
+  <!-- == CUSTOMER STOOLS (3 — along counter front) ===================== -->
   <!-- Stool 1 -->
-  <line x1="140" y1="218" x2="142" y2="204" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="150" y1="218" x2="148" y2="204" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="137" y1="214" x2="142" y2="204" stroke="#3a3020" stroke-width="1"/>
-  <line x1="153" y1="214" x2="148" y2="204" stroke="#3a3020" stroke-width="1"/>
-  <line x1="139" y1="212" x2="151" y2="212" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="145" cy="202" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
+  <line x1="164" y1="196" x2="166" y2="182" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="174" y1="196" x2="172" y2="182" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="161" y1="192" x2="166" y2="182" stroke="#3a3020" stroke-width="1"/>
+  <line x1="177" y1="192" x2="172" y2="182" stroke="#3a3020" stroke-width="1"/>
+  <line x1="163" y1="190" x2="175" y2="190" stroke="#2c2418" stroke-width="0.8"/>
+  <ellipse cx="169" cy="180" rx="7" ry="3.5" fill="#3a2d1e" stroke="#2c2418" stroke-width="0.5"/>
   <!-- Stool 2 -->
-  <line x1="200" y1="248" x2="202" y2="234" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="210" y1="248" x2="208" y2="234" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="197" y1="244" x2="202" y2="234" stroke="#3a3020" stroke-width="1"/>
-  <line x1="213" y1="244" x2="208" y2="234" stroke="#3a3020" stroke-width="1"/>
-  <line x1="199" y1="242" x2="211" y2="242" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="205" cy="232" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
-  <!-- Stool 3 (new — busier counter) -->
-  <line x1="240" y1="262" x2="242" y2="248" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="250" y1="262" x2="248" y2="248" stroke="#3a3020" stroke-width="1.2"/>
-  <line x1="237" y1="258" x2="242" y2="248" stroke="#3a3020" stroke-width="1"/>
-  <line x1="253" y1="258" x2="248" y2="248" stroke="#3a3020" stroke-width="1"/>
-  <line x1="239" y1="256" x2="251" y2="256" stroke="#2c2418" stroke-width="0.8"/>
-  <ellipse cx="245" cy="246" rx="7" ry="3.5" fill="#342c20" stroke="#2c2418" stroke-width="0.5"/>
+  <line x1="220" y1="220" x2="222" y2="206" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="230" y1="220" x2="228" y2="206" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="217" y1="216" x2="222" y2="206" stroke="#3a3020" stroke-width="1"/>
+  <line x1="233" y1="216" x2="228" y2="206" stroke="#3a3020" stroke-width="1"/>
+  <line x1="219" y1="214" x2="231" y2="214" stroke="#2c2418" stroke-width="0.8"/>
+  <ellipse cx="225" cy="204" rx="7" ry="3.5" fill="#3a2d1e" stroke="#2c2418" stroke-width="0.5"/>
+  <!-- Stool 3 -->
+  <line x1="248" y1="232" x2="250" y2="218" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="258" y1="232" x2="256" y2="218" stroke="#3a3020" stroke-width="1.2"/>
+  <line x1="245" y1="228" x2="250" y2="218" stroke="#3a3020" stroke-width="1"/>
+  <line x1="261" y1="228" x2="256" y2="218" stroke="#3a3020" stroke-width="1"/>
+  <line x1="247" y1="226" x2="259" y2="226" stroke="#2c2418" stroke-width="0.8"/>
+  <ellipse cx="253" cy="216" rx="7" ry="3.5" fill="#3a2d1e" stroke="#2c2418" stroke-width="0.5"/>
 
-  <!-- == PLANT (healthier — someone waters it now) ====================== -->
-  <polygon points="82,186 88,189 94,186 88,183" fill="#2c2218"/>
-  <polygon points="82,186 88,189 88,196 82,193" fill="#3d2c20" stroke="#231e18" stroke-width="0.3"/>
-  <polygon points="94,186 88,189 88,196 94,193" fill="#2c2218" stroke="#231e18" stroke-width="0.3"/>
-  <ellipse cx="88" cy="177" rx="9" ry="8" fill="#1e3828"/>
-  <ellipse cx="84" cy="174" rx="5" ry="6" fill="#1e3828"/>
-  <ellipse cx="92" cy="175" rx="4" ry="5" fill="#204030"/>
-  <!-- Small flower -->
-  <circle cx="90" cy="170" r="1.5" fill="rgba(200,168,76,0.12)"/>
-
-  <!-- == MENU BOARD (on right wall — updated prices, cleaner) =========== -->
-  <polygon points="310,84 350,104 340,108 300,88"
-    fill="#1a1820" stroke="#141218" stroke-width="0.4"/>
-  <polygon points="300,88 340,108 340,120 300,100"
-    fill="#161418" stroke="#141218" stroke-width="0.3"/>
-  <polygon points="350,104 340,108 340,120 350,116"
-    fill="#1a1820" stroke="#141218" stroke-width="0.3"/>
-  <!-- Menu text lines (chalk-white) -->
-  <line x1="304" y1="92" x2="330" y2="105" stroke="rgba(224,221,214,0.12)" stroke-width="0.8"/>
-  <line x1="304" y1="95" x2="326" y2="106" stroke="rgba(224,221,214,0.08)" stroke-width="0.6"/>
-  <line x1="304" y1="98" x2="322" y2="107" stroke="rgba(224,221,214,0.06)" stroke-width="0.6"/>
-  <!-- Price (gold chalk) -->
-  <line x1="332" y1="106" x2="338" y2="109" stroke="rgba(200,168,76,0.1)" stroke-width="0.7"/>
+  <!-- == PLANT (front-left of counter) ================================= -->
+  <polygon points="120,166 126,169 132,166 126,163" fill="#2c2218"/>
+  <polygon points="120,166 126,169 126,176 120,173" fill="#3d2c20" stroke="#231e18" stroke-width="0.3"/>
+  <polygon points="132,166 126,169 126,176 132,173" fill="#2c2218" stroke="#231e18" stroke-width="0.3"/>
+  <ellipse cx="126" cy="156" rx="9" ry="8" fill="#1e3828"/>
+  <ellipse cx="122" cy="153" rx="5" ry="6" fill="#1e3828"/>
+  <ellipse cx="130" cy="154" rx="4" ry="5" fill="#204030"/>
+  <ellipse cx="126" cy="151" rx="3" ry="3" fill="#264a38"/>
+  <circle cx="128" cy="148" r="1.4" fill="rgba(200,168,76,0.18)"/>
 </svg>
