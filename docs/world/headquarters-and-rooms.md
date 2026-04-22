@@ -264,6 +264,7 @@ The bodega combines most functions into one dining area. As the guild moves to l
 - **The Briefing Room.** Dedicated planning and review space.
 - **The Dock.** Waterfront staging and departure surface.
 - **The Deck.** Waterfront downtime and morale space.
+- **The Workshop.** Waterfront-adjacent fabrication space for durable gear once the machine-shop conversion is complete.
 
 **Skyscraper:**
 

@@ -46,6 +46,12 @@ Defined in runtime/templates:
 - `room/deck:tier_1`
 - `room/workshop:tier_1`
 
+Important clarification:
+
+- Porter's room progression is currently unlock-gated, not multi-tiered. Every shipped Porter's room template is a `tier_1` template today.
+- Unlike the bodega's authored room-state swaps, Porter's does not yet have explicit per-room scene-state variants or higher room-template tiers.
+- The asset package should therefore target one approved baseline scene per Porter's room template unless runtime room-state contracts are added later on purpose.
+
 Defined in world/product docs:
 
 - Porter's is a waterfront bar-and-restaurant HQ with a public ground floor and semi-private operational upstairs
@@ -57,14 +63,26 @@ Document drift to resolve:
 - the roadmap and room templates include `Workshop`
 - `docs/world/headquarters-and-rooms.md` lists 11 Porter's rooms and omits `Workshop`
 
+### Porter's Floor-Presentation Contract Already Exists
+
+Porter's does not need skyscraper-style foundation work to define its basic floor behavior. The runtime floor model already exists and should be treated as the asset target.
+
+- Floor `0` is the ground-floor public interior
+- Floor `1` is the upstairs operational interior
+- Floors `0` and `1` share the `main-interior` stack group and render together as one stacked low-rise view
+- Floor `2` is the waterfront group and renders as its own presented view once unlocked
+- the machine-shop stage extends the waterfront view rather than introducing a fourth presentation mode
+
+This means the Porter's remediation work is primarily a package-completion task, not a foundation-definition task like the skyscraper plan.
+
 ## Current Shipped Asset State
 
 ### Catalog Reality
 
 Current HQ asset-catalog coverage:
 
-- bodega `hq-parts`: 81
-- bodega `hq-rooms`: 9
+- bodega `hq-parts`: 76
+- bodega `hq-rooms`: 12
 - bodega `reference`: 10
 - porters `hq-parts`: 0
 - porters `hq-rooms`: 0
@@ -74,7 +92,7 @@ Current HQ asset-catalog coverage:
 
 `content/data/hq-environment-index.json` currently resolves as:
 
-- `building/bodega`: real bodega package roots, 45 registered parts, 9 registered scene assets
+- `building/bodega`: real bodega package roots with shipped scene coverage for the current bodega room catalog, including Back Office, Backstock, and Alley
 - `building/porters`: bodega package roots, 23 registered background entries, no shell, no structure, no props, no scenes, no reference assets
 
 ### Filesystem Reality
@@ -127,7 +145,6 @@ This plan stays focused on Porter's.
 Relevant drift that should not be silently folded into this slice:
 
 - skyscraper remediation is now tracked separately because the building footprint, scene-builder support, and elevation-band package contract still need definition
-- bodega support-room templates such as Back Office, Backstock, and Alley do not yet appear to have matching room-scene SVGs either
 - some renderer wiring still uses bodega-era scene filename conventions and will need follow-through once new building packages are real
 
 ## Execution Plan
@@ -151,10 +168,13 @@ Exit criteria:
 
 Deliverables:
 
-- one reference fixture plus one approved props-only scene SVG per Porter's room
+- one reference fixture plus one approved props-only baseline scene SVG per Porter's room template
 - Porter's shell/structure assets required to present the building as Porter's rather than a bodega reuse
+- if Porter's later gains explicit room-state contracts, add those scene variants as a follow-on slice instead of assuming them now
 
 Priority order:
+
+Starter interior rooms:
 
 1. Floor
 2. Bar
@@ -163,6 +183,9 @@ Priority order:
 5. Infirmary
 6. Gym
 7. Prep Room
+
+Unlock-gated follow-up rooms:
+
 8. Break Room
 9. Briefing Room
 10. Dock
@@ -171,7 +194,7 @@ Priority order:
 
 Rationale:
 
-- this follows the runtime room catalog and closes both starter-state and upgrade-gated Porter's room gaps in one package
+- this follows the actual runtime room catalog: seven starter rooms plus five building-upgrade unlocks
 
 ### Phase 3: Porter's Exterior Package
 
@@ -209,7 +232,7 @@ Exit criteria:
 
 ## Recommended First Slice
 
-The first slice should be Porter's package grounding plus the Porter's starter and upgrade-gated room scenes.
+The first slice should be Porter's package grounding plus the seven starter-room scenes. The second slice should add the five building-upgrade unlock rooms.
 
 Why:
 
@@ -218,6 +241,7 @@ Why:
 - it closes the most obvious gap between shipped runtime room templates and shipped HQ room assets
 - it gives the viewer a second real HQ building group quickly
 - it proves the cross-building package contract before skyscraper elevation-band reuse is tackled
+- it keeps HQ asset sequencing aligned with the current priority: finish Porter's before continuing skyscraper HQ asset production
 
 ## Open Questions
 

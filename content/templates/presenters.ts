@@ -18,6 +18,7 @@ export const presenterTemplates = [
     kind: "presenter",
     name: "Mara Cordero",
     tags: ["domain:operations", "domain:bodega", "domain:briefing", "role:assistant"],
+    roleTitle: "Guild Assistant",
     roleDescription: "Guild assistant handling intake, paperwork, and management briefings.",
     portraitByExpression: {
       neutral: "/data/presenters/assistant/neutral.png",
@@ -46,6 +47,7 @@ export const presenterTemplates = [
     kind: "presenter",
     name: "Rafi Alvarez",
     tags: ["domain:porters", "domain:kitchen", "domain:quality", "role:cook"],
+    roleTitle: "Kitchen Lead",
     roleDescription:
       "Porter's kitchen lead, surfacing prep, food quality, and line pressure issues.",
     portraitByExpression: {
@@ -74,6 +76,7 @@ export const presenterTemplates = [
     kind: "presenter",
     name: "Sloane Becker",
     tags: ["domain:porters", "domain:bar", "domain:recruitment", "role:bartender"],
+    roleTitle: "Front of House",
     roleDescription:
       "Porter's front-of-house closer, reading recruits, regulars, and bar pressure before they turn into problems.",
     portraitByExpression: {
@@ -108,6 +111,7 @@ export const presenterTemplates = [
       "domain:field-prep",
       "role:quartermaster",
     ],
+    roleTitle: "Quartermaster",
     roleDescription:
       "Guild quartermaster, anchoring gear readiness, loot triage, inventory flow, and field-prep briefings.",
     portraitByExpression: {
@@ -141,6 +145,7 @@ export const presenterTemplates = [
       "domain:infirmary",
       "role:physician",
     ],
+    roleTitle: "Physician",
     roleDescription:
       "Guild physician, anchoring injury, recovery, infirmary, and post-mission medical consequence beats.",
     portraitByExpression: {
@@ -175,6 +180,7 @@ export const presenterTemplates = [
       "domain:pressure",
       "role:compliance-officer",
     ],
+    roleTitle: "Compliance Officer",
     roleDescription:
       "Guild compliance officer, anchoring policy, regulator-facing paperwork, and institutional-pressure consequence beats.",
     portraitByExpression: {

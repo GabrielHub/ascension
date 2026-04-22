@@ -106,7 +106,7 @@ Tone rules:
 ### Phase 0 - Audit And Coverage Map
 
 - [ ] Inventory every narrative surface that can currently render copy:
-  guidance beats, interruption incidents, relocation flows, boss commitment, authored event briefings, and the shipped AI `incident-framing` surface.
+      guidance beats, interruption incidents, relocation flows, boss commitment, authored event briefings, and the shipped AI `incident-framing` surface.
 - [ ] Record for each surface: source file/data owner, current presenter behavior, whether presenter binding is explicit or implicit, whether AI is involved, and whether the current voice is domain-correct.
 - [ ] Produce a machine-checkable coverage artifact or test input list so the repo can prove every shipped narrative path has a presenter.
 - [ ] Flag every incident template currently using assistant by habit rather than domain fit.

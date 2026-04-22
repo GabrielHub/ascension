@@ -4,7 +4,7 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
+The Porter's-era gameplay baseline is shipped, but the HQ asset package is not yet feature-complete. Porter's room-scene, shell, structure, and backdrop remediation remains active work and should be completed before additional skyscraper HQ asset production. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
 
 There are five active checked-in plans right now:
 
@@ -28,7 +28,7 @@ Before working any plan:
 
 ## Next Planning Trigger
 
-Check in a new plan only when a concrete execution slice is ready to start beyond the current skyscraper stack, for example:
+Check in a new plan only when a concrete execution slice is ready to start beyond the current active stack, for example:
 
 - a specific HQ backdrop-package cleanup tied to skyscraper elevation-band reuse
 - a concrete B-rank or A-rank content packet after the C-rank bridge is stable
@@ -42,5 +42,6 @@ Do not add another broad umbrella plan when a narrower active execution slice is
 - The retired midgame remediation pass was verification-first work: browser depth, readability fixes, and balance-table tuning rather than new mechanics or broad new content.
 - Use browser automation as the primary fast regression surface for the canonical Porter's loop.
 - Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.
+- Finish the Porter's HQ asset package before continuing deeper skyscraper HQ asset work.
 - Treat the skyscraper as the final headquarters. Later planning should deepen that building's floor expansion, rank ladder, and pressure loops rather than introduce a fourth HQ.
 - Sequence the presenter-remediation plan after the remaining skyscraper expansion-floor consequence slices. It should tighten narrative ownership and AI framing once the current tower content surface is stable enough to audit in one pass.

@@ -217,6 +217,7 @@ export interface EventTemplate extends TemplateBase {
 
 export interface PresenterTemplate extends TemplateBase {
   kind: "presenter";
+  roleTitle: string;
   roleDescription: string;
   portraitByExpression: Readonly<Record<string, string>>;
   defaultExpression: string;

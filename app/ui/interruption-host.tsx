@@ -35,7 +35,7 @@ function NarrativeLayout({
   }
 
   return (
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
       <PresenterPanel presenterId={presenterId} presenterExpression={presenterExpression} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
