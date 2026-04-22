@@ -36,7 +36,7 @@ describe("guidance host", () => {
     );
 
     expect(html).toContain("Mara Cordero");
-    expect(html).toContain("/data/presenters/assistant/serious.jpg");
+    expect(html).toContain("/data/presenters/assistant/serious.png");
     expect(html).toContain("Operations Briefing");
   });
 

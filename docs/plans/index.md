@@ -6,12 +6,13 @@ This folder is reserved for active execution plans only. Completed work should b
 
 The Porter's-era work is complete and folded back into the roadmap. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
 
-There are four active checked-in plans right now:
+There are five active checked-in plans right now:
 
 - [Porter's Room Asset Remediation](./porters-room-asset-remediation.md) — concrete Porter's room-package cleanup for missing roots, scenes, shell, structure, and viewer/runtime parity
 - [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — prerequisite work for the tower package: scene-builder support, shell sizing, and elevation-band definition before room-scene production
 - [Operations UI Cascade Refactor](./operations-ui-cascade-refactor.md) — apply the same right-anchored cascading panel model to Contracts, Active, Opportunities, and History so Operations no longer depends on the older monolithic bottom-panel composition
 - [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
+- [Narrative Event Presenter Remediation](./narrative-event-presenter-remediation.md) — tighten presenter ownership so every narrative beat, including AI-framed incidents, resolves to a domain-correct presenter with presenter-specific voice rules
 
 The HQ UI Cascade Refactor shipped: HQ now uses one right-anchored cascading panel stack for rooms, people, management, teams, inventory, and market. Room slots, staff assignment, visitor recruitment/replace, and the floor switcher all run through the cascade or a floating HQ-world control, so the plan has been retired.
 
@@ -42,3 +43,4 @@ Do not add another broad umbrella plan when a narrower active execution slice is
 - Use browser automation as the primary fast regression surface for the canonical Porter's loop.
 - Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.
 - Treat the skyscraper as the final headquarters. Later planning should deepen that building's floor expansion, rank ladder, and pressure loops rather than introduce a fourth HQ.
+- Sequence the presenter-remediation plan after the remaining skyscraper expansion-floor consequence slices. It should tighten narrative ownership and AI framing once the current tower content surface is stable enough to audit in one pass.

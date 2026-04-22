@@ -38,22 +38,99 @@ Keep prompts concrete. Specify clothing, posture, face angle, materials, and the
 
 ## Ascension Visual Direction
 
-Default raster style direction for character-facing assets:
+Ascension's raster character art uses a single locked visual language: **modern Korean action-webtoon portrait art** with grounded NYC supernatural-labor styling. This is the style contract for the shipped presenter roster and for any future recurring raster character family. Treat it as a hard spec, not a mood board.
 
-- manhwa-inspired modern dungeon-fantasy portrait art
-- clean facial readability
-- strong silhouette separation
-- cinematic but controlled lighting
-- grounded NYC workwear and lived-in details
-- supernatural edge without turning the image into generic neon fantasy
+In prompts and checked-in docs, describe the style descriptively. Do not name external IP — informal reference to specific titles (e.g. Solo Leveling) is acceptable in internal discussion only, so the asset family stays legally and creatively its own.
 
-Use "Solo Leveling" only as informal directional shorthand in internal discussion. In prompts and checked-in docs, prefer descriptive language:
+### Linework
 
-- Korean action-webtoon portrait energy
-- modern dungeon-fantasy manhwa look
-- high-contrast, polished webtoon rendering
+- Crisp, confident, deliberate outlines. Never sketchy. Never painterly.
+- Outline weight varies slightly to carry form, but stays clean and decisive.
+- Edges around hair, shoulders, and fabric breaks are intentional — no soft airbrush halos.
 
-That keeps the style target legible without tying the asset family too tightly to one outside IP.
+### Shading
+
+- Cel-adjacent: grouped shadow shapes with controlled gradient edges, not airbrushed wash.
+- Highlights are specific and restrained, never glossy.
+- Strong value range — darks read dark; midtones do most of the form work.
+- Shadow direction is consistent across the figure; no conflicting light sources.
+
+### Color
+
+- Muted cinematic jewel tones: deep reds, navy, teal, charcoal, cream, warm neutrals.
+- Avoid saturated anime primaries, pastel hospital/idol palettes, and neon fantasy washes.
+- Skin tones are warm and specific to the character's ethnicity, not pasteurized.
+- Hair color is stylized but grounded — no neon.
+
+### Character structure
+
+- Tall, elongated webtoon proportions. Slim, athletic, not chibi.
+- Angular faces, sharp jawlines, defined brows.
+- Eyes are the most-rendered feature: specific iris detail, confident brow, eyelash shape, inner-corner highlight.
+- Hair rendered with individual strand suggestion and subtle motion texture — not solid color blocks.
+
+### Clothing language
+
+- Grounded modern workwear with personality. Fabric has some flow — coats drape, hair lifts slightly — but the subject is standing, not posing.
+- Role-appropriate silhouettes. A presenter must read as their feature domain from silhouette alone.
+- No fantasy armor, no sci-fi costume, no nightclub neon, no idol glam, no frilly gacha fantasy-dress unless explicitly native to the character.
+- Supernatural accents are allowed only where they belong to the character's canon; default presenters are grounded.
+
+### Composition and framing
+
+- Full-body standing portrait in the shipped presenter-roster portrait canvas, approximately `2:3` (`1024x1536` / `1023x1537` family).
+- Slight 3/4 angle, front-facing to the camera.
+- Readable at interruption-modal scale.
+- Subject centered; negative space on either side for UI integration.
+- No dramatic action pose; the subject is present, not performing.
+
+### Background
+
+- Plain warm-white or off-white.
+- No scene detail.
+- Strong edge contrast between character silhouette and background.
+- Avoid white-on-white costume choices that destroy separation.
+
+### Style anti-patterns (automatic reject)
+
+- Generic anime school-uniform aesthetic.
+- Kawaii, chibi, or super-deformed proportions.
+- Gacha idol-glam: excessive jewelry, heart motifs, idol stage costuming.
+- Photorealistic rendering.
+- Painterly or watercolor rendering.
+- Neon or piled-on glow effects on the character.
+- Costume or rendering that reads as a different game's character sheet.
+
+### Presenter house-style lock
+
+The presenter family must read as if one artist drew the entire figure with one rendering discipline.
+
+- Keep line, shadow, prop, hair, and shoe detail at the same stylization level across the whole image.
+- Use grouped shadow masses and selective highlights; do not let one item drift into glossy digital rendering.
+- Overwork and fatigue should come from silhouette, styling choices, posture, and restrained facial cues, not wrinkle spam or texture noise.
+- Grounded civilian styling can still be fashion-forward, but it must read as lived-in workwear rather than combat gear or editorial glam.
+- Comfort-first contrast is valid when it supports the character brief, such as polished upper-body officewear paired with simpler worn shoes.
+- Props should be graphic and readable at a glance. Favor clean badge shapes and clear notebook or folder silhouettes over tiny clutter.
+- If shoes, hardware, folder edges, or hair shine start looking more rendered than the clothing and face, simplify them.
+
+## Reference-Image Workflow for Recurring Characters
+
+Recurring presenter and hero portraits use a reference workflow that preserves both style and cast consistency across expressions.
+
+1. **Ref 1 — style anchor.** An approved external style board or approved project example of the locked style (linework, shading, color, character structure). Carries the visual language. Do not re-describe the style in prompt text when Ref 1 is present.
+2. **Ref 2 — cast anchor.** Use an approved project portrait only after the family has a valid neutral master. On a fresh family reset, skip stale legacy portraits and let the first approved neutral become the cast anchor.
+3. **Generate `neutral` first.** Prompt text does identity work (who, age, ethnicity, costume, composition, constraints). Ref 1 does style; Ref 2 does cast continuity when one exists.
+4. **Approve the neutral** before generating other expressions.
+5. **Generate `concerned` / `serious` / `amused`** using the approved neutral as the reference image. Keep everything on the preserve list identical across expressions. Only the expression and minor posture change.
+6. **Record** the winning prompt and preserve list in the character's `PresenterTemplate`.
+
+### Avoid over-prompting style when refs are present
+
+When Ref 1 is carrying the style:
+
+- Strip descriptive style adjectives from the prompt text (they fight the reference).
+- Keep composition, framing, background, and negative constraints — those are framing rules, not style.
+- Keep identity details (ethnicity, age, costume, expression) — those must live in the prompt.
 
 ## Asset-Family Defaults
 
@@ -64,17 +141,21 @@ Use for:
 - assistant
 - cook
 - bartender
+- quartermaster
+- doctor
+- compliance officer
 - future recurring narrative presenters
 
 Defaults:
 
 - single character only
-- bust-up or waist-up framing
-- 3/4 or front-facing portrait
-- plain light neutral background
+- full-body standing portrait in the shipped presenter-roster portrait canvas, approximately `2:3` (`1024x1536` / `1023x1537`)
+- slight 3/4 angle, front-facing to camera
+- plain warm-white or off-white background
 - no detailed scene background
 - expression readable at modal size
 - clothing and styling must communicate role immediately
+- the whole figure must hold one consistent artist-hand; reject any localized rendering drift
 
 ### Prestige / Future Hero Assets
 
@@ -167,8 +248,8 @@ Use case: <asset family>
 Asset type: <where it will appear>
 Primary request: <what to generate>
 Subject: <who or what>
-Style/medium: <manhwa-inspired raster illustration / other>
-Composition/framing: <bust-up, 3/4, centered, etc.>
+Style/medium: <locked presenter house style / other>
+Composition/framing: <full-body presenter-roster canvas (~2:3 / 1024x1536), slight 3/4, centered, etc.>
 Lighting/mood: <lighting and emotional tone>
 Background: <plain warm-white / other controlled background>
 Key details: <hair, clothing, props, posture, facial read>
@@ -178,18 +259,20 @@ Avoid: <negative constraints>
 
 ## Presenter Prompt Example
 
+Prompt template below assumes Ref 1 (style anchor) is attached. If the family already has an approved neutral, attach that as Ref 2. Style adjectives are deliberately stripped — style is carried by the reference image.
+
 ```text
 Use case: narrative presenter portrait
 Asset type: interruption modal portrait
-Primary request: create a recurring narrative portrait for the guild assistant
-Subject: competent office assistant in a modern supernatural labor guild, late 20s to 30s, dry and composed, visibly used to chaos
-Style/medium: polished manhwa-inspired dungeon-fantasy portrait illustration with grounded NYC workplace styling
-Composition/framing: waist-up, 3/4 view, centered, readable at small modal size
-Lighting/mood: controlled indoor light, calm but serious, slight cinematic contrast
-Background: plain warm-white background, no scene detail, designed for faux-cutout presentation on a dark modal panel
-Key details: practical officewear, clipboard or folder optional, clear facial silhouette, intelligent and slightly tired expression
-Constraints: single character only, no text, no logos, no cluttered props, no dramatic action pose
-Avoid: generic anime school-uniform styling, neon overload, exaggerated armor, messy background, extra people
+Style/medium: carried by the style reference image; do not add further style adjectives
+Primary request: recurring narrative portrait for the guild assistant
+Subject: competent office assistant in a modern supernatural labor guild, late 20s to early 30s, Afro-Latina, dry and composed, visibly used to chaos
+Composition/framing: full-body standing portrait, centered in the shipped presenter-roster portrait canvas (~2:3 / 1024x1536), slight 3/4 angle, readable at interruption-modal size
+Lighting/mood: controlled indoor light, calm cinematic contrast, practical rather than glamorous
+Background: plain warm-white background, no scene detail, designed for faux-cutout presentation on a dark portrait panel
+Key details: textured dark curls pinned back, tailored charcoal blouse with rolled sleeves, fitted slacks, practical heels, worn lanyard badge, slim black folder, intelligent and slightly tired expression
+Constraints: single character only, no readable text in image, no logos, no clutter, no dramatic action pose, no armor
+Avoid: generic anime school styling, neon overload, fantasy armor, messy background, extra people
 ```
 
 ## Iteration Policy

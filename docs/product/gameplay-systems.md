@@ -52,7 +52,15 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
 - Guidance beats, incidents, and other interruption-backed narrative surfaces may optionally bind an authored presenter character id.
 - Presenter binding is content data layered on the existing runtime-owned interruption and guidance systems, not a parallel authority path.
-- The shipped presenter layer starts with the assistant retrofitted into the bodega path and extends into Porter's domain presenters such as the cook and bartender.
+- The presenter layer is a cross-building domain roster rather than a building-locked cast. The current canon anchor set is the assistant, cook, bartender, quartermaster, doctor, and compliance officer.
+- Presenter binding should follow a stable feature-ownership contract so product and code can choose voices consistently:
+  - assistant: contracts, staffing, operations, fallback campaign guidance, relocation continuity
+  - cook: hospitality, food quality, comfort-first recovery, kitchen-adjacent rooms and incidents
+  - bartender: recruitment reads, front-of-house pressure, nightlife and public-facing social beats
+  - quartermaster: gear readiness, loot triage, selling / loot-filter instruction, stock flow, workshop / fabrication
+  - doctor: injury, treatment, recovery, infirmary / trauma support, post-mission medical consequence beats
+  - compliance officer: compliance, policy, regulator-facing paperwork, institutional pressure, executive-floor consequence beats
+- When multiple presenters could plausibly comment, bind the one whose system domain most directly caused the beat instead of the nearest building or room theme.
 - Future AI support may help draft or vary non-authoritative copy only after the deterministic framework exists. It must not choose triggers, hidden weights, available choices, or outcome logic.
 - Any AI-assisted authoring workflow for tutorials or narrative events must include the world foundation as canonical tone and content input so generated material stays consistent with the setting.
 
