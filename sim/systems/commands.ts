@@ -22,7 +22,8 @@ import {
   getRoomStateId,
   getSlotKey,
 } from "lib/hq-room-state";
-import { deriveOperatorCombatDefaults, type OperatorRank } from "lib/operator-combat";
+import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import type { CombatRank } from "content/templates/combat-packages";
 import { deriveRecruitRank } from "lib/visitor-rank";
 import { formatIdentityText, type GameIdentity } from "lib/game-identity";
 import { stableStringHash } from "lib/stable-hash";
@@ -61,13 +62,13 @@ import {
   Renderable,
   RoomInstance,
   ScheduleState,
-  StaffState,
   TrainingState,
   VisitorState,
   WorldTimeState,
 } from "../components";
 import { ensureOperatorDispositionEntity, ensureRoomCultureEntity } from "./social";
 import { getRecruitmentGateState } from "./opening-envelope";
+import { unlockPresenterForRoomTemplate } from "./presenter-unlocks";
 import type { RuntimeEvent, SimSystemContext, VisitorQueueState } from "./types";
 
 // Late-bound encounter/interruption/incident command handler.
@@ -94,34 +95,6 @@ export function registerContractCommandHandler(
 }
 
 const ROLE_TAG_PREFIX = "role:";
-const STAFF_TAG_PREFIX = "staff:";
-const CANONICAL_STAFF_ROLE_TAGS = [
-  "staff:reception",
-  "staff:logistics",
-  "staff:maintenance",
-  "staff:medical",
-  "staff:admin",
-] as const;
-type CanonicalStaffRoleTag = (typeof CANONICAL_STAFF_ROLE_TAGS)[number];
-const canonicalStaffRoleTagSet = new Set<string>(CANONICAL_STAFF_ROLE_TAGS);
-const STAFF_ROLE_TAG_ALIASES: Record<string, CanonicalStaffRoleTag> = {
-  reception: "staff:reception",
-  "role:reception": "staff:reception",
-  "staff:reception": "staff:reception",
-  logistics: "staff:logistics",
-  "staff:logistics": "staff:logistics",
-  maintenance: "staff:maintenance",
-  "staff:maintenance": "staff:maintenance",
-  medical: "staff:medical",
-  "role:medic": "staff:medical",
-  "staff:medical": "staff:medical",
-  admin: "staff:admin",
-  administrative: "staff:admin",
-  general: "staff:admin",
-  recruitment: "staff:admin",
-  "role:recruitment": "staff:admin",
-  "staff:admin": "staff:admin",
-};
 const DEFAULT_SHIFT_START = 480;
 const DEFAULT_SHIFT_END = 1080;
 const DEFAULT_HISTORY_TAG_LIMIT = 6;
@@ -493,20 +466,6 @@ export function getRoleTag(tags: readonly string[]): string {
   return tags.find((tag) => tag.startsWith(ROLE_TAG_PREFIX)) ?? "role:general";
 }
 
-export function getStaffRoleTag(tags: readonly string[]): CanonicalStaffRoleTag | "" {
-  const tag = tags.find((candidate) => candidate.startsWith(STAFF_TAG_PREFIX)) ?? "";
-  return isCanonicalStaffRoleTag(tag) ? tag : "";
-}
-
-export function isCanonicalStaffRoleTag(value: string): value is CanonicalStaffRoleTag {
-  return canonicalStaffRoleTagSet.has(value);
-}
-
-export function normalizeStaffRoleTag(value: string): CanonicalStaffRoleTag | null {
-  const normalized = STAFF_ROLE_TAG_ALIASES[value.trim()];
-  return normalized ?? null;
-}
-
 function getBuildingEntity(context: SimSystemContext): number {
   return context.singletonEntities.building;
 }
@@ -611,17 +570,6 @@ function getRoomTiers(context: SimSystemContext): Map<string, number> {
   return tiers;
 }
 
-function getStaffRoleCounts(context: SimSystemContext): Map<string, number> {
-  const counts = new Map<string, number>();
-
-  context.runtimeState.staffEntities.forEach((entity) => {
-    const roleTag = StaffState.roleTag[entity];
-    counts.set(roleTag, (counts.get(roleTag) ?? 0) + 1);
-  });
-
-  return counts;
-}
-
 export function buildRequirementContext(context: SimSystemContext): RequirementEvaluationContext {
   const buildingEntity = getBuildingEntity(context);
   const activeBuildingTemplate = getActiveBuildingTemplate(context);
@@ -643,7 +591,6 @@ export function buildRequirementContext(context: SimSystemContext): RequirementE
     ]),
     roomCounts: getRoomCounts(context),
     roomTiers: getRoomTiers(context),
-    staffRoleCounts: getStaffRoleCounts(context),
     operatorCount: context.runtimeState.operatorEntities.filter(
       (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
     ).length,
@@ -680,10 +627,7 @@ export function getAdjustedMarketPriceForItem(
     return null;
   }
 
-  if (
-    !hasStaffedOperationalRoomTemplate(context, BODEGA_BACKSTOCK_TEMPLATE_ID) ||
-    price.buyPrice <= 0
-  ) {
+  if (!hasOperationalRoomTemplate(context, BODEGA_BACKSTOCK_TEMPLATE_ID) || price.buyPrice <= 0) {
     return price;
   }
 
@@ -861,9 +805,6 @@ export function createRoomInstanceEntity(
     cols?: number;
     rows?: number;
   },
-  options?: {
-    isRequestedActive?: boolean;
-  },
 ): string | null {
   const template = context.registry.roomById.get(templateId);
   if (!template) {
@@ -896,9 +837,7 @@ export function createRoomInstanceEntity(
   RoomInstance.roomStateId[entity] = getRoomStateId(template.id, []);
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
-  RoomInstance.isRequestedActive[entity] = options?.isRequestedActive ? 1 : 0;
-  RoomInstance.isOperational[entity] = 0;
-  RoomInstance.assignedStaffCount[entity] = 0;
+  RoomInstance.isOperational[entity] = 1;
   RoomInstance.appliedUpgradeIds[entity] = [];
   RoomInstance.slotIndex[entity] = slotIndex;
   RoomInstance.reservedCol[entity] = reservedFootprint.col;
@@ -943,7 +882,7 @@ function createOperatorEntity(
       workStartMinute: number;
       workEndMinute: number;
     };
-    rank?: OperatorRank;
+    rank?: CombatRank;
   },
 ): number {
   const entity = addEntity(context.world);
@@ -954,7 +893,11 @@ function createOperatorEntity(
       roleTag: source.roleTag,
       specialtyTag: source.specialtyTag,
     });
-  const combat = deriveOperatorCombatDefaults(source.roleTag, source.rank);
+  const combat = deriveOperatorCombatDefaults(
+    source.roleTag,
+    source.rank,
+    context.runtimeState.combatPackageRegistry,
+  );
 
   addComponent(context.world, entity, OperatorIdentity);
   addComponent(context.world, entity, NeedState);
@@ -986,10 +929,8 @@ function createOperatorEntity(
   OperatorIdentity.rank[entity] = combat.rank;
   OperatorIdentity.attunementTag[entity] = combat.attunementTag;
   OperatorIdentity.traits[entity] = [...combat.traits];
-  OperatorIdentity.regularAttackId[entity] = combat.kit.regularAttackId;
-  OperatorIdentity.skillId[entity] = combat.kit.skillId;
-  OperatorIdentity.ultimateId[entity] = combat.kit.ultimateId;
-  OperatorIdentity.passiveIds[entity] = [...combat.kit.passiveIds];
+  OperatorIdentity.combatPackageId[entity] = combat.combatPackageId;
+  OperatorIdentity.blocks[entity] = combat.blocks;
   OperatorIdentity.baseStrength[entity] = combat.baseStats.strength;
   OperatorIdentity.baseSpeed[entity] = combat.baseStats.speed;
   OperatorIdentity.baseEndurance[entity] = combat.baseStats.endurance;
@@ -1031,73 +972,6 @@ function createOperatorEntity(
   ensureOperatorDispositionEntity(context, OperatorIdentity.id[entity]);
   context.runtimeState.nextOperatorSequence += 1;
   return entity;
-}
-
-// Name pool for dynamically hired staff (deterministic by sequence number).
-const STAFF_NAMES: readonly string[] = [
-  "Dana Wolfe",
-  "Emile Nava",
-  "Freya Cobb",
-  "Gael Moran",
-  "Hiro Vance",
-  "Ida Kwan",
-  "Jasper Doyle",
-  "Kira Sato",
-  "Leo Vidal",
-  "Maren Cho",
-  "Nico Stein",
-  "Olive Ruiz",
-  "Pax Lindahl",
-  "Remy Serra",
-  "Suki Roth",
-  "Tomas Carr",
-  "Uma Phan",
-  "Victor Albright",
-  "Wren Ito",
-  "Zara Medina",
-];
-
-function createStaffEntity(context: SimSystemContext, roleTag: string): boolean {
-  const normalizedRoleTag = normalizeStaffRoleTag(roleTag);
-  if (!normalizedRoleTag) {
-    return false;
-  }
-
-  const entity = addEntity(context.world);
-
-  addComponent(context.world, entity, StaffState);
-  addComponent(context.world, entity, MoraleState);
-  addComponent(context.world, entity, LoyaltyState);
-  addComponent(context.world, entity, ScheduleState);
-  addComponent(context.world, entity, AssignmentState);
-  addComponent(context.world, entity, NeedState);
-  addComponent(context.world, entity, InjuryState);
-
-  const seq = context.runtimeState.nextStaffSequence;
-  StaffState.id[entity] = `staff/${seq}`;
-  StaffState.name[entity] = STAFF_NAMES[seq % STAFF_NAMES.length];
-  StaffState.roleTag[entity] = normalizedRoleTag;
-  StaffState.status[entity] = "available";
-  StaffState.wage[entity] = 16 + (scoreString(roleTag) % 7);
-  MoraleState.current[entity] = 58;
-  MoraleState.baseline[entity] = 58;
-  LoyaltyState.current[entity] = 54;
-  LoyaltyState.baseline[entity] = 54;
-  ScheduleState.currentBlock[entity] = "idle";
-  ScheduleState.workStartMinute[entity] = DEFAULT_SHIFT_START;
-  ScheduleState.workEndMinute[entity] = DEFAULT_SHIFT_END;
-  AssignmentState.kind[entity] = "idle";
-  AssignmentState.targetId[entity] = "";
-  NeedState.hunger[entity] = 18;
-  NeedState.fatigue[entity] = 24;
-  NeedState.stress[entity] = 14;
-  InjuryState.severity[entity] = 0;
-  InjuryState.recoveryHoursRemaining[entity] = 0;
-  InjuryState.treated[entity] = 0;
-
-  context.runtimeState.staffEntities.push(entity);
-  context.runtimeState.nextStaffSequence += 1;
-  return true;
 }
 
 export function spawnVisitorEntity(context: SimSystemContext, seed: VisitorSeed): void {
@@ -1207,10 +1081,6 @@ function findVisitorEntityById(context: SimSystemContext, visitorId: string): nu
   );
 }
 
-function findStaffEntityById(context: SimSystemContext, staffId: string): number | undefined {
-  return context.runtimeState.staffEntities.find((entity) => StaffState.id[entity] === staffId);
-}
-
 export function hasOperationalRecruitmentRoom(context: SimSystemContext): boolean {
   return context.runtimeState.roomEntities.some((entity) => {
     const template = getRoomTemplateForEntity(context, entity);
@@ -1286,37 +1156,11 @@ export function hasOperationalRoomTemplate(context: SimSystemContext, templateId
   });
 }
 
-export function hasStaffedOperationalRoomTemplate(
-  context: SimSystemContext,
-  templateId: string,
-): boolean {
-  return context.runtimeState.roomEntities.some((entity) => {
-    const template = getRoomTemplateForEntity(context, entity);
-    return (
-      template.id === templateId &&
-      RoomInstance.isOperational[entity] === 1 &&
-      RoomInstance.assignedStaffCount[entity] >= 1
-    );
-  });
-}
-
 /** Check if any operational room has the given tag. Building-agnostic. */
 export function hasOperationalRoomWithTag(context: SimSystemContext, tag: string): boolean {
   return context.runtimeState.roomEntities.some((entity) => {
     const template = getRoomTemplateForEntity(context, entity);
     return template.tags.includes(tag) && RoomInstance.isOperational[entity] === 1;
-  });
-}
-
-/** Check if any operational + staffed room has the given tag. Building-agnostic. */
-export function hasStaffedOperationalRoomWithTag(context: SimSystemContext, tag: string): boolean {
-  return context.runtimeState.roomEntities.some((entity) => {
-    const template = getRoomTemplateForEntity(context, entity);
-    return (
-      template.tags.includes(tag) &&
-      RoomInstance.isOperational[entity] === 1 &&
-      RoomInstance.assignedStaffCount[entity] >= 1
-    );
   });
 }
 
@@ -1401,6 +1245,20 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       if (!roomId) {
         return;
       }
+      recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
+      const unlockedPresenterId = unlockPresenterForRoomTemplate(context, template.id);
+      if (unlockedPresenterId) {
+        const presenter = context.registry.presenterById.get(unlockedPresenterId);
+        if (presenter) {
+          pushRuntimeEvent(context, {
+            kind: "presenter_unlocked",
+            message: `${presenter.name} has joined the guild.`,
+            accent: "gold",
+            targetKind: "presenter",
+            targetId: unlockedPresenterId,
+          });
+        }
+      }
       if (template.id === BODEGA_BACK_OFFICE_TEMPLATE_ID) {
         pushRuntimeEvent(context, {
           kind: "event_change",
@@ -1439,18 +1297,6 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       }
 
       BuildingAuthority.activeFloorIndex[buildingEntity] = command.floorIndex;
-      return;
-    }
-    case "sim/set-room-active": {
-      const roomEntity = findRoomEntityById(context, command.roomId);
-      if (roomEntity === undefined) {
-        return;
-      }
-
-      if (RoomInstance.isRequestedActive[roomEntity] !== (command.isActive ? 1 : 0)) {
-        recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
-      }
-      RoomInstance.isRequestedActive[roomEntity] = command.isActive ? 1 : 0;
       return;
     }
     case "sim/set-policy": {
@@ -1544,7 +1390,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       // Recompute derived authority state immediately so the new tier,
       // unlocked templates, and slot count are visible to the placement
       // logic that seeds starter rooms below.
-      refreshBuildingAuthoritySystem(context);
+      refreshBuildingAuthoritySystem(context, 0);
 
       const newFloors = getBuildingFloors(
         activeBuildingTemplate.id,
@@ -1556,17 +1402,12 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
           if (!slot.startingTemplateId) continue;
           const template = context.registry.roomById.get(slot.startingTemplateId);
           if (!template) continue;
-          createRoomInstanceEntity(
-            context,
-            template.id,
-            {
-              floorIndex: floor.floorIndex,
-              slotId: slot.slotId,
-              reservedFootprint: { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows },
-            },
-            undefined,
-            { isRequestedActive: true },
-          );
+          createRoomInstanceEntity(context, template.id, {
+            floorIndex: floor.floorIndex,
+            slotId: slot.slotId,
+            reservedFootprint: { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows },
+          });
+          unlockPresenterForRoomTemplate(context, template.id);
         }
       }
 
@@ -1790,80 +1631,6 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       });
       return;
     }
-    case "sim/hire-staff": {
-      const normalizedRoleTag = normalizeStaffRoleTag(command.roleTag);
-      if (!normalizedRoleTag) {
-        return;
-      }
-
-      const hiringCost = 28 + (scoreString(command.roleTag) % 9);
-      if (readResourceBalance(context, "resource/cash") < hiringCost) {
-        return;
-      }
-
-      spendResourceBalance(context, "resource/cash", hiringCost);
-      createStaffEntity(context, normalizedRoleTag);
-      return;
-    }
-    case "sim/assign-staff": {
-      const staffEntity = findStaffEntityById(context, command.staffId);
-      if (staffEntity === undefined) {
-        return;
-      }
-
-      const previousAssignment = {
-        kind: AssignmentState.kind[staffEntity],
-        targetId: AssignmentState.targetId[staffEntity],
-      };
-
-      if (!command.roomId) {
-        AssignmentState.kind[staffEntity] = "idle";
-        AssignmentState.targetId[staffEntity] = "";
-        if (previousAssignment.kind !== "idle" || previousAssignment.targetId !== "") {
-          recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
-        }
-        return;
-      }
-
-      const roomEntity = findRoomEntityById(context, command.roomId);
-      if (roomEntity === undefined) {
-        return;
-      }
-
-      const template = getRoomTemplateForEntity(context, roomEntity);
-      const requiredStaffRoleTag = getStaffRoleTag(template.tags);
-      if (!requiredStaffRoleTag || StaffState.roleTag[staffEntity] !== requiredStaffRoleTag) {
-        return;
-      }
-
-      AssignmentState.kind[staffEntity] = "room";
-      AssignmentState.targetId[staffEntity] = command.roomId;
-      if (
-        previousAssignment.kind !== AssignmentState.kind[staffEntity] ||
-        previousAssignment.targetId !== AssignmentState.targetId[staffEntity]
-      ) {
-        recordGuidanceInteraction(context.runtimeState.guidanceState, "staffing_action");
-        if (template.id === BODEGA_BACK_OFFICE_TEMPLATE_ID) {
-          pushRuntimeEvent(context, {
-            kind: "event_change",
-            message: "The Back Office started reviewing contract intel and compliance paperwork.",
-            accent: "gold",
-            targetKind: "room",
-            targetId: command.roomId,
-          });
-        } else if (template.id === BODEGA_BACKSTOCK_TEMPLATE_ID) {
-          pushRuntimeEvent(context, {
-            kind: "event_change",
-            message: "Backstock logistics are staffed. Loadout prep should run cleaner now.",
-            accent: "gold",
-            targetKind: "room",
-            targetId: command.roomId,
-          });
-        }
-      }
-      return;
-    }
-
     case "sim/buy-item": {
       const price = getAdjustedMarketPriceForItem(context, command.itemId);
       if (!price || price.buyPrice <= 0) return;
@@ -1995,8 +1762,8 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       const recipe = context.registry.prepRecipeById.get(command.recipeId);
       if (!recipe) return;
 
-      // Check that the required room is operational and staffed
-      if (!hasStaffedOperationalRoomWithTag(context, recipe.requiredRoomTag)) return;
+      // Check that the required room is operational
+      if (!hasOperationalRoomWithTag(context, recipe.requiredRoomTag)) return;
 
       // Check that the player has all required inputs
       for (const input of recipe.inputs) {
@@ -2022,8 +1789,8 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       const craftRecipe = context.registry.craftRecipeById.get(command.recipeId);
       if (!craftRecipe) return;
 
-      // Workshop room must be operational and staffed
-      if (!hasStaffedOperationalRoomTemplate(context, craftRecipe.requiredRoomId)) return;
+      // Workshop room must be operational
+      if (!hasOperationalRoomTemplate(context, craftRecipe.requiredRoomId)) return;
 
       // Building tier gate
       const buildingEntity = context.singletonEntities.building;

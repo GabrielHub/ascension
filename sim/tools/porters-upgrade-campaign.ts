@@ -251,10 +251,6 @@ export function createPortersUpgradeCampaignSeedWorld(): WorldSnapshot {
   relocatedWorld.interruptionQueue = null;
   relocatedWorld.incidentState = null;
   relocatedWorld.visitors = [];
-  relocatedWorld.staff = (relocatedWorld.staff ?? []).map((staff) => ({
-    ...staff,
-    assignment: { kind: "idle", targetId: "" },
-  }));
   relocatedWorld.operators = (relocatedWorld.operators ?? []).map((operator) => ({
     ...operator,
     assignment: { kind: "idle", targetId: "" },
@@ -320,15 +316,6 @@ export async function runPortersUpgradeCampaign(): Promise<PortersUpgradeCampaig
     createPortersUpgradeCampaignSeedWorld(),
     templateRegistry,
   );
-  const activateRoomByTemplateId = (templateId: string) => {
-    const roomId = simulation
-      .getPhase1View()
-      .rooms.find((room) => room.templateId === templateId)?.id;
-    if (!roomId) {
-      throw new Error(`Expected room ${templateId} to exist in the Porters campaign run.`);
-    }
-    simulation.dispatch({ type: "sim/set-room-active", roomId, isActive: true });
-  };
 
   for (const upgradeId of PORTERS_CAMPAIGN_UPGRADE_SEQUENCE) {
     simulation.dispatch({ type: "sim/purchase-building-upgrade", upgradeId });
@@ -359,10 +346,6 @@ export async function runPortersUpgradeCampaign(): Promise<PortersUpgradeCampaig
     floorIndex: 2,
     slotId: "slot/deck",
   });
-  activateRoomByTemplateId("room/prep_room:tier_1");
-  activateRoomByTemplateId("room/briefing_room:tier_1");
-  activateRoomByTemplateId("room/dock:tier_1");
-  activateRoomByTemplateId("room/deck:tier_1");
 
   const postingId = simulation.getPhase1View().postedContracts[0]?.postingId;
   if (!postingId) {

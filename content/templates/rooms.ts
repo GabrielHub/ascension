@@ -5,7 +5,7 @@ export const roomTemplates = [
     id: "room/register:tier_1",
     kind: "room",
     name: "The Register",
-    tags: ["room:operations", "staff:reception"],
+    tags: ["room:operations", "room:reception"],
     description: "The checkout counter where intake, paperwork, and walk-in visitors all collide.",
     tier: 1,
     baseCapacity: 2,
@@ -37,7 +37,7 @@ export const roomTemplates = [
     id: "room/supply_closet:tier_1",
     kind: "room",
     name: "Supply Closet",
-    tags: ["room:staffing", "staff:logistics"],
+    tags: ["room:logistics"],
     description:
       "A cramped back-room closet for gear, stock, paperwork overflow, and whatever else fits on the shelf.",
     tier: 1,
@@ -48,7 +48,7 @@ export const roomTemplates = [
     id: "room/back_office:tier_1",
     kind: "room",
     name: "The Back Office",
-    tags: ["room:operations", "ops:intel", "staff:admin"],
+    tags: ["room:operations", "ops:intel"],
     description:
       "A cramped annex office where contract research, permits, payroll, and the paperwork panic finally get a real door.",
     tier: 1,
@@ -59,7 +59,7 @@ export const roomTemplates = [
     id: "room/backstock:tier_1",
     kind: "room",
     name: "The Backstock",
-    tags: ["room:staffing", "staff:logistics"],
+    tags: ["room:logistics"],
     description:
       "The annexed unit's storage space, finally organized into something that is not a literal closet. Heavy inventory and staging work happens here.",
     tier: 1,
@@ -104,7 +104,7 @@ export const roomTemplates = [
     id: "room/office:tier_1",
     kind: "room",
     name: "The Office",
-    tags: ["room:operations", "ops:intel", "staff:admin"],
+    tags: ["room:operations", "ops:intel"],
     description:
       "An upstairs room with a real desk, filing cabinets, and a door that actually closes. The first time admin work has had its own space instead of sharing a counter with sandwich orders.",
     tier: 1,
@@ -115,7 +115,7 @@ export const roomTemplates = [
     id: "room/stockroom:tier_1",
     kind: "room",
     name: "The Stockroom",
-    tags: ["room:staffing", "staff:logistics"],
+    tags: ["room:logistics"],
     description:
       "Industrial shelving, labeled crates, and enough floor space to lay out a full loadout without knocking anything over. Smells like packing tape and old wood.",
     tier: 1,
@@ -126,7 +126,7 @@ export const roomTemplates = [
     id: "room/infirmary:tier_1",
     kind: "room",
     name: "The Infirmary",
-    tags: ["room:recovery", "staff:medical"],
+    tags: ["room:recovery"],
     description:
       "A cot with actual sheets, a locked supply cabinet, and overhead lighting that does not flicker. The first time someone getting patched up does not have to share the room with lunch.",
     tier: 1,
@@ -148,7 +148,7 @@ export const roomTemplates = [
     id: "room/prep_room:tier_1",
     kind: "room",
     name: "The Prep Room",
-    tags: ["room:operations", "ops:staging", "staff:logistics"],
+    tags: ["room:operations", "ops:staging"],
     description:
       "A back room with a steel table, wall hooks, and bins of salvaged monster parts. Not a workshop — more like a field kitchen where someone who knows what they are doing can turn raw drops into something useful.",
     tier: 1,
@@ -204,7 +204,7 @@ export const roomTemplates = [
     id: "room/workshop:tier_1",
     kind: "room",
     name: "The Workshop",
-    tags: ["room:operations", "ops:crafting", "staff:logistics"],
+    tags: ["room:operations", "ops:crafting"],
     description:
       "A converted machine shop behind the dock with a welding bench, a parts press, and ventilation that mostly works. The first place the guild can turn raw site materials into durable field gear instead of buying everything off the rack.",
     tier: 1,
@@ -227,7 +227,7 @@ export const roomTemplates = [
     id: "room/reception:tier_1",
     kind: "room",
     name: "The Front Desk",
-    tags: ["room:operations", "staff:reception"],
+    tags: ["room:operations", "room:reception"],
     description:
       "A pair of workstations behind the lobby counter. Badges printed here, calls routed here, and walk-in paperwork filed here before anybody gets further into the building. The first formal screen between the guild and the street.",
     tier: 1,
@@ -238,7 +238,7 @@ export const roomTemplates = [
     id: "room/bullpen:tier_1",
     kind: "room",
     name: "The Bullpen",
-    tags: ["room:operations", "ops:intel", "staff:admin"],
+    tags: ["room:operations", "ops:intel"],
     description:
       "An open operations floor with rolling chairs, a glass conference wall, and a corkboard that takes up half a corridor. Contract research, intel triage, and day-to-day coordination happen in the same room instead of being split across a kitchen office and a folding table.",
     tier: 1,
@@ -260,7 +260,7 @@ export const roomTemplates = [
     id: "room/clinic:tier_1",
     kind: "room",
     name: "The Clinic",
-    tags: ["room:recovery", "staff:medical"],
+    tags: ["room:recovery"],
     description:
       "A proper recovery suite on a quiet floor — exam bays behind curtains, a small trauma station, and locked cabinets stocked with more than the infirmary ever had. The first time guild medical feels like a clinic instead of a back-room cot.",
     tier: 1,
@@ -293,7 +293,7 @@ export const roomTemplates = [
     id: "room/supply_hall:tier_1",
     kind: "room",
     name: "The Supply Hall",
-    tags: ["room:staffing", "staff:logistics", "ops:staging"],
+    tags: ["room:logistics", "ops:staging"],
     description:
       "A logistics floor built around racks, a weighing station, and a secure cage for contract-sensitive gear. Loadouts get assembled here instead of dragged out of a stockroom, and teams can stage a departure without tripping over the bar.",
     tier: 1,
@@ -304,7 +304,7 @@ export const roomTemplates = [
     id: "room/fabrication_bay:tier_1",
     kind: "room",
     name: "The Fabrication Bay",
-    tags: ["room:operations", "ops:crafting", "staff:logistics"],
+    tags: ["room:operations", "ops:crafting"],
     description:
       "A sealed workshop off the supply hall — lathe, press, reinforced bench, and proper ventilation piped up through the shaft. The workshop Porter's machine shop grew into, without the dock stink or the salt corrosion.",
     tier: 1,
@@ -383,7 +383,7 @@ export const roomTemplates = [
     id: "room/trauma_bay:tier_1",
     kind: "room",
     name: "The Trauma Bay",
-    tags: ["room:training", "staff:medical", "role:medic"],
+    tags: ["room:training", "role:medic"],
     description:
       "A simulation suite with a real surgical light, training mannequins, and a wall of timed scenarios. Medics come here to run trauma calls under pressure instead of learning them in the field. The clinic patches operators; this room sharpens the people who do the patching.",
     tier: 1,
@@ -395,7 +395,7 @@ export const roomTemplates = [
     id: "room/executive_office:tier_1",
     kind: "room",
     name: "The Executive Office",
-    tags: ["room:operations", "staff:admin", "ops:intel"],
+    tags: ["room:operations", "ops:intel"],
     description:
       "{playerName}'s office on the executive floor — a corner suite with a wide desk, a meeting table for four, and a glass door with the {guildName} mark on it. Faction reps come here. So do regulators. The first room in the tower where the player's name is on the door.",
     tier: 1,
@@ -406,7 +406,7 @@ export const roomTemplates = [
     id: "room/compliance_office:tier_1",
     kind: "room",
     name: "The Compliance Office",
-    tags: ["room:operations", "staff:admin"],
+    tags: ["room:operations"],
     description:
       "A side office on the executive floor stacked with filing cabinets, a secure terminal, and a calendar full of audit windows. Where the guild keeps its paperwork in a state that can survive a regulator showing up unannounced.",
     tier: 1,

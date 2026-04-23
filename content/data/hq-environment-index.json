@@ -17,7 +17,7 @@
           "room:operations",
           "room:recovery",
           "room:social",
-          "room:staffing",
+          "room:logistics",
           "room:training"
         ],
         "sceneSystem": {
@@ -398,9 +398,9 @@
         {
           "id": "recipes/scene-the-backstock",
           "category": "scene",
-          "tags": ["room", "interior", "props-only", "bodega", "storage", "staffing", "annex"],
+          "tags": ["room", "interior", "props-only", "bodega", "storage", "logistics", "annex"],
           "scale": "room",
-          "roomFamily": "staffing",
+          "roomFamily": "logistics",
           "status": "approved"
         },
         {
@@ -510,47 +510,41 @@
     "building/porters": {
       "style": "porters-waterfront-isometric",
       "paths": {
-        "partsRoot": "/data/svg-environments/hq/bodega/parts",
-        "referenceRoot": "/data/svg-environments/hq/bodega/reference",
-        "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
+        "partsRoot": "/data/svg-environments/hq/porters/parts",
+        "referenceRoot": "/data/svg-environments/hq/porters/reference",
+        "recipesRoot": "/data/svg-environments/hq/porters/recipes"
       },
       "parts": [
         {
-          "id": "background/iso-bg-tenement-left",
-          "category": "background",
-          "tags": ["building", "tenement", "adjacent", "left", "isometric", "backdrop"],
-          "scale": "backdrop",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "background/iso-bg-tenement-right",
-          "category": "background",
-          "tags": ["building", "tenement", "adjacent", "right", "isometric", "backdrop"],
-          "scale": "backdrop",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
           "id": "background/iso-bg-building-tall",
           "category": "background",
-          "tags": ["building", "adjacent", "tall", "isometric", "backdrop"],
+          "tags": ["building", "adjacent", "tall", "isometric", "backdrop", "porters"],
           "scale": "backdrop",
           "roomFamily": null,
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-garden",
+          "id": "background/iso-bg-warehouse",
           "category": "background",
-          "tags": ["garden", "park", "foliage", "isometric", "backdrop"],
+          "tags": ["warehouse", "industrial", "building", "red-hook", "isometric", "backdrop"],
           "scale": "backdrop",
           "roomFamily": null,
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-back-alley",
+          "id": "background/iso-bg-warehouse-arched",
           "category": "background",
-          "tags": ["alley", "rear", "dumpster", "trash", "isometric", "backdrop"],
+          "tags": [
+            "building",
+            "warehouse",
+            "brick",
+            "arched-windows",
+            "industrial",
+            "red-hook",
+            "right-facing",
+            "isometric",
+            "backdrop"
+          ],
           "scale": "backdrop",
           "roomFamily": null,
           "status": "approved"
@@ -596,9 +590,25 @@
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-trash-bags",
+          "id": "background/iso-bg-trash-can-wire",
           "category": "background",
-          "tags": ["trash", "garbage", "bags", "street-detail", "isometric"],
+          "tags": ["trash-can", "wire", "street-furniture", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-traffic-light",
+          "category": "background",
+          "tags": ["traffic-light", "street", "signal", "isometric"],
+          "scale": "prop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-street-sign",
+          "category": "background",
+          "tags": ["street-sign", "wayfinding", "street-furniture", "isometric"],
           "scale": "prop",
           "roomFamily": null,
           "status": "approved"
@@ -624,14 +634,6 @@
           "category": "background",
           "tags": ["rope", "coil", "dock", "maritime", "isometric"],
           "scale": "prop",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "background/iso-bg-warehouse",
-          "category": "background",
-          "tags": ["warehouse", "industrial", "building", "red-hook", "isometric", "backdrop"],
-          "scale": "backdrop",
           "roomFamily": null,
           "status": "approved"
         },
@@ -668,24 +670,6 @@
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-warehouse-arched",
-          "category": "background",
-          "tags": [
-            "building",
-            "warehouse",
-            "brick",
-            "arched-windows",
-            "industrial",
-            "red-hook",
-            "right-facing",
-            "isometric",
-            "backdrop"
-          ],
-          "scale": "backdrop",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
           "id": "background/iso-bg-water-tower",
           "category": "background",
           "tags": ["water-tower", "wooden-tank", "rooftop", "brooklyn", "industrial", "isometric"],
@@ -716,6 +700,110 @@
           "scale": "prop",
           "roomFamily": null,
           "status": "approved"
+        },
+        {
+          "id": "shell/porters-stacked-shell",
+          "category": "shell",
+          "tags": ["building", "shell", "porters", "stacked", "waterfront", "isometric"],
+          "scale": "building",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-floor",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "social", "dining"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-bar",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "social", "bar", "recruitment"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-office",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "operations", "office", "admin"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-stockroom",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "stockroom", "logistics"],
+          "scale": "room",
+          "roomFamily": "logistics",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-infirmary",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "recovery", "infirmary", "medical"],
+          "scale": "room",
+          "roomFamily": "recovery",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-gym",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "training", "gym"],
+          "scale": "room",
+          "roomFamily": "training",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-prep-room",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "operations", "prep", "staging"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-break-room",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "social", "break-room", "recovery"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-briefing-room",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "operations", "briefing", "intel"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-dock",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "operations", "dock", "waterfront"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-deck",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "social", "deck", "waterfront"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-workshop",
+          "category": "scene",
+          "tags": ["porters", "room", "props-only", "operations", "workshop", "crafting"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
         }
       ],
       "composition": {
@@ -727,7 +815,7 @@
           "room:operations",
           "room:recovery",
           "room:social",
-          "room:staffing",
+          "room:logistics",
           "room:training"
         ],
         "sceneSystem": {
@@ -750,10 +838,35 @@
             "shadowIntensity": 0.1,
             "zones": {
               "belowShell": [],
-              "rear": [],
-              "leftFlank": [],
-              "rightFlank": [],
-              "fore": [],
+              "rear": [
+                "background/iso-bg-warehouse",
+                "background/iso-bg-warehouse-arched",
+                "background/iso-bg-building-tall",
+                "background/iso-bg-water-tower",
+                "background/iso-bg-container",
+                "background/iso-bg-forklift",
+                "background/iso-bg-keg-stack",
+                "background/iso-bg-tugboat",
+                "background/iso-bg-boat-small"
+              ],
+              "leftFlank": [
+                "background/iso-bg-tree-street",
+                "background/iso-bg-lamppost",
+                "background/iso-bg-bench"
+              ],
+              "rightFlank": [
+                "background/iso-bg-mailbox",
+                "background/iso-bg-traffic-light",
+                "background/iso-bg-street-sign"
+              ],
+              "fore": [
+                "background/iso-bg-dock-pilings",
+                "background/iso-bg-mooring-bollard",
+                "background/iso-bg-rope-coil",
+                "background/iso-bg-seagull-post",
+                "background/iso-bg-trash-can-wire",
+                "background/iso-bg-hydrant"
+              ],
               "aboveShell": [],
               "fxOverlay": []
             }
@@ -764,10 +877,35 @@
             "shadowIntensity": 0.18,
             "zones": {
               "belowShell": [],
-              "rear": [],
-              "leftFlank": [],
-              "rightFlank": [],
-              "fore": [],
+              "rear": [
+                "background/iso-bg-warehouse",
+                "background/iso-bg-warehouse-arched",
+                "background/iso-bg-building-tall",
+                "background/iso-bg-water-tower",
+                "background/iso-bg-container",
+                "background/iso-bg-forklift",
+                "background/iso-bg-keg-stack",
+                "background/iso-bg-tugboat",
+                "background/iso-bg-boat-small"
+              ],
+              "leftFlank": [
+                "background/iso-bg-tree-street",
+                "background/iso-bg-lamppost",
+                "background/iso-bg-bench"
+              ],
+              "rightFlank": [
+                "background/iso-bg-mailbox",
+                "background/iso-bg-traffic-light",
+                "background/iso-bg-street-sign"
+              ],
+              "fore": [
+                "background/iso-bg-dock-pilings",
+                "background/iso-bg-mooring-bollard",
+                "background/iso-bg-rope-coil",
+                "background/iso-bg-seagull-post",
+                "background/iso-bg-trash-can-wire",
+                "background/iso-bg-hydrant"
+              ],
               "aboveShell": [],
               "fxOverlay": []
             }
@@ -778,10 +916,35 @@
             "shadowIntensity": 0.22,
             "zones": {
               "belowShell": [],
-              "rear": [],
-              "leftFlank": [],
-              "rightFlank": [],
-              "fore": [],
+              "rear": [
+                "background/iso-bg-warehouse",
+                "background/iso-bg-warehouse-arched",
+                "background/iso-bg-building-tall",
+                "background/iso-bg-water-tower",
+                "background/iso-bg-container",
+                "background/iso-bg-forklift",
+                "background/iso-bg-keg-stack",
+                "background/iso-bg-tugboat",
+                "background/iso-bg-boat-small"
+              ],
+              "leftFlank": [
+                "background/iso-bg-tree-street",
+                "background/iso-bg-lamppost",
+                "background/iso-bg-bench"
+              ],
+              "rightFlank": [
+                "background/iso-bg-mailbox",
+                "background/iso-bg-traffic-light",
+                "background/iso-bg-street-sign"
+              ],
+              "fore": [
+                "background/iso-bg-dock-pilings",
+                "background/iso-bg-mooring-bollard",
+                "background/iso-bg-rope-coil",
+                "background/iso-bg-seagull-post",
+                "background/iso-bg-trash-can-wire",
+                "background/iso-bg-hydrant"
+              ],
               "aboveShell": [],
               "fxOverlay": []
             }
@@ -792,10 +955,35 @@
             "shadowIntensity": 0.28,
             "zones": {
               "belowShell": [],
-              "rear": [],
-              "leftFlank": [],
-              "rightFlank": [],
-              "fore": [],
+              "rear": [
+                "background/iso-bg-warehouse",
+                "background/iso-bg-warehouse-arched",
+                "background/iso-bg-building-tall",
+                "background/iso-bg-water-tower",
+                "background/iso-bg-container",
+                "background/iso-bg-forklift",
+                "background/iso-bg-keg-stack",
+                "background/iso-bg-tugboat",
+                "background/iso-bg-boat-small"
+              ],
+              "leftFlank": [
+                "background/iso-bg-tree-street",
+                "background/iso-bg-lamppost",
+                "background/iso-bg-bench"
+              ],
+              "rightFlank": [
+                "background/iso-bg-mailbox",
+                "background/iso-bg-traffic-light",
+                "background/iso-bg-street-sign"
+              ],
+              "fore": [
+                "background/iso-bg-dock-pilings",
+                "background/iso-bg-mooring-bollard",
+                "background/iso-bg-rope-coil",
+                "background/iso-bg-seagull-post",
+                "background/iso-bg-trash-can-wire",
+                "background/iso-bg-hydrant"
+              ],
               "aboveShell": [],
               "fxOverlay": []
             }
@@ -820,7 +1008,7 @@
           "room:operations",
           "room:recovery",
           "room:social",
-          "room:staffing",
+          "room:logistics",
           "room:training"
         ],
         "sceneSystem": {

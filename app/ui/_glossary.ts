@@ -51,12 +51,8 @@ const TAG_META = {
   "room:social": { label: "Social", tip: "Builds bonds and improves morale" },
   "room:operations": { label: "Operations", tip: "Handles business intake and customer flow" },
   "room:training": { label: "Training", tip: "Improves combat readiness through drills" },
-  "room:staffing": { label: "Staffing", tip: "Manages supplies and personnel logistics" },
-  "staff:reception": { label: "Reception", tip: "Handles front-of-house and customer traffic" },
-  "staff:logistics": { label: "Logistics", tip: "Manages inventory and supply storage" },
-  "staff:medical": { label: "Medical", tip: "Provides medical care and injury treatment" },
-  "staff:admin": { label: "Admin", tip: "Handles paperwork and administrative tasks" },
-  "staff:maintenance": { label: "Maintenance", tip: "Keeps facilities in working condition" },
+  "room:logistics": { label: "Logistics", tip: "Manages inventory and supply storage" },
+  "room:reception": { label: "Reception", tip: "Handles front-of-house and customer traffic" },
   "ops:recruitment": { label: "Recruitment", tip: "Attracts potential operators to the team" },
   "ops:intel": { label: "Intel", tip: "Supports contract research and compliance work" },
   "ops:staging": {
@@ -74,12 +70,18 @@ const TONE_META = {
 } satisfies DisplayRegistry;
 
 const SIGNAL_META = {
-  comfortable: { label: "Comfortable", tip: "High comfort. Staff feel at ease here" },
+  comfortable: { label: "Comfortable", tip: "High comfort. Operators feel at ease here" },
   "worn thin": { label: "Worn Thin", tip: "Low comfort. The room needs attention or upgrades" },
-  frayed: { label: "Frayed", tip: "High tension. Conflicts may arise between staff" },
-  steady: { label: "Steady", tip: "Low tension. Staff work smoothly together" },
-  "tight-knit": { label: "Tight Knit", tip: "Strong camaraderie. Staff look out for each other" },
-  distant: { label: "Distant", tip: "Low camaraderie. Staff are disconnected from each other" },
+  frayed: { label: "Frayed", tip: "High tension. Conflicts may arise between operators" },
+  steady: { label: "Steady", tip: "Low tension. Operators work smoothly together" },
+  "tight-knit": {
+    label: "Tight Knit",
+    tip: "Strong camaraderie. Operators look out for each other",
+  },
+  distant: {
+    label: "Distant",
+    tip: "Low camaraderie. Operators are disconnected from each other",
+  },
 } satisfies DisplayRegistry;
 
 const LOCATION_META = {
@@ -267,9 +269,9 @@ const TRAIT_META = {
 } satisfies DisplayRegistry;
 
 const RANK_META = {
-  s: {
-    label: "Rank S",
-    tip: "Legendary. Industry celebrities. Endgame caliber operators with unique presence.",
+  u: {
+    label: "Unique",
+    tip: "Singular endgame operators. Deterministic unlocks with unique presence and signature gear.",
   },
   a: {
     label: "Rank A",
@@ -661,11 +663,10 @@ const REQUIREMENT_TYPE_META = {
   building_tier_min: { label: "Building Tier", tip: "Requires the HQ to reach a specific tier." },
   room_count_min: { label: "Room Count", tip: "Requires a minimum number of built rooms." },
   room_tier_min: { label: "Room Tier", tip: "Requires a room to reach a specific tier." },
-  staff_role_min: { label: "Staff Role", tip: "Requires staff assigned in a specific role." },
   operator_count_min: { label: "Operator Count", tip: "Requires a minimum number of operators." },
   template_tag_required: {
     label: "Room Tag",
-    tip: "Requires a specific room or staffing capability tag to be unlocked.",
+    tip: "Requires a specific room tag to be unlocked.",
   },
 } satisfies DisplayRegistry;
 
@@ -998,8 +999,6 @@ export function getRequirementLabel(req: { type: string; [key: string]: unknown 
       return `${req.minimum} ${humanizeTemplateIdentifier(String(req.roomId))}`;
     case "room_tier_min":
       return `${humanizeTemplateIdentifier(String(req.roomId))} tier ${req.minimum}`;
-    case "staff_role_min":
-      return `${req.minimum} ${getTagMeta(String(req.roleTag)).label}`;
     case "operator_count_min":
       return `${req.minimum} operator${Number(req.minimum) === 1 ? "" : "s"}`;
     case "template_tag_required":

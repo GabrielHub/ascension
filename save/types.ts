@@ -3,7 +3,7 @@ import type { PolicyState } from "lib/policies";
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 18;
+export const CURRENT_SAVE_SCHEMA_VERSION = 19;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -84,12 +84,8 @@ export interface OperatorCombatSnapshot {
   rank: string;
   attunementTag: string;
   traits: string[];
-  kit: {
-    regularAttackId: string;
-    skillId: string;
-    ultimateId: string;
-    passiveIds: string[];
-  };
+  combatPackageId: string;
+  blocks: number;
   baseStats: {
     strength: number;
     speed: number;
@@ -131,20 +127,6 @@ export interface OperatorRelationshipSnapshot {
   familiarity: number;
   recentSharedOutcome: number;
   historyTags?: string[];
-}
-
-export interface StaffSnapshot {
-  id: string;
-  name: string;
-  roleTag: string;
-  status: string;
-  wage: number;
-  assignment: SaveStructuredRecord;
-  schedule?: SaveStructuredRecord;
-  needs?: SaveStructuredRecord;
-  morale?: SaveStructuredRecord;
-  loyalty?: SaveStructuredRecord;
-  injury?: SaveStructuredRecord;
 }
 
 export type VisitorSnapshot = { id: string } & Record<string, unknown>;
@@ -503,7 +485,6 @@ export interface WorldSnapshot {
   appliedUpgradeIds: string[];
   operators?: OperatorSnapshot[];
   operatorRelationships?: OperatorRelationshipSnapshot[];
-  staff?: StaffSnapshot[];
   visitors?: VisitorSnapshot[];
   raidOpportunities?: RaidOpportunitySnapshot[];
   activeEvents?: ActiveEventSnapshot[];
@@ -527,6 +508,13 @@ export interface WorldSnapshot {
   guidanceState?: SaveStructuredRecord | null;
   raidRuns?: RaidRunSnapshot[];
   cityPressure?: CityPressureSnapshot | null;
+  presenterUnlocks?: PresenterUnlockSnapshot[];
+}
+
+export interface PresenterUnlockSnapshot {
+  presenterId: string;
+  unlockedAtTick: number;
+  unlockedAtDay: number;
 }
 
 export interface PersistedSaveGame {

@@ -13,7 +13,6 @@ import {
   RecurringTeam,
   RoomInstance,
   AssignmentState,
-  StaffState,
   VisitorState,
 } from "../components";
 import type { SimSystemContext } from "./types";
@@ -107,16 +106,6 @@ function createReadyRelocationContext() {
     activeRoster: 8,
     raidSummaries: generateRaidSummaries(20, 3),
   });
-
-  const staffEntity = addEntity(context.world);
-  addComponent(context.world, staffEntity, StaffState);
-  addComponent(context.world, staffEntity, AssignmentState);
-  StaffState.id[staffEntity] = "staff-1";
-  StaffState.name[staffEntity] = "Test Staff";
-  StaffState.roleTag[staffEntity] = "staff:logistics";
-  AssignmentState.kind[staffEntity] = "room";
-  AssignmentState.targetId[staffEntity] = "room-instance/test";
-  context.runtimeState.staffEntities.push(staffEntity);
 
   return context;
 }
@@ -348,15 +337,6 @@ describe("relocation accept and handoff", () => {
     const repBefore = GuildState.reputation[context.singletonEntities.guild];
     runFullAcceptance(context);
     expect(GuildState.reputation[context.singletonEntities.guild]).toBe(repBefore);
-  });
-
-  it("clears staff assignments", () => {
-    const context = createReadyRelocationContext();
-    runFullAcceptance(context);
-    for (const staffEntity of context.runtimeState.staffEntities) {
-      expect(AssignmentState.kind[staffEntity]).toBe("idle");
-      expect(AssignmentState.targetId[staffEntity]).toBe("");
-    }
   });
 
   it("clears active operator assignments during the handoff", () => {
@@ -781,18 +761,6 @@ describe("relocation carryover/reset contract", () => {
     expect(NotableTie.strength[context.runtimeState.notableTieEntities[0]]).toBe(40);
   });
 
-  // ── Carryover: staff entities survive (only assignments clear) ──────
-
-  it("preserves staff entities through relocation", () => {
-    const context = createReadyRelocationContext();
-    expect(context.runtimeState.staffEntities.length).toBe(1);
-
-    runFullAcceptance(context);
-
-    expect(context.runtimeState.staffEntities.length).toBe(1);
-    expect(StaffState.id[context.runtimeState.staffEntities[0]]).toBe("staff-1");
-  });
-
   // ── Reset: building modifiers ───────────────────────────────────────
 
   it("resets building modifiers to zero on relocation", () => {
@@ -1006,16 +974,6 @@ function createReadySkyscraperRelocationContext() {
       SKYSCRAPER_RELOCATION_THRESHOLDS.bossEncountersCompleted,
     ),
   });
-
-  const staffEntity = addEntity(context.world);
-  addComponent(context.world, staffEntity, StaffState);
-  addComponent(context.world, staffEntity, AssignmentState);
-  StaffState.id[staffEntity] = "staff/porters-1";
-  StaffState.name[staffEntity] = "Porter's Staff";
-  StaffState.roleTag[staffEntity] = "staff:logistics";
-  AssignmentState.kind[staffEntity] = "room";
-  AssignmentState.targetId[staffEntity] = "room-instance/stockroom";
-  context.runtimeState.staffEntities.push(staffEntity);
 
   return context;
 }

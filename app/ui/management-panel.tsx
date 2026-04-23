@@ -24,7 +24,6 @@ import {
   type VisibleInstitutionBand,
   type VisibleInstitutionView,
 } from "./view-models";
-import { getTagMeta } from "./_glossary";
 
 interface ManagementPanelProps {
   guild: HqViewModel["guild"];
@@ -97,75 +96,6 @@ function PolicyOptionButton<P extends PolicyId>({
         Tradeoff: {getPolicyOptionTradeoff(policyId, option)}
       </p>
     </button>
-  );
-}
-
-const ROOM_STAFFING_FLAVOR: Record<string, string> = {
-  "room/infirmary:tier_1":
-    "The Infirmary needs medical specialists to deliver real recovery instead of improvised first aid.",
-  "room/stockroom:tier_1":
-    "The Stockroom needs logistics staff to keep inventory organized and loadouts staged cleanly.",
-  "room/prep_room:tier_1":
-    "The Prep Room needs logistics staff to turn salvaged drops into field consumables.",
-  "room/office:tier_1":
-    "The Office needs admin staff to keep contracts filed and risk reads current.",
-  "room/briefing_room:tier_1":
-    "The Briefing Room needs admin staff to turn active contracts into real pre-deploy briefings.",
-};
-
-function getStaffingFlavorText(room: HqViewModel["rooms"][number]): string {
-  const flavor = ROOM_STAFFING_FLAVOR[room.templateId];
-  if (flavor) return flavor;
-  return `${room.name} needs ${getTagMeta(room.requiredStaffTag).label.toLowerCase()} staffing to stay fully operational.`;
-}
-
-function StaffingPressureCard({ rooms }: { rooms: HqViewModel["rooms"] }) {
-  const bottlenecks = rooms.filter(
-    (room) => room.isActive && room.requiredStaffTag && room.assignedStaffCount < room.capacity,
-  );
-
-  return (
-    <section className="glass-card space-y-3 rounded-2xl p-4">
-      <div>
-        <h4 className="text-sm font-medium text-silver-bright">Staffing Pressure</h4>
-        <p className="mt-1 text-sm leading-relaxed text-silver/55">
-          Active rooms with staff requirements only deliver full value when the right workers are
-          assigned.
-        </p>
-      </div>
-
-      {bottlenecks.length === 0 ? (
-        <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
-          <p className="text-sm leading-relaxed text-silver/65">
-            No active room is currently short on required staff.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {bottlenecks.map((room) => {
-            const missing = Math.max(0, room.capacity - room.assignedStaffCount);
-            return (
-              <div key={room.id} className="glass-card-inset rounded-xl p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-silver-bright">{room.name}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-silver/55">
-                      {getStaffingFlavorText(room)}
-                    </p>
-                  </div>
-                  <span className="badge badge-ember">
-                    {room.assignedStaffCount}/{room.capacity}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-ember">
-                  Missing {missing} {missing === 1 ? "assignment" : "assignments"}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -330,8 +260,8 @@ function PortersCampaignCard({
       {!placedRoomTemplateIds.has("room/briefing_room:tier_1") &&
         nextUpgrade?.id !== "upgrade/building/porters:upstairs_conversion" && (
           <p className="rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(200,168,76,0.04)] px-3 py-2 text-sm leading-relaxed text-silver/60">
-            The Briefing Room is still offline. Secured Porter's contracts will stay unbriefed until
-            Upstairs Conversion is bought and the room is actually placed.
+            The Briefing Room is still unavailable. Secured Porter's contracts will stay unbriefed
+            until Upstairs Conversion is bought and the room is actually placed.
           </p>
         )}
     </section>
@@ -570,8 +500,8 @@ function RelocationCard({
         </div>
         <div className="glass-card-inset rounded-xl border border-[rgba(200,168,76,0.08)] p-3">
           <p className="text-sm leading-relaxed text-silver/65">
-            When relocation opens, operators, staff, gear, cash, and reputation carry over. Room
-            assignments reset for the new building.
+            When relocation opens, operators, presenters, gear, cash, and reputation carry over.
+            Room assignments reset for the new building.
           </p>
         </div>
       </section>
@@ -629,8 +559,9 @@ function RelocationCard({
         <p className="text-xs uppercase tracking-[0.14em] text-gold/55">Handoff rules</p>
         <p className="mt-1 text-sm leading-relaxed text-silver/65">
           Starting relocation opens a blocking review, confirmation, and landing sequence.
-          Operators, staff, gear, cash, and reputation carry over. Room assignments reset, and you
-          cannot relocate mid-contract, mid-raid, or while another blocking interruption is live.
+          Operators, presenters, gear, cash, and reputation carry over. Room assignments reset, and
+          you cannot relocate mid-contract, mid-raid, or while another blocking interruption is
+          live.
         </p>
       </div>
 
@@ -877,7 +808,6 @@ export function ManagementPanel({
           relocationGate={relocationGate}
           callbacks={callbacks}
         />
-        <StaffingPressureCard rooms={rooms} />
       </div>
 
       {cityPressure && (

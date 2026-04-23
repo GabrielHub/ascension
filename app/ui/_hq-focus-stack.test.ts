@@ -102,6 +102,15 @@ describe("rootEntryForCategory and stackFromFocus", () => {
     expect(stack).toEqual([{ kind: "visitor", visitorId: "v/3", highlightBounds: null }]);
   });
 
+  it("routes presenter focus back to the roster root instead of creating an unsupported stack entry", () => {
+    const stack = stackFromFocus({
+      targetKind: "presenter",
+      targetId: "presenter/assistant",
+      highlightBounds: null,
+    });
+    expect(stack).toEqual([{ kind: "people-root" }]);
+  });
+
   it("returns an empty stack when focus is null", () => {
     expect(stackFromFocus(null)).toEqual([]);
   });
@@ -111,7 +120,7 @@ describe("closeAt", () => {
   const stack: StackFocusEntry[] = [
     roomEntry,
     { kind: "room-upgrades", roomId: "room/a" },
-    { kind: "room-staffing", roomId: "room/a" },
+    { kind: "place-room", slotId: "slot/a", floorIndex: 0 },
   ];
 
   it("truncates the stack and removes everything to the right of the closed index", () => {
@@ -143,8 +152,8 @@ describe("setBranchAt", () => {
 
   it("replaces a sibling branch at the same depth", () => {
     const base: StackFocusEntry[] = [roomEntry, { kind: "room-upgrades", roomId: "room/a" }];
-    const next = setBranchAt(base, 0, { kind: "room-staffing", roomId: "room/a" });
-    expect(next).toEqual([roomEntry, { kind: "room-staffing", roomId: "room/a" }]);
+    const next = setBranchAt(base, 0, { kind: "place-room", slotId: "slot/a", floorIndex: 0 });
+    expect(next).toEqual([roomEntry, { kind: "place-room", slotId: "slot/a", floorIndex: 0 }]);
   });
 
   it("closes the branch when null is supplied", () => {

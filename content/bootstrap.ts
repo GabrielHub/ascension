@@ -90,12 +90,8 @@ export interface BootstrapScenario {
       rank: string;
       attunementTag: string;
       traits: string[];
-      kit: {
-        regularAttackId: string;
-        skillId: string;
-        ultimateId: string;
-        passiveIds: string[];
-      };
+      combatPackageId: string;
+      blocks: number;
       baseStats: {
         strength: number;
         speed: number;
@@ -114,17 +110,6 @@ export interface BootstrapScenario {
     familiarity: number;
     recentSharedOutcome: number;
     historyTags: string[];
-  }[];
-  staff: readonly {
-    id: string;
-    name: string;
-    roleTag: string;
-    status: string;
-    wage: number;
-    assignment: {
-      kind: string;
-      targetId: string;
-    };
   }[];
   visitors: readonly {
     id: string;
@@ -254,12 +239,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:kinetic",
         traits: ["trait:steady", "trait:resolute"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/field-lead-skill",
-          ultimateId: "kit/field-lead-ultimate",
-          passiveIds: ["kit/field-lead-passive"],
-        },
+        combatPackageId: "package/field-lead/kinetic/standard",
+        blocks: 0,
         baseStats: {
           strength: 14,
           speed: 8,
@@ -319,12 +300,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:void",
         traits: ["trait:alert", "trait:evasive"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/scout-skill",
-          ultimateId: "kit/scout-ultimate",
-          passiveIds: ["kit/scout-passive"],
-        },
+        combatPackageId: "package/scout/void/standard",
+        blocks: 0,
         baseStats: {
           strength: 7,
           speed: 14,
@@ -384,12 +361,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:vital",
         traits: ["trait:resilient", "trait:composed"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/medic-skill",
-          ultimateId: "kit/medic-ultimate",
-          passiveIds: ["kit/medic-passive"],
-        },
+        combatPackageId: "package/medic/vital/standard",
+        blocks: 0,
         baseStats: {
           strength: 6,
           speed: 7,
@@ -449,12 +422,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:kinetic",
         traits: ["trait:aggressive", "trait:steady"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/field-lead-skill",
-          ultimateId: "kit/field-lead-ultimate",
-          passiveIds: ["kit/field-lead-passive"],
-        },
+        combatPackageId: "package/field-lead/kinetic/standard",
+        blocks: 0,
         baseStats: {
           strength: 15,
           speed: 9,
@@ -514,12 +483,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:void",
         traits: ["trait:alert", "trait:tenacious"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/scout-skill",
-          ultimateId: "kit/scout-ultimate",
-          passiveIds: ["kit/scout-passive"],
-        },
+        combatPackageId: "package/scout/void/standard",
+        blocks: 0,
         baseStats: {
           strength: 8,
           speed: 13,
@@ -579,12 +544,8 @@ export const bootstrapScenario = {
         rank: "f",
         attunementTag: "attunement:vital",
         traits: ["trait:resilient", "trait:alert"],
-        kit: {
-          regularAttackId: "kit/basic-strike",
-          skillId: "kit/medic-skill",
-          ultimateId: "kit/medic-ultimate",
-          passiveIds: ["kit/medic-passive"],
-        },
+        combatPackageId: "package/medic/vital/standard",
+        blocks: 0,
         baseStats: {
           strength: 5,
           speed: 8,
@@ -623,41 +584,6 @@ export const bootstrapScenario = {
       familiarity: 40,
       recentSharedOutcome: 6,
       historyTags: ["history:starting_roster", "bond:field_pair"],
-    },
-  ],
-  staff: [
-    {
-      id: "staff/aina",
-      name: "Aina Solis",
-      roleTag: "staff:reception",
-      status: "assigned",
-      wage: 18,
-      assignment: {
-        kind: "room",
-        targetId: "room-instance/register",
-      },
-    },
-    {
-      id: "staff/boris",
-      name: "Boris Petrov",
-      roleTag: "staff:logistics",
-      status: "idle",
-      wage: 15,
-      assignment: {
-        kind: "idle",
-        targetId: "",
-      },
-    },
-    {
-      id: "staff/carmen",
-      name: "Carmen Liu",
-      roleTag: "staff:maintenance",
-      status: "idle",
-      wage: 14,
-      assignment: {
-        kind: "idle",
-        targetId: "",
-      },
     },
   ],
   visitors: [
@@ -705,7 +631,6 @@ const CANONICAL_OPERATOR_IDS = new Set([
   "operator/jin-tanaka",
   "operator/vera-santos",
 ]);
-const CANONICAL_STAFF_IDS = new Set(["staff/aina", "staff/boris"]);
 const OPERATOR_POOL_BY_ROLE = {
   "role:field_lead": ["operator/rose-vega", "operator/vera-santos"],
   "role:scout": ["operator/milo-hart", "operator/ash-okafor"],
@@ -719,7 +644,6 @@ const VISITOR_ID_BY_SOURCE_ID = {
 
 type BootstrapOperator = BootstrapScenario["operators"][number];
 type BootstrapRelationship = BootstrapScenario["operatorRelationships"][number];
-type BootstrapStaff = BootstrapScenario["staff"][number];
 type BootstrapVisitor = BootstrapScenario["visitors"][number];
 
 function createScenarioRng(seed: number): () => number {
@@ -776,10 +700,6 @@ function cloneOperator(operator: BootstrapOperator, selectedOperatorIds?: Readon
     combat: {
       ...operator.combat,
       traits: [...operator.combat.traits],
-      kit: {
-        ...operator.combat.kit,
-        passiveIds: [...operator.combat.kit.passiveIds],
-      },
       baseStats: { ...operator.combat.baseStats },
     },
   } satisfies BootstrapOperator;
@@ -789,13 +709,6 @@ function cloneRelationship(relationship: BootstrapRelationship): BootstrapRelati
   return {
     ...relationship,
     historyTags: [...relationship.historyTags],
-  };
-}
-
-function cloneStaff(staff: BootstrapStaff): BootstrapStaff {
-  return {
-    ...staff,
-    assignment: { ...staff.assignment },
   };
 }
 
@@ -836,9 +749,6 @@ function buildCanonicalSeedScenario(): BootstrapScenario {
           relationship.operatorBId === "operator/rose-vega",
       )
       .map(cloneRelationship),
-    staff: bootstrapScenario.staff
-      .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
-      .map(cloneStaff),
     visitors: [
       {
         ...cloneVisitor(bootstrapScenario.visitors[0]),
@@ -957,9 +867,6 @@ export function buildRandomizedNewGameScenario(seed: number): BootstrapScenario 
     rooms: bootstrapScenario.rooms.map(cloneRoomSeed),
     operators,
     operatorRelationships: relationships,
-    staff: bootstrapScenario.staff
-      .filter((staff) => CANONICAL_STAFF_IDS.has(staff.id))
-      .map(cloneStaff),
     visitors,
     raidOpportunities: [],
     inventory,

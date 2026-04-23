@@ -3,7 +3,6 @@ const REQUIREMENT_TYPES = [
   "building_tier_min",
   "room_count_min",
   "room_tier_min",
-  "staff_role_min",
   "operator_count_min",
   "template_tag_required",
 ] as const;
@@ -32,11 +31,6 @@ export type RequirementDefinition =
       minimum: number;
     }
   | {
-      type: "staff_role_min";
-      roleTag: string;
-      minimum: number;
-    }
-  | {
       type: "operator_count_min";
       minimum: number;
     }
@@ -52,7 +46,6 @@ export interface RequirementEvaluationContext {
   buildingTiers?: ValueLookup;
   roomCounts?: ValueLookup;
   roomTiers?: ValueLookup;
-  staffRoleCounts?: ValueLookup;
   operatorCount?: number;
   unlockedTemplateTags?: Iterable<string>;
 }
@@ -97,11 +90,6 @@ export function validateRequirement(requirement: RequirementDefinition): string[
         ...validateString(requirement.roomId, "roomId"),
         ...validatePositiveNumber(requirement.minimum, "minimum"),
       ];
-    case "staff_role_min":
-      return [
-        ...validateString(requirement.roleTag, "roleTag"),
-        ...validatePositiveNumber(requirement.minimum, "minimum"),
-      ];
     case "operator_count_min":
       return validatePositiveNumber(requirement.minimum, "minimum");
     case "template_tag_required":
@@ -124,8 +112,6 @@ export function evaluateRequirement(
       return readLookupValue(context.roomCounts, requirement.roomId) >= requirement.minimum;
     case "room_tier_min":
       return readLookupValue(context.roomTiers, requirement.roomId) >= requirement.minimum;
-    case "staff_role_min":
-      return readLookupValue(context.staffRoleCounts, requirement.roleTag) >= requirement.minimum;
     case "operator_count_min":
       return (context.operatorCount ?? 0) >= requirement.minimum;
     case "template_tag_required":

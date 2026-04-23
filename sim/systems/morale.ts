@@ -20,7 +20,6 @@ import {
   OperatorIdentity,
   RoomCulture,
   RoomInstance,
-  StaffState,
 } from "../components";
 import { clamp, hasOperationalRoomTemplate, pushRuntimeEvent } from "./commands";
 import type { SimSystem } from "./types";
@@ -269,15 +268,6 @@ export const advanceMoraleSystem: SimSystem = (context, deltaMs) => {
         contractPosture.moraleDriftPerHour + staffingPriority.moraleDriftPerHour,
       passiveLoyaltyDriftPerHour:
         staffingPriority.loyaltyDriftPerHour + rosterFlow.loyaltyDriftPerHour,
-    });
-  });
-
-  context.runtimeState.staffEntities.forEach((entity) => {
-    const staffId = StaffState.id[entity] ?? "";
-    advanceEntityMorale(entity, {
-      griefPenalty: staffId.length > 0 ? getGriefPenaltyForOperator(context, staffId) : 0,
-      passiveMoraleDriftPerHour: 0,
-      passiveLoyaltyDriftPerHour: 0,
     });
   });
 

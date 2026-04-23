@@ -1,18 +1,10 @@
-import {
-  buildKitTemplateRegistry,
-  PASSIVES,
-  REGULAR_ATTACKS,
-  resolveOperatorKit,
-  SKILLS,
-  ULTIMATES,
-} from "content/templates/kits";
+import { resolveCombatPackage } from "content/templates/combat-packages";
+import { DEFAULT_COMBAT_PACKAGE_REGISTRY } from "lib/operator-combat";
 
 import { getAttunementMeta, getRankMeta, getTraitMeta } from "./_glossary";
 import { Tooltip } from "./_tooltip";
 import { STAT_LABELS as STAT_LABEL_MAP } from "./item-surface";
 import type { OperatorCombatViewModel } from "./view-models";
-
-const kitRegistry = buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES);
 
 const STAT_KEYS: readonly {
   key: keyof OperatorCombatViewModel["baseStats"];
@@ -26,7 +18,7 @@ const STAT_KEYS: readonly {
   { key: "intelligence", label: STAT_LABEL_MAP["intelligence"] ?? "INT" },
 ];
 
-function AbilityCard({ label, name, summary }: { label: string; name: string; summary: string }) {
+function StageCard({ label, name, summary }: { label: string; name: string; summary: string }) {
   return (
     <div className="glass-card-inset rounded-lg px-2 py-2">
       <div className="text-xs uppercase tracking-[0.14em] text-gold/50">{label}</div>
@@ -45,12 +37,7 @@ export function OperatorCombatSummary({
 }) {
   const rankMeta = getRankMeta(combat.rank);
   const attunementMeta = getAttunementMeta(combat.attunementTag);
-  const resolvedKit = resolveOperatorKit(kitRegistry, {
-    regularAttackId: combat.regularAttackId,
-    skillId: combat.skillId,
-    ultimateId: combat.ultimateId,
-    passiveIds: combat.passiveIds,
-  });
+  const pkg = resolveCombatPackage(DEFAULT_COMBAT_PACKAGE_REGISTRY, combat.combatPackageId);
 
   return (
     <div className="space-y-2">
@@ -62,6 +49,12 @@ export function OperatorCombatSummary({
           </Tooltip>
           <Tooltip content={attunementMeta.tip} side="top">
             <span className="badge badge-slate">{attunementMeta.label}</span>
+          </Tooltip>
+          <Tooltip
+            content="Each basic action grants +1 block. At 3 blocks, the next action automatically spends all 3 as the operator's ultimate, then blocks reset to 0."
+            side="top"
+          >
+            <span className="badge badge-slate">Blocks {combat.blocks}/3</span>
           </Tooltip>
         </div>
       </div>
@@ -79,35 +72,35 @@ export function OperatorCombatSummary({
         </div>
       )}
 
-      <div className="grid gap-2 lg:grid-cols-3">
-        <AbilityCard
-          label="Regular"
-          name={resolvedKit.regularAttack.name}
-          summary={resolvedKit.regularAttack.summary}
-        />
-        <AbilityCard
-          label="Skill"
-          name={resolvedKit.skill.name}
-          summary={resolvedKit.skill.summary}
-        />
-        <AbilityCard
-          label="Ultimate"
-          name={resolvedKit.ultimate.name}
-          summary={resolvedKit.ultimate.summary}
-        />
-      </div>
+      {pkg && (
+        <>
+          <div className="glass-card-inset rounded-lg px-2 py-2">
+            <div className="text-xs uppercase tracking-[0.14em] text-gold/50">Package</div>
+            <div className="mt-1 text-sm text-silver-bright">{pkg.name}</div>
+            <p className="mt-1 text-xs leading-relaxed text-silver/50">{pkg.description}</p>
+          </div>
 
-      <div className="glass-card-inset rounded-lg px-2 py-2">
-        <div className="text-xs uppercase tracking-[0.14em] text-gold/50">Passives</div>
-        <div className="mt-1.5 grid gap-1">
-          {resolvedKit.passives.map((passive) => (
-            <div key={passive.id}>
-              <div className="text-sm text-silver-bright">{passive.name}</div>
-              <p className="text-xs leading-relaxed text-silver/50">{passive.summary}</p>
+          <div className="grid gap-2 lg:grid-cols-3">
+            <StageCard label="Stage 1" name={pkg.stage1.name} summary={pkg.stage1.summary} />
+            <StageCard label="Stage 2" name={pkg.stage2.name} summary={pkg.stage2.summary} />
+            <StageCard label="Stage 3" name={pkg.stage3.name} summary={pkg.stage3.summary} />
+          </div>
+
+          <div className="glass-card-inset rounded-lg px-2 py-2">
+            <div className="text-xs uppercase tracking-[0.14em] text-gold/50">Ultimate</div>
+            <div className="mt-1 text-sm text-silver-bright">{pkg.ultimate.name}</div>
+            <p className="mt-1 text-xs leading-relaxed text-silver/50">{pkg.ultimate.summary}</p>
+          </div>
+
+          {pkg.passive && (
+            <div className="glass-card-inset rounded-lg px-2 py-2">
+              <div className="text-xs uppercase tracking-[0.14em] text-gold/50">Passive</div>
+              <div className="mt-1 text-sm text-silver-bright">{pkg.passive.name}</div>
+              <p className="mt-1 text-xs leading-relaxed text-silver/50">{pkg.passive.summary}</p>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+        </>
+      )}
 
       <div className="grid grid-cols-3 gap-1.5 text-xs">
         {STAT_KEYS.map(({ key, label }) => (

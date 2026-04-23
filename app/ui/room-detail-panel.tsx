@@ -4,7 +4,6 @@ import type {
   PrepRecipeViewModel,
   RoomCultureViewModel,
   RoomViewModel,
-  StaffViewModel,
   UpgradeViewModel,
 } from "./view-models";
 import { ItemCategoryIcon, ItemRankBadge, StatEffectChips } from "./item-surface";
@@ -14,7 +13,6 @@ import {
   getEffectTypeMeta,
   getRequirementTypeMeta,
   getSignalMeta,
-  getTagMeta,
   getToneMeta,
 } from "./_glossary";
 import { getRoomStateLabel } from "lib/hq-room-state";
@@ -30,7 +28,6 @@ interface RoomDetailPanelProps {
   roomCulture?: RoomCultureViewModel | null;
   onClose?: () => void;
   onOpenUpgrades?: () => void;
-  onOpenStaffing?: () => void;
 }
 
 function UpgradeCard({
@@ -131,7 +128,7 @@ export function RoomCultureBadges({
   );
 }
 
-function getRoomStaffingPercent(room: RoomViewModel): number {
+function getRoomOperationalPercent(room: RoomViewModel): number {
   return getRoomProgressRatio(room) * 100;
 }
 
@@ -179,8 +176,8 @@ function PrepRecipeCard({
         </div>
       </div>
 
-      {!recipe.isRoomStaffed && (
-        <p className="text-sm text-ember/80">Requires assigned logistics staff to produce.</p>
+      {!recipe.isRoomOperational && (
+        <p className="text-sm text-ember/80">Room is currently blocked.</p>
       )}
 
       <button
@@ -189,8 +186,8 @@ function PrepRecipeCard({
         className="btn-primary w-full text-xs"
         onClick={onProduce}
       >
-        {!recipe.isRoomStaffed
-          ? "Needs staff"
+        {!recipe.isRoomOperational
+          ? "Room blocked"
           : recipe.canProduce
             ? `Produce ${recipe.outputQuantity}x ${recipe.outputName}`
             : "Missing inputs"}
@@ -200,7 +197,7 @@ function PrepRecipeCard({
 }
 
 function getCraftBlockerMessage(recipe: CraftRecipeViewModel): string {
-  if (!recipe.isRoomStaffed) return "Needs staff";
+  if (!recipe.isRoomOperational) return "Room blocked";
   if (!recipe.isBuildingTierMet) return "Building tier too low";
   if (!recipe.isDistrictMet) return "District access needed";
   if (!recipe.isFactionMet) return "Faction standing too low";
@@ -215,8 +212,8 @@ function getCraftBlockerSummary(recipe: CraftRecipeViewModel): string | null {
 
   const blockers: string[] = [];
 
-  if (!recipe.isRoomStaffed) {
-    blockers.push("assigned logistics staff");
+  if (!recipe.isRoomOperational) {
+    blockers.push("operational room");
   }
   if (!recipe.isBuildingTierMet) {
     blockers.push("Porter's tier 5");
@@ -340,36 +337,22 @@ export function RoomDetailPanel({
   roomCulture,
   onClose,
   onOpenUpgrades,
-  onOpenStaffing,
 }: RoomDetailPanelProps) {
   if (!room) return null;
 
-  const occupancyPct = getRoomStaffingPercent(room);
-  const requiredStaffMeta = room.requiredStaffTag ? getTagMeta(room.requiredStaffTag) : null;
+  const operationalPct = getRoomOperationalPercent(room);
   const training = room.training;
   const hasAnyUpgrades = buildingUpgrades.length > 0 || roomUpgrades.length > 0;
 
   const stateBadge = room.isOperational
     ? { label: "Operational", cls: "badge badge-gold", tip: getRoomStatusTip(room) }
-    : room.isActive
-      ? {
-          label: "Understaffed",
-          cls: "badge badge-slate",
-          tip: "Active, but not yet staffed enough to operate",
-        }
-      : {
-          label: "Inactive",
-          cls: "badge badge-slate",
-          tip: "Shut down — activate to begin staffing",
-        };
+    : {
+        label: "Blocked",
+        cls: "badge badge-slate",
+        tip: "Blocked by incident, damage, or construction",
+      };
 
-  const loadDisplay = room.requiredStaffTag
-    ? `${Math.round(occupancyPct)}%`
-    : room.isOperational
-      ? "Online"
-      : room.isActive
-        ? "Opening"
-        : "Offline";
+  const loadDisplay = room.isOperational ? "Online" : "Blocked";
 
   const dividerColor = "rgba(200,168,76,0.06)";
 
@@ -393,13 +376,6 @@ export function RoomDetailPanel({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            className={room.isActive ? "btn-ghost text-xs" : "btn-primary text-xs"}
-            onClick={() => callbacks.setRoomActive(room.id, !room.isActive)}
-          >
-            {room.isActive ? "Deactivate room" : "Activate room"}
-          </button>
           {onClose && (
             <button
               type="button"
@@ -426,41 +402,23 @@ export function RoomDetailPanel({
               </div>
             </div>
           </Tooltip>
-          <Tooltip
-            content={
-              room.requiredStaffTag
-                ? "Assigned staff / staffing needed for full output"
-                : "This room runs without dedicated staff"
-            }
-            side="top"
-          >
+          <Tooltip content="Room capacity for occupants" side="top">
             <div
               className="flex w-full flex-col items-center justify-center border-l px-3 py-3"
               style={{ borderColor: dividerColor }}
             >
-              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
-                {room.requiredStaffTag ? "Staff" : "Type"}
-              </div>
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Capacity</div>
               <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
-                {room.requiredStaffTag ? `${room.assignedStaffCount}/${room.capacity}` : "Passive"}
+                {room.capacity}
               </div>
             </div>
           </Tooltip>
-          <Tooltip
-            content={
-              room.requiredStaffTag
-                ? "Staffing level — 100% means fully operational"
-                : "Whether the room is active and providing its benefits"
-            }
-            side="top"
-          >
+          <Tooltip content="Whether the room is currently operational" side="top">
             <div
               className="flex w-full flex-col items-center justify-center border-l px-3 py-3"
               style={{ borderColor: dividerColor }}
             >
-              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
-                {room.requiredStaffTag ? "Load" : "Status"}
-              </div>
+              <div className="text-xs uppercase tracking-[0.12em] text-gold/60">Status</div>
               <div className="mt-1 text-base font-medium tabular-nums text-silver-bright">
                 {loadDisplay}
               </div>
@@ -469,54 +427,25 @@ export function RoomDetailPanel({
         </div>
 
         <div className="h-1 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">
-          <div className={progressBarFillClass} style={{ width: `${occupancyPct}%` }} />
+          <div className={progressBarFillClass} style={{ width: `${operationalPct}%` }} />
         </div>
-
-        <p className="text-xs leading-relaxed text-gold/70">
-          {room.requiredStaffTag && requiredStaffMeta ? (
-            <>
-              Requires{" "}
-              <Tooltip
-                content={requiredStaffMeta.tip || "Staff role needed to operate this room"}
-                side="top"
-              >
-                <span className="text-gold/90">{requiredStaffMeta.label}</span>
-              </Tooltip>{" "}
-              staff to reach full output.
-            </>
-          ) : (
-            "No dedicated staff required. Activate the room and its benefits become available."
-          )}
-        </p>
       </section>
 
-      {(onOpenUpgrades || onOpenStaffing) && (
+      {onOpenUpgrades && hasAnyUpgrades && (
         <section className="flex flex-wrap gap-1.5">
-          {onOpenStaffing && room.requiredStaffTag && (
-            <button
-              type="button"
-              className="btn-ghost px-3 py-1.5 text-xs"
-              data-testid="room-open-staffing"
-              onClick={onOpenStaffing}
-            >
-              Staffing →
-            </button>
-          )}
-          {onOpenUpgrades && hasAnyUpgrades && (
-            <button
-              type="button"
-              className="btn-ghost px-3 py-1.5 text-xs"
-              data-testid="room-open-upgrades"
-              onClick={onOpenUpgrades}
-            >
-              Upgrades →
-            </button>
-          )}
+          <button
+            type="button"
+            className="btn-ghost px-3 py-1.5 text-xs"
+            data-testid="room-open-upgrades"
+            onClick={onOpenUpgrades}
+          >
+            Upgrades →
+          </button>
         </section>
       )}
 
       {roomCulture && (
-        <Tooltip content="Atmosphere shaped by room type, staffing, and events" side="top">
+        <Tooltip content="Atmosphere shaped by room type, visitor activity, and events" side="top">
           <div className="flex flex-wrap items-center gap-1.5 text-xs text-silver/65">
             <span className="uppercase tracking-[0.12em] text-gold/60">Culture</span>
             <span className="text-silver-bright">
@@ -570,7 +499,7 @@ export function RoomDetailPanel({
             <p className="text-sm leading-relaxed text-silver/70">
               {room.isOperational
                 ? "Training raises Strength, Speed, Endurance, and Resilience on a bounded track that later feeds raid readiness and combat power."
-                : "The drills only accrue while this room is active. Bodega runs stay training-free because no operational training room exists there."}
+                : "The drills only accrue while this room remains operational. Bodega runs stay training-free because no operational training room exists there."}
             </p>
             <p className="text-sm leading-relaxed text-gold/75">
               {training.currentTraineeNames.length > 0
@@ -668,121 +597,6 @@ export function RoomUpgradesBody({
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-export function RoomStaffingBody({
-  room,
-  staff,
-  callbacks,
-}: {
-  room: RoomViewModel;
-  staff: readonly StaffViewModel[];
-  callbacks: GameCallbacks;
-}) {
-  const requiredTag = room.requiredStaffTag;
-  if (!requiredTag) {
-    return (
-      <p className="text-sm text-silver/55">
-        This room runs without dedicated staff. Activate it and its benefits become available.
-      </p>
-    );
-  }
-
-  const requiredMeta = getTagMeta(requiredTag);
-  const assignedStaff = staff.filter(
-    (s) => s.assignmentKind === "room" && s.assignmentTargetId === room.id,
-  );
-  const availableStaff = staff.filter(
-    (s) =>
-      s.roleTag === requiredTag &&
-      !(s.assignmentKind === "room" && s.assignmentTargetId === room.id),
-  );
-
-  return (
-    <div className="animate-enter space-y-4">
-      <section className="space-y-2">
-        <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-          Required Role
-        </h4>
-        <div className="flex items-center gap-2 text-sm text-silver/80">
-          <span className="badge badge-slate">{requiredMeta.label}</span>
-          <span className="tabular-nums text-silver/60">
-            {room.assignedStaffCount}/{room.capacity} assigned
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed text-silver/55">{requiredMeta.tip}</p>
-      </section>
-
-      <section className="space-y-2">
-        <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-          Currently Assigned
-        </h4>
-        {assignedStaff.length > 0 ? (
-          <ul className="space-y-1">
-            {assignedStaff.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between rounded-lg bg-[rgba(6,6,8,0.4)] px-3 py-1.5"
-              >
-                <span className="text-sm text-silver-bright">{s.name}</span>
-                <button
-                  type="button"
-                  className="btn-ghost px-2 py-0.5 text-xs"
-                  onClick={() => callbacks.assignStaff(s.id, undefined)}
-                >
-                  unassign
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-silver/50">No staff assigned to this room yet.</p>
-        )}
-      </section>
-
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/70">
-            Available
-          </h4>
-          <button
-            type="button"
-            className="btn-primary px-2.5 py-1 text-xs"
-            onClick={() => callbacks.hireStaff(requiredTag)}
-          >
-            Hire {requiredMeta.label}
-          </button>
-        </div>
-        {availableStaff.length > 0 ? (
-          <ul className="space-y-1">
-            {availableStaff.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between rounded-lg bg-[rgba(6,6,8,0.4)] px-3 py-1.5"
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-sm text-silver-bright">{s.name}</div>
-                  <div className="text-xs text-silver/55">{s.status}</div>
-                </div>
-                <button
-                  type="button"
-                  disabled={room.assignedStaffCount >= room.capacity}
-                  className="btn-ghost px-2 py-0.5 text-xs disabled:opacity-50"
-                  onClick={() => callbacks.assignStaff(s.id, room.id)}
-                >
-                  assign
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-silver/50">
-            No {requiredMeta.label} staff hired yet. Hire one to staff this room.
-          </p>
-        )}
-      </section>
     </div>
   );
 }

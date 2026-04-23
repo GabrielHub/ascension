@@ -32,7 +32,7 @@ export interface CameraBounds {
   worldHeight: number;
 }
 
-export type ActorKind = "operator" | "staff" | "visitor";
+export type ActorKind = "operator" | "visitor" | "presenter";
 export type ActorState =
   | "idle"
   | "moving"
@@ -76,7 +76,7 @@ export interface WorldEffectsSnapshot {
   shadowIntensity: number;
 }
 
-export type FocusTargetKind = "room" | "operator" | "staff" | "visitor" | "team";
+export type FocusTargetKind = "room" | "operator" | "visitor" | "team" | "presenter";
 
 export interface FocusPayload {
   targetKind: FocusTargetKind;
@@ -134,7 +134,6 @@ export interface HqRoomNode {
   floorIndex: number;
   label: string;
   tier: number;
-  isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
   reservedFootprint: HqFootprint;

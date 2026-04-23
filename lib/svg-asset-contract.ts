@@ -3,7 +3,7 @@ import hqEnvironmentIndexData from "content/data/hq-environment-index.json";
 import operatorPartsIndexData from "content/data/operator-parts-index.json";
 import operatorRecipesData from "content/data/operator-recipes.json";
 import raidEnvironmentIndexData from "content/data/raid-environment-index.json";
-import { getBuildingSlot } from "content/building-layouts";
+import { getBuildingLayoutDefinition, getBuildingSlot } from "content/building-layouts";
 
 import { getRoomActiveFootprint } from "./hq-room-state";
 
@@ -311,6 +311,102 @@ const HQ_ROOM_SCENE_BINDINGS = [
     slotId: "slot/storage-right",
     floorIndex: 0,
     assetId: "/data/svg-environments/hq/bodega/recipes/scene-the-alley.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/floor:tier_1",
+    roomStateId: "room-state/floor:1",
+    slotId: "slot/floor",
+    floorIndex: 0,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-floor.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/bar:tier_1",
+    roomStateId: "room-state/bar:1",
+    slotId: "slot/bar",
+    floorIndex: 0,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-bar.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/office:tier_1",
+    roomStateId: "room-state/office:1",
+    slotId: "slot/office",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-office.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/stockroom:tier_1",
+    roomStateId: "room-state/stockroom:1",
+    slotId: "slot/stockroom",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-stockroom.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/infirmary:tier_1",
+    roomStateId: "room-state/infirmary:1",
+    slotId: "slot/infirmary",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-infirmary.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/gym:tier_1",
+    roomStateId: "room-state/gym:1",
+    slotId: "slot/gym",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-gym.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/prep_room:tier_1",
+    roomStateId: "room-state/prep_room:1",
+    slotId: "slot/prep-room",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-prep-room.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/break_room:tier_1",
+    roomStateId: "room-state/break_room:1",
+    slotId: "slot/break-room",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-break-room.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/briefing_room:tier_1",
+    roomStateId: "room-state/briefing_room:1",
+    slotId: "slot/briefing-room",
+    floorIndex: 1,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-briefing-room.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/dock:tier_1",
+    roomStateId: "room-state/dock:1",
+    slotId: "slot/dock",
+    floorIndex: 2,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-dock.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/deck:tier_1",
+    roomStateId: "room-state/deck:1",
+    slotId: "slot/deck",
+    floorIndex: 2,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-deck.svg",
+  },
+  {
+    buildingId: "building/porters",
+    templateId: "room/workshop:tier_1",
+    roomStateId: "room-state/workshop:1",
+    slotId: "slot/workshop",
+    floorIndex: 2,
+    assetId: "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
   },
 ] as const;
 
@@ -836,8 +932,34 @@ export function resolveBossArtAssetUrl(bossDefinitionId: string): string | null 
   return resolveRaidBindingAssetUrl(bossDefinitionId);
 }
 
+function resolveHqBindingPreviewTier(binding: HqRoomSceneBinding): number {
+  const definition = getBuildingLayoutDefinition(binding.buildingId);
+  if (!definition) {
+    return 1;
+  }
+
+  const sortedStages = [...definition.stages].sort(
+    (left, right) => left.minimumTier - right.minimumTier,
+  );
+  const matchingStage = sortedStages.find((stage) =>
+    stage.floors.some(
+      (floor) =>
+        floor.floorIndex === binding.floorIndex &&
+        floor.slots.some((slot) => slot.slotId === binding.slotId),
+    ),
+  );
+
+  return matchingStage?.minimumTier ?? 1;
+}
+
 export function getHqBindingPreviewFootprint(binding: HqRoomSceneBinding) {
-  const slot = getBuildingSlot(binding.buildingId, binding.slotId, binding.floorIndex, 1);
+  const buildingTier = resolveHqBindingPreviewTier(binding);
+  const slot = getBuildingSlot(
+    binding.buildingId,
+    binding.slotId,
+    binding.floorIndex,
+    buildingTier,
+  );
   if (!slot) {
     return null;
   }
@@ -845,6 +967,7 @@ export function getHqBindingPreviewFootprint(binding: HqRoomSceneBinding) {
   const stateLevel = Number.parseInt(binding.roomStateId.split(":").pop() ?? "1", 10);
 
   return {
+    buildingTier,
     reservedFootprint: {
       col: slot.col,
       row: slot.row,

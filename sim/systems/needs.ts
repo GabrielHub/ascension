@@ -184,8 +184,4 @@ export const advanceNeedsSystem: SimSystem = (context, deltaMs) => {
     .forEach((entity) => {
       advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);
     });
-
-  context.runtimeState.staffEntities.forEach((entity) => {
-    advanceEntityNeeds(context, entity, elapsedHours, recoveryRate);
-  });
 };

@@ -163,85 +163,6 @@ function createPortersOpsSnapshot(options: {
       : []),
   ];
 
-  snapshot.staff = [
-    ...(options.office
-      ? [
-          {
-            id: "staff/admin-porter",
-            name: "Mae Hollis",
-            roleTag: "staff:admin",
-            status: "active",
-            wage: 25,
-            schedule: {
-              currentBlock: "work",
-              workStartMinute: 480,
-              workEndMinute: 1080,
-            },
-            needs: {
-              hunger: 12,
-              fatigue: 10,
-              stress: 14,
-            },
-            morale: {
-              current: 68,
-              baseline: 68,
-            },
-            loyalty: {
-              current: 70,
-              baseline: 70,
-            },
-            injury: {
-              severity: 0,
-              recoveryHoursRemaining: 0,
-              treated: false,
-            },
-            assignment: {
-              kind: "room",
-              targetId: "room-instance/office",
-            },
-          },
-        ]
-      : []),
-    ...(options.prepRoom
-      ? [
-          {
-            id: "staff/logistics-porter",
-            name: "Gus Vale",
-            roleTag: "staff:logistics",
-            status: "active",
-            wage: 22,
-            schedule: {
-              currentBlock: "work",
-              workStartMinute: 480,
-              workEndMinute: 1080,
-            },
-            needs: {
-              hunger: 10,
-              fatigue: 11,
-              stress: 12,
-            },
-            morale: {
-              current: 66,
-              baseline: 66,
-            },
-            loyalty: {
-              current: 69,
-              baseline: 69,
-            },
-            injury: {
-              severity: 0,
-              recoveryHoursRemaining: 0,
-              treated: false,
-            },
-            assignment: {
-              kind: "room",
-              targetId: "room-instance/prep",
-            },
-          },
-        ]
-      : []),
-  ];
-
   return snapshot;
 }
 
@@ -437,81 +358,6 @@ function createPortersRecoverySnapshot(options: {
             cols: 4,
             rows: 3,
           }),
-        ]
-      : []),
-  ];
-
-  snapshot.staff = [
-    {
-      id: "staff/logistics-porter",
-      name: "Gus Vale",
-      roleTag: "staff:logistics",
-      status: "active",
-      wage: 22,
-      schedule: {
-        currentBlock: "work",
-        workStartMinute: 480,
-        workEndMinute: 1080,
-      },
-      needs: {
-        hunger: 10,
-        fatigue: 11,
-        stress: 12,
-      },
-      morale: {
-        current: 66,
-        baseline: 66,
-      },
-      loyalty: {
-        current: 69,
-        baseline: 69,
-      },
-      injury: {
-        severity: 0,
-        recoveryHoursRemaining: 0,
-        treated: false,
-      },
-      assignment: {
-        kind: "room",
-        targetId: "room-instance/prep",
-      },
-    },
-    ...(options.infirmary
-      ? [
-          {
-            id: "staff/medic-porter",
-            name: "Tess Vale",
-            roleTag: "staff:medical",
-            status: "active",
-            wage: 24,
-            schedule: {
-              currentBlock: "work",
-              workStartMinute: 480,
-              workEndMinute: 1080,
-            },
-            needs: {
-              hunger: 10,
-              fatigue: 10,
-              stress: 10,
-            },
-            morale: {
-              current: 65,
-              baseline: 65,
-            },
-            loyalty: {
-              current: 67,
-              baseline: 67,
-            },
-            injury: {
-              severity: 0,
-              recoveryHoursRemaining: 0,
-              treated: false,
-            },
-            assignment: {
-              kind: "room",
-              targetId: "room-instance/infirmary",
-            },
-          },
         ]
       : []),
   ];
@@ -931,33 +777,11 @@ describe("phase 1 runtime", () => {
       floorIndex: 0,
       slotId: "slot/back-room-right",
     });
-    const backOfficeId =
-      runtime.getPhase1View().rooms.find((room) => room.templateId === "room/back_office:tier_1")
-        ?.id ?? "missing";
-    runtime.dispatch({
-      type: "sim/set-room-active",
-      roomId: backOfficeId,
-      isActive: true,
-    });
-    runtime.dispatch({
-      type: "sim/hire-staff",
-      roleTag: "staff:admin",
-    });
-    const adminStaffId = runtime
-      .getPhase1View()
-      .staff.find((staff) => staff.roleTag === "staff:admin")?.id;
-    expect(adminStaffId).toBeTruthy();
-    runtime.dispatch({
-      type: "sim/assign-staff",
-      staffId: adminStaffId ?? "missing",
-      roomId: backOfficeId,
-    });
     expect(
       runtime.getPhase1View().rooms.find((room) => room.templateId === "room/back_office:tier_1"),
     ).toMatchObject({
       slotId: "slot/back-room-right",
       isOperational: true,
-      assignedStaffCount: 1,
     });
 
     runtime.dispatch({
@@ -1026,30 +850,10 @@ describe("phase 1 runtime", () => {
     expect(backstockRoom).toBeTruthy();
     expect(backstockRoom!.slotId).toBe("slot/storage-left");
 
-    // Activate and staff the backstock
-    runtime.dispatch({
-      type: "sim/set-room-active",
-      roomId: backstockRoom!.id,
-      isActive: true,
-    });
-    runtime.dispatch({ type: "sim/hire-staff", roleTag: "staff:logistics" });
-    // Grab the most-recently-created logistics staff (the hired one)
-    const logisticsStaff = runtime
-      .getPhase1View()
-      .staff.filter((s) => s.roleTag === "staff:logistics");
-    const hiredStaff = logisticsStaff[logisticsStaff.length - 1];
-    // Clear any auto-assignment, then assign to backstock
-    runtime.dispatch({ type: "sim/assign-staff", staffId: hiredStaff.id, roomId: "" });
-    runtime.dispatch({
-      type: "sim/assign-staff",
-      staffId: hiredStaff.id,
-      roomId: backstockRoom!.id,
-    });
     expect(
       runtime.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
     ).toMatchObject({
       isOperational: true,
-      assignedStaffCount: 1,
     });
   });
 
@@ -1088,12 +892,6 @@ describe("phase 1 runtime", () => {
     expect(alleyRoom).toBeTruthy();
     expect(alleyRoom!.slotId).toBe("slot/storage-right");
 
-    // Alley has no staff tag, so it should be operational without staff
-    runtime.dispatch({
-      type: "sim/set-room-active",
-      roomId: alleyRoom!.id,
-      isActive: true,
-    });
     expect(
       runtime.getPhase1View().rooms.find((room) => room.templateId === "room/alley_staging:tier_1"),
     ).toMatchObject({
@@ -1152,27 +950,6 @@ describe("phase 1 runtime", () => {
           templateId: "room/back_office:tier_1",
           floorIndex: 0,
           slotId: "slot/back-room-right",
-        });
-        const backOfficeId =
-          simulation
-            .getPhase1View()
-            .rooms.find((room) => room.templateId === "room/back_office:tier_1")?.id ?? "missing";
-        simulation.dispatch({
-          type: "sim/set-room-active",
-          roomId: backOfficeId,
-          isActive: true,
-        });
-        simulation.dispatch({
-          type: "sim/hire-staff",
-          roleTag: "staff:admin",
-        });
-        const adminStaffId = simulation
-          .getPhase1View()
-          .staff.find((staff) => staff.roleTag === "staff:admin")?.id;
-        simulation.dispatch({
-          type: "sim/assign-staff",
-          staffId: adminStaffId ?? "missing",
-          roomId: backOfficeId,
         });
       }
 
@@ -1415,6 +1192,25 @@ describe("phase 1 runtime", () => {
     );
   });
 
+  it("counts room placement as the opening rooms management action", () => {
+    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
+    snapshot.rooms = snapshot.rooms.filter((room) => room.slotId !== "slot/supply-closet");
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+    simulation.runtimeState.guidanceState.activeBeatId = "guidance/opening/staffing-and-rooms";
+    simulation.runtimeState.guidanceState.activeBeatProgressBaseline = 0;
+
+    simulation.dispatch({
+      type: "sim/place-room",
+      templateId: "room/supply_closet:tier_1",
+    });
+    simulation.tick(0);
+
+    expect(simulation.runtimeState.guidanceState.completedBeatIds).toContain(
+      "guidance/opening/staffing-and-rooms",
+    );
+  });
+
   it("rejects placing rooms into locked slots even when the command names a slot explicitly", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
     snapshot.rooms = snapshot.rooms.filter((room) => room.slotId !== "slot/supply-closet");
@@ -1445,13 +1241,11 @@ describe("phase 1 runtime", () => {
     first.time.minuteOfDay = 5;
     first.rooms[0].reservedFootprint.col = 7;
     first.operators![0].preferences.preferredMissionTags.push("mission:mutated");
-    first.staff![0].assignment.targetId = "room-instance/mutated";
 
     expect(second.guild.reputation).toBe(0);
     expect(second.time.minuteOfDay).toBe(480);
     expect(second.rooms[0].reservedFootprint.col).toBe(1);
     expect(second.operators?.[0].preferences.preferredMissionTags).not.toContain("mission:mutated");
-    expect(second.staff?.[0].assignment.targetId).toBe("room-instance/register");
   });
 
   it("supports recruiting and operator relationship seeding", () => {
@@ -1468,9 +1262,9 @@ describe("phase 1 runtime", () => {
     expect(phase1View.visitors).toHaveLength(2);
     const recruited = phase1View.operators[phase1View.operators.length - 1];
     expect(recruited.appearance.presetId).toEqual(expect.any(String));
-    expect(recruited.combat.rank).toBe("f");
-    expect(recruited.combat.attunementTag).toBeTruthy();
-    expect(recruited.combat.kit.skillId).toBeTruthy();
+    expect(recruited.combat?.rank).toBe("f");
+    expect(recruited.combat?.attunementTag).toBeTruthy();
+    expect(recruited.combat?.combatPackageId).toBeTruthy();
     expect(
       phase1View.relationshipSignals.some((relationship) => {
         return (
@@ -1697,76 +1491,6 @@ describe("phase 1 runtime", () => {
     expect(getReadiness("field_first")?.availableForRaid).toBe(true);
     expect(getReadiness("balanced_rotation")?.availableForRaid).toBe(true);
     expect(getReadiness("full_recovery")?.availableForRaid).toBe(false);
-  });
-
-  it("round-trips staff mutable state through runtime snapshots", () => {
-    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
-    snapshot.staff = snapshot.staff?.map((staff) => ({
-      ...staff,
-      status: "recovering",
-      schedule: {
-        currentBlock: "recovery",
-        workStartMinute: 540,
-        workEndMinute: 1020,
-      },
-      needs: {
-        hunger: 31,
-        fatigue: 47,
-        stress: 28,
-      },
-      morale: {
-        current: 41,
-        baseline: 52,
-      },
-      loyalty: {
-        current: 44,
-        baseline: 55,
-      },
-      injury: {
-        severity: 18,
-        recoveryHoursRemaining: 6,
-        treated: true,
-      },
-      assignment: {
-        kind: "idle",
-        targetId: "",
-      },
-    }));
-
-    const simulation = createAscensionSimulation(snapshot, templateRegistry);
-    const roundTripped = createAscensionSimulation(simulation.getWorldSnapshot(), templateRegistry);
-    const restoredStaff = roundTripped.getWorldSnapshot().staff?.[0];
-
-    expect(restoredStaff).toMatchObject({
-      status: "off_shift",
-      schedule: {
-        currentBlock: "rest",
-        workStartMinute: 540,
-        workEndMinute: 1020,
-      },
-      needs: {
-        hunger: 31,
-        fatigue: 47,
-        stress: 28,
-      },
-      morale: {
-        current: 41,
-        baseline: 52,
-      },
-      loyalty: {
-        current: 44,
-        baseline: 55,
-      },
-      injury: {
-        severity: 18,
-        recoveryHoursRemaining: 6,
-        treated: true,
-      },
-      assignment: {
-        kind: "idle",
-        targetId: "",
-      },
-    });
   });
 
   it("fails fast on unknown building, room, event, and mission ids instead of coercing fallback state", () => {
@@ -2513,38 +2237,6 @@ describe("phase 1 runtime", () => {
     ).toBe(true);
   });
 
-  it("ignores staff-only morale threshold crossings when emitting operator warnings", () => {
-    const snapshot = createBootstrapWorldSnapshot(templateRegistry);
-
-    snapshot.staff = snapshot.staff?.map((staff) => ({
-      ...staff,
-      morale: {
-        current: 16,
-        baseline: 0,
-      },
-      needs: {
-        hunger: 0,
-        fatigue: 0,
-        stress: 0,
-      },
-      injury: {
-        severity: 0,
-        recoveryHoursRemaining: 0,
-        treated: false,
-      },
-    }));
-
-    const simulation = createAscensionSimulation(snapshot, templateRegistry);
-
-    simulation.tick(1000);
-
-    const moraleEvents = simulation
-      .drainRuntimeEvents()
-      .filter((event) => event.kind === "morale_threshold");
-
-    expect(moraleEvents).toEqual([]);
-  });
-
   it("continues clearing residual injuries after the formal recovery window ends", () => {
     const snapshot = createBootstrapWorldSnapshot(templateRegistry);
 
@@ -2596,24 +2288,6 @@ describe("phase 1 runtime", () => {
           }
         : operator,
     );
-    snapshot.staff = snapshot.staff?.map((staff) => ({
-      ...staff,
-      morale: {
-        current: 16,
-        baseline: 0,
-      },
-      needs: {
-        hunger: 0,
-        fatigue: 0,
-        stress: 0,
-      },
-      injury: {
-        severity: 0,
-        recoveryHoursRemaining: 0,
-        treated: false,
-      },
-    }));
-
     const simulation = createAscensionSimulation(snapshot, templateRegistry);
 
     simulation.tick(1000);
@@ -2817,12 +2491,8 @@ describe("phase 1 runtime", () => {
       rank: "f",
       attunementTag: "attunement:kinetic",
       traits: ["trait:steady", "trait:resolute"],
-      kit: {
-        regularAttackId: "kit/basic-strike",
-        skillId: "kit/field-lead-skill",
-        ultimateId: "kit/field-lead-ultimate",
-        passiveIds: ["kit/field-lead-passive"],
-      },
+      combatPackageId: "package/field-lead/kinetic/standard",
+      blocks: 0,
       baseStats: {
         strength: 14,
         speed: 8,
@@ -3633,8 +3303,8 @@ describe("relocation save/load through full pipeline", () => {
         capacity: floorRoom!.baseCapacity,
         occupancy: 0,
         isActive: true,
-        reservedFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
-        activeFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+        reservedFootprint: { col: 1, row: 8, cols: 10, rows: 10 },
+        activeFootprint: { col: 1, row: 8, cols: 10, rows: 10 },
       },
       {
         id: "room-instance/bar-tier-1-2",
@@ -3646,8 +3316,8 @@ describe("relocation save/load through full pipeline", () => {
         capacity: barRoom!.baseCapacity,
         occupancy: 0,
         isActive: true,
-        reservedFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
-        activeFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+        reservedFootprint: { col: 1, row: 1, cols: 10, rows: 6 },
+        activeFootprint: { col: 1, row: 1, cols: 10, rows: 6 },
       },
     ];
 
@@ -3884,6 +3554,17 @@ describe("relocation save/load through full pipeline", () => {
     const afterTick = simulation.getWorldSnapshot();
     expect(afterTick.building.activeBuildingId).toBe("building/skyscraper");
     expect(afterTick.rooms.length).toBe(3);
+  });
+
+  it("defaults missing room activity flags to operational during restore", () => {
+    const snapshot = createPreviewWorldSnapshot(templateRegistry);
+    snapshot.rooms = snapshot.rooms.map((room, index) =>
+      index === 0 ? { ...room, isActive: undefined, occupancy: 0 } : room,
+    );
+
+    const simulation = createAscensionSimulation(snapshot, templateRegistry);
+
+    expect(simulation.getWorldSnapshot().rooms[0]?.isActive).toBe(true);
   });
 
   it("loads a mid-relocation save for the Porter's → skyscraper handoff", () => {

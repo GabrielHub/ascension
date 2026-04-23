@@ -1,6 +1,6 @@
 # Operators And Staff
 
-The guild employs two fundamentally different kinds of people: **operators** (superhumans who go into dungeons) and **staff** (regular humans who keep the guild running).
+The guild employs two fundamentally different kinds of people: **operators** (superhumans who go into dungeons) and **presenter staff** (a small authored cast of regular humans who keep the guild running). The simulation does not carry a generic hire-and-assign staff roster; the presenters listed below are the only staff in the game.
 
 ## Operators
 
@@ -12,7 +12,7 @@ Every operator is a deliberately authored person with:
 
 - A full name
 - A visual identity assembled from modular parts (head shape, hair, eyes, face details, body silhouette)
-- A rank (F through S) reflecting attunement intensity
+- A rank (F through Unique `U`) reflecting attunement intensity
 - An attunement that shapes how they operate in the field
 - A recognizable field role
 - A personality expressed through preferences and behavioral tendencies
@@ -36,29 +36,30 @@ Traits should be specific enough to create strong voice, clear social friction, 
 
 ## Staff
 
-Staff are non-attuned people hired to run the guild's non-combat operations. They are not operators. They do not go into dungeons.
+Staff are non-attuned authored characters who keep the guild's non-combat operations running. They are not operators. They do not go into dungeons. Staff exist in the game only as the recurring narrative presenter roster — a small authored cast. There is no generic, hirable, assignable staff pool behind them; rooms do not depend on staff assignment, and room function does not require a presenter to be present.
 
-**Staff have individual personality, morale, and loyalty.** They are part of the office comedy. The receptionist has opinions. The logistics person holds grudges. The admin is passive-aggressive about the printer. Staff are authored people with names and personality, not faceless upgrade slots.
+**Staff are authored people with personality, domain, and voice.** They are part of the office comedy. The assistant has opinions about the paperwork. The cook holds grudges about meal scheduling. The compliance officer is precisely unimpressed by preventable disasters. Staff are authored people with names and personality, not faceless upgrade slots and not a headcount stat.
 
-Staff roles are organizational, not combat:
+Each presenter owns a domain of guild operations:
 
-| Function       | Description                                                 |
-| -------------- | ----------------------------------------------------------- |
-| Reception      | Front desk, visitor management, public-facing operations    |
-| Logistics      | Supply management, equipment maintenance, resource movement |
-| Maintenance    | Building upkeep, room repairs, facility management          |
-| Medical        | Non-field medical care, recovery support, injury treatment  |
-| Administrative | Paperwork, compliance, scheduling                           |
+| Function       | Description                                                              |
+| -------------- | ------------------------------------------------------------------------ |
+| Operations     | Operations framing, paperwork, management pressure, fallback guidance    |
+| Hospitality    | Kitchen, food quality, morale-through-comfort                            |
+| Front-of-house | Recruitment reads, public-facing social pressure, nightlife and regulars |
+| Workshop       | Gear readiness, loot triage, fabrication, stock pressure                 |
+| Medical        | Injury, recovery, treatment, infirmary and trauma support                |
+| Compliance     | Policy, regulators, institutional pressure, executive-floor expectations |
 
-Staff are the infrastructure that lets operators focus on the dangerous work. Think of them as the guild's support team - the receptionist who handles walk-ins, the logistics person who makes sure the gear is maintained, the admin who files the paperwork so the city does not shut you down. They have traits, preferences, and opinions about everything, and they will let the player know.
+Staff are the infrastructure that lets operators focus on the dangerous work. Think of them as the guild's authored support cast — the assistant who reminds you of the next move, the cook who tells you your people need to eat, the compliance officer who tells you which way the city is going to land. They have traits, voices, and opinions, and they will let the player know.
 
 ### Narrative Presenters
 
-Some staff and support characters serve as recurring narrative presenters in interruption modals, guidance beats, and event briefings. Presenter characters are not required to be simulation staff roles. Presenter status is a narrative and presentation role, not a separate gameplay-authority layer — the simulation still owns the event, the choices, and the outcomes.
+The authored staff cast surfaces in-game entirely through recurring narrative presenters in interruption modals, guidance beats, and event briefings. Presenter status is a narrative and presentation role, not a separate gameplay-authority layer — the simulation still owns the event, the choices, and the outcomes. Presenters do not mechanically power rooms; they are HQ-visible narrative anchors once unlocked.
 
 **Presenters are feature-domain voices, not building-locked.** Each presenter owns an area of the guild's operation and appears wherever that domain is the right voice — bodega, Porter's, skyscraper, or in-between. They are recurring narrative anchors for long-running guidance, not one-off flavor characters.
 
-Every tutorial event, guide event, interruption modal, and incident briefing must name a presenter explicitly or inherit a clear fallback. Never default to anonymous narrator copy.
+Every tutorial event, guide event, interruption modal, and incident briefing must name a presenter explicitly or inherit a clear fallback. Never default to anonymous narrator copy. The presenter's current `expression` (`neutral`, `concerned`, `serious`, `amused`) drives both portrait selection and prose register; AI-framed copy honors the presenter's voice brief at that expression.
 
 #### Presenter Roster
 
@@ -117,7 +118,7 @@ Use this as the implementation-facing default when binding presenters to tutoria
 **Mara Cordero** owns:
 
 - contracts, bidding, result review, and general operations framing
-- staffing basics, assignment, management pressure, and fallback "what do we do next" guidance
+- room basics, upgrades, management pressure, and fallback "what do we do next" guidance
 - room / upgrade explanation when no more specific domain presenter is the better fit
 - relocation handoff framing and broad campaign continuity
 

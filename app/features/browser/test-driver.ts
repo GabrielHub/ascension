@@ -126,14 +126,12 @@ export interface BrowserTestSnapshot {
     operatorCapacity: number;
     operatorIds: string[];
     operatorRoleTags: string[];
-    staffIds: string[];
     vacancyCount: number;
     visitorIds: string[];
   };
   rooms: Array<{
     floorIndex: number;
     id: string;
-    isActive: boolean;
     isOperational: boolean;
     name: string;
     occupancy: number;
@@ -637,14 +635,12 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
       operatorCapacity: hq.rosterPressure.operatorCapacity,
       operatorIds: hq.operators.map((operator) => operator.id),
       operatorRoleTags: hq.operators.map((operator) => operator.roleTag),
-      staffIds: hq.staff.map((staff) => staff.id),
       vacancyCount: hq.rosterPressure.vacancyCount,
       visitorIds: hq.visitors.map((visitor) => visitor.id),
     },
     rooms: hq.rooms.map((room) => ({
       floorIndex: room.floorIndex,
       id: room.id,
-      isActive: room.isActive,
       isOperational: room.isOperational,
       name: room.name,
       occupancy: room.occupancy,

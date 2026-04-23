@@ -127,7 +127,6 @@ describe("buildGameCallbacks", () => {
       commands: {
         tick: vi.fn(),
         initiateRelocation: vi.fn(),
-        setRoomActive: vi.fn(),
         setPolicy,
         setLootFilter: vi.fn(),
         purchaseBuildingUpgrade: vi.fn(),
@@ -137,8 +136,6 @@ describe("buildGameCallbacks", () => {
         rejectRecruit: vi.fn(),
         replaceRecruit: vi.fn(),
         dismissRecruit: vi.fn(),
-        hireStaff: vi.fn(),
-        assignStaff: vi.fn(),
         placeRoom: vi.fn(),
         setActiveFloor: vi.fn(),
         buyItem: vi.fn(),

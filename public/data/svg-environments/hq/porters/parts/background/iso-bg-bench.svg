@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 58">
+  <!-- Isometric park bench. Wood slats on cast-iron frame.
+       Runs along iso-right axis. 2:1 iso projection.
+       Feet form iso parallelogram: slopes ±1/2 on both axes. -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="34" cy="54" rx="24" ry="3.5" fill="rgba(0,0,0,0.1)"/>
+
+  <!-- Back legs (behind bench body) -->
+  <g stroke="#3a3838" stroke-width="2" stroke-linecap="round">
+    <line x1="22" y1="5" x2="22" y2="33"/>
+    <line x1="54" y1="21" x2="54" y2="49"/>
+  </g>
+
+  <!-- Horizontal brace between back legs -->
+  <line x1="22" y1="30" x2="54" y2="46" stroke="#3a3838" stroke-width="1"/>
+
+  <!-- Backrest front face -->
+  <polygon points="20,4 56,22 56,34 20,16"
+    fill="#6b422a" stroke="#553420" stroke-width="0.5"/>
+
+  <!-- Backrest slat lines -->
+  <g stroke="#553420" stroke-width="0.4" opacity="0.5">
+    <line x1="20" y1="7.5" x2="56" y2="25.5"/>
+    <line x1="20" y1="11" x2="56" y2="29"/>
+  </g>
+
+  <!-- Backrest top edge (depth) -->
+  <polygon points="20,4 56,22 58,21 22,3"
+    fill="#7a4e32" stroke="#553420" stroke-width="0.3"/>
+
+  <!-- Backrest right end face -->
+  <polygon points="56,22 58,21 58,33 56,34"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+
+  <!-- Seat top face -->
+  <polygon points="14,19 50,37 44,40 8,22"
+    fill="#7a4e32" stroke="#5c3a1e" stroke-width="0.5"/>
+
+  <!-- Seat slat lines -->
+  <g stroke="#5c3a1e" stroke-width="0.4" opacity="0.45">
+    <line x1="10" y1="20.5" x2="46" y2="38.5"/>
+    <line x1="12" y1="23" x2="48" y2="41"/>
+  </g>
+
+  <!-- Seat front face -->
+  <polygon points="8,22 44,40 44,43 8,25"
+    fill="#5c3a1e" stroke="#4a2e16" stroke-width="0.3"/>
+
+  <!-- Seat right end face -->
+  <polygon points="44,40 50,37 50,40 44,43"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+
+  <!-- Front legs (in front of seat body) -->
+  <g stroke="#3a3838" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="27" x2="12" y2="38"/>
+    <line x1="44" y1="43" x2="44" y2="54"/>
+  </g>
+
+  <!-- Horizontal brace between front legs -->
+  <line x1="12" y1="35" x2="44" y2="51" stroke="#3a3838" stroke-width="1"/>
+
+  <!-- Armrest bars (cast-iron curves) -->
+  <path d="M22,5 C20,10 14,18 12,27"
+    fill="none" stroke="#454242" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M54,21 C52,26 48,34 44,43"
+    fill="none" stroke="#454242" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Armrest top caps -->
+  <line x1="21" y1="5" x2="24" y2="4" stroke="#454242" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="53" y1="21" x2="56" y2="20" stroke="#454242" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

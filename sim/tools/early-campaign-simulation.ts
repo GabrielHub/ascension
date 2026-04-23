@@ -24,6 +24,11 @@ const openingSafeIncidentCategorySet = new Set<string>(OPENING_SAFE_INCIDENT_CAT
 const incidentTemplateById = new Map(INCIDENT_TEMPLATES.map((template) => [template.id, template]));
 const incidentChoiceScoreCache = new Map<string, number>();
 const earlyCampaignSimulationSuiteCache = new Map<string, Promise<EarlyCampaignSimulationSuite>>();
+const RECEPTION_ROOM_TEMPLATE_IDS = new Set(
+  templateRegistry.rooms
+    .filter((template) => template.tags.includes("room:reception"))
+    .map((template) => template.id),
+);
 
 const INCOME_UPGRADE_IDS = [
   "upgrade/room/register:records_wall",
@@ -572,15 +577,14 @@ function getUpgradeCost(upgradeId: string): number {
 
 function getDailyPayroll(phase1: Phase1View): number {
   return (
-    phase1.staff.reduce((total, staff) => total + staff.wage, 0) +
     phase1.operators.filter((operator) => operator.lifecycle.status === "active").length *
-      DAILY_ACTIVE_OPERATOR_PAYROLL
+    DAILY_ACTIVE_OPERATOR_PAYROLL
   );
 }
 
 function getDailyGrossIncome(phase1: Phase1View): number {
   const activeReceptionRooms = phase1.rooms.filter(
-    (room) => room.isOperational && room.requiredStaffTag === "staff:reception",
+    (room) => room.isOperational && RECEPTION_ROOM_TEMPLATE_IDS.has(room.templateId),
   ).length;
   const incomeFromUpgrades = [
     ...phase1.building.appliedUpgradeIds,
@@ -814,6 +818,7 @@ function chooseUpgradeAction(
   phase1: Phase1View,
   options: {
     guidedOnly: boolean;
+    ignoreEarliestContract?: boolean;
     preferredUpgradeId?: string;
     scenarioProfile: ScenarioProfile;
     completedContracts: number;
@@ -836,7 +841,7 @@ function chooseUpgradeAction(
 
   const preferredUpgradeId =
     options.scenarioProfile === "skilled" ? options.preferredUpgradeId : undefined;
-  const selectedUpgradeId =
+  const preferredSelection =
     preferredUpgradeId && candidateUpgrades.includes(preferredUpgradeId)
       ? preferredUpgradeId
       : chosen;
@@ -845,15 +850,39 @@ function chooseUpgradeAction(
     return null;
   }
   if (
+    !options.ignoreEarliestContract &&
     options.completedContracts + 1 <
-    SCENARIO_PROFILE_CONFIG[options.scenarioProfile].earliestUpgradeContract
+      SCENARIO_PROFILE_CONFIG[options.scenarioProfile].earliestUpgradeContract
   ) {
     return null;
   }
-  if (phase1.resources.cash - getUpgradeCost(selectedUpgradeId) <= CRITICAL_TREASURY_FLOOR) {
+  const selectedUpgradeId =
+    phase1.resources.cash - getUpgradeCost(preferredSelection) > CRITICAL_TREASURY_FLOOR
+      ? preferredSelection
+      : candidateUpgrades.find(
+          (upgradeId) =>
+            phase1.resources.cash - getUpgradeCost(upgradeId) > CRITICAL_TREASURY_FLOOR,
+        );
+  if (!selectedUpgradeId) {
     return null;
   }
   return selectUpgradeActionById(phase1, selectedUpgradeId);
+}
+
+function choosePlaceRoomAction(phase1: Phase1View): {
+  type: "sim/place-room";
+  templateId: string;
+} | null {
+  if (phase1.building.roomsUsed >= phase1.building.roomSlotCount) {
+    return null;
+  }
+
+  const placedRoomTemplateIds = new Set(phase1.rooms.map((room) => room.templateId));
+  const templateId = phase1.building.unlockedRoomTemplateIds.find(
+    (roomTemplateId) => !placedRoomTemplateIds.has(roomTemplateId),
+  );
+
+  return templateId ? { type: "sim/place-room", templateId } : null;
 }
 
 function projectRecruitViability(phase1: Phase1View): {
@@ -1931,6 +1960,44 @@ async function simulateSingleRun(
       });
       continue;
     }
+    if (activeBeatId === "guidance/opening/staffing-and-rooms") {
+      const upgradeAction = chooseUpgradeAction(phase1, {
+        guidedOnly: false,
+        ignoreEarliestContract: true,
+        scenarioProfile,
+        completedContracts: run.completedContracts,
+      });
+      if (upgradeAction) {
+        const cost = getUpgradeCost(upgradeAction.upgradeId);
+        const upgradeName =
+          templateRegistry.upgradeById.get(upgradeAction.upgradeId)?.name ??
+          upgradeAction.upgradeId;
+        run.upgrades.push({
+          contractIndex: getCycleOrRunIndex(run, working),
+          minute: phase1.clock.absoluteMinute,
+          upgradeId: upgradeAction.upgradeId,
+          upgradeName,
+          cost,
+        });
+        if (working.currentCycle) {
+          working.currentCycle.upgradeSpend += cost;
+        }
+        run.totalUpgradeSpend += cost;
+        if (working.firstIncomeUpgradePurchasedContract === null) {
+          working.firstIncomeUpgradePurchasedContract = getCycleOrRunIndex(run, working);
+        }
+        simulation.dispatch(upgradeAction);
+        flushSimulation(simulation);
+        continue;
+      }
+
+      const placeRoomAction = choosePlaceRoomAction(phase1);
+      if (placeRoomAction) {
+        simulation.dispatch(placeRoomAction);
+        flushSimulation(simulation);
+        continue;
+      }
+    }
 
     const sellableLoot = getSellableLoot(phase2);
     if (sellableLoot.length > 0 && phase1.contractLifecycle !== "active") {
@@ -1962,39 +2029,6 @@ async function simulateSingleRun(
         });
         continue;
       }
-    }
-
-    if (
-      (activeBeatId === "guidance/opening/staffing-and-rooms" ||
-        guidanceState.completedBeatIds.includes("guidance/opening/loot-and-market")) &&
-      phase1.rooms.some(
-        (room) => room.id === "room-instance/supply_closet" && !room.isRequestedActive,
-      )
-    ) {
-      simulation.dispatch({
-        type: "sim/set-room-active",
-        roomId: "room-instance/supply_closet",
-        isActive: true,
-      });
-      flushSimulation(simulation);
-      continue;
-    }
-
-    const boris = phase1.staff.find((staff) => staff.id === "staff/boris");
-    if (
-      (activeBeatId === "guidance/opening/staffing-and-rooms" ||
-        guidanceState.completedBeatIds.includes("guidance/opening/loot-and-market")) &&
-      boris &&
-      (boris.assignment.kind !== "room" ||
-        boris.assignment.targetId !== "room-instance/supply_closet")
-    ) {
-      simulation.dispatch({
-        type: "sim/assign-staff",
-        staffId: "staff/boris",
-        roomId: "room-instance/supply_closet",
-      });
-      flushSimulation(simulation);
-      continue;
     }
 
     if (

@@ -688,34 +688,6 @@ const COMMANDS: DevConsoleCommand[] = [
     },
   },
   {
-    name: "room on",
-    family: "Rooms",
-    args: "<room>",
-    help: "Activate a room by ID",
-    examples: ["/room on room/0"],
-    execute: (args, ctx) => {
-      if (args.length < 1) return err("Usage: /room on <roomId>");
-      const roomId = resolveRoomId(args[0], ctx);
-      if (!roomId) return err(`Room not found: ${args[0]}`);
-      void ctx.session.commands.setRoomActive({ roomId, isActive: true });
-      return ok(`Activated ${roomId}`);
-    },
-  },
-  {
-    name: "room off",
-    family: "Rooms",
-    args: "<room>",
-    help: "Deactivate a room by ID",
-    examples: ["/room off room/0"],
-    execute: (args, ctx) => {
-      if (args.length < 1) return err("Usage: /room off <roomId>");
-      const roomId = resolveRoomId(args[0], ctx);
-      if (!roomId) return err(`Room not found: ${args[0]}`);
-      void ctx.session.commands.setRoomActive({ roomId, isActive: false });
-      return ok(`Deactivated ${roomId}`);
-    },
-  },
-  {
     name: "upgrade building",
     family: "Rooms",
     args: "<upgradeId>",
@@ -859,31 +831,6 @@ const COMMANDS: DevConsoleCommand[] = [
       if (!visitorId) return err(`Visitor not found: ${args[0]}`);
       void ctx.session.commands.dismissRecruit({ visitorId });
       return ok(`Dismissed ${visitorId}`);
-    },
-  },
-  {
-    name: "staff hire",
-    family: "Roster",
-    args: "<role>",
-    help: "Hire a staff member by role tag",
-    examples: ["/staff hire role:clerk"],
-    execute: (args, ctx) => {
-      if (args.length < 1) return err("Usage: /staff hire <roleTag>");
-      void ctx.session.commands.hireStaff({ roleTag: args[0] });
-      return ok(`Hired staff with role ${args[0]}`);
-    },
-  },
-  {
-    name: "staff assign",
-    family: "Roster",
-    args: "<staff> [room]",
-    help: "Assign a staff member to a room (omit room to unassign)",
-    examples: ["/staff assign staff/0 room/0", "/staff assign staff/0"],
-    execute: (args, ctx) => {
-      if (args.length < 1) return err("Usage: /staff assign <staffId> [roomId]");
-      const roomId = args[1] ? resolveRoomId(args[1], ctx) : undefined;
-      void ctx.session.commands.assignStaff({ staffId: args[0], roomId: roomId ?? undefined });
-      return ok(roomId ? `Assigned ${args[0]} to ${roomId}` : `Unassigned ${args[0]}`);
     },
   },
   {
@@ -1323,9 +1270,9 @@ const COMMANDS: DevConsoleCommand[] = [
     execute: (_args, ctx) => {
       const encounter = ctx.session.phase1View.encounter;
       if (!encounter) return err("No active encounter");
-      const transitions: typeof encounter.recentLog = [];
-      const interventions: typeof encounter.recentLog = [];
-      const passives: typeof encounter.recentLog = [];
+      const transitions: (typeof encounter.recentLog)[number][] = [];
+      const interventions: (typeof encounter.recentLog)[number][] = [];
+      const passives: (typeof encounter.recentLog)[number][] = [];
       for (const entry of encounter.recentLog) {
         if (entry.actionKind === "phase_transition") {
           transitions.push(entry);
@@ -1485,7 +1432,7 @@ const COMMANDS: DevConsoleCommand[] = [
   {
     name: "inspect",
     family: "Debug",
-    args: "<rooms|operators|visitors|staff|contracts|encounter>",
+    args: "<rooms|operators|visitors|contracts|encounter>",
     help: "Inspect current game state for a category",
     examples: ["/inspect rooms", "/inspect operators", "/inspect contracts"],
     execute: (args, ctx) => {
@@ -1516,19 +1463,6 @@ const COMMANDS: DevConsoleCommand[] = [
           const visitors = pv.visitors ?? [];
           const lines = visitors.map((v) => `  ${v.id} ${v.name} [${v.desiredRoleTag}]`);
           return info(`Visitors (${visitors.length})`, lines.join("\n") || "  (none)");
-        }
-        case "staff": {
-          const ws = ctx.session.worldSnapshot;
-          const staff = ws.staff ?? [];
-          const lines = staff.map((s) => {
-            const assignmentRecord = s.assignment as Record<string, unknown> | undefined;
-            const targetId =
-              assignmentRecord && typeof assignmentRecord.targetId === "string"
-                ? assignmentRecord.targetId
-                : "(unassigned)";
-            return `  ${s.id} ${s.name} [${s.roleTag}] → ${targetId}`;
-          });
-          return info(`Staff (${staff.length})`, lines.join("\n") || "  (none)");
         }
         case "contracts": {
           const lifecycle = pv.contractLifecycle;

@@ -65,7 +65,6 @@ function createRoomSnapshot(
     roomStateId: getRoomStateId(template.id, []),
     capacity: template.baseCapacity,
     occupancy: 0,
-    isActive: true,
     reservedFootprint,
     activeFootprint,
   };
@@ -124,24 +123,6 @@ function createBodegaWorldSnapshot() {
       },
     ),
   ];
-  world.staff = world.staff?.map((staff) =>
-    staff.roleTag === "staff:reception"
-      ? {
-          ...staff,
-          assignment: {
-            kind: "room",
-            targetId: "room-instance/register",
-          },
-        }
-      : {
-          ...staff,
-          assignment: {
-            kind: "idle",
-            targetId: "",
-          },
-        },
-  );
-
   return world;
 }
 
@@ -349,10 +330,6 @@ describe("runtime session lifecycle", () => {
     expect(
       new Set(session.worldSnapshot.operators?.map((operator) => operator.identity.roleTag)),
     ).toEqual(new Set(["role:field_lead", "role:scout", "role:medic"]));
-    expect(session.worldSnapshot.staff?.map((staff) => staff.id)).toEqual([
-      "staff/aina",
-      "staff/boris",
-    ]);
     expect(session.worldSnapshot.visitors?.map((visitor) => visitor.id)).toContain("visitor/nika");
     expect(session.worldSnapshot.visitors?.length).toBeGreaterThanOrEqual(1);
     expect(session.worldSnapshot.visitors?.length).toBeLessThanOrEqual(2);
@@ -748,7 +725,6 @@ describe("runtime session lifecycle", () => {
     expect(session.state.phase1View.operators.length).toBe(6);
     expect(session.state.phase1View.operatorIntentReadiness.length).toBeGreaterThan(0);
     expect(session.state.phase1View.relationshipSignals.length).toBeGreaterThan(0);
-    expect(session.state.phase1View.staff.length).toBeGreaterThan(0);
     expect(session.state.phase1View.visitors.length).toBe(3);
     expect(session.worldSnapshot.guild.treasury).toBe(500);
     expect(
@@ -781,7 +757,6 @@ describe("runtime session lifecycle", () => {
     expect(session.registry.missions.length).toBeGreaterThan(0);
     expect(session.stableCommandTypes).toContain("sim/place-room");
     expect(session.stableCommandTypes).toContain("sim/accept-recruit");
-    expect(session.stableCommandTypes).toContain("sim/assign-staff");
 
     session.dispose();
   });
@@ -1051,49 +1026,6 @@ describe("runtime session lifecycle", () => {
     session.dispose();
   });
 
-  it("does not invent HQ placement for staff when no rooms exist", async () => {
-    const world = createBootstrapWorldSnapshot(templateRegistry);
-    world.rooms = [];
-    world.staff = [
-      {
-        id: "staff/unplaced",
-        name: "Jules Mora",
-        roleTag: "staff:maintenance",
-        status: "available",
-        wage: 20,
-        assignment: {
-          kind: "idle",
-          targetId: "",
-        },
-      },
-    ];
-
-    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
-      slotId: "slot/1",
-      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
-      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
-      metadata: {
-        guildName: "Guild Slot 1",
-        playerName: "Boss",
-        createdAt: "2026-03-21T00:00:00.000Z",
-        lastPlayedAt: "2026-03-21T00:00:00.000Z",
-      },
-      world,
-    });
-    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
-
-    const session = await resolveRuntimeSession({
-      mode: "load",
-      slotId: "slot/1",
-    });
-
-    expect(session.state.hqWorldSnapshot?.actors.some((actor) => actor.kind === "staff")).toBe(
-      false,
-    );
-
-    session.dispose();
-  });
-
   it("places recovering operators into recovery rooms in the HQ world snapshot", async () => {
     const world = createBootstrapWorldSnapshot(templateRegistry);
     const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/dining_area");
@@ -1250,73 +1182,6 @@ describe("runtime session lifecycle", () => {
     session.dispose();
   });
 
-  it("emits staff cues only for successful hire and assignment changes", async () => {
-    const world = createBodegaWorldSnapshot();
-
-    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
-      slotId: "slot/1",
-      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
-      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
-      metadata: {
-        guildName: "Guild Slot 1",
-        playerName: "Boss",
-        createdAt: "2026-03-21T00:00:00.000Z",
-        lastPlayedAt: "2026-03-21T00:00:00.000Z",
-      },
-      world,
-    });
-    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
-
-    const session = await resolveRuntimeSession({
-      mode: "load",
-      slotId: "slot/1",
-    });
-
-    session.drainPendingCues();
-
-    await session.commands.hireStaff({ roleTag: "staff:reception" });
-    expect(session.drainPendingCues()).toEqual(["staff.hire"]);
-
-    const recruitDeskStaff = session.state.phase1View.staff.find(
-      (staff) =>
-        staff.roleTag === "staff:reception" &&
-        staff.assignment.kind === "idle" &&
-        staff.assignment.targetId === "",
-    );
-
-    expect(recruitDeskStaff).toBeTruthy();
-
-    await session.commands.assignStaff({
-      staffId: recruitDeskStaff!.id,
-      roomId: "room-instance/register",
-    });
-    expect(session.drainPendingCues()).toEqual(["staff.assign"]);
-
-    await session.commands.assignStaff({
-      staffId: recruitDeskStaff!.id,
-      roomId: "room-instance/register",
-    });
-    expect(session.drainPendingCues()).toEqual([]);
-
-    session.dispose();
-  });
-
-  it("emits room.activate and room.deactivate cues based on isActive", async () => {
-    const session = await resolveRuntimeSession({ mode: "preview" });
-    const roomId = session.state.phase1View.rooms.find((room) => room.isOperational)?.id;
-    expect(roomId).toBeTruthy();
-
-    // Deactivate an existing room
-    await session.commands.setRoomActive({ roomId: roomId!, isActive: false });
-    expect(session.drainPendingCues()).toEqual(["room.deactivate"]);
-
-    // Reactivate it
-    await session.commands.setRoomActive({ roomId: roomId!, isActive: true });
-    expect(session.drainPendingCues()).toEqual(["room.activate"]);
-
-    session.dispose();
-  });
-
   it("emits hq.floor.switch only when the active floor changes", async () => {
     const world = createBodegaWorldSnapshot();
     world.building = {
@@ -1363,9 +1228,9 @@ describe("runtime session lifecycle", () => {
         "slot/floor",
         {
           col: 1,
-          row: 12,
+          row: 8,
           cols: 10,
-          rows: 6,
+          rows: 10,
         },
         undefined,
         0,
@@ -1376,9 +1241,9 @@ describe("runtime session lifecycle", () => {
         "slot/bar",
         {
           col: 1,
-          row: 6,
+          row: 1,
           cols: 10,
-          rows: 4,
+          rows: 6,
         },
         undefined,
         0,
@@ -1554,23 +1419,6 @@ describe("runtime session lifecycle", () => {
     await session.commands.acceptRecruit({ visitorId: "visitor/does-not-exist" });
     expect(session.drainPendingCues()).toEqual([]);
 
-    const room = session.state.phase1View.rooms[0];
-    expect(room).toBeTruthy();
-    await session.commands.setRoomActive({ roomId: room!.id, isActive: room!.isOperational });
-    expect(session.drainPendingCues()).toEqual([]);
-
-    const staff = session.state.phase1View.staff[0];
-    expect(staff).toBeTruthy();
-    if (staff?.assignment.targetId) {
-      await session.commands.assignStaff({
-        staffId: staff.id,
-        roomId: staff.assignment.targetId,
-      });
-    } else {
-      await session.commands.assignStaff({ staffId: staff!.id });
-    }
-    expect(session.drainPendingCues()).toEqual([]);
-
     await session.commands.setActiveFloor({
       floorIndex: session.state.phase1View.building.activeFloorIndex,
     });
@@ -1670,75 +1518,6 @@ describe("runtime session lifecycle", () => {
       await session.commands.acceptRecruit({ visitorId: visitor.id });
       expect(session.drainPendingCues()).toContain("operator.recruit");
     }
-
-    session.dispose();
-  });
-
-  it("places recovering operators and recruitment staff into matching room functions", async () => {
-    const world = createBodegaWorldSnapshot();
-    const recoveryRoom = world.rooms.find((room) => room.id === "room-instance/dining_area");
-    expect(recoveryRoom).toBeTruthy();
-    world.operators = world.operators?.map((operator) =>
-      operator.id === "operator/rose-vega"
-        ? {
-            ...operator,
-            assignment: {
-              kind: "idle",
-              targetId: "",
-            },
-            injury: {
-              ...operator.injury,
-              severity: 40,
-              recoveryHoursRemaining: 6,
-            },
-            schedule: {
-              ...operator.schedule,
-              currentBlock: "recovery",
-            },
-          }
-        : operator,
-    );
-    world.staff = world.staff?.map((staff) =>
-      staff.id === "staff/aina"
-        ? {
-            ...staff,
-            roleTag: "staff:admin",
-            assignment: {
-              kind: "room",
-              targetId: "room-instance/register",
-            },
-          }
-        : staff,
-    );
-
-    vi.spyOn(saveStorage, "readSaveGame").mockResolvedValue({
-      slotId: "slot/1",
-      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
-      compatibilityVersion: CURRENT_CONTENT_COMPATIBILITY,
-      metadata: {
-        guildName: "Guild Slot 1",
-        playerName: "Boss",
-        createdAt: "2026-03-21T00:00:00.000Z",
-        lastPlayedAt: "2026-03-21T00:00:00.000Z",
-      },
-      world,
-    });
-    vi.spyOn(saveStorage, "writeSaveGame").mockResolvedValue();
-
-    const session = await resolveRuntimeSession({
-      mode: "load",
-      slotId: "slot/1",
-    });
-
-    expect(
-      session.state.hqWorldSnapshot?.actors.find((actor) => actor.id === "operator/rose-vega")
-        ?.roomId,
-    ).toBe("room-instance/dining_area");
-    expect(
-      session.state.hqWorldSnapshot?.actors.find(
-        (actor) => actor.kind === "staff" && actor.roleTag === "staff:admin",
-      )?.roomId,
-    ).toBe("room-instance/register");
 
     session.dispose();
   });

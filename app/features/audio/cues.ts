@@ -28,9 +28,6 @@ const APP_ONLY_AUDIO_CUE_IDS = [
   "room.place",
   "room.activate",
   "room.deactivate",
-  // ── Staff ──
-  "staff.hire",
-  "staff.assign",
   // ── Operator ──
   "operator.recruit",
   "raid.contract.bid",
@@ -44,7 +41,7 @@ export const AUDIO_CUE_IDS = [...APP_ONLY_AUDIO_CUE_IDS, ...RUNTIME_CUE_IDS] as 
 
 export type AudioCueId = (typeof AUDIO_CUE_IDS)[number];
 
-export type AudioCueCategory = "hq" | "room" | "staff" | "operator" | "raid" | "event";
+export type AudioCueCategory = "hq" | "room" | "operator" | "raid" | "event";
 
 export function getCueCategory(id: AudioCueId): AudioCueCategory {
   const prefix = id.split(".")[0];
@@ -221,37 +218,6 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
       }).connect(sfxBus);
       synth.triggerAttackRelease("E2", "8n");
       setTimeout(() => synth.dispose(), 1000);
-    },
-  }),
-
-  // ── Staff ──
-  sfx({
-    id: "staff.hire",
-    label: "Staff Hire",
-    description: "Double confirmation tone when hiring new staff.",
-    play({ Tone, sfxBus }) {
-      const synth = new Tone.Synth({
-        oscillator: { type: "triangle" },
-        envelope: { attack: 0.01, decay: 0.12, sustain: 0, release: 0.15 },
-      }).connect(sfxBus);
-      const now = Tone.now();
-      synth.triggerAttackRelease("G4", "32n", now);
-      synth.triggerAttackRelease("C5", "32n", now + 0.08);
-      setTimeout(() => synth.dispose(), 1000);
-    },
-  }),
-
-  sfx({
-    id: "staff.assign",
-    label: "Staff Assign",
-    description: "Subtle click when assigning staff to a room.",
-    play({ Tone, sfxBus }) {
-      const synth = new Tone.NoiseSynth({
-        noise: { type: "white" },
-        envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.01 },
-      }).connect(sfxBus);
-      synth.triggerAttackRelease("32n");
-      setTimeout(() => synth.dispose(), 500);
     },
   }),
 

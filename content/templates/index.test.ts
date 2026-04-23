@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -7,6 +10,8 @@ import {
 } from "../bootstrap";
 import { bossTemplates } from "./bosses";
 import { createTemplateRegistry } from "./index";
+import { presenterTemplates } from "./presenters";
+import { rivalDrafts, validateRivalDrafts } from "./rivals";
 import { siteConceptTemplates } from "./site-concepts";
 
 describe("template registry", () => {
@@ -67,6 +72,36 @@ describe("template registry", () => {
     expectedUpgradeIds.forEach((id) => {
       expect(registry.upgradeById.get(id)).toBeTruthy();
     });
+  });
+
+  it("keeps presenter unlock rooms inside each presenter's allowed room list", () => {
+    const registry = createTemplateRegistry();
+
+    presenterTemplates.forEach((presenter) => {
+      presenter.allowedRoomTemplateIds.forEach((roomId) => {
+        expect(registry.roomById.has(roomId)).toBe(true);
+      });
+
+      if (presenter.unlockFromRoomTemplateId) {
+        expect(presenter.allowedRoomTemplateIds).toContain(presenter.unlockFromRoomTemplateId);
+      }
+    });
+  });
+
+  it("validates rival draft metadata, status contracts, and shipped asset paths", () => {
+    expect(validateRivalDrafts()).toEqual([]);
+
+    rivalDrafts
+      .filter((rival) => rival.status === "ready-to-wire")
+      .forEach((rival) => {
+        expect(rival.assetsShipped).toBe(true);
+        expect(
+          existsSync(resolve(process.cwd(), "public", rival.assetPaths.leaderPortrait.slice(1))),
+        ).toBe(true);
+        expect(
+          existsSync(resolve(process.cwd(), "public", rival.assetPaths.insignia.slice(1))),
+        ).toBe(true);
+      });
   });
 
   it("uses only canonical pressure tags in event templates", () => {
@@ -308,7 +343,6 @@ describe("template registry", () => {
         expect(recipe.minimumBuildingTier).toBeGreaterThanOrEqual(1);
       }
 
-      expect(recipe.requiredStaffTag).toBe("staff:logistics");
       expect(recipe.cashCost).toBeGreaterThan(0);
       expect(recipe.inputItems.length).toBeGreaterThan(0);
       expect(recipe.requiredDistrictTags.length).toBeGreaterThan(0);
@@ -413,10 +447,6 @@ describe("bootstrap validation", () => {
     expect(bootstrapScenario.operators).toHaveLength(6);
   });
 
-  it("contains the expected number of staff", () => {
-    expect(bootstrapScenario.staff).toHaveLength(3);
-  });
-
   it("contains the expected number of visitors", () => {
     expect(bootstrapScenario.visitors).toHaveLength(3);
   });
@@ -424,12 +454,6 @@ describe("bootstrap validation", () => {
   it("uses valid operator ids", () => {
     bootstrapScenario.operators.forEach((op) => {
       expect(op.id).toMatch(/^operator\//);
-    });
-  });
-
-  it("uses valid staff ids", () => {
-    bootstrapScenario.staff.forEach((s) => {
-      expect(s.id).toMatch(/^staff\//);
     });
   });
 
@@ -441,11 +465,6 @@ describe("bootstrap validation", () => {
 
   it("has unique operator ids", () => {
     const ids = bootstrapScenario.operators.map((op) => op.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it("has unique staff ids", () => {
-    const ids = bootstrapScenario.staff.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
@@ -514,10 +533,6 @@ describe("canonical new-game validation", () => {
       "operator/jin-tanaka",
       "operator/vera-santos",
     ]);
-    expect(canonicalNewGameScenario.staff.map((staff) => staff.id)).toEqual([
-      "staff/aina",
-      "staff/boris",
-    ]);
     expect(canonicalNewGameScenario.visitors.map((visitor) => visitor.id)).toEqual([
       "visitor/nika",
     ]);
@@ -532,7 +547,6 @@ describe("canonical new-game validation", () => {
 
   it("preserves the denser preview bootstrap scenario", () => {
     expect(previewBootstrapScenario.operators).toHaveLength(6);
-    expect(previewBootstrapScenario.staff).toHaveLength(3);
     expect(previewBootstrapScenario.visitors).toHaveLength(3);
     expect(previewBootstrapScenario.guild.treasury).toBe(500);
     expect(

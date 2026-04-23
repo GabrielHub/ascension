@@ -2,6 +2,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 
 import {
   BuildingAuthority,
@@ -108,7 +109,6 @@ function createIncidentContext(options?: {
       roomEntities,
       operatorEntities: [operatorA, operatorB],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -120,7 +120,6 @@ function createIncidentContext(options?: {
       nextRoomSequence: 1,
       nextOperatorSequence: 3,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -157,19 +156,11 @@ function createIncidentContext(options?: {
           firstIncidentSeededAtMinute: null,
         },
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
       deferIncidentPresentation: false,
       cityState: createDefaultCityState(),
+      presenterUnlocks: [],
     },
   };
 }

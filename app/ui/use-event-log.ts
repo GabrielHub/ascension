@@ -77,7 +77,7 @@ export function handleEventLogEntryClick(entry: EventLogEntry, actions: EventLog
   actions.setActiveTab("hq");
   if (entry.targetKind === "room") {
     actions.setHqCategory("rooms");
-  } else if (entry.targetKind === "operator") {
+  } else if (entry.targetKind === "operator" || entry.targetKind === "presenter") {
     actions.setHqCategory("roster");
   }
   actions.setFocus({ targetKind: entry.targetKind, targetId: entry.targetId });

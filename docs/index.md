@@ -37,7 +37,7 @@ Documentation is intentionally narrow.
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  There is no active checked-in plan right now; the Executive Floor institutional-pressure slice is shipped and folded back into the roadmap.
+  Use this as the source of truth for the active checked-in plan set.
 
 ### Research
 

@@ -21,6 +21,7 @@ import type {
   CameraBounds,
   CameraState,
   FocusPayload,
+  FocusTargetKind,
   HqBackdropSnapshot,
   HqFloorOffset,
   HqPerimeterTile,
@@ -55,7 +56,6 @@ const SILVER_BRIGHT = "#f0ece4";
 const SILVER = "rgba(224, 221, 214, 0.72)";
 const ACTOR_RADIUS = 12;
 const ACTOR_FILL_OPERATOR = "#c8a84c";
-const ACTOR_FILL_STAFF = "rgba(224, 221, 214, 0.7)";
 const ACTOR_FILL_VISITOR = "rgba(212, 84, 30, 0.8)";
 const FOCUS_HIGHLIGHT_BORDER = "rgba(200, 168, 76, 0.5)";
 const FOCUS_HIGHLIGHT_GLOW = "rgba(200, 168, 76, 0.12)";
@@ -992,7 +992,7 @@ function drawModularWallSegments(
     const isHovered = seg.roomId === hoveredRoomId || seg.roomId === selectedRoomId;
     const room = roomMap.get(seg.roomId);
     const operational = room?.isOperational ?? false;
-    const active = operational || (room?.isRequestedActive ?? false);
+    const active = operational;
 
     ctx.save();
     ctx.globalAlpha = getFloorRenderAlpha(snapshot, seg.floorIndex);
@@ -1093,7 +1093,7 @@ function drawWallOpening(
   const jambW = 4;
   const room = roomMap.get(seg.roomId);
   const operational = room?.isOperational ?? false;
-  const active = operational || (room?.isRequestedActive ?? false);
+  const active = operational;
 
   // Lintel beam with depth
   const lintelPoints: HqPoint[] = [
@@ -1192,7 +1192,7 @@ function drawRoomHoverLabel(ctx: CanvasRenderingContext2D, room: HqRoomNode): vo
   ctx.stroke();
   ctx.restore();
 
-  const labelActive = room.isOperational || room.isRequestedActive;
+  const labelActive = room.isOperational;
   ctx.fillStyle = labelActive ? SILVER_BRIGHT : SILVER;
   ctx.font = `500 12px ${FONT_FAMILY}`;
   ctx.fillText(room.label, labelX, labelY);
@@ -2132,6 +2132,9 @@ function drawDofManagedFlankingBand(
 
 // ── Actor rendering ───────────────────────────────────────────────────────
 
+const PRESENTER_TOKEN_W = 52;
+const PRESENTER_TOKEN_H = 84;
+
 function drawChibiToken(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -2139,39 +2142,49 @@ function drawChibiToken(
   img: HTMLImageElement,
   kind: ActorMarker["kind"],
 ): void {
+  const isPresenter = kind === "presenter";
+  const width = isPresenter ? PRESENTER_TOKEN_W : TOKEN_W;
+  const height = isPresenter ? PRESENTER_TOKEN_H : TOKEN_H;
+
   // Ground shadow ellipse
   ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
   ctx.beginPath();
-  ctx.ellipse(x, y + 2, TOKEN_W * 0.35, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 2, width * 0.35, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Platform circle
+  // Platform circle — presenter gets a velvet accent so they read as named cast.
   const platformColor =
     kind === "operator"
       ? "rgba(200, 168, 76, 0.15)"
-      : kind === "staff"
-        ? "rgba(200, 200, 210, 0.1)"
-        : "rgba(212, 84, 30, 0.12)";
+      : kind === "visitor"
+        ? "rgba(212, 84, 30, 0.12)"
+        : "rgba(138, 87, 176, 0.22)";
   ctx.fillStyle = platformColor;
   ctx.beginPath();
-  ctx.ellipse(x, y, TOKEN_W * 0.38, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, width * 0.42, 5.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Chibi sprite
-  ctx.drawImage(img, x - TOKEN_W / 2, y - TOKEN_H, TOKEN_W, TOKEN_H);
+  // Portrait sprite
+  ctx.drawImage(img, x - width / 2, y - height, width, height);
 
-  // Subtle ring glow for operators
+  // Accent ring per kind
   if (kind === "operator") {
     ctx.strokeStyle = "rgba(200, 168, 76, 0.2)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(x, y, TOKEN_W * 0.4, 5.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, width * 0.4, 5.5, 0, 0, Math.PI * 2);
     ctx.stroke();
   } else if (kind === "visitor") {
     ctx.strokeStyle = "rgba(232, 170, 60, 0.25)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(x, y, TOKEN_W * 0.4, 5.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, width * 0.4, 5.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (kind === "presenter") {
+    ctx.strokeStyle = "rgba(200, 160, 240, 0.55)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y, width * 0.44, 6, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 }
@@ -2198,12 +2211,6 @@ function drawDotToken(
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.arc(x, y, r + 4, 0, Math.PI * 2);
-    ctx.stroke();
-  } else if (kind === "staff") {
-    ctx.strokeStyle = "rgba(200, 200, 210, 0.15)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, r + 3, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -2253,6 +2260,9 @@ function drawActorLabel(
 
 /** Visitor label color — a warm amber to distinguish recruitable operators. */
 const VISITOR_LABEL_COLOR = "rgba(232, 170, 60, 0.95)";
+/** Presenter label color — a velvet violet to mark named cast. */
+const PRESENTER_LABEL_COLOR = "rgba(214, 180, 250, 0.98)";
+const ACTOR_FILL_PRESENTER = "rgba(138, 87, 176, 0.85)";
 
 function drawActor(
   ctx: CanvasRenderingContext2D,
@@ -2270,15 +2280,19 @@ function drawActor(
   }
 
   const portraitUrl =
-    (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
-      ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
-      : null;
+    actor.kind === "presenter"
+      ? (actor.portraitUrl ?? null)
+      : (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
+        ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
+        : null;
   const tokenImg = portraitUrl ? imageCache.load(portraitUrl) : null;
   if (tokenImg) {
     drawChibiToken(ctx, x, y, tokenImg, actor.kind);
     if (actor.kind === "visitor") {
       const rankLabel = actor.rank ? `(${actor.rank}) ${actor.label}` : actor.label;
       drawActorLabel(ctx, rankLabel, x, y + 12, "500", VISITOR_LABEL_COLOR);
+    } else if (actor.kind === "presenter") {
+      drawActorLabel(ctx, actor.label, x, y + 14, "600", PRESENTER_LABEL_COLOR);
     } else if (actor.kind === "operator" || showLabel) {
       drawActorLabel(ctx, actor.label, x, y + 12, "500");
     }
@@ -2288,13 +2302,15 @@ function drawActor(
   const fill =
     actor.kind === "operator"
       ? ACTOR_FILL_OPERATOR
-      : actor.kind === "staff"
-        ? ACTOR_FILL_STAFF
+      : actor.kind === "presenter"
+        ? ACTOR_FILL_PRESENTER
         : ACTOR_FILL_VISITOR;
   drawDotToken(ctx, x, y, fill, actor.kind, actor.label);
   if (actor.kind === "visitor") {
     const rankLabel = actor.rank ? `(${actor.rank}) ${actor.label}` : actor.label;
     drawActorLabel(ctx, rankLabel, x, y + ACTOR_RADIUS + 8, "400", VISITOR_LABEL_COLOR);
+  } else if (actor.kind === "presenter") {
+    drawActorLabel(ctx, actor.label, x, y + ACTOR_RADIUS + 8, "500", PRESENTER_LABEL_COLOR);
   } else if (actor.kind === "operator" || showLabel) {
     drawActorLabel(ctx, actor.label, x, y + ACTOR_RADIUS + 8, "400");
   }
@@ -2341,7 +2357,7 @@ function drawRoomFloorEdges(ctx: CanvasRenderingContext2D, snapshot: HqWorldSnap
     const fp = room.floorPoints;
     if (fp.length < 4) continue;
 
-    const roomActive = room.isOperational || room.isRequestedActive;
+    const roomActive = room.isOperational;
     const edgeColor = roomActive ? "rgba(200, 168, 76, 0.25)" : "rgba(120, 120, 130, 0.12)";
     const innerColor = roomActive ? "rgba(200, 168, 76, 0.06)" : "rgba(120, 120, 130, 0.03)";
 
@@ -2675,7 +2691,7 @@ function drawHqWorld(
     const showLabel =
       actor.roomId === hoveredRoomId ||
       actor.roomId === focusedRoomId ||
-      (focus?.targetKind === "operator" || focus?.targetKind === "staff"
+      (focus?.targetKind === "operator" || focus?.targetKind === "presenter"
         ? focus.targetId === actor.id
         : false);
     drawActor(ctx, actor, imageCache, showLabel, time);
@@ -2804,7 +2820,13 @@ function hitTestActor(
 ): ActorMarker | null {
   for (const actor of snapshot.actors) {
     const { x: ax, y: ay } = actor;
-    if (actor.kind === "operator" && actor.presetId) {
+    if (actor.kind === "presenter") {
+      const hw = PRESENTER_TOKEN_W / 2 + 4;
+      const top = ay - PRESENTER_TOKEN_H - 4;
+      if (worldX >= ax - hw && worldX <= ax + hw && worldY >= top && worldY <= ay + 4) {
+        return actor;
+      }
+    } else if (actor.kind === "operator" && actor.presetId) {
       const hw = TOKEN_W / 2 + 4;
       const top = ay - TOKEN_H - 4;
       if (worldX >= ax - hw && worldX <= ax + hw && worldY >= top && worldY <= ay + 4) {
@@ -3175,16 +3197,20 @@ export function HqWorldCanvas({
     if (actor) {
       const { x: actorX, y: actorY } = actor;
       const portraitUrl =
-        (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
-          ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
-          : null;
+        actor.kind === "presenter"
+          ? (actor.portraitUrl ?? null)
+          : (actor.kind === "operator" || actor.kind === "visitor") && actor.presetId
+            ? getActorPortraitUrl(actor.presetId, actor.roleTag ?? "")
+            : null;
       const hasPortrait = portraitUrl ? sharedImageCache.get(portraitUrl) !== null : false;
+      const tokenW = actor.kind === "presenter" ? PRESENTER_TOKEN_W : TOKEN_W;
+      const tokenH = actor.kind === "presenter" ? PRESENTER_TOKEN_H : TOKEN_H;
       const bounds = hasPortrait
         ? {
-            x: actorX - TOKEN_W / 2 - 4,
-            y: actorY - TOKEN_H - 4,
-            width: TOKEN_W + 8,
-            height: TOKEN_H + 16,
+            x: actorX - tokenW / 2 - 4,
+            y: actorY - tokenH - 4,
+            width: tokenW + 8,
+            height: tokenH + 16,
           }
         : {
             x: actorX - ACTOR_RADIUS - 8,
@@ -3192,8 +3218,12 @@ export function HqWorldCanvas({
             width: (ACTOR_RADIUS + 8) * 2,
             height: (ACTOR_RADIUS + 8) * 2,
           };
-      const focusKind =
-        actor.kind === "operator" ? "operator" : actor.kind === "visitor" ? "visitor" : "staff";
+      const focusKind: FocusTargetKind =
+        actor.kind === "operator"
+          ? "operator"
+          : actor.kind === "presenter"
+            ? "presenter"
+            : "visitor";
       nextOnFocusChange(buildFocusHighlight(focusKind, actor.id, bounds));
       return;
     }

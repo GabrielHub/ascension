@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createWorld, addEntity, addComponent } from "bitecs";
 
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 import type { BossTag, BossWeakness } from "content/templates/shared";
 import { BuildingAuthority, OperatorIdentity, RoomInstance } from "../components";
 import { SeededRng, seedFromKey } from "../uncertainty";
@@ -30,7 +31,6 @@ function createMinimalContext(): SimSystemContext {
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -42,7 +42,6 @@ function createMinimalContext(): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -82,17 +81,9 @@ function createMinimalContext(): SimSystemContext {
         },
         lastPurchasedUpgradeId: null,
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }

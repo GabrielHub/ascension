@@ -70,7 +70,6 @@ describe("hq panel", () => {
       upgrades: [],
       roomUpgrades: [],
       operators: [],
-      staff: [],
       visitors: [],
       relationships: [],
       activeEvents: [],

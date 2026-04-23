@@ -15,7 +15,6 @@ function createRoomSeed(
     floorIndex: 0,
     name: "The Register",
     tier: 1,
-    isRequestedActive: true,
     isOperational: true,
     functionTag: "room:operations",
     reservedFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
@@ -254,6 +253,34 @@ describe("HQ world navigation", () => {
 
     expect(new Set(geometry.navGraph.anchors.map((anchor) => anchor.roomId))).toEqual(
       new Set(["room-instance/ground"]),
+    );
+  });
+
+  it("uses Porter's scene contract for waterfront room scenes", () => {
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/workshop",
+          templateId: "room/workshop:tier_1",
+          roomStateId: "room-state/workshop:1",
+          slotId: "slot/workshop",
+          floorIndex: 2,
+          name: "The Workshop",
+          functionTag: "room:operations",
+          reservedFootprint: { col: 0, row: 4, cols: 12, rows: 4 },
+          activeFootprint: { col: 0, row: 4, cols: 12, rows: 4 },
+        }),
+      ],
+      {
+        buildingId: "building/porters",
+        buildingTier: 6,
+        floorIndex: 2,
+      },
+    );
+
+    expect(geometry.roomProps).toHaveLength(1);
+    expect(geometry.roomProps[0]?.assetUrl).toBe(
+      "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
     );
   });
 });

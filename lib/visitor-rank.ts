@@ -1,4 +1,5 @@
-import { normalizeOperatorRank, type OperatorRank } from "./operator-combat";
+import type { CombatRank } from "content/templates/combat-packages";
+import { normalizeOperatorRank } from "./operator-combat";
 
 /**
  * Map a visitor's quality score onto a concrete operator rank, gated by the
@@ -13,7 +14,7 @@ import { normalizeOperatorRank, type OperatorRank } from "./operator-combat";
 export function deriveRecruitRank(
   quality: number,
   buildingContractRankCeiling?: string,
-): OperatorRank {
+): CombatRank {
   const ceiling = normalizeOperatorRank(buildingContractRankCeiling);
 
   if (ceiling === "f") return "f";
@@ -30,7 +31,7 @@ export function deriveRecruitRank(
   }
 
   // Skyscraper (c ceiling) and any higher ceiling bridged later: we still
-  // only emit up to `c` until the B/A/S plan ships.
+  // only emit up to `c` until the B/A/U plan ships.
   if (quality >= 65) return "c";
   if (quality >= 45) return "d";
   return "e";

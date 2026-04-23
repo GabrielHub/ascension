@@ -2,14 +2,15 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 
 import {
-  AssignmentState,
   BuildingAuthority,
   GuildState,
   InjuryState,
   MoraleState,
   OperatorIdentity,
+  RoomInstance,
   WorldTimeState,
 } from "../components";
 import {
@@ -56,6 +57,18 @@ function createGuidanceContext(completedOpeningBeatCount: number): SimSystemCont
   BuildingAuthority.activeRaidPackets[buildingEntity] = [];
   BuildingAuthority.lastRaidOpportunityTick[buildingEntity] = 0;
   BuildingAuthority.pressure[buildingEntity] = 0;
+  BuildingAuthority.activeBuildingTemplateIndex[buildingEntity] =
+    templateRegistry.buildingIndexById.get("building/bodega") ?? 0;
+  BuildingAuthority.activeBuildingTier[buildingEntity] = 1;
+  BuildingAuthority.roomSlotCount[buildingEntity] = 4;
+  BuildingAuthority.operatorSlotCount[buildingEntity] = 4;
+  BuildingAuthority.appliedUpgradeIds[buildingEntity] = [];
+  BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] = [
+    "room/register:tier_1",
+    "room/counter:tier_1",
+    "room/dining_area:tier_1",
+    "room/supply_closet:tier_1",
+  ];
 
   const completedBeatIds = OPENING_BEAT_IDS.slice(0, completedOpeningBeatCount);
 
@@ -67,7 +80,6 @@ function createGuidanceContext(completedOpeningBeatCount: number): SimSystemCont
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -79,7 +91,6 @@ function createGuidanceContext(completedOpeningBeatCount: number): SimSystemCont
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -118,17 +129,9 @@ function createGuidanceContext(completedOpeningBeatCount: number): SimSystemCont
           lastTrackedContractSiteId: null,
         },
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }
@@ -163,6 +166,21 @@ function configurePortersBuilding(
   BuildingAuthority.activeBuildingTemplateIndex[context.singletonEntities.building] = buildingIndex;
   BuildingAuthority.activeBuildingTier[context.singletonEntities.building] = tier;
   BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building] = [...appliedUpgradeIds];
+}
+
+function addBlockedRoom(context: SimSystemContext, templateId = "room/register:tier_1"): number {
+  const roomIndex = templateRegistry.roomIndexById.get(templateId);
+  if (roomIndex === undefined) {
+    throw new Error(`Missing ${templateId} in template registry.`);
+  }
+
+  const roomEntity = addEntity(context.world);
+  addComponent(context.world, roomEntity, RoomInstance);
+  RoomInstance.templateIndex[roomEntity] = roomIndex;
+  RoomInstance.isOperational[roomEntity] = 0;
+  RoomInstance.appliedUpgradeIds[roomEntity] = [];
+  context.runtimeState.roomEntities.push(roomEntity);
+  return roomEntity;
 }
 
 function createIncidentInterruption(): InterruptionInstance {
@@ -449,13 +467,34 @@ describe("guidance system", () => {
     expect(context.runtimeState.guidanceState.activeBeatId).toBeNull();
   });
 
+  it("does not activate staffing-and-rooms before any room improvement is actually possible", () => {
+    const context = createGuidanceContext(7);
+    addBlockedRoom(context);
+    BuildingAuthority.roomSlotCount[context.singletonEntities.building] = 1;
+    context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
+    context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBeNull();
+  });
+
   it("activates staffing-and-rooms once loot-and-market is complete", () => {
     const context = createGuidanceContext(7);
-    const idleStaff = addEntity(context.world);
-    addComponent(context.world, idleStaff, AssignmentState);
-    AssignmentState.kind[idleStaff] = "idle";
-    AssignmentState.targetId[idleStaff] = "";
-    context.runtimeState.staffEntities.push(idleStaff);
+    addBlockedRoom(context);
+    context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
+    context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+    GuildState.reputation[context.singletonEntities.guild] = 20;
+
+    advanceGuidanceSystem(context, 0);
+
+    expect(context.runtimeState.guidanceState.activeBeatId).toBe(
+      "guidance/opening/staffing-and-rooms",
+    );
+  });
+
+  it("activates staffing-and-rooms when a legal room placement exists even without a blocked room", () => {
+    const context = createGuidanceContext(7);
     context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
     context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
 
@@ -468,13 +507,10 @@ describe("guidance system", () => {
 
   it("completes staffing-and-rooms when the player buys an upgrade instead", () => {
     const context = createGuidanceContext(7);
-    const idleStaff = addEntity(context.world);
-    addComponent(context.world, idleStaff, AssignmentState);
-    AssignmentState.kind[idleStaff] = "idle";
-    AssignmentState.targetId[idleStaff] = "";
-    context.runtimeState.staffEntities.push(idleStaff);
+    addBlockedRoom(context);
     context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
     context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+    GuildState.reputation[context.singletonEntities.guild] = 20;
 
     advanceGuidanceSystem(context, 0);
     expect(context.runtimeState.guidanceState.activeBeatId).toBe(
@@ -491,13 +527,10 @@ describe("guidance system", () => {
 
   it("auto-completes staffing-and-rooms if the player already upgraded before the beat fires", () => {
     const context = createGuidanceContext(7);
-    const idleStaff = addEntity(context.world);
-    addComponent(context.world, idleStaff, AssignmentState);
-    AssignmentState.kind[idleStaff] = "idle";
-    AssignmentState.targetId[idleStaff] = "";
-    context.runtimeState.staffEntities.push(idleStaff);
+    addBlockedRoom(context);
     context.runtimeState.guidanceState.seenBeatIds.push("guidance/opening/loot-and-market");
     context.runtimeState.guidanceState.completedBeatIds.push("guidance/opening/loot-and-market");
+    GuildState.reputation[context.singletonEntities.guild] = 20;
     BuildingAuthority.appliedUpgradeIds[context.singletonEntities.building] = [
       "upgrade/building/bodega:frontage",
     ];

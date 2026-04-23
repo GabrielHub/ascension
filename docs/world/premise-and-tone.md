@@ -38,7 +38,7 @@ The comedy makes the dark parts darker. When your best operator dies on a routin
 
 - **The player-character is a regular person.** The player has no powers. They manage people who have powers. The comedy comes from a normal human trying to keep a lid on an office full of superhumans who have opinions, egos, and competing lunch orders.
 - **Mundane logistics are real and funny.** Payroll disputes, scheduling conflicts, break room drama, office supply budgets, and OSHA violations that technically do not cover interdimensional threats. These are not flavor text - they are the game.
-- **People are complicated and funny.** Your S-rank operator refuses to go on raids with the B-rank medic because of something that happened at the company holiday party. Your best field lead keeps requesting time off for "personal reasons" that are clearly just a TV show premiere.
+- **People are complicated and funny.** Your Unique (`U`) operator refuses to go on raids with the B-rank medic because of something that happened at the company holiday party. Your best field lead keeps requesting time off for "personal reasons" that are clearly just a TV show premiere.
 - **Death is permanent and devastating.** This is where the comedy stops. When an operator dies, the game should not crack a joke. The contrast between the silly office and the real loss is the emotional core.
 - **Success is institutional, not heroic.** The player wins by building a good organization. The fantasy is not "I have the strongest fighter." The fantasy is "I turned this clown show into something people respect."
 

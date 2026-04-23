@@ -153,17 +153,9 @@ describeBrowser("HQ cascade browser flow", () => {
     );
     expect(roomIds[0]).toMatch(/^0:room:/);
 
-    // Open the staffing branch if the room exposes it; otherwise try upgrades.
-    const staffingButton = page.locator('[data-testid="room-open-staffing"]');
+    // Open the upgrades branch if the room exposes it.
     const upgradesButton = page.locator('[data-testid="room-open-upgrades"]');
-    if (await staffingButton.count()) {
-      await staffingButton.first().click();
-      await waitForStack(
-        page,
-        (ids) => ids.length === 2 && ids[1]!.startsWith("1:room-staffing:"),
-        "room-staffing branch",
-      );
-    } else if (await upgradesButton.count()) {
+    if (await upgradesButton.count()) {
       await upgradesButton.first().click();
       await waitForStack(
         page,
@@ -233,42 +225,6 @@ describeBrowser("HQ cascade browser flow", () => {
       "place-room branch",
     );
     await page.getByTestId("panel-place-room").waitFor({ state: "visible" });
-  }, 60_000);
-
-  it("assigns staff through the cascade staff branch", async () => {
-    await page.goto(`${BASE_URL}/game?mode=preview`, { waitUntil: "networkidle" });
-    await waitForDriver(page);
-    await page.getByTestId("game-shell").waitFor({ state: "visible" });
-
-    await page.getByTestId("hq-category-roster").click();
-    await waitForStack(page, (ids) => ids[0] === "0:people-root", "people-root");
-
-    const staffRow = page.locator('[data-testid="staff-row"]').first();
-    if ((await staffRow.count()) === 0) {
-      // Sandbox may have no staff at startup; the hire-staff branch still lives
-      // behind a + hire entry — exercise that instead so we still cover cascade.
-      await page.getByTestId("staff-open-hire").click();
-      await waitForStack(
-        page,
-        (ids) => ids.length === 2 && ids[1] === "1:hire-staff",
-        "hire-staff branch",
-      );
-      await page.getByTestId("panel-hire-staff").waitFor({ state: "visible" });
-      return;
-    }
-
-    await staffRow.click();
-    await waitForStack(
-      page,
-      (ids) => ids.length === 2 && ids[1]!.startsWith("1:staff:"),
-      "staff detail branch",
-    );
-    await page.getByTestId("panel-staff-detail").waitFor({ state: "visible" });
-    // Either unassign or an assign-to-room button must be available inside
-    // the cascade branch; no inline expander exists in the people-root panel.
-    const assignRoomBtn = page.locator('[data-testid="staff-assign-room"]').first();
-    const unassignBtn = page.locator('[data-testid="staff-unassign"]');
-    expect((await assignRoomBtn.count()) > 0 || (await unassignBtn.count()) > 0).toBe(true);
   }, 60_000);
 
   it("routes visitor replace through the cascade replace-operator branch", async () => {

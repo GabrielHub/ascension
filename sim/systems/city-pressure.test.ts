@@ -1,6 +1,7 @@
 import { addEntity, createWorld } from "bitecs";
 import { describe, it, expect } from "vitest";
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 import {
   createDefaultCityState,
   cityStateToSnapshot,
@@ -33,7 +34,6 @@ function createEventContext(): SimSystemContext {
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -45,7 +45,6 @@ function createEventContext(): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -85,19 +84,11 @@ function createEventContext(): SimSystemContext {
         },
         lastPurchasedUpgradeId: null,
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
       deferIncidentPresentation: false,
       cityState: createDefaultCityState(),
+      presenterUnlocks: [],
     },
   };
 }

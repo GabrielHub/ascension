@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: The Break Room — Private upstairs decompression
+       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
+       Design reference only — the runtime ships the props-only scene extracted below. -->
+<polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+<polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
+<polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+<line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE BREAK ROOM</text>
+<text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+<g><polygon points="143,161 188,176 188,200 143,185" fill="#55483d" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="233,161 188,176 188,200 233,185" fill="#473c33" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="188,146 233,161 188,176 143,161" fill="#6f5f50" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="178,126 213,143.5 213,177.5 178,160" fill="#7d6b59" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="212,140 221,144.5 221,166.5 212,162" fill="#7d6b59" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="144,140 153,144.5 153,166.5 144,162" fill="#7d6b59" stroke="#221a15" stroke-width="0.9"/>
+<polygon points="188,197 220,214 220,232 188,215" fill="#56412f" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="252,197 220,214 220,232 252,215" fill="#483628" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="220,180 252,197 220,214 188,197" fill="#6f533d" stroke="#241a13" stroke-width="0.9"/>
+<line x1="202" y1="198" x2="202" y2="222" stroke="#241a13" stroke-width="1.2"/>
+<line x1="238" y1="198" x2="238" y2="222" stroke="#241a13" stroke-width="1.2"/>
+<line x1="216" y1="207" x2="216" y2="230" stroke="#241a13" stroke-width="1.1"/>
+<line x1="224" y1="207" x2="224" y2="230" stroke="#241a13" stroke-width="1.1"/>
+<polygon points="173,207 220,222 220,226 173,211" fill="#4c332b" stroke="#251915" stroke-width="0.9"/>
+<polygon points="267,207 220,222 220,226 267,211" fill="#402a24" stroke="#251915" stroke-width="0.9"/>
+<polygon points="220,192 267,207 220,222 173,207" fill="#67453a" stroke="#251915" stroke-width="0.9"/>
+<polygon points="298,157 310,164 310,198 298,191" fill="#8c9aa6" stroke="#263039" stroke-width="0.9"/>
+<polygon points="322,157 310,164 310,198 322,191" fill="#758390" stroke="#263039" stroke-width="0.9"/>
+<polygon points="310,150 322,157 310,164 298,157" fill="#cbd6df" stroke="#263039" stroke-width="0.9"/>
+<ellipse cx="310" cy="144" rx="10" ry="8" fill="#7fb9d5" stroke="#36576b" stroke-width="0.8" opacity="0.85"/>
+<polygon points="107,181 118,188 118,206 107,199" fill="#5a3f2a" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="129,181 118,188 118,206 129,199" fill="#4c3625" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="118,174 129,181 118,188 107,181" fill="#79573b" stroke="#241a13" stroke-width="0.9"/>
+<path d="M 118 174 C 100 158, 100 138, 118 150 C 136 140, 134 162, 118 174" fill="#5d8a56" stroke="#345338" stroke-width="1"/>
+<path d="M 116 172 C 106 152, 116 138, 126 158" fill="#6ea260" opacity="0.9"/>
+<polygon points="302,96 319,104.5 319,126.5 302,118" fill="#1e262e" stroke="#11161b" stroke-width="0.9"/>
+<line x1="319" y1="126" x2="319" y2="138" stroke="#1a1f24" stroke-width="2"/>
+<line x1="310" y1="138" x2="328" y2="138" stroke="#1a1f24" stroke-width="2"/></g>
+</svg>

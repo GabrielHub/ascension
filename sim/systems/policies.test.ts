@@ -170,9 +170,7 @@ function addRoom(
   RoomInstance.roomStateId[entity] = `${id}/state`;
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
-  RoomInstance.isRequestedActive[entity] = isOperational ? 1 : 0;
   RoomInstance.isOperational[entity] = isOperational ? 1 : 0;
-  RoomInstance.assignedStaffCount[entity] = 0;
   RoomInstance.appliedUpgradeIds[entity] = [];
   RoomInstance.slotIndex[entity] = context.runtimeState.roomEntities.length;
   RoomInstance.reservedCol[entity] = 0;

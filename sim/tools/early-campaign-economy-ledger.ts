@@ -54,7 +54,7 @@ const storefrontIncomeRowSchema = z.object({
 const payrollRowSchema = z.object({
   entryId: z.string(),
   label: z.string(),
-  sourceKind: z.enum(["staff_wage", "operator_wage", "canonical_total"]),
+  sourceKind: z.enum(["operator_wage", "canonical_total"]),
   cadence: z.literal("per_day"),
   direction: z.literal("sink"),
   cashDelta: numericRangeSchema,
@@ -197,18 +197,10 @@ export const earlyCampaignEconomyLedgerSchema = z.object({
       reputation: z.number(),
       intel: z.number(),
       activeOperators: z.number().int().nonnegative(),
-      activeStaff: z.number().int().nonnegative(),
       activeReceptionRooms: z.number().int().nonnegative(),
       dailyStorefrontIncomeBase: z.number(),
       dailyPayroll: z.number(),
       dailyNetCashBeforeUpgrades: z.number(),
-      staffWages: z.array(
-        z.object({
-          staffId: z.string(),
-          name: z.string(),
-          wage: z.number(),
-        }),
-      ),
     }),
   }),
   ledgers: z.object({
@@ -286,12 +278,8 @@ function getOpeningEligibleSiteConceptIds(): string[] {
 
 function buildStorefrontIncomeLedger(): EarlyCampaignEconomyLedger["ledgers"]["storefrontIncome"] {
   const activeReceptionRooms = canonicalNewGameScenario.rooms.filter((room) => {
-    if (!room.isActive) {
-      return false;
-    }
-
     const template = registry.roomById.get(room.templateId);
-    return template?.tags.includes("staff:reception") === true;
+    return template?.tags.includes("room:reception") === true;
   });
 
   const upgradeRows = registry.upgrades
@@ -338,27 +326,11 @@ function buildStorefrontIncomeLedger(): EarlyCampaignEconomyLedger["ledgers"]["s
 }
 
 function buildPayrollLedger(): EarlyCampaignEconomyLedger["ledgers"]["payroll"] {
-  const staffRows = canonicalNewGameScenario.staff.map((staff) => ({
-    entryId: `payroll/${staff.id}`,
-    label: `${staff.name} daily wage`,
-    sourceKind: "staff_wage" as const,
-    cadence: "per_day" as const,
-    direction: "sink" as const,
-    cashDelta: makeRange(-staff.wage),
-    targetId: staff.id,
-    notes: [`Role: ${staff.roleTag}.`],
-  }));
-
   const operatorCount = canonicalNewGameScenario.operators.length;
   const operatorPayroll = operatorCount * DAILY_ACTIVE_OPERATOR_PAYROLL;
-  const staffPayroll = canonicalNewGameScenario.staff.reduce(
-    (total, staff) => total + staff.wage,
-    0,
-  );
-  const totalPayroll = staffPayroll + operatorPayroll;
+  const totalPayroll = operatorPayroll;
 
   return [
-    ...staffRows,
     {
       entryId: "payroll/active-operator-rate",
       label: "Active operator daily payroll",
@@ -378,7 +350,7 @@ function buildPayrollLedger(): EarlyCampaignEconomyLedger["ledgers"]["payroll"] 
       cadence: "per_day",
       direction: "sink",
       cashDelta: makeRange(-totalPayroll),
-      notes: ["4 active operators and 2 staff in the canonical opening seed."],
+      notes: ["4 active operators in the canonical opening seed."],
     },
   ];
 }
@@ -898,12 +870,8 @@ export function buildEarlyCampaignEconomyLedger(): EarlyCampaignEconomyLedger {
   const treatmentOrRepairCosts = buildTreatmentOrRepairLedger();
   const incidentTreasuryDeltas = buildIncidentTreasuryDeltaLedger();
   const activeReceptionRooms = canonicalNewGameScenario.rooms.filter((room) => {
-    if (!room.isActive) {
-      return false;
-    }
-
     const template = registry.roomById.get(room.templateId);
-    return template?.tags.includes("staff:reception") === true;
+    return template?.tags.includes("room:reception") === true;
   }).length;
   const dailyPayroll = -payroll.find((row) => row.entryId === "payroll/canonical-opening-total")!
     .cashDelta.min;
@@ -921,16 +889,10 @@ export function buildEarlyCampaignEconomyLedger(): EarlyCampaignEconomyLedger {
         reputation: canonicalNewGameScenario.guild.reputation,
         intel: canonicalNewGameScenario.guild.intel,
         activeOperators: canonicalNewGameScenario.operators.length,
-        activeStaff: canonicalNewGameScenario.staff.length,
         activeReceptionRooms,
         dailyStorefrontIncomeBase,
         dailyPayroll,
         dailyNetCashBeforeUpgrades: dailyStorefrontIncomeBase - dailyPayroll,
-        staffWages: canonicalNewGameScenario.staff.map((staff) => ({
-          staffId: staff.id,
-          name: staff.name,
-          wage: staff.wage,
-        })),
       },
     },
     ledgers: {
@@ -972,7 +934,6 @@ export function renderEarlyCampaignEconomyReport(
   lines.push(`- Base storefront income: $${starter.dailyStorefrontIncomeBase}/day`);
   lines.push(`- Net daily cash before upgrades: $${starter.dailyNetCashBeforeUpgrades}/day`);
   lines.push(`- Active operators: ${starter.activeOperators}`);
-  lines.push(`- Active staff: ${starter.activeStaff}`);
   lines.push("");
   lines.push("## Storefront And Payroll");
   lines.push("");

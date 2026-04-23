@@ -21,7 +21,7 @@ export interface CraftRecipeAvailability {
   outputQuantity: number;
   cashCost: number;
   cashOnHand: number;
-  isRoomStaffed: boolean;
+  isRoomOperational: boolean;
   isBuildingTierMet: boolean;
   isDistrictMet: boolean;
   isFactionMet: boolean;
@@ -47,7 +47,6 @@ interface FactionStandingLike {
 export function buildCraftRecipeAvailability(
   roomTemplateId: string,
   isOperational: boolean,
-  assignedStaffCount: number,
   buildingTier: number,
   cashOnHand: number,
   inventory: readonly InventoryStackLike[],
@@ -58,14 +57,13 @@ export function buildCraftRecipeAvailability(
   registry: TemplateRegistry,
 ): CraftRecipeAvailability[] {
   const inventoryByItem = new Map(inventory.map((s) => [s.itemId, s.quantity]));
-  const isRoomStaffed = isOperational && assignedStaffCount >= 1;
 
   return registry.craftRecipes
     .filter((recipe) => recipe.requiredRoomId === roomTemplateId)
     .map((recipe) =>
       buildSingleRecipeAvailability(
         recipe,
-        isRoomStaffed,
+        isOperational,
         buildingTier,
         cashOnHand,
         inventoryByItem,
@@ -77,7 +75,7 @@ export function buildCraftRecipeAvailability(
 
 function buildSingleRecipeAvailability(
   recipe: CraftRecipeTemplate,
-  isRoomStaffed: boolean,
+  isRoomOperational: boolean,
   buildingTier: number,
   cashOnHand: number,
   inventoryByItem: ReadonlyMap<string, number>,
@@ -115,7 +113,7 @@ function buildSingleRecipeAvailability(
 
   const allInputsSatisfied = inputs.every((i) => i.isSatisfied);
   const canProduce =
-    isRoomStaffed &&
+    isRoomOperational &&
     isBuildingTierMet &&
     isDistrictMet &&
     isFactionMet &&
@@ -131,7 +129,7 @@ function buildSingleRecipeAvailability(
     outputQuantity: recipe.outputQuantity,
     cashCost: recipe.cashCost,
     cashOnHand,
-    isRoomStaffed,
+    isRoomOperational,
     isBuildingTierMet,
     isDistrictMet,
     isFactionMet,

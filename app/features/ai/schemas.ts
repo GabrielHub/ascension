@@ -60,6 +60,15 @@ export interface IncidentFramingChoicePayload {
   }>;
 }
 
+export interface IncidentFramingPresenterPayload {
+  id: string;
+  name: string;
+  roleTitle: string;
+  voiceBrief: string;
+  domainSummary: string;
+  expression: string;
+}
+
 export interface IncidentFramingPayload {
   incidentId: string;
   templateId: string;
@@ -73,6 +82,7 @@ export interface IncidentFramingPayload {
   dayNumber: number;
   minuteOfDay: number;
   subjectSummary: string;
+  presenter: IncidentFramingPresenterPayload;
   operators: IncidentFramingOperatorPayload[];
   relationship?: IncidentFramingRelationshipPayload;
   room?: {

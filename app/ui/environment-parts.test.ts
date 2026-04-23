@@ -373,6 +373,8 @@ describe("shipped index style", () => {
     expect(index.style).toBe("porters-waterfront-isometric");
     expect(index.parts.length).toBeGreaterThan(0);
     expect(getLoadedEnvParts("building/porters").length).toBeGreaterThan(0);
+    expect(findEnvPartById(index.parts, "recipes/scene-the-workshop")).toBeDefined();
+    expect(findEnvPartById(index.parts, "shell/porters-stacked-shell")).toBeDefined();
   });
 
   it("contains no flat/cross-section or room-kit entries", () => {
@@ -458,6 +460,15 @@ describe("envPartSvgPath", () => {
     expect(prop!.status).toBe("approved");
     expect(envPartSvgPath(prop!)).toBe(
       "/data/svg-environments/hq/bodega/parts/props/iso-desk-reception.svg",
+    );
+  });
+
+  it("returns Porter's recipe path for approved room scenes", () => {
+    const index = getLoadedEnvPartsIndex("building/porters");
+    const part = findEnvPartById(index.parts, "recipes/scene-the-workshop");
+    expect(part).toBeDefined();
+    expect(envPartSvgPath(part!, index)).toBe(
+      "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
     );
   });
 });

@@ -19,7 +19,6 @@ const DEFAULT_GUILD = {
 
 const callbacks: GameCallbacks = {
   tick: () => {},
-  setRoomActive: () => {},
   setPolicy: vi.fn(),
   setLootFilterEnabled: () => {},
   initiateRelocation: () => {},
@@ -30,8 +29,6 @@ const callbacks: GameCallbacks = {
   rejectRecruit: () => {},
   replaceRecruit: () => {},
   dismissRecruit: () => {},
-  hireStaff: () => {},
-  assignStaff: () => {},
   placeRoom: () => {},
   setActiveFloor: () => {},
   buyItem: () => {},
@@ -165,7 +162,7 @@ describe("management panel", () => {
 
     expect(html).toContain("Ascension Tower stays hidden");
     expect(html).toContain(
-      "When relocation opens, operators, staff, gear, cash, and reputation carry over.",
+      "When relocation opens, operators, presenters, gear, cash, and reputation carry over.",
     );
   });
 
@@ -268,20 +265,14 @@ describe("management panel", () => {
             availableForRaid: true,
             readinessScore: 68,
             appearancePresetId: "vera-004",
-            visibleGear: {
-              weapon: null,
-              outfitOverlay: null,
-              accessory: null,
-            },
+            visibleGear: {},
             lifecycle: { status: "active" },
             combat: {
               rank: "f",
               attunementTag: "attunement:none",
               traits: [],
-              regularAttackId: "attack/basic",
-              skillId: "skill/basic",
-              ultimateId: "ultimate/basic",
-              passiveIds: [],
+              combatPackageId: "package/field-lead/kinetic/standard",
+              blocks: 0,
               baseStats: {
                 strength: 10,
                 speed: 10,
@@ -498,10 +489,7 @@ describe("management panel", () => {
             roomStateId: "room-state/executive-office",
             capacity: 1,
             occupancy: 1,
-            isActive: true,
             isOperational: true,
-            requiredStaffTag: "",
-            assignedStaffCount: 0,
             appliedUpgradeIds: [],
             availableUpgradeIds: [],
             tags: [],
@@ -522,10 +510,7 @@ describe("management panel", () => {
             roomStateId: "room-state/compliance-office",
             capacity: 1,
             occupancy: 1,
-            isActive: true,
             isOperational: true,
-            requiredStaffTag: "",
-            assignedStaffCount: 0,
             appliedUpgradeIds: [],
             availableUpgradeIds: [],
             tags: [],
@@ -546,10 +531,7 @@ describe("management panel", () => {
             roomStateId: "room-state/war-room",
             capacity: 1,
             occupancy: 1,
-            isActive: true,
             isOperational: true,
-            requiredStaffTag: "",
-            assignedStaffCount: 0,
             appliedUpgradeIds: [],
             availableUpgradeIds: [],
             tags: [],

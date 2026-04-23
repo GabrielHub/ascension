@@ -181,7 +181,7 @@ export function applyEncounterCommand(
           context.runtimeState.activeEncounter.status = "active";
         }
         const previousLogLength = context.runtimeState.activeEncounter.encounterLog.length;
-        advanceEncounterTurn(context.runtimeState.activeEncounter);
+        advanceEncounterTurn(context.runtimeState.activeEncounter, context);
         const active = context.runtimeState.activeEncounter;
         if (wasPaused && active.status === "active" && !active.autoplayEnabled) {
           active.status = "paused";

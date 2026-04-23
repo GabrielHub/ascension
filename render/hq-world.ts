@@ -378,10 +378,10 @@ const RECOVERY_RECIPE: RoomRecipe = {
   ],
 };
 
-// ── STAFFING (Recruitment Space) ─────────────────────────────────────────
-// Interview room. Table + two chairs facing each other is the story.
-// Filing cabinet and water cooler in corners. Spartan back-office feel.
-const STAFFING_RECIPE: RoomRecipe = {
+// ── LOGISTICS (Supply / Back-Office) ─────────────────────────────────────
+// Quiet back-office room with a table and two chairs for paperwork handoffs,
+// a filing cabinet, water cooler, clipboard, and a few supply boxes.
+const LOGISTICS_RECIPE: RoomRecipe = {
   palette: { floor: "#2c3024", wallLeft: "#222820", wallRight: "#282e22" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [{ side: "left", cellOffset: 0 }],
@@ -454,24 +454,33 @@ const PORTERS_FLOOR_RECIPE: RoomRecipe = {
   palette: { floor: "#3a2a1a", wallLeft: "#30221a", wallRight: "#362818" },
   inactivePalette: INACTIVE_PALETTE,
   openings: [
-    { side: "right", cellOffset: 1 },
-    { side: "right", cellOffset: 5 },
+    { side: "right", cellOffset: 2 },
+    { side: "right", cellOffset: 7 },
   ],
   props: [
-    { assetKey: "table", relCol: 0.2, relRow: 0.35, width: 72, height: 64, zIndex: 38 },
-    { assetKey: "chair", relCol: 0.24, relRow: 0.2, width: 30, height: 40, zIndex: 36 },
-    { assetKey: "chair", relCol: 0.16, relRow: 0.5, width: 30, height: 40, zIndex: 40 },
-    { assetKey: "table", relCol: 0.5, relRow: 0.55, width: 72, height: 64, zIndex: 38 },
-    { assetKey: "chair", relCol: 0.54, relRow: 0.4, width: 30, height: 40, zIndex: 36 },
-    { assetKey: "chair", relCol: 0.46, relRow: 0.7, width: 30, height: 40, zIndex: 40 },
-    { assetKey: "table", relCol: 0.8, relRow: 0.35, width: 72, height: 64, zIndex: 38 },
-    { assetKey: "chair", relCol: 0.84, relRow: 0.2, width: 30, height: 40, zIndex: 36 },
-    { assetKey: "chair", relCol: 0.76, relRow: 0.5, width: 30, height: 40, zIndex: 40 },
-    { assetKey: "plant", relCol: 0.1, relRow: 0.8, width: 36, height: 58, zIndex: 41 },
+    { assetKey: "bench", relCol: 0.22, relRow: 0.18, width: 84, height: 60, zIndex: 34 },
+    { assetKey: "bench", relCol: 0.78, relRow: 0.18, width: 84, height: 60, zIndex: 34 },
+    { assetKey: "table", relCol: 0.22, relRow: 0.4, width: 70, height: 62, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.17, relRow: 0.3, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.27, relRow: 0.52, width: 30, height: 40, zIndex: 40 },
+    { assetKey: "table", relCol: 0.78, relRow: 0.38, width: 70, height: 62, zIndex: 38 },
+    { assetKey: "chair", relCol: 0.83, relRow: 0.28, width: 30, height: 40, zIndex: 36 },
+    { assetKey: "chair", relCol: 0.73, relRow: 0.5, width: 30, height: 40, zIndex: 40 },
+    { assetKey: "table", relCol: 0.5, relRow: 0.58, width: 122, height: 72, zIndex: 39 },
+    { assetKey: "chair", relCol: 0.38, relRow: 0.52, width: 30, height: 40, zIndex: 37 },
+    { assetKey: "chair", relCol: 0.62, relRow: 0.52, width: 30, height: 40, zIndex: 37 },
+    { assetKey: "chair", relCol: 0.44, relRow: 0.73, width: 30, height: 40, zIndex: 41 },
+    { assetKey: "chair", relCol: 0.56, relRow: 0.73, width: 30, height: 40, zIndex: 41 },
+    { assetKey: "table", relCol: 0.18, relRow: 0.76, width: 64, height: 58, zIndex: 39 },
+    { assetKey: "chair", relCol: 0.1, relRow: 0.83, width: 30, height: 40, zIndex: 41 },
+    { assetKey: "table", relCol: 0.82, relRow: 0.8, width: 64, height: 58, zIndex: 39 },
+    { assetKey: "chair", relCol: 0.9, relRow: 0.87, width: 30, height: 40, zIndex: 41 },
+    { assetKey: "plant", relCol: 0.08, relRow: 0.84, width: 36, height: 58, zIndex: 41 },
+    { assetKey: "plant", relCol: 0.92, relRow: 0.66, width: 36, height: 58, zIndex: 41 },
     {
       assetKey: "light",
-      relCol: 0.35,
-      relRow: 0.3,
+      relCol: 0.22,
+      relRow: 0.18,
       width: 28,
       height: 36,
       zIndex: 31,
@@ -479,12 +488,30 @@ const PORTERS_FLOOR_RECIPE: RoomRecipe = {
     },
     {
       assetKey: "light",
-      relCol: 0.65,
-      relRow: 0.3,
+      relCol: 0.5,
+      relRow: 0.2,
       width: 28,
       height: 36,
       zIndex: 31,
       offsetY: -72,
+    },
+    {
+      assetKey: "light",
+      relCol: 0.78,
+      relRow: 0.18,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+    {
+      assetKey: "ceilingFan",
+      relCol: 0.5,
+      relRow: 0.08,
+      width: 44,
+      height: 18,
+      zIndex: 30,
+      offsetY: -84,
     },
   ],
 };
@@ -494,28 +521,52 @@ const PORTERS_FLOOR_RECIPE: RoomRecipe = {
 const PORTERS_BAR_RECIPE: RoomRecipe = {
   palette: { floor: "#38261a", wallLeft: "#2e2018", wallRight: "#342416" },
   inactivePalette: INACTIVE_PALETTE,
-  openings: [{ side: "left", cellOffset: 1 }],
+  openings: [{ side: "left", cellOffset: 2 }],
   props: [
-    { assetKey: "counter", relCol: 0.5, relRow: 0.45, width: 130, height: 83, zIndex: 40 },
-    { assetKey: "stool", relCol: 0.25, relRow: 0.72, width: 22, height: 44, zIndex: 42 },
-    { assetKey: "stool", relCol: 0.42, relRow: 0.76, width: 22, height: 44, zIndex: 42 },
-    { assetKey: "stool", relCol: 0.58, relRow: 0.78, width: 22, height: 44, zIndex: 42 },
-    { assetKey: "stool", relCol: 0.75, relRow: 0.74, width: 22, height: 44, zIndex: 42 },
-    { assetKey: "bottles", relCol: 0.3, relRow: 0.15, width: 60, height: 68, zIndex: 34 },
-    { assetKey: "bottles", relCol: 0.7, relRow: 0.15, width: 60, height: 68, zIndex: 34 },
+    { assetKey: "counter", relCol: 0.5, relRow: 0.36, width: 178, height: 96, zIndex: 40 },
+    { assetKey: "stool", relCol: 0.2, relRow: 0.68, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.34, relRow: 0.73, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.5, relRow: 0.77, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.66, relRow: 0.73, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "stool", relCol: 0.8, relRow: 0.68, width: 22, height: 44, zIndex: 42 },
+    { assetKey: "table", relCol: 0.1, relRow: 0.52, width: 56, height: 52, zIndex: 37 },
+    { assetKey: "chair", relCol: 0.05, relRow: 0.65, width: 28, height: 36, zIndex: 40 },
+    { assetKey: "table", relCol: 0.9, relRow: 0.52, width: 56, height: 52, zIndex: 37 },
+    { assetKey: "chair", relCol: 0.95, relRow: 0.65, width: 28, height: 36, zIndex: 40 },
+    { assetKey: "bottles", relCol: 0.18, relRow: 0.12, width: 60, height: 68, zIndex: 34 },
+    { assetKey: "bottles", relCol: 0.5, relRow: 0.1, width: 72, height: 72, zIndex: 34 },
+    { assetKey: "bottles", relCol: 0.82, relRow: 0.12, width: 60, height: 68, zIndex: 34 },
     {
       assetKey: "sign",
       relCol: 0.5,
       relRow: 0.06,
-      width: 50,
+      width: 62,
       height: 28,
       zIndex: 33,
       offsetY: -44,
     },
     {
       assetKey: "light",
+      relCol: 0.26,
+      relRow: 0.18,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+    {
+      assetKey: "light",
       relCol: 0.5,
-      relRow: 0.3,
+      relRow: 0.2,
+      width: 28,
+      height: 36,
+      zIndex: 31,
+      offsetY: -72,
+    },
+    {
+      assetKey: "light",
+      relCol: 0.74,
+      relRow: 0.18,
       width: 28,
       height: 36,
       zIndex: 31,
@@ -746,7 +797,7 @@ const ROOM_RECIPES: Record<string, RoomRecipe> = {
   "room:operations": REGISTER_RECIPE,
   "room:recovery": RECOVERY_RECIPE,
   "room:social": SOCIAL_RECIPE,
-  "room:staffing": STAFFING_RECIPE,
+  "room:logistics": LOGISTICS_RECIPE,
   "room:training": TRAINING_RECIPE,
 };
 
@@ -764,7 +815,6 @@ interface HqRoomSeed {
   floorIndex: number;
   name: string;
   tier: number;
-  isRequestedActive: boolean;
   isOperational: boolean;
   functionTag: string;
   appliedUpgradeIds?: readonly string[];
@@ -934,7 +984,6 @@ function createRoomNode(
     floorIndex: seed.floorIndex,
     label: seed.name,
     tier: seed.tier,
-    isRequestedActive: seed.isRequestedActive,
     isOperational: seed.isOperational,
     functionTag: seed.functionTag,
     reservedFootprint: reserved,
@@ -993,8 +1042,7 @@ function buildFloorTiles(seeds: readonly HqRoomSeed[]): HqFloorTile[] {
   const tiles: HqFloorTile[] = [];
   for (const seed of seeds) {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
-    const palette =
-      seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
+    const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
     const fp = seed.reservedFootprint;
     for (let c = fp.col; c < fp.col + fp.cols; c++) {
       for (let r = fp.row; r < fp.row + fp.rows; r++) {
@@ -1017,8 +1065,7 @@ function buildWallSegments(seeds: readonly HqRoomSeed[]): HqWallSegment[] {
   const segments: HqWallSegment[] = [];
   for (const seed of seeds) {
     const recipe = getRecipe(seed.templateId, seed.functionTag);
-    const palette =
-      seed.isOperational || seed.isRequestedActive ? recipe.palette : recipe.inactivePalette;
+    const palette = seed.isOperational ? recipe.palette : recipe.inactivePalette;
     const fp = seed.reservedFootprint;
 
     const openingSet = new Set(recipe.openings.map((o) => `${o.side}:${o.cellOffset}`));
@@ -1248,7 +1295,7 @@ function buildRoomProps(
     const reserved = room.reservedFootprint;
     const active = room.activeFootprint;
     const activeTopCorner = projectIso(active.col, active.row, floorOrigin.x, floorOrigin.y);
-    const roomOpacity = room.isOperational ? 1 : room.isRequestedActive ? 0.65 : 0.35;
+    const roomOpacity = room.isOperational ? 1 : 0.35;
 
     const resolvedSceneUrl = resolveHqRoomSceneAssetUrl(
       buildingId,

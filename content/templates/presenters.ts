@@ -27,6 +27,22 @@ export const presenterTemplates = [
       amused: "/data/presenters/assistant/amused.png",
     },
     defaultExpression: "serious",
+    allowedRoomTemplateIds: [
+      "room/register:tier_1",
+      "room/counter:tier_1",
+      "room/dining_area:tier_1",
+      "room/back_office:tier_1",
+      "room/office:tier_1",
+      "room/briefing_room:tier_1",
+      "room/lobby:tier_1",
+      "room/reception:tier_1",
+      "room/bullpen:tier_1",
+      "room/executive_office:tier_1",
+    ],
+    domainSummary:
+      "Guild assistant: intake, paperwork, briefings, and keeping the guild's administrative surface coherent.",
+    voiceBrief:
+      "Mara speaks in clipped, overworked operations shorthand; dry warmth under the exhaustion. Never performative.",
     generation: {
       canonBrief:
         "Late 20s to early 30s Afro-Latina guild assistant, composed and quick, stylish in a tired overworked way, carries the look of someone who has been keeping a chaotic supernatural operation functioning for months.",
@@ -57,6 +73,17 @@ export const presenterTemplates = [
       amused: "/data/presenters/cook/amused.png",
     },
     defaultExpression: "serious",
+    allowedRoomTemplateIds: [
+      "room/dining_area:tier_1",
+      "room/prep_room:tier_1",
+      "room/break_room:tier_1",
+      "room/backstock:tier_1",
+    ],
+    unlockFromRoomTemplateId: "room/dining_area:tier_1",
+    domainSummary:
+      "Porter's kitchen lead: prep, food quality, and line pressure. Translates kitchen state into problems management actually cares about.",
+    voiceBrief:
+      "Rafi speaks in short, grounded kitchen-authority beats; blunt without being theatrical, dry heat under the composure.",
     generation: {
       canonBrief:
         "Early 30s Puerto Rican line cook and kitchen lead, broad-shouldered, tired eyes, grounded kitchen authority with a muted ember-red hair tone, the kind of person who can keep service moving while glaring holes through everyone in the room.",
@@ -86,6 +113,20 @@ export const presenterTemplates = [
       amused: "/data/presenters/bartender/amused.png",
     },
     defaultExpression: "amused",
+    allowedRoomTemplateIds: [
+      "room/bar:tier_1",
+      "room/floor:tier_1",
+      "room/lobby:tier_1",
+      "room/club:tier_1",
+      "room/green_room:tier_1",
+      "room/sky_lounge:tier_1",
+      "room/private_cellar:tier_1",
+    ],
+    unlockFromRoomTemplateId: "room/bar:tier_1",
+    domainSummary:
+      "Porter's front-of-house closer: reads recruits, regulars, and bar pressure before they become actionable problems.",
+    voiceBrief:
+      "Sloane speaks in wry, clipped social-assessment lines; dangerous warmth when she wants it, cold evaluation underneath.",
     generation: {
       canonBrief:
         "Late 20s front-of-house closer and bartender with ash-blonde hair and pale mint accents, cool-eyed and composed, upscale nightlife polish pushed through Porter's rough edges, the kind of person who can sort a room at a glance and decide who is worth the trouble.",
@@ -121,6 +162,19 @@ export const presenterTemplates = [
       amused: "/data/presenters/quartermaster/amused.png",
     },
     defaultExpression: "neutral",
+    allowedRoomTemplateIds: [
+      "room/fabrication_bay:tier_1",
+      "room/workshop:tier_1",
+      "room/stockroom:tier_1",
+      "room/supply_closet:tier_1",
+      "room/supply_hall:tier_1",
+      "room/dock:tier_1",
+    ],
+    unlockFromRoomTemplateId: "room/fabrication_bay:tier_1",
+    domainSummary:
+      "Guild quartermaster: gear readiness, loot triage, inventory flow, and field-prep briefings for every raid cycle.",
+    voiceBrief:
+      "Vicente speaks in fast, technical, terminally-online teen-prodigy bursts; precise under the jittery energy, dry when cornered.",
     generation: {
       canonBrief:
         "18-year-old Filipino-American guild quartermaster, Queens-raised specialized-high-school prodigy who deferred college to run gear and fabrication for the guild, lean still-growing frame, clean-shaven, terminally-online teen energy under visibly fussy technical focus.",
@@ -155,6 +209,16 @@ export const presenterTemplates = [
       amused: "/data/presenters/medical/amused.png",
     },
     defaultExpression: "serious",
+    allowedRoomTemplateIds: [
+      "room/infirmary:tier_1",
+      "room/clinic:tier_1",
+      "room/trauma_bay:tier_1",
+    ],
+    unlockFromRoomTemplateId: "room/infirmary:tier_1",
+    domainSummary:
+      "Guild physician: injury, recovery, infirmary capacity, and post-mission medical consequence calls.",
+    voiceBrief:
+      "June speaks in composed, clinically direct sentences; dry exasperation underneath, no theatrics, lowest baseline stress in the cast.",
     generation: {
       canonBrief:
         "34-year-old Korean-American guild physician, Flushing-raised, Mount Sinai trauma fellowship, left hospital medicine to run real medical infrastructure for a guild, composed and clinically direct with a dry exasperated edge, lowest baseline stress in the cast.",
@@ -190,6 +254,18 @@ export const presenterTemplates = [
       amused: "/data/presenters/compliance/amused.png",
     },
     defaultExpression: "neutral",
+    allowedRoomTemplateIds: [
+      "room/compliance_office:tier_1",
+      "room/executive_office:tier_1",
+      "room/war_room:tier_1",
+      "room/situation_room:tier_1",
+      "room/office:tier_1",
+    ],
+    unlockFromRoomTemplateId: "room/compliance_office:tier_1",
+    domainSummary:
+      "Guild compliance officer: policy, regulator-facing paperwork, and institutional-pressure consequence beats.",
+    voiceBrief:
+      "Laura speaks in precise, controlled, faintly unimpressed executive-floor beats; regulator charm with cold edges, never theatrical.",
     generation: {
       canonBrief:
         "41-year-old white American compliance officer, Long Island-raised former city auditor who now sells regulator-stack literacy to the guild, precise and controlled with faintly unimpressed executive-floor authority, dangerous regulator charm, and a polished oxblood officewear silhouette that reads like she has somewhere better to be.",

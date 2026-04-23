@@ -48,8 +48,6 @@ import {
   getGuildIdentity,
   hasOperationalRoomTemplate,
   hasOperationalRoomWithTag,
-  hasStaffedOperationalRoomTemplate,
-  hasStaffedOperationalRoomWithTag,
   pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
@@ -2079,11 +2077,8 @@ function launchOpportunityRaid(context: SimSystemContext, opportunityEntity: num
   const stagingOperational =
     hasOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID) ||
     hasOperationalRoomWithTag(context, "ops:staging");
-  const stagingStaffed =
-    hasStaffedOperationalRoomTemplate(context, BODEGA_ALLEY_STAGING_TEMPLATE_ID) ||
-    hasStaffedOperationalRoomWithTag(context, "ops:staging");
   if (stagingOperational) {
-    teamCohesion = clamp(teamCohesion + (stagingStaffed ? 8 : 4), 0, 100);
+    teamCohesion = clamp(teamCohesion + 8, 0, 100);
   }
   if (dockOperational) {
     teamCohesion = clamp(teamCohesion + 6, 0, 100);

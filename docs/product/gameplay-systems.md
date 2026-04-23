@@ -18,7 +18,7 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - The skyscraper is the final headquarters and the long-tail endgame home. Progression after reaching it should come from acquiring and fitting additional floors, not from adding a fourth headquarters tier.
 - The first skyscraper implementation should establish a bounded endgame-entry band with a small owned floor stack before widening into the broader forever loop.
 - Visual variety should split by domain: authored breadth for dungeon concepts, composition rules for operators.
-- Content should escalate in tone and visual language with rank. F and E stay rooted in warped real places and plausible professional gear; D and C can become stranger, more specialized, and more visibly rift-touched; B and A can become institutionally famous and physically implausible; S is where the game spends its truly spectacular concepts.
+- Content should escalate in tone and visual language with rank. F and E stay rooted in warped real places and plausible professional gear; D and C can become stranger, more specialized, and more visibly rift-touched; B and A can become institutionally famous and physically implausible; Unique (`U`) is where the game spends its truly spectacular concepts.
 - That climb applies across dungeons, bosses, gear, and operators. It is not only a difficulty curve.
 
 ## Shared Uncertainty Resolution
@@ -47,14 +47,14 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Tutorial, guidance, and first-run narrative framing should become a simulation-aware layer that sits beside incidents instead of living as isolated UI affordances.
 - ECS should own onboarding progression, first-seen state, gating rules, and save-safe completion flags for any beat that materially changes what the player can or must do next.
 - The guidance stack should support three presentation levels: passive hints/tooltips, focused contextual coachmarks or tours, and blocking interruption-backed narrative beats.
-- The opening player-facing path should be deterministic and authored. New players should learn contracts, staffing, roster health, raids, and interruptions through fixed early beats before the game leans on broader systemic discovery.
+- The opening player-facing path should be deterministic and authored. New players should learn contracts, room placement, roster health, raids, and interruptions through fixed early beats before the game leans on broader systemic discovery.
 - Guidance should explain systems in-world. The same authored beat should teach the mechanic and establish why the player cares about it in the setting.
 - React and rendering code may expose anchors, focus targets, and typed intents, but must not become the authority for whether a tutorial or narrative beat is active.
 - Guidance beats, incidents, and other interruption-backed narrative surfaces may optionally bind an authored presenter character id.
 - Presenter binding is content data layered on the existing runtime-owned interruption and guidance systems, not a parallel authority path.
 - The presenter layer is a cross-building domain roster rather than a building-locked cast. The current canon anchor set is the assistant, cook, bartender, quartermaster, doctor, and compliance officer.
 - Presenter binding should follow a stable feature-ownership contract so product and code can choose voices consistently:
-  - assistant: contracts, staffing, operations, fallback campaign guidance, relocation continuity
+  - assistant: contracts, operations, fallback campaign guidance, relocation continuity
   - cook: hospitality, food quality, comfort-first recovery, kitchen-adjacent rooms and incidents
   - bartender: recruitment reads, front-of-house pressure, nightlife and public-facing social beats
   - quartermaster: gear readiness, loot triage, selling / loot-filter instruction, stock flow, workshop / fabrication
@@ -76,18 +76,21 @@ Roles describe what an operator does in the field. They should read like in-worl
 
 Expand this roster only with additional field-role language that sounds native to the setting, not with generic genre class terms.
 
-Every operator has a fixed, permanent combat kit defined by their attunement:
+Every operator has a fixed, permanent combat package (`combatPackageId`) defined by their role, attunement, and rank pool:
 
-| Slot           | Count | Description                                                                             |
-| -------------- | ----- | --------------------------------------------------------------------------------------- |
-| Regular Attack | 1     | Basic combat action. Always available.                                                  |
-| Skill          | 1     | Signature ability. Cooldown-based. Defines the operator's tactical identity.            |
-| Ultimate       | 1     | High-impact ability. Long cooldown or conditional trigger. Raid-defining when it lands. |
-| Passives       | 0+    | Always-on effects. Modify stats, team dynamics, or situational behavior.                |
+| Payload       | Count | Description                                                                             |
+| ------------- | ----- | --------------------------------------------------------------------------------------- |
+| Stage 1 basic | 1     | Basic combat action at 0 blocks. Always available.                                      |
+| Stage 2 basic | 1     | Basic combat action at 1 block. Scaled form of the stage 1 intent.                      |
+| Stage 3 basic | 1     | Basic combat action at 2 blocks. Strongest basic form.                                  |
+| Ultimate      | 1     | Strong 3-block payoff. Auto-spends all 3 blocks. Offensive, defensive, or support.      |
+| Passive       | 0–1   | Always-on effect. Modifies stats, team dynamics, or situational behavior. C+ rank only. |
 
-These never change. The kit an operator has when the player recruits them is the kit they will always have.
+These never change. The combat package an operator has when the player recruits them is the combat package they will always have.
 
-Kits should be first-class structured combat content, not only stored ids. Their effects should execute through deterministic simulation rules that support real encounters, save/load safety, and later content breadth without requiring a schema rewrite.
+Live combat follows a shared three-block loop. Each basic action gives exactly `+1` block, operators cap at 3 blocks, and the next action at 3 blocks automatically spends all 3 as the ultimate. After the ultimate resolves, the operator returns to 0 blocks. Normal kits do not hold at 3.
+
+Combat packages should be first-class structured combat content, not only stored ids. Each payload declares one scaling stat and coefficient. Their effects should execute through deterministic simulation rules that support real encounters, save/load safety, and later content breadth without requiring a schema rewrite.
 
 Current operator-system direction:
 
@@ -124,22 +127,22 @@ Rank advancement is technically possible but represents a rare, dramatic event:
 Recruitment rarity direction should work like a weighted labor-market ladder, not a clean era switch:
 
 - Early bodega progression should be mostly F recruits, with E as a meaningful improvement band and D as a rare early jackpot.
-- Late bodega should still produce many F and E recruits, but D should become a plausible if uncommon outcome once reputation, facilities, and staffing improve.
+- Late bodega should still produce many F and E recruits, but D should become a plausible if uncommon outcome once reputation and facilities improve.
 - Midgame should shift the center of gravity toward D, C, and B.
 - Late midgame should make the first A-rank recruit feel like a real milestone, not a routine pull.
-- Endgame should center on B, A, and S while still allowing occasional lower-rank filler outcomes for labor-market texture.
+- Endgame labor-market recruitment should center on B and A while still allowing occasional lower-rank filler outcomes for labor-market texture. Unique (`U`) operators should sit outside that normal pool as deterministic endgame unlocks.
 - Recruit distribution should be authored through inspectable weight tables keyed by campaign progression, reputation, room support, and other explicit simulation inputs rather than one-off hand tuning.
-- Recruitment presentation should climb with the same rank contract as the wider content set: early operators should look like dangerous but plausible workers, midgame operators should start feeling rarer and more visually unusual, and S-rank operators should read as industry-famous singular figures.
+- Recruitment presentation should climb with the same rank contract as the wider content set: early operators should look like dangerous but plausible workers, midgame operators should start feeling rarer and more visually unusual, and Unique (`U`) operators should read as industry-famous singular figures.
 
-Staff are hired, assigned to rooms, and provide gameplay bonuses, but they should still read as authored people rather than faceless modifiers. They are the infrastructure that lets operators focus on the dangerous work.
+The recurring presenter roster is the support cast the player meets in operations, guidance, and HQ space. They are authored people with domain ownership. Room function is simulation-owned and does not depend on any generic hire-and-assign staff roster.
 
-| Function       | Tag                 | Description                                                                                                  |
-| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Reception      | `staff:reception`   | Front desk, visitor management, public-facing operations. Affects recruitment pool quality and visitor flow. |
-| Logistics      | `staff:logistics`   | Supply management, equipment maintenance, resource efficiency. Reduces operational costs.                    |
-| Maintenance    | `staff:maintenance` | Building upkeep, room repairs, facility management. Affects room effectiveness and upgrade speed.            |
-| Medical        | `staff:medical`     | Non-field medical care. Recovery support, injury treatment. Reduces recovery time.                           |
-| Administrative | `staff:admin`       | Paperwork, compliance, scheduling. Reduces pressure events and regulatory problems.                          |
+| Function  | Tag              | Description                                                                                                                    |
+| --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Reception | `room:reception` | Front desk, visitor management, public-facing operations. Affects recruitment pool quality and visitor flow.                   |
+| Logistics | `room:logistics` | Supply management, equipment maintenance, resource efficiency. Reduces operational costs. Supports raid staging and workshops. |
+| Recovery  | `room:recovery`  | Non-field medical care and decompression. Reduces recovery time after raids.                                                   |
+| Training  | `room:training`  | Drilling, conditioning, and role-specific coaching that improves operator readiness.                                           |
+| Intel     | `ops:intel`      | Paperwork, compliance, scheduling, and contract research. Reduces pressure events and regulatory problems.                     |
 
 ## Enemy, Boss, And Loot Systems
 
@@ -196,7 +199,7 @@ Boss confrontation direction:
 - A fresh player-facing campaign should enter operations on the bidding board with an authored or generated set of posted contracts already available. New game must not start in an empty contract state and must not skip directly to an active site.
 - The active contract site is authoritative only while the lifecycle is `active`; posted contracts and the previous contract result persist beside it and round-trip through save/load.
 - Preview and verification entry points may seed an `active` contract as a tooling shortcut, but that is a non-canonical fast path for testing, not the player-facing contract progression model.
-- Boss fights are real simulation-owned encounters with phases, action timing, hp, statuses, cooldowns, and deterministic operator-kit execution.
+- Boss fights are real simulation-owned encounters with phases, action timing, hp, statuses, cooldowns, and deterministic combat-package execution.
 - The player remains a manager. Encounter input should be limited to explicit managerial interventions and commitment choices, not direct per-operator tactics control.
 - The current shipped encounter includes limited managerial interventions; future expansion should broaden the intervention library without changing simulation ownership.
 - Encounter time freezes the broader simulation while the fight is active, then writes the elapsed time back into world progression when the encounter resolves.
@@ -210,7 +213,7 @@ Boss confrontation direction:
 - Site concepts own dungeon identity, enemy-family pools, and the attached boss anchor. Mission type changes the job being done at the site; it does not detach the site from its boss.
 - A raid site must never be authored or generated without an attached boss definition. If a `site/*` entry does not resolve to a concrete boss, that site is invalid content rather than a partial draft.
 - Content-generation workflow should treat new raid-site creation as a paired operation: reserve the `site/*` id, reserve or attach the `boss/*` id, and review both together before promotion.
-- Do not spend the game's most spectacular concepts too early. D-rank can move beyond strict realism, but A and S should still feel like a meaningful escalation in scale, weirdness, and cultural visibility.
+- Do not spend the game's most spectacular concepts too early. D-rank can move beyond strict realism, but A and Unique (`U`) should still feel like a meaningful escalation in scale, weirdness, and cultural visibility.
 
 Raid contract-surface direction:
 
@@ -255,7 +258,7 @@ Guild-level resources:
 
 | Resource   | Role                                                                                                  | Tags                                        |
 | ---------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Cash       | Primary currency. Pays for everything - staff, gear, upgrades, operator retention.                    | `resource:liquid`, `economy:core`           |
+| Cash       | Primary currency. Pays for everything - operator retention, gear, upgrades, facility expansion.       | `resource:liquid`, `economy:core`           |
 | Reputation | Public-facing credibility. Affects contract access, recruitment pool quality, and political leverage. | `resource:pressure`, `progression:external` |
 | Intel      | Operational knowledge. Improves raid planning and reduces mission risk.                               | `resource:knowledge`, `ops:planning`        |
 
@@ -288,9 +291,9 @@ Gear, inventory, and market defaults:
 - That floor should be balance-owned, inferred from roster coverage and available higher-rank replacements, rather than set manually per item by the player.
 - The bodega may introduce lightweight consumable preparation as a precursor system, but that should stay deliberately narrow: short recipe lists, temporary raid aids, and no full workshop identity.
 - Porter's now makes that precursor real through a dedicated prep room that combines deployment staging with a narrow consumable recipe list built from monster drops.
-- Crafting is a midgame feature. It requires a dedicated room and staff support.
+- Crafting is a midgame feature. It requires a dedicated room that is unlocked, placed, and not blocked by incident or construction.
 - Crafting should produce gear that is meaningfully better or more specialized than what is available for purchase.
-- Gear presentation should climb with rank without abandoning the grounded-professional baseline too early. F and E should still read as plausible field equipment; D and C can start showing rift-touched materials and stranger silhouettes; A and S can carry the most dramatic visual signatures.
+- Gear presentation should climb with rank without abandoning the grounded-professional baseline too early. F and E should still read as plausible field equipment; D and C can start showing rift-touched materials and stranger silhouettes; A and Unique (`U`) can carry the most dramatic visual signatures.
 
 Rooms are the building blocks of the guild's physical space. They determine what the guild can do and how well it can do it.
 
@@ -298,16 +301,16 @@ Lower headquarters tiers are allowed to combine multiple room families inside on
 
 Building progression should not assume that every headquarters remains a single-plane layout. Later headquarters tiers should support floor-indexed room placement and floor-aware presentation, with multi-floor buildings changing both space allocation and how the player reads the headquarters at a glance.
 
-| Family      | Function                              | Example Rooms                                              |
-| ----------- | ------------------------------------- | ---------------------------------------------------------- |
-| Operations  | Mission planning, contract management | Front desk, mission board, intel room                      |
-| Recovery    | Healing, rest, stress reduction       | Infirmary, break room, sleeping quarters                   |
-| Training    | Stat improvement for operators        | Gym, sparring room, firing range, obstacle course          |
-| Social      | Morale, recruitment, retention        | Lounge, cafeteria, rec room                                |
-| Staffing    | Staff assignment and effectiveness    | Office space, supply closet, server room                   |
-| Specialized | Field-role or rank-specific           | Medic clinic, scout briefing room, field lead command room |
+| Family      | Function                               | Example Rooms                                              |
+| ----------- | -------------------------------------- | ---------------------------------------------------------- |
+| Operations  | Mission planning, contract management  | Front desk, mission board, intel room                      |
+| Recovery    | Healing, rest, stress reduction        | Infirmary, break room, sleeping quarters                   |
+| Training    | Stat improvement for operators         | Gym, sparring room, firing range, obstacle course          |
+| Social      | Morale, recruitment, retention         | Lounge, cafeteria, rec room                                |
+| Logistics   | Supply storage and back-office support | Supply closet, stockroom, supply hall                      |
+| Specialized | Field-role or rank-specific            | Medic clinic, scout briefing room, field lead command room |
 
-Recruitment is a capability, not a separate room family. Public-facing recruitment can live inside different room families at different building tiers as long as the runtime-facing tags and staffing rules stay explicit. The bodega uses the counter; Porter's uses the bar.
+Recruitment is a capability, not a separate room family. Public-facing recruitment can live inside different room families at different building tiers as long as the runtime-facing room/domain tags stay explicit. The bodega uses the counter; Porter's uses the bar.
 
 Training room direction:
 
@@ -326,7 +329,7 @@ Later role-specific room variants should include:
 - Scout Recon Course - more efficient Speed training plus better awareness rehearsal for scouts
 - Medic Clinic - more efficient Endurance/Resilience training for medics
 
-Staff assigned to rooms improve the room's effectiveness. This should remain a core management loop.
+Unlocked rooms should function immediately. Room impairment should come only from explicit authored blockers such as incidents, damage, or construction state, not from a generalized staffing or activation loop.
 
 Low-tier headquarters should be allowed to introduce bodega-native hybrid operations rooms that cover missing management surfaces without pretending the guild already has a full later-tier facility stack. Valid early additions include intel/admin support, deployment staging, and lightweight consumable prep. Those are extensions of management, not proof that the bodega secretly contains a full workshop, infirmary, or training wing.
 
@@ -336,7 +339,7 @@ Multi-floor headquarters direction:
 - Floor identity should be explicit in runtime-facing HQ presentation state once multi-floor buildings arrive; floor selection should not be inferred indirectly from background art alone.
 - Exterior surroundings for multi-floor buildings should use reusable elevation bands where possible so adjacent floors with materially similar outside reads can share one backdrop package.
 - Exact per-floor bespoke surroundings should be reserved for floors whose exterior context genuinely changes, such as ground-entry floors, sky-lobby floors, penthouse tiers, or tower-top prestige floors.
-- Multi-floor support should deepen building strategy, staffing, and readability first. It should not require a full tower-scale simulation before the second building can ship.
+- Multi-floor support should deepen building strategy, room identity, and readability first. It should not require a full tower-scale simulation before the second building can ship.
 
 ## Future Constraints
 
@@ -351,7 +354,7 @@ Multi-floor headquarters direction:
 - Room culture should be surfaced mostly through summaries, room-state labels, behavior, and event writing rather than as a fully exposed raw-stat panel. Players should understand the room's tone without needing to parse an internal spreadsheet.
 - When city institutions become real pressure sources, start with licensing and compliance, labor and worker-safety oversight, emergency-response and site-containment pressure, and borough-level contracting or political pressure.
 - Crafting should deepen through authored recipe families, resource families, rare site-specific materials, and tag-driven quality rules rather than through an exhaustive part-by-part manufacturing sim.
-- Room and staff quality rules should stay legible and tiered. Favor authored packages, tags, thresholds, and a few strong modifiers over sprawling hidden formula stacks.
+- Room and support-domain quality rules should stay legible and tiered. Favor authored packages, tags, thresholds, and a few strong modifiers over sprawling hidden formula stacks.
 
 ## AI Content Layer Direction
 
@@ -362,7 +365,7 @@ Multi-floor headquarters direction:
 - Operator generation should use structured outputs that select from approved prefab appearance parts, recipe slots, names, personality hooks, social flavor, and descriptive text. The model may assemble and flavor the operator identity, but it must not invent unsupported asset types or bypass the approved part registry.
 - Skill and ability text may be AI-authored if the underlying numeric payloads, targeting rules, cooldowns, and schema shape are already locked by deterministic content data.
 - Schema validity is necessary but not sufficient. A schema-valid payload can still be balance-breaking, tonally wrong, or content-incompatible.
-- Canonical campaign generation must keep gameplay-affecting stats, rank, kit slots, and numeric effect payloads inside authored budget envelopes. If the product later wants rare exceptional operators, that exception must be explicit, bounded, and simulation-owned rather than an accidental side effect of prompt drift.
+- Canonical campaign generation must keep gameplay-affecting stats, rank, combat-package identity, and numeric effect payloads inside authored budget envelopes. If the product later wants rare exceptional operators, that exception must be explicit, bounded, and simulation-owned rather than an accidental side effect of prompt drift.
 - AI-generated outputs must be save-safe, debuggable, and replaceable. If model output fails validation or quality checks, the game must fall back to approved authored copy, approved prefab combinations, or approved candidate pools.
 - AI-assisted systems must be optional at runtime. The game should support AI-disabled play as a first-class mode, remain fully playable offline, and allow the player to toggle AI features from the start screen before loading a run or from in-game settings during an active campaign.
 - The game must remain fully playable without live model access. AI is a variation layer, not a runtime dependency for the core management loop.

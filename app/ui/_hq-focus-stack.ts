@@ -22,15 +22,12 @@ export type StackFocusEntry =
   // World-backed focus targets.
   | { kind: "room"; roomId: string; highlightBounds: HighlightBounds }
   | { kind: "operator"; operatorId: string; highlightBounds: HighlightBounds }
-  | { kind: "staff"; staffId: string; highlightBounds: HighlightBounds }
   | { kind: "visitor"; visitorId: string; highlightBounds: HighlightBounds }
   | { kind: "team"; teamId: string; highlightBounds: HighlightBounds }
   // Branch surfaces (synthetic, parented to a world entry).
   | { kind: "room-upgrades"; roomId: string }
-  | { kind: "room-staffing"; roomId: string }
   | { kind: "place-room"; slotId: string; floorIndex: number }
-  | { kind: "replace-operator"; visitorId: string }
-  | { kind: "hire-staff" };
+  | { kind: "replace-operator"; visitorId: string };
 
 export function effectiveFocusFromStack(stack: readonly StackFocusEntry[]): FocusPayload | null {
   for (let i = stack.length - 1; i >= 0; i--) {
@@ -46,12 +43,6 @@ export function effectiveFocusFromStack(stack: readonly StackFocusEntry[]): Focu
         return {
           targetKind: "operator",
           targetId: entry.operatorId,
-          highlightBounds: entry.highlightBounds,
-        };
-      case "staff":
-        return {
-          targetKind: "staff",
-          targetId: entry.staffId,
           highlightBounds: entry.highlightBounds,
         };
       case "visitor":
@@ -81,14 +72,11 @@ export function categoryFromStack(stack: readonly StackFocusEntry[]): HqCategory
     case "room":
     case "place-room":
     case "room-upgrades":
-    case "room-staffing":
       return "rooms";
     case "people-root":
     case "operator":
-    case "staff":
     case "visitor":
     case "replace-operator":
-    case "hire-staff":
       return "roster";
     case "management-root":
       return "management";
@@ -129,14 +117,14 @@ export function stackFromFocus(focus: FocusPayload | null): StackFocusEntry[] {
       return [
         { kind: "operator", operatorId: focus.targetId, highlightBounds: focus.highlightBounds },
       ];
-    case "staff":
-      return [{ kind: "staff", staffId: focus.targetId, highlightBounds: focus.highlightBounds }];
     case "visitor":
       return [
         { kind: "visitor", visitorId: focus.targetId, highlightBounds: focus.highlightBounds },
       ];
     case "team":
       return [{ kind: "team", teamId: focus.targetId, highlightBounds: focus.highlightBounds }];
+    case "presenter":
+      return [{ kind: "people-root" }];
   }
 }
 
@@ -172,16 +160,12 @@ export function entriesEqual(a: StackFocusEntry, b: StackFocusEntry): boolean {
       return b.kind === "room" && a.roomId === b.roomId;
     case "operator":
       return b.kind === "operator" && a.operatorId === b.operatorId;
-    case "staff":
-      return b.kind === "staff" && a.staffId === b.staffId;
     case "visitor":
       return b.kind === "visitor" && a.visitorId === b.visitorId;
     case "team":
       return b.kind === "team" && a.teamId === b.teamId;
     case "room-upgrades":
       return b.kind === "room-upgrades" && a.roomId === b.roomId;
-    case "room-staffing":
-      return b.kind === "room-staffing" && a.roomId === b.roomId;
     case "place-room":
       return b.kind === "place-room" && a.slotId === b.slotId;
     case "replace-operator":

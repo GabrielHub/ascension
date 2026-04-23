@@ -15,7 +15,6 @@ function createContext(): DevConsoleContext {
   const stopAutoTick = vi.fn();
   const startAutoTick = vi.fn();
   const setActiveFloor = vi.fn(() => Promise.resolve());
-  const setRoomActive = vi.fn(() => Promise.resolve());
   const probeAiRuntime = vi.fn(() => Promise.resolve());
   const generateAiSurface = vi.fn(() => Promise.resolve());
   const regenerateAiSurface = vi.fn(() => Promise.resolve());
@@ -37,7 +36,6 @@ function createContext(): DevConsoleContext {
         initiateRelocation: vi.fn(() => Promise.resolve()),
         placeRoom: vi.fn(() => Promise.resolve()),
         setActiveFloor,
-        setRoomActive,
         setPolicy: vi.fn(() => Promise.resolve()),
         setLootFilter: vi.fn(() => Promise.resolve()),
         purchaseBuildingUpgrade: vi.fn(() => Promise.resolve()),
@@ -47,8 +45,6 @@ function createContext(): DevConsoleContext {
         rejectRecruit: vi.fn(() => Promise.resolve()),
         replaceRecruit: vi.fn(() => Promise.resolve()),
         dismissRecruit: vi.fn(() => Promise.resolve()),
-        hireStaff: vi.fn(() => Promise.resolve()),
-        assignStaff: vi.fn(() => Promise.resolve()),
         buyItem: vi.fn(() => Promise.resolve()),
         sellItem: vi.fn(() => Promise.resolve()),
         equipItem: vi.fn(() => Promise.resolve()),
@@ -117,6 +113,16 @@ function createContext(): DevConsoleContext {
               attunementTag: "attunement:void",
               rank: "f",
               traits: ["trait:alert", "trait:evasive"],
+              combatPackageId: "package/scout/void/standard",
+              blocks: 0,
+              baseStats: {
+                strength: 7,
+                speed: 14,
+                endurance: 8,
+                resilience: 7,
+                perception: 13,
+                intelligence: 9,
+              },
             },
             morale: { current: 63, baseline: 63 },
             loyalty: { current: 58, baseline: 58 },
@@ -145,6 +151,16 @@ function createContext(): DevConsoleContext {
               attunementTag: "attunement:kinetic",
               rank: "f",
               traits: ["trait:steady", "trait:resolute"],
+              combatPackageId: "package/field-lead/kinetic/standard",
+              blocks: 0,
+              baseStats: {
+                strength: 14,
+                speed: 8,
+                endurance: 13,
+                resilience: 10,
+                perception: 7,
+                intelligence: 8,
+              },
             },
             morale: { current: 67, baseline: 67 },
             loyalty: { current: 62, baseline: 62 },
@@ -168,9 +184,6 @@ function createContext(): DevConsoleContext {
         hqWorldSnapshot: null,
       },
       worldSnapshot: {
-        staff: [
-          { id: "staff/admin-1", name: "Dana Wolfe", roleTag: "staff:admin", assignment: {} },
-        ],
         activeRaidPackets: [],
       },
     },

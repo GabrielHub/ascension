@@ -178,12 +178,8 @@ function createBaseSave(): PersistedSaveGame {
             rank: "f",
             attunementTag: "attunement:kinetic",
             traits: ["trait:steady"],
-            kit: {
-              regularAttackId: "kit/basic-strike",
-              skillId: "kit/field-lead-skill",
-              ultimateId: "kit/field-lead-ultimate",
-              passiveIds: ["kit/field-lead-passive"],
-            },
+            combatPackageId: "package/field-lead/kinetic/standard",
+            blocks: 0,
             baseStats: {
               strength: 14,
               speed: 8,
@@ -204,42 +200,6 @@ function createBaseSave(): PersistedSaveGame {
           familiarity: 9,
           recentSharedOutcome: 3,
           historyTags: ["history:trained_together"],
-        },
-      ],
-      staff: [
-        {
-          id: "staff/1",
-          name: "Aina Solis",
-          roleTag: "staff:reception",
-          status: "assigned",
-          wage: 18,
-          schedule: {
-            currentBlock: "work",
-            workStartMinute: 480,
-            workEndMinute: 1080,
-          },
-          needs: {
-            hunger: 18,
-            fatigue: 24,
-            stress: 14,
-          },
-          morale: {
-            current: 56,
-            baseline: 56,
-          },
-          loyalty: {
-            current: 52,
-            baseline: 52,
-          },
-          injury: {
-            severity: 0,
-            recoveryHoursRemaining: 0,
-            treated: false,
-          },
-          assignment: {
-            kind: "room",
-            targetId: "room-instance/front-desk",
-          },
         },
       ],
       visitors: [
@@ -370,7 +330,6 @@ describe("save codec", () => {
     expect(normalized.schemaVersion).toBe(CURRENT_SAVE_SCHEMA_VERSION);
     expect(normalized.world.operators).toBeUndefined();
     expect(normalized.world.operatorRelationships).toBeUndefined();
-    expect(normalized.world.staff).toBeUndefined();
     expect(normalized.world.visitors).toBeUndefined();
     expect(normalized.world.raidOpportunities).toBeUndefined();
     expect(normalized.world.activeEvents).toBeUndefined();
@@ -790,12 +749,8 @@ describe("save codec", () => {
       rank: "f",
       attunementTag: "attunement:kinetic",
       traits: ["trait:steady"],
-      kit: {
-        regularAttackId: "kit/basic-strike",
-        skillId: "kit/field-lead-skill",
-        ultimateId: "kit/field-lead-ultimate",
-        passiveIds: ["kit/field-lead-passive"],
-      },
+      combatPackageId: "package/field-lead/kinetic/standard",
+      blocks: 0,
       baseStats: {
         strength: 14,
         speed: 8,
@@ -2033,8 +1988,8 @@ describe("save codec", () => {
     expect(fieldLead?.combat?.rank).toBe("f");
     expect(fieldLead?.combat?.attunementTag).toBe("attunement:kinetic");
     expect(fieldLead?.combat?.traits).toEqual(["trait:steady"]);
-    expect(fieldLead?.combat?.kit.regularAttackId).toBe("kit/basic-strike");
-    expect(fieldLead?.combat?.kit.skillId).toBe("kit/field-lead-skill");
+    expect(fieldLead?.combat?.combatPackageId).toBe("package/field-lead/kinetic/standard");
+    expect(fieldLead?.combat?.blocks).toBe(0);
     expect(fieldLead?.combat?.baseStats.strength).toBe(14);
     expect(fieldLead?.combat?.baseStats.endurance).toBe(13);
 
@@ -2044,7 +1999,7 @@ describe("save codec", () => {
     expect(scout?.combat?.rank).toBe("f");
     expect(scout?.combat?.attunementTag).toBe("attunement:void");
     expect(scout?.combat?.traits).toEqual(["trait:alert"]);
-    expect(scout?.combat?.kit.skillId).toBe("kit/scout-skill");
+    expect(scout?.combat?.combatPackageId).toBe("package/scout/void/standard");
     expect(scout?.combat?.baseStats.speed).toBe(14);
     expect(scout?.combat?.baseStats.perception).toBe(13);
 
@@ -2054,7 +2009,7 @@ describe("save codec", () => {
     expect(medic?.combat?.rank).toBe("f");
     expect(medic?.combat?.attunementTag).toBe("attunement:vital");
     expect(medic?.combat?.traits).toEqual(["trait:resilient"]);
-    expect(medic?.combat?.kit.skillId).toBe("kit/medic-skill");
+    expect(medic?.combat?.combatPackageId).toBe("package/medic/vital/standard");
     expect(medic?.combat?.baseStats.resilience).toBe(14);
     expect(medic?.combat?.baseStats.intelligence).toBe(13);
   });
@@ -2088,18 +2043,60 @@ describe("save codec", () => {
     );
   });
 
+  it("normalizes legacy kit migrations to the package-derived attunement and traits", () => {
+    const base = createBaseSave();
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 18,
+      world: {
+        ...base.world,
+        operators: [
+          {
+            ...base.world.operators![0],
+            identity: {
+              displayName: "Rook",
+              roleTag: "role:medic",
+            },
+            combat: {
+              rank: "f",
+              attunementTag: "attunement:kinetic",
+              traits: ["trait:steady"],
+              kit: {
+                regularAttackId: "legacy/attack",
+                skillId: "legacy/skill",
+                ultimateId: "legacy/ultimate",
+                passiveIds: [],
+              },
+              baseStats: {
+                strength: 6,
+                speed: 7,
+                endurance: 9,
+                resilience: 14,
+                perception: 8,
+                intelligence: 13,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.operators?.[0].combat).toMatchObject({
+      attunementTag: "attunement:vital",
+      traits: ["trait:resilient"],
+      combatPackageId: "package/medic/vital/standard",
+    });
+  });
+
   it("round-trips v10 save with combat data correctly", () => {
     const base = createBaseSave();
     const combat = {
       rank: "e",
-      attunementTag: "attunement:fire",
+      attunementTag: "attunement:kinetic",
       traits: ["trait:aggressive", "trait:alert"],
-      kit: {
-        regularAttackId: "kit/flame-strike",
-        skillId: "kit/fire-burst",
-        ultimateId: "kit/inferno",
-        passiveIds: ["kit/heat-resist", "kit/fire-aura"],
-      },
+      combatPackageId: "package/field-lead/kinetic/standard",
+      blocks: 1,
       baseStats: {
         strength: 18,
         speed: 12,
@@ -2213,6 +2210,83 @@ describe("save codec", () => {
     });
 
     expect(normalized.world.policies).toEqual(policies);
+  });
+
+  it("migrates missing presenter unlocks by seeding Mara and inferring room-based unlocks", () => {
+    const base = createBaseSave();
+
+    const hydrated = hydratePersistedSaveGame({
+      ...base,
+      schemaVersion: 18,
+      world: {
+        ...base.world,
+        building: {
+          activeBuildingId: "building/porters",
+          activeBuildingTier: 1,
+          activeFloorIndex: 0,
+          roomSlotCount: 7,
+          operatorSlotCount: 12,
+        },
+        rooms: [
+          {
+            id: "room-instance/floor-tier-1-1",
+            templateId: "room/floor:tier_1",
+            tier: 1,
+            floorIndex: 0,
+            slotId: "slot/floor",
+            roomStateId: getRoomStateId("room/floor:tier_1", []),
+            capacity: 8,
+            occupancy: 0,
+            reservedFootprint: { col: 1, row: 12, cols: 10, rows: 6 },
+            activeFootprint: getRoomActiveFootprint(
+              "room/floor:tier_1",
+              { col: 1, row: 12, cols: 10, rows: 6 },
+              [],
+            ),
+          },
+          {
+            id: "room-instance/dining-area-tier-1-2",
+            templateId: "room/dining_area:tier_1",
+            tier: 1,
+            floorIndex: 0,
+            slotId: "slot/dining-area",
+            roomStateId: getRoomStateId("room/dining_area:tier_1", []),
+            capacity: 4,
+            occupancy: 0,
+            reservedFootprint: { col: 12, row: 6, cols: 10, rows: 4 },
+            activeFootprint: getRoomActiveFootprint(
+              "room/dining_area:tier_1",
+              { col: 12, row: 6, cols: 10, rows: 4 },
+              [],
+            ),
+          },
+          {
+            id: "room-instance/bar-tier-1-3",
+            templateId: "room/bar:tier_1",
+            tier: 1,
+            floorIndex: 0,
+            slotId: "slot/bar",
+            roomStateId: getRoomStateId("room/bar:tier_1", []),
+            capacity: 4,
+            occupancy: 0,
+            reservedFootprint: { col: 1, row: 6, cols: 10, rows: 4 },
+            activeFootprint: getRoomActiveFootprint(
+              "room/bar:tier_1",
+              { col: 1, row: 6, cols: 10, rows: 4 },
+              [],
+            ),
+          },
+        ],
+        presenterUnlocks: undefined,
+      },
+    });
+
+    expect(hydrated.changed).toBe(true);
+    expect(hydrated.save.world.presenterUnlocks).toEqual([
+      { presenterId: "presenter/assistant", unlockedAtTick: 0, unlockedAtDay: 1 },
+      { presenterId: "presenter/cook", unlockedAtTick: 42, unlockedAtDay: 3 },
+      { presenterId: "presenter/bartender", unlockedAtTick: 42, unlockedAtDay: 3 },
+    ]);
   });
 
   it("hydrates missing loot automation state as disabled by default", () => {

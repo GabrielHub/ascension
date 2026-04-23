@@ -16,7 +16,7 @@ export interface PrepRecipeAvailability {
   recipeId: string;
   outputItemId: string;
   outputQuantity: number;
-  isRoomStaffed: boolean;
+  isRoomOperational: boolean;
   canProduce: boolean;
   inputs: readonly PrepRecipeInputAvailability[];
 }
@@ -39,12 +39,10 @@ export function hasConsumableInventory(
 export function buildPrepRecipeAvailabilityForRoom(
   roomTags: readonly string[],
   isOperational: boolean,
-  assignedStaffCount: number,
   inventory: readonly InventoryStackLike[],
   registry: TemplateRegistry,
 ): PrepRecipeAvailability[] {
   const inventoryByItem = buildInventoryQuantityByItem(inventory);
-  const isRoomStaffed = isOperational && assignedStaffCount >= 1;
 
   return registry.prepRecipes
     .filter((recipe) => roomTags.includes(recipe.requiredRoomTag))
@@ -63,8 +61,8 @@ export function buildPrepRecipeAvailabilityForRoom(
         recipeId: recipe.id,
         outputItemId: recipe.outputItemId,
         outputQuantity: recipe.outputQuantity,
-        isRoomStaffed,
-        canProduce: isRoomStaffed && inputs.every((input) => input.isSatisfied),
+        isRoomOperational: isOperational,
+        canProduce: isOperational && inputs.every((input) => input.isSatisfied),
         inputs,
       };
     });

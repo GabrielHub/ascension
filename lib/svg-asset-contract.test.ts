@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   HQ_PROP_ASSET_PATHS,
+  getHqBindingPreviewFootprint,
   getSvgAssets,
   getSvgContractViolations,
   getSvgRuntimeBindings,
@@ -55,6 +56,63 @@ describe("svg asset contract", () => {
         "room-state/alley_staging:1",
       ),
     ).toBe("/data/svg-environments/hq/bodega/recipes/scene-the-alley.svg");
+  });
+
+  it("resolves Porter's room scenes through the contract", () => {
+    expect(
+      resolveHqRoomSceneAssetUrl("building/porters", "room/bar:tier_1", "room-state/bar:1"),
+    ).toBe("/data/svg-environments/hq/porters/recipes/scene-the-bar.svg");
+    expect(
+      resolveHqRoomSceneAssetUrl(
+        "building/porters",
+        "room/workshop:tier_1",
+        "room-state/workshop:1",
+      ),
+    ).toBe("/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg");
+  });
+
+  it("builds preview footprints for staged Porter's waterfront rooms using their real tier", () => {
+    expect(
+      getHqBindingPreviewFootprint({
+        kind: "hq-room-scene",
+        id: "test/dock",
+        label: "Dock 1",
+        family: "hq",
+        usage: "live",
+        status: "approved",
+        buildingId: "building/porters",
+        templateId: "room/dock:tier_1",
+        roomStateId: "room-state/dock:1",
+        slotId: "slot/dock",
+        floorIndex: 2,
+        assetId: "/data/svg-environments/hq/porters/recipes/scene-the-dock.svg",
+      }),
+    ).toMatchObject({
+      buildingTier: 5,
+      reservedFootprint: { col: 0, row: 0, cols: 6, rows: 4 },
+      activeFootprint: { col: 0, row: 0, cols: 6, rows: 4 },
+    });
+
+    expect(
+      getHqBindingPreviewFootprint({
+        kind: "hq-room-scene",
+        id: "test/workshop",
+        label: "Workshop 1",
+        family: "hq",
+        usage: "live",
+        status: "approved",
+        buildingId: "building/porters",
+        templateId: "room/workshop:tier_1",
+        roomStateId: "room-state/workshop:1",
+        slotId: "slot/workshop",
+        floorIndex: 2,
+        assetId: "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
+      }),
+    ).toMatchObject({
+      buildingTier: 6,
+      reservedFootprint: { col: 0, row: 4, cols: 12, rows: 4 },
+      activeFootprint: { col: 0, row: 4, cols: 12, rows: 4 },
+    });
   });
 
   it("shares fallback HQ prop asset paths between runtime and contract bindings", () => {

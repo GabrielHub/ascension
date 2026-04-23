@@ -10,7 +10,6 @@ import { getNextPendingRoomUpgradeIds } from "lib/hq-room-state";
 import { formatIdentityText } from "lib/game-identity";
 
 import {
-  AssignmentState,
   BuildingAuthority,
   EventState,
   InjuryState,
@@ -113,15 +112,26 @@ function hasOperatorWorn(context: SimSystemContext): boolean {
 }
 
 function hasUnassignedManagementAction(context: SimSystemContext): boolean {
-  const hasIdleStaff = context.runtimeState.staffEntities.some(
-    (entity) => AssignmentState.kind[entity] === "idle",
-  );
-  const hasInactiveRoom = context.runtimeState.roomEntities.some(
-    (entity) =>
-      RoomInstance.isRequestedActive[entity] === 0 || RoomInstance.isOperational[entity] === 0,
-  );
+  if (getAffordableUpgradeIds(context).length > 0) {
+    return true;
+  }
 
-  return hasIdleStaff || hasInactiveRoom;
+  const buildingEntity = context.singletonEntities.building;
+  const roomSlotCount = BuildingAuthority.roomSlotCount[buildingEntity] ?? 0;
+  if (context.runtimeState.roomEntities.length >= roomSlotCount) {
+    return false;
+  }
+
+  const placedRoomTemplateIds = new Set(
+    context.runtimeState.roomEntities.map((entity) => {
+      return context.registry.rooms[RoomInstance.templateIndex[entity]]?.id ?? "";
+    }),
+  );
+  const unlockedRoomTemplateIds = BuildingAuthority.unlockedRoomTemplateIds[buildingEntity] ?? [];
+
+  return unlockedRoomTemplateIds.some(
+    (roomTemplateId) => !placedRoomTemplateIds.has(roomTemplateId),
+  );
 }
 
 function hasAnyUpgradePurchased(context: SimSystemContext): boolean {

@@ -20,11 +20,19 @@ import type {
   InterventionDefinition,
   InterventionUsageState,
   BossEncounterSnapshot,
+  EncounterActionKind,
 } from "./encounter-types";
 import { INTERVENTION_DEFINITIONS, getBossEncounterDefinition } from "./encounter-types";
 import { templateRegistry } from "content/templates";
-import type { AbilityEffect, StatusId, TargetingRule } from "content/templates/kits";
-import { REGULAR_ATTACKS, SKILLS, ULTIMATES } from "content/templates/kits";
+import type {
+  AbilityEffect,
+  CombatStat,
+  StatusId,
+  TargetingRule,
+  CombatPackageTemplate,
+  BasicStagePayload,
+  UltimatePayload,
+} from "content/templates/combat-packages";
 import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
 import type { SimSystemContext } from "./types";
 import {
@@ -37,29 +45,46 @@ import {
 } from "../components";
 import { pushRuntimeEvent } from "./commands";
 import { hasActiveFocusedGuidancePause } from "./guidance";
-import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { DEFAULT_COMBAT_PACKAGE_REGISTRY } from "lib/operator-combat";
 import { seedFromSimulationKey } from "./seed-utils";
 
-// ── Kit lookup maps (built once at module load) ─────────────────────────
+const NEGATIVE_STATUS_IDS: readonly StatusId[] = [
+  "bleeding",
+  "staggered",
+  "suppressed",
+  "slowed",
+  "exposed",
+  "marked",
+];
 
-interface OperatorAbilityRuntime {
-  targeting: TargetingRule;
-  effects: readonly AbilityEffect[];
-  cooldown?: number;
-  aiHints?: readonly string[];
+// ── Combat package lookup helpers ────────────────────────────────────────
+
+function resolvePackageTemplate(
+  context: SimSystemContext | null,
+  combatPackageId: string | undefined,
+): CombatPackageTemplate | undefined {
+  if (!combatPackageId) return undefined;
+  const registry = context?.runtimeState.combatPackageRegistry ?? DEFAULT_COMBAT_PACKAGE_REGISTRY;
+  return registry.packageById.get(combatPackageId);
 }
 
-const operatorAbilityLookup = new Map<string, OperatorAbilityRuntime>(
-  [...REGULAR_ATTACKS, ...SKILLS, ...ULTIMATES].map((template) => [
-    template.id,
-    {
-      targeting: template.targeting,
-      effects: template.effects,
-      cooldown: "cooldown" in template ? template.cooldown : undefined,
-      aiHints: template.aiHints,
-    },
-  ]),
-);
+function fallbackBasicStage(): BasicStagePayload {
+  return {
+    name: "Measured Strike",
+    summary: "Fallback basic attack when the package is missing.",
+    targeting: "enemy_single",
+    effects: [{ kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.8 }],
+  };
+}
+
+function fallbackUltimate(): UltimatePayload {
+  return {
+    name: "Committed Strike",
+    summary: "Fallback ultimate when the package is missing.",
+    targeting: "enemy_highest_threat",
+    effects: [{ kind: "damage", basePower: 20, scalingStat: "strength", scalingFactor: 1.2 }],
+  };
+}
 
 // ── Encounter creation ───────────────────────────────────────────────────
 
@@ -89,7 +114,6 @@ export function createBossEncounter(
 
     const combat = getOperatorCombatData(context, entity);
     const stats = combat.baseStats;
-    // Compute derived combat stats from base stats without context dependency
     const maxHp = Math.round(stats.endurance * 5 + stats.resilience * 3 + 40);
     const attack = Math.round(stats.strength * 1.2 + stats.speed * 0.3);
     const defense = Math.round(stats.resilience * 1.0 + stats.endurance * 0.4);
@@ -112,17 +136,15 @@ export function createBossEncounter(
       baseThreat: 50,
       condition: "alive",
       activeStatuses: [],
-      cooldowns: [],
       temporaryStatModifiers: {},
       actionHistory: [],
       operatorId: opId,
       roleTag: OperatorIdentity.roleTag[entity],
       attunementTag: combat.attunementTag,
       presetId: OperatorIdentity.appearancePresetId[entity],
-      regularAttackId: combat.kit.regularAttackId,
-      skillId: combat.kit.skillId,
-      ultimateId: combat.kit.ultimateId,
-      passiveIds: combat.kit.passiveIds,
+      combatPackageId: combat.combatPackageId,
+      blocks: 0,
+      baseStats: { ...stats },
     };
   }
 
@@ -144,11 +166,11 @@ export function createBossEncounter(
     baseThreat: bossDef.baseStats.threat,
     condition: "alive",
     activeStatuses: [],
-    cooldowns: [],
     temporaryStatModifiers: {},
     actionHistory: [],
     bossDefinitionId: bossId,
     encounterActions: bossDef.actions,
+    actionCooldowns: {},
   };
 
   // Set up interventions
@@ -182,14 +204,48 @@ export function createBossEncounter(
     autoplayIntervalMs: 800,
   };
 
+  for (const actor of Object.values(encounter.actors)) {
+    if (actor.kind !== "operator" || !actor.combatPackageId) {
+      continue;
+    }
+
+    const pkg = resolvePackageTemplate(context, actor.combatPackageId);
+    if (!pkg?.passive) {
+      continue;
+    }
+
+    const passiveEffects = resolveEffects(encounter, actor, actor, pkg.passive.effects, rng);
+    if (passiveEffects.length === 0) {
+      continue;
+    }
+
+    logEncounterAction(encounter, {
+      round: 0,
+      actorId: actor.actorId,
+      actionKind: "passive_trigger",
+      abilityId: `${actor.combatPackageId}/passive`,
+      targetIds: [actor.actorId],
+      effects: passiveEffects,
+      timestamp: Date.now(),
+    });
+  }
+
   return encounter;
 }
 
 function getOperatorCombatData(_context: SimSystemContext, entity: number) {
-  // Look up combat data from the operator snapshot in the runtime
-  // For now, use role-based defaults via the existing system
-  const roleTag = OperatorIdentity.roleTag[entity];
-  return deriveOperatorCombatDefaults(roleTag);
+  return {
+    attunementTag: OperatorIdentity.attunementTag[entity],
+    combatPackageId: OperatorIdentity.combatPackageId[entity],
+    baseStats: {
+      strength: OperatorIdentity.baseStrength[entity],
+      speed: OperatorIdentity.baseSpeed[entity],
+      endurance: OperatorIdentity.baseEndurance[entity],
+      resilience: OperatorIdentity.baseResilience[entity],
+      perception: OperatorIdentity.basePerception[entity],
+      intelligence: OperatorIdentity.baseIntelligence[entity],
+    },
+  };
 }
 
 // ── Encounter advancement ────────────────────────────────────────────────
@@ -213,18 +269,24 @@ export function startEncounter(encounter: BossEncounterInstance): void {
   });
 }
 
-export function advanceEncounterRound(encounter: BossEncounterInstance): void {
+export function advanceEncounterRound(
+  encounter: BossEncounterInstance,
+  context?: SimSystemContext,
+): void {
   if (encounter.status !== "active") return;
 
   const roundToResolve = encounter.currentRound;
   let guard = 0;
   while (encounter.status === "active" && encounter.currentRound === roundToResolve && guard < 64) {
-    advanceEncounterTurn(encounter);
+    advanceEncounterTurn(encounter, context);
     guard++;
   }
 }
 
-export function advanceEncounterTurn(encounter: BossEncounterInstance): void {
+export function advanceEncounterTurn(
+  encounter: BossEncounterInstance,
+  context?: SimSystemContext,
+): void {
   if (encounter.status !== "active") return;
 
   if (encounter.pendingRoundStart || encounter.initiativeQueue.length === 0) {
@@ -260,7 +322,7 @@ export function advanceEncounterTurn(encounter: BossEncounterInstance): void {
         actor.side === "ally" ? countAliveEnemyAdds(encounter) : -1;
 
       if (actor.side === "ally") {
-        resolveOperatorAction(encounter, actor, rng);
+        resolveOperatorAction(encounter, actor, rng, context);
       } else {
         resolveEnemyAction(encounter, actor, rng);
       }
@@ -386,8 +448,10 @@ function finalizeEncounterRound(encounter: BossEncounterInstance): void {
   for (const actorId of Object.keys(encounter.actors)) {
     const actor = encounter.actors[actorId];
     if (actor.condition !== "alive") continue;
-    for (const cd of actor.cooldowns) {
-      if (cd.remainingCooldown > 0) cd.remainingCooldown--;
+    if (!actor.actionCooldowns) continue;
+    for (const actionId of Object.keys(actor.actionCooldowns)) {
+      const remaining = actor.actionCooldowns[actionId];
+      if (remaining > 0) actor.actionCooldowns[actionId] = remaining - 1;
     }
   }
 
@@ -426,105 +490,64 @@ function endEncounter(
   });
 }
 
-// ── Operator action resolution ───────────────────────────────────────────
+// ── Operator action resolution (3-block chain) ───────────────────────────
+//
+// A basic action fires stage1/stage2/stage3 based on current blocks (0/1/2)
+// and increments blocks by exactly +1. When blocks reach 3, the next action
+// auto-spends the ultimate and resets blocks to 0. There is no held state or
+// spend choice at normal rank.
 
 function resolveOperatorAction(
   encounter: BossEncounterInstance,
   actor: ActorCombatState,
   rng: SeededRng,
+  context?: SimSystemContext,
 ): void {
-  // Select ability: ultimate > skill > regular attack based on availability
-  const fallbackAbility: OperatorAbilityRuntime = {
-    targeting: "enemy_single" as const,
-    effects: [{ kind: "damage", basePower: 8, scalingStat: "strength", scalingFactor: 0.8 }],
-  };
-  let abilityId = actor.regularAttackId ?? "kit/basic-strike";
-  let actionKind: "attack" | "skill" | "ultimate" = "attack";
-  let ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
+  const pkg = resolvePackageTemplate(context ?? null, actor.combatPackageId);
+  const blocks = actor.blocks ?? 0;
 
-  // Try ultimate
-  if (
-    actor.ultimateId &&
-    !isOnCooldown(actor, actor.ultimateId) &&
-    shouldUseOperatorUltimate(
-      encounter,
-      operatorAbilityLookup.get(actor.ultimateId) ?? fallbackAbility,
-    )
-  ) {
-    abilityId = actor.ultimateId;
+  let actionKind: EncounterActionKind;
+  let abilityId: string;
+  let payload: BasicStagePayload | UltimatePayload;
+
+  if (blocks >= 3) {
     actionKind = "ultimate";
-    ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
-    setCooldown(actor, actor.ultimateId, ability.cooldown ?? 8);
-  }
-  // Try skill
-  else if (actor.skillId && !isOnCooldown(actor, actor.skillId)) {
-    abilityId = actor.skillId;
-    actionKind = "skill";
-    ability = operatorAbilityLookup.get(abilityId) ?? fallbackAbility;
-    setCooldown(actor, actor.skillId, ability.cooldown ?? 3);
+    payload = pkg?.ultimate ?? fallbackUltimate();
+    abilityId = `${actor.combatPackageId ?? "fallback"}/ultimate`;
+    actor.blocks = 0;
+  } else {
+    actionKind = "basic_stage";
+    if (blocks === 0) {
+      payload = pkg?.stage1 ?? fallbackBasicStage();
+      abilityId = `${actor.combatPackageId ?? "fallback"}/stage1`;
+    } else if (blocks === 1) {
+      payload = pkg?.stage2 ?? fallbackBasicStage();
+      abilityId = `${actor.combatPackageId ?? "fallback"}/stage2`;
+    } else {
+      payload = pkg?.stage3 ?? fallbackBasicStage();
+      abilityId = `${actor.combatPackageId ?? "fallback"}/stage3`;
+    }
+    actor.blocks = blocks + 1;
   }
 
-  const targets = selectTargetsForRule(encounter, actor, ability.targeting, rng);
-  if (targets.length === 0) return;
-
-  const effectResults: EncounterEffectResult[] = [];
-  for (const target of targets) {
-    effectResults.push(...resolveEffects(encounter, actor, target, ability.effects, rng));
-  }
+  const effectResults = resolvePayloadEffects(
+    encounter,
+    actor,
+    payload.targeting,
+    payload.effects,
+    rng,
+  );
+  if (effectResults.length === 0) return;
 
   logEncounterAction(encounter, {
     round: encounter.currentRound,
     actorId: actor.actorId,
     actionKind,
     abilityId,
-    targetIds: targets.map((target) => target.actorId),
+    targetIds: [...new Set(effectResults.map((effect) => effect.targetId))],
     effects: effectResults,
     timestamp: Date.now(),
   });
-}
-
-function shouldUseOperatorUltimate(
-  encounter: BossEncounterInstance,
-  ability: OperatorAbilityRuntime,
-): boolean {
-  if (encounter.currentRound >= 2) {
-    return true;
-  }
-
-  const hints = new Set(ability.aiHints ?? []);
-  const livingEnemies = Object.values(encounter.actors).filter(
-    (candidate) => candidate.side === "enemy" && candidate.condition === "alive",
-  );
-  const livingAllies = Object.values(encounter.actors).filter(
-    (candidate) => candidate.side === "ally" && candidate.condition === "alive",
-  );
-  const boss = livingEnemies.find((candidate) => candidate.kind === "boss");
-  const bossHpFraction = boss ? boss.currentHp / Math.max(1, boss.maxHp) : 1;
-  const lowestAllyHpFraction =
-    livingAllies.length > 0
-      ? Math.min(...livingAllies.map((candidate) => candidate.currentHp / candidate.maxHp))
-      : 1;
-  const nextPhaseThreshold =
-    getBossEncounterDefinitionFromEncounter(encounter)?.phases[encounter.currentPhaseIndex + 1]
-      ?.hpThresholdFraction ?? null;
-
-  if (hints.has("prefer_low_hp_ally") && lowestAllyHpFraction <= 0.6) {
-    return true;
-  }
-  if (hints.has("prefer_finishing") && bossHpFraction <= 0.45) {
-    return true;
-  }
-  if (hints.has("prefer_phase_transition") && nextPhaseThreshold !== null) {
-    return bossHpFraction <= nextPhaseThreshold + 0.15;
-  }
-  if (hints.has("prefer_aoe_opportunity") && livingEnemies.length >= 2) {
-    return true;
-  }
-  if (hints.has("prefer_boss") && bossHpFraction <= 0.75) {
-    return true;
-  }
-
-  return false;
 }
 
 // ── Enemy action resolution ──────────────────────────────────────────────
@@ -552,12 +575,11 @@ function resolveEnemyAction(
     if (action.phaseIndices && !action.phaseIndices.includes(encounter.currentPhaseIndex)) {
       return false;
     }
-    return !isOnCooldown(actor, action.id);
+    return !isBossActionOnCooldown(actor, action.id);
   });
 
   if (availableActions.length === 0) return;
 
-  // Weighted selection
   const weighted: WeightedItem<BossActionDefinition>[] = availableActions.map((a) => ({
     item: a,
     weight: a.weight,
@@ -566,7 +588,7 @@ function resolveEnemyAction(
   const chosen = weightedChoice(rng, weighted).outcome;
 
   if (chosen.cooldown > 0) {
-    setCooldown(actor, chosen.id, chosen.cooldown);
+    setBossActionCooldown(actor, chosen.id, chosen.cooldown);
   }
 
   const targets = selectBossTargets(encounter, actor, chosen, rng);
@@ -609,13 +631,26 @@ function resolveEffects(
         const rawDamage = effect.basePower + scalingValue * effect.scalingFactor;
 
         // Apply defense reduction
-        const defense = target.baseDefense + (target.temporaryStatModifiers["defense"] ?? 0);
+        const defense =
+          target.baseStats &&
+          target.baseStats.resilience !== undefined &&
+          target.baseStats.endurance !== undefined
+            ? Math.round(
+                getStatValue(target, "resilience") + getStatValue(target, "endurance") * 0.4,
+              )
+            : target.baseDefense + (target.temporaryStatModifiers["defense"] ?? 0);
         const mitigated = Math.max(1, rawDamage - defense * 0.4);
 
         // Check exposed status (bonus damage)
         const exposedStatus = target.activeStatuses.find((s) => s.statusId === "exposed");
         const exposedBonus = exposedStatus ? exposedStatus.potency * 0.1 : 0;
-        const finalDamage = Math.round(mitigated * (1 + exposedBonus));
+        const empoweredBonus = source.activeStatuses.reduce((highest, status) => {
+          if (status.statusId !== "empowered") {
+            return highest;
+          }
+          return Math.max(highest, status.potency / 100);
+        }, 0);
+        const finalDamage = Math.round(mitigated * (1 + exposedBonus + empoweredBonus));
 
         // Apply to shield first
         let remainingDamage = finalDamage;
@@ -710,16 +745,10 @@ function resolveEffects(
 
       case "cleanse_status": {
         let cleansed = 0;
-        const negative: StatusId[] = [
-          "bleeding",
-          "staggered",
-          "suppressed",
-          "slowed",
-          "exposed",
-          "marked",
-        ];
         for (let i = 0; i < effect.count && target.activeStatuses.length > 0; i++) {
-          const idx = target.activeStatuses.findIndex((s) => negative.includes(s.statusId));
+          const idx = target.activeStatuses.findIndex((s) =>
+            NEGATIVE_STATUS_IDS.includes(s.statusId),
+          );
           if (idx < 0) break;
           target.activeStatuses.splice(idx, 1);
           cleansed++;
@@ -734,14 +763,10 @@ function resolveEffects(
       }
 
       case "modify_stat": {
-        if (effect.stat === "threat") {
-          target.baseThreat += effect.delta;
-        } else {
-          target.temporaryStatModifiers[effect.stat] =
-            (target.temporaryStatModifiers[effect.stat] ?? 0) + effect.delta;
-          if (effect.stat === "speed") {
-            target.initiative += effect.delta;
-          }
+        target.temporaryStatModifiers[effect.stat] =
+          (target.temporaryStatModifiers[effect.stat] ?? 0) + effect.delta;
+        if (effect.stat === "speed") {
+          target.initiative += effect.delta;
         }
         results.push({
           effectKind: "modify_stat",
@@ -852,14 +877,43 @@ function resolveEffects(
       case "boss_tag_counter":
       case "boss_weakness_bonus":
       case "grant_followup":
-        // These are combat modifiers resolved contextually
+      case "ally_damage_bonus":
+        target.activeStatuses.push({
+          statusId: "empowered",
+          remainingDuration: effect.duration,
+          potency: Math.round(effect.multiplier * 100),
+          sourceActorId: source.actorId,
+        });
         results.push({
           effectKind: effect.kind,
           targetId: target.actorId,
-          value: 0,
+          value: effect.multiplier,
           blocked: false,
         });
         break;
+    }
+  }
+
+  return results;
+}
+
+function resolvePayloadEffects(
+  encounter: BossEncounterInstance,
+  source: ActorCombatState,
+  defaultTargeting: TargetingRule,
+  effects: readonly AbilityEffect[],
+  rng: SeededRng,
+): EncounterEffectResult[] {
+  const results: EncounterEffectResult[] = [];
+
+  for (const effect of effects) {
+    const targeting = effect.targetingOverride ?? defaultTargeting;
+    const targets = selectTargetsForRule(encounter, source, targeting, rng);
+    if (targets.length === 0) {
+      continue;
+    }
+    for (const target of targets) {
+      results.push(...resolveEffects(encounter, source, target, [effect], rng));
     }
   }
 
@@ -987,10 +1041,10 @@ function checkBossPhaseTransition(encounter: BossEncounterInstance, rng: SeededR
           baseThreat: summonDef.stats.threat,
           condition: "alive",
           activeStatuses: [],
-          cooldowns: [],
           temporaryStatModifiers: {},
           actionHistory: [],
           encounterActions: summonDef.actions,
+          actionCooldowns: {},
         };
 
         logEncounterAction(encounter, {
@@ -1021,7 +1075,9 @@ function checkBossPhaseTransition(encounter: BossEncounterInstance, rng: SeededR
 
 // ── Termination checks ───────────────────────────────────────────────────
 
-function checkEncounterTermination(encounter: BossEncounterInstance): EncounterStatus | null {
+function checkEncounterTermination(
+  encounter: BossEncounterInstance,
+): Extract<EncounterStatus, "victory" | "wipe" | "forced_abort"> | null {
   const aliveAllies = Object.values(encounter.actors).filter(
     (a) => a.side === "ally" && a.condition === "alive",
   );
@@ -1135,10 +1191,8 @@ export function buildEncounterView(encounter: BossEncounterInstance): EncounterV
     attunementTag: actor.attunementTag,
     presetId: actor.presetId,
     bossDefinitionId: actor.bossDefinitionId,
-    regularAttackId: actor.regularAttackId,
-    skillId: actor.skillId,
-    ultimateId: actor.ultimateId,
-    passiveIds: actor.passiveIds,
+    combatPackageId: actor.combatPackageId,
+    blocks: actor.blocks,
     baseAttack: actor.baseAttack,
     baseDefense: actor.baseDefense,
     baseSpeed: actor.baseSpeed,
@@ -1202,7 +1256,6 @@ export function writeEncounterOutcome(
       pushRuntimeEvent(context, {
         kind: "encounter_injury",
         message: `${actor.label} was injured in the encounter.`,
-        timestamp: `Day ${WorldTimeState.day[timeEntity]}`,
         accent: "warning",
         targetKind: "operator",
         targetId: actor.operatorId,
@@ -1222,7 +1275,6 @@ export function writeEncounterOutcome(
     pushRuntimeEvent(context, {
       kind: "boss_defeated",
       message: `Boss defeated: ${bossName}`,
-      timestamp: `Day ${WorldTimeState.day[timeEntity]}`,
       accent: "success",
     });
 
@@ -1234,14 +1286,12 @@ export function writeEncounterOutcome(
     pushRuntimeEvent(context, {
       kind: "encounter_wipe",
       message: "The team was overwhelmed. All operators retreated with injuries.",
-      timestamp: `Day ${WorldTimeState.day[timeEntity]}`,
       accent: "danger",
     });
   } else if (encounter.status === "retreat") {
     pushRuntimeEvent(context, {
       kind: "encounter_retreat",
       message: "The team retreated from the encounter.",
-      timestamp: `Day ${WorldTimeState.day[timeEntity]}`,
       accent: "warning",
     });
   }
@@ -1307,6 +1357,9 @@ export function restoreEncounter(snapshot: BossEncounterSnapshot): BossEncounter
 
 function getStatValue(actor: ActorCombatState, statName: string): number {
   const mod = actor.temporaryStatModifiers[statName] ?? 0;
+  if (actor.baseStats && typeof actor.baseStats[statName as CombatStat] === "number") {
+    return (actor.baseStats[statName as CombatStat] as number) + mod;
+  }
   switch (statName) {
     case "strength":
       return actor.baseAttack + mod;
@@ -1323,18 +1376,13 @@ function getStatValue(actor: ActorCombatState, statName: string): number {
   }
 }
 
-function isOnCooldown(actor: ActorCombatState, abilityId: string): boolean {
-  const cd = actor.cooldowns.find((c) => c.abilityId === abilityId);
-  return cd !== undefined && cd.remainingCooldown > 0;
+function isBossActionOnCooldown(actor: ActorCombatState, actionId: string): boolean {
+  return (actor.actionCooldowns?.[actionId] ?? 0) > 0;
 }
 
-function setCooldown(actor: ActorCombatState, abilityId: string, duration: number): void {
-  const existing = actor.cooldowns.find((c) => c.abilityId === abilityId);
-  if (existing) {
-    existing.remainingCooldown = duration;
-  } else {
-    actor.cooldowns.push({ abilityId, remainingCooldown: duration });
-  }
+function setBossActionCooldown(actor: ActorCombatState, actionId: string, duration: number): void {
+  if (!actor.actionCooldowns) actor.actionCooldowns = {};
+  actor.actionCooldowns[actionId] = duration;
 }
 
 function selectTargetsForRule(
@@ -1361,8 +1409,6 @@ function selectTargetsForRule(
       return selectLowestHpTargets(allies);
     case "ally_frontline":
       return selectHighestThreatTargets(allies);
-    case "random_ally":
-      return allies.length > 0 ? [allies[rng.int(0, allies.length - 1)]] : [];
     case "all_enemies":
       return enemies;
     case "boss":
@@ -1372,14 +1418,7 @@ function selectTargetsForRule(
     case "enemy_highest_threat":
       return selectHighestThreatTargets(enemies);
     case "random_enemy":
-    case "enemy_group_member":
-    case "summoned_enemy": {
-      const summonTargets = enemies.filter((candidate) => candidate.kind === "summon");
-      if (targeting === "summoned_enemy" && summonTargets.length > 0) {
-        return [summonTargets[rng.int(0, summonTargets.length - 1)]];
-      }
       return enemies.length > 0 ? [enemies[rng.int(0, enemies.length - 1)]] : [];
-    }
     case "enemy_single":
     default: {
       const taunted = enemies.find((candidate) =>
@@ -1437,6 +1476,12 @@ function selectBossTargets(
       );
       return boss ? [boss] : [];
     }
+    case "all_allies":
+    case "ally_single":
+    case "ally_lowest_hp":
+    case "ally_frontline":
+    case "ally_most_injured":
+    case "self":
     default:
       return [allies[0]];
   }

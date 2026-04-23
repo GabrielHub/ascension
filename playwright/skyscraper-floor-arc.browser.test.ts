@@ -239,12 +239,6 @@ async function loadSkyscraperBaselineSave(page: Page): Promise<BrowserTestSnapsh
     skyscraperWorld.interruptionQueue = null;
     skyscraperWorld.incidentState = null;
     skyscraperWorld.visitors = [];
-    skyscraperWorld.staff = (skyscraperWorld.staff ?? []).map(
-      (staff: { assignment?: unknown }) => ({
-        ...staff,
-        assignment: { kind: "idle", targetId: "" },
-      }),
-    );
     skyscraperWorld.operators = (skyscraperWorld.operators ?? []).map(
       (operator: { assignment?: unknown }) => ({
         ...operator,

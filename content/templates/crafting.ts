@@ -8,7 +8,6 @@ export const craftRecipeTemplates = [
     description:
       "Build a structural-entry hammer around salvaged overpass hardware and monster bone.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "weapon/breach-hammer",
@@ -30,7 +29,6 @@ export const craftRecipeTemplates = [
     name: "Composite Plate Carrier Build",
     description: "Laminate salvaged highway aggregate and shell plating into a heavy carrier rig.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/composite-plate-carrier",
@@ -53,7 +51,6 @@ export const craftRecipeTemplates = [
     description:
       "Rework industrial glove shells into a frontline grip kit that can survive breach work.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "accessory/reinforced-gloves",
@@ -76,7 +73,6 @@ export const craftRecipeTemplates = [
     description:
       "Retrofit a short rifle with rail salvage and sighting glass tuned for distorted spaces.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "weapon/focused-carbine",
@@ -99,7 +95,6 @@ export const craftRecipeTemplates = [
     description:
       "Cut a recon coat around transit salvage that deadens noise and rift interference.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/signal-dampening-coat",
@@ -122,7 +117,6 @@ export const craftRecipeTemplates = [
     description:
       "Build a field compass around rail shards and a crystal optic that refuses ordinary north.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "accessory/rift-compass",
@@ -145,7 +139,6 @@ export const craftRecipeTemplates = [
     description:
       "Assemble a control baton with a tuned crystal core for nonlethal site stabilization.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "weapon/pulse-baton",
@@ -168,7 +161,6 @@ export const craftRecipeTemplates = [
     description:
       "Build a reinforced treatment coat around sealed lab salvage and resilient site fiber.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "outfit-overlay/field-medic-coat",
@@ -191,7 +183,6 @@ export const craftRecipeTemplates = [
     description:
       "Pack a field trauma rig with sealed canisters and the parts needed to keep a squad upright.",
     requiredRoomId: "room/workshop:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/porters",
     minimumBuildingTier: 5,
     outputItemId: "accessory/trauma-kit",
@@ -220,7 +211,6 @@ export const craftRecipeTemplates = [
     description:
       "Reforge ticker ribbons and trading-coin alloy into a long-handled scythe tuned for trading-floor silhouettes.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "weapon/market-scythe",
@@ -243,7 +233,6 @@ export const craftRecipeTemplates = [
     description:
       "Tailor a trading-floor bespoke suit over pressed ticker tape and a woven spire-residue backing.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "outfit-overlay/exchange-bespoke",
@@ -266,7 +255,6 @@ export const craftRecipeTemplates = [
     description:
       "Core a brass service baton around residence-key alloy and a spire-residue inlay so it enforces tenancy rules on contact.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "weapon/concierge-baton",
@@ -289,7 +277,6 @@ export const craftRecipeTemplates = [
     description:
       "Laminate corridor-glass panels into a heavy plate carrier that routes incoming force along its skybridge lining.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "outfit-overlay/skybridge-carrier",
@@ -312,7 +299,6 @@ export const craftRecipeTemplates = [
     description:
       "Reshape a platform-rail section into a two-handed pike timed to the interchange's express schedule.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "weapon/express-pike",
@@ -335,7 +321,6 @@ export const craftRecipeTemplates = [
     description:
       "Mount corridor-glass lenses in a reinforced frame to resolve commuter formations before they reach the operator.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "accessory/corridor-goggles",
@@ -358,7 +343,6 @@ export const craftRecipeTemplates = [
     description:
       "Rebuild a docent's laser-pointer around a gallery gold-leaf lens and a docent-label stabilizer.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "weapon/curator-stylus",
@@ -381,7 +365,6 @@ export const craftRecipeTemplates = [
     description:
       "Sew a conservator smock from archival linen and docent labels so the wearer inherits a coherent placard on-site.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "outfit-overlay/gallery-smock",
@@ -404,7 +387,6 @@ export const craftRecipeTemplates = [
     description:
       "Forge a spotter's spike from binocular-barrel alloy and altitude resin so it locks onto an updraft signature.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "weapon/altitude-spike",
@@ -427,7 +409,6 @@ export const craftRecipeTemplates = [
     description:
       "Calibrate an in-ear receiver to the observation deck's pressure band so the wearer can navigate shifted verticals.",
     requiredRoomId: "room/fabrication_bay:tier_1",
-    requiredStaffTag: "staff:logistics",
     minimumBuildingId: "building/skyscraper",
     minimumBuildingTier: 1,
     outputItemId: "accessory/altitude-earpiece",

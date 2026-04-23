@@ -135,22 +135,14 @@ function buildScenarioWorldSnapshot(
         rank: operator.combat.rank,
         attunementTag: operator.combat.attunementTag,
         traits: [...operator.combat.traits],
-        kit: {
-          regularAttackId: operator.combat.kit.regularAttackId,
-          skillId: operator.combat.kit.skillId,
-          ultimateId: operator.combat.kit.ultimateId,
-          passiveIds: [...operator.combat.kit.passiveIds],
-        },
+        combatPackageId: operator.combat.combatPackageId,
+        blocks: operator.combat.blocks,
         baseStats: { ...operator.combat.baseStats },
       },
     })),
     operatorRelationships: scenario.operatorRelationships.map((relationship) => ({
       ...relationship,
       historyTags: [...relationship.historyTags],
-    })),
-    staff: scenario.staff.map((staff) => ({
-      ...staff,
-      assignment: { ...staff.assignment },
     })),
     visitors: scenario.visitors.map((visitor) => ({ ...visitor })),
     raidOpportunities: scenario.raidOpportunities.map((opportunity) => ({
@@ -193,6 +185,28 @@ function buildScenarioWorldSnapshot(
             } => entry !== null,
           )
       : [],
+    presenterUnlocks: registry.presenters.flatMap((presenter) => {
+      if (presenter.id === "presenter/assistant") {
+        return [
+          {
+            presenterId: presenter.id,
+            unlockedAtTick: 0,
+            unlockedAtDay: scenario.time.day,
+          },
+        ];
+      }
+
+      return presenter.unlockFromRoomTemplateId &&
+        scenario.rooms.some((room) => room.templateId === presenter.unlockFromRoomTemplateId)
+        ? [
+            {
+              presenterId: presenter.id,
+              unlockedAtTick: scenario.time.tick,
+              unlockedAtDay: scenario.time.day,
+            },
+          ]
+        : [];
+    }),
   } satisfies Phase1RuntimeWorldSnapshot;
 
   return snapshot;

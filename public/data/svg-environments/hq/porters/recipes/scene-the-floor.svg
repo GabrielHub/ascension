@@ -1,0 +1,276 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Floor (Porter's tier 1 public dining room).
+       Grid: 4 cols x 3 rows. Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+       Composition:
+         - Three hardwood dining tables: two 1x1 2-tops (back-left, back-right) and
+           one 1.5x1 communal 4-top centered-front. Top-plane edges align to the iso
+           axes; all uprights are strictly vertical.
+         - Bentwood chairs attached to table edge midpoints with backrests facing
+           outward. 2-tops seat two (W+E diagonal); communal seats four (W/N/E/S).
+         - Place settings (plate, wine glass, candle votive) on each table.
+         - Plants in the north and south-east corners as shell accents.
+         - Milk-glass schoolhouse pendants hang over each table; ceiling fan
+           centered on the room plane. No detached oval drop shadows. -->
+
+  <defs>
+    <!-- ============ CHAIR PRIMITIVES ============
+         Each chair is centered on its seat-top center. Seat top is an iso
+         diamond 24 wide x 12 deep. Three visible legs. Backrest faces one
+         specific iso edge; the variant name encodes which edge. -->
+
+    <!-- chair-w: sits at table's world-west edge, backrest on screen NW edge -->
+    <g id="chair-w">
+      <line x1="11" y1="3" x2="11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="-11" y1="3" x2="-11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
+      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,-6 -12,0 -12,-17 0,-23" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-2,-7 -10,-3 -10,-15 -2,-19" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="0,-23 -12,-17 -13,-18 -1,-24" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
+      <polygon points="-12,-17 -13,-18 -13,-1 -12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+    </g>
+
+    <!-- chair-n: sits at table's world-north edge, backrest on screen NE edge -->
+    <g id="chair-n">
+      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
+      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,-6 12,0 12,-17 0,-23" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="2,-7 10,-3 10,-15 2,-19" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="0,-23 12,-17 13,-18 1,-24" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
+      <polygon points="12,-17 13,-18 13,-1 12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+    </g>
+
+    <!-- chair-s: sits at table's world-south edge, backrest on screen SW edge -->
+    <g id="chair-s">
+      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
+      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 -12,0 -12,-17 0,-11" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-2,5 -10,1 -10,-11 -2,-7" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="-12,-17 0,-11 1,-12 -11,-18" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
+      <polygon points="-12,-17 -11,-18 -11,-1 -12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+    </g>
+
+    <!-- chair-e: sits at table's world-east edge, backrest on screen SE edge -->
+    <g id="chair-e">
+      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
+      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
+      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+      <polygon points="0,6 12,0 12,-17 0,-11" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
+      <polygon points="2,5 10,1 10,-11 2,-7" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="12,-17 0,-11 -1,-12 11,-18" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
+      <polygon points="12,-17 11,-18 11,-1 12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
+    </g>
+
+    <!-- ============ TABLE PRIMITIVES ============
+         Hardwood dining tables, iso-aligned. Top thickness 4, legs strictly
+         vertical down to floor (table height 24). Center = top-center. -->
+
+    <!-- dining-table-2top: 1 tile x 1 tile top, four legs + cross brace -->
+    <g id="dining-table-2top">
+      <!-- Back (hidden) leg, drawn first -->
+      <line x1="0" y1="-24" x2="0" y2="0" stroke="#241810" stroke-width="2"/>
+      <!-- Top thickness underside faces -->
+      <polygon points="-48,0 0,24 0,28 -48,4" fill="#2c2418" stroke="#241810" stroke-width="0.4"/>
+      <polygon points="48,0 0,24 0,28 48,4" fill="#302818" stroke="#241810" stroke-width="0.4"/>
+      <!-- Top face diamond -->
+      <polygon points="0,-24 48,0 0,24 -48,0" fill="#4a3220" stroke="#3a2618" stroke-width="0.7"/>
+      <!-- Lighter edge highlights on back edges -->
+      <line x1="0" y1="-24" x2="-48" y2="0" stroke="rgba(255,235,200,0.12)" stroke-width="0.55"/>
+      <line x1="0" y1="-24" x2="48" y2="0" stroke="rgba(255,235,200,0.08)" stroke-width="0.45"/>
+      <!-- Iso-axis wood grain -->
+      <line x1="-30" y1="-12" x2="24" y2="16" stroke="#3a2618" stroke-width="0.35" opacity="0.32"/>
+      <line x1="-20" y1="-2" x2="20" y2="18" stroke="#3a2618" stroke-width="0.3" opacity="0.26"/>
+      <line x1="-12" y1="6" x2="14" y2="19" stroke="#3a2618" stroke-width="0.25" opacity="0.22"/>
+      <!-- Visible legs + floor anchors -->
+      <line x1="-48" y1="4" x2="-46" y2="24" stroke="#2a1810" stroke-width="2"/>
+      <line x1="48" y1="4" x2="46" y2="24" stroke="#2a1810" stroke-width="2"/>
+      <line x1="0" y1="28" x2="0" y2="48" stroke="#2a1810" stroke-width="2"/>
+      <!-- Cross brace -->
+      <line x1="-46" y1="18" x2="46" y2="18" stroke="#241810" stroke-width="0.55" opacity="0.55"/>
+    </g>
+
+    <!-- dining-table-communal: 1.5 tiles (along c-axis) x 1 tile (along r-axis).
+         Top diamond corners: N(-12,-30) E(60,6) S(12,30) W(-60,-6). -->
+    <g id="dining-table-communal">
+      <!-- Back leg (hidden) -->
+      <line x1="-12" y1="-30" x2="-12" y2="-6" stroke="#241810" stroke-width="2"/>
+      <!-- Top underside faces -->
+      <polygon points="-60,-6 12,30 12,34 -60,-2" fill="#2c2418" stroke="#241810" stroke-width="0.4"/>
+      <polygon points="60,6 12,30 12,34 60,10" fill="#302818" stroke="#241810" stroke-width="0.4"/>
+      <!-- Top face diamond -->
+      <polygon points="-12,-30 60,6 12,30 -60,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.7"/>
+      <!-- Back-edge highlights -->
+      <line x1="-12" y1="-30" x2="-60" y2="-6" stroke="rgba(255,235,200,0.12)" stroke-width="0.55"/>
+      <line x1="-12" y1="-30" x2="60" y2="6" stroke="rgba(255,235,200,0.08)" stroke-width="0.45"/>
+      <!-- Wood grain along iso axes -->
+      <line x1="-42" y1="-18" x2="36" y2="22" stroke="#3a2618" stroke-width="0.35" opacity="0.3"/>
+      <line x1="-30" y1="-6" x2="30" y2="24" stroke="#3a2618" stroke-width="0.3" opacity="0.25"/>
+      <line x1="-18" y1="6" x2="18" y2="25" stroke="#3a2618" stroke-width="0.25" opacity="0.2"/>
+      <!-- Visible legs -->
+      <line x1="-60" y1="-2" x2="-58" y2="18" stroke="#2a1810" stroke-width="2"/>
+      <line x1="60" y1="10" x2="58" y2="30" stroke="#2a1810" stroke-width="2"/>
+      <line x1="12" y1="34" x2="12" y2="54" stroke="#2a1810" stroke-width="2"/>
+      <!-- Cross brace between W and E legs -->
+      <line x1="-58" y1="12" x2="58" y2="24" stroke="#241810" stroke-width="0.55" opacity="0.55"/>
+    </g>
+
+    <!-- ============ DECOR PRIMITIVES ============ -->
+
+    <!-- plate: creamy ceramic with shallow rim -->
+    <g id="plate">
+      <ellipse cx="0" cy="0" rx="7" ry="2.8" fill="#e8e2d4" stroke="#a89c88" stroke-width="0.5"/>
+      <ellipse cx="0" cy="0" rx="5" ry="2" fill="#d8ccb8" stroke="#a89c88" stroke-width="0.3"/>
+      <ellipse cx="0" cy="-0.2" rx="3.2" ry="1.2" fill="rgba(120,80,40,0.2)"/>
+    </g>
+
+    <!-- wineglass: upright crystal with warm highlight -->
+    <g id="wineglass">
+      <ellipse cx="0" cy="0" rx="2.4" ry="1" fill="rgba(200,220,235,0.28)" stroke="rgba(170,200,215,0.45)" stroke-width="0.3"/>
+      <polygon points="-2.3,0 2.3,0 1.9,5 -1.9,5" fill="rgba(200,220,235,0.22)" stroke="rgba(170,200,215,0.4)" stroke-width="0.3"/>
+      <ellipse cx="0" cy="0" rx="1.8" ry="0.6" fill="rgba(170,200,215,0.5)"/>
+      <line x1="0" y1="5" x2="0" y2="8.5" stroke="rgba(170,200,215,0.5)" stroke-width="0.5"/>
+      <ellipse cx="0" cy="8.8" rx="1.5" ry="0.5" fill="rgba(170,200,215,0.35)" stroke="rgba(170,200,215,0.5)" stroke-width="0.3"/>
+    </g>
+
+    <!-- candle-votive: amber glass jar with tiny flame -->
+    <g id="candle-votive">
+      <ellipse cx="0" cy="3.5" rx="2.6" ry="1" fill="#7a5424" stroke="#3a2412" stroke-width="0.3"/>
+      <polygon points="-2.6,-0.3 2.6,-0.3 2.6,3.5 -2.6,3.5" fill="#c8904c" stroke="#3a2412" stroke-width="0.3"/>
+      <polygon points="-2,-0.3 2,-0.3 2,3 -2,3" fill="#e8b868" opacity="0.55"/>
+      <ellipse cx="0" cy="-0.3" rx="2.6" ry="1" fill="#5a3a18" stroke="#3a2412" stroke-width="0.3"/>
+      <ellipse cx="0" cy="-0.3" rx="1.6" ry="0.6" fill="rgba(40,22,10,0.9)"/>
+      <ellipse cx="0" cy="-1.6" rx="0.7" ry="1.6" fill="#ffd66a" opacity="0.92"/>
+      <ellipse cx="0" cy="-1.4" rx="0.4" ry="0.9" fill="#fff4b8"/>
+    </g>
+
+    <!-- ============ STRUCTURAL ACCENTS (walls-adjacent, iso-aligned) ============ -->
+
+    <!-- potted-plant: terracotta pot with leafy fern -->
+    <g id="potted-plant">
+      <!-- Pot footprint diamond + sides -->
+      <polygon points="-10,6 0,12 10,6 0,0" fill="#7a3a1c" stroke="#3e1d0e" stroke-width="0.5"/>
+      <polygon points="-10,-2 0,4 0,0 -10,-4 -10,-2 -10,-2" fill="#6a3218" stroke="#3e1d0e" stroke-width="0.5"/>
+      <polygon points="-10,-2 0,4 10,-2 0,-8" fill="#9a4e26" stroke="#4e230e" stroke-width="0.5"/>
+      <polygon points="-10,-2 0,4 0,12 -10,6" fill="#5c2a14" stroke="#3e1d0e" stroke-width="0.4"/>
+      <polygon points="0,4 10,-2 10,6 0,12" fill="#7c3a1c" stroke="#3e1d0e" stroke-width="0.4"/>
+      <!-- Soil ring -->
+      <ellipse cx="0" cy="-4.2" rx="8" ry="3" fill="#2a1a0e" stroke="#150a04" stroke-width="0.3"/>
+      <!-- Leaves -->
+      <path d="M 0 -5 C -9 -16, -18 -14, -14 -2 C -6 -8, -2 -8, 0 -5" fill="#4e8046" stroke="#244c24" stroke-width="0.5"/>
+      <path d="M 0 -5 C 9 -16, 18 -14, 14 -2 C 6 -8, 2 -8, 0 -5" fill="#548a4c" stroke="#244c24" stroke-width="0.5"/>
+      <path d="M 0 -6 C -6 -22, 0 -28, 4 -14 C 2 -10, -2 -8, 0 -6" fill="#5e9454" stroke="#2a5228" stroke-width="0.4"/>
+      <path d="M 0 -6 C 8 -22, 14 -18, 10 -8 C 4 -12, 2 -8, 0 -6" fill="#6aa460" opacity="0.85"/>
+      <path d="M -2 -8 C -10 -20, -4 -26, 2 -18" fill="#70ae64" opacity="0.75"/>
+    </g>
+
+    <!-- pendant-milkglass: corded schoolhouse fixture with warm glow.
+         Cord hangs from y=-38 (ceiling) to y=-12 (socket).
+         Anchor y=0 is where the glass hits. -->
+    <g id="pendant-milkglass">
+      <line x1="0" y1="-38" x2="0" y2="-12" stroke="#2f2117" stroke-width="1.2"/>
+      <ellipse cx="0" cy="-12" rx="2.6" ry="1.1" fill="#7a5a2e" stroke="#3a2512" stroke-width="0.4"/>
+      <polygon points="-2.6,-12 2.6,-12 2.3,-9 -2.3,-9" fill="#5a3e1a" stroke="#3a2512" stroke-width="0.3"/>
+      <ellipse cx="0" cy="-4" rx="8.5" ry="5" fill="#f4ead0" stroke="#b89a5a" stroke-width="0.5"/>
+      <ellipse cx="0" cy="-5" rx="6.5" ry="3" fill="#ffdfa0" opacity="0.72"/>
+      <ellipse cx="-2.5" cy="-5.5" rx="2.2" ry="1.1" fill="rgba(255,255,255,0.55)"/>
+      <ellipse cx="0" cy="-0.2" rx="6" ry="2" fill="#e8d8a8" stroke="#b89a5a" stroke-width="0.3"/>
+    </g>
+
+    <!-- ceiling-fan: iso-correct ellipse motor housing + 4 blades.
+         Rendered top-z, sits above the pendants. -->
+    <g id="ceiling-fan">
+      <line x1="0" y1="-24" x2="0" y2="-4" stroke="#2a2014" stroke-width="1.2"/>
+      <ellipse cx="0" cy="-3" rx="5" ry="2.2" fill="#3a2a18" stroke="#1e1408" stroke-width="0.5"/>
+      <ellipse cx="0" cy="-3.8" rx="4" ry="1.5" fill="#5a4228" stroke="#1e1408" stroke-width="0.3"/>
+      <!-- Blades along iso axes: +c, -c, +r, -r -->
+      <polygon points="0,-3 36,12 38,15 2,0" fill="#6c4a2c" stroke="#2a1a0e" stroke-width="0.4"/>
+      <polygon points="0,-3 -36,12 -38,15 -2,0" fill="#5a3a22" stroke="#2a1a0e" stroke-width="0.4"/>
+      <polygon points="0,-3 36,-18 38,-15 2,0" fill="#7e5a34" stroke="#3a2514" stroke-width="0.4"/>
+      <polygon points="0,-3 -36,-18 -38,-15 -2,0" fill="#6a4828" stroke="#2a1a0e" stroke-width="0.4"/>
+      <circle cx="0" cy="-3" r="1.2" fill="#2a1810" stroke="#1e1408" stroke-width="0.3"/>
+    </g>
+  </defs>
+
+  <!-- ====================================================================
+       SCENE LAYOUT (painter's algorithm: back-most first, front-most last).
+       Room footprint 4 cols x 3 rows, origin (200,100).
+       Table centers:
+         Table A (2-top): c=0.8, r=1.0 -> iso (190,143)
+         Table B (2-top): c=3.2, r=1.0 -> iso (306,201)
+         Table C (communal 1.5x1): c=2.0, r=2.0 -> iso (200,196)
+       ==================================================================== -->
+
+  <!-- North-corner potted plant (c=0.25, r=0.5) -> (188,118) -->
+  <use href="#potted-plant" x="188" y="118"/>
+
+  <!-- TABLE A CLUSTER: 2-top, back-left, seats 2 (W + E) -->
+  <g>
+    <use href="#chair-w" x="162" y="131"/>
+    <use href="#dining-table-2top" x="190" y="143"/>
+    <use href="#plate" x="172" y="138"/>
+    <use href="#plate" x="208" y="148"/>
+    <use href="#wineglass" x="178" y="134"/>
+    <use href="#wineglass" x="214" y="144"/>
+    <use href="#candle-votive" x="190" y="143"/>
+    <use href="#chair-e" x="212" y="163"/>
+  </g>
+
+  <!-- West-corner potted plant (c=0.4, r=2.6) -> (95,172) -->
+  <use href="#potted-plant" x="95" y="172"/>
+
+  <!-- TABLE C CLUSTER: communal, center-front, seats 4 (W, N, E, S) -->
+  <g>
+    <use href="#chair-w" x="160" y="178"/>
+    <use href="#chair-n" x="226" y="184"/>
+    <use href="#dining-table-communal" x="200" y="196"/>
+    <use href="#plate" x="180" y="192"/>
+    <use href="#plate" x="220" y="200"/>
+    <use href="#plate" x="208" y="183"/>
+    <use href="#plate" x="192" y="209"/>
+    <use href="#wineglass" x="186" y="188"/>
+    <use href="#wineglass" x="226" y="196"/>
+    <use href="#wineglass" x="214" y="179"/>
+    <use href="#wineglass" x="198" y="205"/>
+    <use href="#candle-votive" x="200" y="196"/>
+    <use href="#chair-s" x="176" y="209"/>
+    <use href="#chair-e" x="240" y="216"/>
+  </g>
+
+  <!-- TABLE B CLUSTER: 2-top, back-right, seats 2 (W + E) -->
+  <g>
+    <use href="#chair-w" x="278" y="189"/>
+    <use href="#dining-table-2top" x="306" y="201"/>
+    <use href="#plate" x="288" y="196"/>
+    <use href="#plate" x="324" y="206"/>
+    <use href="#wineglass" x="294" y="192"/>
+    <use href="#wineglass" x="330" y="202"/>
+    <use href="#candle-votive" x="306" y="201"/>
+    <use href="#chair-e" x="328" y="221"/>
+  </g>
+
+  <!-- South-corner potted plant (c=3.7, r=2.7) -> (248,254) -->
+  <use href="#potted-plant" x="248" y="254"/>
+
+  <!-- Ceiling elements, drawn last so they overlap table/chair tops when tall -->
+  <use href="#pendant-milkglass" x="190" y="77"/>
+  <use href="#pendant-milkglass" x="200" y="130"/>
+  <use href="#pendant-milkglass" x="306" y="135"/>
+  <use href="#ceiling-fan" x="248" y="88"/>
+</svg>

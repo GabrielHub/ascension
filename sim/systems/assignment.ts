@@ -11,7 +11,6 @@ import {
   RaidParticipationState,
   RoomInstance,
   ScheduleState,
-  StaffState,
 } from "../components";
 import {
   getCurrentAbsoluteMinute,
@@ -187,7 +186,7 @@ function chooseOperatorBlock(
   if (
     preferred === "social" &&
     !hasOperationalRoomForFunction(context, "room:social") &&
-    !hasOperationalRoomForFunction(context, "room:staffing")
+    !hasOperationalRoomForFunction(context, "room:logistics")
   ) {
     return inShift ? "work" : "rest";
   }
@@ -212,26 +211,6 @@ export const reconcileAssignmentsSystem: SimSystem = (context) => {
       .filter((entity) => OperatorIdentity.lifecycleStatus[entity] === "active")
       .map((entity) => OperatorIdentity.id[entity]),
   );
-
-  context.runtimeState.staffEntities.forEach((entity) => {
-    const workStartMinute = ScheduleState.workStartMinute[entity] || 480;
-    const workEndMinute = ScheduleState.workEndMinute[entity] || 1080;
-
-    if (shouldForceRecovery(context, entity)) {
-      ScheduleState.currentBlock[entity] = "recovery";
-      StaffState.status[entity] = "recovering";
-      return;
-    }
-
-    ScheduleState.currentBlock[entity] =
-      localMinute >= workStartMinute && localMinute < workEndMinute ? "work" : "rest";
-    StaffState.status[entity] =
-      AssignmentState.kind[entity] === "room"
-        ? "assigned"
-        : ScheduleState.currentBlock[entity] === "work"
-          ? "available"
-          : "off_shift";
-  });
 
   context.runtimeState.operatorEntities.forEach((entity) => {
     if (OperatorIdentity.lifecycleStatus[entity] === "dead") {

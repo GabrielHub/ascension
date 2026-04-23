@@ -106,7 +106,7 @@ function getAnchorKindsForRoom(functionTag: string): NavAnchorKind[] {
     case "room:training":
     case "room:operations":
       return ["work", "idle", "work"];
-    case "room:staffing":
+    case "room:logistics":
       return ["work", "idle", "social"];
     default:
       return ["idle", "work", "social"];

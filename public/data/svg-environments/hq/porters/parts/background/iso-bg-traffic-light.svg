@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 210">
+  <!-- NYC mast-arm traffic signal. Pole with curved gooseneck arm
+       and signal head hanging from end. 2:1 isometric.
+       Anchor: pole base at (24, 205). -->
+
+  <!-- Pole base shadow -->
+  <ellipse cx="24" cy="206" rx="12" ry="3.5" fill="rgba(0,0,0,0.2)"/>
+
+  <!-- Main pole -->
+  <rect x="21" y="42" width="6" height="160" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+
+  <!-- Base plate -->
+  <rect x="14" y="198" width="20" height="6" rx="1" fill="#3a3838" stroke="#2a2a2a" stroke-width="0.5"/>
+  <rect x="16" y="202" width="16" height="4" rx="1" fill="#2e2e2e"/>
+
+  <!-- Decorative collar -->
+  <rect x="19" y="55" width="10" height="4" rx="1" fill="#2e2e2e" opacity="0.5"/>
+
+  <!-- Gooseneck arm curving out to the right -->
+  <path d="M24,48 C24,38 32,32 44,28 L58,22"
+    stroke="#3a3838" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Signal head support wire -->
+  <line x1="54" y1="24" x2="54" y2="38" stroke="#3a3838" stroke-width="1.8"/>
+
+  <!-- ═══ Signal head — isometric box ═══ -->
+  <!-- Left face (front, shows lights) — slope +0.5 along top -->
+  <polygon points="42,34 58,42 58,72 42,64"
+    fill="#1e1e1e" stroke="#2a2a2a" stroke-width="0.8"/>
+
+  <!-- Right face (side) — slope -0.5 along top -->
+  <polygon points="58,42 64,39 64,69 58,72"
+    fill="#161616" stroke="#1e1e1e" stroke-width="0.5"/>
+
+  <!-- Top face -->
+  <polygon points="42,34 58,42 64,39 48,31"
+    fill="#2a2a2a" stroke="#222" stroke-width="0.5"/>
+
+  <!-- Signal hood (visor extending from top) -->
+  <polygon points="40,32 58,41 58,43 40,34"
+    fill="#2e2e2e" stroke="#252525" stroke-width="0.4"/>
+
+  <!-- Red light (top) -->
+  <ellipse cx="49" cy="41" rx="4" ry="3.5" fill="#2a1414" stroke="#1e1010" stroke-width="0.4"/>
+  <ellipse cx="49" cy="41" rx="2.5" ry="2" fill="#7a2020" opacity="0.6"/>
+
+  <!-- Yellow light (middle) -->
+  <ellipse cx="49" cy="51" rx="4" ry="3.5" fill="#2a2414" stroke="#1e1a10" stroke-width="0.4"/>
+  <ellipse cx="49" cy="51" rx="2.5" ry="2" fill="#6a5a18" opacity="0.35"/>
+
+  <!-- Green light (bottom) -->
+  <ellipse cx="49" cy="61" rx="4" ry="3.5" fill="#142a1a" stroke="#102018" stroke-width="0.4"/>
+  <ellipse cx="49" cy="61" rx="2.5" ry="2" fill="#1a5a28" opacity="0.35"/>
+
+  <!-- Subtle active-light glow (red is "on") -->
+  <ellipse cx="49" cy="41" rx="6" ry="5" fill="rgba(120,30,30,0.12)"/>
+
+  <!-- Second signal head (facing perpendicular, further back on arm) -->
+  <!-- This smaller head faces the side street -->
+  <g opacity="0.7">
+    <!-- Right face (visible side for perpendicular signal) -->
+    <polygon points="36,28 44,24 44,48 36,52"
+      fill="#1a1a1a" stroke="#222" stroke-width="0.5"/>
+    <!-- Left face (partially visible) -->
+    <polygon points="30,31 36,28 36,52 30,55"
+      fill="#1e1e1e" stroke="#222" stroke-width="0.4"/>
+    <!-- Top -->
+    <polygon points="30,31 36,28 44,24 38,27"
+      fill="#252525" stroke="#222" stroke-width="0.3"/>
+  </g>
+</svg>

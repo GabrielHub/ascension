@@ -5,7 +5,7 @@ import type { RankTone } from "./shared";
  * A site concept determines what the place is; a mission determines what you do there.
  */
 
-export type ContractRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
+export type ContractRank = "f" | "e" | "d" | "c" | "b" | "a" | "u";
 
 export interface SiteConceptTheme {
   accentPalette: "sewer" | "concrete" | "garden" | "aquatic" | "dust" | "neon" | "rust" | "glass";

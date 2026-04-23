@@ -23,6 +23,14 @@ const request = {
     buildingName: "Bodega HQ",
     dayNumber: 2,
     minuteOfDay: 600,
+    presenter: {
+      id: "presenter/assistant",
+      name: "Mara Cordero",
+      roleTitle: "Assistant",
+      voiceBrief: "Matter-of-fact, calm, grounded in operations.",
+      domainSummary: "Contracts, operations, and campaign guidance.",
+      expression: "concerned",
+    },
     subjectSummary: "Rose Vega, Milo Hart",
     operators: [],
     choices: [

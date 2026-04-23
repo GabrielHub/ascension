@@ -4,11 +4,10 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_POLICY_STATE } from "lib/policies";
 
 import { RosterPanel } from "./roster-panel";
-import type { GameCallbacks, OperatorViewModel } from "./view-models";
+import type { OperatorViewModel } from "./view-models";
 
 function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): OperatorViewModel {
   return {
-    id: overrides.id,
     name: "Test",
     roleTag: "role:bruiser",
     specialtyTag: "focus:frontline",
@@ -36,10 +35,8 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
       rank: "f",
       attunementTag: "attunement:kinetic",
       traits: ["trait:steady"],
-      regularAttackId: "kit/basic-strike",
-      skillId: "kit/field-lead-skill",
-      ultimateId: "kit/field-lead-ultimate",
-      passiveIds: ["kit/field-lead-passive"],
+      combatPackageId: "package/field-lead/kinetic/standard",
+      blocks: 0,
       baseStats: {
         strength: 10,
         speed: 8,
@@ -73,34 +70,6 @@ function makeOperator(overrides: Partial<OperatorViewModel> & { id: string }): O
   };
 }
 
-const callbacks: GameCallbacks = {
-  tick: () => {},
-  setRoomActive: () => {},
-  setPolicy: () => {},
-  setLootFilterEnabled: () => {},
-  initiateRelocation: () => {},
-  purchaseBuildingUpgrade: () => {},
-  purchaseRoomUpgrade: () => {},
-  acceptRecruit: () => {},
-  deferRecruit: () => {},
-  rejectRecruit: () => {},
-  replaceRecruit: () => {},
-  dismissRecruit: () => {},
-  hireStaff: () => {},
-  assignStaff: () => {},
-  placeRoom: () => {},
-  setActiveFloor: () => {},
-  buyItem: () => {},
-  sellItem: () => {},
-  equipItem: () => {},
-  autoAssignAccessory: () => {},
-  unequipItem: () => {},
-  bidContract: () => {},
-  advanceContract: () => {},
-  prepConsumable: () => {},
-  craftDurable: () => {},
-};
-
 describe("roster panel", () => {
   it("separates fallen operators and surfaces vacancy pressure banners", () => {
     const html = renderToStaticMarkup(
@@ -117,9 +86,7 @@ describe("roster panel", () => {
             },
           }),
         ]}
-        staff={[]}
         visitors={[]}
-        callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 2,
           livingOperatorCount: 1,
@@ -145,7 +112,6 @@ describe("roster panel", () => {
     const html = renderToStaticMarkup(
       <RosterPanel
         operators={[makeOperator({ id: "operator/active", name: "Active" })]}
-        staff={[]}
         visitors={[
           {
             id: "visitor/test",
@@ -171,7 +137,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 1,
           livingOperatorCount: 1,
@@ -210,7 +175,6 @@ describe("roster panel", () => {
             availableForRaid: false,
           }),
         ]}
-        staff={[]}
         visitors={[
           {
             id: "visitor/selective",
@@ -236,7 +200,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 2,
           livingOperatorCount: 1,
@@ -268,51 +231,10 @@ describe("roster panel", () => {
     expect(html).not.toContain("Visitor volume is lower than usual.");
   });
 
-  it("renders staff rows as cascade-entry buttons without inline assignment expanders", () => {
-    const html = renderToStaticMarkup(
-      <RosterPanel
-        operators={[]}
-        staff={[
-          {
-            id: "staff/a",
-            name: "Alina",
-            roleTag: "staff:medical",
-            status: "idle",
-            wage: 80,
-            assignmentKind: "idle",
-            assignmentTargetId: "",
-          },
-        ]}
-        visitors={[]}
-        callbacks={callbacks}
-        rosterPressure={{
-          operatorCapacity: 1,
-          livingOperatorCount: 0,
-          vacancyCount: 1,
-          deferredVisitorCapacity: 1,
-          unavailableOperatorIds: [],
-          recentDeathOperatorIds: [],
-          replacementPressureLevel: "stable",
-        }}
-        policies={DEFAULT_POLICY_STATE}
-        onSelectStaff={() => {}}
-        onOpenHireStaff={() => {}}
-      />,
-    );
-
-    expect(html).toContain('data-testid="staff-row"');
-    expect(html).toContain('data-staff-id="staff/a"');
-    expect(html).toContain('data-testid="staff-open-hire"');
-    // Assignment picker / unassign lives in the staff cascade branch, not inline.
-    expect(html).not.toContain(">unassign<");
-    expect(html).not.toContain("/day");
-  });
-
   it("renders deferred reserve rows as plain cascade entries", () => {
     const html = renderToStaticMarkup(
       <RosterPanel
         operators={[makeOperator({ id: "operator/active", name: "Active" })]}
-        staff={[]}
         visitors={[
           {
             id: "visitor/deferred",
@@ -338,7 +260,6 @@ describe("roster panel", () => {
             replaceLockedReason: null,
           },
         ]}
-        callbacks={callbacks}
         rosterPressure={{
           operatorCapacity: 1,
           livingOperatorCount: 1,

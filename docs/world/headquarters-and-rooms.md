@@ -76,6 +76,7 @@ The guild's second headquarters is Porter's: a neighborhood bar and restaurant o
 - A dining room that feels lived in, not curated.
 - A bar that is loud, public, and useful as a recruitment funnel.
 - Upstairs rooms that still remember they used to be apartments.
+- A machine-shop conversion by the water that makes the workshop feel earned instead of generic.
 - Harbor air, industrial skyline, and the feeling that the city is broader here than on the bodega block.
 
 ### Porter's Room Direction
@@ -87,6 +88,7 @@ Porter's is the first headquarters tier where functions meaningfully separate.
 - Training unlocks here for the first time.
 - Dedicated recovery unlocks here for the first time.
 - Lightweight consumable prep and proper staging can live in a dedicated room here without turning the building into a full workshop tier.
+- The Workshop sits behind the dock once the machine-shop conversion is complete and is Porter's first true fabrication space.
 
 ### Porter's Exterior By Time Of Day
 

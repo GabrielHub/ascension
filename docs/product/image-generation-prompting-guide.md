@@ -14,7 +14,7 @@ Use this guide when generating raster images for:
 
 - narrative presenter portraits
 - future prestige-tier portraits or promo art
-- future S-rank item hero renders
+- future Unique (`U`) item hero renders
 - future boss concept sheets or non-runtime raster concept work
 
 Do **not** use this guide to replace:
@@ -161,8 +161,8 @@ Defaults:
 
 Use for:
 
-- S-rank operator hero portraits
-- S-rank gear hero renders
+- Unique (`U`) operator hero portraits
+- Unique (`U`) gear hero renders
 - prestige boss concept art
 
 Defaults:
@@ -297,5 +297,5 @@ Current planned users:
 Future likely users:
 
 - prestige portrait work
-- S-rank hero assets
+- Unique (`U`) hero assets
 - future raster concept families that need consistent prompting discipline
