@@ -88,12 +88,13 @@ describe("template registry", () => {
     });
   });
 
-  it("validates rival draft metadata and shipped asset paths", () => {
+  it("validates rival draft metadata, status contracts, and shipped asset paths", () => {
     expect(validateRivalDrafts()).toEqual([]);
 
     rivalDrafts
-      .filter((rival) => rival.assetsShipped)
+      .filter((rival) => rival.status === "ready-to-wire")
       .forEach((rival) => {
+        expect(rival.assetsShipped).toBe(true);
         expect(
           existsSync(resolve(process.cwd(), "public", rival.assetPaths.leaderPortrait.slice(1))),
         ).toBe(true);
