@@ -18,7 +18,6 @@ describe("dev console", () => {
             initiateRelocation: vi.fn(),
             placeRoom: vi.fn(),
             setActiveFloor: vi.fn(),
-            setRoomActive: vi.fn(),
             setPolicy: vi.fn(),
             setLootFilter: vi.fn(),
             purchaseBuildingUpgrade: vi.fn(),
@@ -28,8 +27,6 @@ describe("dev console", () => {
             rejectRecruit: vi.fn(),
             replaceRecruit: vi.fn(),
             dismissRecruit: vi.fn(),
-            hireStaff: vi.fn(),
-            assignStaff: vi.fn(),
             buyItem: vi.fn(),
             sellItem: vi.fn(),
             equipItem: vi.fn(),
@@ -62,7 +59,7 @@ describe("dev console", () => {
           },
           registry: templateRegistry,
           state: { hqWorldSnapshot: null },
-          worldSnapshot: { staff: [], activeRaidPackets: [] },
+          worldSnapshot: { activeRaidPackets: [] },
         }}
         onClose={() => {}}
         debugOverlays={{

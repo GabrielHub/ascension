@@ -1,7 +1,7 @@
 import type { World } from "bitecs";
 
 import type { TemplateRegistry } from "content/templates";
-import type { KitTemplateRegistry } from "content/templates/kits";
+import type { CombatPackageRegistry } from "content/templates/combat-packages";
 import type { RuntimeCueId } from "lib/runtime-cues";
 import type { CityState } from "../components/city-state";
 import type { BossEncounterInstance } from "./encounter-types";
@@ -110,7 +110,6 @@ export interface SimRuntimeState {
   roomEntities: number[];
   operatorEntities: number[];
   raidOpportunityEntities: number[];
-  staffEntities: number[];
   visitorEntities: number[];
   eventEntities: number[];
   dispositionEntities: number[];
@@ -122,7 +121,6 @@ export interface SimRuntimeState {
   nextRoomSequence: number;
   nextOperatorSequence: number;
   nextOpportunitySequence: number;
-  nextStaffSequence: number;
   nextVisitorSequence: number;
   nextRaidSequence: number;
   nextEventSequence: number;
@@ -135,10 +133,17 @@ export interface SimRuntimeState {
   interruptionQueue: InterruptionQueueState;
   incidentState: IncidentState;
   guidanceState: GuidanceState;
-  kitRegistry: KitTemplateRegistry;
+  combatPackageRegistry: CombatPackageRegistry;
   worldTimeFrozen: boolean;
   deferIncidentPresentation: boolean;
   cityState: CityState;
+  presenterUnlocks: PresenterUnlockState[];
+}
+
+export interface PresenterUnlockState {
+  presenterId: string;
+  unlockedAtTick: number;
+  unlockedAtDay: number;
 }
 
 export type VisitorQueueState = "active" | "deferred";

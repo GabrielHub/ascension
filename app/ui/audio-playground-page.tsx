@@ -26,10 +26,6 @@ const CATEGORY_META: Record<string, { title: string; subtitle: string }> = {
     title: "Room Cues",
     subtitle: "Room placement and state changes",
   },
-  staff: {
-    title: "Staff Cues",
-    subtitle: "Staff hiring and assignment feedback",
-  },
   operator: {
     title: "Operator Cues",
     subtitle: "Operator recruitment and roster events",
@@ -44,14 +40,7 @@ const CATEGORY_META: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-const CATEGORY_ORDER: readonly AudioCueCategory[] = [
-  "hq",
-  "room",
-  "staff",
-  "operator",
-  "raid",
-  "event",
-];
+const CATEGORY_ORDER: readonly AudioCueCategory[] = ["hq", "room", "operator", "raid", "event"];
 const DEFAULT_SFX_VOLUME = -6;
 const DEFAULT_MUSIC_VOLUME = -12;
 

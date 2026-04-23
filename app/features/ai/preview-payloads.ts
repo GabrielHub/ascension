@@ -15,13 +15,24 @@ type PendingIncident = NonNullable<
 
 interface PreviewIncidentSource extends Pick<
   PendingIncident,
-  "instanceId" | "templateId" | "templateName" | "category" | "tags" | "triggerFamily" | "choices"
+  | "instanceId"
+  | "templateId"
+  | "templateName"
+  | "category"
+  | "tags"
+  | "triggerFamily"
+  | "choices"
+  | "presenterId"
+  | "presenterExpression"
 > {
   boundContext: {
     operatorIds: string[];
     roomId?: string;
   };
 }
+
+const FALLBACK_PRESENTER_ID = "presenter/assistant";
+const FALLBACK_PRESENTER_EXPRESSION = "concerned";
 
 function getOperatorIdentityMaxRarity(quality: number): "common" | "uncommon" | "rare" {
   if (quality >= 82) return "rare";
@@ -173,6 +184,28 @@ export function buildIncidentFramingPayload(
       ? phase2View.roomCultures.find((entry) => entry.roomId === source.boundContext.roomId)
       : undefined;
 
+  const presenterId = source.presenterId ?? FALLBACK_PRESENTER_ID;
+  const presenterTemplate =
+    session.registry.presenterById.get(presenterId) ??
+    session.registry.presenterById.get(FALLBACK_PRESENTER_ID);
+  if (!presenterTemplate) {
+    throw new Error(
+      `buildIncidentFramingPayload: presenter "${presenterId}" not found in registry and fallback "${FALLBACK_PRESENTER_ID}" is missing`,
+    );
+  }
+  const presenterExpression =
+    source.presenterExpression ??
+    presenterTemplate.defaultExpression ??
+    FALLBACK_PRESENTER_EXPRESSION;
+  const presenter = {
+    id: presenterTemplate.id,
+    name: presenterTemplate.name,
+    roleTitle: presenterTemplate.roleTitle,
+    voiceBrief: presenterTemplate.voiceBrief,
+    domainSummary: presenterTemplate.domainSummary,
+    expression: presenterExpression,
+  };
+
   return {
     incidentId: source.instanceId,
     templateId: source.templateId,
@@ -185,6 +218,7 @@ export function buildIncidentFramingPayload(
     buildingName: pv.building.activeBuildingName,
     dayNumber: pv.clock.day,
     minuteOfDay: pv.clock.minuteOfDay,
+    presenter,
     subjectSummary: source.boundContext.operatorIds
       .map((operatorId) => operatorsById.get(operatorId)?.identity.name ?? operatorId)
       .concat(room ? [room.name] : [])
@@ -227,9 +261,7 @@ export function buildIncidentFramingPayload(
             name: room.name,
             templateId: room.templateId,
             functionTag:
-              roomTemplate?.tags.find((tag) => tag.startsWith("room:")) ??
-              room.requiredStaffTag ??
-              room.templateId,
+              roomTemplate?.tags.find((tag) => tag.startsWith("room:")) ?? room.templateId,
             ...(roomCulture ? { cultureSummary: roomCulture.summary } : {}),
             ...(roomCulture && roomCulture.signals.length > 0
               ? { cultureSignals: [...roomCulture.signals] }
@@ -264,6 +296,8 @@ export function buildIncidentFramingPreviewPayload(
     category: "personnel_conflict",
     tags: ["conflict", "morale", origin.originTag],
     triggerFamily: "operator_conflict",
+    presenterId: FALLBACK_PRESENTER_ID,
+    presenterExpression: FALLBACK_PRESENTER_EXPRESSION,
     boundContext: {
       operatorIds: [primaryOperator?.id, secondaryOperator?.id].filter(
         (operatorId): operatorId is string => Boolean(operatorId),

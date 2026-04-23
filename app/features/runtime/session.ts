@@ -163,9 +163,6 @@ export interface RuntimeSessionCommands {
   setActiveFloor(
     input: Omit<Extract<SimCommand, { type: "sim/set-active-floor" }>, "type">,
   ): Promise<void>;
-  setRoomActive(
-    input: Omit<Extract<SimCommand, { type: "sim/set-room-active" }>, "type">,
-  ): Promise<void>;
   setPolicy(input: Omit<Extract<SimCommand, { type: "sim/set-policy" }>, "type">): Promise<void>;
   setLootFilter(
     input: Omit<Extract<SimCommand, { type: "sim/set-loot-filter" }>, "type">,
@@ -190,10 +187,6 @@ export interface RuntimeSessionCommands {
   ): Promise<void>;
   dismissRecruit(
     input: Omit<Extract<SimCommand, { type: "sim/dismiss-recruit" }>, "type">,
-  ): Promise<void>;
-  hireStaff(input: Omit<Extract<SimCommand, { type: "sim/hire-staff" }>, "type">): Promise<void>;
-  assignStaff(
-    input: Omit<Extract<SimCommand, { type: "sim/assign-staff" }>, "type">,
   ): Promise<void>;
   buyItem(input: Omit<Extract<SimCommand, { type: "sim/buy-item" }>, "type">): Promise<void>;
   sellItem(input: Omit<Extract<SimCommand, { type: "sim/sell-item" }>, "type">): Promise<void>;
@@ -420,15 +413,6 @@ function resolveCuesForCommand(
     case "sim/place-room": {
       return afterPhase1View.rooms.length > beforePhase1View.rooms.length ? ["room.place"] : [];
     }
-    case "sim/set-room-active": {
-      const previousRoom = beforePhase1View.rooms.find((room) => room.id === command.roomId);
-      const nextRoom = afterPhase1View.rooms.find((room) => room.id === command.roomId);
-      if (!previousRoom || !nextRoom || previousRoom.isOperational === nextRoom.isOperational) {
-        return [];
-      }
-
-      return [nextRoom.isOperational ? "room.activate" : "room.deactivate"];
-    }
     case "sim/accept-recruit": {
       const previousOperatorCount = beforePhase1View.operators.filter(
         (operator) => operator.lifecycle.status === "active",
@@ -448,25 +432,6 @@ function resolveCuesForCommand(
       return previousVisitor?.queueState === "active" && nextVisitor?.queueState === "deferred"
         ? ["hq.dismiss"]
         : [];
-    }
-    case "sim/hire-staff": {
-      return afterWorldSnapshot.staff.length > beforeWorldSnapshot.staff.length
-        ? ["staff.hire"]
-        : [];
-    }
-    case "sim/assign-staff": {
-      const previousStaff = beforeWorldSnapshot.staff.find((staff) => staff.id === command.staffId);
-      const nextStaff = afterWorldSnapshot.staff.find((staff) => staff.id === command.staffId);
-      if (
-        !previousStaff ||
-        !nextStaff ||
-        (previousStaff.assignment.kind === nextStaff.assignment.kind &&
-          previousStaff.assignment.targetId === nextStaff.assignment.targetId)
-      ) {
-        return [];
-      }
-
-      return ["staff.assign"];
     }
     case "sim/purchase-building-upgrade": {
       return afterWorldSnapshot.appliedUpgradeIds.length >
@@ -802,12 +767,13 @@ function createRuntimeSession(
   type StageBounds = { x: number; y: number; width: number; height: number };
   type RoomOccupants = {
     operatorIds: string[];
-    staffIds: string[];
     visitorIds: string[];
+    presenterIds: string[];
   };
 
   type RoomEntry = {
     id: string;
+    templateId: string;
     floorIndex: number;
     slotId: string;
     roomStateId: string;
@@ -962,8 +928,8 @@ function createRuntimeSession(
     const actorIds =
       actorKind === "operator"
         ? (roomOccupants?.operatorIds ?? [])
-        : actorKind === "staff"
-          ? (roomOccupants?.staffIds ?? [])
+        : actorKind === "presenter"
+          ? (roomOccupants?.presenterIds ?? [])
           : (roomOccupants?.visitorIds ?? []);
     const actorIndex = Math.max(0, actorIds.indexOf(actorId));
     const actorCount = Math.max(1, actorIds.length);
@@ -983,35 +949,23 @@ function createRuntimeSession(
     const positions = room.allTags.includes("ops:recruitment")
       ? actorKind === "visitor"
         ? createQueueStagePositions(reservedFloorBounds, actorCount)
-        : actorKind === "staff"
-          ? createGridStagePositions(
-              insetBounds(activeBounds, {
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: Math.max(18, Math.round(activeBounds.height * 0.45)),
-              }),
-              actorCount,
-              Math.min(2, actorCount),
-              0.25,
-            )
-          : createGridStagePositions(
-              insetBounds(reservedFloorBounds, {
-                left: 16,
-                right: 16,
-                top: 10,
-                bottom: Math.max(18, Math.round(reservedFloorBounds.height * 0.3)),
-              }),
-              actorCount,
-              Math.min(2, actorCount),
-              0.4,
-            )
+        : createGridStagePositions(
+            insetBounds(reservedFloorBounds, {
+              left: 16,
+              right: 16,
+              top: 10,
+              bottom: Math.max(18, Math.round(reservedFloorBounds.height * 0.3)),
+            }),
+            actorCount,
+            Math.min(2, actorCount),
+            0.4,
+          )
       : room.functionTags.includes("room:social") && room.functionTags.includes("room:recovery")
         ? createGridStagePositions(reservedFloorBounds, actorCount, Math.min(3, actorCount), 0.58)
         : room.functionTags.includes("room:social")
           ? createGridStagePositions(reservedFloorBounds, actorCount, Math.min(2, actorCount), 0.62)
           : room.functionTags.includes("room:operations") ||
-              room.functionTags.includes("room:staffing")
+              room.functionTags.includes("room:logistics")
             ? createGridStagePositions(activeBounds, actorCount, Math.min(2, actorCount), 0.42)
             : createGridStagePositions(activeBounds, actorCount, Math.min(2, actorCount), 0.55);
 
@@ -1071,36 +1025,14 @@ function createRuntimeSession(
     const preferredRoomTags = needsRecovery
       ? ["room:recovery", "room:social"]
       : operator.schedule.currentBlock === "social"
-        ? ["room:social", "room:staffing"]
+        ? ["room:social", "room:logistics"]
         : operator.schedule.currentBlock === "work" ||
             operator.schedule.currentBlock === "training" ||
             operator.schedule.currentBlock === "raid"
-          ? ["room:operations", "room:training", "room:staffing"]
-          : ["room:social", "room:staffing", "room:operations", "room:recovery"];
+          ? ["room:operations", "room:training", "room:logistics"]
+          : ["room:social", "room:logistics", "room:operations", "room:recovery"];
 
     return pickByTagPreference(rooms, stableStringHash(operator.id), preferredRoomTags);
-  }
-
-  function resolveStaffRoomId(
-    staff: RuntimePhase1View["staff"][number],
-    rooms: ReadonlyArray<RoomEntry>,
-  ): string | null {
-    if (staff.assignment.targetId && rooms.some((room) => room.id === staff.assignment.targetId)) {
-      return staff.assignment.targetId;
-    }
-
-    const preferredRoomTags =
-      staff.roleTag === "staff:medical"
-        ? ["room:recovery", "room:operations"]
-        : staff.roleTag === "staff:reception"
-          ? ["room:operations", "room:staffing"]
-          : staff.roleTag === "staff:admin" ||
-              staff.roleTag === "staff:logistics" ||
-              staff.roleTag === "staff:maintenance"
-            ? ["room:staffing", "room:operations", "room:social"]
-            : ["room:operations", "room:staffing", "room:social"];
-
-    return pickByTagPreference(rooms, stableStringHash(staff.id), preferredRoomTags);
   }
 
   function getHqWorldStaticContext(view: RuntimePhase1View): HqWorldStaticContext {
@@ -1127,7 +1059,6 @@ function createRuntimeSession(
         floorIndex: room.floorIndex,
         name: room.name,
         tier: room.tier,
-        isRequestedActive: room.isRequestedActive,
         isOperational: room.isOperational,
         functionTag,
         functionTags,
@@ -1237,8 +1168,8 @@ function createRuntimeSession(
 
       const created: RoomOccupants = {
         operatorIds: [],
-        staffIds: [],
         visitorIds: [],
+        presenterIds: [],
       };
       roomOccupants.set(roomId, created);
       return created;
@@ -1298,7 +1229,7 @@ function createRuntimeSession(
         // Only spill from small operational/staffing rooms, not social rooms.
         const isSmallWorkRoom =
           (room.functionTags.includes("room:operations") ||
-            room.functionTags.includes("room:staffing")) &&
+            room.functionTags.includes("room:logistics")) &&
           getRoomArea(room) < 20;
         if (!isSmallWorkRoom) continue;
 
@@ -1314,34 +1245,48 @@ function createRuntimeSession(
         a.preferredAnchorKind = "social";
       }
     }
-    const staffAssignments = view.staff
-      .map((staff) => {
-        const roomId = resolveStaffRoomId(staff, allRooms);
-        return roomId && visibleRoomIds.has(roomId) ? { staff, roomId } : null;
-      })
-      .filter(
-        (assignment): assignment is { staff: RuntimePhase1View["staff"][number]; roomId: string } =>
-          assignment !== null,
-      );
     const visitorAssignments = recruitmentRoom
       ? view.visitors
           .filter((visitor) => visitor.queueState === "active")
           .map((visitor) => ({ visitor, roomId: recruitmentRoom.id }))
       : [];
 
+    const PRESENTER_ROOM_ROTATION_MINUTES = 90;
+    const presenterAssignments: Array<{
+      presenter: ReturnType<typeof templateRegistry.presenterById.get> & object;
+      roomId: string;
+    }> = [];
+    for (const unlock of view.presenterUnlocks) {
+      const presenter = templateRegistry.presenterById.get(unlock.presenterId);
+      if (!presenter) continue;
+      const allowedPlacedRooms = rooms.filter((room) =>
+        presenter.allowedRoomTemplateIds.includes(room.templateId),
+      );
+      if (allowedPlacedRooms.length === 0) continue;
+      const rotationIndex =
+        Math.floor(view.clock.absoluteMinute / PRESENTER_ROOM_ROTATION_MINUTES) +
+        stableStringHash(presenter.id);
+      const home =
+        allowedPlacedRooms[
+          ((rotationIndex % allowedPlacedRooms.length) + allowedPlacedRooms.length) %
+            allowedPlacedRooms.length
+        ];
+      presenterAssignments.push({ presenter, roomId: home.id });
+    }
+
     operatorAssignments.forEach(({ operator, roomId }) => {
       ensureRoomOccupants(roomId).operatorIds.push(operator.id);
-    });
-    staffAssignments.forEach(({ staff, roomId }) => {
-      ensureRoomOccupants(roomId).staffIds.push(staff.id);
     });
     visitorAssignments.forEach(({ visitor, roomId }) => {
       ensureRoomOccupants(roomId).visitorIds.push(visitor.id);
     });
+    presenterAssignments.forEach(({ presenter, roomId }) => {
+      ensureRoomOccupants(roomId).presenterIds.push(presenter.id);
+    });
     roomOccupants.forEach((occupants) => {
       occupants.operatorIds.sort();
-      occupants.staffIds.sort();
       occupants.visitorIds.sort();
+      occupants.presenterIds.sort();
     });
 
     const getStagedPositionForActor = (
@@ -1462,32 +1407,6 @@ function createRuntimeSession(
       }
     }
 
-    // ── Staff actors ─────────────────────────────────────────────────
-    const staffActors: ActorMarker[] = staffAssignments.map(({ staff, roomId }) => {
-      const fallbackPos = computeRoomAnchorPosition(
-        roomId,
-        staff.id,
-        anchorsByRoomId,
-        fallbackAnchor,
-        staff.assignment.kind === "room" ? "work" : "idle",
-      );
-      const pos = getStagedPositionForActor(roomId, staff.id, "staff", fallbackPos);
-      return {
-        id: staff.id,
-        kind: "staff" as const,
-        x: pos.x,
-        y: pos.y,
-        targetX: pos.x,
-        targetY: pos.y,
-        roomId,
-        label: staff.name,
-        presetId: "",
-        roleTag: staff.roleTag,
-        state: staff.assignment.kind === "room" ? "working" : ("idle" as ActorState),
-        moveProgress: 1,
-      };
-    });
-
     // ── Visitor actors ────────────────────────────────────────────────
     const activeBuildingTemplate = templateRegistry.buildingById.get(activeBuildingId);
     const visitorActors: ActorMarker[] = visitorAssignments.map(({ visitor, roomId }) => {
@@ -1518,7 +1437,92 @@ function createRuntimeSession(
       };
     });
 
-    const actors: ActorMarker[] = [...operatorActors, ...staffActors, ...visitorActors];
+    // ── Presenter actors ──────────────────────────────────────────────
+    // Derive one actor marker per unlocked presenter whose allowed rooms
+    // include at least one currently-placed room on the visible floor.
+    // Presenters rotate deterministically through their allowed rooms to
+    // give a lived-in feel without a full scheduler.
+    const presenterActors: ActorMarker[] = presenterAssignments.map(({ presenter, roomId }) => {
+      const fallbackPos = computeRoomAnchorPosition(
+        roomId,
+        presenter.id,
+        anchorsByRoomId,
+        fallbackAnchor,
+        "social",
+      );
+      const stagedPos = getStagedPositionForActor(roomId, presenter.id, "presenter", fallbackPos);
+      const previousRoomId = actorPreviousRoomId.get(presenter.id);
+      const existingMovement = actorMovements.get(presenter.id);
+      const isCurrentlyMoving =
+        existingMovement !== undefined &&
+        nowMs - existingMovement.startedAtMs < existingMovement.durationMs;
+      if (
+        previousRoomId !== undefined &&
+        previousRoomId !== roomId &&
+        visibleRoomIds.has(previousRoomId) &&
+        !isCurrentlyMoving
+      ) {
+        const fromAnchor = resolveRoomAnchor(navGraph, previousRoomId, "social");
+        const toAnchor = resolveRoomAnchor(navGraph, roomId, "social");
+        if (fromAnchor && toAnchor) {
+          const path = findPath(navGraph, fromAnchor.id, toAnchor.id);
+          if (path && path.totalMs > 0) {
+            actorMovements.set(presenter.id, {
+              fromRoomId: previousRoomId,
+              toRoomId: roomId,
+              path,
+              startedAtMs: nowMs,
+              durationMs: Math.max(ACTOR_MOVE_DURATION_MS, path.totalMs),
+            });
+          }
+        }
+      }
+      if (!isCurrentlyMoving) {
+        actorPreviousRoomId.set(presenter.id, roomId);
+      }
+      const movement = actorMovements.get(presenter.id);
+      const portraitUrl = presenter.portraitByExpression.neutral;
+      if (movement) {
+        const progress = Math.min(1, (nowMs - movement.startedAtMs) / movement.durationMs);
+        if (progress >= 1) {
+          actorMovements.delete(presenter.id);
+        } else {
+          const pos = interpolatePathPosition(navGraph, movement.path, progress);
+          return {
+            id: presenter.id,
+            kind: "presenter" as const,
+            x: pos.x,
+            y: pos.y,
+            targetX: stagedPos.x,
+            targetY: stagedPos.y,
+            roomId,
+            label: presenter.name,
+            presetId: presenter.id,
+            roleTag: presenter.roleTitle,
+            state: "moving" as ActorState,
+            moveProgress: progress,
+            portraitUrl,
+          };
+        }
+      }
+      return {
+        id: presenter.id,
+        kind: "presenter" as const,
+        x: stagedPos.x,
+        y: stagedPos.y,
+        targetX: stagedPos.x,
+        targetY: stagedPos.y,
+        roomId,
+        label: presenter.name,
+        presetId: presenter.id,
+        roleTag: presenter.roleTitle,
+        state: "idle" as ActorState,
+        moveProgress: 1,
+        portraitUrl,
+      };
+    });
+
+    const actors: ActorMarker[] = [...operatorActors, ...visitorActors, ...presenterActors];
 
     return createHqWorldSnapshot(
       buildingName,
@@ -2118,13 +2122,6 @@ function createRuntimeSession(
       });
     },
 
-    setRoomActive(input) {
-      return commands.dispatch({
-        type: "sim/set-room-active",
-        ...input,
-      });
-    },
-
     setPolicy(input) {
       return commands.dispatch({
         type: "sim/set-policy",
@@ -2184,20 +2181,6 @@ function createRuntimeSession(
     dismissRecruit(input) {
       return commands.dispatch({
         type: "sim/dismiss-recruit",
-        ...input,
-      });
-    },
-
-    hireStaff(input) {
-      return commands.dispatch({
-        type: "sim/hire-staff",
-        ...input,
-      });
-    },
-
-    assignStaff(input) {
-      return commands.dispatch({
-        type: "sim/assign-staff",
         ...input,
       });
     },

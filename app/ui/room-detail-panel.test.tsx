@@ -6,7 +6,6 @@ import type { GameCallbacks, RoomViewModel } from "./view-models";
 
 const callbacks: GameCallbacks = {
   tick: () => {},
-  setRoomActive: () => {},
   setPolicy: () => {},
   setLootFilterEnabled: () => {},
   initiateRelocation: () => {},
@@ -17,8 +16,6 @@ const callbacks: GameCallbacks = {
   rejectRecruit: () => {},
   replaceRecruit: () => {},
   dismissRecruit: () => {},
-  hireStaff: () => {},
-  assignStaff: () => {},
   placeRoom: () => {},
   setActiveFloor: () => {},
   buyItem: () => {},
@@ -44,10 +41,7 @@ function makeTrainingRoom(overrides: Partial<RoomViewModel> = {}): RoomViewModel
     roomStateId: "room-state/gym",
     capacity: 3,
     occupancy: 0,
-    isActive: true,
     isOperational: true,
-    requiredStaffTag: "",
-    assignedStaffCount: 0,
     appliedUpgradeIds: [],
     availableUpgradeIds: [],
     tags: ["room:training"],
@@ -93,7 +87,7 @@ describe("room detail panel", () => {
           id: "room-instance/office",
           templateId: "room/office:tier_1",
           name: "The Office",
-          tags: ["room:operations", "ops:intel", "staff:admin"],
+          tags: ["room:operations", "ops:intel"],
           training: undefined,
         })}
         buildingUpgrades={[]}
@@ -131,9 +125,8 @@ describe("room detail panel", () => {
           id: "room-instance/workshop",
           templateId: "room/workshop:tier_1",
           name: "The Workshop",
-          tags: ["room:operations", "ops:crafting", "staff:logistics"],
-          assignedStaffCount: 0,
-          requiredStaffTag: "staff:logistics",
+          tags: ["room:operations", "ops:crafting"],
+          isOperational: false,
           craftRecipes: [
             {
               recipeId: "craft-recipe/field-lead-breach/breach-hammer",
@@ -158,7 +151,7 @@ describe("room detail panel", () => {
               cashOnHand: 60,
               outputStatEffects: [{ stat: "strength", value: 8 }],
               canProduce: false,
-              isRoomStaffed: false,
+              isRoomOperational: false,
               isBuildingTierMet: false,
               isDistrictMet: false,
               isFactionMet: false,
@@ -183,7 +176,7 @@ describe("room detail panel", () => {
     );
 
     expect(html).toContain("Blocked by:");
-    expect(html).toContain("assigned logistics staff");
+    expect(html).toContain("operational room");
     expect(html).toContain("Emergency Management 2/5");
     expect(html).toContain("Fang 1/3");
   });

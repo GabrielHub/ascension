@@ -1,0 +1,287 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Bar (Porter's tier 1)
+       Grid: 4 cols x 3 rows. Origin (200,100). iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Composition goals:
+         - One continuous bar run that spans the room without module seams.
+         - A readable bartender lane between the back bar and the counter.
+         - Fewer overlapping props and a calmer pendant rhythm.
+         - Front seating arranged as distinct table groups with chairs attached to table edges. -->
+
+  <defs>
+    <g id="bar-stool">
+      <line x1="-10" y1="0" x2="-10" y2="-19" stroke="#2a2318" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="0" y1="5" x2="0" y2="-14" stroke="#2a2318" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="10" y1="0" x2="10" y2="-19" stroke="#2a2318" stroke-width="1.4" stroke-linecap="round"/>
+      <polygon points="-9,-6 0,-2 9,-6 0,-10" fill="none" stroke="#7a5a2a" stroke-width="0.7"/>
+      <polygon points="-10,-22 0,-17 0,-14 -10,-19" fill="#2a1810" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="0,-17 10,-22 10,-19 0,-14" fill="#241208" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-10,-22 0,-17 10,-22 0,-27" fill="#5a2410" stroke="#2a0e06" stroke-width="0.5"/>
+      <polygon points="-8,-22 0,-18 8,-22 0,-26" fill="#7a341a" stroke="#4a1c0e" stroke-width="0.35"/>
+    </g>
+
+    <g id="high-top-table">
+      <polygon points="-10,-1 0,4 10,-1 0,-6" fill="#2a1e12" stroke="#140a06" stroke-width="0.4"/>
+      <polygon points="-10,-1 0,4 0,2 -10,-3" fill="#1c1208" stroke="#140a06" stroke-width="0.3"/>
+      <polygon points="0,4 10,-1 10,-3 0,2" fill="#241408" stroke="#140a06" stroke-width="0.3"/>
+      <rect x="-1.5" y="-36" width="3" height="32" fill="#322214" stroke="#140a06" stroke-width="0.3"/>
+      <polygon points="-18,-38 0,-29 0,-26 -18,-35" fill="#2a1a0f" stroke="#140a06" stroke-width="0.3"/>
+      <polygon points="0,-29 18,-38 18,-35 0,-26" fill="#241208" stroke="#140a06" stroke-width="0.3"/>
+      <polygon points="-18,-38 0,-29 18,-38 0,-47" fill="#4a2f18" stroke="#231408" stroke-width="0.5"/>
+      <polygon points="-16,-38 0,-30 16,-38 0,-46" fill="#5a3a20" stroke="#2a1a0f" stroke-width="0.35"/>
+      <line x1="-18" y1="-38" x2="18" y2="-38" stroke="rgba(230,180,100,0.15)" stroke-width="0.4"/>
+    </g>
+
+    <g id="chair-ne">
+      <line x1="-9" y1="0" x2="-9" y2="-22" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="0" y1="5" x2="0" y2="-17" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="9" y1="0" x2="9" y2="-22" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <polygon points="-8,-8 0,-4 8,-8 0,-12" fill="none" stroke="#7a5a2a" stroke-width="0.7"/>
+      <polygon points="-9,-25 0,-20 0,-17 -9,-22" fill="#2a1810" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="0,-20 9,-25 9,-22 0,-17" fill="#241208" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-9,-25 0,-20 9,-25 0,-30" fill="#5a2410" stroke="#2a0e06" stroke-width="0.4"/>
+      <polygon points="-7,-25 0,-21 7,-25 0,-29" fill="#7a341a" stroke="#4a1c0e" stroke-width="0.3"/>
+      <polygon points="0,-30 9,-25 9,-38 0,-43" fill="#3a2618" stroke="#1a0e06" stroke-width="0.4"/>
+      <polygon points="1,-31 8,-26 8,-37 1,-42" fill="#5a3a20" stroke="#2a1a0f" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="0,-43 9,-38 10,-37 1,-42" fill="#4a3220" stroke="#241408" stroke-width="0.25"/>
+      <polygon points="9,-38 10,-37 10,-24 9,-25" fill="#241208" stroke="#140a04" stroke-width="0.3"/>
+    </g>
+
+    <g id="chair-nw">
+      <line x1="-9" y1="0" x2="-9" y2="-22" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="0" y1="5" x2="0" y2="-17" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="9" y1="0" x2="9" y2="-22" stroke="#2a2318" stroke-width="1.3" stroke-linecap="round"/>
+      <polygon points="-8,-8 0,-4 8,-8 0,-12" fill="none" stroke="#7a5a2a" stroke-width="0.7"/>
+      <polygon points="-9,-25 0,-20 0,-17 -9,-22" fill="#2a1810" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="0,-20 9,-25 9,-22 0,-17" fill="#241208" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-9,-25 0,-20 9,-25 0,-30" fill="#5a2410" stroke="#2a0e06" stroke-width="0.4"/>
+      <polygon points="-7,-25 0,-21 7,-25 0,-29" fill="#7a341a" stroke="#4a1c0e" stroke-width="0.3"/>
+      <polygon points="0,-30 -9,-25 -9,-38 0,-43" fill="#3a2618" stroke="#1a0e06" stroke-width="0.4"/>
+      <polygon points="-1,-31 -8,-26 -8,-37 -1,-42" fill="#5a3a20" stroke="#2a1a0f" stroke-width="0.3" opacity="0.85"/>
+      <polygon points="0,-43 -9,-38 -10,-37 -1,-42" fill="#4a3220" stroke="#241408" stroke-width="0.25"/>
+      <polygon points="-9,-38 -10,-37 -10,-24 -9,-25" fill="#241208" stroke="#140a04" stroke-width="0.3"/>
+    </g>
+  </defs>
+
+  <!-- Corner sign -->
+  <g transform="translate(8 -22)">
+    <ellipse cx="176" cy="78" rx="28" ry="8" fill="rgba(255,170,80,0.10)"/>
+    <line x1="164" y1="22" x2="164" y2="50" stroke="#1a1108" stroke-width="0.8"/>
+    <polygon points="154,56 182,70 192,65 164,51" fill="#2c1e13" stroke="#0f0a06" stroke-width="0.4"/>
+    <polygon points="182,70 192,65 192,81 182,86" fill="#20140d" stroke="#0f0a06" stroke-width="0.4"/>
+    <polygon points="154,56 182,70 182,86 154,72" fill="#1f140d" stroke="#0f0a06" stroke-width="0.5"/>
+    <path d="M 162,63 L 162,77 M 162,63 L 168,63 Q 171,63 171,66 Q 171,69 168,69 L 162,69 M 162,69 L 168,69 Q 172,69 172,73 Q 172,77 168,77 L 162,77"
+      fill="none" stroke="#ff9d3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 176,77 L 179,63 L 182,77 M 177,72 L 181,72"
+      fill="none" stroke="#ff9d3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 186,77 L 186,63 L 192,63 Q 195,63 195,67 Q 195,70 192,70 L 186,70 M 191,70 L 195,77"
+      fill="none" stroke="#c6631f" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+  </g>
+
+  <!-- Back bar -->
+  <g transform="translate(8 -22)">
+    <polygon points="170,104 356,197 356,229 170,136"
+      fill="#2a1a0f" stroke="#160c06" stroke-width="0.6"/>
+    <polygon points="380,185 356,197 356,229 380,217"
+      fill="#1e1208" stroke="#160c06" stroke-width="0.5"/>
+    <polygon points="194,92 380,185 356,197 170,104"
+      fill="#3c2614" stroke="#221408" stroke-width="0.6"/>
+    <line x1="194" y1="92" x2="380" y2="185" stroke="rgba(220,170,90,0.14)" stroke-width="0.5"/>
+    <line x1="220" y1="111" x2="220" y2="146" stroke="#160c06" stroke-width="0.4"/>
+    <line x1="268" y1="135" x2="268" y2="170" stroke="#160c06" stroke-width="0.4"/>
+    <line x1="316" y1="159" x2="316" y2="194" stroke="#160c06" stroke-width="0.4"/>
+    <line x1="352" y1="177" x2="352" y2="212" stroke="#160c06" stroke-width="0.4"/>
+    <polygon points="194,92 380,185 380,156 194,63"
+      fill="rgba(20,28,36,0.75)" stroke="#141820" stroke-width="0.4"/>
+    <line x1="236" y1="106" x2="236" y2="77" stroke="rgba(200,190,170,0.08)" stroke-width="0.5"/>
+    <line x1="292" y1="134" x2="292" y2="105" stroke="rgba(200,190,170,0.06)" stroke-width="0.4"/>
+    <line x1="344" y1="160" x2="344" y2="131" stroke="rgba(200,190,170,0.05)" stroke-width="0.4"/>
+
+    <polygon points="194,68 380,161 356,173 170,80"
+      fill="#241608" stroke="#140a04" stroke-width="0.4"/>
+    <polygon points="170,75 356,168 356,173 170,80"
+      fill="#1c1206" stroke="#140a04" stroke-width="0.3"/>
+    <polygon points="380,156 356,168 356,173 380,161"
+      fill="#180e04" stroke="#140a04" stroke-width="0.3"/>
+    <polygon points="194,63 380,156 356,168 170,75"
+      fill="#3c2614" stroke="#221408" stroke-width="0.5"/>
+
+    <g transform="translate(206 101)">
+      <polygon points="-2.2,0 0,1.1 2.2,0 0,-1.1" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-2.2,0 -2.2,-12 2.2,-12 2.2,0" fill="#a36024" stroke="#542612" stroke-width="0.3"/>
+      <polygon points="-2.2,-12 -0.7,-15 0.7,-15 2.2,-12" fill="#a36024" stroke="#542612" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(244 120)">
+      <polygon points="-2.1,0 0,1 2.1,0 0,-1" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-2.1,0 -2.1,-13 2.1,-13 2.1,0" fill="rgba(180,200,210,0.42)" stroke="#404850" stroke-width="0.3"/>
+      <polygon points="-2.1,-13 -0.7,-16 0.7,-16 2.1,-13" fill="rgba(180,200,210,0.42)" stroke="#404850" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(288 142)">
+      <polygon points="-2.2,0 0,1.1 2.2,0 0,-1.1" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-2.2,0 -2.2,-11 2.2,-11 2.2,0" fill="#2e4a2a" stroke="#132014" stroke-width="0.3"/>
+      <polygon points="-2.2,-11 -0.7,-14 0.7,-14 2.2,-11" fill="#2e4a2a" stroke="#132014" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(332 164)">
+      <polygon points="-2.3,0 0,1.1 2.3,0 0,-1.1" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-2.3,0 -2.3,-10 2.3,-10 2.3,0" fill="#c47024" stroke="#643218" stroke-width="0.3"/>
+      <polygon points="-2.3,-10 -0.8,-13 0.8,-13 2.3,-10" fill="#c47024" stroke="#643218" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(364 180)">
+      <polygon points="-1.9,0 0,1 1.9,0 0,-1" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-1.9,0 -1.9,-8 1.9,-8 1.9,0" fill="#5a1818" stroke="#2a0808" stroke-width="0.3"/>
+      <polygon points="-1.9,-8 -0.6,-10 0.6,-10 1.9,-8" fill="#5a1818" stroke="#2a0808" stroke-width="0.25"/>
+    </g>
+
+    <g transform="translate(216 74)">
+      <polygon points="-2.0,0 0,1 2.0,0 0,-1" fill="#140a04" stroke="#080402" stroke-width="0.3"/>
+      <polygon points="-2.0,0 -2.0,-11 2.0,-11 2.0,0" fill="#5a2a12" stroke="#2a140a" stroke-width="0.3"/>
+      <polygon points="-2.0,-11 -0.7,-15 0.7,-15 2.0,-11" fill="#5a2a12" stroke="#2a140a" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(258 95)">
+      <polygon points="-2.0,0 0,1 2.0,0 0,-1" fill="#140a04" stroke="#080402" stroke-width="0.3"/>
+      <polygon points="-2.0,0 -2.0,-12 2.0,-12 2.0,0" fill="rgba(200,180,150,0.42)" stroke="#4a3e2a" stroke-width="0.3"/>
+      <polygon points="-2.0,-12 -0.6,-15 0.6,-15 2.0,-12" fill="rgba(200,180,150,0.42)" stroke="#4a3e2a" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(304 118)">
+      <polygon points="-2.1,0 0,1 2.1,0 0,-1" fill="#140a04" stroke="#080402" stroke-width="0.3"/>
+      <polygon points="-2.1,0 -2.1,-11 2.1,-11 2.1,0" fill="#8a4a1c" stroke="#42220e" stroke-width="0.3"/>
+      <polygon points="-2.1,-11 -0.7,-14 0.7,-14 2.1,-11" fill="#8a4a1c" stroke="#42220e" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(348 140)">
+      <polygon points="-2.2,0 0,1.1 2.2,0 0,-1.1" fill="#140a04" stroke="#080402" stroke-width="0.3"/>
+      <polygon points="-2.2,0 -2.2,-10 2.2,-10 2.2,0" fill="#2e2418" stroke="#140e08" stroke-width="0.3"/>
+      <polygon points="-2.2,-10 -0.7,-13 0.7,-13 2.2,-10" fill="#2e2418" stroke="#140e08" stroke-width="0.25"/>
+    </g>
+  </g>
+
+  <!-- Pendant lamps -->
+  <g transform="translate(8 -22)">
+    <g transform="translate(188 90)">
+      <line x1="0" y1="-64" x2="0" y2="0" stroke="#1a1108" stroke-width="0.8"/>
+      <rect x="-3" y="0" width="6" height="2" fill="#2a1e12" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-12,4 12,4 8,14 -8,14" fill="#382618" stroke="#140a04" stroke-width="0.5"/>
+      <polygon points="-12,4 12,4 10,2 -10,2" fill="#4a3220" stroke="#140a04" stroke-width="0.4"/>
+      <ellipse cx="0" cy="14" rx="8" ry="2" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <ellipse cx="0" cy="13" rx="6" ry="1.4" fill="#ffc96a" opacity="0.9"/>
+    </g>
+    <g transform="translate(236 114)">
+      <line x1="0" y1="-78" x2="0" y2="0" stroke="#1a1108" stroke-width="0.8"/>
+      <rect x="-3" y="0" width="6" height="2" fill="#2a1e12" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-12,4 12,4 8,14 -8,14" fill="#382618" stroke="#140a04" stroke-width="0.5"/>
+      <polygon points="-12,4 12,4 10,2 -10,2" fill="#4a3220" stroke="#140a04" stroke-width="0.4"/>
+      <ellipse cx="0" cy="14" rx="8" ry="2" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <ellipse cx="0" cy="13" rx="6" ry="1.4" fill="#ffc96a" opacity="0.9"/>
+    </g>
+    <g transform="translate(284 138)">
+      <line x1="0" y1="-92" x2="0" y2="0" stroke="#1a1108" stroke-width="0.8"/>
+      <rect x="-3" y="0" width="6" height="2" fill="#2a1e12" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-12,4 12,4 8,14 -8,14" fill="#382618" stroke="#140a04" stroke-width="0.5"/>
+      <polygon points="-12,4 12,4 10,2 -10,2" fill="#4a3220" stroke="#140a04" stroke-width="0.4"/>
+      <ellipse cx="0" cy="14" rx="8" ry="2" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <ellipse cx="0" cy="13" rx="6" ry="1.4" fill="#ffc96a" opacity="0.9"/>
+    </g>
+    <g transform="translate(332 162)">
+      <line x1="0" y1="-106" x2="0" y2="0" stroke="#1a1108" stroke-width="0.8"/>
+      <rect x="-3" y="0" width="6" height="2" fill="#2a1e12" stroke="#140a04" stroke-width="0.3"/>
+      <polygon points="-12,4 12,4 8,14 -8,14" fill="#382618" stroke="#140a04" stroke-width="0.5"/>
+      <polygon points="-12,4 12,4 10,2 -10,2" fill="#4a3220" stroke="#140a04" stroke-width="0.4"/>
+      <ellipse cx="0" cy="14" rx="8" ry="2" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <ellipse cx="0" cy="13" rx="6" ry="1.4" fill="#ffc96a" opacity="0.9"/>
+    </g>
+  </g>
+
+  <!-- Customer counter -->
+  <g>
+    <polygon points="78,155 318,275 318,305 78,185"
+      fill="#321e12" stroke="#140a06" stroke-width="0.6"/>
+    <polygon points="340,264 318,275 318,305 340,294"
+      fill="#2a1a0f" stroke="#140a06" stroke-width="0.6"/>
+    <polygon points="100,144 340,264 318,275 78,155"
+      fill="#4a2f18" stroke="#231408" stroke-width="0.8"/>
+    <line x1="100" y1="144" x2="340" y2="264" stroke="#a88038" stroke-width="1"/>
+    <line x1="78" y1="155" x2="318" y2="275" stroke="#6e4e20" stroke-width="0.8"/>
+    <line x1="100" y1="143" x2="340" y2="263" stroke="rgba(255,220,140,0.45)" stroke-width="0.4"/>
+    <line x1="128" y1="180" x2="128" y2="214" stroke="#140a06" stroke-width="0.4"/>
+    <line x1="188" y1="210" x2="188" y2="244" stroke="#140a06" stroke-width="0.4"/>
+    <line x1="248" y1="240" x2="248" y2="274" stroke="#140a06" stroke-width="0.4"/>
+    <line x1="300" y1="266" x2="300" y2="298" stroke="#140a06" stroke-width="0.4"/>
+    <polygon points="78,181 318,301 318,305 78,185"
+      fill="#1a0e06" stroke="#0a0604" stroke-width="0.3"/>
+
+    <g transform="translate(170 178)">
+      <rect x="-0.8" y="-14" width="1.6" height="10" fill="#a88038" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-3,-14 3,-14 2.5,-18 -2.5,-18" fill="#c89a3a" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-1.5,-18 1.5,-18 1,-22 -1,-22" fill="#7a1e12" stroke="#3a0e08" stroke-width="0.3"/>
+    </g>
+    <g transform="translate(214 200)">
+      <rect x="-0.8" y="-14" width="1.6" height="10" fill="#a88038" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-3,-14 3,-14 2.5,-18 -2.5,-18" fill="#c89a3a" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-1.5,-18 1.5,-18 1,-22 -1,-22" fill="#2a4a3a" stroke="#142820" stroke-width="0.3"/>
+    </g>
+    <g transform="translate(260 223)">
+      <rect x="-0.8" y="-14" width="1.6" height="10" fill="#a88038" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-3,-14 3,-14 2.5,-18 -2.5,-18" fill="#c89a3a" stroke="#5c3e12" stroke-width="0.3"/>
+      <polygon points="-1.5,-18 1.5,-18 1,-22 -1,-22" fill="#3a2410" stroke="#1a120a" stroke-width="0.3"/>
+    </g>
+
+    <g transform="translate(154 174)">
+      <ellipse cx="0" cy="0" rx="3.2" ry="1.6" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-3,0 3,0 2.4,-8 -2.4,-8" fill="rgba(210,240,240,0.22)" stroke="rgba(180,210,210,0.45)" stroke-width="0.4"/>
+      <polygon points="-2.7,-3 2.7,-3 2.4,-7.5 -2.4,-7.5" fill="rgba(220,150,40,0.55)" stroke="rgba(180,120,30,0.4)" stroke-width="0.3"/>
+      <ellipse cx="0" cy="-8" rx="2.6" ry="1.1" fill="rgba(255,240,200,0.6)" stroke="rgba(220,210,180,0.5)" stroke-width="0.3"/>
+    </g>
+    <g transform="translate(226 220)">
+      <ellipse cx="0" cy="0" rx="3.5" ry="1.7" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+      <polygon points="-3.2,0 3.2,0 2.8,-10 -2.8,-10" fill="rgba(200,220,230,0.2)" stroke="rgba(160,190,200,0.4)" stroke-width="0.4"/>
+      <rect x="-1.8" y="-3" width="3.6" height="1.5" fill="#2a1a0f" stroke="#140a04" stroke-width="0.2"/>
+    </g>
+    <g transform="translate(280 246)">
+      <ellipse cx="0" cy="0" rx="4" ry="2" fill="#2a1a0f" stroke="#140a04" stroke-width="0.3"/>
+      <ellipse cx="-1.2" cy="-1.4" rx="1.2" ry="0.8" fill="#8aa82a" stroke="#3a4a14" stroke-width="0.2"/>
+      <ellipse cx="1.0" cy="-1.7" rx="1.2" ry="0.8" fill="#9abb2c" stroke="#3a4a14" stroke-width="0.2"/>
+    </g>
+    <polygon points="188,198 200,204 200,216 188,210"
+      fill="#7a6a38" stroke="#3a2e14" stroke-width="0.4"/>
+    <polygon points="189,199 199,204 199,212 189,207"
+      fill="#928038" stroke="#3a2e14" stroke-width="0.3"/>
+  </g>
+
+  <!-- Stools -->
+  <use href="#bar-stool" transform="translate(110 182)"/>
+  <use href="#bar-stool" transform="translate(154 204)"/>
+  <use href="#bar-stool" transform="translate(198 226)"/>
+  <use href="#bar-stool" transform="translate(242 248)"/>
+  <use href="#bar-stool" transform="translate(286 270)"/>
+  <use href="#bar-stool" transform="translate(330 292)"/>
+
+  <!-- Front seating groups -->
+  <g transform="translate(112 226)">
+    <use href="#high-top-table"/>
+    <ellipse cx="-2" cy="-40" rx="2.4" ry="1.1" fill="#1a1008" stroke="#0a0604" stroke-width="0.25"/>
+    <polygon points="-4,-40 0,-40 -0.5,-44 -3.5,-44" fill="rgba(210,120,40,0.6)" stroke="#5a2e10" stroke-width="0.3"/>
+  </g>
+  <use href="#chair-nw" transform="translate(88 246)"/>
+
+  <g transform="translate(170 248)">
+    <use href="#high-top-table"/>
+    <ellipse cx="3" cy="-37" rx="3" ry="1.4" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+    <polygon points="0,-37 6,-37 5.2,-45 0.8,-45" fill="rgba(210,240,240,0.22)" stroke="rgba(180,210,210,0.45)" stroke-width="0.35"/>
+    <polygon points="0.4,-39 5.6,-39 5.2,-44 0.8,-44" fill="rgba(220,150,40,0.55)"/>
+  </g>
+  <use href="#chair-ne" transform="translate(196 264)"/>
+
+  <g transform="translate(230 272)">
+    <use href="#high-top-table"/>
+    <ellipse cx="-5" cy="-37" rx="2.8" ry="1.3" fill="#2a1a0f" stroke="#140a04" stroke-width="0.3"/>
+    <ellipse cx="-5.6" cy="-38.6" rx="0.7" ry="0.4" fill="#a8843a"/>
+    <ellipse cx="-4.4" cy="-38.4" rx="0.7" ry="0.4" fill="#a8843a"/>
+    <ellipse cx="-5.2" cy="-38" rx="0.6" ry="0.35" fill="#b89244"/>
+  </g>
+  <use href="#chair-nw" transform="translate(206 292)"/>
+
+  <g transform="translate(296 286)">
+    <use href="#high-top-table"/>
+    <ellipse cx="3" cy="-37" rx="3" ry="1.4" fill="#1a1008" stroke="#0a0604" stroke-width="0.3"/>
+    <polygon points="0,-37 6,-37 5.2,-45 0.8,-45" fill="rgba(210,240,240,0.22)" stroke="rgba(180,210,210,0.45)" stroke-width="0.35"/>
+  </g>
+  <use href="#chair-ne" transform="translate(322 302)"/>
+</svg>

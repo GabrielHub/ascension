@@ -28,7 +28,7 @@ The city is larger than what the player can immediately touch. Borough politics,
 
 Dungeons are localized supernatural intrusions. They occupy real physical space in the city - a subway tunnel that now goes somewhere wrong, a condemned building whose interior no longer matches its exterior, a park where the ground opened.
 
-- Each dungeon has a **rank** matching the threat level, using the same F-S scale as operators. An F-rank dungeon is manageable. An S-rank dungeon is a national emergency.
+- Each dungeon has a **rank** matching the threat level, using the same F-U scale as operators. An F-rank dungeon is manageable. A Unique (`U`) dungeon is a national emergency.
 - Each dungeon has a **threat profile** defined by the kinds of enemies inside, the environmental hazards, and the boss anchoring the space.
 - Dungeons do not close until their boss is killed. Ordinary enemies respawn.
 - Dungeons have geography. They are not abstract encounter lists. Rooms, corridors, hazards, and points of interest exist spatially.
@@ -41,12 +41,12 @@ Dungeon rank should also mark a tonal and visual climb:
 - F and E dungeons should still feel anchored to recognizable city spaces. They are wrong, hostile, and supernatural, but still clearly built from schools, storefronts, garages, tunnels, labs, parks, and similar places.
 - D and C dungeons can become more impossible in geometry, scale, and internal logic. This is where a real place starts giving way to a place that should not physically exist.
 - B and A dungeons can become genuinely spectacular and institutionally alarming. They should feel like major city events, not just harder versions of a basement problem.
-- S-rank dungeons are allowed to become world-class anomalies: the kind of thing that makes national news, rewrites the skyline, or introduces concepts the early game would have wasted.
+- Unique (`U`) dungeons are allowed to become world-class anomalies: the kind of thing that makes national news, rewrites the skyline, or introduces concepts the early game would have wasted.
 - The climb should be deliberate. Do not jump straight from a warped school hallway to a floating city without the intermediate escalation earning it.
 
 ## Dungeon Ranking
 
-Dungeons use the same F-S rank scale as everything else.
+Dungeons use the same F-U rank scale as everything else.
 
 | Dungeon Rank | Description                                   |
 | ------------ | --------------------------------------------- |
@@ -56,7 +56,7 @@ Dungeons use the same F-S rank scale as everything else.
 | C            | Serious threat.                               |
 | B            | Major operation.                              |
 | A            | Extremely dangerous.                          |
-| S            | National emergency.                           |
+| U            | National emergency.                           |
 
 ## Dungeon Concepts
 

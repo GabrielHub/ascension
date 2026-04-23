@@ -7,7 +7,7 @@
  */
 
 import type { TemplateRegistry } from "content/templates";
-import type { StatusId, AbilityEffect } from "content/templates/kits";
+import type { StatusId, AbilityEffect, CombatStat } from "content/templates/combat-packages";
 import type {
   BossEncounterActionTemplate,
   BossEncounterReactionTemplate,
@@ -39,11 +39,6 @@ export interface ActiveStatus {
   sourceActorId: string;
 }
 
-export interface CooldownEntry {
-  abilityId: string;
-  remainingCooldown: number;
-}
-
 export interface ActorCombatState {
   actorId: string;
   side: ActorSide;
@@ -60,21 +55,23 @@ export interface ActorCombatState {
   baseThreat: number;
   condition: ActorCondition;
   activeStatuses: ActiveStatus[];
-  cooldowns: CooldownEntry[];
   temporaryStatModifiers: Record<string, number>;
   actionHistory: readonly EncounterActionRecord[];
-  // Operator-specific
+  // Operator-specific — packages use the block-chain loop instead of cooldowns
   operatorId?: string;
   roleTag?: string;
   attunementTag?: string;
   presetId?: string;
-  regularAttackId?: string;
-  skillId?: string;
-  ultimateId?: string;
-  passiveIds?: readonly string[];
+  combatPackageId?: string;
+  /** Current block count for the operator chain. 0..3. Resets after ultimate. */
+  blocks?: number;
+  /** Raw operator stats for authored single-stat payload scaling. */
+  baseStats?: Partial<Record<CombatStat, number>>;
   // Boss-specific
   bossDefinitionId?: string;
   encounterActions?: readonly BossActionDefinition[];
+  /** Boss/summon action cooldowns keyed by action id. Unused for operators. */
+  actionCooldowns?: Record<string, number>;
 }
 
 // ── Boss behavior model ──────────────────────────────────────────────────
@@ -245,8 +242,7 @@ export const INTERVENTION_DEFINITIONS: readonly InterventionDefinition[] = [
 // ── Encounter action records (log/trace) ─────────────────────────────────
 
 export type EncounterActionKind =
-  | "attack"
-  | "skill"
+  | "basic_stage"
   | "ultimate"
   | "boss_action"
   | "passive_trigger"
@@ -347,11 +343,9 @@ export interface EncounterActorView {
   attunementTag?: string;
   presetId?: string;
   bossDefinitionId?: string;
-  // Operator ability IDs (for detail display)
-  regularAttackId?: string;
-  skillId?: string;
-  ultimateId?: string;
-  passiveIds?: readonly string[];
+  // Operator combat package reference (for detail display)
+  combatPackageId?: string;
+  blocks?: number;
   // Base combat stats
   baseAttack?: number;
   baseDefense?: number;

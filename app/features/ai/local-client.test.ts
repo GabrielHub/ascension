@@ -89,6 +89,14 @@ describe("local AI client", () => {
         buildingName: "Porter's",
         dayNumber: 3,
         minuteOfDay: 615,
+        presenter: {
+          id: "presenter/assistant",
+          name: "Mara Cordero",
+          roleTitle: "Assistant",
+          voiceBrief: "Matter-of-fact, calm, grounded in operations.",
+          domainSummary: "Contracts, operations, and campaign guidance.",
+          expression: "concerned",
+        },
         subjectSummary: "Rose Vega, Loading Dock",
         operators: [
           {

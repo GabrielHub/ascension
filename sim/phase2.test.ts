@@ -8,6 +8,7 @@ import {
 } from "save/types";
 import { hydratePersistedSaveGame } from "save/codec";
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 import {
   createAscensionSimulation,
   createBootstrapSimulation,
@@ -134,7 +135,6 @@ function createPhase2TestContext(): SimSystemContext {
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -146,7 +146,6 @@ function createPhase2TestContext(): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -186,17 +185,9 @@ function createPhase2TestContext(): SimSystemContext {
         },
         lastPurchasedUpgradeId: null,
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }
@@ -479,7 +470,6 @@ describe("Phase 2 inventory system", () => {
         roomEntities: [],
         operatorEntities: [],
         raidOpportunityEntities: [],
-        staffEntities: [],
         visitorEntities: [],
         eventEntities: [],
         dispositionEntities: [],
@@ -491,7 +481,6 @@ describe("Phase 2 inventory system", () => {
         nextRoomSequence: 1,
         nextOperatorSequence: 1,
         nextOpportunitySequence: 1,
-        nextStaffSequence: 1,
         nextVisitorSequence: 1,
         nextRaidSequence: 1,
         nextEventSequence: 1,
@@ -531,17 +520,9 @@ describe("Phase 2 inventory system", () => {
           },
           lastPurchasedUpgradeId: null,
         },
-        kitRegistry: {
-          regularAttacks: [],
-          skills: [],
-          ultimates: [],
-          passives: [],
-          regularAttackById: new Map(),
-          skillById: new Map(),
-          ultimateById: new Map(),
-          passiveById: new Map(),
-        },
+        combatPackageRegistry: buildCombatPackageRegistry([]),
         worldTimeFrozen: false,
+        presenterUnlocks: [],
       },
     };
 
@@ -728,47 +709,10 @@ describe("Phase 2 market system", () => {
       slotId: "slot/storage-left",
     });
 
-    const backstockRoomId =
-      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1")
-        ?.id ?? "missing";
-    simulation.dispatch({
-      type: "sim/set-room-active",
-      roomId: backstockRoomId,
-      isActive: true,
-    });
-
-    expect(
-      simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
-    ).toMatchObject({
-      isOperational: false,
-    });
-
-    const pipeWrench = simulation
-      .getPhase2View()
-      .marketItems.find((item) => item.itemId === "weapon/pipe-wrench");
-    expect(pipeWrench?.buyPrice).toBe(30);
-
-    simulation.dispatch({
-      type: "sim/hire-staff",
-      roleTag: "staff:logistics",
-    });
-    const logisticsStaff = simulation
-      .getPhase1View()
-      .staff.filter((staff) => staff.roleTag === "staff:logistics");
-    const hiredStaff = logisticsStaff[logisticsStaff.length - 1];
-    if (!hiredStaff) {
-      throw new Error("expected hired logistics staff for backstock test");
-    }
-    simulation.dispatch({
-      type: "sim/assign-staff",
-      staffId: hiredStaff.id,
-      roomId: backstockRoomId,
-    });
     expect(
       simulation.getPhase1View().rooms.find((room) => room.templateId === "room/backstock:tier_1"),
     ).toMatchObject({
       isOperational: true,
-      assignedStaffCount: 1,
     });
 
     const discountedPipeWrench = simulation

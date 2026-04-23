@@ -1,0 +1,700 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Office (Porter's tier 1)
+       Cramped admin office above the bar — a converted apartment room,
+       paperwork-heavy and lived-in. The hero is a scarred wooden desk
+       under a green banker's lamp, paired with a chunky beige CRT,
+       corded phone, a coffee-stained mug, and stacks of manila folders.
+       A tall metal filing cabinet anchors the back-right corner with a
+       potted plant on top. A low wood credenza along the back-left
+       carries a tube radio, a bottle of bourbon with a glass, and a
+       short stack of binders. The corkboard past the door collects
+       the month's schedule, pinned photos, and sticky notes. A single
+       mismatched visitor chair faces the desk. Wastebasket beside the
+       desk, folded newspaper on the floor, stack of binders by the
+       filing cabinet. Operations leadership, not a corner office.
+
+       Origin (200,100). iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Slot 4×3. Door is on the c=0 wall at r∈[0,1] (engine-rendered);
+       corkboard mounts past it at r∈[1.5, 2.5].
+
+       Z-order (back-to-front):
+         1) Corkboard (c=0 wall mount)
+         2) Back-wall credenza + items on top (back-left, r=0)
+         3) Tall filing cabinet + potted plant (back-right, r=0)
+         4) Rolling office chair (behind desk, r∈[0.5, 1.0])
+         5) Desk body
+         6) Desk-top props (lamp, CRT, keyboard, dossier, mug, phone, pens)
+         7) Visitor chair (in front of desk)
+         8) Wastebasket, floor binders, folded newspaper -->
+
+  <!-- ====================================================================
+       CORKBOARD — mounted on c=0 wall, past the door at r∈[0,1].
+       r∈[1.5, 2.5], z∈[40, 76]. Wood frame, cork field with calendar,
+       operator photo, schedule slip, sticky note, colored push pins.
+       ==================================================================== -->
+  <!-- Frame -->
+  <polygon points="128,60 80,84 80,120 128,96"
+    fill="#2a1c10" stroke="#100a06" stroke-width="0.7"/>
+  <!-- Cork field -->
+  <polygon points="123,66 85,85 85,114 123,93"
+    fill="#a87648" stroke="#5a3a1e" stroke-width="0.4"/>
+  <!-- Cork grain (iso along +r) -->
+  <line x1="116" y1="71" x2="92" y2="83" stroke="#7a4f2a" stroke-width="0.3" opacity="0.45"/>
+  <line x1="119" y1="79" x2="92" y2="92" stroke="#7a4f2a" stroke-width="0.3" opacity="0.4"/>
+  <line x1="121" y1="87" x2="90" y2="102" stroke="#7a4f2a" stroke-width="0.3" opacity="0.4"/>
+  <line x1="122" y1="95" x2="93" y2="109" stroke="#7a4f2a" stroke-width="0.3" opacity="0.35"/>
+
+  <!-- Wall calendar (upper-back, paper with red month header) -->
+  <polygon points="120,68 100,78 100,92 120,82"
+    fill="#f0e8d2" stroke="#7a6238" stroke-width="0.35"/>
+  <polygon points="120,68 100,78 100,82 120,72"
+    fill="#9a3030" stroke="#5a1010" stroke-width="0.3"/>
+  <!-- Grid lines -->
+  <line x1="114" y1="74" x2="114" y2="86" stroke="#3a3026" stroke-width="0.2" opacity="0.5"/>
+  <line x1="107" y1="77" x2="107" y2="89" stroke="#3a3026" stroke-width="0.2" opacity="0.45"/>
+  <line x1="118" y1="75" x2="100" y2="84" stroke="#3a3026" stroke-width="0.2" opacity="0.5"/>
+  <line x1="118" y1="78.5" x2="100" y2="87.5" stroke="#3a3026" stroke-width="0.2" opacity="0.45"/>
+  <!-- Circled "today" -->
+  <circle cx="109" cy="85" r="1.4" fill="none" stroke="#9a3030" stroke-width="0.55"/>
+
+  <!-- Yellow sticky note (smaller, lower-back) -->
+  <polygon points="120,85 112,89 112,94 120,90"
+    fill="#e6d069" stroke="#9a8030" stroke-width="0.25"/>
+  <line x1="118" y1="87" x2="114" y2="89" stroke="#3a2c10" stroke-width="0.2" opacity="0.6"/>
+  <line x1="118" y1="89" x2="114" y2="91" stroke="#3a2c10" stroke-width="0.2" opacity="0.5"/>
+
+  <!-- Operator photo (mid-board) -->
+  <polygon points="111,93 102,97 102,107 111,103"
+    fill="#cfc8b8" stroke="#5a3a1e" stroke-width="0.3"/>
+  <polygon points="109,95 104,97 104,105 109,103"
+    fill="#3a4a5a" stroke="#1c140a" stroke-width="0.25"/>
+  <circle cx="106.5" cy="98.5" r="1.0" fill="#a89070"/>
+
+  <!-- Schedule slip (lower-front, handwritten rows) -->
+  <polygon points="113,98 97,106 97,112 113,104"
+    fill="#e8e0c8" stroke="#7a6238" stroke-width="0.3"/>
+  <line x1="111" y1="101" x2="99" y2="107" stroke="#3a3026" stroke-width="0.22" opacity="0.6"/>
+  <line x1="111" y1="103" x2="99" y2="109" stroke="#3a3026" stroke-width="0.22" opacity="0.5"/>
+  <line x1="111" y1="105" x2="99" y2="111" stroke="#3a3026" stroke-width="0.22" opacity="0.45"/>
+
+  <!-- Push pins -->
+  <circle cx="120" cy="68" r="1.2" fill="#c43232" stroke="#5a1010" stroke-width="0.3"/>
+  <circle cx="120" cy="85" r="1.0" fill="#3a8830" stroke="#1a4818" stroke-width="0.3"/>
+  <circle cx="111" cy="93" r="1.0" fill="#1d4d8a" stroke="#0a2440" stroke-width="0.3"/>
+  <circle cx="113" cy="98" r="1.0" fill="#c43232" stroke="#5a1010" stroke-width="0.3"/>
+
+  <!-- ====================================================================
+       LOW CREDENZA — back wall (r=0), c∈[0.5, 2.0], r∈[0.0, 0.5],
+       z∈[0, 28]. Two drawers with brass pulls, scratched walnut wood.
+       Footprint (z=0): BL(224,112) BR(296,148) FR(272,160) FL(200,124).
+       Top      (z=28): BL(224,84)  BR(296,120) FR(272,132) FL(200,96).
+       On top: short stack of binders, a tube radio, bourbon + glass.
+       ==================================================================== -->
+  <!-- Top surface -->
+  <polygon points="224,84 296,120 272,132 200,96"
+    fill="#5a3a22" stroke="#2a1808" stroke-width="0.55"/>
+  <line x1="224" y1="84" x2="296" y2="120" stroke="rgba(255,228,180,0.14)" stroke-width="0.5"/>
+  <line x1="224" y1="84" x2="200" y2="96" stroke="rgba(255,228,180,0.08)" stroke-width="0.4"/>
+  <!-- Wood grain -->
+  <line x1="208" y1="92" x2="280" y2="128" stroke="#2a1808" stroke-width="0.3" opacity="0.3"/>
+  <line x1="216" y1="88" x2="288" y2="124" stroke="#2a1808" stroke-width="0.25" opacity="0.25"/>
+
+  <!-- Front face (+r face at r=0.5) -->
+  <polygon points="200,96 272,132 272,160 200,124"
+    fill="#3e2a18" stroke="#2a1808" stroke-width="0.55"/>
+  <!-- Right end face -->
+  <polygon points="272,132 296,120 296,148 272,160"
+    fill="#2c1c0c" stroke="#1c1208" stroke-width="0.45"/>
+
+  <!-- Drawer division (vertical on front face at c=1.25) -->
+  <line x1="236" y1="114" x2="236" y2="142" stroke="#1c1208" stroke-width="0.45"/>
+  <!-- Horizontal drawer split at z=14 -->
+  <line x1="200" y1="110" x2="272" y2="146" stroke="#1c1208" stroke-width="0.45"/>
+
+  <!-- Drawer pulls (small brass pills on front face) -->
+  <rect x="216" y="110.5" width="4" height="1.6" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="252" y="128.5" width="4" height="1.6" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="216" y="124.5" width="4" height="1.6" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="252" y="142.5" width="4" height="1.6" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+
+  <!-- Legs (short plinth, iso parallelogram at bottom of front face) -->
+  <polygon points="200,120 272,156 272,160 200,124"
+    fill="#1c1208" stroke="#120a04" stroke-width="0.35"/>
+
+  <!-- ── Credenza top: stack of 3 binders (left area) ──────────────── -->
+  <!-- Binder 1 (bottom, red; world c∈[0.75, 1.25], r∈[0.1, 0.35], z∈[28, 32])
+       top corners (z=32): (230,89) (254,101) (242,107) (218,95)
+       floor corners (z=28): (230,93) (254,105) (242,111) (218,99) -->
+  <polygon points="230,89 254,101 242,107 218,95"
+    fill="#9a3030" stroke="#5a1010" stroke-width="0.35"/>
+  <polygon points="218,95 242,107 242,111 218,99"
+    fill="#6a1818" stroke="#3a0808" stroke-width="0.3"/>
+  <polygon points="242,107 254,101 254,105 242,111"
+    fill="#7a2020" stroke="#3a0808" stroke-width="0.25"/>
+  <line x1="230" y1="89" x2="254" y2="101" stroke="rgba(255,220,200,0.15)" stroke-width="0.4"/>
+
+  <!-- Binder 2 (middle, navy blue, slightly offset)
+       top corners (z=36): (232,83) (256,95) (244,101) (220,89) -->
+  <polygon points="232,83 256,95 244,101 220,89"
+    fill="#1d4d8a" stroke="#0a2440" stroke-width="0.35"/>
+  <polygon points="220,89 244,101 244,105 220,93"
+    fill="#12335e" stroke="#061630" stroke-width="0.3"/>
+  <polygon points="244,101 256,95 256,99 244,105"
+    fill="#163d70" stroke="#061630" stroke-width="0.25"/>
+
+  <!-- Binder 3 (top, manila)
+       top corners (z=40): (234,77) (258,89) (246,95) (222,83) -->
+  <polygon points="234,77 258,89 246,95 222,83"
+    fill="#c8a468" stroke="#7a6030" stroke-width="0.35"/>
+  <polygon points="222,83 246,95 246,99 222,87"
+    fill="#8a6a38" stroke="#4a3818" stroke-width="0.3"/>
+  <polygon points="246,95 258,89 258,93 246,99"
+    fill="#a0824c" stroke="#4a3818" stroke-width="0.25"/>
+
+  <!-- ── Credenza top: tube radio (mid area) ──────────────────────── -->
+  <!-- World c∈[1.35, 1.75], r∈[0.1, 0.4], z∈[28, 42]. Wood cabinet,
+       brass-rim speaker grille, warm glow dial. -->
+  <!-- Top (z=42) -->
+  <polygon points="260,86 279,96 265,103 246,93"
+    fill="#5a3a22" stroke="#2a1808" stroke-width="0.3"/>
+  <!-- Front face (+r side, z∈[28, 42]) -->
+  <polygon points="246,93 265,103 265,117 246,107"
+    fill="#7a4e2c" stroke="#2a1808" stroke-width="0.35"/>
+  <!-- Right end face -->
+  <polygon points="265,103 279,96 279,110 265,117"
+    fill="#4a2e1a" stroke="#2a1808" stroke-width="0.3"/>
+  <!-- Speaker grille (circle on front face, iso ellipse) -->
+  <ellipse cx="252" cy="103" rx="3" ry="2.5" fill="#1c140a" stroke="#8a6a38" stroke-width="0.5"/>
+  <line x1="250" y1="102" x2="253.5" y2="104" stroke="#2a1808" stroke-width="0.3"/>
+  <line x1="250" y1="104" x2="253.5" y2="106" stroke="#2a1808" stroke-width="0.3"/>
+  <!-- Tuning dial (glowing) -->
+  <rect x="259" y="108" width="4" height="1.6" rx="0.3" fill="#1a1408" stroke="#0a0604" stroke-width="0.2"/>
+  <rect x="259.3" y="108.3" width="3.4" height="1" rx="0.2" fill="#e8b040" opacity="0.75"/>
+  <line x1="261" y1="108.5" x2="261" y2="109.4" stroke="#9a3030" stroke-width="0.4"/>
+  <!-- Knob -->
+  <circle cx="262" cy="112.5" r="1" fill="#3a2618" stroke="#140a04" stroke-width="0.2"/>
+
+  <!-- ── Credenza top: bourbon bottle + tumbler ───────────────────── -->
+  <!-- Bourbon bottle (standing) at world c≈1.88, r≈0.25
+       base center (z=28): iso(1.88, 0.25, 28) = (278.24, 123.12)
+       Use c=1.875, r=0.25, z∈[28, 48] for body, z∈[48, 54] for neck. -->
+  <!-- Body base ellipse at z=28 (iso 2:1) -->
+  <ellipse cx="278" cy="123" rx="4" ry="2" fill="#3a1a08" stroke="#1c0c04" stroke-width="0.3"/>
+  <!-- Body shoulders (upper rectangle-like) -->
+  <polygon points="274,103 282,103 282,123 274,123"
+    fill="#5a2a10" stroke="#2a1408" stroke-width="0.3"/>
+  <!-- Body highlight -->
+  <line x1="275" y1="107" x2="275" y2="121" stroke="rgba(255,180,100,0.35)" stroke-width="0.7"/>
+  <line x1="280" y1="107" x2="280" y2="121" stroke="rgba(40,10,4,0.5)" stroke-width="0.5"/>
+  <!-- Shoulder taper -->
+  <polygon points="274,103 282,103 280,99 276,99"
+    fill="#48220e" stroke="#2a1408" stroke-width="0.25"/>
+  <!-- Neck -->
+  <rect x="276.5" y="93" width="3" height="6" fill="#3a1a08" stroke="#1c0c04" stroke-width="0.25"/>
+  <!-- Cap -->
+  <rect x="276" y="90" width="4" height="3.2" rx="0.4" fill="#1a1008" stroke="#080402" stroke-width="0.25"/>
+  <!-- Label -->
+  <polygon points="274.5,110 281.5,110 281.5,118 274.5,118"
+    fill="#e8d8a8" stroke="#8a6a38" stroke-width="0.25"/>
+  <line x1="275.5" y1="112" x2="280.5" y2="112" stroke="#3a2610" stroke-width="0.3"/>
+  <line x1="275.5" y1="114" x2="280.5" y2="114" stroke="#3a2610" stroke-width="0.25" opacity="0.7"/>
+  <line x1="275.5" y1="116" x2="280.5" y2="116" stroke="#3a2610" stroke-width="0.25" opacity="0.5"/>
+
+  <!-- Tumbler glass (front-right of bottle)
+       Base at world c≈1.95, r≈0.4, z=28: iso = (274.4, 128.4) -->
+  <ellipse cx="274" cy="128" rx="2.2" ry="1.1" fill="rgba(150,170,180,0.22)" stroke="#5a6068" stroke-width="0.3"/>
+  <rect x="271.8" y="121" width="4.4" height="7" fill="rgba(180,195,205,0.18)" stroke="#5a6068" stroke-width="0.3"/>
+  <ellipse cx="274" cy="121" rx="2.2" ry="1.1" fill="rgba(200,215,225,0.28)" stroke="#7a8088" stroke-width="0.3"/>
+  <!-- Amber liquid inside -->
+  <ellipse cx="274" cy="124.5" rx="2" ry="1" fill="rgba(180,100,40,0.55)"/>
+
+  <!-- ====================================================================
+       TALL FILING CABINET — back wall (r=0), c∈[3.0, 3.75], r∈[0.0, 0.75],
+       z∈[0, 60]. Four drawers with brass pulls, steel grey.
+       Footprint (z=0): BL(344,172) BR(380,190) FR(344,208) FL(308,190).
+       Top      (z=60): BL(344,112) BR(380,130) FR(344,148) FL(308,130).
+       On top: potted plant.
+       ==================================================================== -->
+  <!-- Top surface -->
+  <polygon points="344,112 380,130 344,148 308,130"
+    fill="#4a4f57" stroke="#2a2e34" stroke-width="0.55"/>
+  <line x1="344" y1="112" x2="380" y2="130" stroke="rgba(255,255,255,0.18)" stroke-width="0.45"/>
+  <line x1="344" y1="112" x2="308" y2="130" stroke="rgba(255,255,255,0.1)" stroke-width="0.35"/>
+
+  <!-- Front face (+r at r=0.75) -->
+  <polygon points="308,130 344,148 344,208 308,190"
+    fill="#3c434b" stroke="#252a30" stroke-width="0.55"/>
+  <!-- Right end face (c=3.75) -->
+  <polygon points="344,148 380,130 380,190 344,208"
+    fill="#30363e" stroke="#222830" stroke-width="0.45"/>
+
+  <!-- Drawer divisions (horizontal, 4 drawers, z=45, 30, 15) -->
+  <line x1="308" y1="145" x2="344" y2="163" stroke="#1a1e24" stroke-width="0.5"/>
+  <line x1="308" y1="160" x2="344" y2="178" stroke="#1a1e24" stroke-width="0.5"/>
+  <line x1="308" y1="175" x2="344" y2="193" stroke="#1a1e24" stroke-width="0.5"/>
+  <!-- Drawer shadow grooves -->
+  <line x1="308" y1="145.5" x2="344" y2="163.5" stroke="rgba(255,255,255,0.08)" stroke-width="0.3"/>
+  <line x1="308" y1="160.5" x2="344" y2="178.5" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+  <line x1="308" y1="175.5" x2="344" y2="193.5" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>
+
+  <!-- Drawer pulls (recessed brass cups, 4 drawers)
+       Each pull at c=3.375 (front face center), z=52.5, 37.5, 22.5, 7.5 -->
+  <rect x="322" y="139" width="4" height="1.8" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="322" y="154" width="4" height="1.8" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="322" y="169" width="4" height="1.8" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <rect x="322" y="184" width="4" height="1.8" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+
+  <!-- Top drawer label slot (small card) -->
+  <rect x="328" y="140.5" width="4" height="1.2" rx="0.2" fill="#e8e0c8" stroke="#7a6238" stroke-width="0.15"/>
+  <line x1="329" y1="141.2" x2="331" y2="141.2" stroke="#3a3026" stroke-width="0.2"/>
+
+  <!-- Hairline dent on front face -->
+  <line x1="314" y1="170" x2="318" y2="172" stroke="#1a1e24" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- ── Filing cabinet top: potted plant ─────────────────────────── -->
+  <!-- Pot at c≈3.4, r≈0.4 (center of cabinet top). iso(3.4, 0.4, 60) = (344, 131.2) -->
+  <!-- Terracotta pot (iso rim + body) -->
+  <polygon points="336,119 352,127 344,133 328,125"
+    fill="#6a3820" stroke="#3a1c08" stroke-width="0.4"/>
+  <polygon points="328,125 344,133 344,142 328,134"
+    fill="#4a2818" stroke="#3a1c08" stroke-width="0.35"/>
+  <polygon points="344,133 352,127 352,136 344,142"
+    fill="#3a1c08" stroke="#2a1004" stroke-width="0.3"/>
+  <!-- Pot rim highlight -->
+  <line x1="336" y1="119" x2="352" y2="127" stroke="rgba(255,180,120,0.3)" stroke-width="0.45"/>
+  <!-- Soil -->
+  <polygon points="336,121 350,128 344,131 330,124"
+    fill="#241408" stroke="#140a04" stroke-width="0.3"/>
+  <!-- Foliage: sansevieria / tall leaves (world-vertical, small lean) -->
+  <path d="M 340 123 Q 339 110 342 97 L 344 97 Q 342 110 342 123 Z"
+    fill="#2a4a2e" stroke="#162818" stroke-width="0.4"/>
+  <path d="M 338 124 Q 335 112 334 100 L 336 99 Q 336 112 340 124 Z"
+    fill="#365c3a" stroke="#162818" stroke-width="0.35"/>
+  <path d="M 343 123 Q 346 114 350 103 L 352 104 Q 348 116 345 123 Z"
+    fill="#2a4a2e" stroke="#162818" stroke-width="0.4"/>
+  <path d="M 341 122 Q 342 105 346 95 L 348 96 Q 344 107 343 122 Z"
+    fill="#3a604a" stroke="#162818" stroke-width="0.35"/>
+  <!-- Leaf center highlights -->
+  <line x1="342" y1="98" x2="342" y2="121" stroke="rgba(180,220,170,0.28)" stroke-width="0.35"/>
+  <line x1="346" y1="100" x2="348" y2="120" stroke="rgba(180,220,170,0.22)" stroke-width="0.3"/>
+
+  <!-- ====================================================================
+       ROLLING OFFICE CHAIR — c∈[2.0, 2.5], r∈[0.5, 1.0]. Seat at z=18,
+       backrest tops at z=46. 5-star wheeled base centered at the seat
+       footprint center (c=2.25, r=0.75, z=0 → iso (272, 172)). Sitter
+       faces +r (south, toward the desk and visitor chair). Drawn BEFORE
+       the desk so the desk top occludes the front of the seat.
+       ==================================================================== -->
+  <!-- Floor shadow disc (tight contact) -->
+  <ellipse cx="272" cy="173" rx="15" ry="5" fill="rgba(0,0,0,0.28)"/>
+
+  <!-- 5-star base — 5 arms radiating from hub, each ending in a caster.
+       Arms use iso-plane directions to stay grounded on the floor. -->
+  <!-- Hub -->
+  <ellipse cx="272" cy="172" rx="3.2" ry="1.6" fill="#1e2228" stroke="#0c0e12" stroke-width="0.35"/>
+  <!-- Arm NE (toward +c) -->
+  <polygon points="270,171 274,173 283,177 281,175"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Arm SE (toward +r, front) -->
+  <polygon points="274,172 274,174 273,181 271,180"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Arm E-SE (between) -->
+  <polygon points="274,171 275,173 282,179 280,177"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Arm SW (toward -c+r) -->
+  <polygon points="270,172 272,174 264,179 263,177"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Arm NW (toward -c) -->
+  <polygon points="269,171 271,173 262,175 261,173"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+
+  <!-- Casters (at arm tips) -->
+  <ellipse cx="282" cy="176" rx="1.6" ry="0.9" fill="#14181c" stroke="#080a0c" stroke-width="0.25"/>
+  <ellipse cx="272" cy="181" rx="1.6" ry="0.9" fill="#14181c" stroke="#080a0c" stroke-width="0.25"/>
+  <ellipse cx="281" cy="179" rx="1.6" ry="0.9" fill="#14181c" stroke="#080a0c" stroke-width="0.25"/>
+  <ellipse cx="263" cy="179" rx="1.6" ry="0.9" fill="#14181c" stroke="#080a0c" stroke-width="0.25"/>
+  <ellipse cx="262" cy="174" rx="1.6" ry="0.9" fill="#14181c" stroke="#080a0c" stroke-width="0.25"/>
+
+  <!-- Gas cylinder (vertical from hub up to seat underside) -->
+  <rect x="270.5" y="156" width="3" height="16" fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <rect x="270.5" y="156" width="3" height="3" fill="#3a3e46" stroke="#12161a" stroke-width="0.25"/>
+
+  <!-- Seat underside shadow strip -->
+  <polygon points="248,154 296,154 296,158 248,158" opacity="0" />
+
+  <!-- Seat pan (iso parallelogram, c∈[2.0, 2.5], r∈[0.5, 1.0], z=18)
+       top corners: (272,142) (296,154) (272,166) (248,154)
+       floor (z=16): (272,144) (296,156) (272,168) (248,156) -->
+  <!-- Seat cushion top -->
+  <polygon points="272,142 296,154 272,166 248,154"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.45"/>
+  <!-- Seat front edge (front face of cushion) -->
+  <polygon points="248,154 272,166 272,170 248,158"
+    fill="#1c2026" stroke="#0c0e12" stroke-width="0.35"/>
+  <polygon points="272,166 296,154 296,158 272,170"
+    fill="#181c22" stroke="#0c0e12" stroke-width="0.3"/>
+  <!-- Fabric wear highlight -->
+  <line x1="260" y1="150" x2="284" y2="162" stroke="rgba(255,255,255,0.08)" stroke-width="0.4"/>
+
+  <!-- Backrest (on NE edge of seat = back side, faces +r)
+       Backrest face top corners: (272,114) (296,126)
+       Backrest face bottom: shared seat top NE edge (272,142) (296,154) -->
+  <polygon points="272,114 296,126 296,154 272,142"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.45"/>
+  <!-- Backrest depth / top cap -->
+  <polygon points="272,114 296,126 298,125 274,113"
+    fill="#3a3e46" stroke="#12161a" stroke-width="0.3"/>
+  <polygon points="296,126 298,125 298,153 296,154"
+    fill="#181c22" stroke="#0c0e12" stroke-width="0.3"/>
+  <!-- Backrest seam lines (padding stripes) -->
+  <line x1="274" y1="119" x2="274" y2="143" stroke="#181c22" stroke-width="0.3" opacity="0.55"/>
+  <line x1="278" y1="121" x2="278" y2="145" stroke="#181c22" stroke-width="0.3" opacity="0.5"/>
+  <line x1="284" y1="124" x2="284" y2="148" stroke="#181c22" stroke-width="0.3" opacity="0.45"/>
+  <line x1="290" y1="128" x2="290" y2="152" stroke="#181c22" stroke-width="0.3" opacity="0.4"/>
+  <!-- Backrest highlight -->
+  <line x1="273" y1="116" x2="295" y2="128" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+
+  <!-- Armrests (short arms protruding forward from seat sides) -->
+  <!-- Left armrest (NW side, c=2.0) -->
+  <rect x="247.5" y="148" width="2" height="8" fill="#1c2026" stroke="#0c0e12" stroke-width="0.25"/>
+  <polygon points="246,146 254,150 254,152 246,148"
+    fill="#3a3e46" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Right armrest (SE side, c=2.5) -->
+  <rect x="294.5" y="148" width="2" height="8" fill="#1c2026" stroke="#0c0e12" stroke-width="0.25"/>
+  <polygon points="290,150 298,146 298,148 290,152"
+    fill="#3a3e46" stroke="#12161a" stroke-width="0.3"/>
+
+  <!-- Hanging jacket (slung over backrest corner, NE — lived-in touch) -->
+  <polygon points="294,130 302,134 300,148 293,144"
+    fill="#3a2a1a" stroke="#1c1208" stroke-width="0.35"/>
+  <polygon points="294,130 302,134 302,137 294,133"
+    fill="#5a3a22" stroke="#1c1208" stroke-width="0.3"/>
+  <line x1="297" y1="134" x2="298" y2="144" stroke="#1c1208" stroke-width="0.25" opacity="0.7"/>
+
+  <!-- ====================================================================
+       DESK (HERO) — c∈[1.5, 3.0], r∈[1.0, 1.75], top z=22. Scarred
+       wooden surface, iron-edged top, modesty panel front drawer, four
+       legs. Visible legs at NW front (c=1.5,r=1.75), SE front
+       (c=3.0,r=1.75), NE back (c=3.0,r=1.0). NW back leg hidden.
+       Top corners  (z=22): (224,138) (296,174) (260,192) (188,156).
+       Floor corners (z=0): (224,160) (296,196) (260,214) (188,178).
+       ==================================================================== -->
+  <!-- Desk contact shadow on floor -->
+  <ellipse cx="240" cy="198" rx="62" ry="12" fill="rgba(0,0,0,0.22)"/>
+
+  <!-- Back legs (strictly vertical, hidden-but-grounded under top) -->
+  <line x1="224" y1="138" x2="224" y2="160" stroke="#1c1208" stroke-width="2"/>
+  <line x1="296" y1="174" x2="296" y2="196" stroke="#1c1208" stroke-width="2"/>
+
+  <!-- Top-thickness underside faces (SW and SE) -->
+  <polygon points="188,156 260,192 260,196 188,160"
+    fill="#2a1808" stroke="#1c1208" stroke-width="0.5"/>
+  <polygon points="296,174 260,192 260,196 296,178"
+    fill="#2c1a0a" stroke="#1c1208" stroke-width="0.45"/>
+
+  <!-- Desk top parallelogram -->
+  <polygon points="224,138 296,174 260,192 188,156"
+    fill="#6a4630" stroke="#3a2416" stroke-width="0.7"/>
+  <!-- Edge highlight (back two edges) -->
+  <line x1="224" y1="138" x2="296" y2="174" stroke="rgba(255,228,180,0.16)" stroke-width="0.55"/>
+  <line x1="224" y1="138" x2="188" y2="156" stroke="rgba(255,228,180,0.1)" stroke-width="0.45"/>
+  <!-- Wood grain (iso along +c and +r) -->
+  <line x1="210" y1="148" x2="282" y2="184" stroke="#3a2416" stroke-width="0.3" opacity="0.35"/>
+  <line x1="222" y1="154" x2="268" y2="177" stroke="#3a2416" stroke-width="0.25" opacity="0.3"/>
+  <line x1="238" y1="146" x2="250" y2="190" stroke="#3a2416" stroke-width="0.25" opacity="0.25"/>
+  <line x1="262" y1="158" x2="226" y2="176" stroke="#3a2416" stroke-width="0.25" opacity="0.25"/>
+  <!-- Scratches and ring stain on top (wear) -->
+  <line x1="234" y1="154" x2="250" y2="162" stroke="#2a1808" stroke-width="0.35" opacity="0.5"/>
+  <ellipse cx="262" cy="168" rx="3.5" ry="1.5" fill="none" stroke="#2a1808" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- Front face of desk (SW-facing panel, c∈[1.5,3.0], r=1.75)
+       Top edge: (188,156) → (260,192); Bottom edge at z=0: (188,178) → (260,214) -->
+  <polygon points="188,156 260,192 260,214 188,178"
+    fill="#3a2416" stroke="#1c1208" stroke-width="0.5"/>
+  <!-- Modesty panel drawer (upper section of front face, z∈[14,22]) -->
+  <polygon points="190,159 258,193 258,197 190,163"
+    fill="#4a2e1a" stroke="#1c1208" stroke-width="0.35"/>
+  <!-- Drawer pull -->
+  <rect x="222" y="176" width="5" height="1.6" rx="0.3" fill="#c8a868" stroke="#7a6238" stroke-width="0.2"/>
+  <!-- Panel grain lines -->
+  <line x1="210" y1="167" x2="210" y2="185" stroke="#1c1208" stroke-width="0.3" opacity="0.4"/>
+  <line x1="236" y1="180" x2="236" y2="198" stroke="#1c1208" stroke-width="0.3" opacity="0.35"/>
+
+  <!-- Right end face (c=3.0, r∈[1.0, 1.75], z∈[0, 22])
+       Top edge: (296,174) → (260,192); Bottom edge at z=0: (296,196) → (260,214) -->
+  <polygon points="296,174 260,192 260,214 296,196"
+    fill="#2a1808" stroke="#1c1208" stroke-width="0.45"/>
+  <line x1="278" y1="183" x2="278" y2="205" stroke="#1c1208" stroke-width="0.3" opacity="0.4"/>
+
+  <!-- Visible legs (strictly vertical) -->
+  <line x1="188" y1="156" x2="188" y2="178" stroke="#1c1208" stroke-width="2"/>
+  <line x1="260" y1="192" x2="260" y2="214" stroke="#1c1208" stroke-width="2"/>
+
+  <!-- ── Desk-top props (drawn on top of desk, z-ordered back-to-front) ── -->
+
+  <!-- BANKER'S LAMP (back-left of desk, world c≈1.8, r≈1.1)
+       Base at (227.2, 145.2) on desk top. -->
+  <!-- Lamp base (iso ellipse + short cylinder) -->
+  <ellipse cx="227" cy="146" rx="5" ry="2" fill="#3a2a16" stroke="#1a0e04" stroke-width="0.35"/>
+  <polygon points="222,145 232,145 232,147 222,147"
+    fill="#5a3a20" stroke="#1a0e04" stroke-width="0.25"/>
+  <!-- Stem (brass) -->
+  <line x1="227" y1="145" x2="227" y2="131" stroke="#c8a868" stroke-width="1"/>
+  <!-- Pull chain -->
+  <line x1="231" y1="133" x2="231" y2="140" stroke="#c8a868" stroke-width="0.4"/>
+  <circle cx="231" cy="140.5" r="0.6" fill="#c8a868"/>
+  <!-- Green glass shade (iso parallelogram, brass trim) -->
+  <polygon points="216,128 238,128 236,132 218,132"
+    fill="#2a5a2e" stroke="#183a1a" stroke-width="0.35"/>
+  <polygon points="218,132 236,132 234,135 220,135"
+    fill="#1a4020" stroke="#0c2010" stroke-width="0.3"/>
+  <!-- Shade top cap -->
+  <polygon points="216,128 238,128 236,126 218,126"
+    fill="#1a4020" stroke="#0c2010" stroke-width="0.3"/>
+  <!-- Brass rim along bottom of shade -->
+  <line x1="218" y1="132" x2="236" y2="132" stroke="#e8c878" stroke-width="0.5"/>
+  <!-- Warm glow under shade (on desk) -->
+  <ellipse cx="227" cy="144" rx="14" ry="5" fill="rgba(255,200,110,0.2)"/>
+  <ellipse cx="227" cy="144" rx="9" ry="3" fill="rgba(255,220,140,0.22)"/>
+
+  <!-- PAPER STACK (under lamp glow, world c≈2.0, r≈1.45) -->
+  <!-- Screen pos on desktop: iso(2.0, 1.45, 22) = (226.4, 160.8) -->
+  <polygon points="214,157 248,174 242,178 208,161"
+    fill="#f0e8d2" stroke="#8a7248" stroke-width="0.35"/>
+  <polygon points="208,161 242,178 242,181 208,164"
+    fill="#c8bd9c" stroke="#8a7248" stroke-width="0.28"/>
+  <polygon points="242,178 248,174 248,177 242,181"
+    fill="#b0a580" stroke="#8a7248" stroke-width="0.25"/>
+  <!-- Text lines on top page -->
+  <line x1="216" y1="160" x2="244" y2="174" stroke="#3a3026" stroke-width="0.3" opacity="0.55"/>
+  <line x1="216" y1="163" x2="244" y2="177" stroke="#3a3026" stroke-width="0.25" opacity="0.45"/>
+  <line x1="216" y1="166" x2="238" y2="177" stroke="#3a3026" stroke-width="0.25" opacity="0.4"/>
+
+  <!-- BEIGE CRT MONITOR (back-right of desk, world c≈2.4, r≈1.15)
+       Base center on desk top: iso(2.4, 1.15, 22) = (260, 162) -->
+  <!-- Monitor stand (short parallelogram plinth) -->
+  <polygon points="252,160 272,170 264,174 244,164"
+    fill="#b8b09a" stroke="#6a6252" stroke-width="0.35"/>
+  <polygon points="244,164 264,174 264,177 244,167"
+    fill="#8a8272" stroke="#6a6252" stroke-width="0.3"/>
+  <polygon points="264,174 272,170 272,173 264,177"
+    fill="#70685a" stroke="#6a6252" stroke-width="0.28"/>
+  <!-- Monitor body (iso box sitting on stand) -->
+  <!-- Body back-top corners at z=22+6=28 above desk to z=22+28=50 above desk.
+       But we're in screen space with desk top at y=162 center — let me just
+       author in screen space for compactness. -->
+  <polygon points="240,144 276,162 270,166 234,148"
+    fill="#c8c0a8" stroke="#7a7260" stroke-width="0.4"/>
+  <polygon points="234,148 270,166 270,169 234,151"
+    fill="#a09680" stroke="#7a7260" stroke-width="0.35"/>
+  <polygon points="270,166 276,162 276,165 270,169"
+    fill="#8a8272" stroke="#7a7260" stroke-width="0.3"/>
+  <!-- Monitor body vertical extent -->
+  <polygon points="234,148 270,166 270,150 234,132"
+    fill="#d0c8b0" stroke="#7a7260" stroke-width="0.4"/>
+  <polygon points="270,166 270,150 276,146 276,162"
+    fill="#a89e86" stroke="#7a7260" stroke-width="0.3"/>
+  <polygon points="240,128 276,146 270,150 234,132"
+    fill="#d8d0b6" stroke="#7a7260" stroke-width="0.4"/>
+  <!-- Screen bezel (inset dark) -->
+  <polygon points="240,138 268,152 264,155 236,141"
+    fill="#1a1208" stroke="#0c0804" stroke-width="0.35"/>
+  <!-- Screen glass (dark with faint phosphor glow) -->
+  <polygon points="242,139 266,151 263,154 239,142"
+    fill="#0c1418" stroke="#050a0c" stroke-width="0.25"/>
+  <polygon points="243,140 265,151 262,153 241,142"
+    fill="rgba(60,120,90,0.38)"/>
+  <!-- Scanlines (subtle) -->
+  <line x1="243" y1="144" x2="264" y2="154.5" stroke="rgba(120,220,180,0.18)" stroke-width="0.25"/>
+  <line x1="243" y1="147" x2="264" y2="157.5" stroke="rgba(120,220,180,0.1)" stroke-width="0.2"/>
+  <!-- Power LED -->
+  <circle cx="270" cy="162" r="0.7" fill="#5ae060" stroke="#1a3a1a" stroke-width="0.2"/>
+  <!-- Front brand strip -->
+  <line x1="244" y1="156" x2="262" y2="165" stroke="#7a7260" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- KEYBOARD (in front of CRT, on desk top, world c≈2.3, r≈1.55) -->
+  <!-- Top parallelogram -->
+  <polygon points="252,172 276,184 268,188 244,176"
+    fill="#d8d0b6" stroke="#7a7260" stroke-width="0.35"/>
+  <!-- Front lip -->
+  <polygon points="244,176 268,188 268,190 244,178"
+    fill="#a89e86" stroke="#7a7260" stroke-width="0.28"/>
+  <polygon points="268,188 276,184 276,186 268,190"
+    fill="#8a8272" stroke="#7a7260" stroke-width="0.25"/>
+  <!-- Key rows (iso horizontal lines) -->
+  <line x1="248" y1="176" x2="272" y2="188" stroke="#7a7260" stroke-width="0.3" opacity="0.55"/>
+  <line x1="250" y1="178" x2="270" y2="188" stroke="#7a7260" stroke-width="0.25" opacity="0.5"/>
+  <line x1="252" y1="180" x2="268" y2="188" stroke="#7a7260" stroke-width="0.25" opacity="0.45"/>
+  <line x1="254" y1="182" x2="266" y2="188" stroke="#7a7260" stroke-width="0.22" opacity="0.4"/>
+  <!-- Space bar hint -->
+  <line x1="256" y1="184" x2="268" y2="190" stroke="#7a7260" stroke-width="0.35" opacity="0.55"/>
+
+  <!-- OPEN DOSSIER on desk front-center (world c≈2.05, r≈1.6) -->
+  <polygon points="210,170 246,187 244,190 208,173"
+    fill="#e0d19a" stroke="#7a6238" stroke-width="0.35"/>
+  <polygon points="210,170 228,177 244,173 226,166"
+    fill="#d8c890" stroke="#7a6238" stroke-width="0.35"/>
+  <polygon points="228,177 244,173 244,190 228,194"
+    fill="#c8b880" stroke="#7a6238" stroke-width="0.35"/>
+  <!-- Spine groove -->
+  <line x1="228" y1="177" x2="228" y2="194" stroke="#7a6238" stroke-width="0.4"/>
+  <!-- Handwriting lines on left page -->
+  <line x1="214" y1="174" x2="226" y2="178" stroke="#3a3026" stroke-width="0.3" opacity="0.6"/>
+  <line x1="214" y1="176" x2="226" y2="180" stroke="#3a3026" stroke-width="0.25" opacity="0.55"/>
+  <line x1="214" y1="178" x2="224" y2="182" stroke="#3a3026" stroke-width="0.25" opacity="0.5"/>
+  <!-- Right page (blank, barely any)
+  <line x1="232" y1="180" x2="240" y2="182" stroke="#3a3026" stroke-width="0.25" opacity="0.4"/>
+  <line x1="232" y1="183" x2="240" y2="185" stroke="#3a3026" stroke-width="0.22" opacity="0.35"/>
+  -->
+
+  <!-- COFFEE MUG (right-back of desk, world c≈2.75, r≈1.25, z=22)
+       On top: iso(2.75, 1.25, 22) = (272, 174). -->
+  <!-- Saucer (iso ellipse) -->
+  <ellipse cx="272" cy="174" rx="5" ry="2" fill="#c8bd9c" stroke="#6a6238" stroke-width="0.3"/>
+  <!-- Mug body -->
+  <rect x="269" y="165" width="6" height="9" fill="#e8e2d4" stroke="#9a8a70" stroke-width="0.4"/>
+  <ellipse cx="272" cy="165" rx="3" ry="1.2" fill="#d8d0c0" stroke="#9a8a70" stroke-width="0.3"/>
+  <ellipse cx="272" cy="165" rx="2.4" ry="0.9" fill="rgba(30,15,6,0.85)"/>
+  <!-- Handle -->
+  <path d="M 275,167 Q 278,168 277.5,172" fill="none" stroke="#9a8a70" stroke-width="0.7"/>
+  <!-- Coffee ring stain on saucer -->
+  <line x1="270" y1="173" x2="271.5" y2="174" stroke="#4a2a10" stroke-width="0.3" opacity="0.55"/>
+
+  <!-- PEN CUP (right-back of desk, world c≈2.6, r≈1.15) -->
+  <!-- Cup body (small cylinder, iso ellipse on top) -->
+  <ellipse cx="262" cy="162" rx="2.6" ry="1.1" fill="#2c4a5a" stroke="#162028" stroke-width="0.3"/>
+  <rect x="259.4" y="158" width="5.2" height="4" fill="#364e60" stroke="#162028" stroke-width="0.3"/>
+  <ellipse cx="262" cy="158" rx="2.6" ry="1.1" fill="#4a6474" stroke="#162028" stroke-width="0.3"/>
+  <ellipse cx="262" cy="158" rx="2.0" ry="0.85" fill="#111820"/>
+  <!-- Pens sticking out -->
+  <line x1="261" y1="157.5" x2="260" y2="151" stroke="#1a1a1a" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="262.5" y1="157.5" x2="263" y2="150" stroke="#9a3030" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="263.5" y1="157.5" x2="265" y2="152" stroke="#1d4d8a" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="262" y1="157.5" x2="262" y2="149" stroke="#c8a868" stroke-width="0.7" stroke-linecap="round"/>
+
+  <!-- CORDED DESK PHONE (right of mug, world c≈2.7, r≈1.55, z=22)
+       Iso screen: (251.6, 179.4) -->
+  <!-- Phone base -->
+  <polygon points="244,174 278,190 272,194 238,178"
+    fill="#d8d0b6" stroke="#6a6052" stroke-width="0.4"/>
+  <polygon points="238,178 272,194 272,197 238,181"
+    fill="#a89e86" stroke="#6a6052" stroke-width="0.3"/>
+  <polygon points="272,194 278,190 278,193 272,197"
+    fill="#8a8272" stroke="#6a6052" stroke-width="0.3"/>
+  <!-- Number pad (small grid on top) -->
+  <line x1="244" y1="179" x2="260" y2="187" stroke="#7a7260" stroke-width="0.3" opacity="0.55"/>
+  <line x1="245" y1="181" x2="261" y2="189" stroke="#7a7260" stroke-width="0.25" opacity="0.45"/>
+  <line x1="248" y1="176" x2="252" y2="184" stroke="#7a7260" stroke-width="0.25" opacity="0.45"/>
+  <line x1="252" y1="178" x2="256" y2="186" stroke="#7a7260" stroke-width="0.25" opacity="0.4"/>
+  <!-- Handset (sitting on cradle) -->
+  <polygon points="252,170 278,182 276,186 250,174"
+    fill="#c8c0a8" stroke="#6a6052" stroke-width="0.35"/>
+  <polygon points="250,174 276,186 276,189 250,177"
+    fill="#a89e86" stroke="#6a6052" stroke-width="0.28"/>
+  <!-- Handset earpiece -->
+  <ellipse cx="252" cy="172" rx="2" ry="1" fill="#6a6052" stroke="#3a3428" stroke-width="0.25"/>
+  <ellipse cx="276" cy="184" rx="2" ry="1" fill="#6a6052" stroke="#3a3428" stroke-width="0.25"/>
+  <!-- Coiled cable from handset -->
+  <path d="M 276 186 Q 280 190 282 194 Q 284 196 286 198"
+    fill="none" stroke="#2a2418" stroke-width="0.55"/>
+
+  <!-- ====================================================================
+       VISITOR CHAIR — in front of desk, c∈[2.0, 2.5], r∈[2.0, 2.5],
+       z seat=18, z back top=42. Sitter faces -r (north, toward desk).
+       Mismatched wood style, borrowed from the bar downstairs.
+       Seat top corners (z=18): (200,178) (224,190) (200,202) (176,190)
+       ==================================================================== -->
+  <!-- Legs (strictly vertical) -->
+  <line x1="176" y1="190" x2="176" y2="197" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="200" y1="202" x2="200" y2="209" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="224" y1="190" x2="224" y2="197" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="200" y1="178" x2="200" y2="185" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+
+  <!-- Seat top -->
+  <polygon points="200,178 224,190 200,202 176,190"
+    fill="#7a4e32" stroke="#5c3a1e" stroke-width="0.5"/>
+  <line x1="188" y1="184" x2="212" y2="196" stroke="#5c3a1e" stroke-width="0.3" opacity="0.5"/>
+  <!-- Seat underside (SW and SE faces) -->
+  <polygon points="176,190 200,202 200,205 176,193"
+    fill="#5c3a1e" stroke="#4a2e16" stroke-width="0.3"/>
+  <polygon points="200,202 224,190 224,193 200,205"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Backrest (on NW edge of seat, faces -r toward desk)
+       Backrest face bottom shared with seat NW edge (200,178) (176,190)
+       Backrest face top at z=42: (200,154) (176,166) -->
+  <polygon points="200,178 176,190 176,166 200,154"
+    fill="#6b422a" stroke="#553420" stroke-width="0.5"/>
+  <!-- Backrest top cap (depth toward NW) -->
+  <polygon points="200,154 176,166 175,167 199,155"
+    fill="#7a4e32" stroke="#553420" stroke-width="0.3"/>
+  <!-- Backrest end face (W end, farthest in -c) -->
+  <polygon points="176,166 175,167 175,191 176,190"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Slats (iso strokes on backrest) -->
+  <line x1="198" y1="160" x2="178" y2="170" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
+  <line x1="198" y1="165" x2="178" y2="175" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- ====================================================================
+       FLOOR PROPS — wastebasket, stack of binders by filing cabinet,
+       folded newspaper near visitor chair.
+       ==================================================================== -->
+
+  <!-- Wire-frame wastebasket (beside desk, right; world c≈3.25, r≈1.5)
+       iso(3.25, 1.5, 0) = (284, 214). -->
+  <!-- Contact shadow -->
+  <ellipse cx="284" cy="214" rx="5" ry="2" fill="rgba(0,0,0,0.28)"/>
+  <!-- Base ring -->
+  <ellipse cx="284" cy="213" rx="4.5" ry="1.8" fill="#1c1e20" stroke="#0c0e10" stroke-width="0.3"/>
+  <!-- Body (wire mesh silhouette — slightly tapered) -->
+  <path d="M 279.5 212 L 280.5 198 L 287.5 198 L 288.5 212 Z"
+    fill="#2a2e34" stroke="#12161a" stroke-width="0.3"/>
+  <!-- Top rim -->
+  <ellipse cx="284" cy="198" rx="4" ry="1.5" fill="#2a2e34" stroke="#0c0e10" stroke-width="0.35"/>
+  <ellipse cx="284" cy="198" rx="3.4" ry="1.2" fill="#12161a"/>
+  <!-- Vertical wires -->
+  <line x1="281" y1="199" x2="281" y2="211" stroke="#14181c" stroke-width="0.35" opacity="0.75"/>
+  <line x1="284" y1="199.5" x2="284" y2="212" stroke="#14181c" stroke-width="0.35" opacity="0.7"/>
+  <line x1="287" y1="199" x2="287" y2="211" stroke="#14181c" stroke-width="0.35" opacity="0.7"/>
+  <!-- Horizontal rings (iso ellipses) -->
+  <ellipse cx="284" cy="204" rx="4" ry="1.3" fill="none" stroke="#14181c" stroke-width="0.3" opacity="0.7"/>
+  <ellipse cx="284" cy="209" rx="4.3" ry="1.5" fill="none" stroke="#14181c" stroke-width="0.3" opacity="0.65"/>
+  <!-- Crumpled paper peeking out -->
+  <polygon points="282,197 287,196 286,199 283,199"
+    fill="#f0e8d2" stroke="#8a7248" stroke-width="0.3"/>
+  <polygon points="284,195 288,195 287,198 284,198"
+    fill="#e0d19a" stroke="#8a7248" stroke-width="0.28"/>
+
+  <!-- Stack of binders on the floor (right of desk, left of filing cabinet;
+       c≈2.9, r≈0.9) -->
+  <!-- iso(2.9, 0.9, 0) = (296, 191). Stack occupies z∈[0, 10]. -->
+  <polygon points="301,179 315,186 307,190 293,183"
+    fill="#3a6a48" stroke="#1a3a22" stroke-width="0.3"/>
+  <polygon points="293,183 307,190 307,193 293,186"
+    fill="#254e32" stroke="#143220" stroke-width="0.28"/>
+  <polygon points="307,190 315,186 315,189 307,193"
+    fill="#1e4028" stroke="#143220" stroke-width="0.25"/>
+  <!-- Second binder (slightly offset) -->
+  <polygon points="303,185 317,192 309,196 295,189"
+    fill="#5a2a10" stroke="#2a1408" stroke-width="0.3"/>
+  <polygon points="295,189 309,196 309,199 295,192"
+    fill="#3e1a08" stroke="#2a1408" stroke-width="0.28"/>
+  <polygon points="309,196 317,192 317,195 309,199"
+    fill="#321408" stroke="#2a1408" stroke-width="0.25"/>
+  <!-- Tape strip detail -->
+  <line x1="305" y1="187" x2="311" y2="191" stroke="rgba(200,168,76,0.22)" stroke-width="1"/>
+
+  <!-- Folded newspaper on the floor (front of visitor chair; world c≈1.8, r≈2.7)
+       iso(1.8, 2.7, 0) = (156.8, 208). -->
+  <polygon points="172,201 194,212 180,218 158,207"
+    fill="#d8d4c4" stroke="#5a5248" stroke-width="0.35"/>
+  <!-- Fold crease (iso along +r) -->
+  <line x1="165" y1="204" x2="187" y2="215" stroke="#7a7268" stroke-width="0.35" opacity="0.7"/>
+  <!-- Masthead (bold black block) -->
+  <polygon points="172,201 186,208 184,210 170,203"
+    fill="#2a2418" stroke="#1a1408" stroke-width="0.3"/>
+  <!-- Secondary headline lines -->
+  <line x1="170" y1="206" x2="188" y2="215" stroke="#2a2418" stroke-width="0.3" opacity="0.6"/>
+  <line x1="168" y1="208" x2="186" y2="217" stroke="#2a2418" stroke-width="0.25" opacity="0.45"/>
+  <!-- Column divider -->
+  <line x1="180" y1="204" x2="176" y2="217" stroke="#7a7268" stroke-width="0.25" opacity="0.5"/>
+</svg>

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 385 215">
+  <!-- Red Hook harbor boat — white-hulled working cabin cruiser.
+       Isometric 2:1. Hull along left iso axis (slope +0.5).
+       ~4 tiles long. Pointed bow with gradual taper.
+
+       Hull profile (port side, boat-shaped pentagon):
+         Bow tip:     (20,46)
+         Bow shoulder: (60,38)  — where bow meets main hull
+         Stern deck:  (310,163) — slope +0.5 from shoulder
+         Stern bottom:(310,185) — transom drop (22px freeboard)
+         Bow bottom:  (60,60)   — waterline, slope +0.5 back to stern
+
+       Stern transom (side face): D=60
+         (310,163)(370,133)(370,155)(310,185)
+
+       Deck (top face with bow): D=60
+         (20,46)(60,38)(310,163)(370,133)(120,8)
+         BL_top: (120,8) = FL_top(60,38) + side offset(60,-30)
+
+       Cabin (centered, 12 units inboard from port edge):
+         FC(242,117) FL(172,82) W=70 D=36 H=26 -->
+
+  <!-- ═══ HULL ═══ -->
+
+  <!-- Stern transom (side face, slope -0.5, drawn first — behind) -->
+  <polygon points="310,163 370,133 370,155 310,185"
+    fill="#c8c4be" stroke="#a09888" stroke-width="1"/>
+
+  <!-- Port hull — boat-shaped profile with pointed bow.
+       Top edge: bow tip → bow shoulder → stern (sheer line, slope +0.5).
+       Right edge: stern top → stern bottom (vertical transom).
+       Bottom edge: stern bottom → bow bottom (waterline, slope +0.5).
+       Bow: hull narrows from (60,38)/(60,60) to single point (20,46). -->
+  <polygon points="20,46 60,38 310,163 310,185 60,60"
+    fill="#e8e4e0" stroke="#c0b8b0" stroke-width="1"/>
+
+  <!-- Boot stripe near waterline (slope +0.5) -->
+  <line x1="60" y1="57" x2="310" y2="182"
+    stroke="#2a1828" stroke-width="2.5" opacity="0.25"/>
+
+  <!-- Deck (top face with bow taper) -->
+  <polygon points="20,46 60,38 310,163 370,133 120,8"
+    fill="#c0b8b0" stroke="#a09888" stroke-width="0.8"/>
+
+  <!-- ═══ CABIN / PILOTHOUSE (centered on beam, 12u inboard) ═══ -->
+
+  <!-- Cabin aft wall (side face, slope -0.5) -->
+  <polygon points="242,91 278,73 278,99 242,117"
+    fill="#d0ccc8" stroke="#a09888" stroke-width="0.6"/>
+
+  <!-- Cabin port wall (facade, slope +0.5) -->
+  <polygon points="172,56 242,91 242,117 172,82"
+    fill="#e8e4e0" stroke="#c0b8b0" stroke-width="0.8"/>
+
+  <!-- Cabin roof -->
+  <polygon points="172,56 242,91 278,73 208,38"
+    fill="#788898" stroke="#687888" stroke-width="0.6"/>
+
+  <!-- Cabin windows — port wall (facade plane) -->
+  <g transform="matrix(1, 0.5, 0, 1, 172, 56)">
+    <rect x="8" y="6" width="13" height="10" rx="1"
+      fill="#1a2838" stroke="#8898a8" stroke-width="0.4" opacity="0.7"/>
+    <rect x="26" y="6" width="13" height="10" rx="1"
+      fill="#1a2838" stroke="#8898a8" stroke-width="0.4" opacity="0.7"/>
+    <rect x="44" y="6" width="13" height="10" rx="1"
+      fill="#1a2838" stroke="#8898a8" stroke-width="0.4" opacity="0.7"/>
+  </g>
+
+  <!-- Cabin aft window (side plane) -->
+  <g transform="matrix(1, -0.5, 0, 1, 242, 91)">
+    <rect x="8" y="6" width="12" height="8" rx="1"
+      fill="#1a2838" stroke="#8898a8" stroke-width="0.4" opacity="0.6"/>
+  </g>
+
+  <!-- ═══ DETAILS ═══ -->
+
+  <!-- Antenna mast from cabin roof center -->
+  <line x1="215" y1="52" x2="215" y2="18"
+    stroke="#606870" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="215" cy="16" r="1.5" fill="#e04040" opacity="0.5"/>
+
+  <!-- Bow line -->
+  <path d="M20,46 Q12,38 8,26 Q4,16 10,6"
+    stroke="#5a5040" stroke-width="1.2" fill="none" opacity="0.3"/>
+
+  <!-- Tire fender (port side near stern) -->
+  <ellipse cx="286" cy="170" rx="4" ry="6"
+    fill="#1a1a1e" stroke="#101014" stroke-width="0.6" opacity="0.4"/>
+
+  <!-- Water ripple -->
+  <path d="M15,208 Q100,215 200,215 Q300,215 375,208"
+    stroke="rgba(140,200,255,0.04)" stroke-width="0.8" fill="none"/>
+</svg>

@@ -4,15 +4,17 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The Porter's-era gameplay baseline is shipped, but the HQ asset package is not yet feature-complete. Porter's room-scene, shell, structure, and backdrop remediation remains active work and should be completed before additional skyscraper HQ asset production. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
+The Porter's-era gameplay baseline is shipped, and the Porter's HQ package is now grounded in real building-specific assets rather than bodega placeholders. Remaining HQ environment work should stay narrow and contract-driven instead of reopening broad package-grounding plans. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
 
-There are five active checked-in plans right now:
+There are seven active checked-in plans right now:
 
-- [Porter's Room Asset Remediation](./porters-room-asset-remediation.md) — concrete Porter's room-package cleanup for missing roots, scenes, shell, structure, and viewer/runtime parity
 - [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — prerequisite work for the tower package: scene-builder support, shell sizing, and elevation-band definition before room-scene production
+- [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) — define the first rival guild packet, portrait/branding direction, and stable rival ids before the broader skyscraper rival-pressure gameplay refactor depends on them
+- [Skyscraper Rival Pressure Refactor](./skyscraper-rival-pressure-refactor.md) — collapse tower-end public pressure into one lighter lane, promote rival guild leaders into the main endgame-pressure surface, and keep skyscraper pressure meaningfully room-gated
 - [Operations UI Cascade Refactor](./operations-ui-cascade-refactor.md) — apply the same right-anchored cascading panel model to Contracts, Active, Opportunities, and History so Operations no longer depends on the older monolithic bottom-panel composition
 - [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
 - [Narrative Event Presenter Remediation](./narrative-event-presenter-remediation.md) — tighten presenter ownership so every narrative beat, including AI-framed incidents, resolves to a domain-correct presenter with presenter-specific voice rules
+- [Operator And Staff Remediation](./operator-and-staff-remediation.md) — collapse generic staff into the presenter roster, add presenter HQ walkers, and refactor operator combat into a rank-gated block-chain model
 
 The HQ UI Cascade Refactor shipped: HQ now uses one right-anchored cascading panel stack for rooms, people, management, teams, inventory, and market. Room slots, staff assignment, visitor recruitment/replace, and the floor switcher all run through the cascade or a floating HQ-world control, so the plan has been retired.
 
@@ -42,6 +44,6 @@ Do not add another broad umbrella plan when a narrower active execution slice is
 - The retired midgame remediation pass was verification-first work: browser depth, readability fixes, and balance-table tuning rather than new mechanics or broad new content.
 - Use browser automation as the primary fast regression surface for the canonical Porter's loop.
 - Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.
-- Finish the Porter's HQ asset package before continuing deeper skyscraper HQ asset work.
+- Treat Porter's follow-on HQ work as targeted room or contract cleanup, not as a still-missing package-grounding phase.
 - Treat the skyscraper as the final headquarters. Later planning should deepen that building's floor expansion, rank ladder, and pressure loops rather than introduce a fourth HQ.
 - Sequence the presenter-remediation plan after the remaining skyscraper expansion-floor consequence slices. It should tighten narrative ownership and AI framing once the current tower content surface is stable enough to audit in one pass.

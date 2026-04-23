@@ -1,0 +1,480 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene: The Workshop (Porter's tier 1 fabrication).
+       Waterfront machine-shop conversion for durable D-rank gear — steel,
+       wood, and welded salvage. Grid: 4 cols x 3 rows. Origin (200,100).
+       Tile 96x48; iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Composition (drawn back-to-front by row/column sum):
+         - Back-left heavy workbench (c 0.35-2.05 r 0.30-1.00) with vise,
+           bench grinder, WIP composite plate, and scattered hand tools.
+         - Back-right welding cart (c 2.55-3.55 r 0.30-0.95) with argon
+           and acetylene tanks standing upright, hood hanging, regulator
+           hoses draped.
+         - Front-left oil-stained floor wash anchoring the drill press
+           column (c 0.80 r 1.50) on its cast-iron base.
+         - Center anvil on wood stump (c 2.20 r 1.75) with forge hammer.
+         - Front-right red rolling tool chest (c 3.05 r 1.55) with open
+           drawer.
+         - Front pallet of rebar stock (c 1.45 r 2.30).
+         - Front-left rust drum (c 0.45 r 2.50) with protruding scrap.
+         - Front-right orange safety cone (c 2.95 r 2.60).
+         - Industrial cone pendant suspended above the work island.
+         Strictly props-only: no walls, floors, grid, or room outline.
+         All floor-plane rectangles are iso parallelograms on the canonical
+         axes; all uprights stay vertical; no detached oval drop-shadows. -->
+
+  <defs>
+    <radialGradient id="wsPendantGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#fff2c8" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#f4b85a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7a4a18" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wsSparkGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#fff0b0" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#ffb050" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#8a3a10" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ================================================================ -->
+  <!-- 1. BACK-WALL PEGBOARD (c 0.50-3.30 r=0, z 18-40)                  -->
+  <!-- Wall-adjacent tool board, mounted on the back wall surface. The  -->
+  <!-- board is a single iso-aligned parallelogram along the back edge. -->
+  <!-- ================================================================ -->
+  <polygon points="224,96 358,163 358,185 224,118"
+    fill="#3a2a1a" stroke="#1f1509" stroke-width="0.6"/>
+  <polygon points="226,99 356,164 356,182 226,117"
+    fill="#4a3624" stroke="#24180d" stroke-width="0.3" opacity="0.85"/>
+  <!-- Peg dots pattern -->
+  <circle cx="238" cy="109" r="0.9" fill="#1a1208"/>
+  <circle cx="252" cy="116" r="0.9" fill="#1a1208"/>
+  <circle cx="266" cy="123" r="0.9" fill="#1a1208"/>
+  <circle cx="280" cy="130" r="0.9" fill="#1a1208"/>
+  <circle cx="294" cy="137" r="0.9" fill="#1a1208"/>
+  <circle cx="308" cy="144" r="0.9" fill="#1a1208"/>
+  <circle cx="322" cy="151" r="0.9" fill="#1a1208"/>
+  <circle cx="336" cy="158" r="0.9" fill="#1a1208"/>
+  <circle cx="238" cy="121" r="0.9" fill="#1a1208"/>
+  <circle cx="266" cy="135" r="0.9" fill="#1a1208"/>
+  <circle cx="294" cy="149" r="0.9" fill="#1a1208"/>
+  <circle cx="322" cy="163" r="0.9" fill="#1a1208"/>
+  <!-- Hanging wrench silhouette -->
+  <polygon points="244,108 248,110 248,127 244,125" fill="#6a6e74" stroke="#2a2e32" stroke-width="0.35"/>
+  <polygon points="242,106 250,110 250,114 242,110" fill="#6a6e74" stroke="#2a2e32" stroke-width="0.35"/>
+  <!-- Hanging hammer silhouette -->
+  <polygon points="272,122 274,123 274,139 272,138" fill="#3a2a1a" stroke="#1a1208" stroke-width="0.3"/>
+  <polygon points="268,119 278,124 278,128 268,123" fill="#2a2e34" stroke="#0f1216" stroke-width="0.3"/>
+  <!-- Hanging pliers silhouette -->
+  <polygon points="300,136 303,137 303,149 300,147" fill="#4a2a22" stroke="#1a0c08" stroke-width="0.3"/>
+  <polygon points="298,134 305,137 305,140 298,137" fill="#6a3a2e" stroke="#1a0c08" stroke-width="0.3"/>
+  <!-- Hanging square -->
+  <polygon points="328,150 340,156 340,166 328,160" fill="none" stroke="#5a5e64" stroke-width="1.1"/>
+  <!-- Shelf below board -->
+  <polygon points="228,124 354,186 354,190 228,128" fill="#2a1e12" stroke="#120a06" stroke-width="0.4"/>
+  <!-- Paint can on shelf -->
+  <polygon points="242,131 248,134 248,142 242,139" fill="#4a3a28" stroke="#1a0f08" stroke-width="0.4"/>
+  <polygon points="242,131 248,134 250,133 244,130" fill="#6a5a3a" stroke="#1a0f08" stroke-width="0.3"/>
+  <!-- Coffee can -->
+  <polygon points="276,148 282,151 282,159 276,156" fill="#6a2a1a" stroke="#2a1008" stroke-width="0.4"/>
+  <polygon points="276,148 282,151 284,150 278,147" fill="#8a3a22" stroke="#2a1008" stroke-width="0.3"/>
+
+  <!-- ================================================================ -->
+  <!-- 2. HEAVY WORKBENCH — back-left                                   -->
+  <!-- Footprint c 0.35-2.05, r 0.30-1.00. Height z=14.                 -->
+  <!--   BACK  (0.35,0.30) → (214,115.2)                                -->
+  <!--   RIGHT (2.05,0.30) → (295.6,156.0)                              -->
+  <!--   FRONT (2.05,1.00) → (261.8,172.8)                              -->
+  <!--   LEFT  (0.35,1.00) → (168.2,132.0)                              -->
+  <!-- ================================================================ -->
+  <!-- SW front face (r=1.00 edge, raised) -->
+  <polygon points="168,132 262,173 262,187 168,146"
+    fill="#2a2c30" stroke="#0f1013" stroke-width="0.6"/>
+  <!-- Wood grain along front face -->
+  <line x1="178" y1="139" x2="258" y2="173.4" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+  <line x1="178" y1="146" x2="258" y2="180.4" stroke="rgba(0,0,0,0.25)" stroke-width="0.4"/>
+  <!-- SE right face (c=2.05 edge, raised) -->
+  <polygon points="296,156 262,173 262,187 296,170"
+    fill="#1f2124" stroke="#0a0b0d" stroke-width="0.6"/>
+  <!-- Bench top (iso parallelogram) at z=14 -->
+  <polygon points="214,101 296,156 262,173 168,132"
+    fill="#6a6e72" stroke="#3a3d42" stroke-width="0.7"/>
+  <!-- Top edge highlights -->
+  <line x1="214" y1="101" x2="168" y2="132" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/>
+  <line x1="214" y1="101" x2="296" y2="156" stroke="rgba(255,255,255,0.10)" stroke-width="0.5"/>
+  <!-- Oil streaks on bench top -->
+  <polygon points="198,118 238,140 234,142 194,120" fill="#3a3a3a" opacity="0.55"/>
+  <polygon points="224,116 260,138 258,140 222,118" fill="#2a2a2a" opacity="0.45"/>
+  <!-- Bench leg braces (verticals) -->
+  <line x1="168" y1="132" x2="168" y2="146" stroke="#0a0b0d" stroke-width="1.2"/>
+  <line x1="262" y1="173" x2="262" y2="187" stroke="#0a0b0d" stroke-width="1.2"/>
+  <line x1="214" y1="115" x2="214" y2="129" stroke="#0a0b0d" stroke-width="1.1" opacity="0.7"/>
+  <line x1="296" y1="156" x2="296" y2="170" stroke="#0a0b0d" stroke-width="1.2"/>
+
+  <!-- 2a. Bench vise — mounted left end of bench top (c≈0.55, r≈0.55) -->
+  <!-- Base/jaw footprint small (~0.30 tile). Top of bench z=14. -->
+  <polygon points="189,116 201,122 201,126 189,120"
+    fill="#5e2418" stroke="#2a0e08" stroke-width="0.4"/>
+  <polygon points="189,116 201,122 197,113 185,107"
+    fill="#7a2e1e" stroke="#2a0e08" stroke-width="0.4"/>
+  <polygon points="189,118 201,124 201,127 189,121"
+    fill="#8a3626" stroke="#2a0e08" stroke-width="0.3"/>
+  <polygon points="192,109 196,111 196,118 192,116"
+    fill="#4a1a10" stroke="#1a0606" stroke-width="0.3"/>
+  <!-- Vise handle (horizontal cylinder) -->
+  <line x1="186" y1="115" x2="204" y2="121" stroke="#1a1208" stroke-width="1.3" stroke-linecap="round"/>
+  <circle cx="186" cy="115" r="1.3" fill="#7a7e82" stroke="#1a1208" stroke-width="0.3"/>
+  <circle cx="204" cy="121" r="1.3" fill="#7a7e82" stroke="#1a1208" stroke-width="0.3"/>
+
+  <!-- 2b. Bench grinder — right end of bench (c≈1.75, r≈0.55) -->
+  <polygon points="259,144 273,150 273,156 259,150"
+    fill="#3a4048" stroke="#151a1f" stroke-width="0.4"/>
+  <polygon points="259,144 273,150 270,141 256,135"
+    fill="#4e555e" stroke="#151a1f" stroke-width="0.4"/>
+  <!-- Grinding wheel left -->
+  <ellipse cx="258" cy="138" rx="4" ry="5.5" fill="#2a2d32" stroke="#0f1216" stroke-width="0.4"/>
+  <ellipse cx="258" cy="138" rx="2.5" ry="3.5" fill="#4a4d52" stroke="#0f1216" stroke-width="0.3"/>
+  <!-- Grinding wheel right -->
+  <ellipse cx="272" cy="144" rx="4" ry="5.5" fill="#2a2d32" stroke="#0f1216" stroke-width="0.4"/>
+  <ellipse cx="272" cy="144" rx="2.5" ry="3.5" fill="#4a4d52" stroke="#0f1216" stroke-width="0.3"/>
+  <!-- Spark glow off right wheel -->
+  <ellipse cx="274" cy="145" rx="7" ry="3" fill="url(#wsSparkGlow)"/>
+  <circle cx="278" cy="146" r="0.6" fill="#fff0b0"/>
+  <circle cx="281" cy="148" r="0.5" fill="#ffc860"/>
+  <circle cx="283" cy="145" r="0.4" fill="#ffa040"/>
+  <!-- Spindle/motor box -->
+  <polygon points="263,140 269,143 269,149 263,146" fill="#2a2d32" stroke="#0f1216" stroke-width="0.3"/>
+
+  <!-- 2c. WIP composite chest plate — bench center (c≈1.20, r≈0.60) -->
+  <polygon points="220,128 244,140 234,147 210,135"
+    fill="#485058" stroke="#1a1e22" stroke-width="0.5"/>
+  <polygon points="222,129 242,139 234,144 214,134"
+    fill="#5a626a" stroke="#1a1e22" stroke-width="0.3"/>
+  <!-- Rivets on plate -->
+  <circle cx="222" cy="133" r="0.7" fill="#8a8e92"/>
+  <circle cx="230" cy="137" r="0.7" fill="#8a8e92"/>
+  <circle cx="238" cy="141" r="0.7" fill="#8a8e92"/>
+  <circle cx="222" cy="137" r="0.7" fill="#8a8e92"/>
+  <circle cx="230" cy="141" r="0.7" fill="#8a8e92"/>
+  <!-- Scribed centerline -->
+  <line x1="217" y1="133" x2="237" y2="143" stroke="#1a1e22" stroke-width="0.35" opacity="0.8"/>
+
+  <!-- 2d. Scattered hand tools on bench -->
+  <!-- Wrench (angled along iso-c axis) at c≈1.60, r≈0.50 -->
+  <polygon points="244,126 260,134 259,135.5 243,127.5" fill="#5a5e64" stroke="#1a1d22" stroke-width="0.3"/>
+  <polygon points="242,125 246,127 246,129 242,127" fill="#5a5e64" stroke="#1a1d22" stroke-width="0.3"/>
+  <polygon points="258,133 262,135 262,137 258,135" fill="#5a5e64" stroke="#1a1d22" stroke-width="0.3"/>
+  <!-- Hammer (handle along iso-r axis, head at lower end) at c≈0.90, r≈0.85 -->
+  <polygon points="192,124 206,117 206,118.4 192,125.4" fill="#4a3220" stroke="#1a0e08" stroke-width="0.3"/>
+  <polygon points="190,123 196,126 196,127.5 190,124.5" fill="#2a2e34" stroke="#0a0c10" stroke-width="0.3"/>
+  <polygon points="188,122 196,126 196,118 188,114" fill="#3a3d42" stroke="#0a0c10" stroke-width="0.3"/>
+  <!-- Bolt -->
+  <circle cx="251" cy="137" r="1" fill="#7a7e84" stroke="#2a2e32" stroke-width="0.3"/>
+  <!-- Oil rag -->
+  <polygon points="250,128 258,131 256,133 248,130" fill="#7a3a18" opacity="0.55" stroke="#3a1a0a" stroke-width="0.3"/>
+
+  <!-- ================================================================ -->
+  <!-- 3. WELDING CART + TANKS — back-right                             -->
+  <!-- Cart footprint c 2.55-3.55, r 0.30-0.95. Two upright tanks on    -->
+  <!-- top of the cart; helmet hanging off near side.                   -->
+  <!-- iso corners of cart footprint:                                   -->
+  <!--   BACK  (2.55,0.30) → (308,168.4)                                -->
+  <!--   RIGHT (3.55,0.30) → (356,192.4)                                -->
+  <!--   FRONT (3.55,0.95) → (325.2,208)                                -->
+  <!--   LEFT  (2.55,0.95) → (277.2,184)                                -->
+  <!-- Cart height z=10.                                                -->
+  <!-- ================================================================ -->
+  <!-- Cart SW front face -->
+  <polygon points="277,184 325,208 325,218 277,194"
+    fill="#1e2228" stroke="#080a0c" stroke-width="0.5"/>
+  <!-- Cart SE right face -->
+  <polygon points="356,192 325,208 325,218 356,202"
+    fill="#14171c" stroke="#080a0c" stroke-width="0.5"/>
+  <!-- Cart top -->
+  <polygon points="308,158 356,182 325,198 277,174"
+    fill="#2a2e34" stroke="#0c0e12" stroke-width="0.6"/>
+  <!-- Cart top panel highlight -->
+  <line x1="308" y1="158" x2="277" y2="174" stroke="rgba(255,255,255,0.14)" stroke-width="0.4"/>
+  <line x1="308" y1="158" x2="356" y2="182" stroke="rgba(255,255,255,0.10)" stroke-width="0.4"/>
+  <!-- Wheel hints on cart (verticals at corners) -->
+  <line x1="277" y1="184" x2="277" y2="194" stroke="#080a0c" stroke-width="1.2"/>
+  <line x1="325" y1="208" x2="325" y2="218" stroke="#080a0c" stroke-width="1.2"/>
+  <line x1="356" y1="192" x2="356" y2="202" stroke="#080a0c" stroke-width="1.2"/>
+
+  <!-- Argon tank (green) — standing on cart, base at (c≈2.90, r≈0.55), z=10 -->
+  <!-- Tank bottom ellipse at cart top plane -->
+  <ellipse cx="305" cy="180" rx="5" ry="2" fill="#1a3a22" stroke="#0a1a10" stroke-width="0.3"/>
+  <!-- Tank cylinder body -->
+  <polygon points="300,180 310,180 310,143 300,143" fill="#224f32" stroke="#0a1a10" stroke-width="0.5"/>
+  <polygon points="301,180 305,180 305,143 301,143" fill="#2f6a42" stroke="#0a1a10" stroke-width="0.3" opacity="0.85"/>
+  <!-- Shoulder -->
+  <ellipse cx="305" cy="143" rx="5" ry="2" fill="#3a7a4a" stroke="#0a1a10" stroke-width="0.4"/>
+  <!-- Neck/valve -->
+  <polygon points="303,143 307,143 307,137 303,137" fill="#8a7a3a" stroke="#2a2408" stroke-width="0.3"/>
+  <!-- Cap -->
+  <ellipse cx="305" cy="137" rx="2.3" ry="0.9" fill="#3a3020" stroke="#1a1408" stroke-width="0.3"/>
+
+  <!-- Acetylene tank (amber-brown) — standing on cart, base at (c≈3.15, r≈0.65) -->
+  <ellipse cx="320" cy="190" rx="5" ry="2" fill="#2a1608" stroke="#0f0a04" stroke-width="0.3"/>
+  <polygon points="315,190 325,190 325,150 315,150" fill="#5a2e14" stroke="#1a0c06" stroke-width="0.5"/>
+  <polygon points="316,190 320,190 320,150 316,150" fill="#7a3e1c" stroke="#1a0c06" stroke-width="0.3" opacity="0.85"/>
+  <ellipse cx="320" cy="150" rx="5" ry="2" fill="#8a4e28" stroke="#1a0c06" stroke-width="0.4"/>
+  <polygon points="318,150 322,150 322,144 318,144" fill="#7a6a2a" stroke="#2a2408" stroke-width="0.3"/>
+  <ellipse cx="320" cy="144" rx="2.3" ry="0.9" fill="#a01818" stroke="#400808" stroke-width="0.3"/>
+
+  <!-- Regulator + hose curling from tank tops down to cart top -->
+  <path d="M305 138 Q302 146 296 156 Q292 162 295 170"
+    fill="none" stroke="#1a1208" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M320 145 Q324 154 330 165 Q334 172 331 178"
+    fill="none" stroke="#1a1208" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Welding hood hanging off cart front-left (c≈2.60, r≈0.90) -->
+  <polygon points="284,180 298,186 298,194 284,188"
+    fill="#2a2e32" stroke="#0a0c10" stroke-width="0.4"/>
+  <polygon points="286,182 296,186 296,190 286,186"
+    fill="#1a1c20" stroke="#0a0c10" stroke-width="0.3"/>
+  <!-- Viewfinder slot -->
+  <polygon points="287,184 295,187 295,188.5 287,185.5" fill="#6aa838" opacity="0.8"/>
+  <!-- Hood strap loop -->
+  <line x1="284" y1="180" x2="282" y2="177" stroke="#0a0c10" stroke-width="0.6"/>
+
+  <!-- ================================================================ -->
+  <!-- 4. DRILL PRESS — mid-left                                        -->
+  <!-- Base footprint centered at iso(0.80, 1.50) = (166.4, 155.2)      -->
+  <!-- with column rising to z≈50. Cast-iron base + column + head.      -->
+  <!-- ================================================================ -->
+  <!-- Cast-iron base (iso parallelogram, ~0.55 tile) -->
+  <polygon points="166,149 180,156 167,162 153,155"
+    fill="#2a2e34" stroke="#0a0c10" stroke-width="0.5"/>
+  <polygon points="166,149 180,156 180,159 166,152"
+    fill="#1a1c20" stroke="#0a0c10" stroke-width="0.4"/>
+  <polygon points="180,156 167,162 167,165 180,159"
+    fill="#14171c" stroke="#0a0c10" stroke-width="0.4"/>
+  <polygon points="153,155 167,162 167,165 153,158"
+    fill="#1f2228" stroke="#0a0c10" stroke-width="0.4"/>
+  <!-- Column (vertical pipe) -->
+  <polygon points="164,152 170,152 170,108 164,108"
+    fill="#3a3d42" stroke="#12141a" stroke-width="0.4"/>
+  <polygon points="164,152 167,152 167,108 164,108"
+    fill="#4a4d52" stroke="#12141a" stroke-width="0.3" opacity="0.85"/>
+  <!-- Motor housing at top -->
+  <polygon points="159,112 175,112 175,102 159,102" fill="#2a2d32" stroke="#0c0e12" stroke-width="0.5"/>
+  <polygon points="159,112 167,112 167,102 159,102" fill="#3a3d42" stroke="#0c0e12" stroke-width="0.3" opacity="0.85"/>
+  <!-- Head/chuck -->
+  <polygon points="161,120 173,120 173,112 161,112" fill="#2a2d32" stroke="#0c0e12" stroke-width="0.5"/>
+  <!-- Handle wheel (three spokes) -->
+  <line x1="173" y1="116" x2="182" y2="116" stroke="#1a1c20" stroke-width="1.1"/>
+  <circle cx="183" cy="116" r="2.5" fill="none" stroke="#1a1c20" stroke-width="0.8"/>
+  <line x1="181" y1="114" x2="185" y2="118" stroke="#1a1c20" stroke-width="0.5"/>
+  <line x1="185" y1="114" x2="181" y2="118" stroke="#1a1c20" stroke-width="0.5"/>
+  <!-- Chuck + drill bit hanging down -->
+  <polygon points="165,128 169,128 169,121 165,121" fill="#5a5e64" stroke="#1a1c20" stroke-width="0.3"/>
+  <line x1="167" y1="128" x2="167" y2="134" stroke="#1a1c20" stroke-width="1.1"/>
+  <!-- Worktable (small iso platform on column) at z≈25 -->
+  <polygon points="167,133 178,139 167,144 156,139" fill="#2a2d32" stroke="#0c0e12" stroke-width="0.4"/>
+  <polygon points="167,133 178,139 178,141 167,135" fill="#1a1c20" stroke="#0c0e12" stroke-width="0.3"/>
+  <polygon points="178,139 167,144 167,146 178,141" fill="#14171c" stroke="#0c0e12" stroke-width="0.3"/>
+
+  <!-- Small chip bucket at drill press base (c≈0.50, r≈1.60) -->
+  <ellipse cx="148" cy="160" rx="4" ry="1.4" fill="#1a1208" stroke="#080604" stroke-width="0.3"/>
+  <polygon points="144,160 152,160 151,152 145,152" fill="#2a2418" stroke="#080604" stroke-width="0.4"/>
+  <ellipse cx="148" cy="152" rx="3.2" ry="1.2" fill="#1a1208" stroke="#080604" stroke-width="0.3"/>
+  <!-- Metal shavings piled inside -->
+  <polygon points="145,151.5 148,150.5 151,152 149,152 147,151.5" fill="#6a6e72" opacity="0.85"/>
+
+  <!-- ================================================================ -->
+  <!-- 5. BARREL OF SCRAP — front-left (c≈0.45, r≈2.50)                 -->
+  <!-- iso(0.45, 2.50) = (200-2.05*48, 100+2.95*24) = (101.6, 170.8)    -->
+  <!-- ================================================================ -->
+  <ellipse cx="102" cy="172" rx="9" ry="3" fill="#120a04" opacity="0.6"/>
+  <polygon points="94,172 110,172 110,150 94,150" fill="#6a3218" stroke="#1f0a04" stroke-width="0.5"/>
+  <polygon points="95,172 102,172 102,150 95,150" fill="#8a4220" stroke="#1f0a04" stroke-width="0.3" opacity="0.85"/>
+  <!-- Barrel ribs -->
+  <line x1="94" y1="156" x2="110" y2="156" stroke="#2a0e06" stroke-width="0.5"/>
+  <line x1="94" y1="164" x2="110" y2="164" stroke="#2a0e06" stroke-width="0.5"/>
+  <!-- Rust drips -->
+  <polygon points="98,151 99,160 100,160 99,151" fill="#2a0e06" opacity="0.7"/>
+  <polygon points="104,151 105,162 106,162 105,151" fill="#2a0e06" opacity="0.6"/>
+  <!-- Barrel top -->
+  <ellipse cx="102" cy="150" rx="8" ry="2.6" fill="#3a1a0a" stroke="#1f0a04" stroke-width="0.4"/>
+  <ellipse cx="102" cy="150" rx="7" ry="2.2" fill="#4a2210" stroke="#1f0a04" stroke-width="0.3"/>
+  <!-- Scrap protruding (rebar pieces) -->
+  <line x1="99" y1="150" x2="96" y2="138" stroke="#7a4a1a" stroke-width="1.3" stroke-linecap="round"/>
+  <line x1="103" y1="150" x2="103" y2="132" stroke="#8a5a24" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="105" y1="150" x2="110" y2="140" stroke="#6a3a14" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Crumpled cloth/rag draped over rim -->
+  <polygon points="105,148 112,149 112,153 107,152" fill="#4a3a24" opacity="0.8" stroke="#1a1208" stroke-width="0.3"/>
+
+  <!-- ================================================================ -->
+  <!-- 6. ANVIL ON WOOD STUMP — center (c≈2.20, r≈1.75)                 -->
+  <!-- iso(2.20, 1.75) = (200+0.45*48, 100+3.95*24) = (221.6, 194.8)    -->
+  <!-- ================================================================ -->
+  <!-- Stump footprint (iso parallelogram) -->
+  <polygon points="222,187 236,194 222,202 208,195"
+    fill="#2a1810" opacity="0.5"/>
+  <!-- Stump faces -->
+  <polygon points="222,186 236,193 236,201 222,194"
+    fill="#4a3220" stroke="#1a0e08" stroke-width="0.5"/>
+  <polygon points="222,186 208,193 208,201 222,194"
+    fill="#3a2618" stroke="#1a0e08" stroke-width="0.5"/>
+  <!-- Stump top -->
+  <polygon points="222,178 236,185 222,192 208,185"
+    fill="#6a4a30" stroke="#1a0e08" stroke-width="0.5"/>
+  <!-- Growth rings on stump top -->
+  <ellipse cx="222" cy="185" rx="10" ry="3.5" fill="none" stroke="#2a1810" stroke-width="0.35" opacity="0.6"/>
+  <ellipse cx="222" cy="185" rx="6" ry="2" fill="none" stroke="#2a1810" stroke-width="0.3" opacity="0.5"/>
+  <ellipse cx="222" cy="185" rx="2.5" ry="0.9" fill="#2a1810" opacity="0.5"/>
+
+  <!-- Anvil base (lower block) -->
+  <polygon points="217,180 227,180 227,184 217,184" fill="#14161a" stroke="#050608" stroke-width="0.4"/>
+  <!-- Anvil waist/body -->
+  <polygon points="216,180 228,180 226,176 218,176" fill="#1a1e22" stroke="#050608" stroke-width="0.4"/>
+  <!-- Anvil horn pointing right -->
+  <polygon points="226,176 236,172 236,174 226,178" fill="#1f2328" stroke="#050608" stroke-width="0.4"/>
+  <!-- Anvil face/top plate -->
+  <polygon points="216,174 228,170 236,172 226,176" fill="#2a2e34" stroke="#050608" stroke-width="0.4"/>
+  <polygon points="217,174 227,171 234,172 226,175" fill="#7a7e84" stroke="#2a2e32" stroke-width="0.25" opacity="0.85"/>
+  <!-- Anvil heel (rear left) -->
+  <polygon points="216,174 212,172 212,174 216,176" fill="#14171c" stroke="#050608" stroke-width="0.3"/>
+  <!-- Hardy hole (square hole on top) -->
+  <polygon points="221,173 223,172 224,172.5 222,173.5" fill="#000000"/>
+
+  <!-- Forge hammer leaning against stump -->
+  <line x1="215" y1="194" x2="208" y2="180" stroke="#4a3220" stroke-width="1.5" stroke-linecap="round"/>
+  <polygon points="205,179 213,175 213,177 205,181" fill="#2a2d32" stroke="#0a0c10" stroke-width="0.4"/>
+  <polygon points="207,178 212,175 213,176 208,179" fill="#4a4d52" stroke="#0a0c10" stroke-width="0.3" opacity="0.85"/>
+
+  <!-- ================================================================ -->
+  <!-- 7. PALLET OF REBAR STOCK — front-center (c≈1.45, r≈2.30)         -->
+  <!-- iso(1.45, 2.30) = (200-0.85*48, 100+3.75*24) = (159.2, 190)      -->
+  <!-- ================================================================ -->
+  <!-- Pallet footprint (iso parallelogram, ~1.0 x 0.7 tile) -->
+  <polygon points="165,180 197,196 163,212 131,196"
+    fill="#3a2818" opacity="0.4"/>
+  <!-- Pallet SW face -->
+  <polygon points="131,196 163,212 163,216 131,200"
+    fill="#3a2818" stroke="#1a0e08" stroke-width="0.4"/>
+  <!-- Pallet SE face -->
+  <polygon points="197,196 163,212 163,216 197,200"
+    fill="#2a1c10" stroke="#1a0e08" stroke-width="0.4"/>
+  <!-- Pallet top (flat wood slats) -->
+  <polygon points="165,180 197,196 163,212 131,196"
+    fill="#6a4a28" stroke="#2a1c10" stroke-width="0.4"/>
+  <!-- Slat gaps -->
+  <line x1="142" y1="186" x2="174" y2="202" stroke="#2a1c10" stroke-width="0.5"/>
+  <line x1="151" y1="190" x2="183" y2="206" stroke="#2a1c10" stroke-width="0.5"/>
+  <line x1="151" y1="202" x2="173" y2="191" stroke="#2a1c10" stroke-width="0.45"/>
+
+  <!-- Bundled rebar on pallet (stacked along iso-c axis) -->
+  <polygon points="138,196 180,217 184,215 142,194"
+    fill="#7a4e20" stroke="#2a1a08" stroke-width="0.4"/>
+  <polygon points="142,194 184,215 186,211 144,190"
+    fill="#9a6a30" stroke="#2a1a08" stroke-width="0.3"/>
+  <polygon points="144,190 186,211 188,207 146,186"
+    fill="#b8802e" stroke="#2a1a08" stroke-width="0.3"/>
+  <!-- Binding strap -->
+  <line x1="158" y1="188" x2="156" y2="210" stroke="#2a1208" stroke-width="1" opacity="0.85"/>
+  <line x1="168" y1="193" x2="166" y2="215" stroke="#2a1208" stroke-width="1" opacity="0.85"/>
+  <!-- Rebar end rings (visible end cross-sections) -->
+  <circle cx="183" cy="210" r="1.3" fill="#4a2808" stroke="#1a0c04" stroke-width="0.3"/>
+  <circle cx="185" cy="208" r="1.1" fill="#5a3210" stroke="#1a0c04" stroke-width="0.3"/>
+  <circle cx="187" cy="206" r="1" fill="#6a3e14" stroke="#1a0c04" stroke-width="0.3"/>
+  <!-- Steel sheet off-cut leaning on pallet -->
+  <polygon points="170,184 194,192 194,194 170,186" fill="#5a5e64" stroke="#1a1e22" stroke-width="0.4"/>
+  <polygon points="170,184 194,192 192,196 168,188" fill="#4a4d52" stroke="#1a1e22" stroke-width="0.3"/>
+
+  <!-- ================================================================ -->
+  <!-- 8. ROLLING TOOL CHEST — front-right (c≈3.05, r≈1.55)             -->
+  <!-- iso(3.05, 1.55) = (200+1.50*48, 100+4.60*24) = (272, 210.4)      -->
+  <!-- Classic red multi-drawer chest, ~0.7 x 0.55 footprint, height 20 -->
+  <!-- ================================================================ -->
+  <!-- Footprint contact shadow (small, tight) -->
+  <polygon points="260,210 296,228 282,235 246,217" fill="#0a0608" opacity="0.45"/>
+  <!-- Chest SW front face (to viewer) -->
+  <polygon points="246,216 282,234 282,254 246,236"
+    fill="#8a1e14" stroke="#2a0606" stroke-width="0.5"/>
+  <!-- Chest SE right face -->
+  <polygon points="296,226 282,234 282,254 296,246"
+    fill="#6a1510" stroke="#2a0606" stroke-width="0.5"/>
+  <!-- Chest top -->
+  <polygon points="260,208 296,226 282,234 246,216"
+    fill="#a02418" stroke="#2a0606" stroke-width="0.6"/>
+  <!-- Top highlight -->
+  <line x1="260" y1="208" x2="246" y2="216" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
+  <line x1="260" y1="208" x2="296" y2="226" stroke="rgba(255,255,255,0.10)" stroke-width="0.4"/>
+
+  <!-- Drawer separators (horizontal lines parallel to iso c-axis on front face) -->
+  <line x1="247" y1="223" x2="282" y2="240" stroke="#2a0606" stroke-width="0.7"/>
+  <line x1="247" y1="229" x2="282" y2="245" stroke="#2a0606" stroke-width="0.7"/>
+  <line x1="247" y1="235" x2="282" y2="250" stroke="#2a0606" stroke-width="0.7"/>
+
+  <!-- Chrome drawer handles -->
+  <line x1="257" y1="222" x2="272" y2="230" stroke="#c8cace" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="257" y1="228" x2="272" y2="236" stroke="#c8cace" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="257" y1="234" x2="272" y2="241" stroke="#c8cace" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="257" y1="240" x2="272" y2="247" stroke="#c8cace" stroke-width="0.9" stroke-linecap="round"/>
+
+  <!-- SE side drawer separators -->
+  <line x1="287" y1="232" x2="287" y2="252" stroke="#2a0606" stroke-width="0.4"/>
+
+  <!-- Open drawer (third from top) — a small peek of recessed interior -->
+  <polygon points="246,230 282,247 282,249 246,232"
+    fill="#1a0606" stroke="#050202" stroke-width="0.35"/>
+  <!-- Tool glint inside open drawer -->
+  <line x1="254" y1="236" x2="268" y2="244" stroke="#b8bcc2" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="258" y1="238" x2="264" y2="241" stroke="#d8dce2" stroke-width="0.5"/>
+
+  <!-- Oil can on top -->
+  <ellipse cx="270" cy="217" rx="3" ry="1" fill="#14161a" stroke="#050608" stroke-width="0.3"/>
+  <polygon points="267,217 273,217 273,212 267,212" fill="#2a2d32" stroke="#050608" stroke-width="0.4"/>
+  <ellipse cx="270" cy="212" rx="3" ry="1" fill="#4a4d52" stroke="#050608" stroke-width="0.3"/>
+  <polygon points="272,212 273,210 276,206 275,207" fill="#4a4d52" stroke="#050608" stroke-width="0.3"/>
+
+  <!-- Caliper lying on top -->
+  <polygon points="257,214 276,223 276,224 257,215" fill="#7a7e84" stroke="#1a1e22" stroke-width="0.3"/>
+  <polygon points="257,214 276,223 275,224.5 256,216" fill="#4a4d52" stroke="#1a1e22" stroke-width="0.3"/>
+
+  <!-- ================================================================ -->
+  <!-- 9. SAFETY CONE — front-right (c≈2.95, r≈2.60)                    -->
+  <!-- iso(2.95, 2.60) = (200+0.35*48, 100+5.55*24) = (216.8, 233.2)    -->
+  <!-- ================================================================ -->
+  <!-- Base shadow (tight) -->
+  <ellipse cx="217" cy="234" rx="5" ry="1.6" fill="#0a0604" opacity="0.5"/>
+  <!-- Base plate (iso parallelogram) -->
+  <polygon points="212,233 222,233 218,236 213,236"
+    fill="#1a1208" stroke="#080604" stroke-width="0.35"/>
+  <polygon points="213,233 221,233 218,235 214,235"
+    fill="#2a1e12" stroke="#080604" stroke-width="0.3"/>
+  <!-- Cone body (vertical triangle) -->
+  <polygon points="214,234 220,234 217,220" fill="#d64a1c" stroke="#5a1808" stroke-width="0.4"/>
+  <polygon points="215,234 218,234 217,222" fill="#ec6028" stroke="#5a1808" stroke-width="0.3" opacity="0.85"/>
+  <!-- Reflective stripes -->
+  <polygon points="214.5,230 219.5,230 219,228.5 215,228.5" fill="#f4f4f0" stroke="#2a2420" stroke-width="0.3"/>
+  <polygon points="215,226 219,226 218.7,225 215.3,225" fill="#f4f4f0" stroke="#2a2420" stroke-width="0.25"/>
+  <!-- Cone tip -->
+  <circle cx="217" cy="220" r="0.8" fill="#2a0c04"/>
+
+  <!-- ================================================================ -->
+  <!-- 10. OIL STAIN FLOOR WASH (subtle, near anvil + tool chest)       -->
+  <!-- Kept tight to grounded footprints; no detached shadow pads.      -->
+  <!-- ================================================================ -->
+  <polygon points="218,200 252,217 240,223 206,206" fill="#14161a" opacity="0.35"/>
+  <polygon points="224,204 246,215 238,219 216,208" fill="#080a0e" opacity="0.4"/>
+
+  <!-- ================================================================ -->
+  <!-- 11. INDUSTRIAL PENDANT LIGHT — above the work island             -->
+  <!-- Hanging over the anvil/bench midpoint. Cone shade + wire + glow. -->
+  <!-- ================================================================ -->
+  <!-- Supply wire -->
+  <line x1="248" y1="0" x2="248" y2="84" stroke="#1a1208" stroke-width="0.9" opacity="0.8"/>
+  <!-- Glow disc behind shade -->
+  <circle cx="248" cy="98" r="30" fill="url(#wsPendantGlow)"/>
+  <!-- Shade top disc -->
+  <ellipse cx="248" cy="82" rx="10" ry="3" fill="#2a1c10" stroke="#0f0804" stroke-width="0.5"/>
+  <!-- Shade cone body -->
+  <polygon points="238,82 258,82 253,96 243,96" fill="#3a2618" stroke="#0f0804" stroke-width="0.5"/>
+  <polygon points="239,82 251,82 249,92 241,92" fill="#5a3e22" stroke="#0f0804" stroke-width="0.3" opacity="0.85"/>
+  <!-- Shade bottom rim -->
+  <ellipse cx="248" cy="96" rx="5" ry="1.6" fill="#2a1c10" stroke="#0f0804" stroke-width="0.4"/>
+  <!-- Bulb glow -->
+  <ellipse cx="248" cy="99" rx="3.2" ry="1.4" fill="#fff2c0"/>
+  <ellipse cx="248" cy="99" rx="2" ry="0.9" fill="#ffffff" opacity="0.85"/>
+</svg>

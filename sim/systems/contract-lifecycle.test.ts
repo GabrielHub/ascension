@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createWorld, addEntity, addComponent } from "bitecs";
 
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 import { siteConceptTemplates, siteConceptById } from "content/templates/site-concepts";
 import { BuildingAuthority, GuildState, WorldTimeState } from "../components";
 import type { BossEncounterInstance } from "./encounter-types";
@@ -51,7 +52,6 @@ function createFullContext(): SimSystemContext {
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -63,7 +63,6 @@ function createFullContext(): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -103,17 +102,9 @@ function createFullContext(): SimSystemContext {
         },
         lastPurchasedUpgradeId: null,
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }
@@ -549,7 +540,6 @@ describe("resolved contract handoff", () => {
           baseThreat: 50,
           condition: "incapacitated",
           activeStatuses: [],
-          cooldowns: [],
           temporaryStatModifiers: {},
           actionHistory: [],
           bossDefinitionId: "boss/tunneler-brood-mother",

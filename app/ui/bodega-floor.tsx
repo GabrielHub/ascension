@@ -2,37 +2,18 @@ import type { ExpansionSlotViewModel, RoomViewModel } from "./view-models";
 import { Tooltip } from "./_tooltip";
 
 export function getRoomProgressRatio(room: RoomViewModel): number {
-  if (!room.requiredStaffTag) {
-    return room.isOperational ? 1 : room.isActive ? 0.5 : 0;
-  }
-
-  return room.capacity > 0 ? room.assignedStaffCount / room.capacity : 0;
+  return room.isOperational ? 1 : 0;
 }
 
 export function getRoomStatusTip(room: RoomViewModel): string {
   if (room.isOperational) {
-    if (!room.requiredStaffTag) {
-      return "Active and delivering its passive room benefits";
-    }
-
-    return room.assignedStaffCount >= room.capacity
-      ? "Fully staffed and operational"
-      : "Operational, with room for more staff to improve throughput";
+    return "Operational";
   }
-  if (room.isActive) {
-    return room.requiredStaffTag
-      ? "Active, but not yet staffed enough to operate"
-      : "Active and available for guild use";
-  }
-  return "Inactive - not generating benefits";
+  return "Blocked by incident, damage, or construction";
 }
 
-export function getRoomStaffingLabel(room: RoomViewModel): string {
-  if (!room.requiredStaffTag) {
-    return room.isActive ? "No staff needed" : "Passive room";
-  }
-
-  return `${room.assignedStaffCount}/${room.capacity}`;
+export function getRoomOperationalLabel(room: RoomViewModel): string {
+  return room.isOperational ? "Online" : "Blocked";
 }
 
 function StatusDot({ room }: { room: RoomViewModel }) {
@@ -40,13 +21,6 @@ function StatusDot({ room }: { room: RoomViewModel }) {
     return (
       <Tooltip content={getRoomStatusTip(room)}>
         <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-gold shadow-[0_0_6px_rgba(200,168,76,0.4)]" />
-      </Tooltip>
-    );
-  }
-  if (room.isActive) {
-    return (
-      <Tooltip content={getRoomStatusTip(room)}>
-        <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-gold-dim/50" />
       </Tooltip>
     );
   }
@@ -90,25 +64,19 @@ function RoomCard({
         <Tooltip content="Room tier — higher tiers unlock upgrades">
           <span className="badge badge-gold shrink-0">T{room.tier}</span>
         </Tooltip>
-        <Tooltip
-          content={
-            room.requiredStaffTag
-              ? "Assigned staff / capacity"
-              : "This room runs without dedicated staff"
-          }
-        >
+        <Tooltip content={getRoomStatusTip(room)}>
           <span
             className={`shrink-0 text-xs tabular-nums ${
               room.isOperational ? "text-gold" : "text-gold/60"
             }`}
           >
-            {getRoomStaffingLabel(room)}
+            {getRoomOperationalLabel(room)}
           </span>
         </Tooltip>
       </div>
 
-      {!room.isActive && (
-        <div className="mt-1 text-xs uppercase tracking-[0.12em] text-silver/40">Inactive</div>
+      {!room.isOperational && (
+        <div className="mt-1 text-xs uppercase tracking-[0.12em] text-silver/40">Blocked</div>
       )}
 
       <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-[rgba(6,6,8,0.6)]">

@@ -21,6 +21,7 @@ import {
   getStatusMeta,
   getWeaknessTargetMeta,
 } from "./_glossary";
+import { DEFAULT_COMBAT_PACKAGE_REGISTRY } from "lib/operator-combat";
 import { Tooltip } from "./_tooltip";
 import { glassPanelSubtleClass } from "./styles";
 
@@ -97,8 +98,7 @@ interface FeedEntry {
 }
 
 const ACTION_ICONS: Partial<Record<EncounterActionKind, string>> = {
-  attack: "\u2694",
-  skill: "\u2726",
+  basic_stage: "\u2694",
   ultimate: "\u2605",
   boss_action: "\u26A0",
   intervention: "\u2691",
@@ -130,15 +130,10 @@ function formatFeedEntry(
   let colorClass = "text-silver/60";
 
   switch (entry.actionKind) {
-    case "attack":
-      text = `${actor} attacks`;
+    case "basic_stage":
+      text = abilityName ? `${actor} \u2014 ${abilityName}` : `${actor} attacks`;
       detail = formatEffects(entry, actorLabels);
       colorClass = "text-silver/70";
-      break;
-    case "skill":
-      text = `${actor} \u2014 ${abilityName}`;
-      detail = formatEffects(entry, actorLabels);
-      colorClass = "text-frost";
       break;
     case "ultimate":
       text = `${actor} \u2014 ${abilityName}`;
@@ -414,31 +409,65 @@ function OperatorDetailPanel({
         )}
       </div>
 
-      {/* Abilities section */}
-      {(actor.skillId || actor.ultimateId || actor.regularAttackId) && (
-        <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-          <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">Abilities</h4>
-          <div className="space-y-1.5">
-            {actor.regularAttackId && (
-              <AbilityRow id={actor.regularAttackId} kind="Attack" icon="\u2694" />
+      {/* Combat package section */}
+      {(() => {
+        const pkg = actor.combatPackageId
+          ? DEFAULT_COMBAT_PACKAGE_REGISTRY.packageById.get(actor.combatPackageId)
+          : undefined;
+        if (!pkg) return null;
+        const blocks = actor.blocks ?? 0;
+        const nextStageIndex = blocks >= 3 ? 3 : blocks;
+        const stages: { label: string; name: string; index: number }[] = [
+          { label: "Stage 1", name: pkg.stage1.name, index: 0 },
+          { label: "Stage 2", name: pkg.stage2.name, index: 1 },
+          { label: "Stage 3", name: pkg.stage3.name, index: 2 },
+          { label: "Ultimate", name: pkg.ultimate.name, index: 3 },
+        ];
+        return (
+          <>
+            <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-sm uppercase tracking-[0.14em] text-silver/40">Chain</h4>
+                <span className="text-xs tabular-nums text-gold-dim">{blocks}/3 blocks</span>
+              </div>
+              <div className="space-y-1.5">
+                {stages.map((stage) => {
+                  const isNext = stage.index === nextStageIndex;
+                  const icon = stage.index === 3 ? "\u2605" : "\u2694";
+                  return (
+                    <div
+                      key={stage.label}
+                      className={`flex items-center gap-2 rounded px-2.5 py-1.5 ${
+                        isNext ? "bg-[rgba(200,168,76,0.12)]" : "bg-[rgba(6,6,8,0.4)] opacity-70"
+                      }`}
+                    >
+                      <span className="text-sm leading-none text-silver/50">{icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-medium text-silver-bright">{stage.name}</span>
+                        <span className="ml-1.5 text-xs text-silver/30">{stage.label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {pkg.passive && (
+              <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
+                <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">Passive</h4>
+                <div className="flex items-center gap-2 rounded bg-[rgba(6,6,8,0.4)] px-2.5 py-1.5">
+                  <span className="text-sm leading-none text-silver/50">&#x2727;</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-medium text-silver-bright">
+                      {pkg.passive.name}
+                    </span>
+                    <span className="ml-1.5 text-xs text-silver/30">Passive</span>
+                  </div>
+                </div>
+              </div>
             )}
-            {actor.skillId && <AbilityRow id={actor.skillId} kind="Skill" icon="\u2726" />}
-            {actor.ultimateId && <AbilityRow id={actor.ultimateId} kind="Ultimate" icon="\u2605" />}
-          </div>
-        </div>
-      )}
-
-      {/* Passives section */}
-      {actor.passiveIds && actor.passiveIds.length > 0 && (
-        <div className="border-b border-[rgba(200,168,76,0.06)] px-4 py-3">
-          <h4 className="mb-2 text-sm uppercase tracking-[0.14em] text-silver/40">Passives</h4>
-          <div className="space-y-1.5">
-            {actor.passiveIds.map((pid) => (
-              <AbilityRow key={pid} id={pid} kind="Passive" icon="\u2727" />
-            ))}
-          </div>
-        </div>
-      )}
+          </>
+        );
+      })()}
 
       {/* Active status effects */}
       {actor.activeStatuses.length > 0 && (
@@ -463,19 +492,6 @@ function OperatorDetailPanel({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function AbilityRow({ id, kind, icon }: { id: string; kind: string; icon: string }) {
-  const meta = getAbilityMeta(id);
-  return (
-    <div className="flex items-center gap-2 rounded bg-[rgba(6,6,8,0.4)] px-2.5 py-1.5">
-      <span className="text-sm leading-none text-silver/50">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <span className="text-xs font-medium text-silver-bright">{meta.label}</span>
-        <span className="ml-1.5 text-xs text-silver/30">{kind}</span>
-      </div>
     </div>
   );
 }

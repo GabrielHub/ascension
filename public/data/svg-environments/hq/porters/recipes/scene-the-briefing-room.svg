@@ -1,0 +1,300 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Briefing Room (Porter's tier 1)
+       Whiteboard, corkboard with pinned photos and red string, and a long
+       folding conference table with mismatched chairs. The room where
+       contracts stop being paperwork and start being plans.
+       Origin (200,100). iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Slot 4×3. Door is on the c=0 wall at r∈[0,1] (engine-rendered);
+       corkboard mounts past it at r∈[1.1, 2.6].
+
+       Z-order: whiteboard → corkboard → north chairs → folding table
+                → east head chair → south chairs. -->
+
+  <!-- ====================================================================
+       WHITEBOARD — mounted on r=0 wall (back-right, screen-SE going from
+       back corner). c∈[1.0, 3.0], z∈[42, 78]. Wood frame, glossy white
+       surface, marker scrawl, ledge with markers below.
+       ==================================================================== -->
+  <!-- Frame parallelogram (iso edges along +c and +z) -->
+  <polygon points="246,44 346,92 346,132 246,84"
+    fill="#3a2a1e" stroke="#1c1208" stroke-width="0.7"/>
+  <!-- Inner whiteboard surface -->
+  <polygon points="252,52 340,94 340,124 252,82"
+    fill="#e8e5da" stroke="#9a9588" stroke-width="0.4"/>
+  <!-- Glossy highlight along top edge -->
+  <line x1="252" y1="52" x2="340" y2="94" stroke="#ffffff" stroke-width="0.6" opacity="0.7"/>
+  <!-- Plan annotations: blue boxes, red circle target, connector line -->
+  <line x1="262" y1="64" x2="290" y2="78" stroke="#1d4d8a" stroke-width="0.9" opacity="0.85"/>
+  <line x1="262" y1="64" x2="262" y2="74" stroke="#1d4d8a" stroke-width="0.9" opacity="0.85"/>
+  <line x1="290" y1="78" x2="290" y2="88" stroke="#1d4d8a" stroke-width="0.9" opacity="0.85"/>
+  <line x1="262" y1="74" x2="290" y2="88" stroke="#1d4d8a" stroke-width="0.9" opacity="0.85"/>
+  <circle cx="316" cy="92" r="3" fill="none" stroke="#9a3030" stroke-width="0.9" opacity="0.85"/>
+  <line x1="316" y1="92" x2="316" y2="98" stroke="#9a3030" stroke-width="0.6" opacity="0.7"/>
+  <line x1="290" y1="83" x2="313" y2="92" stroke="#2a2a2a" stroke-width="0.45" stroke-dasharray="2 1.5" opacity="0.7"/>
+  <!-- Secondary scrawl below -->
+  <line x1="270" y1="100" x2="324" y2="122" stroke="#1d4d8a" stroke-width="0.55" opacity="0.55"/>
+  <line x1="276" y1="108" x2="306" y2="120" stroke="#1d4d8a" stroke-width="0.45" opacity="0.45"/>
+  <!-- Marker ledge under the surface -->
+  <polygon points="252,82 340,124 340,127 252,85"
+    fill="#241a13" stroke="#120a06" stroke-width="0.4"/>
+  <polygon points="252,85 340,127 346,128 252,86 246,84"
+    fill="#1c130a" stroke="#0a0604" stroke-width="0.35"/>
+  <!-- Markers resting on ledge (iso-aligned along +c) -->
+  <line x1="270" y1="83" x2="282" y2="89" stroke="#1d4d8a" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="282" y1="89" x2="284" y2="90" stroke="#cccccc" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="298" y1="97" x2="310" y2="103" stroke="#9a3030" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="310" y1="103" x2="312" y2="104" stroke="#cccccc" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- Eraser block -->
+  <polygon points="320,108 332,114 332,118 320,112"
+    fill="#5a4632" stroke="#2a1c10" stroke-width="0.35"/>
+  <polygon points="320,108 332,114 332,116 320,110"
+    fill="#7a6044" stroke="#2a1c10" stroke-width="0.3"/>
+
+  <!-- ====================================================================
+       CORKBOARD — mounted on c=0 wall (back-left, screen-SW going from
+       back corner), past the door at r∈[0,1]. r∈[1.1, 2.6], z∈[40, 76].
+       Cork field with pinned photos, an index card, and red string between
+       pins for connection lines.
+       ==================================================================== -->
+  <!-- Frame parallelogram (iso edges along +r and +z) -->
+  <polygon points="147,50 75,86 75,124 147,88"
+    fill="#2a1c10" stroke="#100a06" stroke-width="0.7"/>
+  <!-- Cork field -->
+  <polygon points="142,57 81,87 81,118 142,88"
+    fill="#a87648" stroke="#5a3a1e" stroke-width="0.4"/>
+  <!-- Cork grain (iso-aligned subtle strokes along +r) -->
+  <line x1="120" y1="68" x2="92" y2="82" stroke="#7a4f2a" stroke-width="0.3" opacity="0.45"/>
+  <line x1="130" y1="73" x2="100" y2="88" stroke="#7a4f2a" stroke-width="0.3" opacity="0.4"/>
+  <line x1="115" y1="83" x2="86" y2="98" stroke="#7a4f2a" stroke-width="0.3" opacity="0.4"/>
+  <line x1="135" y1="91" x2="100" y2="108" stroke="#7a4f2a" stroke-width="0.3" opacity="0.35"/>
+  <!-- Photo 1: top-right (mug-shot, grayscale) -->
+  <polygon points="124,68 134,63 134,75 124,80"
+    fill="#cfc8b8" stroke="#5a3a1e" stroke-width="0.35"/>
+  <polygon points="125,71 133,67 133,73 125,77"
+    fill="#3a3026" stroke="#1c140a" stroke-width="0.25"/>
+  <circle cx="129" cy="72" r="1.4" fill="#9a8e78"/>
+  <!-- Photo 2: middle (portrait, color) -->
+  <polygon points="106,80 116,75 116,87 106,92"
+    fill="#cfc8b8" stroke="#5a3a1e" stroke-width="0.35"/>
+  <polygon points="107,83 115,79 115,85 107,89"
+    fill="#5a4a3a" stroke="#1c140a" stroke-width="0.25"/>
+  <circle cx="111" cy="83" r="1.3" fill="#a89070"/>
+  <!-- Photo 3: lower-left (wide shot, building) -->
+  <polygon points="92,93 104,87 104,99 92,105"
+    fill="#cfc8b8" stroke="#5a3a1e" stroke-width="0.35"/>
+  <polygon points="93,96 103,91 103,98 93,103"
+    fill="#3a4a5a" stroke="#1c140a" stroke-width="0.25"/>
+  <line x1="95" y1="100" x2="101" y2="97" stroke="#1c2030" stroke-width="0.35"/>
+  <!-- Index card: lower-right with handwriting marks -->
+  <polygon points="132,86 140,82 140,90 132,94"
+    fill="#f0e8d2" stroke="#8a7c5e" stroke-width="0.3"/>
+  <line x1="133" y1="89" x2="138" y2="86.5" stroke="#1d2030" stroke-width="0.3" opacity="0.7"/>
+  <line x1="133" y1="91" x2="138" y2="88.5" stroke="#1d2030" stroke-width="0.3" opacity="0.55"/>
+  <line x1="133" y1="92.5" x2="137" y2="90.5" stroke="#1d2030" stroke-width="0.3" opacity="0.45"/>
+  <!-- Red string between photos (investigation web) -->
+  <line x1="129" y1="69" x2="111" y2="81" stroke="#9a2020" stroke-width="0.55" opacity="0.9"/>
+  <line x1="111" y1="81" x2="98" y2="94" stroke="#9a2020" stroke-width="0.55" opacity="0.9"/>
+  <line x1="98" y1="94" x2="136" y2="84" stroke="#9a2020" stroke-width="0.5" opacity="0.75"/>
+  <!-- Push pins (drawn last so they sit over string ends) -->
+  <circle cx="129" cy="69" r="1.2" fill="#c43232" stroke="#5a1010" stroke-width="0.3"/>
+  <circle cx="111" cy="81" r="1.2" fill="#c43232" stroke="#5a1010" stroke-width="0.3"/>
+  <circle cx="98" cy="94" r="1.2" fill="#c43232" stroke="#5a1010" stroke-width="0.3"/>
+  <circle cx="136" cy="84" r="1.0" fill="#1d4d8a" stroke="#0a2440" stroke-width="0.3"/>
+
+  <!-- ====================================================================
+       NORTH-SIDE CHAIRS — sitter faces world-south (+r), backrest on
+       world-north edge of seat = NE edge of screen diamond. Hidden leg: N.
+       Drawn FIRST so the table top occludes the south side of each chair.
+       N-chair-1: seat top center (243,140). N-chair-2: seat top (291,164).
+       ==================================================================== -->
+  <!-- N-chair-1 -->
+  <line x1="231" y1="143" x2="231" y2="150" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="243" y1="149" x2="243" y2="156" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="255" y1="143" x2="255" y2="150" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <polygon points="231,140 243,146 255,140 243,134"
+    fill="#7a4e32" stroke="#5c3a1e" stroke-width="0.5"/>
+  <line x1="234" y1="141" x2="252" y2="141" stroke="#5c3a1e" stroke-width="0.3" opacity="0.4"/>
+  <polygon points="231,140 243,146 243,149 231,143"
+    fill="#5c3a1e" stroke="#4a2e16" stroke-width="0.3"/>
+  <polygon points="243,146 255,140 255,143 243,149"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Backrest face on screen NE edge (N→E, world north edge) -->
+  <polygon points="243,134 255,140 255,123 243,117"
+    fill="#6b422a" stroke="#553420" stroke-width="0.5"/>
+  <!-- Backrest top cap (depth offset toward NE) -->
+  <polygon points="243,117 255,123 256,122 244,116"
+    fill="#7a4e32" stroke="#553420" stroke-width="0.3"/>
+  <!-- Backrest end face (N end, farthest from camera) -->
+  <polygon points="243,117 244,116 244,133 243,134"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Slat lines -->
+  <line x1="244" y1="123" x2="254" y2="128" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
+  <line x1="244" y1="128" x2="254" y2="133" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- N-chair-2 -->
+  <line x1="279" y1="167" x2="279" y2="174" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="291" y1="173" x2="291" y2="180" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="303" y1="167" x2="303" y2="174" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <polygon points="279,164 291,170 303,164 291,158"
+    fill="#6e4630" stroke="#523218" stroke-width="0.5"/>
+  <line x1="282" y1="165" x2="300" y2="165" stroke="#523218" stroke-width="0.3" opacity="0.4"/>
+  <polygon points="279,164 291,170 291,173 279,167"
+    fill="#523218" stroke="#3e2412" stroke-width="0.3"/>
+  <polygon points="291,170 303,164 303,167 291,173"
+    fill="#46280f" stroke="#321c08" stroke-width="0.3"/>
+  <polygon points="291,158 303,164 303,147 291,141"
+    fill="#5e3a26" stroke="#4a2c1c" stroke-width="0.5"/>
+  <polygon points="291,141 303,147 304,146 292,140"
+    fill="#6e4630" stroke="#4a2c1c" stroke-width="0.3"/>
+  <polygon points="291,141 292,140 292,157 291,158"
+    fill="#46280f" stroke="#321c08" stroke-width="0.3"/>
+  <line x1="292" y1="147" x2="302" y2="152" stroke="#4a2c1c" stroke-width="0.35" opacity="0.5"/>
+  <line x1="292" y1="152" x2="302" y2="157" stroke="#4a2c1c" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- ====================================================================
+       FOLDING CONFERENCE TABLE — drawn AFTER north chairs (occludes their
+       south sides) and BEFORE south chairs / east head (which sit in
+       front). World footprint c∈[1,3], r∈[1,2]. Top z=22.
+       Top corners: back(200,126) right(296,174) front(248,198) left(152,150).
+       Floor:        back(200,148) right(296,196) front(248,220) left(152,172).
+       ==================================================================== -->
+  <!-- Soft contact shadow at floor -->
+  <ellipse cx="224" cy="186" rx="58" ry="11" fill="rgba(0,0,0,0.22)"/>
+  <!-- Back legs (hidden behind top, kept for grounding) -->
+  <line x1="200" y1="128" x2="200" y2="148" stroke="#241c12" stroke-width="2"/>
+  <!-- Top-thickness underside faces (SW and SE) -->
+  <polygon points="152,150 248,198 248,201 152,153"
+    fill="#2c2418" stroke="#241c12" stroke-width="0.5"/>
+  <polygon points="296,174 248,198 248,201 296,177"
+    fill="#302818" stroke="#241c12" stroke-width="0.5"/>
+  <!-- Table top parallelogram (iso axis-aligned) -->
+  <polygon points="200,126 296,174 248,198 152,150"
+    fill="#3a3020" stroke="#2c2418" stroke-width="0.7"/>
+  <line x1="200" y1="126" x2="152" y2="150" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+  <line x1="200" y1="126" x2="296" y2="174" stroke="rgba(255,255,255,0.06)" stroke-width="0.4"/>
+  <!-- Wood grain along iso axes -->
+  <line x1="176" y1="138" x2="272" y2="186" stroke="#2c2418" stroke-width="0.3" opacity="0.3"/>
+  <line x1="188" y1="144" x2="284" y2="192" stroke="#2c2418" stroke-width="0.25" opacity="0.25"/>
+  <line x1="216" y1="138" x2="240" y2="186" stroke="#2c2418" stroke-width="0.25" opacity="0.2"/>
+  <!-- Visible legs (strictly vertical) -->
+  <line x1="152" y1="153" x2="152" y2="172" stroke="#241c12" stroke-width="2"/>
+  <line x1="296" y1="177" x2="296" y2="196" stroke="#241c12" stroke-width="2"/>
+  <line x1="248" y1="201" x2="248" y2="220" stroke="#241c12" stroke-width="2"/>
+  <!-- Cross brace between left and right legs (iso ridge under table) -->
+  <line x1="152" y1="166" x2="296" y2="190" stroke="#241c12" stroke-width="0.6" opacity="0.55"/>
+
+  <!-- ── Tabletop props ───────────────────────────────────────────────── -->
+  <!-- Open dossier near the west end of the table (world ~(1.5, 1.4)) -->
+  <polygon points="180,144 208,158 208,162 180,148"
+    fill="#d8c890" stroke="#7a6238" stroke-width="0.35"/>
+  <polygon points="180,144 208,158 224,150 196,136"
+    fill="#e8d8a0" stroke="#7a6238" stroke-width="0.35"/>
+  <line x1="194" y1="151" x2="206" y2="157" stroke="#7a6238" stroke-width="0.4"/>
+  <!-- Lines on the open page (handwriting/print) -->
+  <line x1="186" y1="148" x2="204" y2="157" stroke="#3a3020" stroke-width="0.3" opacity="0.6"/>
+  <line x1="190" y1="146" x2="208" y2="155" stroke="#3a3020" stroke-width="0.3" opacity="0.55"/>
+  <line x1="194" y1="144" x2="212" y2="153" stroke="#3a3020" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- Scattered photo on table (small, pinned to dossier) -->
+  <polygon points="216,148 226,144 230,150 220,154"
+    fill="#cfc8b8" stroke="#5a3a1e" stroke-width="0.3"/>
+  <polygon points="218,149 225,146 228,150 221,153"
+    fill="#3a4a5a" stroke="#1c140a" stroke-width="0.25"/>
+
+  <!-- Coffee mug (iso cylinder) at table center-east (world ~(2.4, 1.4)) -->
+  <path d="M 232.5,164 A 2.6,1.3 0 0 0 237.7,164 L 237.7,170 A 2.6,1.3 0 0 1 232.5,170 Z"
+    fill="#e8e2d4" stroke="#9a8a70" stroke-width="0.35"/>
+  <ellipse cx="235.1" cy="164" rx="2.6" ry="1.3" fill="#d8d0c0" stroke="#9a8a70" stroke-width="0.3"/>
+  <ellipse cx="235.1" cy="164" rx="2.0" ry="1.0" fill="rgba(30,15,6,0.78)"/>
+  <!-- Mug handle -->
+  <path d="M 237.7,166 Q 240.2,167 239.7,169.5" fill="none" stroke="#9a8a70" stroke-width="0.6"/>
+
+  <!-- Stacked folder near east end (world ~(2.6, 1.5)) -->
+  <polygon points="248,168 268,178 268,181 248,171"
+    fill="#7a4830" stroke="#3a1e10" stroke-width="0.35"/>
+  <polygon points="248,168 268,178 264,180 244,170"
+    fill="#8a5638" stroke="#3a1e10" stroke-width="0.35"/>
+  <line x1="252" y1="172" x2="266" y2="179" stroke="#3a1e10" stroke-width="0.3" opacity="0.5"/>
+
+  <!-- Black marker on table (mid, points along +c) -->
+  <line x1="218" y1="170" x2="232" y2="177" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="216" y1="169" x2="218" y2="170" stroke="#9a3030" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- ====================================================================
+       EAST HEAD CHAIR — sitter faces world-west (-c), backrest on world-
+       east edge of seat = SE edge of screen diamond. Hidden leg: E.
+       Seat top center (291,208). Sits at the east end of the table.
+       ==================================================================== -->
+  <line x1="291" y1="205" x2="291" y2="212" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="279" y1="211" x2="279" y2="218" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="291" y1="217" x2="291" y2="224" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <polygon points="279,208 291,214 303,208 291,202"
+    fill="#6a4632" stroke="#4a2c18" stroke-width="0.5"/>
+  <line x1="282" y1="209" x2="300" y2="209" stroke="#4a2c18" stroke-width="0.3" opacity="0.4"/>
+  <polygon points="279,208 291,214 291,217 279,211"
+    fill="#4a2c18" stroke="#381e0e" stroke-width="0.3"/>
+  <polygon points="291,214 303,208 303,211 291,217"
+    fill="#3a200e" stroke="#281408" stroke-width="0.3"/>
+  <!-- Backrest face on screen SE edge (S→E, world east edge) -->
+  <polygon points="291,214 303,208 303,191 291,197"
+    fill="#5e3a26" stroke="#48281a" stroke-width="0.5"/>
+  <!-- Backrest top cap (depth offset toward SE) -->
+  <polygon points="291,197 303,191 304,192 292,198"
+    fill="#6a4632" stroke="#48281a" stroke-width="0.3"/>
+  <!-- Backrest end face (E end, farthest from camera in +c) -->
+  <polygon points="303,191 304,192 304,209 303,208"
+    fill="#3a200e" stroke="#281408" stroke-width="0.3"/>
+  <!-- Slat lines -->
+  <line x1="292" y1="200" x2="302" y2="195" stroke="#48281a" stroke-width="0.35" opacity="0.5"/>
+  <line x1="292" y1="205" x2="302" y2="200" stroke="#48281a" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- ====================================================================
+       SOUTH-SIDE CHAIRS — sitter faces world-north (-r), backrest on
+       world-south edge of seat = SW edge of screen diamond. Hidden leg: W.
+       Drawn LAST (closest to camera). Two mismatched chairs.
+       S-chair-1: seat top (157,184). S-chair-2: seat top (205,208).
+       ==================================================================== -->
+  <!-- S-chair-1 (warm brown) -->
+  <line x1="157" y1="181" x2="157" y2="188" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="169" y1="187" x2="169" y2="194" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="157" y1="193" x2="157" y2="200" stroke="#2a2a2a" stroke-width="1.4" stroke-linecap="round"/>
+  <polygon points="145,184 157,190 169,184 157,178"
+    fill="#7a4e32" stroke="#5c3a1e" stroke-width="0.5"/>
+  <line x1="148" y1="185" x2="166" y2="185" stroke="#5c3a1e" stroke-width="0.3" opacity="0.4"/>
+  <polygon points="145,184 157,190 157,193 145,187"
+    fill="#5c3a1e" stroke="#4a2e16" stroke-width="0.3"/>
+  <polygon points="157,190 169,184 169,187 157,193"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Backrest face on screen SW edge (S→W, world south edge) -->
+  <polygon points="157,190 145,184 145,167 157,173"
+    fill="#6b422a" stroke="#553420" stroke-width="0.5"/>
+  <!-- Backrest top cap (depth offset toward SW) -->
+  <polygon points="157,173 145,167 144,168 156,174"
+    fill="#7a4e32" stroke="#553420" stroke-width="0.3"/>
+  <!-- Backrest end face (W end, farthest from camera in +r) -->
+  <polygon points="145,167 144,168 144,185 145,184"
+    fill="#4e3018" stroke="#3e2612" stroke-width="0.3"/>
+  <!-- Slat lines -->
+  <line x1="156" y1="179" x2="146" y2="174" stroke="#553420" stroke-width="0.35" opacity="0.5"/>
+  <line x1="156" y1="184" x2="146" y2="179" stroke="#553420" stroke-width="0.35" opacity="0.4"/>
+
+  <!-- S-chair-2 (cooler dark stain — mismatched) -->
+  <line x1="205" y1="205" x2="205" y2="212" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="217" y1="211" x2="217" y2="218" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="205" y1="217" x2="205" y2="224" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round"/>
+  <polygon points="193,208 205,214 217,208 205,202"
+    fill="#3a3026" stroke="#1c1612" stroke-width="0.5"/>
+  <line x1="196" y1="209" x2="214" y2="209" stroke="#1c1612" stroke-width="0.3" opacity="0.45"/>
+  <polygon points="193,208 205,214 205,217 193,211"
+    fill="#1c1612" stroke="#100a08" stroke-width="0.3"/>
+  <polygon points="205,214 217,208 217,211 205,217"
+    fill="#16100a" stroke="#0a0604" stroke-width="0.3"/>
+  <polygon points="205,214 193,208 193,191 205,197"
+    fill="#2a2018" stroke="#16100a" stroke-width="0.5"/>
+  <polygon points="205,197 193,191 192,192 204,198"
+    fill="#3a3026" stroke="#16100a" stroke-width="0.3"/>
+  <polygon points="193,191 192,192 192,209 193,208"
+    fill="#16100a" stroke="#0a0604" stroke-width="0.3"/>
+  <line x1="204" y1="203" x2="194" y2="198" stroke="#16100a" stroke-width="0.35" opacity="0.55"/>
+  <line x1="204" y1="208" x2="194" y2="203" stroke="#16100a" stroke-width="0.35" opacity="0.45"/>
+</svg>

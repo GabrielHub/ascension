@@ -27,6 +27,7 @@ import {
   type OperatorRelationshipSnapshot,
   type PersistedSaveGame,
   type PostedContractSnapshot,
+  type PresenterUnlockSnapshot,
   type RaidOpportunitySnapshot,
   type RaidOperatorOutcomeSnapshot,
   type RaidSummarySnapshot,
@@ -37,7 +38,6 @@ import {
   type SaveSlotId,
   type SaveSlotMetadata,
   type SaveStructuredRecord,
-  type StaffSnapshot,
   type VisitorSnapshot,
   type WorldSnapshot,
   type WorldSchedulerSnapshot,
@@ -53,7 +53,7 @@ import {
   type OperatorAppearancePartIndexEntry,
 } from "./appearance";
 import { templateRegistry } from "content/templates";
-import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { deriveOperatorCombatDefaults, normalizeOperatorRank } from "lib/operator-combat";
 import {
   CONTRACT_POSTURE_OPTIONS,
   DEFAULT_POLICY_STATE,
@@ -1281,19 +1281,14 @@ function parseOperatorLifecycleSnapshot(
 
 function parseOperatorCombatSnapshot(value: unknown, path: string): OperatorCombatSnapshot {
   const record = expectRecord(value, path);
-  const kitRecord = expectRecord(record.kit, `${path}.kit`);
   const statsRecord = expectRecord(record.baseStats, `${path}.baseStats`);
 
   return {
     rank: expectString(record.rank, `${path}.rank`),
     attunementTag: expectString(record.attunementTag, `${path}.attunementTag`),
     traits: expectStringArray(record.traits, `${path}.traits`),
-    kit: {
-      regularAttackId: expectString(kitRecord.regularAttackId, `${path}.kit.regularAttackId`),
-      skillId: expectString(kitRecord.skillId, `${path}.kit.skillId`),
-      ultimateId: expectString(kitRecord.ultimateId, `${path}.kit.ultimateId`),
-      passiveIds: expectStringArray(kitRecord.passiveIds, `${path}.kit.passiveIds`),
-    },
+    combatPackageId: expectString(record.combatPackageId, `${path}.combatPackageId`),
+    blocks: expectNonNegativeInteger(record.blocks, `${path}.blocks`),
     baseStats: {
       strength: expectNumber(statsRecord.strength, `${path}.baseStats.strength`),
       speed: expectNumber(statsRecord.speed, `${path}.baseStats.speed`),
@@ -1311,11 +1306,37 @@ function parseOptionalOperatorCombatSnapshot(
   identity: SaveStructuredRecord | undefined,
   schemaVersion: number,
 ): { combat: OperatorCombatSnapshot | undefined; changed: boolean } {
+  const roleTag = identity && typeof identity.roleTag === "string" ? identity.roleTag : "";
+
   if (value !== undefined) {
+    const record = expectRecord(value, path);
+    if (record.combatPackageId === undefined && record.kit !== undefined) {
+      // Legacy schema (<19): derive a package from role/rank, drop the old kit.
+      const rank = typeof record.rank === "string" ? normalizeOperatorRank(record.rank) : "f";
+      const defaults = deriveOperatorCombatDefaults(roleTag, rank);
+      const statsRecord = expectRecord(record.baseStats, `${path}.baseStats`);
+      return {
+        combat: {
+          rank: typeof record.rank === "string" ? record.rank : defaults.rank,
+          attunementTag: defaults.attunementTag,
+          traits: [...defaults.traits],
+          combatPackageId: defaults.combatPackageId,
+          blocks: 0,
+          baseStats: {
+            strength: expectNumber(statsRecord.strength, `${path}.baseStats.strength`),
+            speed: expectNumber(statsRecord.speed, `${path}.baseStats.speed`),
+            endurance: expectNumber(statsRecord.endurance, `${path}.baseStats.endurance`),
+            resilience: expectNumber(statsRecord.resilience, `${path}.baseStats.resilience`),
+            perception: expectNumber(statsRecord.perception, `${path}.baseStats.perception`),
+            intelligence: expectNumber(statsRecord.intelligence, `${path}.baseStats.intelligence`),
+          },
+        },
+        changed: true,
+      };
+    }
     return { combat: parseOperatorCombatSnapshot(value, path), changed: false };
   }
 
-  const roleTag = identity && typeof identity.roleTag === "string" ? identity.roleTag : "";
   return {
     combat: deriveOperatorCombatDefaults(roleTag),
     changed: schemaVersion < 10 || value === undefined,
@@ -1449,33 +1470,6 @@ function parseOperatorRelationshipSnapshot(
     historyTags:
       historyTags === undefined ? [] : expectStringArray(historyTags, `${path}.historyTags`),
     _changed: changed,
-  };
-}
-
-function parseStaffSnapshot(value: unknown, path: string): StaffSnapshot {
-  const record = expectRecord(value, path);
-  const assignment = expectRecord(record.assignment, `${path}.assignment`);
-  const targetId = assignment.targetId;
-
-  if (typeof targetId !== "string") {
-    fail(`${path}.assignment.targetId`, "must be a string.");
-  }
-
-  return {
-    id: expectString(record.id, `${path}.id`),
-    name: expectString(record.name, `${path}.name`),
-    roleTag: expectString(record.roleTag, `${path}.roleTag`),
-    status: expectString(record.status, `${path}.status`),
-    wage: expectNumber(record.wage, `${path}.wage`),
-    assignment: {
-      kind: expectString(assignment.kind, `${path}.assignment.kind`),
-      targetId,
-    },
-    schedule: parseOptionalStructuredRecord(record.schedule, `${path}.schedule`),
-    needs: parseOptionalStructuredRecord(record.needs, `${path}.needs`),
-    morale: parseOptionalStructuredRecord(record.morale, `${path}.morale`),
-    loyalty: parseOptionalStructuredRecord(record.loyalty, `${path}.loyalty`),
-    injury: parseOptionalStructuredRecord(record.injury, `${path}.injury`),
   };
 }
 
@@ -1949,6 +1943,15 @@ function parseFactionStandingSnapshot(value: unknown, path: string): FactionStan
   };
 }
 
+function parsePresenterUnlockSnapshot(value: unknown, path: string): PresenterUnlockSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    presenterId: expectString(record.presenterId, `${path}.presenterId`),
+    unlockedAtTick: expectNonNegativeInteger(record.unlockedAtTick, `${path}.unlockedAtTick`),
+    unlockedAtDay: expectNonNegativeInteger(record.unlockedAtDay, `${path}.unlockedAtDay`),
+  };
+}
+
 function parseCityPressureSnapshot(
   value: unknown,
   path: string,
@@ -2080,7 +2083,6 @@ function parseWorldSnapshot(
     `${path}.operatorRelationships`,
     parseOperatorRelationshipSnapshot,
   );
-  const staff = parseOptionalCollection(record.staff, `${path}.staff`, parseStaffSnapshot);
   const visitors = parseOptionalCollection(
     record.visitors,
     `${path}.visitors`,
@@ -2107,6 +2109,7 @@ function parseWorldSnapshot(
     `${path}.activeEvents`,
     parseActiveEventSnapshot,
   );
+  const time = parseWorldTimeSnapshot(record.time, `${path}.time`);
   const contractSite = parseContractSiteSnapshot(record.contractSite, `${path}.contractSite`);
   const contractLifecycle = parseContractLifecycleSnapshot(
     record.contractLifecycle,
@@ -2192,6 +2195,37 @@ function parseWorldSnapshot(
     : (() => {
         if (schemaVersion < 8) phase2Changed = true;
         return [];
+      })();
+
+  const presenterUnlocks: PresenterUnlockSnapshot[] = record.presenterUnlocks
+    ? parseCollection(
+        record.presenterUnlocks,
+        `${path}.presenterUnlocks`,
+        parsePresenterUnlockSnapshot,
+      )
+    : (() => {
+        phase2Changed = true;
+
+        return templateRegistry.presenters.flatMap((presenter) => {
+          if (presenter.id === "presenter/assistant") {
+            return [{ presenterId: presenter.id, unlockedAtTick: 0, unlockedAtDay: 1 }];
+          }
+
+          if (
+            presenter.unlockFromRoomTemplateId &&
+            rooms.some(({ room }) => room.templateId === presenter.unlockFromRoomTemplateId)
+          ) {
+            return [
+              {
+                presenterId: presenter.id,
+                unlockedAtTick: time.tick,
+                unlockedAtDay: time.day,
+              },
+            ];
+          }
+
+          return [];
+        });
       })();
 
   if (schemaVersion >= 7) {
@@ -2401,7 +2435,7 @@ function parseWorldSnapshot(
     world: {
       simulationSeed,
       guild: guild.guild,
-      time: parseWorldTimeSnapshot(record.time, `${path}.time`),
+      time,
       building: building.building,
       rooms: rooms.map(({ room }) => room),
       activeRaidPackets: activeRaidPackets.map(({ _changed: _ignored, ...packet }) => packet),
@@ -2417,7 +2451,6 @@ function parseWorldSnapshot(
               ({ _changed: _ignored, ...relationship }) => relationship,
             ),
           }),
-      ...(record.staff === undefined ? {} : { staff: staff.items }),
       ...(record.visitors === undefined ? {} : { visitors: visitors.items }),
       ...(record.raidOpportunities === undefined
         ? {}
@@ -2454,6 +2487,7 @@ function parseWorldSnapshot(
       ...(cityPressure.cityPressure === undefined
         ? {}
         : { cityPressure: cityPressure.cityPressure }),
+      presenterUnlocks,
       // Encounter, interruption, and incident state: pass through if present, ignore if absent
       ...(record.activeEncounter && typeof record.activeEncounter === "object"
         ? { activeEncounter: record.activeEncounter as SaveStructuredRecord }
@@ -2475,7 +2509,6 @@ function parseWorldSnapshot(
       operators.changed ||
       operatorChanged ||
       operatorRelationships.changed ||
-      staff.changed ||
       visitors.changed ||
       raidOpportunities.changed ||
       activeEvents.changed ||

@@ -86,7 +86,7 @@ function parseTagAttributes(attrsRaw: string, filePath: string, line: number): S
   return issues;
 }
 
-function validateSvgText(filePath: string, svgText: string): SvgIssue[] {
+export function validateSvgText(filePath: string, svgText: string): SvgIssue[] {
   const issues: SvgIssue[] = [];
   const stack: Array<{ line: number; name: string }> = [];
   let index = 0;
@@ -116,6 +116,14 @@ function validateSvgText(filePath: string, svgText: string): SvgIssue[] {
       }
 
       const token = svgText.slice(index, commentEnd + 3);
+      const commentBody = svgText.slice(index + 4, commentEnd);
+      if (commentBody.includes("--")) {
+        issues.push({
+          filePath,
+          line: startLine,
+          message: "Invalid XML comment contains `--` in its body.",
+        });
+      }
       line += countNewlines(token);
       index = commentEnd + 3;
       continue;

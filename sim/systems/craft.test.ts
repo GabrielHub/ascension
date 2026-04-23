@@ -13,12 +13,7 @@ import type { SimSystemContext } from "./types";
 const BREACH_HAMMER_RECIPE_ID = "craft-recipe/field-lead-breach/breach-hammer";
 const BREACH_HAMMER_OUTPUT_ID = "weapon/breach-hammer";
 
-function addOperationalRoom(
-  context: SimSystemContext,
-  templateId: string,
-  id: string,
-  assignedStaffCount = 1,
-): void {
+function addOperationalRoom(context: SimSystemContext, templateId: string, id: string): void {
   const templateIndex = context.registry.roomIndexById.get(templateId);
   if (templateIndex === undefined) {
     throw new Error(`Missing room template ${templateId}`);
@@ -35,10 +30,8 @@ function addOperationalRoom(
   RoomInstance.slotId[entity] = `${id}/slot`;
   RoomInstance.roomStateId[entity] = `${id}/state`;
   RoomInstance.capacity[entity] = template.baseCapacity;
-  RoomInstance.occupancy[entity] = assignedStaffCount;
-  RoomInstance.isRequestedActive[entity] = 1;
+  RoomInstance.occupancy[entity] = 0;
   RoomInstance.isOperational[entity] = 1;
-  RoomInstance.assignedStaffCount[entity] = assignedStaffCount;
   RoomInstance.appliedUpgradeIds[entity] = [];
   RoomInstance.slotIndex[entity] = 0;
 
@@ -75,7 +68,6 @@ describe("durable crafting", () => {
     const availability = buildCraftRecipeAvailability(
       "room/workshop:tier_1",
       true,
-      1,
       5,
       recipe!.cashCost - 1,
       [

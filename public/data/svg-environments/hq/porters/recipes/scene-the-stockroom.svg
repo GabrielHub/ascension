@@ -1,0 +1,315 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- Props-only scene layer: The Stockroom (Porter's tier)
+       Grid: 4 cols x 3 rows. Origin (200,100). iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Role: gear storage, logistics, loadout handling.
+       Composition (back to front):
+         gear lockers, cork manifest board, industrial shelving with tiered totes,
+         top-shelf duffel and stenciled crate, loadout prep bench with vest / clipboard / radio / mug,
+         canvas floor duffel, coiled rope, pallet with stacked wooden crates,
+         hand truck with loaded crate, cage pendant lights overlay. -->
+
+  <defs>
+    <g id="tote-olive">
+      <polygon points="0,0 21.6,10.8 9.6,16.8 -12,6" fill="#3f4c2e" stroke="#1e2414" stroke-width="0.5"/>
+      <polygon points="-12,6 9.6,16.8 9.6,32.8 -12,22" fill="#2a361e" stroke="#161c10" stroke-width="0.4"/>
+      <polygon points="21.6,10.8 9.6,16.8 9.6,32.8 21.6,26.8" fill="#4e5c3c" stroke="#1e2414" stroke-width="0.4"/>
+      <rect x="-2" y="7" width="8" height="2" fill="#1e2414" opacity="0.6" rx="0.3"/>
+      <rect x="-8" y="11" width="8" height="2.2" rx="0.3" fill="#c8a84c" opacity="0.28"/>
+      <circle cx="15" cy="22" r="0.9" fill="#c89a3a" opacity="0.7"/>
+    </g>
+    <g id="tote-red">
+      <polygon points="0,0 21.6,10.8 9.6,16.8 -12,6" fill="#7c3020" stroke="#2a0e08" stroke-width="0.5"/>
+      <polygon points="-12,6 9.6,16.8 9.6,32.8 -12,22" fill="#4a1610" stroke="#20080a" stroke-width="0.4"/>
+      <polygon points="21.6,10.8 9.6,16.8 9.6,32.8 21.6,26.8" fill="#8e3e2a" stroke="#2a0e08" stroke-width="0.4"/>
+      <rect x="-2" y="7" width="8" height="2" fill="#20080a" opacity="0.6" rx="0.3"/>
+      <rect x="-8" y="11" width="8" height="2.2" rx="0.3" fill="#e8dccc" opacity="0.4"/>
+      <rect x="13" y="19" width="4" height="1" fill="#e8dccc" opacity="0.75"/>
+      <rect x="14.5" y="17.5" width="1" height="4" fill="#e8dccc" opacity="0.75"/>
+    </g>
+    <g id="tote-navy">
+      <polygon points="0,0 21.6,10.8 9.6,16.8 -12,6" fill="#2a3a48" stroke="#10181e" stroke-width="0.5"/>
+      <polygon points="-12,6 9.6,16.8 9.6,32.8 -12,22" fill="#1c2430" stroke="#0a0e14" stroke-width="0.4"/>
+      <polygon points="21.6,10.8 9.6,16.8 9.6,32.8 21.6,26.8" fill="#3a4a58" stroke="#10181e" stroke-width="0.4"/>
+      <rect x="-2" y="7" width="8" height="2" fill="#10181e" opacity="0.6" rx="0.3"/>
+      <rect x="-8" y="11" width="8" height="2.2" rx="0.3" fill="#c8a84c" opacity="0.25"/>
+      <polyline points="12,19 14,22 13,22 15,25" fill="none" stroke="#c8a84c" stroke-width="0.7" opacity="0.8"/>
+    </g>
+    <g id="tote-kraft">
+      <polygon points="0,0 21.6,10.8 9.6,16.8 -12,6" fill="#7a5e2e" stroke="#2a1e0e" stroke-width="0.5"/>
+      <polygon points="-12,6 9.6,16.8 9.6,32.8 -12,22" fill="#4a3418" stroke="#20140a" stroke-width="0.4"/>
+      <polygon points="21.6,10.8 9.6,16.8 9.6,32.8 21.6,26.8" fill="#8a6e3e" stroke="#2a1e0e" stroke-width="0.4"/>
+      <rect x="-2" y="7" width="8" height="2" fill="#20140a" opacity="0.6" rx="0.3"/>
+      <rect x="-8" y="11" width="8" height="2.2" rx="0.3" fill="#e8dccc" opacity="0.32"/>
+    </g>
+  </defs>
+
+  <!-- Gear lockers (left wall, c=0..0.35, r=0.5..1.7, z=0..70) -->
+  <g id="lockers">
+    <polygon points="176,42 193,50 135,79 118,71" fill="#4c535a" stroke="#141a20" stroke-width="0.6"/>
+    <polygon points="193,50 135,79 135,149 193,120" fill="#3a4249" stroke="#141a20" stroke-width="0.7"/>
+    <polygon points="135,79 118,71 118,141 135,149" fill="#2c3238" stroke="#141a20" stroke-width="0.6"/>
+    <line x1="173.6" y1="60" x2="173.6" y2="130" stroke="#141a20" stroke-width="0.8"/>
+    <line x1="154.4" y1="69.6" x2="154.4" y2="139.6" stroke="#141a20" stroke-width="0.8"/>
+    <rect x="185" y="90" width="3" height="6" fill="#a88438" stroke="#5a3e12" stroke-width="0.3" rx="0.3"/>
+    <rect x="165.5" y="99.5" width="3" height="6" fill="#a88438" stroke="#5a3e12" stroke-width="0.3" rx="0.3"/>
+    <rect x="146" y="109" width="3" height="6" fill="#a88438" stroke="#5a3e12" stroke-width="0.3" rx="0.3"/>
+    <rect x="178" y="68" width="10" height="4" fill="#d8b88c" stroke="#7a5a2a" stroke-width="0.3" rx="0.3"/>
+    <line x1="180" y1="70" x2="186" y2="70" stroke="#3a2818" stroke-width="0.3"/>
+    <rect x="158.5" y="77.5" width="10" height="4" fill="#d8b88c" stroke="#7a5a2a" stroke-width="0.3" rx="0.3"/>
+    <line x1="161" y1="79.5" x2="167" y2="79.5" stroke="#3a2818" stroke-width="0.3"/>
+    <rect x="139" y="87" width="10" height="4" fill="#d8b88c" stroke="#7a5a2a" stroke-width="0.3" rx="0.3"/>
+    <line x1="141" y1="89" x2="147" y2="89" stroke="#3a2818" stroke-width="0.3"/>
+    <g stroke="#141a20" stroke-width="0.4">
+      <line x1="181" y1="114" x2="188" y2="114"/>
+      <line x1="181" y1="117" x2="188" y2="117"/>
+      <line x1="181" y1="120" x2="188" y2="120"/>
+      <line x1="161" y1="124" x2="168" y2="124"/>
+      <line x1="161" y1="127" x2="168" y2="127"/>
+      <line x1="161" y1="130" x2="168" y2="130"/>
+      <line x1="142" y1="134" x2="149" y2="134"/>
+      <line x1="142" y1="137" x2="149" y2="137"/>
+      <line x1="142" y1="140" x2="149" y2="140"/>
+    </g>
+    <polygon points="193,115 135,144 135,149 193,120" fill="#141a20" opacity="0.4"/>
+  </g>
+
+  <!-- Cork manifest board (left wall, r=1.85..2.6, z=18..54) -->
+  <g id="corkboard">
+    <polygon points="111,90 75,108 75,144 111,126" fill="#3a2818" stroke="#1a1008" stroke-width="0.8"/>
+    <polygon points="109,94 78,109 78,141 109,126" fill="#a87648" stroke="#7a4f2a" stroke-width="0.4"/>
+    <circle cx="90" cy="118" r="0.4" fill="#7a4f2a" opacity="0.5"/>
+    <circle cx="95" cy="122" r="0.4" fill="#8a5a38" opacity="0.4"/>
+    <circle cx="100" cy="125" r="0.4" fill="#7a4f2a" opacity="0.5"/>
+    <circle cx="85" cy="128" r="0.4" fill="#8a5a38" opacity="0.4"/>
+    <circle cx="92" cy="134" r="0.4" fill="#7a4f2a" opacity="0.4"/>
+    <polygon points="87,100 100,95 103,112 90,117" fill="#d8ccb0" stroke="#7a6a4a" stroke-width="0.3"/>
+    <line x1="89" y1="103" x2="101" y2="98" stroke="#5a4428" stroke-width="0.3" opacity="0.7"/>
+    <line x1="89" y1="106" x2="101" y2="101" stroke="#5a4428" stroke-width="0.3" opacity="0.6"/>
+    <line x1="89" y1="109" x2="100" y2="104" stroke="#5a4428" stroke-width="0.3" opacity="0.55"/>
+    <line x1="89" y1="112" x2="99" y2="107" stroke="#5a4428" stroke-width="0.3" opacity="0.55"/>
+    <circle cx="94" cy="97" r="0.9" fill="#c45151" stroke="#6a1a10" stroke-width="0.2"/>
+    <polygon points="93,120 105,116 107,128 95,132" fill="#c8a858" stroke="#6a4a18" stroke-width="0.3"/>
+    <line x1="95" y1="122" x2="104" y2="119" stroke="#3a2818" stroke-width="0.3" opacity="0.6"/>
+    <line x1="95" y1="125" x2="104" y2="122" stroke="#3a2818" stroke-width="0.3" opacity="0.5"/>
+    <line x1="95" y1="128" x2="103" y2="125" stroke="#3a2818" stroke-width="0.3" opacity="0.5"/>
+    <circle cx="99" cy="118" r="0.9" fill="#38584a" stroke="#1a281e" stroke-width="0.2"/>
+    <polygon points="80,127 93,123 95,136 82,140" fill="#e8dccc" stroke="#7a6a4a" stroke-width="0.3"/>
+    <polygon points="81,128 91,125 92,133 82,136" fill="#4a5860" stroke="#1e2430" stroke-width="0.3"/>
+    <circle cx="87" cy="125" r="0.9" fill="#4a6a38" stroke="#1a2618" stroke-width="0.2"/>
+    <polygon points="103,107 108,106 109,114 104,115" fill="#d88838" stroke="#5a3a14" stroke-width="0.25"/>
+    <circle cx="106" cy="107" r="0.8" fill="#3a4858" stroke="#1a2030" stroke-width="0.2"/>
+  </g>
+
+  <!-- Industrial shelving (back wall, c=1.15..3.25, r=0..0.45, z=0..78) -->
+  <g id="shelving">
+    <polygon points="255,50 234,60 234,138 255,128" fill="#38393a" stroke="#141416" stroke-width="0.7"/>
+    <polygon points="356,100 334,111 334,189 356,178" fill="#5a5d5c" stroke="#141416" stroke-width="0.7"/>
+    <polygon points="234,60 334,111 334,189 234,138" fill="#4a4d4a" stroke="#141416" stroke-width="0.8"/>
+    <polygon points="255,50 356,100 334,111 234,60" fill="#6a6d6a" stroke="#141416" stroke-width="0.6"/>
+    <polygon points="234,78 334,129 356,118 255,68" fill="#2a2b2c" stroke="#141416" stroke-width="0.4"/>
+    <polygon points="234,98 334,149 356,138 255,88" fill="#2a2b2c" stroke="#141416" stroke-width="0.4"/>
+    <polygon points="234,118 334,169 356,158 255,108" fill="#2a2b2c" stroke="#141416" stroke-width="0.4"/>
+    <line x1="284" y1="84" x2="284" y2="163" stroke="#2c2d2e" stroke-width="0.9" opacity="0.85"/>
+    <line x1="305" y1="94" x2="305" y2="173" stroke="#2c2d2e" stroke-width="0.9" opacity="0.7"/>
+  </g>
+
+  <!-- Totes on shelves: mid tier (z=40..56) and bottom tier (z=20..36) -->
+  <use href="#tote-red"   x="255.2" y="76.4"/>
+  <use href="#tote-olive" x="279.2" y="88.4"/>
+  <use href="#tote-kraft" x="303.2" y="100.4"/>
+  <use href="#tote-navy"  x="327.2" y="112.4"/>
+  <use href="#tote-olive" x="255.2" y="96.4"/>
+  <use href="#tote-red"   x="279.2" y="108.4"/>
+  <use href="#tote-navy"  x="303.2" y="120.4"/>
+  <use href="#tote-kraft" x="327.2" y="132.4"/>
+
+  <!-- Top shelf: olive duffel and stenciled wooden crate (z=60..) -->
+  <g id="top-shelf-duffel">
+    <polygon points="255,60 289,77 277,83 243,66" fill="#4e5c3c" stroke="#1e2414" stroke-width="0.4"/>
+    <polygon points="243,66 277,83 277,95 243,78" fill="#3f4c2e" stroke="#1e2414" stroke-width="0.4"/>
+    <polygon points="289,77 277,83 277,95 289,89" fill="#2a361e" stroke="#1e2414" stroke-width="0.4"/>
+    <line x1="249" y1="63" x2="283" y2="80" stroke="#1e2414" stroke-width="0.6" opacity="0.7"/>
+    <circle cx="252" cy="69" r="1.2" fill="none" stroke="#a88438" stroke-width="0.5"/>
+    <circle cx="280" cy="83" r="1.2" fill="none" stroke="#a88438" stroke-width="0.5"/>
+    <line x1="252" y1="69" x2="280" y2="83" stroke="#2a2018" stroke-width="1" opacity="0.85"/>
+    <rect x="252" y="86" width="16" height="3" rx="0.3" fill="#c8a84c" opacity="0.35"/>
+  </g>
+  <g id="top-shelf-crate">
+    <polygon points="298,76 344,99 332,105 286,82" fill="#6b4a28" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="286,82 332,105 332,123 286,100" fill="#5a3a22" stroke="#2a1808" stroke-width="0.6"/>
+    <polygon points="344,99 332,105 332,123 344,117" fill="#3a2618" stroke="#2a1808" stroke-width="0.5"/>
+    <line x1="286" y1="94" x2="332" y2="117" stroke="#2a1808" stroke-width="0.5" opacity="0.8"/>
+    <line x1="309" y1="79" x2="320" y2="93" stroke="#2a1808" stroke-width="0.4" opacity="0.6"/>
+    <line x1="286" y1="88" x2="332" y2="111" stroke="#2c2018" stroke-width="1" opacity="0.9"/>
+    <line x1="286" y1="114" x2="332" y2="137" stroke="#2c2018" stroke-width="1" opacity="0.9"/>
+    <polygon points="286,82 290,84 290,88 286,86" fill="#2c2018"/>
+    <polygon points="328,101 332,103 332,123 328,121" fill="#2c2018" opacity="0.9"/>
+    <rect x="299" y="107" width="11" height="3" fill="#9a3030" opacity="0.9"/>
+    <rect x="300.2" y="108" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="302.5" y="108" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="304.8" y="108" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="307.1" y="108" width="1.4" height="1" fill="#e8dccc"/>
+  </g>
+
+  <!-- Loadout prep bench (c=0.75..2.05, r=1.65..2.25, top z=22) -->
+  <g id="prep-bench">
+    <polygon points="157,136 219,167 190,181 128,150" fill="#6b4a28" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="128,150 190,181 190,203 128,172" fill="#5a3a22" stroke="#2a1808" stroke-width="0.6"/>
+    <polygon points="219,167 190,181 190,203 219,189" fill="#3a2618" stroke="#2a1808" stroke-width="0.5"/>
+    <line x1="143" y1="143" x2="205" y2="174" stroke="#2a1808" stroke-width="0.4" opacity="0.7"/>
+    <line x1="172" y1="158" x2="208" y2="176" stroke="#2a1808" stroke-width="0.35" opacity="0.5"/>
+    <line x1="128" y1="163" x2="190" y2="194" stroke="#2a1808" stroke-width="0.5" opacity="0.9"/>
+    <line x1="149" y1="160.5" x2="149" y2="182.5" stroke="#2a1808" stroke-width="0.4" opacity="0.7"/>
+    <line x1="170" y1="171" x2="170" y2="193" stroke="#2a1808" stroke-width="0.4" opacity="0.7"/>
+    <rect x="137" y="158" width="3" height="1.5" rx="0.3" fill="#a88438" stroke="#5a3e12" stroke-width="0.2"/>
+    <rect x="158" y="168.5" width="3" height="1.5" rx="0.3" fill="#a88438" stroke="#5a3e12" stroke-width="0.2"/>
+    <rect x="179" y="179" width="3" height="1.5" rx="0.3" fill="#a88438" stroke="#5a3e12" stroke-width="0.2"/>
+  </g>
+
+  <!-- Bench-top items: tactical vest, clipboard, radio, coffee mug, magazines -->
+  <g id="bench-top">
+    <polygon points="169,144 200,160 183,168 152,153" fill="#3f4c2e" stroke="#1e2414" stroke-width="0.5"/>
+    <polygon points="178,148 193,156 188,163 173,155" fill="#4e5c3c" stroke="#1e2414" stroke-width="0.3"/>
+    <line x1="171" y1="148" x2="197" y2="161" stroke="#1e2414" stroke-width="0.4" opacity="0.85"/>
+    <line x1="168" y1="151" x2="196" y2="165" stroke="#1e2414" stroke-width="0.4" opacity="0.75"/>
+    <line x1="165" y1="154" x2="193" y2="168" stroke="#1e2414" stroke-width="0.4" opacity="0.75"/>
+    <line x1="162" y1="157" x2="189" y2="170" stroke="#1e2414" stroke-width="0.4" opacity="0.65"/>
+    <polygon points="169,144 175,147 175,149 169,146" fill="#1e2414" opacity="0.85"/>
+    <polygon points="194,157 200,160 200,162 194,159" fill="#1e2414" opacity="0.85"/>
+    <rect x="181" y="151" width="2" height="1.5" fill="#a88438" stroke="#3a2a10" stroke-width="0.2"/>
+    <polygon points="162,140 174,146 159,153 147,147" fill="#c8b488" stroke="#6a4a20" stroke-width="0.3"/>
+    <polygon points="164,143 172,147 158,151 150,147" fill="#e8dccc" stroke="#8a7a4a" stroke-width="0.2"/>
+    <line x1="155" y1="146" x2="168" y2="149" stroke="#3a2818" stroke-width="0.25" opacity="0.85"/>
+    <line x1="154" y1="148" x2="167" y2="151" stroke="#3a2818" stroke-width="0.25" opacity="0.75"/>
+    <line x1="153" y1="150" x2="165" y2="152" stroke="#3a2818" stroke-width="0.25" opacity="0.75"/>
+    <rect x="165" y="141" width="4" height="1.5" rx="0.3" fill="#a88438" stroke="#3a2a10" stroke-width="0.2"/>
+    <line x1="159" y1="144" x2="171" y2="150" stroke="#c49a3a" stroke-width="0.8"/>
+    <line x1="170" y1="149.5" x2="172" y2="150.7" stroke="#2a1808" stroke-width="0.6"/>
+    <polygon points="176,159 186,164 178,167 169,163" fill="#b88458" stroke="#4a2a10" stroke-width="0.3"/>
+    <polygon points="169,163 178,167 178,170 169,166" fill="#7a5a3a" stroke="#4a2a10" stroke-width="0.3"/>
+    <polygon points="186,164 178,167 178,170 186,167" fill="#5a3a1a" stroke="#4a2a10" stroke-width="0.3"/>
+    <line x1="170" y1="164" x2="185" y2="168.5" stroke="#4a2a10" stroke-width="0.22" opacity="0.7"/>
+    <line x1="170" y1="165" x2="185" y2="169.5" stroke="#4a2a10" stroke-width="0.22" opacity="0.6"/>
+    <polygon points="208,153 213,155 210,157 205,154" fill="#3a3838" stroke="#141416" stroke-width="0.3"/>
+    <polygon points="205,154 210,157 210,167 205,164" fill="#2c2a2a" stroke="#141416" stroke-width="0.3"/>
+    <polygon points="213,155 210,157 210,167 213,165" fill="#1e1c1c" stroke="#141416" stroke-width="0.3"/>
+    <line x1="207" y1="153" x2="206" y2="142" stroke="#1e1c1c" stroke-width="0.6"/>
+    <circle cx="207" cy="160" r="0.8" fill="#c45151" opacity="0.95"/>
+    <line x1="206" y1="162" x2="209" y2="163.5" stroke="#141416" stroke-width="0.25"/>
+    <line x1="206" y1="163.5" x2="209" y2="165" stroke="#141416" stroke-width="0.25"/>
+    <ellipse cx="202" cy="164" rx="3" ry="1.5" fill="#4a4a52" stroke="#141416" stroke-width="0.3"/>
+    <path d="M199,164 L199,170 Q199,172 202,172 Q205,172 205,170 L205,164 Z" fill="#e8dccc" stroke="#141416" stroke-width="0.3"/>
+    <ellipse cx="202" cy="164" rx="2.4" ry="1.1" fill="#2a1808" opacity="0.75"/>
+    <path d="M205,165 Q208,166 207,169 Q207,170 205,170" fill="none" stroke="#141416" stroke-width="0.7"/>
+    <path d="M200,162 Q199,159 201,157" fill="none" stroke="#a8a8a8" stroke-width="0.5" opacity="0.5"/>
+    <path d="M203,162 Q205,159 203,156" fill="none" stroke="#a8a8a8" stroke-width="0.5" opacity="0.4"/>
+  </g>
+
+  <!-- Canvas floor duffel (front-left, c=0.45..1.00, r=2.40..2.75, z=2..18) -->
+  <g id="floor-duffel">
+    <polygon points="106,150 133,164 116,172 90,159" fill="#6a5a3a" stroke="#2a2418" stroke-width="0.5"/>
+    <polygon points="90,159 116,172 116,188 90,175" fill="#584a30" stroke="#2a2418" stroke-width="0.5"/>
+    <polygon points="133,164 116,172 116,188 133,180" fill="#3a301e" stroke="#2a2418" stroke-width="0.5"/>
+    <line x1="98" y1="155" x2="124" y2="168" stroke="#2a2418" stroke-width="0.6" opacity="0.8"/>
+    <line x1="90" y1="167" x2="116" y2="180" stroke="#2c1c10" stroke-width="1.8"/>
+    <line x1="90" y1="167" x2="116" y2="180" stroke="#5a4028" stroke-width="0.7"/>
+    <line x1="116" y1="180" x2="133" y2="172" stroke="#2c1c10" stroke-width="1.8"/>
+    <line x1="116" y1="180" x2="133" y2="172" stroke="#5a4028" stroke-width="0.7"/>
+    <rect x="105" y="175" width="3" height="2" fill="#a88438" stroke="#3a2a10" stroke-width="0.2"/>
+    <path d="M100,152 Q106,145 113,149" fill="none" stroke="#2a1c10" stroke-width="1.3"/>
+    <path d="M112,164 Q118,157 125,161" fill="none" stroke="#2a1c10" stroke-width="1.3"/>
+    <polygon points="94,172 114,181 114,184 94,175" fill="#c8a84c" opacity="0.28"/>
+  </g>
+
+  <!-- Coiled rope (front, c=1.3, r=2.65, z=0..4) -->
+  <g id="rope-coil">
+    <ellipse cx="135" cy="193" rx="14" ry="7" fill="none" stroke="#8a6a3a" stroke-width="2.2" opacity="0.95"/>
+    <ellipse cx="135" cy="193" rx="10" ry="5" fill="none" stroke="#9a7a4a" stroke-width="1.8" opacity="0.9"/>
+    <ellipse cx="135" cy="193" rx="6" ry="3" fill="none" stroke="#ac8a54" stroke-width="1.6" opacity="0.8"/>
+    <path d="M149,193 Q156,196 159,201" fill="none" stroke="#8a6a3a" stroke-width="2" opacity="0.9"/>
+    <line x1="130" y1="186" x2="140" y2="189" stroke="#2a1808" stroke-width="1"/>
+  </g>
+
+  <!-- Pallet and stacked wooden crates (c=2.45..3.20, r=1.40..2.00) -->
+  <g id="pallet-crates">
+    <polygon points="250,187 286,205 258,220 222,202" fill="#5a3a22" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="222,202 258,220 258,225 222,207" fill="#3a2618" stroke="#2a1808" stroke-width="0.4"/>
+    <polygon points="286,205 258,220 258,225 286,210" fill="#2a1808" stroke="#1a1008" stroke-width="0.4"/>
+    <line x1="230" y1="204" x2="266" y2="222" stroke="#2a1808" stroke-width="0.5" opacity="0.7"/>
+    <line x1="238" y1="200" x2="274" y2="218" stroke="#2a1808" stroke-width="0.5" opacity="0.7"/>
+    <line x1="246" y1="196" x2="282" y2="214" stroke="#2a1808" stroke-width="0.5" opacity="0.7"/>
+    <line x1="233" y1="203" x2="269" y2="221" stroke="#7a5a38" stroke-width="0.3" opacity="0.5"/>
+    <line x1="241" y1="199" x2="277" y2="217" stroke="#7a5a38" stroke-width="0.3" opacity="0.5"/>
+    <polygon points="253,169 279,182 255,194 229,181" fill="#6b4a28" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="229,181 255,194 255,216 229,203" fill="#5a3a22" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="279,182 255,194 255,216 279,204" fill="#3a2618" stroke="#2a1808" stroke-width="0.5"/>
+    <line x1="229" y1="187" x2="255" y2="200" stroke="#2a1808" stroke-width="0.4" opacity="0.6"/>
+    <line x1="229" y1="193" x2="255" y2="206" stroke="#2a1808" stroke-width="0.4" opacity="0.6"/>
+    <line x1="229" y1="189" x2="255" y2="202" stroke="#2c2018" stroke-width="0.8"/>
+    <rect x="235" y="197" width="13" height="3" fill="#9a3030" opacity="0.9"/>
+    <rect x="236.5" y="198" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="238.8" y="198" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="241.1" y="198" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="243.4" y="198" width="1.4" height="1" fill="#e8dccc"/>
+    <rect x="245.7" y="198" width="1.4" height="1" fill="#e8dccc"/>
+    <polygon points="254,155 275,166 254,176 233,165" fill="#6b4a28" stroke="#2a1808" stroke-width="0.4"/>
+    <polygon points="233,165 254,176 254,192 233,181" fill="#5a3a22" stroke="#2a1808" stroke-width="0.5"/>
+    <polygon points="275,166 254,176 254,192 275,182" fill="#3a2618" stroke="#2a1808" stroke-width="0.4"/>
+    <line x1="233" y1="171" x2="254" y2="182" stroke="#2a1808" stroke-width="0.35" opacity="0.6"/>
+    <line x1="233" y1="173" x2="254" y2="184" stroke="#2c2018" stroke-width="0.7"/>
+    <rect x="239" y="181" width="9" height="2.5" fill="#9a3030" opacity="0.85"/>
+  </g>
+
+  <!-- Hand truck with small loaded crate (c=2.1..2.3, r=2.15..2.70) -->
+  <g id="hand-truck">
+    <ellipse cx="178" cy="209" rx="4" ry="2.2" fill="#1e1c1c" stroke="#0a0808" stroke-width="0.4"/>
+    <ellipse cx="178" cy="209" rx="2" ry="1.1" fill="#3a3838" opacity="0.85"/>
+    <circle cx="178" cy="208" r="0.6" fill="#6a6a6a"/>
+    <ellipse cx="188" cy="213" rx="4" ry="2.2" fill="#1e1c1c" stroke="#0a0808" stroke-width="0.4"/>
+    <ellipse cx="188" cy="213" rx="2" ry="1.1" fill="#3a3838" opacity="0.85"/>
+    <circle cx="188" cy="212" r="0.6" fill="#6a6a6a"/>
+    <polygon points="178,208 188,212 181,216 171,212" fill="#4a4a52" stroke="#1e1e28" stroke-width="0.4"/>
+    <line x1="183" y1="209" x2="183" y2="152" stroke="#3a3a44" stroke-width="2.2"/>
+    <line x1="183" y1="209" x2="183" y2="152" stroke="#5a5a68" stroke-width="0.7"/>
+    <line x1="193" y1="214" x2="193" y2="157" stroke="#3a3a44" stroke-width="2.2"/>
+    <line x1="193" y1="214" x2="193" y2="157" stroke="#5a5a68" stroke-width="0.7"/>
+    <line x1="183" y1="170" x2="193" y2="175" stroke="#3a3a44" stroke-width="1.2"/>
+    <line x1="183" y1="183" x2="193" y2="188" stroke="#3a3a44" stroke-width="1.2"/>
+    <line x1="183" y1="152" x2="193" y2="157" stroke="#3a3a44" stroke-width="2.4"/>
+    <rect x="180" y="150" width="6" height="2.5" rx="0.5" fill="#2a2018"/>
+    <rect x="190" y="155" width="6" height="2.5" rx="0.5" fill="#2a2018"/>
+    <polygon points="183,187 193,192 183,197 174,192" fill="#6b4a28" stroke="#2a1808" stroke-width="0.4"/>
+    <polygon points="174,192 183,197 183,210 174,205" fill="#5a3a22" stroke="#2a1808" stroke-width="0.4"/>
+    <polygon points="193,192 183,197 183,210 193,205" fill="#3a2618" stroke="#2a1808" stroke-width="0.4"/>
+    <line x1="174" y1="196" x2="183" y2="201" stroke="#2a1808" stroke-width="0.35" opacity="0.6"/>
+    <line x1="174" y1="199" x2="183" y2="204" stroke="#2c2018" stroke-width="0.6"/>
+    <rect x="177" y="200" width="5" height="2" fill="#9a3030" opacity="0.85"/>
+  </g>
+
+  <!-- Cage pendant lights (overlay) -->
+  <g id="pendants">
+    <line x1="186" y1="0" x2="186" y2="112" stroke="#2a2018" stroke-width="0.9"/>
+    <ellipse cx="186" cy="3" rx="3" ry="1" fill="#3a3028" stroke="#141008" stroke-width="0.4"/>
+    <ellipse cx="186" cy="112" rx="8" ry="3" fill="#3a3028" stroke="#141008" stroke-width="0.5"/>
+    <path d="M178,112 Q178,118 186,120 Q194,118 194,112" fill="#2c241c" stroke="#141008" stroke-width="0.4"/>
+    <ellipse cx="186" cy="119" rx="6" ry="1.8" fill="#ffc96a" opacity="0.85"/>
+    <ellipse cx="186" cy="119" rx="3" ry="1" fill="#fff2c8" opacity="0.9"/>
+    <path d="M178,112 Q178,122 186,124 Q194,122 194,112" fill="none" stroke="#141008" stroke-width="0.5"/>
+    <path d="M182,113 Q182,122 190,122 Q198,122 190,113" fill="none" stroke="#141008" stroke-width="0.4" opacity="0.7"/>
+    <line x1="186" y1="112" x2="186" y2="124" stroke="#141008" stroke-width="0.4"/>
+    <line x1="180" y1="115" x2="192" y2="115" stroke="#141008" stroke-width="0.4" opacity="0.5"/>
+    <line x1="179" y1="120" x2="193" y2="120" stroke="#141008" stroke-width="0.4" opacity="0.4"/>
+
+    <line x1="258" y1="0" x2="258" y2="138" stroke="#2a2018" stroke-width="0.9"/>
+    <ellipse cx="258" cy="3" rx="3" ry="1" fill="#3a3028" stroke="#141008" stroke-width="0.4"/>
+    <ellipse cx="258" cy="138" rx="8" ry="3" fill="#3a3028" stroke="#141008" stroke-width="0.5"/>
+    <path d="M250,138 Q250,144 258,146 Q266,144 266,138" fill="#2c241c" stroke="#141008" stroke-width="0.4"/>
+    <ellipse cx="258" cy="145" rx="6" ry="1.8" fill="#ffc96a" opacity="0.85"/>
+    <ellipse cx="258" cy="145" rx="3" ry="1" fill="#fff2c8" opacity="0.9"/>
+    <path d="M250,138 Q250,148 258,150 Q266,148 266,138" fill="none" stroke="#141008" stroke-width="0.5"/>
+    <path d="M254,139 Q254,148 262,148 Q270,148 262,139" fill="none" stroke="#141008" stroke-width="0.4" opacity="0.7"/>
+    <line x1="258" y1="138" x2="258" y2="150" stroke="#141008" stroke-width="0.4"/>
+    <line x1="252" y1="141" x2="264" y2="141" stroke="#141008" stroke-width="0.4" opacity="0.5"/>
+    <line x1="251" y1="146" x2="265" y2="146" stroke="#141008" stroke-width="0.4" opacity="0.4"/>
+  </g>
+</svg>

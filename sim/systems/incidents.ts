@@ -15,6 +15,7 @@ import {
   type RaidBossCommitmentPayload,
 } from "./interruptions";
 import { enqueueInterruption } from "./interruptions";
+import { MARA_PRESENTER_ID } from "./presenter-unlocks";
 import {
   BuildingAuthority,
   GuildState,
@@ -32,7 +33,6 @@ import {
   clamp,
   getCurrentAbsoluteMinute,
   hasOperationalRoomTemplate,
-  hasStaffedOperationalRoomTemplate,
   pushRuntimeEvent,
 } from "./commands";
 import {
@@ -178,7 +178,6 @@ export function createIncidentState(): IncidentState {
 }
 
 const OPENING_INCIDENT_LEARNED_BEAT_ID = "guidance/opening/first-incident";
-const ASSISTANT_PRESENTER_ID = "presenter/assistant";
 const COOK_PRESENTER_ID = "presenter/cook";
 const BARTENDER_PRESENTER_ID = "presenter/bartender";
 
@@ -669,7 +668,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.3,
     briefingTemplate:
       "The coffee machine finally died. Foot traffic is already down and the operators are giving you looks. The nearest wholesale place has a refurbished unit, but it is not cheap.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     choices: [
       {
@@ -721,7 +720,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.0,
     briefingTemplate:
       "A health inspector showed up unannounced. The bodega technically still has a food license and she is asking about the back room where operators eat. She has not noticed the clearance permits yet.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     choices: [
       {
@@ -768,7 +767,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.2,
     briefingTemplate:
       "The upstairs tenant is at the counter again, this time with a petition. Says the operators coming and going at night are scaring the building. Three other neighbors signed it.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     choices: [
       {
@@ -815,7 +814,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.3,
     briefingTemplate:
       "{operator_a} has been picking up freelance clearance gigs on their days off. It is technically not against policy, but they showed up to the last raid tired and unfocused.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     choices: [
       {
@@ -863,7 +862,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.4,
     briefingTemplate:
       "The AC is dead and it is 94 degrees outside. The dining area smells like sweat and old sandwiches. Two operators are refusing to eat in there.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     choices: [
       {
@@ -910,7 +909,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.6,
     briefingTemplate:
       "A stray cat has taken up residence behind the counter. The operators have named it. The neighbors are feeding it. Aina says it is technically a health code violation but nobody seems to care.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "amused",
     choices: [
       {
@@ -955,7 +954,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.1,
     briefingTemplate:
       "The supply delivery got mixed up with the bodega's grocery order. Half the field kit is missing and there are six cases of energy drinks nobody ordered sitting in the supply closet.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "amused",
     choices: [
       {
@@ -1005,7 +1004,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.4,
     briefingTemplate:
       "Someone who used to clear sites for the guild stopped by. They are doing well — better guild, better pay, better building. {operator_a} has been quiet since the visit.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     choices: [
       {
@@ -1053,7 +1052,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.15,
     briefingTemplate:
       "{operator_a} and {operator_b} got into it at the counter in front of a walk-in prospect. The visitor left. Aina is not happy.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     choices: [
       {
@@ -1102,7 +1101,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     noveltyWeight: 1.5,
     briefingTemplate:
       "The whole block lost power. The bodega is running on phone flashlights and whatever sunlight comes through the front window. The supply closet refrigeration is off. Con Ed says four to six hours.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     choices: [
       {
@@ -3249,7 +3248,7 @@ function getAdjustedIncidentEffects(
 ): readonly ConsequenceEffect[] {
   if (
     incident.templateId !== "incident/compliance-audit" ||
-    !hasStaffedOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID)
+    !hasOperationalRoomTemplate(context, BODEGA_BACK_OFFICE_TEMPLATE_ID)
   ) {
     return effects;
   }
@@ -3473,7 +3472,7 @@ export function createBossCommitmentPayload(
     bossRank,
     stakeSummary: `Rank ${bossRank.toUpperCase()} boss encounter. ${operatorIds.length} operators committed.`,
     teamConditionSummary: "Team is in operational condition.",
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
   };
 }
@@ -3560,7 +3559,7 @@ export function createIncidentInterruptionPayload(
     subjectSummary: presentation?.subjectSummary?.trim() || subjectSummary,
     choices: mergedChoices,
     boundContext: incident.boundContext,
-    presenterId: template.presenterId ?? ASSISTANT_PRESENTER_ID,
+    presenterId: template.presenterId ?? MARA_PRESENTER_ID,
     presenterExpression:
       template.presenterExpression ?? getDefaultIncidentPresenterExpression(template),
     copySource: presentation?.copySource ?? "authored",

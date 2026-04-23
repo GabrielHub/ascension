@@ -55,7 +55,6 @@ import { formatIdentityText } from "lib/game-identity";
 
 export interface GameCallbacks {
   tick: (deltaMs: number) => void;
-  setRoomActive: (roomId: string, isActive: boolean) => void;
   setPolicy: (policyId: PolicyId, value: PolicyValue) => void;
   setLootFilterEnabled: (enabled: boolean) => void;
   initiateRelocation: () => void;
@@ -66,8 +65,6 @@ export interface GameCallbacks {
   rejectRecruit: (visitorId: string) => void;
   replaceRecruit: (visitorId: string, operatorId: string) => void;
   dismissRecruit: (visitorId: string) => void;
-  hireStaff: (roleTag: string) => void;
-  assignStaff: (staffId: string, roomId?: string) => void;
   placeRoom: (templateId: string, floorIndex: number, slotId: string) => void;
   setActiveFloor: (floorIndex: number) => void;
   buyItem: (itemId: string) => void;
@@ -144,10 +141,7 @@ export interface RoomViewModel {
   roomStateId: string;
   capacity: number;
   occupancy: number;
-  isActive: boolean;
   isOperational: boolean;
-  requiredStaffTag: string;
-  assignedStaffCount: number;
   appliedUpgradeIds: readonly string[];
   availableUpgradeIds: readonly string[];
   tags: readonly string[];
@@ -294,10 +288,8 @@ export interface OperatorCombatViewModel {
   rank: string;
   attunementTag: string;
   traits: readonly string[];
-  regularAttackId: string;
-  skillId: string;
-  ultimateId: string;
-  passiveIds: readonly string[];
+  combatPackageId: string;
+  blocks: number;
   baseStats: OperatorCombatStatsViewModel;
 }
 
@@ -364,16 +356,6 @@ export interface OperatorViewModel {
   autonomyReasons: readonly string[];
   canBeReplaced: boolean;
   replaceLockedReason: string | null;
-}
-
-export interface StaffViewModel {
-  id: string;
-  name: string;
-  roleTag: string;
-  status: string;
-  wage: number;
-  assignmentKind: string;
-  assignmentTargetId: string;
 }
 
 export interface VisitorViewModel {
@@ -485,8 +467,8 @@ export interface PrepRecipeViewModel {
   outputBuffStat: string;
   outputBuffValue: number;
   canProduce: boolean;
-  /** False when the room is not staffed — blocks production. */
-  isRoomStaffed: boolean;
+  /** False when the room is not operational — blocks production. */
+  isRoomOperational: boolean;
 }
 
 export interface CraftRecipeInputViewModel {
@@ -512,7 +494,7 @@ export interface CraftRecipeViewModel {
   cashOnHand: number;
   outputStatEffects: readonly StatEffectViewModel[];
   canProduce: boolean;
-  isRoomStaffed: boolean;
+  isRoomOperational: boolean;
   isBuildingTierMet: boolean;
   isDistrictMet: boolean;
   isFactionMet: boolean;
@@ -582,7 +564,7 @@ export interface EventLogEntry {
   timestamp: string;
   kind: EventLogKind;
   message: string;
-  targetKind?: "operator" | "room" | "team" | "staff";
+  targetKind?: "operator" | "presenter" | "room" | "team";
   targetId?: string;
   accent: string;
 }
@@ -607,7 +589,6 @@ export interface HqViewModel {
   upgrades: readonly UpgradeViewModel[];
   roomUpgrades: readonly UpgradeViewModel[];
   operators: readonly OperatorViewModel[];
-  staff: readonly StaffViewModel[];
   visitors: readonly VisitorViewModel[];
   relationships: readonly RelationshipViewModel[];
   activeEvents: readonly ActiveEventViewModel[];
@@ -1073,12 +1054,8 @@ function mapCombatViewModel(combat: {
   rank: string;
   attunementTag: string;
   traits: readonly string[];
-  kit: {
-    regularAttackId: string;
-    skillId: string;
-    ultimateId: string;
-    passiveIds: readonly string[];
-  };
+  combatPackageId: string;
+  blocks: number;
   baseStats: {
     strength: number;
     speed: number;
@@ -1092,10 +1069,8 @@ function mapCombatViewModel(combat: {
     rank: combat.rank,
     attunementTag: combat.attunementTag,
     traits: combat.traits,
-    regularAttackId: combat.kit.regularAttackId,
-    skillId: combat.kit.skillId,
-    ultimateId: combat.kit.ultimateId,
-    passiveIds: combat.kit.passiveIds,
+    combatPackageId: combat.combatPackageId,
+    blocks: combat.blocks,
     baseStats: combat.baseStats,
   };
 }
@@ -1189,51 +1164,45 @@ function mapStatEffects(
 function buildPrepRecipesForRoom(
   roomTags: readonly string[],
   isOperational: boolean,
-  assignedStaffCount: number,
   inventory: readonly Phase2InventoryView[],
   registry: TemplateRegistry,
 ): PrepRecipeViewModel[] {
-  return buildPrepRecipeAvailabilityForRoom(
-    roomTags,
-    isOperational,
-    assignedStaffCount,
-    inventory,
-    registry,
-  ).map((recipeAvailability) => {
-    const recipe = registry.prepRecipeById.get(recipeAvailability.recipeId);
-    if (!recipe) {
-      throw new Error(`Missing prep recipe "${recipeAvailability.recipeId}" in registry.`);
-    }
+  return buildPrepRecipeAvailabilityForRoom(roomTags, isOperational, inventory, registry).map(
+    (recipeAvailability) => {
+      const recipe = registry.prepRecipeById.get(recipeAvailability.recipeId);
+      if (!recipe) {
+        throw new Error(`Missing prep recipe "${recipeAvailability.recipeId}" in registry.`);
+      }
 
-    const outputTemplate = registry.itemById.get(recipe.outputItemId);
-    const inputs: PrepRecipeInputViewModel[] = recipeAvailability.inputs.map((input) => ({
-      itemId: input.itemId,
-      itemName: registry.itemById.get(input.itemId)?.name ?? input.itemId,
-      quantityRequired: input.quantityRequired,
-      quantityOwned: input.quantityOwned,
-      isSatisfied: input.isSatisfied,
-    }));
+      const outputTemplate = registry.itemById.get(recipe.outputItemId);
+      const inputs: PrepRecipeInputViewModel[] = recipeAvailability.inputs.map((input) => ({
+        itemId: input.itemId,
+        itemName: registry.itemById.get(input.itemId)?.name ?? input.itemId,
+        quantityRequired: input.quantityRequired,
+        quantityOwned: input.quantityOwned,
+        isSatisfied: input.isSatisfied,
+      }));
 
-    return {
-      recipeId: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      inputs,
-      outputItemId: recipe.outputItemId,
-      outputName: outputTemplate?.name ?? recipe.name,
-      outputQuantity: recipeAvailability.outputQuantity,
-      outputBuffStat: outputTemplate?.consumableBuff?.stat ?? "",
-      outputBuffValue: outputTemplate?.consumableBuff?.value ?? 0,
-      canProduce: recipeAvailability.canProduce,
-      isRoomStaffed: recipeAvailability.isRoomStaffed,
-    };
-  });
+      return {
+        recipeId: recipe.id,
+        name: recipe.name,
+        description: recipe.description,
+        inputs,
+        outputItemId: recipe.outputItemId,
+        outputName: outputTemplate?.name ?? recipe.name,
+        outputQuantity: recipeAvailability.outputQuantity,
+        outputBuffStat: outputTemplate?.consumableBuff?.stat ?? "",
+        outputBuffValue: outputTemplate?.consumableBuff?.value ?? 0,
+        canProduce: recipeAvailability.canProduce,
+        isRoomOperational: recipeAvailability.isRoomOperational,
+      };
+    },
+  );
 }
 
 function buildCraftRecipesForRoom(
   roomTemplateId: string,
   isOperational: boolean,
-  assignedStaffCount: number,
   buildingTier: number,
   cashOnHand: number,
   inventory: readonly Phase2InventoryView[],
@@ -1262,7 +1231,6 @@ function buildCraftRecipesForRoom(
   return buildCraftRecipeAvailability(
     roomTemplateId,
     isOperational,
-    assignedStaffCount,
     buildingTier,
     cashOnHand,
     inventory,
@@ -1299,7 +1267,7 @@ function buildCraftRecipesForRoom(
       cashOnHand: availability.cashOnHand,
       outputStatEffects: mapStatEffects(outputTemplate?.statEffects ?? []),
       canProduce: availability.canProduce,
-      isRoomStaffed: availability.isRoomStaffed,
+      isRoomOperational: availability.isRoomOperational,
       isBuildingTierMet: availability.isBuildingTierMet,
       isDistrictMet: availability.isDistrictMet,
       isFactionMet: availability.isFactionMet,
@@ -1342,10 +1310,7 @@ export function buildHqViewFromPhase1(
       roomStateId: room.roomStateId,
       capacity: room.capacity,
       occupancy: room.occupancy,
-      isActive: room.isRequestedActive,
       isOperational: room.isOperational,
-      requiredStaffTag: room.requiredStaffTag,
-      assignedStaffCount: room.assignedStaffCount,
       appliedUpgradeIds: room.appliedUpgradeIds,
       availableUpgradeIds: room.availableUpgradeIds,
       tags: template.tags,
@@ -1354,14 +1319,12 @@ export function buildHqViewFromPhase1(
       prepRecipes: buildPrepRecipesForRoom(
         template.tags,
         room.isOperational,
-        room.assignedStaffCount,
         inventory ?? [],
         registry,
       ),
       craftRecipes: buildCraftRecipesForRoom(
         template.id,
         room.isOperational,
-        room.assignedStaffCount,
         view.building.tier,
         view.resources.cash,
         inventory ?? [],
@@ -1431,7 +1394,7 @@ export function buildHqViewFromPhase1(
     appearancePresetId: op.appearance.presetId,
     visibleGear: resolveVisibleGear(op.appearance.visibleGear, getLoadedParts()),
     lifecycle: extractLifecycle(op.lifecycle),
-    combat: mapCombatViewModel(op.combat),
+    combat: mapCombatViewModel(normalizeOperatorCombatSnapshot(op.combat, op.identity.roleTag)),
     training: buildOperatorTrainingViewModel(op.training),
     // Phase 2: defaults until enriched via enrichOperatorsWithAutonomy
     refusalRisk: false,
@@ -1443,16 +1406,6 @@ export function buildHqViewFromPhase1(
   }));
 
   const operatorNameById = new Map(operators.map((op) => [op.id, op.name]));
-
-  const staff: StaffViewModel[] = view.staff.map((s) => ({
-    id: s.id,
-    name: s.name,
-    roleTag: s.roleTag,
-    status: s.status,
-    wage: s.wage,
-    assignmentKind: s.assignment.kind,
-    assignmentTargetId: s.assignment.targetId,
-  }));
 
   const visitors: VisitorViewModel[] = view.visitors.map((v) => ({
     id: v.id,
@@ -1556,7 +1509,6 @@ export function buildHqViewFromPhase1(
     upgrades: buildingUpgrades,
     roomUpgrades,
     operators,
-    staff,
     visitors,
     relationships,
     activeEvents,
@@ -1830,6 +1782,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
     const reservedFootprint = toFootprintViewModel(room.reservedFootprint ?? room.footprint);
     const activeFootprint = toFootprintViewModel(room.activeFootprint ?? room.footprint);
+    const isOperational = room.isActive !== false;
     return {
       id: room.id,
       templateId: room.templateId,
@@ -1842,18 +1795,16 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       roomStateId: room.roomStateId,
       capacity: room.capacity,
       occupancy: room.occupancy,
-      isActive: room.isActive ?? true,
-      isOperational: room.isActive ?? true,
-      requiredStaffTag: "",
-      assignedStaffCount: 0,
+      isOperational,
       appliedUpgradeIds: [],
       availableUpgradeIds: [],
       tags: template.tags,
       reservedFootprint,
       activeFootprint,
       prepRecipes: [],
+      craftRecipes: [],
       training: buildRoomTrainingViewModel(
-        { tags: template.tags, isOperational: room.isActive ?? true },
+        { tags: template.tags, isOperational },
         snapshot.operators ?? [],
         0,
       ),
@@ -1962,20 +1913,6 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
 
   const operatorNameById = new Map(operators.map((op) => [op.id, op.name]));
 
-  const staff: StaffViewModel[] = (snapshot.staff ?? []).map((s) => {
-    const raw = s as Record<string, unknown>;
-    const assignment = rec(raw, "assignment");
-    return {
-      id: s.id,
-      name: str(raw, "name", getIdentifierLabel(s.id)),
-      roleTag: str(raw, "roleTag", "general"),
-      status: str(raw, "status", "unassigned"),
-      wage: num(raw, "wage", 0),
-      assignmentKind: str(assignment, "kind", "idle"),
-      assignmentTargetId: str(assignment, "targetId", ""),
-    };
-  });
-
   const visitors: VisitorViewModel[] = (snapshot.visitors ?? []).map((v) => {
     const raw = v as Record<string, unknown>;
     const appearance = rec(raw, "appearance");
@@ -2070,7 +2007,6 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
     upgrades,
     roomUpgrades: [],
     operators,
-    staff,
     visitors,
     relationships,
     activeEvents: [],

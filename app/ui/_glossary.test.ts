@@ -41,9 +41,9 @@ describe("ui glossary", () => {
         label: "Containment",
       }),
     );
-    expect(getTagMeta("staff:maintenance")).toEqual(
+    expect(getTagMeta("room:reception")).toEqual(
       expect.objectContaining({
-        label: "Maintenance",
+        label: "Reception",
       }),
     );
     expect(getTagMeta("room:operations")).toEqual(
@@ -105,9 +105,9 @@ describe("ui glossary", () => {
   });
 
   it("humanizes upgrade requirement and effect types from raw ids", () => {
-    expect(getRequirementTypeMeta("staff_role_min")).toEqual(
+    expect(getRequirementTypeMeta("operator_count_min")).toEqual(
       expect.objectContaining({
-        label: "Staff Role",
+        label: "Operator Count",
       }),
     );
     expect(getEffectTypeMeta("grant_operator_slot")).toEqual(
@@ -121,9 +121,6 @@ describe("ui glossary", () => {
     expect(
       getRequirementLabel({ type: "resource_min", resourceId: "resource/cash", minimum: 150 }),
     ).toBe("150 Cash");
-    expect(
-      getRequirementLabel({ type: "staff_role_min", roleTag: "staff:medical", minimum: 1 }),
-    ).toBe("1 Medical");
     expect(
       getEffectLabel({ type: "modify_resource_income", resourceId: "resource/cash", amount: 6 }),
     ).toBe("+6 Cash income");

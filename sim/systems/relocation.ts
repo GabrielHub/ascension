@@ -28,10 +28,9 @@ import {
   pushRuntimeEvent,
 } from "./commands";
 import { BODEGA_SPECIFIC_BEAT_IDS, PORTERS_CAMPAIGN_BEAT_IDS } from "./guidance-beats";
+import { MARA_PRESENTER_ID, unlockPresenterForRoomTemplate } from "./presenter-unlocks";
 
 // ── Constants ───────────────────────────────────────────────────────────
-
-const ASSISTANT_PRESENTER_ID = "presenter/assistant";
 
 export const RELOCATION_THRESHOLDS = {
   buildingTier: 4,
@@ -284,7 +283,7 @@ export function initiateRelocation(context: SimSystemContext): boolean {
     buildingFromId: config.fromBuildingId,
     buildingToId: config.toBuildingId,
     treasuryCost: config.treasuryCost,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
   };
 
@@ -434,12 +433,7 @@ function executeRelocationHandoff(context: SimSystemContext, payload: Relocation
   runtimeState.activeEncounter = null;
   runtimeState.raidPresentation = { contractSiteId: null, teams: [], enemies: [], features: [] };
 
-  // ── 4. Clear staff assignments ─────────────────────────────────────
-  for (const staffEntity of runtimeState.staffEntities) {
-    AssignmentState.kind[staffEntity] = "idle";
-    AssignmentState.targetId[staffEntity] = "";
-  }
-
+  // ── 4. Clear operator assignments ──────────────────────────────────
   for (const operatorEntity of runtimeState.operatorEntities) {
     if (OperatorIdentity.lifecycleStatus[operatorEntity] !== "active") {
       continue;
@@ -498,17 +492,12 @@ function executeRelocationHandoff(context: SimSystemContext, payload: Relocation
       if (!template) continue;
 
       const reservedFootprint = { col: slot.col, row: slot.row, cols: slot.cols, rows: slot.rows };
-      createRoomInstanceEntity(
-        context,
-        template.id,
-        {
-          floorIndex: floor.floorIndex,
-          slotId: slot.slotId,
-          reservedFootprint,
-        },
-        undefined,
-        { isRequestedActive: true },
-      );
+      createRoomInstanceEntity(context, template.id, {
+        floorIndex: floor.floorIndex,
+        slotId: slot.slotId,
+        reservedFootprint,
+      });
+      unlockPresenterForRoomTemplate(context, template.id);
     }
   }
 

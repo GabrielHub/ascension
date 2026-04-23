@@ -4,7 +4,6 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/tick",
   "sim/place-room",
   "sim/set-active-floor",
-  "sim/set-room-active",
   "sim/set-policy",
   "sim/set-loot-filter",
   "sim/purchase-building-upgrade",
@@ -14,8 +13,6 @@ export const STABLE_SIM_COMMAND_TYPES = [
   "sim/reject-recruit",
   "sim/replace-recruit",
   "sim/dismiss-recruit",
-  "sim/hire-staff",
-  "sim/assign-staff",
   "sim/buy-item",
   "sim/sell-item",
   "sim/equip-item",
@@ -64,11 +61,6 @@ export type SimCommand =
   | {
       type: "sim/set-active-floor";
       floorIndex: number;
-    }
-  | {
-      type: "sim/set-room-active";
-      roomId: string;
-      isActive: boolean;
     }
   | {
       type: "sim/set-policy";
@@ -132,15 +124,6 @@ export type SimCommand =
       };
       personaSummary: string;
       personaHooks: string[];
-    }
-  | {
-      type: "sim/hire-staff";
-      roleTag: string;
-    }
-  | {
-      type: "sim/assign-staff";
-      staffId: string;
-      roomId?: string;
     }
   | {
       type: "sim/buy-item";

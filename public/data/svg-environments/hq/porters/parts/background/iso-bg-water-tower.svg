@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 200">
+  <!-- Brooklyn rooftop wooden water tower on iron lattice frame.
+       True 2:1 isometric: tank cap ellipses ry/rx = 0.5,
+       leg footprint diamond width:height = 2:1.
+
+       Geometry:
+         Ground footprint diamond center (65, 175), half-w=36, half-h=18.
+         Leg base corners: F(65,193) R(101,175) B(65,157 hidden) L(29,175).
+         Tank cylinder: top y=50, bottom y=100, ellipse rx=30 ry=15.
+         Leg attach points: F(65,115) R(95,100) L(35,100) B(65,85 hidden).
+         Cone roof: apex (65, 8), base ellipse (65, 50) rx=30 ry=15.
+         Anchor: front-leg base centered at (65, 193). -->
+
+  <!-- Subtle ground shadow -->
+  <ellipse cx="65" cy="195" rx="42" ry="5" fill="#060608" opacity="0.22"/>
+
+  <!-- ═══ IRON LATTICE BRACING (drawn before legs so legs occlude crossings) ═══ -->
+
+  <!-- Front-Right (FR) face — iso right axis, slope -0.5 -->
+  <g stroke="#241c22" fill="none" opacity="0.55">
+    <!-- Horizontal rails along iso-right axis (1/3 and 2/3 leg height) -->
+    <line x1="65" y1="141" x2="97" y2="125" stroke-width="0.7"/>
+    <line x1="65" y1="167" x2="99" y2="150" stroke-width="0.7"/>
+    <!-- Top section X -->
+    <line x1="65" y1="115" x2="97" y2="125" stroke-width="0.6"/>
+    <line x1="95" y1="100" x2="65" y2="141" stroke-width="0.6"/>
+    <!-- Mid section X -->
+    <line x1="65" y1="141" x2="99" y2="150" stroke-width="0.6"/>
+    <line x1="97" y1="125" x2="65" y2="167" stroke-width="0.6"/>
+    <!-- Bottom section X -->
+    <line x1="65" y1="167" x2="101" y2="175" stroke-width="0.6"/>
+    <line x1="99" y1="150" x2="65" y2="193" stroke-width="0.6"/>
+  </g>
+
+  <!-- Front-Left (FL) face — iso left axis, slope +0.5 (mirror of FR) -->
+  <g stroke="#241c22" fill="none" opacity="0.55">
+    <!-- Horizontal rails along iso-left axis -->
+    <line x1="65" y1="141" x2="33" y2="125" stroke-width="0.7"/>
+    <line x1="65" y1="167" x2="31" y2="150" stroke-width="0.7"/>
+    <!-- Top section X -->
+    <line x1="65" y1="115" x2="33" y2="125" stroke-width="0.6"/>
+    <line x1="35" y1="100" x2="65" y2="141" stroke-width="0.6"/>
+    <!-- Mid section X -->
+    <line x1="65" y1="141" x2="31" y2="150" stroke-width="0.6"/>
+    <line x1="33" y1="125" x2="65" y2="167" stroke-width="0.6"/>
+    <!-- Bottom section X -->
+    <line x1="65" y1="167" x2="29" y2="175" stroke-width="0.6"/>
+    <line x1="31" y1="150" x2="65" y2="193" stroke-width="0.6"/>
+  </g>
+
+  <!-- ═══ MAIN LEGS (3 visible: F, R, L; B hidden behind tank) ═══ -->
+  <g stroke="#1c1620" stroke-width="1.6" stroke-linecap="round" fill="none">
+    <!-- Front leg (vertical, x=65) -->
+    <line x1="65" y1="193" x2="65" y2="115"/>
+    <!-- Right leg (slight inward slant going up) -->
+    <line x1="101" y1="175" x2="95" y2="100"/>
+    <!-- Left leg (slight inward slant going up) -->
+    <line x1="29" y1="175" x2="35" y2="100"/>
+  </g>
+
+  <!-- Foot pads (small iso pads beneath leg bases) -->
+  <g fill="#181018" opacity="0.7">
+    <ellipse cx="65"  cy="194" rx="3.5" ry="1.6"/>
+    <ellipse cx="101" cy="176" rx="3.5" ry="1.6"/>
+    <ellipse cx="29"  cy="176" rx="3.5" ry="1.6"/>
+  </g>
+
+  <!-- ═══ TANK BODY (wooden barrel cylinder) ═══ -->
+  <!-- Side surface: vertical sides with front-half of bottom ellipse curving below -->
+  <path d="M 35 50 L 35 100 A 30 15 0 0 0 95 100 L 95 50 Z"
+    fill="#3a2818" stroke="#180f08" stroke-width="0.8"/>
+
+  <!-- Vertical staves (stop at y=100; lid covers upper portion) -->
+  <g stroke="#180f08" stroke-width="0.4" opacity="0.4">
+    <line x1="40" y1="50" x2="40" y2="100"/>
+    <line x1="46" y1="50" x2="46" y2="100"/>
+    <line x1="52" y1="50" x2="52" y2="100"/>
+    <line x1="58" y1="50" x2="58" y2="100"/>
+    <line x1="65" y1="50" x2="65" y2="100"/>
+    <line x1="72" y1="50" x2="72" y2="100"/>
+    <line x1="78" y1="50" x2="78" y2="100"/>
+    <line x1="84" y1="50" x2="84" y2="100"/>
+    <line x1="90" y1="50" x2="90" y2="100"/>
+  </g>
+
+  <!-- Right-side curvature shading -->
+  <rect x="88" y="50" width="7" height="50" fill="#1a1108" opacity="0.55"/>
+  <!-- Left-side highlight -->
+  <rect x="35" y="50" width="7" height="50" fill="#5a3624" opacity="0.18"/>
+
+  <!-- Iron banding (front-half ellipse arcs curving down) -->
+  <g stroke="#181218" stroke-width="1.5" fill="none" opacity="0.7">
+    <path d="M 35 66 A 30 15 0 0 0 95 66"/>
+    <path d="M 35 78 A 30 15 0 0 0 95 78"/>
+    <path d="M 35 90 A 30 15 0 0 0 95 90"/>
+  </g>
+  <!-- Band rust highlight -->
+  <g stroke="#5a4838" stroke-width="0.5" fill="none" opacity="0.4">
+    <path d="M 35 66 A 30 15 0 0 0 95 66"/>
+    <path d="M 35 78 A 30 15 0 0 0 95 78"/>
+    <path d="M 35 90 A 30 15 0 0 0 95 90"/>
+  </g>
+
+  <!-- ═══ TANK TOP LID (full iso ellipse, drawn over body) ═══ -->
+  <ellipse cx="65" cy="50" rx="30" ry="15" fill="#4a3424" stroke="#180f08" stroke-width="0.7"/>
+  <!-- Lid front-edge highlight (only front-half visible after cone covers back) -->
+  <ellipse cx="65" cy="58" rx="18" ry="4" fill="#5e4230" opacity="0.4"/>
+
+  <!-- ═══ CONICAL ROOF ═══ -->
+  <!-- Roof silhouette (apex to base left/right tips) -->
+  <polygon points="65,8 35,50 95,50" fill="#2a1e14" stroke="#0e0804" stroke-width="0.7"/>
+  <!-- Right-side roof shading -->
+  <polygon points="65,8 65,50 95,50" fill="#1a1108" opacity="0.55"/>
+
+  <!-- Finial spike -->
+  <line x1="65" y1="8" x2="65" y2="2" stroke="#181218" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="65" cy="2" r="1.4" fill="#3a3030"/>
+
+  <!-- Faded "PORTERS" stencil on visible tank face -->
+  <g opacity="0.22">
+    <text x="42" y="84" font-family="sans-serif" font-weight="bold"
+      font-size="9" fill="#c8a84c" letter-spacing="0.5">PORTERS</text>
+  </g>
+
+  <!-- Drip rust streaks down tank sides -->
+  <g opacity="0.20">
+    <line x1="46" y1="92" x2="44" y2="100" stroke="#5a3020" stroke-width="1.2"/>
+    <line x1="80" y1="92" x2="82" y2="100" stroke="#4a2818" stroke-width="1"/>
+  </g>
+</svg>

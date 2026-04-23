@@ -169,7 +169,7 @@ export interface ContractSiteState {
   siteConceptId: string;
   /** Location string for the dungeon. */
   location: string;
-  /** Contract rank (F-S). */
+  /** Contract rank (F-U). */
   rank: ContractRank;
   /** Owning district for this contract. */
   districtId: string;

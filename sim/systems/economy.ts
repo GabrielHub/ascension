@@ -3,15 +3,9 @@ import {
   GuildState,
   OperatorIdentity,
   RoomInstance,
-  StaffState,
   WorldTimeState,
 } from "../components";
-import {
-  getActiveBuildingTemplate,
-  getRoomTemplateForEntity,
-  getStaffRoleTag,
-  pushRuntimeEvent,
-} from "./commands";
+import { getActiveBuildingTemplate, getRoomTemplateForEntity, pushRuntimeEvent } from "./commands";
 import { DAILY_ACTIVE_OPERATOR_PAYROLL } from "./economy-constants";
 import type { SimSystem } from "./types";
 
@@ -30,20 +24,12 @@ export const advanceEconomySystem: SimSystem = (context, deltaMs) => {
   }
 
   const payroll =
-    context.runtimeState.staffEntities.reduce(
-      (total, entity) => total + StaffState.wage[entity],
-      0,
-    ) +
     context.runtimeState.operatorEntities.filter(
       (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
-    ).length *
-      DAILY_ACTIVE_OPERATOR_PAYROLL;
+    ).length * DAILY_ACTIVE_OPERATOR_PAYROLL;
   const activeReceptionRooms = context.runtimeState.roomEntities.filter((entity) => {
     const template = getRoomTemplateForEntity(context, entity);
-    return (
-      getStaffRoleTag(template.tags) === "staff:reception" &&
-      RoomInstance.isOperational[entity] === 1
-    );
+    return template.tags.includes("room:reception") && RoomInstance.isOperational[entity] === 1;
   }).length;
   const buildingTemplate = getActiveBuildingTemplate(context);
   const storefrontIncome = buildingTemplate.baseIncome ?? 50;

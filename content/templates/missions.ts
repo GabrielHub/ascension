@@ -21,6 +21,7 @@ export const missionTemplates = [
         bossId: "boss/tunneler-brood-mother",
         name: "Tunneler Brood-Mother",
         rank: "f",
+        rankTone: "grounded",
         phases: 2,
         tags: ["boss:area-damage", "boss:summon-pressure"],
         weaknesses: [{ kind: "role", target: "role:field_lead", multiplier: 1.3 }],
@@ -166,6 +167,7 @@ export const missionTemplates = [
         bossId: "boss/sewer-warden",
         name: "Sewer Warden",
         rank: "f",
+        rankTone: "grounded",
         phases: 1,
         tags: ["boss:resilience-pierce", "boss:recovery-suppress"],
         weaknesses: [{ kind: "stat", target: "resilience", multiplier: 1.25 }],
@@ -241,6 +243,7 @@ export const missionTemplates = [
         bossId: "boss/phantom-stalker",
         name: "Phantom Stalker",
         rank: "f",
+        rankTone: "grounded",
         phases: 2,
         tags: ["boss:speed-drain", "boss:intel-resist"],
         weaknesses: [

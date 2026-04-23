@@ -356,7 +356,7 @@ function RelocationModal({
             "A lease for a licensed headquarters in Midtown Manhattan is available. Moving assistance and a transition budget are included.",
           decisionTitle: "Relocate to Ascension Tower?",
           decisionLead:
-            "Accepting spends {cost} from the treasury. Porter's closes as headquarters. All operators, staff, gear, cash, and reputation carry over. Room assignments reset in the new building.",
+            "Accepting spends {cost} from the treasury. Porter's closes as headquarters. All operators, presenters, gear, cash, and reputation carry over. Room assignments reset in the new building.",
           decisionDetail:
             "Ascension Tower starts with 11 rooms across five floors and an 18-operator cap. Operations, recovery, training, logistics, fabrication, and rooftop staging are already built into the stack. You cannot reverse this decision, and relocation is only valid when no contract, raid, or blocking interruption is still in progress.",
           movingTitle: "Welcome to Ascension Tower",
@@ -372,7 +372,7 @@ function RelocationModal({
             "A lease for a larger licensed headquarters in Red Hook, Brooklyn is available. Moving assistance and a transitional operating budget are included.",
           decisionTitle: "Relocate to Porter's?",
           decisionLead:
-            "Accepting spends {cost} from the treasury. The bodega lease terminates. All operators, staff, gear, cash, and reputation carry over. Room assignments reset in the new building.",
+            "Accepting spends {cost} from the treasury. The bodega lease terminates. All operators, presenters, gear, cash, and reputation carry over. Room assignments reset in the new building.",
           decisionDetail:
             "Porter's starts with 7 rooms across two floors and a 12-operator cap. Training and dedicated recovery unlock for the first time. You cannot reverse this decision, and relocation is only valid when no contract, raid, or blocking interruption is still in progress.",
           movingTitle: "Welcome to Porter's",

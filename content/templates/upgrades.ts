@@ -294,7 +294,7 @@ export const upgradeTemplates = [
     id: "upgrade/room/supply_closet:labeled_bins",
     kind: "upgrade",
     name: "Labeled Bins",
-    tags: ["upgrade:room", "room:staffing"],
+    tags: ["upgrade:room", "room:logistics"],
     description: "Adds shelf labels, bins, and enough order to stop losing useful gear.",
     target: "room",
     targetId: "room/supply_closet:tier_1",

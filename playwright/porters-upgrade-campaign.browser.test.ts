@@ -288,20 +288,8 @@ async function activateRoom(
   await setFloor(page, floorNumber);
   await selectRoom(page, roomName);
 
-  const activateButton = page.getByRole("button", { exact: true, name: "Activate room" });
-  if ((await activateButton.count()) > 0) {
-    await activateButton.click();
-  } else {
-    const snapshot = await getSnapshot(page);
-    const room = snapshot.rooms.find((entry) => entry.name === roomName);
-    if (room?.isActive) {
-      return snapshot;
-    }
-    throw new Error(`Expected an activation control for ${roomName}.`);
-  }
-
-  return waitForSnapshot(page, `${roomName} activated`, (snapshot) =>
-    snapshot.rooms.some((room) => room.name === roomName && room.isActive),
+  return waitForSnapshot(page, `${roomName} operational`, (snapshot) =>
+    snapshot.rooms.some((room) => room.name === roomName && room.isOperational),
   );
 }
 
@@ -471,30 +459,8 @@ async function runDevConsoleCommand(page: Page, command: string): Promise<void> 
   await page.waitForTimeout(200);
 }
 
-async function runDevConsoleCommandAndReadOutput(page: Page, command: string): Promise<string> {
-  const result = await page.evaluate(
-    (input) =>
-      (window as BrowserTestWindow).__ASCENSION_BROWSER_TEST__?.runDevCommand(input) ?? null,
-    command,
-  );
-  if (!result || result.status === "error") {
-    throw new Error(
-      `Dev command failed: ${command}${result?.message ? ` (${result.message})` : ""}`,
-    );
-  }
-  await page.waitForTimeout(200);
-  return result.detail ?? result.message;
-}
-
 function getInventoryQuantity(snapshot: BrowserTestSnapshot, itemId: string): number {
   return snapshot.inventory.find((stack) => stack.itemId === itemId)?.quantity ?? 0;
-}
-
-async function getLogisticsStaffIds(page: Page): Promise<string[]> {
-  const transcript = await runDevConsoleCommandAndReadOutput(page, "inspect staff");
-  return [...transcript.matchAll(/(staff\/[^\s]+).*?\[staff:logistics\]/g)].map(
-    (match) => match[1],
-  );
 }
 
 async function resolveInterruptionWithFirstChoice(page: Page): Promise<BrowserTestSnapshot> {
@@ -741,21 +707,12 @@ describeBrowser("Porters upgrade campaign browser path", () => {
     await openHqCategory(page, "rooms");
     await setFloor(page, workshopFloorNumber);
     await selectRoom(page, "The Workshop");
-    const breachHammerCard = page
-      .locator(".glass-card-inset")
-      .filter({ hasText: "Breach Hammer Assembly" })
-      .first();
-    await breachHammerCard.getByText("Blocked by:", { exact: false }).waitFor({ state: "visible" });
-    expect(await breachHammerCard.textContent()).toContain("assigned logistics staff");
 
     const workshopRoomId = snapshot.rooms.find(
       (room) => room.templateId === "room/workshop:tier_1",
     )?.id;
     expect(workshopRoomId).toBeTruthy();
-    const logisticsStaffIds = await getLogisticsStaffIds(page);
-    expect(logisticsStaffIds.length).toBeGreaterThan(0);
-    await runDevConsoleCommand(page, `staff assign ${logisticsStaffIds[0]} ${workshopRoomId}`);
-    snapshot = await waitForSnapshot(page, "workshop staffed", (next) =>
+    snapshot = await waitForSnapshot(page, "workshop operational", (next) =>
       next.rooms.some((room) => room.id === workshopRoomId && room.isOperational),
     );
 

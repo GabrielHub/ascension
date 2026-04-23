@@ -1,6 +1,6 @@
 # World Content Rules
 
-This file owns future-facing content-reference rules for enemies, bosses, gear language, copy, naming, rank escalation, and S-rank treatment.
+This file owns future-facing content-reference rules for enemies, bosses, gear language, copy, naming, rank escalation, and Unique (`U`) treatment.
 
 ## Rank Escalation Contract
 
@@ -9,8 +9,8 @@ The game needs a deliberate climb in tone and visual language as rank rises. Dif
 - F and E content should stay grounded in recognizable city reality. The place or object is wrong, but it still clearly comes from the ordinary world.
 - D and C content can become more visibly rift-touched, specialized, and physically implausible. This is where the game starts leaning harder into impossible architecture, stranger materials, and rarer operator presence.
 - B and A content should feel institutionally famous, expensive, and hard to mistake for ordinary hazard work.
-- S-rank content is where the game can spend its most spectacular ideas: singular bosses, impossible spaces, celebrity operators, and signature gear.
-- This climb applies across dungeons, enemies, bosses, operators, and gear. Do not spend S-rank spectacle on early-rank content.
+- Unique (`U`) content is where the game can spend its most spectacular ideas: singular bosses, impossible spaces, celebrity operators, and signature gear.
+- This climb applies across dungeons, enemies, bosses, operators, and gear. Do not spend Unique (`U`) spectacle on early-rank content.
 
 ## Enemy And Boss Definitions
 
@@ -39,7 +39,7 @@ Enemies should have visual design language tied to their dungeon theme. Subway d
 Bosses anchor dungeons. A dungeon exists as long as its boss does. Killing the boss closes the dungeon.
 
 - Each dungeon has exactly one boss.
-- Bosses have ranks matching the dungeon. An F-rank dungeon has an F-rank boss. An S-rank dungeon has an S-rank boss that is a genuine crisis.
+- Bosses have ranks matching the dungeon. An F-rank dungeon has an F-rank boss. A Unique (`U`) dungeon has a Unique (`U`) boss that is a genuine crisis.
 - Bosses should feel like the dungeon's core, not just a harder enemy. They define the space.
 
 ### Boss Design Principles
@@ -47,7 +47,7 @@ Bosses anchor dungeons. A dungeon exists as long as its boss does. Killing the b
 - A boss should feel like the culmination of its dungeon's theme.
 - Bosses should have names. They are specific entities. Not "The Guardian" or "Dark Lord." Something that implies the dungeon's theme. For example, "The Dispatcher" for a subway boss or "The Superintendent" for a residential boss.
 - Lower-rank bosses should still feel like the warped core of a recognizable place. Higher-rank bosses can become stranger, more singular, and more visually extravagant as long as they still read as the culmination of that place.
-- S-rank bosses should be genuine spectacles - unique visual design, lore implications, and lasting world consequences.
+- Unique (`U`) bosses should be genuine spectacles - unique visual design, lore implications, and lasting world consequences.
 
 ## Gear And Weapon Logic
 
@@ -80,7 +80,7 @@ Gear is functional equipment. It should feel consistent with the grounded-but-su
 
 ### Gear Ranking
 
-Gear uses the same F-S rank scale as operators, enemies, and dungeons.
+Gear uses the same F-U rank scale as operators, enemies, and dungeons.
 
 | Gear Rank | Description                                                                                |
 | --------- | ------------------------------------------------------------------------------------------ |
@@ -90,16 +90,16 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 | C         | Specialized. Well-crafted, effective against serious threats.                              |
 | B         | Elite. Expensive, powerful, hard to acquire.                                               |
 | A         | Exceptional. Top-tier professional equipment.                                              |
-| S         | Unique. Named items tied to specific operators. Signature gear with celebrity recognition. |
+| U         | Unique. Named items tied to specific operators. Signature gear with celebrity recognition. |
 
 ### Gear Rules
 
 - Gear should look like equipment professionals carry into dangerous jobs. Not fantasy armor, not sci-fi power suits. Higher-rank gear can look more impressive, but it should still read as equipment.
-- Gear should climb by rank without flattening the ladder. F and E should remain grounded, practical, and plausible. D and C can start showing stranger materials, silhouettes, and rift-touched detailing. A and S can carry the boldest signatures.
+- Gear should climb by rank without flattening the ladder. F and E should remain grounded, practical, and plausible. D and C can start showing stranger materials, silhouettes, and rift-touched detailing. A and U can carry the boldest signatures.
 - Weapon and gear compatibility should align with field role and attunement. Field leads favor heavier protection. Scouts favor mobility, visibility, and fast access tools. Medics carry stabilization and support kit.
 - Gear can be common, uncommon, or rare within its rank tier. Rarity reflects quality and specialization within the rank.
 - Operators should not wear raid gear inside the headquarters. HQ presentation is casual.
-- S-rank gear is unique, named, and tied to operator identity. Each S-rank operator should have signature equipment that contributes to their celebrity persona and visual presence.
+- Unique (`U`) gear is unique, named, and tied to operator identity. Each Unique (`U`) operator should have signature equipment that contributes to their celebrity persona and visual presence.
 
 ## Copy And Naming Rules
 
@@ -136,7 +136,7 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 
 - Gear names should be functional and descriptive. "Tactical rifle" not "Shadowbane."
 - Higher-rank gear can have slightly more evocative names, but it should still sound like equipment rather than fantasy artifacts.
-- S-rank gear can have proper names. These are signature items tied to famous operators.
+- Unique (`U`) gear can have proper names. These are signature items tied to famous operators.
 
 ### Naming Rules For Events
 
@@ -151,24 +151,26 @@ Gear uses the same F-S rank scale as operators, enemies, and dungeons.
 - UI copy should be clear and functional first, funny second. The joke should never obscure what a button does.
 - Death and serious injury copy should not be funny. These are the moments the comedy stops.
 
-## S-Rank Content Rules
+## Unique (U-Rank) Content Rules
 
-S-rank is the endgame prestige tier. It deserves its own section because it behaves differently from everything else.
+Unique (`U`) is the true endgame prestige tier. It deserves its own section because it behaves differently from everything else.
 
-### S-Rank Operators
+### Unique (U-Rank) Operators
 
-- S-rank operators are celebrities. They are known by name in-world. Other guilds talk about them.
-- Recruiting an S-rank operator should feel extraordinary, not routine.
-- S-rank operators have unique visual presentation: special effects in their appearance (auras, particles, visual signatures), unique gear, and distinct portrait treatment.
-- S-rank operators have high standards, strong opinions, and alternatives.
+- Unique (`U`) operators are celebrities. They are known by name in-world. Other guilds talk about them.
+- Unique (`U`) operators are not randomly generated from the normal labor market.
+- Unlocking a Unique (`U`) operator should feel extraordinary, not routine.
+- Unique (`U`) operators should be tied to deterministic late-game goals rather than probabilistic recruitment rolls.
+- Unique (`U`) operators have unique visual presentation: special effects in their appearance, unique gear, and distinct portrait treatment.
+- Unique (`U`) operators have high standards, strong opinions, and alternatives.
 
-### S-Rank Dungeons
+### Unique (U-Rank) Dungeons
 
-- S-rank dungeons are national emergencies. They are not routine contracts.
-- Clearing an S-rank dungeon should be a major story moment with lasting world consequences.
+- Unique (`U`) dungeons are national emergencies. They are not routine contracts.
+- Clearing a Unique (`U`) dungeon should be a major story moment with lasting world consequences.
 
-### S-Rank Gear
+### Unique (U-Rank) Gear
 
-- S-rank gear is unique, named, and tied to operator identity.
-- Each S-rank operator should have signature gear that contributes to their public persona.
-- S-rank gear should be visually distinctive - this is where the art budget goes.
+- Unique (`U`) gear is unique, named, and tied to operator identity.
+- Each Unique (`U`) operator should have signature gear that contributes to their public persona.
+- Unique (`U`) gear should be visually distinctive - this is where the art budget goes.

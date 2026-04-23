@@ -417,7 +417,6 @@ function buildCraftCosts() {
       ),
       notes: [
         `Requires building/Porter's tier ${recipe.minimumBuildingTier}+.`,
-        `Requires staffed workshop (${recipe.requiredStaffTag}).`,
         `Consumes ${recipe.cashCost} cash when crafted.`,
       ],
     };

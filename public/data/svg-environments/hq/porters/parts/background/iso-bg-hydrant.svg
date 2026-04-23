@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 56">
+  <!-- Base plate -->
+  <ellipse cx="20" cy="52" rx="14" ry="4" fill="#1a1816" opacity="0.4"/>
+
+  <!-- Body -->
+  <rect x="12" y="18" width="16" height="32" rx="3" fill="#8a2020" stroke="#5a1515" stroke-width="0.8"/>
+
+  <!-- Cap dome -->
+  <ellipse cx="20" cy="18" rx="8" ry="4" fill="#9a2828"/>
+  <ellipse cx="20" cy="16" rx="6" ry="3" fill="#7a1818"/>
+
+  <!-- Pentagon nut on top -->
+  <rect x="17" y="12" width="6" height="5" rx="1" fill="#5a1515"/>
+
+  <!-- Side nozzles -->
+  <g fill="#6a1818" stroke="#5a1515" stroke-width="0.5">
+    <!-- Left nozzle -->
+    <rect x="5" y="28" width="9" height="6" rx="1"/>
+    <!-- Right nozzle -->
+    <rect x="26" y="28" width="9" height="6" rx="1"/>
+  </g>
+
+  <!-- Chains (hanging from nozzle caps) -->
+  <g stroke="#3a3838" stroke-width="0.5" fill="none" opacity="0.5">
+    <path d="M8,34 Q6,38 8,40"/>
+    <path d="M32,34 Q34,38 32,40"/>
+  </g>
+
+  <!-- Highlight / worn paint -->
+  <rect x="14" y="22" width="3" height="18" rx="1" fill="#aa3030" opacity="0.3"/>
+
+  <!-- Bolts -->
+  <circle cx="14" cy="24" r="1" fill="#5a1515"/>
+  <circle cx="26" cy="24" r="1" fill="#5a1515"/>
+  <circle cx="14" cy="42" r="1" fill="#5a1515"/>
+  <circle cx="26" cy="42" r="1" fill="#5a1515"/>
+</svg>

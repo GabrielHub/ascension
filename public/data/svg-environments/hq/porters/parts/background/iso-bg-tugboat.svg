@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <!-- Working harbor tugboat — squat dark green hull, white pilothouse, tall stack.
+       Iso 2:1. Hull along left iso axis (slope +0.5).
+       ~5 tiles long. Pointed bow tapering to a flat stern.
+
+       Hull pentagon (port side):
+         Bow tip:       (16, 90)
+         Bow shoulder:  (50, 78)    FL
+         Stern deck:    (250, 178)  FR
+         Stern bottom:  (250, 196)  freeboard 18 at both ends
+         Bow waterline: (50, 96)
+
+       Stern transom (side face, slope -0.5, depth 50):
+         (250,178) (300,153) (300,171) (250,196)
+
+       Deck top face (depth 50):
+         (16,90) (50,78) (250,178) (300,153) (100,53)
+         BL_top: (100,53) = (50,78) + (50,-25)
+
+       Pilothouse (centered on main deck):
+         u_FC=60 v_FC=8 W=80 D=36 H=44
+         Bottom: FC(118,104) FR(198,144) BR(234,126) BL(154,86)
+         Top:    FC(118,60)  FR(198,100) BR(234,82)  BL(154,42)
+         Roof centroid: (176, 71) -->
+
+  <!-- ═══ HULL ═══ -->
+
+  <!-- Stern transom (side face, drawn first — behind) -->
+  <polygon points="250,178 300,153 300,171 250,196"
+    fill="#1c2818" stroke="#0e1408" stroke-width="0.8"/>
+
+  <!-- Port hull — boat-shaped pentagon, dark working green -->
+  <polygon points="16,90 50,78 250,178 250,196 50,96"
+    fill="#2a3a22" stroke="#14201a" stroke-width="1"/>
+
+  <!-- Hull shadow under sheer -->
+  <polygon points="50,78 250,178 250,184 50,84"
+    fill="#1c2818" opacity="0.5"/>
+
+  <!-- Boot stripe + waterline -->
+  <line x1="50" y1="93" x2="250" y2="193"
+    stroke="#0a0e08" stroke-width="3" opacity="0.55"/>
+  <line x1="50" y1="89" x2="250" y2="189"
+    stroke="#c83828" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Bow rub rail / bumper -->
+  <polygon points="16,90 50,78 50,82 16,94"
+    fill="#1a1a1e" opacity="0.7"/>
+
+  <!-- Big rope fender on the bow -->
+  <ellipse cx="22" cy="92" rx="8" ry="5" fill="#1e1810" stroke="#0e0c08" stroke-width="0.6"/>
+  <g stroke="#5a4838" stroke-width="0.5" fill="none" opacity="0.6">
+    <line x1="14" y1="90" x2="30" y2="94"/>
+    <line x1="14" y1="93" x2="30" y2="97"/>
+    <line x1="16" y1="87" x2="28" y2="98"/>
+  </g>
+
+  <!-- Tire fenders along port side (between sheer and waterline) -->
+  <g>
+    <ellipse cx="100" cy="113" rx="5" ry="7" fill="#1a1a1e" stroke="#0e0e12" stroke-width="0.6" opacity="0.7"/>
+    <ellipse cx="160" cy="143" rx="5" ry="7" fill="#1a1a1e" stroke="#0e0e12" stroke-width="0.6" opacity="0.7"/>
+    <ellipse cx="220" cy="173" rx="5" ry="7" fill="#1a1a1e" stroke="#0e0e12" stroke-width="0.6" opacity="0.7"/>
+  </g>
+
+  <!-- Deck (top face) -->
+  <polygon points="16,90 50,78 250,178 300,153 100,53"
+    fill="#3a4a30" stroke="#1c2818" stroke-width="0.8"/>
+
+  <!-- Deck plank lines (parallel to port axis, slope +0.5) -->
+  <g stroke="#1c2818" stroke-width="0.4" opacity="0.4">
+    <line x1="60" y1="73" x2="260" y2="173"/>
+    <line x1="70" y1="68" x2="270" y2="168"/>
+    <line x1="80" y1="63" x2="280" y2="163"/>
+    <line x1="90" y1="58" x2="290" y2="158"/>
+  </g>
+
+  <!-- Forward deck capstan (small drum) -->
+  <g>
+    <ellipse cx="94" cy="80" rx="6" ry="2" fill="#2a2a2e" stroke="#0a0a0e" stroke-width="0.4"/>
+    <ellipse cx="94" cy="76" rx="6" ry="2" fill="#3a3838" stroke="#1a1a1e" stroke-width="0.4"/>
+  </g>
+
+  <!-- ═══ PILOTHOUSE / WHEELHOUSE (raised cabin, white) ═══ -->
+
+  <!-- Cabin aft side (drawn first — behind) -->
+  <polygon points="198,100 234,82 234,126 198,144"
+    fill="#a8a8a4" stroke="#5a5a58" stroke-width="0.6"/>
+
+  <!-- Cabin port wall (facade) -->
+  <polygon points="118,60 198,100 198,144 118,104"
+    fill="#d8d8d4" stroke="#5a5a58" stroke-width="0.7"/>
+
+  <!-- Cabin roof -->
+  <polygon points="118,60 198,100 234,82 154,42"
+    fill="#5a5a58" stroke="#3a3a38" stroke-width="0.6"/>
+
+  <!-- Cabin roof rail edge -->
+  <polygon points="118,60 198,100 198,104 118,64" fill="#3a3a38" opacity="0.5"/>
+
+  <!-- Cabin port windows -->
+  <g transform="matrix(1, 0.5, 0, 1, 118, 60)">
+    <rect x="6"  y="10" width="14" height="14" rx="0.5"
+      fill="#0c1218" stroke="#5a5a58" stroke-width="0.4" opacity="0.85"/>
+    <rect x="24" y="10" width="14" height="14" rx="0.5"
+      fill="#0c1218" stroke="#5a5a58" stroke-width="0.4" opacity="0.85"/>
+    <rect x="42" y="10" width="14" height="14" rx="0.5"
+      fill="#0c1218" stroke="#5a5a58" stroke-width="0.4" opacity="0.85"/>
+    <rect x="60" y="10" width="14" height="14" rx="0.5"
+      fill="#0c1218" stroke="#5a5a58" stroke-width="0.4" opacity="0.85"/>
+  </g>
+
+  <!-- Sodium glow in third window (≈167, 102) -->
+  <g opacity="0.45">
+    <ellipse cx="167" cy="102" rx="7" ry="5" fill="rgba(220,170,80,0.7)"/>
+  </g>
+
+  <!-- Cabin aft window -->
+  <g transform="matrix(1, -0.5, 0, 1, 198, 100)">
+    <rect x="4" y="6" width="28" height="12" rx="0.5"
+      fill="#0c1218" stroke="#5a5a58" stroke-width="0.4" opacity="0.85"/>
+  </g>
+
+  <!-- Cabin door (aft) -->
+  <g transform="matrix(1, -0.5, 0, 1, 198, 100)">
+    <rect x="13" y="22" width="10" height="22" rx="0.5"
+      fill="#1e1818" stroke="#0e0c08" stroke-width="0.5"/>
+    <circle cx="21" cy="33" r="0.6" fill="#5a5a58" opacity="0.6"/>
+  </g>
+
+  <!-- ═══ STACK (signature tug funnel, centered on cabin roof) ═══ -->
+  <!-- Roof centroid (176, 71). Body 16w × 32h, top at y=39. -->
+  <ellipse cx="176" cy="39" rx="8" ry="2.5" fill="#1a1818" stroke="#0a0808" stroke-width="0.5"/>
+  <rect x="168" y="39" width="16" height="32" rx="1"
+    fill="#1c2818" stroke="#0a1208" stroke-width="0.7"/>
+  <!-- Stack right shading -->
+  <rect x="178" y="39" width="6" height="32" fill="#0a1208" opacity="0.5"/>
+  <!-- Stack red band -->
+  <rect x="168" y="47" width="16" height="6" fill="#7a2018" opacity="0.85"/>
+  <rect x="168" y="47" width="16" height="6" fill="none" stroke="#3a0e08" stroke-width="0.4"/>
+  <!-- Stack opening -->
+  <ellipse cx="176" cy="39" rx="6" ry="1.8" fill="#060404"/>
+  <!-- Soot streak -->
+  <line x1="176" y1="41" x2="176" y2="59"
+    stroke="#0a0808" stroke-width="2.5" opacity="0.30"/>
+
+  <!-- Stack guy wires -->
+  <g stroke="#1a1a1e" stroke-width="0.4" opacity="0.5">
+    <line x1="176" y1="41" x2="188" y2="62"/>
+    <line x1="176" y1="41" x2="164" y2="62"/>
+  </g>
+
+  <!-- ═══ ANTENNAE / RADAR ═══ -->
+  <!-- Mast on roof slightly aft of stack (roof point 196,81) -->
+  <line x1="196" y1="81" x2="196" y2="10"
+    stroke="#3a3838" stroke-width="1" stroke-linecap="round"/>
+  <!-- Radar dome (iso flat oval) -->
+  <ellipse cx="196" cy="22" rx="7" ry="2" fill="#5a5a58" stroke="#2a2a2e" stroke-width="0.4"/>
+  <!-- Aviation light -->
+  <circle cx="196" cy="10" r="1" fill="rgba(220,60,40,0.7)"/>
+
+  <!-- Pilothouse navigation light (port front corner) -->
+  <circle cx="122" cy="76" r="1.5" fill="rgba(60,180,220,0.6)"/>
+
+  <!-- Bow nameplate -->
+  <text x="56" y="92" font-family="sans-serif" font-weight="bold" font-size="6"
+    fill="#c8a84c" opacity="0.55">PORTERS</text>
+</svg>

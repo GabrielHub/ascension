@@ -16,7 +16,6 @@ import {
 import {
   getCurrentAbsoluteMinute,
   getRoomTemplateForEntity,
-  getStaffRoleTag,
   pushRuntimeEvent,
   removeTrackedEntity,
 } from "./commands";
@@ -38,14 +37,8 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
     (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   );
-  const moraleValues = [
-    ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
-    ...context.runtimeState.staffEntities.map((entity) => MoraleState.current[entity]),
-  ];
-  const loyaltyValues = [
-    ...livingOperatorEntities.map((entity) => LoyaltyState.current[entity]),
-    ...context.runtimeState.staffEntities.map((entity) => LoyaltyState.current[entity]),
-  ];
+  const moraleValues = livingOperatorEntities.map((entity) => MoraleState.current[entity]);
+  const loyaltyValues = livingOperatorEntities.map((entity) => LoyaltyState.current[entity]);
   const activeInjuries = livingOperatorEntities.filter(
     (entity) => InjuryState.severity[entity] > 0,
   ).length;
@@ -74,10 +67,7 @@ function getPressureTags(context: Parameters<SimSystem>[0]): string[] {
   if (
     context.runtimeState.roomEntities.some((entity) => {
       const template = getRoomTemplateForEntity(context, entity);
-      return (
-        getStaffRoleTag(template.tags) === "staff:reception" &&
-        RoomInstance.isOperational[entity] === 0
-      );
+      return template.tags.includes("room:reception") && RoomInstance.isOperational[entity] === 0;
     })
   ) {
     tags.push("pressure:reputation");
@@ -120,10 +110,7 @@ function computePressure(context: Parameters<SimSystem>[0]): number {
   const livingOperatorEntities = context.runtimeState.operatorEntities.filter(
     (entity) => OperatorIdentity.lifecycleStatus[entity] === "active",
   );
-  const moraleValues = [
-    ...livingOperatorEntities.map((entity) => MoraleState.current[entity]),
-    ...context.runtimeState.staffEntities.map((entity) => MoraleState.current[entity]),
-  ];
+  const moraleValues = livingOperatorEntities.map((entity) => MoraleState.current[entity]);
   const averageMorale = getAverageValue(moraleValues);
   const activeInjuries = livingOperatorEntities.filter(
     (entity) => InjuryState.severity[entity] > 0,

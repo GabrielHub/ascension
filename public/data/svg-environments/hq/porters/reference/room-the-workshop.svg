@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: The Workshop — Machine-shop conversion for durable gear
+       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
+       Design reference only — the runtime ships the props-only scene extracted below. -->
+<polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+<polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
+<polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+<line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE WORKSHOP</text>
+<text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+<g><polygon points="141,164 184,178 184,200 141,186" fill="#4f5357" stroke="#24282d" stroke-width="0.9"/>
+<polygon points="227,164 184,178 184,200 227,186" fill="#41464a" stroke="#24282d" stroke-width="0.9"/>
+<polygon points="184,150 227,164 184,178 141,164" fill="#6d6f73" stroke="#24282d" stroke-width="0.9"/>
+<line x1="162" y1="166" x2="162" y2="190" stroke="#282d32" stroke-width="1.3"/>
+<line x1="206" y1="166" x2="206" y2="190" stroke="#282d32" stroke-width="1.3"/>
+<polygon points="235,182 278,196 278,218 235,204" fill="#4f5357" stroke="#24282d" stroke-width="0.9"/>
+<polygon points="321,182 278,196 278,218 321,204" fill="#41464a" stroke="#24282d" stroke-width="0.9"/>
+<polygon points="278,168 321,182 278,196 235,182" fill="#6d6f73" stroke="#24282d" stroke-width="0.9"/>
+<line x1="256" y1="184" x2="256" y2="208" stroke="#282d32" stroke-width="1.3"/>
+<line x1="300" y1="184" x2="300" y2="208" stroke="#282d32" stroke-width="1.3"/>
+<polygon points="89,137 110,148 110,206 89,195" fill="#555d63" stroke="#1b2328" stroke-width="0.9"/>
+<polygon points="131,137 110,148 110,206 131,195" fill="#474e54" stroke="#1b2328" stroke-width="0.9"/>
+<polygon points="110,126 131,137 110,148 89,137" fill="#6f767c" stroke="#1b2328" stroke-width="0.9"/>
+<polygon points="308,134 336,146 336,210 308,198" fill="#4f4032" stroke="#211810" stroke-width="0.9"/>
+<polygon points="364,134 336,146 336,210 364,198" fill="#43352b" stroke="#211810" stroke-width="0.9"/>
+<polygon points="336,122 364,134 336,146 308,134" fill="#6b5642" stroke="#211810" stroke-width="0.9"/>
+<line x1="320" y1="142" x2="344" y2="154" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="320" y1="156" x2="344" y2="168" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="320" y1="170" x2="344" y2="182" stroke="#2b2118" stroke-width="1.1"/>
+<polygon points="100,202 118,212 118,232 100,222" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="136,202 118,212 118,232 136,222" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="118,192 136,202 118,212 100,202" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="110" y1="204" x2="126" y2="212" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="308,204 326,214 326,234 308,224" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="344,204 326,214 326,234 344,224" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="326,194 344,204 326,214 308,204" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="318" y1="206" x2="334" y2="214" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="252,88 276,100 276,130 252,118" fill="#7a5f2f" stroke="#241d16" stroke-width="0.9"/>
+<line x1="262" y1="98" x2="278" y2="106" stroke="rgba(255,255,255,0.25)" stroke-width="1.1"/>
+<circle cx="260" cy="114" r="2" fill="#c45151"/>
+<circle cx="280" cy="122" r="2" fill="#d7bc54"/></g>
+</svg>

@@ -4,6 +4,7 @@ import { createWorld, addEntity, addComponent } from "bitecs";
 import { EquipmentAssignment, InjuryState, OperatorIdentity } from "../components";
 import type { SimSystemContext } from "./types";
 import type { ItemTemplate, TemplateRegistry } from "content/templates/shared";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 import { readOperatorBaseStats, collectStatModifiers, computeDerivedStats } from "./derived-stats";
 
 // ── Test helpers ──────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ function createMockItemTemplate(
     tags: [],
     category: "weapon",
     rank: "f",
+    rankTone: "grounded",
     buyPrice: 10,
     sellPrice: 5,
     statEffects,
@@ -69,7 +71,6 @@ function createTestContext(items: ItemTemplate[] = []): SimSystemContext {
       roomEntities: [],
       operatorEntities: [],
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -81,7 +82,6 @@ function createTestContext(items: ItemTemplate[] = []): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 1,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -121,17 +121,9 @@ function createTestContext(items: ItemTemplate[] = []): SimSystemContext {
         },
         lastPurchasedUpgradeId: null,
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }

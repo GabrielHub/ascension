@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: The Stockroom — Logistics and loadout handling
+       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
+       Design reference only — the runtime ships the props-only scene extracted below. -->
+<polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+<polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
+<polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+<line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE STOCKROOM</text>
+<text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+<g><polygon points="98,130 126,142 126,206 98,194" fill="#4d3a2d" stroke="#211810" stroke-width="0.9"/>
+<polygon points="154,130 126,142 126,206 154,194" fill="#3d2d23" stroke="#211810" stroke-width="0.9"/>
+<polygon points="126,118 154,130 126,142 98,130" fill="#67503c" stroke="#211810" stroke-width="0.9"/>
+<line x1="110" y1="138" x2="134" y2="150" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="110" y1="152" x2="134" y2="164" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="110" y1="166" x2="134" y2="178" stroke="#2b2118" stroke-width="1.1"/>
+<polygon points="174,128 202,140 202,204 174,192" fill="#4d3a2d" stroke="#211810" stroke-width="0.9"/>
+<polygon points="230,128 202,140 202,204 230,192" fill="#3d2d23" stroke="#211810" stroke-width="0.9"/>
+<polygon points="202,116 230,128 202,140 174,128" fill="#67503c" stroke="#211810" stroke-width="0.9"/>
+<line x1="186" y1="136" x2="210" y2="148" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="186" y1="150" x2="210" y2="162" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="186" y1="164" x2="210" y2="176" stroke="#2b2118" stroke-width="1.1"/>
+<polygon points="258,132 286,144 286,208 258,196" fill="#4d3a2d" stroke="#211810" stroke-width="0.9"/>
+<polygon points="314,132 286,144 286,208 314,196" fill="#3d2d23" stroke="#211810" stroke-width="0.9"/>
+<polygon points="286,120 314,132 286,144 258,132" fill="#67503c" stroke="#211810" stroke-width="0.9"/>
+<line x1="270" y1="140" x2="294" y2="152" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="270" y1="154" x2="294" y2="166" stroke="#2b2118" stroke-width="1.1"/>
+<line x1="270" y1="168" x2="294" y2="180" stroke="#2b2118" stroke-width="1.1"/>
+<polygon points="160,186 178,196 178,216 160,206" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="196,186 178,196 178,216 196,206" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="178,176 196,186 178,196 160,186" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="170" y1="188" x2="186" y2="196" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="208,174 226,184 226,204 208,194" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="244,174 226,184 226,204 244,194" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="226,164 244,174 226,184 208,174" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="218" y1="176" x2="234" y2="184" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="260,190 278,200 278,220 260,210" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="296,190 278,200 278,220 296,210" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="278,180 296,190 278,200 260,190" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="270" y1="192" x2="286" y2="200" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="114,204 132,214 132,234 114,224" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="150,204 132,214 132,234 150,224" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="132,194 150,204 132,214 114,204" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
+<line x1="124" y1="206" x2="140" y2="214" stroke="#3b2b1d" stroke-width="1.1"/>
+<polygon points="324,194 334,200 334,218 324,212" fill="#414b50" stroke="#1b2226" stroke-width="0.9"/>
+<polygon points="344,194 334,200 334,218 344,212" fill="#354045" stroke="#1b2226" stroke-width="0.9"/>
+<polygon points="334,188 344,194 334,200 324,194" fill="#5a646a" stroke="#1b2226" stroke-width="0.9"/>
+<ellipse cx="108" cy="202" rx="15" ry="8" fill="none" stroke="#ac8a54" stroke-width="3" opacity="0.95"/></g>
+</svg>

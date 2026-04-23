@@ -130,7 +130,7 @@ function getDefaultRoomCultureFromTags(tags: readonly string[]) {
   if (tags.includes("room:training")) {
     return { comfort: 45, tension: 36, camaraderie: 52, tone: "focused" };
   }
-  if (tags.includes("room:operations") || tags.includes("room:staffing")) {
+  if (tags.includes("room:operations") || tags.includes("room:logistics")) {
     return { comfort: 42, tension: 47, camaraderie: 37, tone: "brisk" };
   }
   return { comfort: 50, tension: 35, camaraderie: 45, tone: "neutral" };
@@ -819,13 +819,13 @@ export function applySocialFalloutAfterContractLoss(context: SimSystemContext): 
     }
   }
 
-  // Operations and staffing rooms see tension spike
+  // Operations and logistics rooms see tension spike
   for (const cultureEntity of context.runtimeState.roomCultureEntities) {
     const roomId = RoomCulture.roomInstanceId[cultureEntity];
     const roomEntity = context.runtimeState.roomEntities.find((e) => RoomInstance.id[e] === roomId);
     if (roomEntity === undefined) continue;
     const template = getRoomTemplateForEntity(context, roomEntity);
-    if (template.tags.includes("room:operations") || template.tags.includes("room:staffing")) {
+    if (template.tags.includes("room:operations") || template.tags.includes("room:logistics")) {
       RoomCulture.tension[cultureEntity] = clamp(RoomCulture.tension[cultureEntity] + 10, 0, 100);
       RoomCulture.camaraderie[cultureEntity] = clamp(
         RoomCulture.camaraderie[cultureEntity] - 5,

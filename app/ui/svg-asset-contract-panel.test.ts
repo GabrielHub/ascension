@@ -44,18 +44,18 @@ describe("svg asset contract panel record model", () => {
     expect(roomSceneCategoryKeys).toEqual(new Set(["hq-room-scene"]));
   });
 
-  it("filters live HQ room scenes by room search and room-scene category", () => {
+  it("filters live HQ room scenes by building and room-scene category", () => {
     const filtered = filterSvgAssetViewerRecords(records, {
       usage: "live",
       family: "hq",
       category: "hq-room-scene",
-      room: "operations",
+      building: "building/bodega",
       search: "register",
     });
 
     expect(filtered.length).toBeGreaterThan(1);
     expect(filtered.every((record) => record.categoryKey === "hq-room-scene")).toBe(true);
-    expect(filtered.every((record) => record.roomFamily === "operations")).toBe(true);
+    expect(filtered.every((record) => record.buildingId === "building/bodega")).toBe(true);
     expect(filtered.every((record) => record.kind === "binding")).toBe(true);
   });
 
@@ -64,7 +64,7 @@ describe("svg asset contract panel record model", () => {
       usage: "live",
       family: "hq",
       category: "hq-room-scene",
-      room: "",
+      building: "",
       search: "counter",
     });
 
@@ -102,7 +102,7 @@ describe("svg asset contract panel record model", () => {
       usage: "live",
       family: "hq",
       category: "hq-room-scene",
-      room: "social",
+      building: "building/bodega",
       search: "dining area 1",
     });
 

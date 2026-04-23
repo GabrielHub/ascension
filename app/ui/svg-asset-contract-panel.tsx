@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { getBuildingLayout } from "content/building-layouts";
 import { templateRegistry } from "content/templates";
 import {
   createHqWorldSnapshot,
@@ -94,7 +95,7 @@ interface ViewerFilters {
   usage: SvgAssetUsage;
   family: FamilyFilter;
   category: string;
-  room: string;
+  building: string;
   search: string;
 }
 
@@ -378,7 +379,7 @@ export function filterSvgAssetViewerRecords(
     if (filters.category && record.categoryKey !== filters.category) {
       return false;
     }
-    if (filters.room && record.roomFamily !== filters.room) {
+    if (filters.building && record.buildingId !== filters.building) {
       return false;
     }
     if (q && !record.searchText.includes(q)) {
@@ -489,8 +490,39 @@ interface NavigatorTreeNode {
   testId: string;
   label: string;
   count: number;
-  filters: { family: FamilyFilter; category: string; room: string };
+  filters: { family: FamilyFilter; category: string; building: string };
   children: NavigatorTreeNode[];
+}
+
+function buildingLabel(buildingId: string): string {
+  const tail = buildingId.split("/").pop() ?? buildingId;
+  return titleCase(tail.replace(/[-_]/g, " "));
+}
+
+function formatFloorPlacementLabel(elevationBandId: string | null): string | null {
+  return elevationBandId ? titleCase(elevationBandId.replace(/-/g, " ")) : null;
+}
+
+function getHqRoomBindingPlacementLabel(binding: HqRoomSceneBinding): string {
+  const buildingName =
+    templateRegistry.buildingById.get(binding.buildingId)?.name ??
+    buildingLabel(binding.buildingId);
+  const preview = getHqBindingPreviewFootprint(binding);
+  const layout = getBuildingLayout(
+    binding.buildingId,
+    binding.floorIndex,
+    preview?.buildingTier ?? 1,
+  );
+  const parts = [buildingName, `Floor ${binding.floorIndex + 1}`];
+  const floorLabel = formatFloorPlacementLabel(layout?.elevationBandId ?? null);
+  if (floorLabel) {
+    parts.push(floorLabel);
+  }
+  return parts.join(" · ");
+}
+
+function buildingTestIdSegment(buildingId: string): string {
+  return buildingId.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
 }
 
 function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode[] {
@@ -524,22 +556,22 @@ function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode
     );
 
     for (const [categoryKey, bucket] of sortedCategories) {
-      const rooms = new Map<string, ViewerRecord[]>();
+      const buildings = new Map<string, ViewerRecord[]>();
       for (const record of bucket.records) {
-        if (!record.roomFamily) continue;
-        const list = rooms.get(record.roomFamily) ?? [];
+        if (!record.buildingId) continue;
+        const list = buildings.get(record.buildingId) ?? [];
         list.push(record);
-        rooms.set(record.roomFamily, list);
+        buildings.set(record.buildingId, list);
       }
 
-      const roomNodes: NavigatorTreeNode[] = [...rooms.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([roomFamily, roomRecords]) => ({
-          key: `${family}:${categoryKey}:${roomFamily}`,
-          testId: `svg-nav-${family}-${categoryKey}-${roomFamily}`,
-          label: titleCase(roomFamily.replace(/_/g, " ")),
-          count: roomRecords.length,
-          filters: { family, category: categoryKey, room: roomFamily },
+      const buildingNodes: NavigatorTreeNode[] = [...buildings.entries()]
+        .sort((a, b) => buildingLabel(a[0]).localeCompare(buildingLabel(b[0])))
+        .map(([buildingId, buildingRecords]) => ({
+          key: `${family}:${categoryKey}:${buildingId}`,
+          testId: `svg-nav-${family}-${categoryKey}-${buildingTestIdSegment(buildingId)}`,
+          label: buildingLabel(buildingId),
+          count: buildingRecords.length,
+          filters: { family, category: categoryKey, building: buildingId },
           children: [],
         }));
 
@@ -548,8 +580,8 @@ function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode
         testId: `svg-nav-${family}-${categoryKey}`,
         label: bucket.label,
         count: bucket.records.length,
-        filters: { family, category: categoryKey, room: "" },
-        children: roomNodes,
+        filters: { family, category: categoryKey, building: "" },
+        children: buildingNodes,
       });
     }
 
@@ -558,7 +590,7 @@ function buildNavigatorTree(records: readonly ViewerRecord[]): NavigatorTreeNode
       testId: `svg-nav-${family}`,
       label: family === "hq" ? "HQ" : titleCase(family),
       count: familyRecords.length,
-      filters: { family, category: "", room: "" },
+      filters: { family, category: "", building: "" },
       children: categoryNodes,
     });
   }
@@ -1274,7 +1306,7 @@ function NavigatorRail({
 }: {
   tree: NavigatorTreeNode[];
   activeKey: string;
-  onSelect: (filters: { family: FamilyFilter; category: string; room: string }) => void;
+  onSelect: (filters: { family: FamilyFilter; category: string; building: string }) => void;
   onReset: () => void;
   totalCount: number;
 }) {
@@ -1305,7 +1337,7 @@ function NavigatorRail({
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <ul
           role="tree"
-          aria-label="Records grouped by family → category → room"
+          aria-label="Records grouped by family → category → building"
           className="space-y-0.5"
         >
           {tree.map((node) => (
@@ -1713,7 +1745,6 @@ function buildHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapsho
         floorIndex: binding.floorIndex,
         name: template.name,
         tier: 1,
-        isRequestedActive: true,
         isOperational: true,
         functionTag,
         reservedFootprint: previewFootprint.reservedFootprint,
@@ -1722,7 +1753,7 @@ function buildHqRoomBindingSnapshot(binding: HqRoomSceneBinding): HqWorldSnapsho
     ],
     {
       buildingId: binding.buildingId,
-      buildingTier: 1,
+      buildingTier: previewFootprint.buildingTier,
       floorIndex: binding.floorIndex,
     },
   );
@@ -2045,12 +2076,14 @@ function DetailWorkbench({
   const isRoomScene = binding?.kind === "hq-room-scene";
   const isEnvBinding = binding?.kind === "hq-environment";
   const isOperatorRecipe = binding?.kind === "operator-recipe";
+  const roomScenePlacementLabel =
+    binding?.kind === "hq-room-scene" ? getHqRoomBindingPlacementLabel(binding) : null;
 
   const stage = isRoomScene ? (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
       <div className="flex items-center justify-between">
         <EyebrowLabel>Placed In Building</EyebrowLabel>
-        <span className="text-xs text-silver/40">live HQ composition</span>
+        <span className="text-xs text-silver/40">{roomScenePlacementLabel}</span>
       </div>
       <div className="relative flex-1 min-h-0 overflow-hidden rounded-lg border border-[rgba(200,168,76,0.08)] bg-[rgba(6,6,8,0.45)]">
         <HqRoomFitCanvas binding={binding} showIsoAxes={showIsoAxes} />
@@ -2336,6 +2369,12 @@ function InspectorRail({
             <InspectorRow label="Lighting" value={preset.label} />
             {record.roomFamily && <InspectorRow label="Room" value={record.roomFamily} />}
             {record.buildingId && <InspectorRow label="Building" value={record.buildingId} />}
+            {record.binding?.kind === "hq-room-scene" && (
+              <InspectorRow
+                label="Placement"
+                value={getHqRoomBindingPlacementLabel(record.binding)}
+              />
+            )}
             <InspectorRow label="Id" testId="svg-inspector-id">
               <div className="flex items-start gap-2">
                 <code className="break-all font-[family-name:var(--font-sans)] text-xs text-silver-bright">
@@ -2561,7 +2600,7 @@ export function SvgAssetContractPanel() {
   const [usage, setUsage] = useState<SvgAssetUsage>("live");
   const [family, setFamily] = useState<FamilyFilter>("hq");
   const [category, setCategory] = useState("");
-  const [room, setRoom] = useState("");
+  const [building, setBuilding] = useState("");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("label-asc");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -2597,10 +2636,10 @@ export function SvgAssetContractPanel() {
         usage,
         family,
         category,
-        room,
+        building,
         search,
       }),
-    [allRecords, category, family, room, search, usage],
+    [allRecords, category, family, building, search, usage],
   );
 
   const sortedRecords = useMemo(
@@ -2613,9 +2652,9 @@ export function SvgAssetContractPanel() {
   const activeNavKey = useMemo(() => {
     if (!family) return "__all__";
     if (!category) return family;
-    if (!room) return `${family}:${category}`;
-    return `${family}:${category}:${room}`;
-  }, [family, category, room]);
+    if (!building) return `${family}:${category}`;
+    return `${family}:${category}:${building}`;
+  }, [family, category, building]);
 
   const activeNavLabel = useMemo(() => {
     if (activeNavKey === "__all__") return familyLabel(family);
@@ -2624,9 +2663,9 @@ export function SvgAssetContractPanel() {
     const catNode = navigatorTree
       .find((n) => n.key === family)
       ?.children.find((c) => c.key === `${family}:${category}`);
-    if (!room) return `${fam} · ${catNode?.label ?? category}`;
-    return `${fam} · ${catNode?.label ?? category} · ${titleCase(room.replace(/_/g, " "))}`;
-  }, [activeNavKey, category, family, navigatorTree, room]);
+    if (!building) return `${fam} · ${catNode?.label ?? category}`;
+    return `${fam} · ${catNode?.label ?? category} · ${buildingLabel(building)}`;
+  }, [activeNavKey, category, family, navigatorTree, building]);
 
   const recordsById = useMemo(
     () => new Map(allRecords.map((record) => [record.id, record])),
@@ -2676,10 +2715,10 @@ export function SvgAssetContractPanel() {
   }, [focusedId, pinnedIds, sortedRecords]);
 
   const handleNavigate = useCallback(
-    (filters: { family: FamilyFilter; category: string; room: string }) => {
+    (filters: { family: FamilyFilter; category: string; building: string }) => {
       setFamily(filters.family);
       setCategory(filters.category);
-      setRoom(filters.room);
+      setBuilding(filters.building);
     },
     [],
   );
@@ -2687,7 +2726,7 @@ export function SvgAssetContractPanel() {
   const handleNavReset = useCallback(() => {
     setFamily("");
     setCategory("");
-    setRoom("");
+    setBuilding("");
   }, []);
 
   const handleTogglePin = useCallback((id: string) => {
@@ -2792,7 +2831,7 @@ export function SvgAssetContractPanel() {
     onUsageChange: (next) => {
       setUsage(next);
       setCategory("");
-      setRoom("");
+      setBuilding("");
       setFocusedId(null);
     },
     onViewModeChange: setViewMode,

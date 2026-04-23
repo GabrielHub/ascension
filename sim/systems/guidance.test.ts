@@ -109,6 +109,7 @@ describe("guidance completion evaluation", () => {
           hasRaidReturnWithLoot: false,
           hasStaffingActionTaken: true,
           hasUpgradePurchased: false,
+          lastPurchasedUpgradeId: null,
         },
       ),
     ).toBe(true);
@@ -127,6 +128,7 @@ describe("guidance completion evaluation", () => {
           hasRaidReturnWithLoot: false,
           hasStaffingActionTaken: false,
           hasUpgradePurchased: true,
+          lastPurchasedUpgradeId: null,
         },
       ),
     ).toBe(true);
@@ -145,6 +147,7 @@ describe("guidance completion evaluation", () => {
           hasRaidReturnWithLoot: false,
           hasStaffingActionTaken: false,
           hasUpgradePurchased: false,
+          lastPurchasedUpgradeId: null,
         },
       ),
     ).toBe(false);
@@ -162,6 +165,7 @@ describe("guidance completion evaluation", () => {
           hasRaidReturnWithLoot: false,
           hasStaffingActionTaken: false,
           hasUpgradePurchased: false,
+          lastPurchasedUpgradeId: null,
         },
       ),
     ).toBe(false);

@@ -1,39 +1,32 @@
 import type { OperatorCombatSnapshot } from "save";
+import type { CombatPackageRegistry, CombatRank } from "content/templates/combat-packages";
+import {
+  COMBAT_PACKAGES,
+  COMBAT_RANK_ORDER,
+  buildCombatPackageRegistry,
+  findCombatPackagesForRecruit,
+} from "content/templates/combat-packages";
 
-/**
- * Supported rank identities for recruited operators.
- *
- * Ranks below `f` are not representable; ranks above `c` are not produced
- * by default recruitment yet and remain out of scope until later plans add
- * the B/A/S ladder. Recruits default to `f` unless a rank-aware caller
- * requests otherwise.
- */
-export type OperatorRank = "f" | "e" | "d" | "c";
-
-const OPERATOR_RANK_ORDER: readonly OperatorRank[] = ["f", "e", "d", "c"];
-
-/**
- * Base-stat multiplier applied on top of the role archetype's F-rank stats.
- *
- * Each rank step compounds on the previous tier, so F < E < D < C gear and
- * enemies all have a consistent envelope: C-rank recruits are roughly 60%
- * stronger than the F-rank baseline across the board.
- */
-const RANK_STAT_MULTIPLIER: Record<OperatorRank, number> = {
+const RANK_STAT_MULTIPLIER: Record<CombatRank, number> = {
   f: 1.0,
   e: 1.15,
   d: 1.35,
   c: 1.6,
+  b: 1.9,
+  a: 2.25,
+  u: 2.6,
 };
 
-/**
- * Role archetype baseline. Rank defaults to F; rank-aware callers opt in
- * by passing a target rank.
- */
+const SENIOR_RANK_BAND: ReadonlySet<CombatRank> = new Set(["c", "b", "a"]);
+
 interface RoleArchetype {
   attunementTag: string;
   traits: readonly string[];
-  kit: OperatorCombatSnapshot["kit"];
+  defaultPackageIdByRankBand: {
+    baseRanks: string;
+    seniorRanks: string;
+    uniqueRank?: string;
+  };
   baseStats: OperatorCombatSnapshot["baseStats"];
 }
 
@@ -41,11 +34,9 @@ const ROLE_ARCHETYPES: Record<string, RoleArchetype> = {
   "role:scout": {
     attunementTag: "attunement:void",
     traits: ["trait:alert"],
-    kit: {
-      regularAttackId: "kit/basic-strike",
-      skillId: "kit/scout-skill",
-      ultimateId: "kit/scout-ultimate",
-      passiveIds: ["kit/scout-passive"],
+    defaultPackageIdByRankBand: {
+      baseRanks: "package/scout/void/standard",
+      seniorRanks: "package/scout/void/senior",
     },
     baseStats: {
       strength: 7,
@@ -59,11 +50,9 @@ const ROLE_ARCHETYPES: Record<string, RoleArchetype> = {
   "role:medic": {
     attunementTag: "attunement:vital",
     traits: ["trait:resilient"],
-    kit: {
-      regularAttackId: "kit/basic-strike",
-      skillId: "kit/medic-skill",
-      ultimateId: "kit/medic-ultimate",
-      passiveIds: ["kit/medic-passive"],
+    defaultPackageIdByRankBand: {
+      baseRanks: "package/medic/vital/standard",
+      seniorRanks: "package/medic/vital/senior",
     },
     baseStats: {
       strength: 6,
@@ -79,11 +68,10 @@ const ROLE_ARCHETYPES: Record<string, RoleArchetype> = {
 const DEFAULT_ROLE_ARCHETYPE: RoleArchetype = {
   attunementTag: "attunement:kinetic",
   traits: ["trait:steady"],
-  kit: {
-    regularAttackId: "kit/basic-strike",
-    skillId: "kit/field-lead-skill",
-    ultimateId: "kit/field-lead-ultimate",
-    passiveIds: ["kit/field-lead-passive"],
+  defaultPackageIdByRankBand: {
+    baseRanks: "package/field-lead/kinetic/standard",
+    seniorRanks: "package/field-lead/kinetic/senior",
+    uniqueRank: "package/field-lead/kinetic/unique/anchor-absolute",
   },
   baseStats: {
     strength: 14,
@@ -95,17 +83,15 @@ const DEFAULT_ROLE_ARCHETYPE: RoleArchetype = {
   },
 };
 
-export function normalizeOperatorRank(rank: string | undefined | null): OperatorRank {
+export function normalizeOperatorRank(rank: string | undefined | null): CombatRank {
   if (!rank) return "f";
   const lowered = rank.toLowerCase();
-  return (OPERATOR_RANK_ORDER as readonly string[]).includes(lowered)
-    ? (lowered as OperatorRank)
-    : "f";
+  return (COMBAT_RANK_ORDER as readonly string[]).includes(lowered) ? (lowered as CombatRank) : "f";
 }
 
 function scaleStats(
   baseStats: OperatorCombatSnapshot["baseStats"],
-  rank: OperatorRank,
+  rank: CombatRank,
 ): OperatorCombatSnapshot["baseStats"] {
   const multiplier = RANK_STAT_MULTIPLIER[rank];
   return {
@@ -118,29 +104,35 @@ function scaleStats(
   };
 }
 
-/**
- * Derive a combat snapshot for a newly created operator.
- *
- * Passing `rank` produces a stat block scaled for that rank band while
- * preserving the role-specific attunement, trait, and kit identity. Omitting
- * `rank` yields the legacy F-rank defaults so existing callers continue to
- * work unchanged.
- */
+function pickDefaultPackageIdForRole(roleTag: string, rank: CombatRank): string {
+  const archetype = ROLE_ARCHETYPES[roleTag] ?? DEFAULT_ROLE_ARCHETYPE;
+  if (rank === "u" && archetype.defaultPackageIdByRankBand.uniqueRank) {
+    return archetype.defaultPackageIdByRankBand.uniqueRank;
+  }
+  if (SENIOR_RANK_BAND.has(rank) || rank === "u") {
+    return archetype.defaultPackageIdByRankBand.seniorRanks;
+  }
+  return archetype.defaultPackageIdByRankBand.baseRanks;
+}
+
 export function deriveOperatorCombatDefaults(
   roleTag: string,
-  rank: OperatorRank = "f",
+  rank: CombatRank = "f",
+  registry: CombatPackageRegistry = DEFAULT_COMBAT_PACKAGE_REGISTRY,
 ): OperatorCombatSnapshot {
   const archetype = ROLE_ARCHETYPES[roleTag] ?? DEFAULT_ROLE_ARCHETYPE;
+  const combatPackageId = resolveRecruitCombatPackageId(
+    registry,
+    roleTag,
+    archetype.attunementTag,
+    rank,
+  );
   return {
     rank,
     attunementTag: archetype.attunementTag,
     traits: [...archetype.traits],
-    kit: {
-      regularAttackId: archetype.kit.regularAttackId,
-      skillId: archetype.kit.skillId,
-      ultimateId: archetype.kit.ultimateId,
-      passiveIds: [...archetype.kit.passiveIds],
-    },
+    combatPackageId,
+    blocks: 0,
     baseStats: scaleStats(archetype.baseStats, rank),
   };
 }
@@ -152,12 +144,8 @@ export function cloneOperatorCombatSnapshot(
     rank: combat.rank,
     attunementTag: combat.attunementTag,
     traits: [...combat.traits],
-    kit: {
-      regularAttackId: combat.kit.regularAttackId,
-      skillId: combat.kit.skillId,
-      ultimateId: combat.kit.ultimateId,
-      passiveIds: [...combat.kit.passiveIds],
-    },
+    combatPackageId: combat.combatPackageId,
+    blocks: combat.blocks,
     baseStats: {
       strength: combat.baseStats.strength,
       speed: combat.baseStats.speed,
@@ -178,3 +166,28 @@ export function normalizeOperatorCombatSnapshot(
   }
   return deriveOperatorCombatDefaults(roleTag);
 }
+
+/**
+ * Resolve a legal combat package id for a recruit given its role, attunement,
+ * and rank. Falls back to the role archetype's default id when no package in
+ * the registry matches the pool filter.
+ */
+export function resolveRecruitCombatPackageId(
+  registry: CombatPackageRegistry,
+  roleTag: string,
+  attunementTag: string,
+  rank: CombatRank,
+): string {
+  const matches = findCombatPackagesForRecruit(registry, roleTag, attunementTag, rank);
+  if (matches.length > 0) {
+    return matches[0].id;
+  }
+  return pickDefaultPackageIdForRole(roleTag, normalizeOperatorRank(rank));
+}
+
+/**
+ * Shared default registry used when the runtime context is not accessible.
+ * Simulation systems should use `context.runtimeState.combatPackageRegistry`.
+ */
+export const DEFAULT_COMBAT_PACKAGE_REGISTRY: CombatPackageRegistry =
+  buildCombatPackageRegistry(COMBAT_PACKAGES);

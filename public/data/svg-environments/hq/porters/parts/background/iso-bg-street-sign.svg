@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 185">
+  <!-- NYC double street sign on pole. Two green rectangular signs
+       at the top, perpendicular to each other for an intersection.
+       2:1 isometric. Anchor: base center (20, 180). -->
+
+  <!-- Pole shadow -->
+  <ellipse cx="20" cy="181" rx="8" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+
+  <!-- Main pole -->
+  <rect x="18" y="22" width="4" height="158" fill="#3a3838" stroke="#2e2e2e" stroke-width="0.5"/>
+
+  <!-- Pole cap (top) -->
+  <rect x="16" y="18" width="8" height="6" rx="1" fill="#3a3838" stroke="#2e2e2e" stroke-width="0.4"/>
+
+  <!-- ═══ Street sign A (facing iso-left direction, slope +0.5) ═══ -->
+  <!-- Sign face — isometric parallelogram -->
+  <polygon points="4,24 42,43 42,35 4,16"
+    fill="#1a3828" stroke="#142e20" stroke-width="0.8"/>
+
+  <!-- White border on sign A -->
+  <polygon points="6,23 40,41 40,37 6,18"
+    fill="none" stroke="#4a5a4e" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Sign text area (lighter stripe) -->
+  <polygon points="8,22 38,39 38,37 8,20"
+    fill="#1e4030" opacity="0.3"/>
+
+  <!-- Sign bracket A -->
+  <polygon points="18,26 22,28 22,24 18,22"
+    fill="#3a3838" opacity="0.5"/>
+
+  <!-- ═══ Street sign B (facing iso-right direction, slope -0.5) ═══ -->
+  <!-- Sign face — perpendicular to sign A -->
+  <polygon points="22,20 54,6 54,14 22,28"
+    fill="#163024" stroke="#102818" stroke-width="0.8"/>
+
+  <!-- White border on sign B -->
+  <polygon points="24,21 52,8 52,13 24,26"
+    fill="none" stroke="#4a5a4e" stroke-width="0.5" opacity="0.35"/>
+
+  <!-- Sign text area -->
+  <polygon points="26,22 50,10 50,12 26,24"
+    fill="#1a3828" opacity="0.3"/>
+
+  <!-- Sign bracket B -->
+  <polygon points="20,24 22,23 22,21 20,22"
+    fill="#3a3838" opacity="0.5"/>
+
+  <!-- ═══ Optional: one-way arrow or walk signal below ═══ -->
+  <!-- Small pedestrian signal box below signs -->
+  <g opacity="0.45">
+    <rect x="16" y="46" width="8" height="12" rx="1"
+      fill="#1e1e1e" stroke="#2a2a2a" stroke-width="0.5"/>
+    <!-- Walk indicator (dim) -->
+    <rect x="18" y="48" width="4" height="4" rx="0.5"
+      fill="#1a3a28" opacity="0.4"/>
+  </g>
+
+  <!-- Base plate -->
+  <rect x="14" y="176" width="12" height="4" rx="1" fill="#3a3838" stroke="#2e2e2e" stroke-width="0.4"/>
+</svg>

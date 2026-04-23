@@ -33,7 +33,7 @@ export const CONTRACT_RANK_CONFIG: Record<ContractRank, ContractRankBudgetConfig
   c: { threatBase: 72, rewardBase: 138, paceMultiplier: 1.4 },
   b: { threatBase: 82, rewardBase: 188, paceMultiplier: 1.6 },
   a: { threatBase: 90, rewardBase: 250, paceMultiplier: 1.85 },
-  s: { threatBase: 95, rewardBase: 330, paceMultiplier: 2.2 },
+  u: { threatBase: 95, rewardBase: 330, paceMultiplier: 2.2 },
 };
 
 export const POSTED_CONTRACT_VARIANCE = {
@@ -60,7 +60,7 @@ export function getAvailableContractRanksForReputation(
   if (reputation >= 40) availableRanks.push("c");
   if (reputation >= 60) availableRanks.push("b");
   if (reputation >= 80) availableRanks.push("a");
-  if (reputation >= 95) availableRanks.push("s");
+  if (reputation >= 95) availableRanks.push("u");
 
   if (rankCeiling) {
     const ceilingIdx = CONTRACT_RANK_ORDER.indexOf(rankCeiling);

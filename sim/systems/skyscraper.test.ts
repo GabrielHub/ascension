@@ -79,10 +79,9 @@ describe("skyscraper room templates", () => {
     expect(lobby.tags).toContain("room:social");
   });
 
-  it("the Clinic uses the recovery and medical staff tags", () => {
+  it("the Clinic uses the recovery tag", () => {
     const clinic = registry.roomById.get("room/clinic:tier_1")!;
     expect(clinic.tags).toContain("room:recovery");
-    expect(clinic.tags).toContain("staff:medical");
   });
 
   it("the Dojo carries the training tag", () => {
@@ -92,7 +91,7 @@ describe("skyscraper room templates", () => {
 
   it("the Supply Hall supports logistics staging", () => {
     const supplyHall = registry.roomById.get("room/supply_hall:tier_1")!;
-    expect(supplyHall.tags).toContain("staff:logistics");
+    expect(supplyHall.tags).toContain("room:logistics");
     expect(supplyHall.tags).toContain("ops:staging");
   });
 
@@ -249,7 +248,7 @@ describe("skyscraper contract ladder", () => {
     const available = getAvailableContractRanksForReputation(99, skyscraperCeiling);
     expect(available).not.toContain("b");
     expect(available).not.toContain("a");
-    expect(available).not.toContain("s");
+    expect(available).not.toContain("u");
   });
 });
 
@@ -295,8 +294,9 @@ describe("rank-aware recruit generation", () => {
     expect(dLead.baseStats.strength).toBeGreaterThan(fLead.baseStats.strength);
     expect(cLead.baseStats.strength).toBeGreaterThan(dLead.baseStats.strength);
     // Role identity is preserved across ranks.
-    expect(cLead.kit.skillId).toBe(fLead.kit.skillId);
     expect(cLead.attunementTag).toBe(fLead.attunementTag);
+    // Rank-band packages differ: senior (c) uses senior package id.
+    expect(cLead.combatPackageId).not.toBe(fLead.combatPackageId);
   });
 
   it("still defaults to F-rank when no rank is provided (legacy callers)", () => {
@@ -349,10 +349,10 @@ describe("skyscraper expansion-floor room templates", () => {
     }
   });
 
-  it("tags The Trauma Bay with both training and medical staffing", () => {
+  it("tags The Trauma Bay with training and medic role", () => {
     const trauma = registry.roomById.get("room/trauma_bay:tier_1")!;
     expect(trauma.tags).toContain("room:training");
-    expect(trauma.tags).toContain("staff:medical");
+    expect(trauma.tags).toContain("role:medic");
   });
 
   it("keeps The Crew Lounge and The Sky Lounge as distinct identities", () => {

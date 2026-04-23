@@ -77,9 +77,7 @@ function addOperationalGym(context: SimSystemContext): number {
   RoomInstance.roomStateId[entity] = "room-state/gym";
   RoomInstance.capacity[entity] = 3;
   RoomInstance.occupancy[entity] = 0;
-  RoomInstance.isRequestedActive[entity] = 1;
   RoomInstance.isOperational[entity] = 1;
-  RoomInstance.assignedStaffCount[entity] = 0;
   RoomInstance.appliedUpgradeIds[entity] = [];
 
   context.runtimeState.roomEntities.push(entity);

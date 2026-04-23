@@ -40,12 +40,7 @@ import { ManagementPanel } from "./management-panel";
 import { MarketPanel } from "./market-panel";
 import { OperatorPortrait } from "./operator-portrait";
 import { OperatorCombatSummary } from "./operator-combat-summary";
-import {
-  RoomCultureBadges,
-  RoomDetailPanel,
-  RoomStaffingBody,
-  RoomUpgradesBody,
-} from "./room-detail-panel";
+import { RoomCultureBadges, RoomDetailPanel, RoomUpgradesBody } from "./room-detail-panel";
 import {
   ActiveRootBody,
   ContractReviewBody,
@@ -95,7 +90,7 @@ import { InterruptionHost } from "./interruption-host";
 import { EncounterSurface } from "./encounter-surface";
 import { GuidanceHost } from "./guidance-host";
 import { AnchorRegistryProvider, useAnchorRegistry, useGuidanceAnchor } from "./guidance-anchor";
-import { getCultureSummaryLabel, getRoleMeta, getSpecialtyMeta, getTagMeta } from "./_glossary";
+import { getCultureSummaryLabel, getRoleMeta, getSpecialtyMeta } from "./_glossary";
 import {
   emptyStateClass,
   emptyStateIconClass,
@@ -266,9 +261,6 @@ export function buildGameCallbacks(
     tick: (deltaMs: number) => {
       void session.commands.tick(deltaMs);
     },
-    setRoomActive: (roomId: string, isActive: boolean) => {
-      void session.commands.setRoomActive({ roomId, isActive });
-    },
     setPolicy: (policyId, value) => {
       void session.commands.setPolicy({ policyId, value });
     },
@@ -298,12 +290,6 @@ export function buildGameCallbacks(
     },
     dismissRecruit: (visitorId: string) => {
       void session.commands.dismissRecruit({ visitorId });
-    },
-    hireStaff: (roleTag: string) => {
-      void session.commands.hireStaff({ roleTag });
-    },
-    assignStaff: (staffId: string, roomId?: string) => {
-      void session.commands.assignStaff({ staffId, roomId });
     },
     placeRoom: (templateId: string, floorIndex: number, slotId: string) => {
       void session.commands.placeRoom({ templateId, floorIndex, slotId });
@@ -344,14 +330,6 @@ export function buildGameCallbacks(
     },
   };
 }
-
-const HIREABLE_STAFF_ROLES = [
-  "staff:admin",
-  "staff:reception",
-  "staff:logistics",
-  "staff:medical",
-  "staff:maintenance",
-] as const;
 
 const OPS_CATEGORIES: readonly { id: OpsCategory; label: string; icon: string }[] = [
   { id: "contract", label: "Contract", icon: "\u2691" },
@@ -791,7 +769,6 @@ function FocusedRoomOverlay({
   roomCulture,
   onDismiss,
   onOpenUpgrades,
-  onOpenStaffing,
 }: {
   guildName: string;
   room: RoomViewModel;
@@ -801,7 +778,6 @@ function FocusedRoomOverlay({
   roomCulture: RoomCultureViewModel | null;
   onDismiss: () => void;
   onOpenUpgrades?: () => void;
-  onOpenStaffing?: () => void;
 }) {
   return (
     <div className="glass-card pointer-events-auto animate-enter flex h-full max-h-full w-full min-h-0 flex-col overflow-hidden">
@@ -815,7 +791,6 @@ function FocusedRoomOverlay({
           roomCulture={roomCulture}
           onClose={onDismiss}
           onOpenUpgrades={onOpenUpgrades}
-          onOpenStaffing={onOpenStaffing}
         />
       </div>
     </div>
@@ -1139,22 +1114,16 @@ function entryKey(entry: StackFocusEntry, index: number): string {
       return `${index}:room:${entry.roomId}`;
     case "operator":
       return `${index}:operator:${entry.operatorId}`;
-    case "staff":
-      return `${index}:staff:${entry.staffId}`;
     case "visitor":
       return `${index}:visitor:${entry.visitorId}`;
     case "team":
       return `${index}:team:${entry.teamId}`;
     case "room-upgrades":
       return `${index}:room-upgrades:${entry.roomId}`;
-    case "room-staffing":
-      return `${index}:room-staffing:${entry.roomId}`;
     case "place-room":
       return `${index}:place-room:${entry.slotId}`;
     case "replace-operator":
       return `${index}:replace-operator:${entry.visitorId}`;
-    case "hire-staff":
-      return `${index}:hire-staff`;
     default:
       return `${index}:${entry.kind}`;
   }
@@ -1230,9 +1199,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                 onOpenUpgrades={() =>
                   onOpenBranch(index, { kind: "room-upgrades", roomId: room.id })
                 }
-                onOpenStaffing={() =>
-                  onOpenBranch(index, { kind: "room-staffing", roomId: room.id })
-                }
               />
             ),
           };
@@ -1258,25 +1224,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                   roomUpgrades={roomUpgrades}
                   callbacks={callbacks}
                 />
-              </PanelFrame>
-            ),
-          };
-        }
-
-        case "room-staffing": {
-          const room = hq.rooms.find((r) => r.id === entry.roomId);
-          if (!room) return null;
-          return {
-            id: entryKey(entry, index),
-            widthClass: "w-[22rem]",
-            content: (
-              <PanelFrame
-                testId="panel-room-staffing"
-                title="Staffing"
-                subtitle={room.name}
-                onClose={close}
-              >
-                <RoomStaffingBody room={room} staff={hq.staff} callbacks={callbacks} />
               </PanelFrame>
             ),
           };
@@ -1323,7 +1270,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
         case "people-root": {
           const branchEntry = stack[index + 1];
           const branchOperatorId = branchEntry?.kind === "operator" ? branchEntry.operatorId : null;
-          const branchStaffId = branchEntry?.kind === "staff" ? branchEntry.staffId : null;
           const branchVisitorId = branchEntry?.kind === "visitor" ? branchEntry.visitorId : null;
           return {
             id: entryKey(entry, index),
@@ -1337,13 +1283,11 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
               >
                 <RosterPanel
                   operators={hq.operators}
-                  staff={hq.staff}
                   visitors={hq.visitors}
                   callbacks={callbacks}
                   rosterPressure={hq.rosterPressure}
                   policies={hq.policies}
                   focusedOperatorId={branchOperatorId}
-                  focusedStaffId={branchStaffId}
                   focusedVisitorId={branchVisitorId}
                   onSelectOperator={(operatorId) => {
                     const isSame = branchOperatorId === operatorId;
@@ -1355,19 +1299,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                         : {
                             kind: "operator",
                             operatorId,
-                            highlightBounds: null,
-                          },
-                    );
-                  }}
-                  onSelectStaff={(staffId) => {
-                    const isSame = branchStaffId === staffId;
-                    onOpenBranch(
-                      index,
-                      isSame
-                        ? null
-                        : {
-                            kind: "staff",
-                            staffId,
                             highlightBounds: null,
                           },
                     );
@@ -1385,12 +1316,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                           },
                     );
                   }}
-                  onOpenHireStaff={() =>
-                    onOpenBranch(
-                      index,
-                      branchEntry?.kind === "hire-staff" ? null : { kind: "hire-staff" },
-                    )
-                  }
                 />
               </PanelFrame>
             ),
@@ -1412,85 +1337,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                 roomCultures={roomCultures}
                 onDismiss={close}
               />
-            ),
-          };
-        }
-
-        case "staff": {
-          const staff = hq.staff.find((s) => s.id === entry.staffId);
-          if (!staff) return null;
-          const assignedRoom =
-            staff.assignmentKind === "room"
-              ? (hq.rooms.find((r) => r.id === staff.assignmentTargetId) ?? null)
-              : null;
-          const assignableRooms = hq.rooms.filter(
-            (r) =>
-              r.isActive &&
-              r.requiredStaffTag === staff.roleTag &&
-              r.assignedStaffCount < r.capacity,
-          );
-          return {
-            id: entryKey(entry, index),
-            widthClass: "w-[22rem]",
-            content: (
-              <PanelFrame
-                testId="panel-staff-detail"
-                title={staff.name}
-                subtitle={staff.status}
-                onClose={close}
-              >
-                <div className="space-y-3 text-sm text-silver/80">
-                  <div className="space-y-1 text-xs text-silver/60">
-                    <div>
-                      <span className="uppercase tracking-[0.12em] text-gold/60">Role</span>{" "}
-                      <span className="text-silver-bright">{staff.roleTag}</span>
-                    </div>
-                    <div>
-                      <span className="uppercase tracking-[0.12em] text-gold/60">Wage</span>{" "}
-                      <span className="text-silver-bright">${staff.wage}/day</span>
-                    </div>
-                    <div>
-                      <span className="uppercase tracking-[0.12em] text-gold/60">Assignment</span>{" "}
-                      <span className="text-silver-bright">
-                        {assignedRoom ? assignedRoom.name : staff.assignmentKind}
-                      </span>
-                    </div>
-                  </div>
-                  {assignedRoom && (
-                    <button
-                      type="button"
-                      data-testid="staff-unassign"
-                      className="btn-ghost w-full px-2 py-1 text-xs"
-                      onClick={() => callbacks.assignStaff(staff.id, undefined)}
-                    >
-                      Unassign from {assignedRoom.name}
-                    </button>
-                  )}
-                  <div className="space-y-1.5">
-                    <div className="text-xs uppercase tracking-[0.12em] text-gold/60">
-                      Assign to Room
-                    </div>
-                    {assignableRooms.length > 0 ? (
-                      <div className="space-y-1">
-                        {assignableRooms.map((room) => (
-                          <button
-                            key={room.id}
-                            type="button"
-                            data-testid="staff-assign-room"
-                            data-room-id={room.id}
-                            className="btn-ghost w-full px-2 py-1 text-left text-xs"
-                            onClick={() => callbacks.assignStaff(staff.id, room.id)}
-                          >
-                            {room.name} ({room.assignedStaffCount}/{room.capacity})
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-silver/40">No rooms match this role right now.</p>
-                    )}
-                  </div>
-                </div>
-              </PanelFrame>
             ),
           };
         }
@@ -1634,34 +1480,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                 ) : (
                   <p className="text-sm text-silver/50">No operators can be replaced right now.</p>
                 )}
-              </PanelFrame>
-            ),
-          };
-        }
-
-        case "hire-staff": {
-          return {
-            id: entryKey(entry, index),
-            widthClass: "w-[18rem]",
-            content: (
-              <PanelFrame testId="panel-hire-staff" title="Hire Staff" onClose={close}>
-                <div className="space-y-1.5">
-                  {HIREABLE_STAFF_ROLES.map((roleTag) => (
-                    <button
-                      key={roleTag}
-                      type="button"
-                      data-testid="hire-staff-role"
-                      data-role-tag={roleTag}
-                      className="btn-ghost w-full px-2 py-1 text-left text-xs"
-                      onClick={() => {
-                        callbacks.hireStaff(roleTag);
-                        close();
-                      }}
-                    >
-                      {getTagMeta(roleTag).label}
-                    </button>
-                  ))}
-                </div>
               </PanelFrame>
             ),
           };
@@ -3113,15 +2931,6 @@ export function GameShell() {
                         &middot; {hq.rosterPressure.recentDeathOperatorIds.length} lost
                       </span>
                     </Tooltip>
-                  )}
-                  {hq.staff.length > 0 && (
-                    <>
-                      <span className="mx-0.5 opacity-40">|</span>
-                      <Tooltip content="Total hired staff across all rooms">
-                        <span>{hq.staff.length}</span>
-                      </Tooltip>
-                      <span className="opacity-60">staff</span>
-                    </>
                   )}
                 </div>
 

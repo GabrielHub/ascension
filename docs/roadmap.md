@@ -30,16 +30,16 @@ The implementation itself is the source of truth. This section is organized by s
 
 ### Content Infrastructure
 
-- The template registry covers resources, buildings, rooms, upgrades, items, missions, events, bosses, enemies, and kits with deterministic validation.
-- Phase 2 content breadth is in place through authored gear families, loot families, additional room families for later tiers, and expanded operator/staff/runtime content definitions.
+- The template registry covers resources, buildings, rooms, upgrades, items, missions, events, bosses, enemies, and combat packages with deterministic validation.
+- Phase 2 content breadth is in place through authored gear families, loot families, additional room families for later tiers, and expanded operator/presenter/runtime content definitions.
 - Phase 4 shared midgame contracts are now locked in data: districts, factions, city-pressure save state, craft recipes, workshop ids, and explicit `rankTone` escalation metadata.
 - Porter's-era content remediation is shipped through additional D-rank site packets, expanded boss and enemy coverage, promoted recruit identities, non-gear item visual contracts, and runtime asset-parity validation.
 - The Phase 2 asset-production contract is documented and locked around canon-first briefs, recipe previews, modular production, props-only room scenes, controlled item variants, and viewer/playground review.
 
 ### ECS & Simulation
 
-- The ECS runtime owns guild, time, building, room, operator, staff, visitor, raid, social, inventory, and event state across ~52 system files.
-- The stable gameplay command surface includes ticking time, placing rooms, toggling room activation, buying upgrades, recruiting, hiring staff, assigning staff, equipping gear, and trading on the market.
+- The ECS runtime owns guild, time, building, room, operator, presenter, visitor, raid, social, inventory, and event state across ~52 system files.
+- The stable gameplay command surface includes ticking time, placing rooms, buying upgrades, recruiting, equipping gear, and trading on the market.
 - A shared simulation-owned derived-stat layer computes effective operator stats from base stats, equipped gear stat effects, and injury penalties, and exposes a single combat-power aggregate for raid resolution.
 - Shared uncertainty influences raid resolution, damaged-team outcomes, operator departure checks, loot generation, and runtime event pressure.
 
@@ -61,10 +61,10 @@ The implementation itself is the source of truth. This section is organized by s
 
 ### Operators & Roster
 
-- Operators have needs, morale, loyalty, injury, schedule, preference, and relationship state that drive readiness, refusal, quitting, recovery, and staffing pressure.
-- Operators carry a permanent combat identity: rank, attunement, traits, fixed kit references, and six base combat stats (strength, speed, endurance, resilience, perception, intelligence).
-- Recruit generation is rank-aware: the bodega still produces F-rank operators, Porter's spreads F/E/D based on visitor quality, and the skyscraper spreads E/D/C. Combat base stats scale with rank while attunement, traits, and kit identity stay role-deterministic.
-- First-class operator kit templates are implemented for regular attacks, skills, ultimates, and passives, with deterministic runtime execution rules.
+- Operators have needs, morale, loyalty, injury, schedule, preference, and relationship state that drive readiness, refusal, quitting, recovery, and roster pressure.
+- Operators carry a permanent combat identity: rank, attunement, traits, a fixed `combatPackageId`, and six base combat stats (strength, speed, endurance, resilience, perception, intelligence).
+- Recruit generation is rank-aware: the bodega still produces F-rank operators, Porter's spreads F/E/D based on visitor quality, and the skyscraper spreads E/D/C. Combat base stats scale with rank while attunement, traits, and combat-package identity stay role-deterministic.
+- Operator combat uses a unified combat-package model: each package authors stage 1, stage 2, and stage 3 basic payloads, exactly one ultimate payload, an optional passive, and explicit role/attunement/rank pool tags. Live combat follows a shared three-block loop where each basic grants `+1` block, the ultimate auto-spends at `3`, and block count resets afterward.
 - Gear stat effects are first-class gameplay inputs: weapons contribute to offensive stats, outfits to defensive stats, and accessories to utility stats, flowing through the derived-stat layer into raid outcomes.
 - Porter's training is a bounded readiness loop: operational `room:training` space accrues save-safe physical readiness, feeds derived stats and raid readiness, decays through neglect and raid wear, and stays absent from bodega runs.
 - Permanent operator death, operator departure, and roster replacement pressure are implemented.
@@ -115,13 +115,13 @@ The implementation itself is the source of truth. This section is organized by s
 
 ### UI & Presentation
 
-- The bodega renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, staff, and visitor markers.
+- The bodega renders in a world-first HQ view with overlay UI, zoom/pan camera rules, and in-world operator, presenter, and visitor markers.
 - HQ and Operations overlays use a shared right-anchored cascading panel shell: category pills open a compact root, deeper actions branch horizontally into adjacent panels, `Esc` closes the rightmost panel, and closing a parent truncates every panel to its right.
 - Glass-card presentation and compact category switching remain the baseline visual language; the event log rail persists as an always-on notice surface alongside the cascade stack.
-- The event log is the always-on notice surface for departures, returns, injuries, deaths, morale/loyalty thresholds, staffing changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
+- The event log is the always-on notice surface for departures, returns, injuries, deaths, morale/loyalty thresholds, roster changes, resource swings, active-event changes, raid-result updates, team status, and room-culture updates.
 - The UI exposes first-pass explanations for raid acceptance, refusal, regrouping, quitting, team damage, and accessory assignment.
 - The management panel surfaces relocation readiness, blockers, building name, floor zone badges, atmospheric floor descriptions, and building-aware "Why This Room Matters" copy for all 18 shipped rooms.
-- Staffing pressure cards use room-specific language explaining what each room needs staff for.
+- Management surfaces use room-specific language explaining what each room contributes to the guild.
 - The Porter's remediation pass is shipped through narrower readability fixes for workshop blockers and overlay interaction debt instead of a broad UI redesign.
 - HQ environment metadata, raid environment metadata, and visual review tooling are shipped.
 
@@ -176,7 +176,7 @@ Deliverables:
 - AI features exposed as opt-in settings, available from the start screen before campaign launch and from in-game settings during a live run
 - AI features can be toggled on or off mid-campaign without corrupting saves or making the run unplayable
 - the game remains fully playable offline, with AI-disabled behavior treated as a first-class supported path rather than a degraded emergency mode
-- operator-generation guardrails that keep gameplay-affecting stats, rank, kit slots, and numeric effect payloads inside deterministic authored envelopes unless a later product update explicitly introduces a bounded exception system
+- operator-generation guardrails that keep gameplay-affecting stats, rank, combat-package identity, and numeric effect payloads inside deterministic authored envelopes unless a later product update explicitly introduces a bounded exception system
 
 Exit criteria:
 
@@ -188,10 +188,10 @@ Exit criteria:
 
 ## Deferred Until Proven Necessary
 
-- the full B/A/S prestige ladder beyond the first skyscraper-entry band
+- the full B/A/U prestige ladder beyond the first skyscraper-entry band
 - literal tower-scale 20+ floor simultaneous management if reusable floor bands and staged expansion solve the need sooner
 - live premium operator generation
-- FAL-style AI image generation for portraits and scene art as core systems; if external image generation is explored later, constrain portraits to S-rank operators so cost stays bounded and those operators get a uniquely prestigious presentation layer
+- FAL-style AI image generation for portraits and scene art as core systems; if external image generation is explored later, constrain portraits to Unique (`U`) operators so cost stays bounded and those operators get a uniquely prestigious presentation layer
 - heavy procedural narrative systems
 - fully simulated rival headquarters interiors
 

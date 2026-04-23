@@ -2,6 +2,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 
 import {
   RoomInstance,
@@ -82,7 +83,6 @@ function createIncidentSystemContext(): SimSystemContext {
       roomEntities: [],
       operatorEntities,
       raidOpportunityEntities: [],
-      staffEntities: [],
       visitorEntities: [],
       eventEntities: [],
       dispositionEntities: [],
@@ -94,7 +94,6 @@ function createIncidentSystemContext(): SimSystemContext {
       nextRoomSequence: 1,
       nextOperatorSequence: 3,
       nextOpportunitySequence: 1,
-      nextStaffSequence: 1,
       nextVisitorSequence: 1,
       nextRaidSequence: 1,
       nextEventSequence: 1,
@@ -149,17 +148,9 @@ function createIncidentSystemContext(): SimSystemContext {
           lastTrackedContractSiteId: "contract/test",
         },
       },
-      kitRegistry: {
-        regularAttacks: [],
-        skills: [],
-        ultimates: [],
-        passives: [],
-        regularAttackById: new Map(),
-        skillById: new Map(),
-        ultimateById: new Map(),
-        passiveById: new Map(),
-      },
+      combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
+      presenterUnlocks: [],
     },
   };
 }
@@ -193,9 +184,7 @@ describe("incident system", () => {
         RoomInstance.floorIndex[roomEntity] = 0;
         RoomInstance.capacity[roomEntity] = 2;
         RoomInstance.occupancy[roomEntity] = 1;
-        RoomInstance.isRequestedActive[roomEntity] = 1;
         RoomInstance.isOperational[roomEntity] = 1;
-        RoomInstance.assignedStaffCount[roomEntity] = 1;
         context.runtimeState.roomEntities.push(roomEntity);
       }
 

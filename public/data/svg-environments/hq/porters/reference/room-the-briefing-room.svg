@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: The Briefing Room — Dedicated planning and review space
+       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
+       Design reference only — the runtime ships the props-only scene extracted below. -->
+<polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+<polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
+<polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+<line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+<line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+<text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE BRIEFING ROOM</text>
+<text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+<g><polygon points="182,177 214,194 214,212 182,195" fill="#51483e" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="246,177 214,194 214,212 246,195" fill="#453d35" stroke="#241a13" stroke-width="0.9"/>
+<polygon points="214,160 246,177 214,194 182,177" fill="#6a5f51" stroke="#241a13" stroke-width="0.9"/>
+<line x1="196" y1="178" x2="196" y2="202" stroke="#241a13" stroke-width="1.2"/>
+<line x1="232" y1="178" x2="232" y2="202" stroke="#241a13" stroke-width="1.2"/>
+<line x1="210" y1="187" x2="210" y2="210" stroke="#241a13" stroke-width="1.1"/>
+<line x1="218" y1="187" x2="218" y2="210" stroke="#241a13" stroke-width="1.1"/>
+<polygon points="156,164 170,172 170,192 156,184" fill="#584332" stroke="#211912" stroke-width="0.9"/>
+<polygon points="184,164 170,172 170,192 184,184" fill="#49382a" stroke="#211912" stroke-width="0.9"/>
+<polygon points="170,156 184,164 170,172 156,164" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<polygon points="170,138 181,143.5 181,171.5 170,166" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<line x1="161" y1="164" x2="161" y2="180" stroke="#2b241e" stroke-width="1.1"/>
+<line x1="179" y1="164" x2="179" y2="180" stroke="#2b241e" stroke-width="1.1"/>
+<polygon points="248,164 262,172 262,192 248,184" fill="#584332" stroke="#211912" stroke-width="0.9"/>
+<polygon points="276,164 262,172 262,192 276,184" fill="#49382a" stroke="#211912" stroke-width="0.9"/>
+<polygon points="262,156 276,164 262,172 248,164" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<polygon points="262,138 273,143.5 273,171.5 262,166" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<line x1="253" y1="164" x2="253" y2="180" stroke="#2b241e" stroke-width="1.1"/>
+<line x1="271" y1="164" x2="271" y2="180" stroke="#2b241e" stroke-width="1.1"/>
+<polygon points="200,223 214,231 214,251 200,243" fill="#584332" stroke="#211912" stroke-width="0.9"/>
+<polygon points="228,223 214,231 214,251 228,243" fill="#49382a" stroke="#211912" stroke-width="0.9"/>
+<polygon points="214,215 228,223 214,231 200,223" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<polygon points="214,197 225,202.5 225,230.5 214,225" fill="#6f543f" stroke="#211912" stroke-width="0.9"/>
+<line x1="205" y1="223" x2="205" y2="239" stroke="#2b241e" stroke-width="1.1"/>
+<line x1="223" y1="223" x2="223" y2="239" stroke="#2b241e" stroke-width="1.1"/>
+<polygon points="202,86 226,98 226,128 202,116" fill="#5f6740" stroke="#241d16" stroke-width="0.9"/>
+<line x1="212" y1="96" x2="228" y2="104" stroke="rgba(255,255,255,0.25)" stroke-width="1.1"/>
+<circle cx="210" cy="112" r="2" fill="#c45151"/>
+<circle cx="230" cy="120" r="2" fill="#d7bc54"/>
+<polygon points="132,114 149,122.5 149,144.5 132,136" fill="#1e262e" stroke="#11161b" stroke-width="0.9"/>
+<line x1="149" y1="144" x2="149" y2="156" stroke="#1a1f24" stroke-width="2"/>
+<line x1="140" y1="156" x2="158" y2="156" stroke="#1a1f24" stroke-width="2"/>
+<polygon points="215,159 224,164 224,170 215,165" fill="#a19170" stroke="#473c31" stroke-width="0.9"/>
+<polygon points="233,159 224,164 224,170 233,165" fill="#8b7d60" stroke="#473c31" stroke-width="0.9"/>
+<polygon points="224,154 233,159 224,164 215,159" fill="#d7caa5" stroke="#473c31" stroke-width="0.9"/></g>
+</svg>

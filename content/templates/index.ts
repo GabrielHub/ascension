@@ -303,6 +303,7 @@ function validateEventTemplates(
 
 function validatePresenterTemplates(
   templates: readonly PresenterTemplate[],
+  roomById: ReadonlyMap<string, RoomTemplate>,
   issues: TemplateRegistryValidationIssue[],
 ): void {
   templates.forEach((template) => {
@@ -364,6 +365,70 @@ function validatePresenterTemplates(
         category: "presenters",
         templateId: template.id,
         message: "generation.masterPrompt must be a non-empty string.",
+      });
+    }
+
+    if (template.allowedRoomTemplateIds.length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "allowedRoomTemplateIds must include at least one room template id.",
+      });
+    }
+
+    const duplicateAllowedRooms = template.allowedRoomTemplateIds.filter(
+      (roomId, index) => template.allowedRoomTemplateIds.indexOf(roomId) !== index,
+    );
+    if (duplicateAllowedRooms.length > 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: `Duplicate allowedRoomTemplateIds found: ${duplicateAllowedRooms.join(", ")}.`,
+      });
+    }
+
+    template.allowedRoomTemplateIds.forEach((roomId) => {
+      if (!roomById.has(roomId)) {
+        issues.push({
+          category: "presenters",
+          templateId: template.id,
+          message: `allowedRoomTemplateIds references unknown room "${roomId}".`,
+        });
+      }
+    });
+
+    if (template.unlockFromRoomTemplateId && !roomById.has(template.unlockFromRoomTemplateId)) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: `unlockFromRoomTemplateId references unknown room "${template.unlockFromRoomTemplateId}".`,
+      });
+    }
+
+    if (
+      template.unlockFromRoomTemplateId &&
+      !template.allowedRoomTemplateIds.includes(template.unlockFromRoomTemplateId)
+    ) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "unlockFromRoomTemplateId must also appear in allowedRoomTemplateIds.",
+      });
+    }
+
+    if (template.domainSummary.trim().length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "domainSummary must be a non-empty string.",
+      });
+    }
+
+    if (template.voiceBrief.trim().length === 0) {
+      issues.push({
+        category: "presenters",
+        templateId: template.id,
+        message: "voiceBrief must be a non-empty string.",
       });
     }
   });
@@ -862,14 +927,6 @@ function validateCraftRecipeTemplates(
       });
     }
 
-    if (template.requiredStaffTag.trim().length === 0) {
-      issues.push({
-        category: "craftRecipes",
-        templateId: template.id,
-        message: "requiredStaffTag must be non-empty.",
-      });
-    }
-
     if (!buildings.has(template.minimumBuildingId)) {
       issues.push({
         category: "craftRecipes",
@@ -993,7 +1050,7 @@ const RANK_TO_ALLOWED_TONES: Record<string, readonly string[]> = {
   c: ["heightened", "surreal"],
   b: ["surreal"],
   a: ["surreal", "mythic"],
-  s: ["mythic"],
+  u: ["mythic"],
 };
 
 function validateRankToneConsistency(issues: TemplateRegistryValidationIssue[]): void {
@@ -1170,7 +1227,7 @@ export function createTemplateRegistry(): TemplateRegistry {
   );
   validateMissionTemplates(missions, issues);
   validateEventTemplates(events, issues);
-  validatePresenterTemplates(presenters, issues);
+  validatePresenterTemplates(presenters, roomLookup.byId, issues);
   validateItemTemplates(items, issues);
   validatePrepRecipes(prepRecipes, itemLookup.byId, roomLookup.byId, issues);
   validateDropTables(dropTables, itemLookup.byId, issues);

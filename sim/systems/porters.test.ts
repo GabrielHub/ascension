@@ -13,7 +13,8 @@ import {
 } from "lib/hq-environment-manifest";
 import { DEFAULT_POLICY_STATE } from "lib/policies";
 import { getAvailableContractRanksForReputation } from "./contract-economy";
-import { applyEncounterCommand, type BossEncounterInstance } from "./encounter-commands";
+import { applyEncounterCommand } from "./encounter-commands";
+import type { BossEncounterInstance } from "./encounter-types";
 import { advanceEconomySystem } from "./economy";
 import { addToInventory, getInventoryCount } from "./inventory";
 import { applySimCommand } from "./commands";
@@ -27,6 +28,18 @@ import {
   VisitorState,
   WorldTimeState,
 } from "../components";
+
+function slotsOverlap(
+  left: { col: number; row: number; cols: number; rows: number },
+  right: { col: number; row: number; cols: number; rows: number },
+) {
+  return !(
+    left.col + left.cols <= right.col ||
+    right.col + right.cols <= left.col ||
+    left.row + left.rows <= right.row ||
+    right.row + right.rows <= left.row
+  );
+}
 
 // ── Porter's building template ──────────────────────────────────────────
 
@@ -105,10 +118,9 @@ describe("Porter's room templates", () => {
     expect(gym.tags).toContain("room:training");
   });
 
-  it("The Infirmary has recovery and medical tags", () => {
+  it("The Infirmary has the recovery tag", () => {
     const infirmary = registry.roomById.get("room/infirmary:tier_1")!;
     expect(infirmary.tags).toContain("room:recovery");
-    expect(infirmary.tags).toContain("staff:medical");
   });
 });
 
@@ -157,6 +169,28 @@ describe("Porter's multi-floor layout", () => {
     expect(
       getVisibleBuildingFloors("building/porters", 2, 5).map((floor) => floor.floorIndex),
     ).toEqual([2]);
+  });
+
+  it("keeps every Porter's floor layout free of same-floor slot overlaps", () => {
+    for (const tier of [1, 3, 5, 6]) {
+      for (const floor of getBuildingFloors("building/porters", tier)) {
+        for (let index = 0; index < floor.slots.length; index++) {
+          for (let compareIndex = index + 1; compareIndex < floor.slots.length; compareIndex++) {
+            expect(slotsOverlap(floor.slots[index]!, floor.slots[compareIndex]!)).toBe(false);
+          }
+        }
+      }
+    }
+  });
+
+  it("keeps dock, deck, and workshop together on Porter's third floor", () => {
+    const waterfront = getBuildingLayout("building/porters", 2, 6)!;
+
+    expect(waterfront.slots.map((slot) => slot.slotId).sort()).toEqual([
+      "slot/deck",
+      "slot/dock",
+      "slot/workshop",
+    ]);
   });
 });
 
@@ -239,7 +273,7 @@ describe("contract rank ceiling", () => {
 
   it("no ceiling returns all reputation-eligible ranks", () => {
     const ranks = getAvailableContractRanksForReputation(100);
-    expect(ranks).toContain("s");
+    expect(ranks).toContain("u");
   });
 });
 
@@ -298,12 +332,12 @@ describe("Prep Room consumables", () => {
   });
 });
 
-// ── Prep Room staffing gate ────────────────────────────────────────────
+// ── Prep Room staging tag ──────────────────────────────────────────────
 
-describe("Prep Room staffing requirement", () => {
-  it("Prep Room has staff:logistics tag", () => {
+describe("Prep Room staging tag", () => {
+  it("Prep Room carries the ops:staging tag", () => {
     const prepRoom = registry.roomById.get("room/prep_room:tier_1")!;
-    expect(prepRoom.tags).toContain("staff:logistics");
+    expect(prepRoom.tags).toContain("ops:staging");
   });
 });
 
@@ -384,9 +418,9 @@ function addTestRoom(
   context: SimSystemContext,
   templateId: string,
   id: string,
-  options: { operational?: boolean; staffed?: boolean } = {},
+  options: { operational?: boolean } = {},
 ): number {
-  const { operational = true, staffed = false } = options;
+  const { operational = true } = options;
   const templateIndex = context.registry.rooms.findIndex((t) => t.id === templateId);
   if (templateIndex < 0) throw new Error(`Missing room template ${templateId}`);
 
@@ -402,9 +436,7 @@ function addTestRoom(
   RoomInstance.roomStateId[entity] = `${id}/state`;
   RoomInstance.capacity[entity] = template.baseCapacity;
   RoomInstance.occupancy[entity] = 0;
-  RoomInstance.isRequestedActive[entity] = operational ? 1 : 0;
   RoomInstance.isOperational[entity] = operational ? 1 : 0;
-  RoomInstance.assignedStaffCount[entity] = staffed ? 1 : 0;
 
   context.runtimeState.roomEntities.push(entity);
   return entity;
@@ -431,7 +463,6 @@ function spawnVisitorQuality(buildingIndex: number): number {
   const recruitTemplateId = buildingIndex === 0 ? "room/counter:tier_1" : "room/bar:tier_1";
   addTestRoom(context, recruitTemplateId, "recruit-room", {
     operational: true,
-    staffed: true,
   });
 
   WorldTimeState.tick[context.singletonEntities.time] = 500_000;
@@ -445,11 +476,10 @@ function spawnVisitorQuality(buildingIndex: number): number {
 }
 
 describe("Prep Room production (behavior)", () => {
-  it("succeeds when room is staffed and inputs are available", () => {
+  it("succeeds when room is operational and inputs are available", () => {
     const context = createPortersBehaviorContext(1);
     addTestRoom(context, "room/prep_room:tier_1", "prep-room", {
       operational: true,
-      staffed: true,
     });
 
     // Stock the required inputs for Rift Tonic: 2 fang + 1 ichor
@@ -465,11 +495,10 @@ describe("Prep Room production (behavior)", () => {
     expect(getInventoryCount(context, "loot/monster-part/ichor")).toBe(2);
   });
 
-  it("fails silently when room is operational but not staffed", () => {
+  it("fails silently when room is not operational", () => {
     const context = createPortersBehaviorContext(1);
     addTestRoom(context, "room/prep_room:tier_1", "prep-room", {
-      operational: true,
-      staffed: false,
+      operational: false,
     });
 
     addToInventory(context, "loot/monster-part/fang", 5);
@@ -486,7 +515,6 @@ describe("Prep Room production (behavior)", () => {
     const context = createPortersBehaviorContext(1);
     addTestRoom(context, "room/prep_room:tier_1", "prep-room", {
       operational: true,
-      staffed: true,
     });
 
     // Only 1 fang, recipe needs 2
@@ -536,7 +564,6 @@ describe("Consumable encounter intervention (behavior)", () => {
           baseThreat: 5,
           condition: "alive",
           activeStatuses: [],
-          cooldowns: [],
           temporaryStatModifiers: {},
           actionHistory: [],
           operatorId: "op-1",
@@ -558,7 +585,6 @@ describe("Consumable encounter intervention (behavior)", () => {
           baseThreat: 10,
           condition: "alive",
           activeStatuses: [],
-          cooldowns: [],
           temporaryStatModifiers: {},
           actionHistory: [],
         },
@@ -647,9 +673,9 @@ describe("Porter's environment (data-driven)", () => {
   it("Porter's render config has correct asset roots", () => {
     const config = getHqEnvironmentRenderConfigForBuilding("building/porters");
     expect(config.building).toBe("porters");
-    expect(config.paths.partsRoot).toContain("bodega");
-    expect(config.paths.referenceRoot).toContain("bodega");
-    expect(config.paths.recipesRoot).toContain("bodega");
+    expect(config.paths.partsRoot).toContain("porters");
+    expect(config.paths.referenceRoot).toContain("porters");
+    expect(config.paths.recipesRoot).toContain("porters");
   });
 
   it("bodega backdrop still loads correctly", () => {

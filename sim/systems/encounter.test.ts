@@ -4,14 +4,10 @@ import { templateRegistry } from "content/templates";
 import { siteConceptById } from "content/templates/site-concepts";
 import { createBootstrapSimulation } from "sim";
 import {
-  validateKitTemplates,
-  buildKitTemplateRegistry,
-  REGULAR_ATTACKS,
-  SKILLS,
-  ULTIMATES,
-  PASSIVES,
-  resolveOperatorKit,
-} from "content/templates/kits";
+  COMBAT_PACKAGES,
+  buildCombatPackageRegistry,
+  validateCombatPackages,
+} from "content/templates/combat-packages";
 import {
   createBossEncounter,
   advanceEncounterTurn,
@@ -36,41 +32,27 @@ import { INCIDENT_TEMPLATES } from "./incidents";
 import type { ActorCombatState } from "./encounter-types";
 import { getBossEncounterDefinition } from "./encounter-types";
 import { deferredSimulationSystemsReady } from "./index";
+import { OperatorIdentity } from "../components";
 
-// ── Kit template validation ──────────────────────────────────────────────
+// ── Combat package validation ────────────────────────────────────────────
 
-describe("kit template validation", () => {
-  it("validates all authored kits without issues", () => {
-    const registry = buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES);
-    const issues = validateKitTemplates(registry);
+describe("combat package validation", () => {
+  it("validates all authored combat packages without issues", () => {
+    const registry = buildCombatPackageRegistry(COMBAT_PACKAGES);
+    const issues = validateCombatPackages(registry);
     expect(issues).toEqual([]);
   });
 
-  it("resolves default kits for all role/attunement combos", () => {
-    const registry = buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES);
-    const kit = resolveOperatorKit(registry, {
-      regularAttackId: "kit/kinetic-strike",
-      skillId: "kit/field-lead-skill",
-      ultimateId: "kit/field-lead-ultimate",
-      passiveIds: ["kit/field-lead-passive"],
-    });
-    expect(kit.regularAttack.id).toBe("kit/kinetic-strike");
-    expect(kit.skill.id).toBe("kit/field-lead-skill");
-    expect(kit.ultimate.id).toBe("kit/field-lead-ultimate");
-    expect(kit.passives.length).toBeGreaterThan(0);
+  it("resolves authored packages by id", () => {
+    const registry = buildCombatPackageRegistry(COMBAT_PACKAGES);
+    expect(registry.packageById.get("package/field-lead/kinetic/standard")).toBeDefined();
+    expect(registry.packageById.get("package/scout/void/standard")).toBeDefined();
+    expect(registry.packageById.get("package/medic/vital/standard")).toBeDefined();
   });
 
-  it("falls back to defaults for unknown kit ids", () => {
-    const registry = buildKitTemplateRegistry(REGULAR_ATTACKS, SKILLS, ULTIMATES, PASSIVES);
-    const kit = resolveOperatorKit(registry, {
-      regularAttackId: "kit/nonexistent",
-      skillId: "kit/nonexistent",
-      ultimateId: "kit/nonexistent",
-      passiveIds: ["kit/nonexistent"],
-    });
-    expect(kit.regularAttack).toBeDefined();
-    expect(kit.skill).toBeDefined();
-    expect(kit.ultimate).toBeDefined();
+  it("returns undefined for unknown package ids", () => {
+    const registry = buildCombatPackageRegistry(COMBAT_PACKAGES);
+    expect(registry.packageById.get("package/nonexistent")).toBeUndefined();
   });
 });
 
@@ -160,7 +142,6 @@ describe("encounter simulation", () => {
       baseThreat: 20,
       condition: "alive",
       activeStatuses: [],
-      cooldowns: [],
       temporaryStatModifiers: {},
       actionHistory: [],
       encounterActions: [
@@ -217,7 +198,7 @@ describe("encounter simulation", () => {
     expect(encounter!.initiativeQueue.length).toBeLessThan(queueLengthBeforeAction);
     expect(
       encounter!.encounterLog.some((entry) =>
-        ["attack", "skill", "ultimate", "boss_action"].includes(entry.actionKind),
+        ["basic_stage", "ultimate", "boss_action"].includes(entry.actionKind),
       ),
     ).toBe(true);
   });
@@ -244,7 +225,7 @@ describe("encounter simulation", () => {
       (entry) => entry.round === 1 && entry.actionKind === "ultimate",
     );
     const roundOneOperatorActions = encounter!.encounterLog.filter(
-      (entry) => entry.round === 1 && ["attack", "skill", "ultimate"].includes(entry.actionKind),
+      (entry) => entry.round === 1 && ["basic_stage", "ultimate"].includes(entry.actionKind),
     );
     // Round 1 ultimates are restricted: at most one may fire when an
     // AI-hint condition (e.g. low-HP ally after boss damage) is met.
@@ -441,6 +422,192 @@ describe("encounter simulation", () => {
     expect(boss.activeStatuses.filter((status) => status.statusId === "marked")).toHaveLength(1);
   });
 
+  it("scales operator payloads from their authored raw stat instead of derived attack buckets", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    const medic = Object.values(encounter!.actors).find(
+      (actor) => actor.kind === "operator" && actor.roleTag === "role:medic",
+    )!;
+    const boss = Object.values(encounter!.actors).find((actor) => actor.kind === "boss")!;
+
+    medic.baseAttack = 0;
+    medic.baseSpeed = 0;
+    medic.baseStats = {
+      strength: 0,
+      speed: 0,
+      endurance: 0,
+      resilience: 0,
+      perception: 0,
+      intelligence: 40,
+    };
+    medic.initiative = 999;
+    boss.baseDefense = 0;
+
+    for (const actor of Object.values(encounter!.actors)) {
+      if (actor.actorId !== medic.actorId) {
+        actor.initiative = 1;
+      }
+    }
+
+    advanceEncounterTurn(encounter!);
+    advanceEncounterTurn(encounter!);
+
+    const medicAction = [...encounter!.encounterLog]
+      .reverse()
+      .find((entry) => entry.actorId === medic.actorId && entry.actionKind === "basic_stage");
+    const damageEffect = medicAction?.effects.find((effect) => effect.effectKind === "damage");
+
+    expect(medicAction?.abilityId).toBe("package/medic/vital/standard/stage1");
+    expect(damageEffect?.value).toBe(51);
+  });
+
+  it("applies authored operator passives when an encounter is created", () => {
+    const simulation = createBootstrapSimulation(templateRegistry);
+    const operatorId = simulation
+      .getWorldSnapshot()
+      .operators!.find((operator) => operator.identity.roleTag === "role:field_lead")!.id;
+    const operatorEntity = simulation.runtimeState.operatorEntities.find(
+      (entity) => OperatorIdentity.id[entity] === operatorId,
+    )!;
+    OperatorIdentity.combatPackageId[operatorEntity] = "package/field-lead/kinetic/senior";
+
+    const context = {
+      world: {} as ReturnType<typeof import("bitecs").createWorld>,
+      registry: templateRegistry,
+      singletonEntities: simulation.singletonEntities,
+      runtimeState: simulation.runtimeState,
+    };
+    const operatorIds = simulation
+      .getWorldSnapshot()
+      .operators!.filter((operator) => operator.lifecycle.status === "active")
+      .slice(0, 3)
+      .map((operator) => operator.id);
+
+    const encounter = createBossEncounter(
+      context,
+      "test-raid-passive",
+      "test-site-passive",
+      "mission/clearance",
+      "test-team-passive",
+      operatorIds,
+      "boss/tunneler-brood-mother",
+    );
+
+    expect(encounter).not.toBeNull();
+    const actor = Object.values(encounter!.actors).find(
+      (entry) => entry.operatorId === operatorId,
+    )!;
+    expect(actor.temporaryStatModifiers.resilience).toBe(2);
+    expect(
+      encounter!.encounterLog.some(
+        (entry) =>
+          entry.actorId === actor.actorId &&
+          entry.actionKind === "passive_trigger" &&
+          entry.abilityId === "package/field-lead/kinetic/senior/passive",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps mixed-target medic payload riders on allies instead of healing the enemy", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    const medic = Object.values(encounter!.actors).find(
+      (actor) => actor.kind === "operator" && actor.roleTag === "role:medic",
+    )!;
+    const ally = Object.values(encounter!.actors).find(
+      (actor) => actor.kind === "operator" && actor.roleTag === "role:scout",
+    )!;
+    const boss = Object.values(encounter!.actors).find((actor) => actor.kind === "boss")!;
+
+    medic.initiative = 999;
+    boss.baseDefense = 0;
+    boss.currentHp = Math.max(1, boss.maxHp - 5);
+
+    for (const actor of Object.values(encounter!.actors)) {
+      if (actor.actorId !== medic.actorId) {
+        actor.initiative = 1;
+      }
+      if (actor.kind === "operator" && actor.actorId !== medic.actorId) {
+        actor.currentHp = actor.maxHp;
+      }
+    }
+    ally.currentHp = Math.max(1, ally.maxHp - 10);
+
+    advanceEncounterTurn(encounter!);
+    advanceEncounterTurn(encounter!);
+
+    const medicAction = [...encounter!.encounterLog]
+      .reverse()
+      .find((entry) => entry.actorId === medic.actorId && entry.actionKind === "basic_stage");
+
+    expect(medicAction?.effects.find((effect) => effect.effectKind === "damage")?.targetId).toBe(
+      boss.actorId,
+    );
+    expect(medicAction?.effects.find((effect) => effect.effectKind === "heal")?.targetId).toBe(
+      ally.actorId,
+    );
+    expect(ally.currentHp).toBeGreaterThan(ally.maxHp - 10);
+    expect(boss.currentHp).toBeLessThan(boss.maxHp - 5);
+  });
+
+  it("turns ally_damage_bonus into a real team damage window", () => {
+    const { encounter } = createTestEncounter();
+    startEncounter(encounter!);
+
+    const fieldLead = Object.values(encounter!.actors).find(
+      (actor) => actor.kind === "operator" && actor.roleTag === "role:field_lead",
+    )!;
+    const scout = Object.values(encounter!.actors).find(
+      (actor) => actor.kind === "operator" && actor.roleTag === "role:scout",
+    )!;
+    const boss = Object.values(encounter!.actors).find((actor) => actor.kind === "boss")!;
+
+    fieldLead.combatPackageId = "package/field-lead/kinetic/senior";
+    fieldLead.blocks = 3;
+    fieldLead.initiative = 999;
+    scout.initiative = 998;
+    scout.baseAttack = 0;
+    scout.baseSpeed = 0;
+    scout.baseStats = {
+      strength: 0,
+      speed: 40,
+      endurance: 0,
+      resilience: 0,
+      perception: 0,
+      intelligence: 0,
+    };
+    boss.baseDefense = 0;
+
+    for (const actor of Object.values(encounter!.actors)) {
+      if (actor.actorId !== fieldLead.actorId && actor.actorId !== scout.actorId) {
+        actor.initiative = 1;
+      }
+    }
+
+    advanceEncounterTurn(encounter!);
+    advanceEncounterTurn(encounter!);
+    advanceEncounterTurn(encounter!);
+
+    expect(
+      Object.values(encounter!.actors)
+        .filter((actor) => actor.side === "ally")
+        .every((actor) =>
+          actor.activeStatuses.some(
+            (status) => status.statusId === "empowered" && status.potency === 25,
+          ),
+        ),
+    ).toBe(true);
+
+    const scoutAction = [...encounter!.encounterLog]
+      .reverse()
+      .find((entry) => entry.actorId === scout.actorId && entry.actionKind === "basic_stage");
+    const scoutDamage = scoutAction?.effects.find((effect) => effect.effectKind === "damage");
+
+    expect(scoutDamage?.value).toBe(66);
+  });
+
   it("builds an encounter view for UI consumption", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);
@@ -484,41 +651,6 @@ describe("encounter simulation", () => {
     expect(allies[2].currentHp).toBe(allies[2].maxHp);
   });
 
-  it("resolves support abilities against allies instead of healing the boss", () => {
-    const { encounter } = createTestEncounter();
-    startEncounter(encounter!);
-
-    const { allies, boss } = getActors(encounter!);
-    const healer = allies[0];
-    const injured = allies[1];
-
-    healer.skillId = "kit/medic-skill";
-    healer.ultimateId = undefined;
-    healer.regularAttackId = "kit/basic-strike";
-    healer.initiative = 999;
-    injured.currentHp = Math.max(1, Math.floor(injured.maxHp / 4));
-
-    for (const actor of Object.values(encounter!.actors)) {
-      if (actor.actorId !== healer.actorId) {
-        actor.initiative = 1;
-      }
-    }
-
-    advanceEncounterRound(encounter!);
-
-    const healerLog = encounter!.encounterLog.find(
-      (entry) => entry.actorId === healer.actorId && entry.actionKind === "skill",
-    );
-    expect(healerLog).toBeDefined();
-    expect(healerLog!.targetIds).toEqual([injured.actorId]);
-    expect(healerLog!.targetIds).not.toContain(boss.actorId);
-    expect(
-      healerLog!.effects.some(
-        (effect) => effect.effectKind === "heal" && effect.targetId === injured.actorId,
-      ),
-    ).toBe(true);
-  });
-
   it("ends in victory as soon as the boss dies even if summons are still alive", () => {
     const { encounter } = createTestEncounter();
     startEncounter(encounter!);
@@ -539,8 +671,15 @@ describe("encounter simulation", () => {
     const { allies, boss } = getActors(encounter!);
     for (const ally of allies) {
       ally.baseAttack = 0;
-      ally.skillId = undefined;
-      ally.ultimateId = undefined;
+      ally.baseSpeed = 0;
+      ally.baseStats = {
+        strength: 0,
+        speed: 0,
+        endurance: 0,
+        resilience: 0,
+        perception: 0,
+        intelligence: 0,
+      };
     }
 
     boss.currentHp = 55;
@@ -655,8 +794,6 @@ describe("encounter simulation", () => {
     )!;
     firstAlly.initiative = 999;
     firstAlly.baseAttack = 200;
-    firstAlly.skillId = undefined;
-    firstAlly.ultimateId = undefined;
 
     for (const actor of Object.values(encounter!.actors)) {
       if (actor.actorId !== firstAlly.actorId) {

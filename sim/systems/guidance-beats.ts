@@ -1,6 +1,6 @@
 import type { GuidanceBeat, GuidanceTrack } from "./guidance";
+import { MARA_PRESENTER_ID } from "./presenter-unlocks";
 
-const ASSISTANT_PRESENTER_ID = "presenter/assistant";
 const COOK_PRESENTER_ID = "presenter/cook";
 const BARTENDER_PRESENTER_ID = "presenter/bartender";
 
@@ -10,7 +10,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["contracts"],
     milestoneOrder: 1,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "blocking",
@@ -38,7 +38,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["contracts", "bidding"],
     milestoneOrder: 2,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "focused",
@@ -67,7 +67,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["rooms", "bodega"],
     milestoneOrder: 3,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "amused",
     delivery: {
       mode: "focused",
@@ -97,7 +97,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["roster", "operators", "gear"],
     milestoneOrder: 4,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "neutral",
     delivery: {
       mode: "focused",
@@ -126,7 +126,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["raids", "autonomy"],
     milestoneOrder: 5,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "focused",
@@ -144,7 +144,7 @@ const OPENING_BEATS_MUTABLE = [
     copy: {
       title: "Raid Operations",
       subtitle: "They go in. {playerName} manages what comes back.",
-      body: "Once a team deploys into a dungeon, they operate on their own. They scout, fight, loot, and decide when to push deeper or pull out. {playerName} does not control tactics inside the rift — {playerName} controls preparation, staffing, equipment, and whatever consequences come back through the door.",
+      body: "Once a team deploys into a dungeon, they operate on their own. They scout, fight, loot, and decide when to push deeper or pull out. {playerName} does not control tactics inside the rift — {playerName} controls preparation, equipment, room support, and whatever consequences come back through the door.",
       ctaLabel: "Understood",
       fallbackBody: "Watch the raid map. Teams move and act without direct tactical control.",
       eventLogSummary: "Guidance: autonomous raid behavior explained",
@@ -156,7 +156,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["raids", "results"],
     milestoneOrder: 6,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     delivery: {
       mode: "focused",
@@ -186,7 +186,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["roster", "recovery"],
     milestoneOrder: 7,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "concerned",
     delivery: {
       mode: "focused",
@@ -216,7 +216,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["incidents", "interruptions"],
     milestoneOrder: 8,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "blocking",
@@ -245,7 +245,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["loot", "market", "inventory"],
     milestoneOrder: 9,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "amused",
     delivery: {
       mode: "focused",
@@ -273,9 +273,9 @@ const OPENING_BEATS_MUTABLE = [
   {
     id: "guidance/opening/staffing-and-rooms",
     track: "opening",
-    featureIds: ["staffing", "rooms"],
+    featureIds: ["rooms", "upgrades"],
     milestoneOrder: 10,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "neutral",
     delivery: {
       mode: "focused",
@@ -291,13 +291,13 @@ const OPENING_BEATS_MUTABLE = [
     },
     bindings: {},
     copy: {
-      title: "Staffing and Rooms",
+      title: "Rooms and Upgrades",
       subtitle: "Make the bodega pull its weight",
-      body: "Open Rooms and make one practical improvement. Assign an existing staff member, switch on an idle room, or buy an upgrade that helps the operation run cleaner. The goal is progress, not a specific button.",
+      body: "Open Rooms and make one practical improvement. Place a new room if you have the space, or buy an upgrade that helps the operation run cleaner. The goal is progress, not a specific button.",
       ctaLabel: "Make one Rooms change",
       fallbackBody:
-        "Open the Rooms tab and make one improvement: assign existing staff, activate an idle room, or buy an upgrade. You do not need to recruit someone new for this step.",
-      eventLogSummary: "Guidance: rooms can be improved through staffing, activation, or upgrades",
+        "Open the Rooms tab and make one improvement: place a new room, or buy an upgrade. You do not need to recruit someone new for this step.",
+      eventLogSummary: "Guidance: rooms can be improved through placement or upgrades",
     },
     completion: { kind: "staffing_action_taken" },
   },
@@ -306,7 +306,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["upgrades", "rooms"],
     milestoneOrder: 11,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "neutral",
     delivery: {
       mode: "focused",
@@ -338,7 +338,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["recovery", "failure"],
     milestoneOrder: 12,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "blocking",
@@ -367,7 +367,7 @@ const OPENING_BEATS_MUTABLE = [
     track: "opening",
     featureIds: ["boss-commitment", "encounters"],
     milestoneOrder: 13,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "blocking",
@@ -451,7 +451,7 @@ const PORTERS_CAMPAIGN_BEATS_MUTABLE = [
     track: "feature_intro",
     featureIds: ["porters", "upgrades", "briefing", "recovery"],
     milestoneOrder: 2,
-    presenterId: ASSISTANT_PRESENTER_ID,
+    presenterId: MARA_PRESENTER_ID,
     presenterExpression: "serious",
     delivery: {
       mode: "focused",

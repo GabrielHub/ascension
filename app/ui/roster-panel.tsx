@@ -2,31 +2,20 @@ import { type ReactNode } from "react";
 
 import { type PolicyState } from "lib/policies";
 
-import type {
-  GameCallbacks,
-  OperatorViewModel,
-  RosterPressureViewModel,
-  StaffViewModel,
-  VisitorViewModel,
-} from "./view-models";
+import type { OperatorViewModel, RosterPressureViewModel, VisitorViewModel } from "./view-models";
 import { Tooltip } from "./_tooltip";
 import { getRosterFlowSurfaceSummary } from "./policy-summaries";
-import { getRoleMeta, getSpecialtyMeta, getTagMeta } from "./_glossary";
+import { getRoleMeta, getSpecialtyMeta } from "./_glossary";
 
 interface RosterPanelProps {
   operators: readonly OperatorViewModel[];
-  staff: readonly StaffViewModel[];
   visitors: readonly VisitorViewModel[];
-  callbacks: GameCallbacks;
   rosterPressure: RosterPressureViewModel;
   policies: PolicyState;
   focusedOperatorId?: string | null;
-  focusedStaffId?: string | null;
   focusedVisitorId?: string | null;
   onSelectOperator?: (operatorId: string) => void;
-  onSelectStaff?: (staffId: string) => void;
   onSelectVisitor?: (visitorId: string) => void;
-  onOpenHireStaff?: () => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -112,42 +101,6 @@ function FallenRow({ op }: { op: OperatorViewModel }) {
       <Tooltip content="Killed in action" side="top">
         <span className="ml-auto text-sm text-magma/70">KIA</span>
       </Tooltip>
-    </div>
-  );
-}
-
-// ── Staff row ────────────────────────────────────────────────────────────
-
-function StaffRow({
-  member,
-  isFocused,
-  onSelect,
-}: {
-  member: StaffViewModel;
-  isFocused: boolean;
-  onSelect: () => void;
-}) {
-  const isAssigned = member.assignmentKind === "room";
-
-  return (
-    <div data-testid="staff-row" data-staff-id={member.id}>
-      <button
-        type="button"
-        onClick={onSelect}
-        className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 ${
-          isFocused
-            ? "bg-[rgba(200,168,76,0.06)] shadow-[inset_2px_0_0_var(--color-gold)]"
-            : "hover:bg-[rgba(200,168,76,0.03)]"
-        }`}
-      >
-        <span className="min-w-0 truncate text-xs text-silver-bright">{member.name}</span>
-        <span className="badge badge-slate ml-auto shrink-0">
-          {getTagMeta(member.roleTag).label}
-        </span>
-        <span className="shrink-0 text-sm text-silver/40">
-          {isAssigned ? "assigned" : member.status}
-        </span>
-      </button>
     </div>
   );
 }
@@ -255,43 +208,19 @@ function SectionHeader({
 
 export function RosterPanel({
   operators,
-  staff,
   visitors,
-  callbacks,
   rosterPressure,
   policies,
   focusedOperatorId = null,
-  focusedStaffId = null,
   focusedVisitorId = null,
   onSelectOperator,
-  onSelectStaff,
   onSelectVisitor,
-  onOpenHireStaff,
 }: RosterPanelProps) {
   const livingOperators = operators.filter((op) => op.lifecycle.status === "active");
   const fallenOperators = operators.filter((op) => op.lifecycle.status === "dead");
   const activeVisitors = visitors.filter((visitor) => visitor.queueState === "active");
   const deferredVisitors = visitors.filter((visitor) => visitor.queueState === "deferred");
   const rosterFlowSummary = getRosterFlowSurfaceSummary(policies.rosterFlow);
-
-  const hireMeta = onOpenHireStaff ? (
-    <button
-      type="button"
-      data-testid="staff-open-hire"
-      className="btn-ghost px-1.5 py-0.5 text-sm"
-      onClick={onOpenHireStaff}
-    >
-      + hire
-    </button>
-  ) : (
-    <button
-      type="button"
-      className="btn-ghost px-1.5 py-0.5 text-sm text-silver/40"
-      onClick={() => callbacks.hireStaff("staff:admin")}
-    >
-      + hire
-    </button>
-  );
 
   return (
     <div className="animate-enter space-y-3" data-testid="roster-panel">
@@ -362,28 +291,6 @@ export function RosterPanel({
           </div>
         </section>
       )}
-
-      <section>
-        <SectionHeader
-          label={`Staff (${staff.length})`}
-          tip="Hired workers assigned to rooms. Not combat-capable"
-          meta={hireMeta}
-        />
-        {staff.length > 0 ? (
-          <div className="mt-1 space-y-0.5">
-            {staff.map((s) => (
-              <StaffRow
-                key={s.id}
-                member={s}
-                isFocused={focusedStaffId === s.id}
-                onSelect={() => onSelectStaff?.(s.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="mt-1 px-2.5 py-1 text-sm text-silver/40">No staff hired</p>
-        )}
-      </section>
 
       <section data-testid="roster-visitors">
         <SectionHeader

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
+  <!-- REFERENCE FIXTURE: The Bar — recruitment through the front room
+       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
+       Design reference only — the runtime ships the props-only scene extracted below. -->
+  <polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+  <polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
+  <polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+  <line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+  <line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+  <line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE BAR</text>
+  <text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+  <defs>
+    <g id="bar-counter">
+      <polygon points="-96,0 0,22 0,64 -96,42" fill="#4f3728" stroke="#231913" stroke-width="1"/>
+      <polygon points="0,22 96,0 96,42 0,64" fill="#402d21" stroke="#231913" stroke-width="1"/>
+      <polygon points="-96,0 0,-22 96,0 0,22" fill="#6f4d38" stroke="#231913" stroke-width="1"/>
+      <polygon points="-86,-16 0,3 0,18 -86,-1" fill="#815b41" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="0,3 86,-16 86,-1 0,18" fill="#6a4833" stroke="#231913" stroke-width="0.9"/>
+    </g>
+    <g id="stool">
+      <polygon points="-13,0 0,8 0,30 -13,22" fill="#4c3726" stroke="#241b15" stroke-width="0.9"/>
+      <polygon points="0,8 13,0 13,22 0,30" fill="#3f2e21" stroke="#241b15" stroke-width="0.9"/>
+      <polygon points="-13,0 0,-8 13,0 0,8" fill="#7b5a3d" stroke="#241b15" stroke-width="0.9"/>
+      <line x1="-8" y1="4" x2="-8" y2="24" stroke="#241b15" stroke-width="1.1"/>
+      <line x1="8" y1="4" x2="8" y2="24" stroke="#241b15" stroke-width="1.1"/>
+    </g>
+    <g id="high-top">
+      <polygon points="-22,0 0,11 0,32 -22,21" fill="#5a3d2b" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="0,11 22,0 22,21 0,32" fill="#473226" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="-22,0 0,-11 22,0 0,11" fill="#7e5b41" stroke="#231913" stroke-width="0.9"/>
+      <line x1="0" y1="8" x2="0" y2="46" stroke="#231913" stroke-width="1.2"/>
+      <line x1="-8" y1="44" x2="8" y2="44" stroke="#231913" stroke-width="1"/>
+    </g>
+    <g id="chair">
+      <polygon points="-14,0 0,8 0,28 -14,20" fill="#5a4131" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="0,8 14,0 14,20 0,28" fill="#483528" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="-14,0 0,-8 14,0 0,8" fill="#77573f" stroke="#231913" stroke-width="0.9"/>
+      <polygon points="0,-18 10,-13 10,2 0,-3" fill="#77573f" stroke="#231913" stroke-width="0.9"/>
+    </g>
+    <g id="bottle-bank">
+      <polygon points="-34,0 0,12 0,40 -34,28" fill="#463427" stroke="#211810" stroke-width="0.9"/>
+      <polygon points="0,12 34,0 34,28 0,40" fill="#39291f" stroke="#211810" stroke-width="0.9"/>
+      <polygon points="-34,0 0,-12 34,0 0,12" fill="#5d4433" stroke="#211810" stroke-width="0.9"/>
+      <line x1="-16" y1="8" x2="16" y2="20" stroke="#2b2118" stroke-width="1"/>
+      <line x1="-16" y1="18" x2="16" y2="30" stroke="#2b2118" stroke-width="1"/>
+      <circle cx="-8" cy="18" r="2.2" fill="#c45151"/>
+      <circle cx="2" cy="22" r="2.2" fill="#d7bc54"/>
+      <circle cx="12" cy="26" r="2.2" fill="#6a8fc7"/>
+    </g>
+    <g id="pendant">
+      <line x1="0" y1="-28" x2="0" y2="0" stroke="#2f261f" stroke-width="1.2"/>
+      <ellipse cx="0" cy="4" rx="12" ry="6" fill="#d3a14a" stroke="#6e542e" stroke-width="0.9"/>
+    </g>
+    <g id="neon-sign">
+      <path d="M -34 -8 L -10 -20 L 16 -8 L -8 4 Z" fill="rgba(38,20,18,0.65)" stroke="#5f2d23" stroke-width="1"/>
+      <path d="M -22 -8 L -6 -16 L 10 -8 L -6 0 Z" fill="none" stroke="#e59d69" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M -2 -2 L 10 -8" stroke="#e59d69" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <g>
+    <use href="#bottle-bank" transform="translate(112 122)"/>
+    <use href="#bottle-bank" transform="translate(210 104)"/>
+    <use href="#bottle-bank" transform="translate(308 122)"/>
+    <use href="#bar-counter" transform="translate(210 164)"/>
+    <use href="#stool" transform="translate(132 206)"/>
+    <use href="#stool" transform="translate(170 220)"/>
+    <use href="#stool" transform="translate(210 228)"/>
+    <use href="#stool" transform="translate(250 220)"/>
+    <use href="#stool" transform="translate(288 206)"/>
+    <use href="#high-top" transform="translate(88 194)"/>
+    <use href="#chair" transform="translate(64 214)"/>
+    <use href="#high-top" transform="translate(332 194)"/>
+    <use href="#chair" transform="translate(356 214)"/>
+    <use href="#pendant" transform="translate(136 74)"/>
+    <use href="#pendant" transform="translate(210 62)"/>
+    <use href="#pendant" transform="translate(284 74)"/>
+    <use href="#neon-sign" transform="translate(210 50)"/>
+  </g>
+</svg>

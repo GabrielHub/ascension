@@ -1,6 +1,6 @@
 import type { EffectDefinition } from "../effects";
 import type { RequirementDefinition } from "../requirements";
-import type { AbilityEffect, TargetingRule } from "./kits";
+import type { AbilityEffect, CombatStat, TargetingRule } from "./combat-packages";
 import type { ContractRank } from "./site-concepts";
 
 export interface TemplateBase {
@@ -221,6 +221,21 @@ export interface PresenterTemplate extends TemplateBase {
   roleDescription: string;
   portraitByExpression: Readonly<Record<string, string>>;
   defaultExpression: string;
+  /**
+   * Room template ids whose existence allows this presenter to appear in the
+   * HQ. Mara's list should cover baseline ops rooms; every other presenter's
+   * list should cover their domain-correct rooms.
+   */
+  allowedRoomTemplateIds: readonly string[];
+  /**
+   * If present, the presenter is unlocked the first time a room matching this
+   * template id is placed. Omitted for presenters unlocked from the start.
+   */
+  unlockFromRoomTemplateId?: string;
+  /** One-line domain summary used for narrative grounding and AI prompts. */
+  domainSummary: string;
+  /** One-line voice brief used to ground AI-framed incident copy. */
+  voiceBrief: string;
   generation: {
     canonBrief: string;
     masterPrompt: string;
@@ -229,10 +244,10 @@ export interface PresenterTemplate extends TemplateBase {
 }
 
 export type ItemCategory = "weapon" | "outfit-overlay" | "accessory" | "loot" | "consumable";
-export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "s";
+export type ItemRank = "f" | "e" | "d" | "c" | "b" | "a" | "u";
 
 /** Canonical ascending rank order shared across all rank-aware systems. */
-export const ITEM_RANK_ORDER: readonly ItemRank[] = ["f", "e", "d", "c", "b", "a", "s"];
+export const ITEM_RANK_ORDER: readonly ItemRank[] = ["f", "e", "d", "c", "b", "a", "u"];
 
 export function getItemRankIndex(rank: string): number {
   const index = ITEM_RANK_ORDER.indexOf(rank.toLowerCase() as ItemRank);
@@ -246,7 +261,7 @@ export interface StatEffect {
 
 /** Temporary buff applied by a consumable before a raid. */
 export interface ConsumableBuff {
-  stat: string;
+  stat: CombatStat;
   value: number;
   /** Duration in raid minutes. */
   durationMinutes: number;
@@ -322,7 +337,6 @@ export interface CraftRecipeTemplate {
   name: string;
   description: string;
   requiredRoomId: string;
-  requiredStaffTag: string;
   minimumBuildingId: string;
   minimumBuildingTier: number;
   outputItemId: string;
