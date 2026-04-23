@@ -301,6 +301,7 @@ export interface SvgCompositionLayer {
 }
 
 export interface SvgCompositionRecipe {
+  viewBox: string;
   layers: readonly SvgCompositionLayer[];
 }
 

@@ -625,13 +625,13 @@ export const bootstrapScenario = {
 
 export const previewBootstrapScenario = bootstrapScenario;
 
-const CANONICAL_OPERATOR_IDS = new Set([
+const CANONICAL_OPERATOR_IDS = new Set<string>([
   "operator/rose-vega",
   "operator/milo-hart",
   "operator/jin-tanaka",
   "operator/vera-santos",
 ]);
-const OPERATOR_POOL_BY_ROLE = {
+const OPERATOR_POOL_BY_ROLE: Record<string, readonly string[]> = {
   "role:field_lead": ["operator/rose-vega", "operator/vera-santos"],
   "role:scout": ["operator/milo-hart", "operator/ash-okafor"],
   "role:medic": ["operator/jin-tanaka", "operator/lena-park"],
@@ -713,9 +713,10 @@ function cloneRelationship(relationship: BootstrapRelationship): BootstrapRelati
 }
 
 function cloneVisitor(visitor: BootstrapVisitor): BootstrapVisitor {
+  const visitorIdBySourceId = VISITOR_ID_BY_SOURCE_ID as Record<string, string | undefined>;
   return {
     ...visitor,
-    id: VISITOR_ID_BY_SOURCE_ID[visitor.id] ?? visitor.id,
+    id: visitorIdBySourceId[visitor.id] ?? visitor.id,
   };
 }
 
@@ -771,12 +772,12 @@ export function buildRandomizedNewGameScenario(seed: number): BootstrapScenario 
   }
 
   const next = createScenarioRng(seed);
-  const operatorsById = new Map(
+  const operatorsById = new Map<string, BootstrapOperator>(
     bootstrapScenario.operators.map((operator) => [operator.id, operator]),
   );
   const visitorsById = new Map(bootstrapScenario.visitors.map((visitor) => [visitor.id, visitor]));
 
-  const chosenOperators = [
+  const chosenOperators: string[] = [
     OPERATOR_POOL_BY_ROLE["role:field_lead"][
       Math.floor(next() * OPERATOR_POOL_BY_ROLE["role:field_lead"].length)
     ],

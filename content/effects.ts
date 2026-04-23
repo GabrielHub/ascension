@@ -163,34 +163,62 @@ function missingHandler(effectType: EffectType): never {
 
 export function applyEffect(effect: EffectDefinition, context: EffectApplicationContext): void {
   switch (effect.type) {
-    case "add_room_slot":
-      return (context.addRoomSlot ?? missingHandler)(effect.amount);
-    case "unlock_room_template":
-      return (context.unlockRoomTemplate ?? missingHandler)(effect.roomId);
-    case "unlock_room_tier":
-      return (context.unlockRoomTier ?? missingHandler)(effect.roomId, effect.tier);
-    case "modify_room_capacity":
-      return (context.modifyRoomCapacity ?? missingHandler)(effect.roomId, effect.amount);
-    case "modify_need_rate":
-      return (context.modifyNeedRate ?? missingHandler)(effect.needId, effect.multiplier);
-    case "modify_attraction_weight":
-      return (context.modifyAttractionWeight ?? missingHandler)(effect.tag, effect.amount);
-    case "modify_recovery_rate":
-      return (context.modifyRecoveryRate ?? missingHandler)(effect.amount);
-    case "modify_training_rate":
-      return (context.modifyTrainingRate ?? missingHandler)(effect.amount);
-    case "modify_morale":
-      return (context.modifyMorale ?? missingHandler)(effect.amount);
-    case "modify_resource_income":
-      return (context.modifyResourceIncome ?? missingHandler)(effect.resourceId, effect.amount);
-    case "modify_resource_cost":
-      return (context.modifyResourceCost ?? missingHandler)(effect.resourceId, effect.multiplier);
-    case "grant_operator_slot":
-      return (context.grantOperatorSlot ?? missingHandler)(effect.amount);
-    case "modify_loyalty":
-      return (context.modifyLoyalty ?? missingHandler)(effect.amount);
-    case "modify_scalar":
-      return (context.modifyScalar ?? missingHandler)(effect.path, effect.mode, effect.value);
+    case "add_room_slot": {
+      if (!context.addRoomSlot) return missingHandler(effect.type);
+      return context.addRoomSlot(effect.amount);
+    }
+    case "unlock_room_template": {
+      if (!context.unlockRoomTemplate) return missingHandler(effect.type);
+      return context.unlockRoomTemplate(effect.roomId);
+    }
+    case "unlock_room_tier": {
+      if (!context.unlockRoomTier) return missingHandler(effect.type);
+      return context.unlockRoomTier(effect.roomId, effect.tier);
+    }
+    case "modify_room_capacity": {
+      if (!context.modifyRoomCapacity) return missingHandler(effect.type);
+      return context.modifyRoomCapacity(effect.roomId, effect.amount);
+    }
+    case "modify_need_rate": {
+      if (!context.modifyNeedRate) return missingHandler(effect.type);
+      return context.modifyNeedRate(effect.needId, effect.multiplier);
+    }
+    case "modify_attraction_weight": {
+      if (!context.modifyAttractionWeight) return missingHandler(effect.type);
+      return context.modifyAttractionWeight(effect.tag, effect.amount);
+    }
+    case "modify_recovery_rate": {
+      if (!context.modifyRecoveryRate) return missingHandler(effect.type);
+      return context.modifyRecoveryRate(effect.amount);
+    }
+    case "modify_training_rate": {
+      if (!context.modifyTrainingRate) return missingHandler(effect.type);
+      return context.modifyTrainingRate(effect.amount);
+    }
+    case "modify_morale": {
+      if (!context.modifyMorale) return missingHandler(effect.type);
+      return context.modifyMorale(effect.amount);
+    }
+    case "modify_resource_income": {
+      if (!context.modifyResourceIncome) return missingHandler(effect.type);
+      return context.modifyResourceIncome(effect.resourceId, effect.amount);
+    }
+    case "modify_resource_cost": {
+      if (!context.modifyResourceCost) return missingHandler(effect.type);
+      return context.modifyResourceCost(effect.resourceId, effect.multiplier);
+    }
+    case "grant_operator_slot": {
+      if (!context.grantOperatorSlot) return missingHandler(effect.type);
+      return context.grantOperatorSlot(effect.amount);
+    }
+    case "modify_loyalty": {
+      if (!context.modifyLoyalty) return missingHandler(effect.type);
+      return context.modifyLoyalty(effect.amount);
+    }
+    case "modify_scalar": {
+      if (!context.modifyScalar) return missingHandler(effect.type);
+      return context.modifyScalar(effect.path, effect.mode, effect.value);
+    }
   }
 }
 

@@ -135,8 +135,8 @@ export interface SimRuntimeState {
   guidanceState: GuidanceState;
   combatPackageRegistry: CombatPackageRegistry;
   worldTimeFrozen: boolean;
-  deferIncidentPresentation: boolean;
-  cityState: CityState;
+  deferIncidentPresentation?: boolean;
+  cityState?: CityState;
   presenterUnlocks: PresenterUnlockState[];
 }
 

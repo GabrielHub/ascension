@@ -11,11 +11,11 @@ interface WakeLockSentinelLike extends EventTarget {
   release(): Promise<void>;
 }
 
-interface WakeLockNavigator extends Navigator {
+type WakeLockNavigator = Navigator & {
   wakeLock?: {
     request(type: "screen"): Promise<WakeLockSentinelLike>;
   };
-}
+};
 
 function getWakeLockNavigator(): WakeLockNavigator | null {
   if (typeof navigator === "undefined") {

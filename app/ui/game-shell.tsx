@@ -1,4 +1,12 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type Ref,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -26,6 +34,7 @@ import {
 import { getPolicyOptionLabel, type PolicyState } from "lib/policies";
 import type {
   FocusPayload,
+  FocusTargetKind,
   HqDebugOverlays,
   HqWorldSnapshot,
   RaidWorldSnapshot,
@@ -1284,7 +1293,6 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                 <RosterPanel
                   operators={hq.operators}
                   visitors={hq.visitors}
-                  callbacks={callbacks}
                   rosterPressure={hq.rosterPressure}
                   policies={hq.policies}
                   focusedOperatorId={branchOperatorId}
@@ -1505,8 +1513,8 @@ interface OpsStackRenderContext {
   focusedRaidState: RuntimeSession["state"]["phase1View"]["activeRaids"][number] | null;
   focusedRaidOperatorStatuses: ReadonlyMap<string, FocusOperatorStatus> | undefined;
   callbacks: GameCallbacks;
-  contractRootAnchorRef: React.RefObject<HTMLDivElement | null>;
-  historyRootAnchorRef: React.RefObject<HTMLDivElement | null>;
+  contractRootAnchorRef: Ref<HTMLDivElement>;
+  historyRootAnchorRef: Ref<HTMLDivElement>;
   onCloseAt: (index: number) => void;
   onOpenBranch: (parentIndex: number, branch: OpsStackEntry | null) => void;
   onReplaceRoot: (next: OpsStackEntry | null) => void;
@@ -2178,7 +2186,10 @@ export function GameShell() {
     void session.commands.probeAiRuntime();
   }, [session]);
 
-  const callbacks: GameCallbacks | null = useMemo(() => buildGameCallbacks(session), [session]);
+  const callbacks: GameCallbacks | null = useMemo(
+    () => buildGameCallbacks(session ?? null),
+    [session],
+  );
 
   const advanceHour = useCallback(() => {
     callbacks?.tick(TICK_HOUR_MS);
@@ -2474,7 +2485,7 @@ export function GameShell() {
       if (newFocus?.targetKind === "room" && hq) {
         const room = hq.rooms.find((r) => r.id === newFocus.targetId);
         if (room && room.floorIndex !== hq.building.activeFloorIndex) {
-          callbacks.setActiveFloor(room.floorIndex);
+          callbacks?.setActiveFloor(room.floorIndex);
         }
       }
     },
@@ -2486,7 +2497,8 @@ export function GameShell() {
       setActiveTab,
       setHqCategory,
       setOpsCategory,
-      setFocus,
+      setFocus: (payload: { targetKind: FocusTargetKind; targetId: string } | null) =>
+        setFocus(payload ? { ...payload, highlightBounds: null } : null),
       openOpsTeam: (teamId: string) =>
         setOpsFocusStack([
           { kind: "active-root" },
@@ -2514,14 +2526,17 @@ export function GameShell() {
     : { current: 0, total: 13 };
   const activeGuidanceInterruption =
     phase1View?.activeInterruption?.type === "guidance" ? phase1View.activeInterruption : null;
+  const activeGuidancePayload =
+    activeGuidanceInterruption?.payload.kind === "guidance"
+      ? activeGuidanceInterruption.payload
+      : null;
   const suspendFocusedGuidanceBeat = isFocusedGuidanceBeatSuspended(
     guidanceBeat,
     phase1View?.activeInterruption ?? null,
     phase1View?.encounter != null,
   );
   const suppressTutorialInterruption =
-    !settings.tutorialEventsEnabled &&
-    isTutorialSuppressibleGuidanceBeat(activeGuidanceInterruption?.payload);
+    !settings.tutorialEventsEnabled && isTutorialSuppressibleGuidanceBeat(activeGuidancePayload);
   const suppressTutorialBeat =
     !settings.tutorialEventsEnabled &&
     guidanceBeat?.deliveryMode !== "blocking" &&

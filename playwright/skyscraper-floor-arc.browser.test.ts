@@ -20,6 +20,18 @@ type BrowserTestWindow = Window & {
   };
 };
 
+type SkyscraperStarterFloor = {
+  floorIndex: number;
+  slots: readonly {
+    slotId: string;
+    col: number;
+    row: number;
+    cols: number;
+    rows: number;
+    startingTemplateId?: string;
+  }[];
+};
+
 function ensurePlaywrightArtifactDirs(): void {
   for (const directory of [playwrightScreenshotsDir, playwrightLogsDir, playwrightArtifactsDir]) {
     fs.mkdirSync(directory, { recursive: true });
@@ -182,7 +194,10 @@ async function loadSkyscraperBaselineSave(page: Page): Promise<BrowserTestSnapsh
 
     const portersWorld = portersModule.createPortersUpgradeCampaignSeedWorld();
     const skyscraperWorld = structuredClone(portersWorld);
-    const starterFloors = layoutModule.getBuildingFloors("building/skyscraper", 1);
+    const starterFloors = layoutModule.getBuildingFloors(
+      "building/skyscraper",
+      1,
+    ) as readonly SkyscraperStarterFloor[];
 
     skyscraperWorld.building = {
       activeBuildingId: "building/skyscraper",

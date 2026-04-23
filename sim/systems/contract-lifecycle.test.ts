@@ -430,14 +430,20 @@ describe("resolved contract handoff", () => {
       location: "district/lower-east-side",
       rank: "f",
       bossDefeated: true,
+      missionCompleted: true,
       contractLost: false,
       threat: 40,
       intel: 55,
       reward: 90,
+      boardIntel: { source: "street", quality: "rough" },
+      briefing: null,
       securedAtTick: 1200,
       explorationProgress: 84,
+      closureProgress: 100,
+      closureThreshold: 100,
       bossIntelProgress: 60,
       bossPressureProgress: 75,
+      requiresBossClear: true,
       bossAvailable: true,
     };
 
@@ -521,6 +527,7 @@ describe("resolved contract handoff", () => {
       elapsedMinutes: 12,
       rngSeed: 1,
       rngCursor: 0,
+      reactionHooks: [],
       initiativeQueue: [],
       pendingRoundStart: false,
       actors: {

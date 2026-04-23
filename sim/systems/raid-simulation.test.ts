@@ -11,6 +11,7 @@ import {
   type RaidSimulationInput,
 } from "./raid-simulation";
 import { templateRegistry } from "content/templates";
+import { DEFAULT_POLICY_STATE } from "lib/policies";
 
 // ── Fixtures ──────────────────────────────────────────────────────────
 
@@ -73,6 +74,11 @@ function makeBaseInput(overrides: Partial<RaidSimulationInput> = {}): RaidSimula
     teamCohesion: 65,
     contractExplorationProgress: 75,
     contractBossIntelProgress: 50,
+    contractPosture: DEFAULT_POLICY_STATE.contractPosture,
+    objectiveBias: DEFAULT_POLICY_STATE.objectiveBias,
+    recoveryTriage: DEFAULT_POLICY_STATE.recoveryTriage,
+    staffingPriority: DEFAULT_POLICY_STATE.staffingPriority,
+    rosterFlow: DEFAULT_POLICY_STATE.rosterFlow,
     ...overrides,
   };
 }

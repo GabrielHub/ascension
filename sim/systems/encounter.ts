@@ -877,20 +877,23 @@ function resolveEffects(
       case "boss_tag_counter":
       case "boss_weakness_bonus":
       case "grant_followup":
-      case "ally_damage_bonus":
+      case "ally_damage_bonus": {
+        const duration = "duration" in effect ? effect.duration : 1;
+        const multiplier = "multiplier" in effect ? effect.multiplier : 1;
         target.activeStatuses.push({
           statusId: "empowered",
-          remainingDuration: effect.duration,
-          potency: Math.round(effect.multiplier * 100),
+          remainingDuration: duration,
+          potency: Math.round(multiplier * 100),
           sourceActorId: source.actorId,
         });
         results.push({
           effectKind: effect.kind,
           targetId: target.actorId,
-          value: effect.multiplier,
+          value: multiplier,
           blocked: false,
         });
         break;
+      }
     }
   }
 

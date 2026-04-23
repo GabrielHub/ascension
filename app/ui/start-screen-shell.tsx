@@ -70,7 +70,7 @@ function generateFlowingStars(count: number): FlowingStar[] {
     const driftDur = isFast ? 20 + (i % 7) * 2.5 : 40 + (i % 9) * 5;
     const driftDelay = parseFloat(((i * 1.17) % driftDur).toFixed(2));
 
-    let color = P.starGold;
+    let color: string = P.starGold;
     let glowColor = "rgba(200,168,76,0.3)";
     const colorIndex = i % 10;
 
@@ -106,6 +106,14 @@ function generateFlowingStars(count: number): FlowingStar[] {
 }
 
 const STARS = generateFlowingStars(60);
+
+function isOccupiedSlot(slot: StartScreenSaveSlot): slot is OccupiedSaveSlotCard {
+  return slot.state === "occupied" && slot.metadata !== undefined;
+}
+
+function isUnreadableSlot(slot: StartScreenSaveSlot): slot is UnreadableSaveSlotCard {
+  return slot.state === "error" && slot.diagnostic !== undefined;
+}
 
 function buildStarStyle(star: FlowingStar, top: string): FlowingStarStyle {
   return {
@@ -992,7 +1000,7 @@ export function StartScreenShell() {
           <section className="pb-6">
             <div className="mx-auto grid max-w-3xl gap-5 sm:grid-cols-2">
               {topRowSlots.map((slot) =>
-                slot.state === "occupied" && slot.metadata ? (
+                isOccupiedSlot(slot) ? (
                   <OccupiedCard
                     key={slot.slotId}
                     slot={slot}
@@ -1002,7 +1010,7 @@ export function StartScreenShell() {
                     onImport={handleImport}
                     onDelete={handleDelete}
                   />
-                ) : slot.state === "error" && slot.diagnostic ? (
+                ) : isUnreadableSlot(slot) ? (
                   <ErrorCard
                     key={slot.slotId}
                     slot={slot}
@@ -1027,7 +1035,7 @@ export function StartScreenShell() {
             <div className="mx-auto mt-5 flex max-w-3xl justify-center">
               <div className="w-full sm:w-1/2 sm:max-w-none lg:w-[calc(50%-0.625rem)]">
                 {bottomRowSlots.map((slot) =>
-                  slot.state === "occupied" && slot.metadata ? (
+                  isOccupiedSlot(slot) ? (
                     <OccupiedCard
                       key={slot.slotId}
                       slot={slot}
@@ -1037,7 +1045,7 @@ export function StartScreenShell() {
                       onImport={handleImport}
                       onDelete={handleDelete}
                     />
-                  ) : slot.state === "error" && slot.diagnostic ? (
+                  ) : isUnreadableSlot(slot) ? (
                     <ErrorCard
                       key={slot.slotId}
                       slot={slot}

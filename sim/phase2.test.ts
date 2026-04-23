@@ -73,6 +73,7 @@ function createMinimalSave(): PersistedSaveGame {
         activeBuildingTier: 2,
         roomSlotCount: 4,
         operatorSlotCount: 3,
+        activeFloorIndex: 0,
       },
       rooms: [
         {
@@ -83,6 +84,11 @@ function createMinimalSave(): PersistedSaveGame {
           occupancy: 1,
           isActive: true,
           footprint: { col: 0, row: 0, cols: 4, rows: 3 },
+          floorIndex: 0,
+          slotId: "slot/register",
+          roomStateId: "room-state/register:1",
+          reservedFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
+          activeFootprint: { col: 0, row: 0, cols: 4, rows: 3 },
         },
       ],
       activeRaidPackets: [],

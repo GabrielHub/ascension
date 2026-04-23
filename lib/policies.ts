@@ -451,28 +451,31 @@ export function getPolicyQuestion(policyId: PolicyId): string {
 }
 
 export function getPolicyOptions<P extends PolicyId>(policyId: P): readonly PolicyState[P][] {
-  return POLICY_OPTION_MAP[policyId] as readonly PolicyState[P][];
+  return POLICY_OPTION_MAP[policyId] as unknown as readonly PolicyState[P][];
 }
 
 export function getPolicyOptionLabel<P extends PolicyId>(
   policyId: P,
   value: PolicyState[P],
 ): string {
-  return POLICY_METADATA[policyId].options[value].label;
+  const options = POLICY_METADATA[policyId].options as Record<string, { label: string }>;
+  return options[value].label;
 }
 
 export function getPolicyOptionExplanation<P extends PolicyId>(
   policyId: P,
   value: PolicyState[P],
 ): string {
-  return POLICY_METADATA[policyId].options[value].explanation;
+  const options = POLICY_METADATA[policyId].options as Record<string, { explanation: string }>;
+  return options[value].explanation;
 }
 
 export function getPolicyOptionTradeoff<P extends PolicyId>(
   policyId: P,
   value: PolicyState[P],
 ): string {
-  return POLICY_METADATA[policyId].options[value].tradeoff;
+  const options = POLICY_METADATA[policyId].options as Record<string, { tradeoff: string }>;
+  return options[value].tradeoff;
 }
 
 export function getPolicyMetadata<P extends PolicyId>(policyId: P) {
@@ -485,7 +488,7 @@ export function getPolicyFactorMetadata(tag: string): PolicyFactorMetadata | nul
     return null;
   }
 
-  const policyId = POLICY_FACTOR_TAG_MAP[factorId];
+  const policyId = (POLICY_FACTOR_TAG_MAP as Record<string, PolicyId | undefined>)[factorId];
   if (!policyId || !isValidPolicyValue(policyId, rawValue)) {
     return null;
   }

@@ -55,11 +55,11 @@ function readLookupValue(source: ValueLookup, key: string): number {
     return 0;
   }
 
-  if (source instanceof Map) {
+  if ("get" in source && typeof source.get === "function") {
     return source.get(key) ?? 0;
   }
 
-  return source[key] ?? 0;
+  return (source as Record<string, number>)[key] ?? 0;
 }
 
 function validatePositiveNumber(value: number, fieldName: string): string[] {

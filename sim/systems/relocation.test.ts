@@ -75,7 +75,16 @@ function createTestContext(overrides?: {
         result: "success" as const,
         reputationDelta: 2,
         cashDelta: 50,
-        contractSiteId: summary.contractSiteId,
+        contractSiteId: summary.contractSiteId ?? "contract/test",
+        opportunityId: `opportunity/${summary.id}`,
+        location: "district/lower-east-side",
+        threat: 40,
+        intel: 40,
+        reward: 90,
+        cohesion: 60,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
         bossDefeated: summary.bossDefeated,
       })),
       policies: {},
@@ -678,7 +687,10 @@ describe("relocation carryover/reset contract", () => {
 
     runFullAcceptance(context);
 
-    const policies = BuildingAuthority.policies[buildingEntity] as Record<string, string>;
+    const policies = BuildingAuthority.policies[buildingEntity] as unknown as Record<
+      string,
+      string
+    >;
     expect(policies.contractPosture).toBe("aggressive");
     expect(policies.objectiveBias).toBe("loot");
     expect(policies.recoveryTriage).toBe("strict");
@@ -940,7 +952,16 @@ function createSkyscraperTestContext(overrides?: {
         result: "success" as const,
         reputationDelta: 2,
         cashDelta: 50,
-        contractSiteId: summary.contractSiteId,
+        contractSiteId: summary.contractSiteId ?? "contract/test",
+        opportunityId: `opportunity/${summary.id}`,
+        location: "district/lower-east-side",
+        threat: 40,
+        intel: 40,
+        reward: 90,
+        cohesion: 60,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
         bossDefeated: summary.bossDefeated,
       })),
       policies: {},

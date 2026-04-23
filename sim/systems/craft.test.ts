@@ -50,8 +50,8 @@ function createCraftContext(treasury: number): SimSystemContext {
   });
 
   addOperationalRoom(context, "room/workshop:tier_1", "room-instance/workshop");
-  context.runtimeState.cityState.districts["district/bronx-overpass"].trust = 12;
-  context.runtimeState.cityState.factions["faction/emergency-management"].standing = 5;
+  context.runtimeState.cityState!.districts["district/bronx-overpass"].trust = 12;
+  context.runtimeState.cityState!.factions["faction/emergency-management"].standing = 5;
 
   addToInventory(context, "loot/monster-part/fang", 3);
   addToInventory(context, "loot/monster-part/bone-shard", 2);

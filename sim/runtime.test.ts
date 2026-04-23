@@ -22,6 +22,7 @@ import { computeDerivedStats } from "./systems/derived-stats";
 import { OPENING_BEAT_IDS } from "./systems/guidance-beats";
 import { computeOperatorRaidReadiness, markRaidBossCommitment } from "./systems/raids";
 import { deferredSimulationSystemsReady } from "./systems";
+import type { SimSystemContext } from "./systems/types";
 import { readOperatorTrainingSnapshot } from "./systems/training";
 
 function createPolicyRaidSnapshot() {
@@ -1088,7 +1089,9 @@ describe("phase 1 runtime", () => {
     expect(
       simulation
         .getPhase1View()
-        .raidSummaries.some((summary) => summary.contributingFactors.includes("briefing:drilled")),
+        .raidSummaries.some((summary) =>
+          (summary.contributingFactors ?? []).includes("briefing:drilled"),
+        ),
     ).toBe(true);
   });
 
@@ -1239,13 +1242,18 @@ describe("phase 1 runtime", () => {
 
     first.guild.reputation = 99;
     first.time.minuteOfDay = 5;
-    first.rooms[0].reservedFootprint.col = 7;
-    first.operators![0].preferences.preferredMissionTags.push("mission:mutated");
+    first.rooms[0]!.reservedFootprint.col = 7;
+    (
+      first.operators?.[0]?.preferences as { preferredMissionTags: string[] } | undefined
+    )?.preferredMissionTags.push("mission:mutated");
 
     expect(second.guild.reputation).toBe(0);
     expect(second.time.minuteOfDay).toBe(480);
-    expect(second.rooms[0].reservedFootprint.col).toBe(1);
-    expect(second.operators?.[0].preferences.preferredMissionTags).not.toContain("mission:mutated");
+    expect(second.rooms[0]!.reservedFootprint.col).toBe(1);
+    expect(
+      (second.operators?.[0]?.preferences as { preferredMissionTags: string[] } | undefined)
+        ?.preferredMissionTags,
+    ).not.toContain("mission:mutated");
   });
 
   it("supports recruiting and operator relationship seeding", () => {
@@ -1615,7 +1623,9 @@ describe("phase 1 runtime", () => {
       true,
     );
     // Verify at least one relationship got updated by the raid
-    const raidOperatorIds = new Set(phase1View.raidSummaries[0].operatorIds ?? []);
+    const raidOperatorIds = new Set<string>(
+      (phase1View.raidSummaries[0]?.operatorIds as string[] | undefined) ?? [],
+    );
     const raidRelationships = phase1View.relationshipSignals.filter(
       (rel) => raidOperatorIds.has(rel.operatorAId) && raidOperatorIds.has(rel.operatorBId),
     );
@@ -1845,7 +1855,9 @@ describe("phase 1 runtime", () => {
     simulation.tick(1000);
     const activeInterruption = simulation.getPhase1View().activeInterruption;
     expect(activeInterruption?.payload.kind).toBe("raid_boss_commitment");
-    expect(activeInterruption?.payload.activeRaidId).toBe("raid/boss-breakpoint");
+    if (activeInterruption?.payload.kind === "raid_boss_commitment") {
+      expect(activeInterruption.payload.activeRaidId).toBe("raid/boss-breakpoint");
+    }
   });
 
   it("records boss commitment on the active raid run before entering the live encounter", () => {
@@ -1956,7 +1968,9 @@ describe("phase 1 runtime", () => {
     ];
 
     const simulation = createAscensionSimulation(snapshot, templateRegistry);
-    expect(markRaidBossCommitment(simulation, "raid/boss-breakpoint")).toBe(true);
+    expect(
+      markRaidBossCommitment(simulation as unknown as SimSystemContext, "raid/boss-breakpoint"),
+    ).toBe(true);
 
     const raidRun = simulation.getWorldSnapshot().activeRaidPackets[0].raidRun;
     expect(raidRun?.status).toBe("boss_encounter");
@@ -2476,7 +2490,9 @@ describe("phase 1 runtime", () => {
     );
 
     expect(roseEntity).toBeDefined();
-    expect(computeDerivedStats(simulation, roseEntity!).base).toEqual({
+    expect(
+      computeDerivedStats(simulation as unknown as SimSystemContext, roseEntity!).base,
+    ).toEqual({
       strength: 14,
       speed: 8,
       endurance: 13,
@@ -2546,7 +2562,7 @@ describe("phase 1 runtime", () => {
     NeedState.stress[operatorEntity!] = 25;
     ScheduleState.currentBlock[operatorEntity!] = "idle";
     const readinessBefore = computeOperatorRaidReadiness(
-      simulation,
+      simulation as unknown as SimSystemContext,
       operatorEntity!,
       opportunityEntity!,
     ).readinessScore;
@@ -2567,7 +2583,7 @@ describe("phase 1 runtime", () => {
     ScheduleState.currentBlock[operatorEntity!] = "idle";
 
     const readinessAfter = computeOperatorRaidReadiness(
-      simulation,
+      simulation as unknown as SimSystemContext,
       operatorEntity!,
       opportunityEntity!,
     ).readinessScore;
@@ -2763,7 +2779,7 @@ describe("phase 1 runtime", () => {
                 accessoryPartId: "",
               },
             },
-          } as typeof operator)
+          } as unknown as typeof operator)
         : operator,
     );
 
@@ -3458,7 +3474,7 @@ describe("relocation save/load through full pipeline", () => {
     expect(phase1View.activeInterruption).not.toBeNull();
     expect(phase1View.activeInterruption?.type).toBe("relocation");
     expect(phase1View.activeInterruption?.payload.kind).toBe("relocation");
-    const payload = phase1View.activeInterruption!.payload as Record<string, unknown>;
+    const payload = phase1View.activeInterruption!.payload as unknown as Record<string, unknown>;
     expect(payload.beat).toBe("moving");
   });
 
@@ -3614,7 +3630,7 @@ describe("relocation save/load through full pipeline", () => {
     const phase1View = simulation.getPhase1View();
     expect(phase1View.activeInterruption).not.toBeNull();
     expect(phase1View.activeInterruption?.type).toBe("relocation");
-    const payload = phase1View.activeInterruption!.payload as Record<string, unknown>;
+    const payload = phase1View.activeInterruption!.payload as unknown as Record<string, unknown>;
     expect(payload.beat).toBe("moving");
     expect(payload.buildingToId).toBe("building/skyscraper");
   });

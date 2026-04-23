@@ -376,7 +376,8 @@ export function createMusicScheduler(ctx: MusicSchedulerContext): MusicScheduler
     if (!active || disposed) return;
 
     const family = getFamily();
-    const synth = new Tone.PolySynth(Tone.Synth, {
+    const synth = new Tone.PolySynth({
+      voice: Tone.Synth,
       maxPolyphony: phrase.length,
       options: {
         oscillator: { type: family.oscillator as OscillatorType },

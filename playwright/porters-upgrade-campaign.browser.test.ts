@@ -460,7 +460,7 @@ async function runDevConsoleCommand(page: Page, command: string): Promise<void> 
 }
 
 function getInventoryQuantity(snapshot: BrowserTestSnapshot, itemId: string): number {
-  return snapshot.inventory.find((stack) => stack.itemId === itemId)?.quantity ?? 0;
+  return snapshot.inventory?.find((stack) => stack.itemId === itemId)?.quantity ?? 0;
 }
 
 async function resolveInterruptionWithFirstChoice(page: Page): Promise<BrowserTestSnapshot> {

@@ -207,6 +207,7 @@ export interface VisitorSeed {
 }
 
 export interface PreferenceProfileRecord {
+  [key: string]: unknown;
   riskTolerance: number;
   rewardFocus: number;
   recoveryBias: number;
@@ -1727,7 +1728,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       return;
     }
     case "sim/dev-set-district": {
-      const district = context.runtimeState.cityState.districts[command.districtId];
+      const district = context.runtimeState.cityState!.districts[command.districtId];
       if (!district) return;
       switch (command.field) {
         case "attention":
@@ -1743,7 +1744,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       return;
     }
     case "sim/dev-set-faction": {
-      const faction = context.runtimeState.cityState.factions[command.factionId];
+      const faction = context.runtimeState.cityState!.factions[command.factionId];
       if (!faction) return;
       switch (command.field) {
         case "standing":
@@ -1800,7 +1801,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       // District tag gate: pool tags from all trusted districts
       const accessibleTags = new Set<string>();
       for (const dt of districtTemplates) {
-        const snapshot = context.runtimeState.cityState.districts[dt.id];
+        const snapshot = context.runtimeState.cityState!.districts[dt.id];
         if (snapshot && snapshot.trust > 0) {
           for (const tag of dt.tags) accessibleTags.add(tag);
         }
@@ -1809,7 +1810,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       // Faction standing gate
       for (const [factionId, required] of Object.entries(craftRecipe.requiredFactionStanding)) {
-        const faction = context.runtimeState.cityState.factions[factionId];
+        const faction = context.runtimeState.cityState!.factions[factionId];
         if (!faction || faction.standing < required) return;
       }
 

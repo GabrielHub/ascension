@@ -26,7 +26,6 @@ import {
   OperatorIdentity,
   RecurringTeam,
   RoomInstance,
-  WorldTimeState,
 } from "../components";
 import {
   BODEGA_BACK_OFFICE_TEMPLATE_ID,
@@ -3226,7 +3225,6 @@ export function resolveIncident(
   pushRuntimeEvent(context, {
     kind: "incident_resolved",
     message: resolutionSummary?.trim() || `Incident resolved: ${choice.label}`,
-    timestamp: `Day ${WorldTimeState.day[context.singletonEntities.time]}`,
     accent: "info",
   });
   if (adjustedEffects !== choice.effects) {

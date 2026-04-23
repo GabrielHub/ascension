@@ -186,7 +186,7 @@ function createContext(): DevConsoleContext {
       worldSnapshot: {
         activeRaidPackets: [],
       },
-    },
+    } as unknown as DevConsoleContext["session"],
     debugOverlays: {
       showRoomBounds: false,
       showFootprints: false,
@@ -340,7 +340,7 @@ describe("dev console commands", () => {
 
   it("uses the recorded payload when regenerating an AI request", () => {
     const ctx = createContext();
-    ctx.session.ai.requests.set("incident-framing:test", {
+    (ctx.session.ai.requests as Map<string, unknown>).set("incident-framing:test", {
       requestKey: "incident-framing:test",
       subjectId: "test",
       surface: "incident-framing",

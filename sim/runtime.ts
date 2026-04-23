@@ -137,6 +137,8 @@ import {
   AssignmentState,
   BuildingAuthority,
   type ActiveRaidPacketRecord,
+  type ContractBriefingState,
+  type ContractBoardIntelState,
   type RaidSummaryRecord,
   EquipmentAssignment,
   EventState,
@@ -220,6 +222,7 @@ import {
 export type Phase1OperatorPreferenceSnapshot = PreferenceProfileRecord;
 
 export interface Phase1OperatorScheduleSnapshot {
+  [key: string]: unknown;
   currentBlock: string;
   workStartMinute: number;
   workEndMinute: number;
@@ -232,8 +235,10 @@ export interface Phase1OperatorVisibleGearSnapshot {
 }
 
 export interface Phase1OperatorSnapshot {
+  [key: string]: unknown;
   id: string;
   identity: {
+    [key: string]: unknown;
     name: string;
     roleTag: string;
     specialtyTag: string;
@@ -243,24 +248,29 @@ export interface Phase1OperatorSnapshot {
   preferences: Phase1OperatorPreferenceSnapshot;
   schedule: Phase1OperatorScheduleSnapshot;
   needs: {
+    [key: string]: unknown;
     hunger: number;
     fatigue: number;
     stress: number;
   };
   morale: {
+    [key: string]: unknown;
     current: number;
     baseline: number;
   };
   loyalty: {
+    [key: string]: unknown;
     current: number;
     baseline: number;
   };
   injury: {
+    [key: string]: unknown;
     severity: number;
     recoveryHoursRemaining: number;
     treated: boolean;
   };
   assignment: {
+    [key: string]: unknown;
     kind: string;
     targetId: string;
   };
@@ -304,6 +314,7 @@ export interface Phase1RelationshipSnapshot {
 }
 
 export interface Phase1VisitorSnapshot {
+  [key: string]: unknown;
   id: string;
   name: string;
   desiredRoleTag: string;
@@ -339,6 +350,7 @@ export interface Phase1VisitorSnapshot {
 }
 
 export interface Phase1RaidOpportunitySnapshot {
+  [key: string]: unknown;
   id: string;
   missionId: string;
   location: string;
@@ -354,6 +366,7 @@ export interface Phase1RaidOpportunitySnapshot {
 }
 
 export interface Phase1ActiveEventSnapshot {
+  [key: string]: unknown;
   id: string;
   templateId: string;
   severity: number;
@@ -645,6 +658,9 @@ export interface Phase1RuntimeView {
       source: "street" | "back_office" | "office";
       quality: "rough" | "reviewed" | "dossier";
     };
+    districtId?: string;
+    sponsorFactionId?: string;
+    pressureTags?: readonly string[];
   }>;
   fogOfWar: {
     gridWidth: number;
@@ -1235,15 +1251,47 @@ function toRuntimeSnapshot(snapshot: WorldSnapshot): Phase1RuntimeWorldSnapshot 
 function cloneContractBoardIntel(
   boardIntel:
     | {
-        source: "street" | "back_office" | "office";
-        quality: "rough" | "reviewed" | "dossier";
+        source?: string;
+        quality?: string;
       }
     | null
     | undefined,
-) {
+): ContractBoardIntelState {
+  const source =
+    boardIntel?.source === "back_office" || boardIntel?.source === "office"
+      ? boardIntel.source
+      : "street";
+  const quality =
+    boardIntel?.quality === "reviewed" || boardIntel?.quality === "dossier"
+      ? boardIntel.quality
+      : "rough";
   return {
-    source: boardIntel?.source ?? "street",
-    quality: boardIntel?.quality ?? "rough",
+    source,
+    quality,
+  };
+}
+
+function cloneContractBriefingState(
+  briefing:
+    | {
+        source?: string;
+        status?: string;
+        opportunityIntelBonus?: number;
+        bossIntelBonus?: number;
+      }
+    | null
+    | undefined,
+): ContractBriefingState | null {
+  if (!briefing) {
+    return null;
+  }
+
+  return {
+    source:
+      briefing.source === "briefing_room_and_prep" ? "briefing_room_and_prep" : "briefing_room",
+    status: briefing.status === "drilled" ? "drilled" : "briefed",
+    opportunityIntelBonus: briefing.opportunityIntelBonus ?? 0,
+    bossIntelBonus: briefing.bossIntelBonus ?? 0,
   };
 }
 
@@ -1738,11 +1786,41 @@ function applyWorldSnapshot(
   BuildingAuthority.activeRaidPackets[buildingEntity] = runtimeSnapshot.activeRaidPackets.map(
     (packet) => ({
       ...packet,
+      contractSiteId: packet.contractSiteId ?? "",
+      briefingSource:
+        packet.briefingSource === "briefing_room" ||
+        packet.briefingSource === "briefing_room_and_prep"
+          ? packet.briefingSource
+          : null,
+      briefingStatus:
+        packet.briefingStatus === "briefed" || packet.briefingStatus === "drilled"
+          ? packet.briefingStatus
+          : null,
+      resolutionPacket: packet.resolutionPacket ?? {
+        result: "mixed",
+        reputationDelta: 0,
+        cashDelta: 0,
+        operatorOutcomes: [],
+        narrativeTags: [],
+        intelMismatchTags: [],
+      },
     }),
   );
   BuildingAuthority.raidSummaries[buildingEntity] = runtimeSnapshot.raidSummaries.map(
     (summary) => ({
       ...summary,
+      contractSiteId: summary.contractSiteId ?? "",
+      opportunityId: summary.opportunityId ?? summary.id,
+      location: summary.location ?? "",
+      startedAt: summary.startedAt ?? "",
+      endedAt: summary.endedAt ?? "",
+      threat: summary.threat ?? 0,
+      intel: summary.intel ?? 0,
+      reward: summary.reward ?? 0,
+      cohesion: summary.cohesion ?? 0,
+      operatorOutcomes: summary.operatorOutcomes ?? [],
+      narrativeTags: summary.narrativeTags ?? [],
+      intelMismatchTags: summary.intelMismatchTags ?? [],
     }),
   );
   BuildingAuthority.pressure[buildingEntity] = 0;
@@ -1772,6 +1850,8 @@ function applyWorldSnapshot(
         bossPressureProgress: runtimeSnapshot.contractSite.bossPressureProgress ?? 0,
         requiresBossClear: runtimeSnapshot.contractSite.requiresBossClear ?? false,
         bossAvailable: runtimeSnapshot.contractSite.bossAvailable ?? false,
+        boardIntel: cloneContractBoardIntel(runtimeSnapshot.contractSite.boardIntel),
+        briefing: cloneContractBriefingState(runtimeSnapshot.contractSite.briefing),
       }
     : null;
 
@@ -1796,6 +1876,7 @@ function applyWorldSnapshot(
       lootFamilyHints: p.lootFamilyHints ?? [],
       bossHint: p.bossHint ?? null,
       neighborhoodLabel: p.neighborhoodLabel ?? "",
+      boardIntel: cloneContractBoardIntel(p.boardIntel),
     }),
   );
   BuildingAuthority.contractResult[buildingEntity] = runtimeSnapshot.contractResult
@@ -2259,6 +2340,19 @@ function applyWorldSnapshot(
       const deferredVisitorCount = runtimeState.visitorEntities.filter(
         (entity) => getVisitorQueueState(entity) === "deferred",
       ).length;
+      const visitorAcceptLockReason = getVisitorAcceptLockReason({
+        recruitmentUnlocked: recruitmentGate.unlocked,
+        recruitmentLockReason: recruitmentGate.reason,
+        livingOperatorCount,
+        operatorCapacity,
+      });
+      const visitorReplaceLockReason = getVisitorReplaceLockReason({
+        recruitmentUnlocked: recruitmentGate.unlocked,
+        recruitmentLockReason: recruitmentGate.reason,
+        livingOperatorCount,
+        operatorCapacity,
+        replaceableOperatorCount,
+      });
 
       return {
         simulationSeed: runtimeState.simulationSeed,
@@ -2382,20 +2476,7 @@ function applyWorldSnapshot(
         })),
         visitors: runtimeState.visitorEntities.map((entity) => {
           const queueState = getVisitorQueueState(entity);
-          const acceptLockReason = getVisitorAcceptLockReason({
-            recruitmentUnlocked: recruitmentGate.unlocked,
-            recruitmentLockReason: recruitmentGate.reason,
-            livingOperatorCount,
-            operatorCapacity,
-          });
           const deferLockReason = getVisitorDeferLockReason(queueState, deferredVisitorCount);
-          const replaceLockReason = getVisitorReplaceLockReason({
-            recruitmentUnlocked: recruitmentGate.unlocked,
-            recruitmentLockReason: recruitmentGate.reason,
-            livingOperatorCount,
-            operatorCapacity,
-            replaceableOperatorCount,
-          });
           return {
             id: VisitorState.id[entity],
             name: VisitorState.name[entity],
@@ -2434,12 +2515,12 @@ function applyWorldSnapshot(
             queueState,
             projectedMorale: projectVisitorRecruitMorale(VisitorState.quality[entity]),
             projectedLoyalty: projectVisitorRecruitLoyalty(VisitorState.expectedLoyalty[entity]),
-            canAccept: acceptLockReason === null,
-            lockedReason: acceptLockReason,
+            canAccept: visitorAcceptLockReason === null,
+            lockedReason: visitorAcceptLockReason,
             canDefer: deferLockReason === null,
             deferLockedReason: deferLockReason,
-            canReplace: replaceLockReason === null,
-            replaceLockedReason: replaceLockReason,
+            canReplace: visitorReplaceLockReason === null,
+            replaceLockedReason: visitorReplaceLockReason,
           };
         }),
         raidOpportunities: runtimeState.raidOpportunityEntities.map((entity) => ({
@@ -2550,7 +2631,7 @@ function applyWorldSnapshot(
         lootAutomation: {
           autoSellEnabled: BuildingAuthority.lootAutomationEnabled[buildingEntity] === 1,
         },
-        cityPressure: cityStateToSnapshot(runtimeState.cityState),
+        cityPressure: cityStateToSnapshot(runtimeState.cityState ?? createDefaultCityState()),
         presenterUnlocks: runtimeState.presenterUnlocks.map((entry) => ({ ...entry })),
         // Encounter, interruption, and incident persistence
         ...(runtimeState.activeEncounter
@@ -2642,7 +2723,7 @@ function applyWorldSnapshot(
               } as Record<string, unknown>,
             }
           : {}),
-      };
+      } as unknown as Phase1RuntimeWorldSnapshot;
     },
     getPhase1View(cachedSnapshot?: Phase1RuntimeWorldSnapshot) {
       const snapshot = cachedSnapshot ?? simulation.getWorldSnapshot();
@@ -2662,7 +2743,12 @@ function applyWorldSnapshot(
         .filter((upgrade) => {
           const costs = getAdjustedUpgradeCosts(context, upgrade.requirements);
           return Array.from(costs.entries()).every(([resourceId, amount]) => {
-            return (requirementContext.resourceBalances.get(resourceId) ?? 0) >= amount;
+            const balances = requirementContext.resourceBalances;
+            const balance =
+              balances instanceof Map
+                ? (balances.get(resourceId) ?? 0)
+                : ((balances as Record<string, number> | undefined)?.[resourceId] ?? 0);
+            return balance >= amount;
           });
         })
         .map((upgrade) => upgrade.id);
@@ -2792,7 +2878,12 @@ function applyWorldSnapshot(
             .filter((upgrade) => {
               const costs = getAdjustedUpgradeCosts(context, upgrade.requirements);
               return Array.from(costs.entries()).every(([resourceId, amount]) => {
-                return (requirementContext.resourceBalances.get(resourceId) ?? 0) >= amount;
+                const balances = requirementContext.resourceBalances;
+                const balance =
+                  balances instanceof Map
+                    ? (balances.get(resourceId) ?? 0)
+                    : ((balances as Record<string, number> | undefined)?.[resourceId] ?? 0);
+                return balance >= amount;
               });
             })
             .map((upgrade) => upgrade.id);
@@ -3062,7 +3153,7 @@ function applyWorldSnapshot(
           return { ...gate, blockers };
         })(),
         presenterUnlocks: runtimeState.presenterUnlocks.map((entry) => ({ ...entry })),
-      };
+      } as unknown as Phase1RuntimeView;
     },
     getPhase2View(): Phase2View {
       if (phase2ViewCache) return phase2ViewCache;
@@ -3092,27 +3183,34 @@ function applyWorldSnapshot(
           itemId: InventoryStack.itemId[entity],
           quantity: InventoryStack.quantity[entity],
         })),
-        equipment: livingOperatorEntities.map((entity) => {
-          const operatorId = OperatorIdentity.id[entity];
-          const equipmentEntity = runtimeState.equipmentEntities.find(
-            (candidate) => EquipmentAssignment.operatorId[candidate] === operatorId,
-          );
-          const accessoryId =
-            equipmentEntity === undefined ? "" : EquipmentAssignment.accessoryId[equipmentEntity];
-          const accessory = describeAccessoryAssignment(context, operatorId, accessoryId);
-          return {
-            operatorId,
-            weaponId:
-              equipmentEntity === undefined ? "" : EquipmentAssignment.weaponId[equipmentEntity],
-            outfitOverlayId:
-              equipmentEntity === undefined
-                ? ""
-                : EquipmentAssignment.outfitOverlayId[equipmentEntity],
-            accessoryId,
-            accessoryReason: accessory.reason,
-            accessorySummary: describeAccessorySelectionReason(accessory.reason),
-          };
-        }),
+        equipment: (() => {
+          const equipmentEntityByOperatorId = new Map<string, number>();
+          for (const equipmentEntity of runtimeState.equipmentEntities) {
+            equipmentEntityByOperatorId.set(
+              EquipmentAssignment.operatorId[equipmentEntity],
+              equipmentEntity,
+            );
+          }
+          return livingOperatorEntities.map((entity) => {
+            const operatorId = OperatorIdentity.id[entity];
+            const equipmentEntity = equipmentEntityByOperatorId.get(operatorId);
+            const accessoryId =
+              equipmentEntity === undefined ? "" : EquipmentAssignment.accessoryId[equipmentEntity];
+            const accessory = describeAccessoryAssignment(context, operatorId, accessoryId);
+            return {
+              operatorId,
+              weaponId:
+                equipmentEntity === undefined ? "" : EquipmentAssignment.weaponId[equipmentEntity],
+              outfitOverlayId:
+                equipmentEntity === undefined
+                  ? ""
+                  : EquipmentAssignment.outfitOverlayId[equipmentEntity],
+              accessoryId,
+              accessoryReason: accessory.reason,
+              accessorySummary: describeAccessorySelectionReason(accessory.reason),
+            };
+          });
+        })(),
         operatorAutonomy: livingOperatorEntities.map((entity) => {
           const flags = computeAutonomyFlags(entity);
           const morale = MoraleState.current[entity];

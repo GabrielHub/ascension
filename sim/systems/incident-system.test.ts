@@ -40,14 +40,20 @@ function createIncidentSystemContext(): SimSystemContext {
     location: "district/lower-east-side",
     rank: "f",
     bossDefeated: false,
+    missionCompleted: false,
     contractLost: false,
     threat: 40,
     intel: 40,
     reward: 80,
+    boardIntel: { source: "street", quality: "rough" },
+    briefing: null,
     securedAtTick: 600,
     explorationProgress: 10,
+    closureProgress: 0,
+    closureThreshold: 100,
     bossIntelProgress: 0,
     bossPressureProgress: 0,
+    requiresBossClear: false,
     bossAvailable: false,
   };
   BuildingAuthority.raidSummaries[buildingEntity] = [];
@@ -193,6 +199,9 @@ describe("incident system", () => {
       context.runtimeState.incidentState.pendingIncident = {
         instanceId: "incident-1",
         templateId: template.id,
+        templateName: template.name,
+        category: template.category,
+        tags: template.tags,
         triggerFamily: template.triggerFamily,
         boundContext: {
           operatorIds: [],

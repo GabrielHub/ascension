@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -8,59 +9,61 @@ describe("dev console", () => {
   it("renders the empty-state command reference with the shipped discovery commands", () => {
     const html = renderToStaticMarkup(
       <DevConsole
-        session={{
-          mode: "preview",
-          isPreview: true,
-          isAutoTicking: true,
-          commands: {
-            dispatch: vi.fn(),
-            tick: vi.fn(),
-            initiateRelocation: vi.fn(),
-            placeRoom: vi.fn(),
-            setActiveFloor: vi.fn(),
-            setPolicy: vi.fn(),
-            setLootFilter: vi.fn(),
-            purchaseBuildingUpgrade: vi.fn(),
-            purchaseRoomUpgrade: vi.fn(),
-            acceptRecruit: vi.fn(),
-            deferRecruit: vi.fn(),
-            rejectRecruit: vi.fn(),
-            replaceRecruit: vi.fn(),
-            dismissRecruit: vi.fn(),
-            buyItem: vi.fn(),
-            sellItem: vi.fn(),
-            equipItem: vi.fn(),
-            autoAssignAccessory: vi.fn(),
-            unequipItem: vi.fn(),
-            prepConsumable: vi.fn(),
-          },
-          lifecycle: {
-            startAutoTick: vi.fn(),
-            stopAutoTick: vi.fn(),
-          },
-          phase1View: {
-            clock: { day: 1, minuteOfDay: 600 },
-            resources: { cash: 500, reputation: 10, intel: 20 },
-            building: {
-              activeBuildingId: "building/bodega",
-              tier: 1,
-              activeFloorIndex: 0,
-              floorCount: 1,
-              roomSlotCount: 4,
-              operatorSlotCount: 3,
+        session={
+          {
+            mode: "preview",
+            isPreview: true,
+            isAutoTicking: true,
+            commands: {
+              dispatch: vi.fn(),
+              tick: vi.fn(),
+              initiateRelocation: vi.fn(),
+              placeRoom: vi.fn(),
+              setActiveFloor: vi.fn(),
+              setPolicy: vi.fn(),
+              setLootFilter: vi.fn(),
+              purchaseBuildingUpgrade: vi.fn(),
+              purchaseRoomUpgrade: vi.fn(),
+              acceptRecruit: vi.fn(),
+              deferRecruit: vi.fn(),
+              rejectRecruit: vi.fn(),
+              replaceRecruit: vi.fn(),
+              dismissRecruit: vi.fn(),
+              buyItem: vi.fn(),
+              sellItem: vi.fn(),
+              equipItem: vi.fn(),
+              autoAssignAccessory: vi.fn(),
+              unequipItem: vi.fn(),
+              prepConsumable: vi.fn(),
             },
-            rooms: [],
-            visitors: [],
-            postedContracts: [],
-            contractLifecycle: "bidding",
-            activeInterruption: null,
-            encounter: null,
-            operators: [],
-          },
-          registry: templateRegistry,
-          state: { hqWorldSnapshot: null },
-          worldSnapshot: { activeRaidPackets: [] },
-        }}
+            lifecycle: {
+              startAutoTick: vi.fn(),
+              stopAutoTick: vi.fn(),
+            },
+            phase1View: {
+              clock: { day: 1, minuteOfDay: 600 },
+              resources: { cash: 500, reputation: 10, intel: 20 },
+              building: {
+                activeBuildingId: "building/bodega",
+                tier: 1,
+                activeFloorIndex: 0,
+                floorCount: 1,
+                roomSlotCount: 4,
+                operatorSlotCount: 3,
+              },
+              rooms: [],
+              visitors: [],
+              postedContracts: [],
+              contractLifecycle: "bidding",
+              activeInterruption: null,
+              encounter: null,
+              operators: [],
+            },
+            registry: templateRegistry,
+            state: { hqWorldSnapshot: null },
+            worldSnapshot: { activeRaidPackets: [] },
+          } as unknown as ComponentProps<typeof DevConsole>["session"]
+        }
         onClose={() => {}}
         debugOverlays={{
           showRoomBounds: false,

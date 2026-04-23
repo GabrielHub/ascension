@@ -103,7 +103,7 @@ export interface OperatorTrainingSnapshot {
   resilience: number;
 }
 
-export interface OperatorSnapshot {
+export interface OperatorSnapshot extends SaveStructuredRecord {
   id: string;
   lifecycle: OperatorLifecycleSnapshot;
   identity?: SaveStructuredRecord;
@@ -257,15 +257,24 @@ export interface ActiveRaidSnapshot extends SaveStructuredRecord {
   contractSiteId?: string;
   missionId: string;
   startedAt: string;
-  startedTick?: number;
+  startedTick: number;
   revealProgress: number;
-  operatorIds?: string[];
-  returnTick?: number;
-  durationHours?: number;
+  operatorIds: string[];
+  returnTick: number;
+  durationHours: number;
   briefingSource?: string | null;
   briefingStatus?: string | null;
-  resolutionPacket?: SaveStructuredRecord;
+  resolutionPacket?: ActiveRaidResolutionSnapshot;
   raidRun?: RaidRunSnapshot;
+}
+
+export interface ActiveRaidResolutionSnapshot extends SaveStructuredRecord {
+  result?: "success" | "failure" | "mixed";
+  reputationDelta?: number;
+  cashDelta?: number;
+  operatorOutcomes?: RaidOperatorOutcomeSnapshot[];
+  narrativeTags?: string[];
+  intelMismatchTags?: string[];
 }
 
 export interface RaidOperatorOutcomeSnapshot extends SaveStructuredRecord {
@@ -276,12 +285,18 @@ export interface RaidOperatorOutcomeSnapshot extends SaveStructuredRecord {
 export interface RaidSummarySnapshot extends SaveStructuredRecord {
   id: string;
   contractSiteId?: string;
+  opportunityId?: string;
   missionId: string;
-  startedAt: string;
-  endedAt: string;
+  location?: string;
+  startedAt?: string;
+  endedAt?: string;
   result: "success" | "failure" | "mixed";
   reputationDelta: number;
   cashDelta: number;
+  threat?: number;
+  intel?: number;
+  reward?: number;
+  cohesion?: number;
   treatmentCost?: number;
   operatorOutcomes?: RaidOperatorOutcomeSnapshot[];
   narrativeTags?: string[];
@@ -474,7 +489,7 @@ export function createDefaultFactionStanding(factionId: string): FactionStanding
   return { factionId, standing: 0, scrutiny: 0, leverage: 0, cooldownUntilTick: 0 };
 }
 
-export interface WorldSnapshot {
+export interface WorldSnapshot extends SaveStructuredRecord {
   simulationSeed?: number;
   guild: GuildSnapshot;
   time: WorldTimeSnapshot;
@@ -502,10 +517,10 @@ export interface WorldSnapshot {
   equipmentAssignments?: EquipmentAssignmentSnapshot[];
   policies?: PolicyStateSnapshot;
   lootAutomation?: LootAutomationSnapshot;
-  activeEncounter?: SaveStructuredRecord | null;
-  interruptionQueue?: SaveStructuredRecord | null;
-  incidentState?: SaveStructuredRecord | null;
-  guidanceState?: SaveStructuredRecord | null;
+  activeEncounter?: object | null;
+  interruptionQueue?: object | null;
+  incidentState?: object | null;
+  guidanceState?: object | null;
   raidRuns?: RaidRunSnapshot[];
   cityPressure?: CityPressureSnapshot | null;
   presenterUnlocks?: PresenterUnlockSnapshot[];

@@ -284,7 +284,7 @@ describe("legacy save hydration", () => {
           },
         ],
       },
-    } satisfies PersistedSaveGame;
+    } as unknown as PersistedSaveGame;
 
     const hydrated = hydratePersistedSaveGame(legacySave);
 
@@ -328,7 +328,7 @@ describe("runtime session lifecycle", () => {
     expect(session.worldSnapshot.operators?.length).toBeGreaterThanOrEqual(3);
     expect(session.worldSnapshot.operators?.length).toBeLessThanOrEqual(4);
     expect(
-      new Set(session.worldSnapshot.operators?.map((operator) => operator.identity.roleTag)),
+      new Set(session.worldSnapshot.operators?.map((operator) => operator.identity?.roleTag)),
     ).toEqual(new Set(["role:field_lead", "role:scout", "role:medic"]));
     expect(session.worldSnapshot.visitors?.map((visitor) => visitor.id)).toContain("visitor/nika");
     expect(session.worldSnapshot.visitors?.length).toBeGreaterThanOrEqual(1);
@@ -703,7 +703,7 @@ describe("runtime session lifecycle", () => {
       if ("expectedRaidCount" in checkpoint) {
         expect(session.state.phase1View.activeRaids).toHaveLength(checkpoint.expectedRaidCount);
       }
-      if (checkpoint.expectedInterruptionKind) {
+      if ("expectedInterruptionKind" in checkpoint) {
         expect(session.state.phase1View.activeInterruption?.payload.kind).toBe(
           checkpoint.expectedInterruptionKind,
         );
@@ -728,7 +728,7 @@ describe("runtime session lifecycle", () => {
     expect(session.state.phase1View.visitors.length).toBe(3);
     expect(session.worldSnapshot.guild.treasury).toBe(500);
     expect(
-      session.worldSnapshot.inventoryStacks.some(
+      (session.worldSnapshot.inventoryStacks ?? []).some(
         (entry) => entry.itemId === "loot/monster-part/fang",
       ),
     ).toBe(true);
@@ -981,7 +981,7 @@ describe("runtime session lifecycle", () => {
                 outfitOverlayPartId: 42,
               },
             },
-          } as typeof operator)
+          } as unknown as typeof operator)
         : operator,
     );
 
@@ -1323,6 +1323,7 @@ describe("runtime session lifecycle", () => {
     });
 
     const treasuryBefore = session.worldSnapshot.guild.treasury;
+    expect(item).toBeDefined();
     session.drainPendingCues();
 
     await session.commands.buyItem({ itemId });
@@ -1358,7 +1359,7 @@ describe("runtime session lifecycle", () => {
 
     await session.commands.sellItem({ itemId, quantity: 1 });
     expect(session.worldSnapshot.guild.treasury).toBe(
-      treasuryBefore - item!.buyPrice + item.sellPrice,
+      treasuryBefore - item!.buyPrice + item!.sellPrice,
     );
     expect(session.worldSnapshot.inventoryStacks).toEqual([]);
     expect(session.drainPendingCues()).toEqual(["hq.market.sell"]);

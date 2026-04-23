@@ -2,6 +2,7 @@ import {
   bootstrapScenario,
   buildRandomizedNewGameScenario,
   canonicalNewGameScenario,
+  type BootstrapScenario,
 } from "content/bootstrap";
 import type { TemplateRegistry } from "content/templates";
 import { DEFAULT_GUILD_NAME, normalizeGameIdentity, type GameIdentity } from "lib/game-identity";
@@ -47,7 +48,7 @@ export * from "./systems";
 export * from "./uncertainty";
 
 function buildScenarioWorldSnapshot(
-  scenario: typeof bootstrapScenario,
+  scenario: BootstrapScenario,
   registry: TemplateRegistry,
   identityInput?: Partial<GameIdentity>,
   options?: {
@@ -131,6 +132,12 @@ function buildScenarioWorldSnapshot(
           : {}),
       },
       lifecycle: { status: "active" as const },
+      training: {
+        strength: 0,
+        speed: 0,
+        endurance: 0,
+        resilience: 0,
+      },
       combat: {
         rank: operator.combat.rank,
         attunementTag: operator.combat.attunementTag,
@@ -144,7 +151,7 @@ function buildScenarioWorldSnapshot(
       ...relationship,
       historyTags: [...relationship.historyTags],
     })),
-    visitors: scenario.visitors.map((visitor) => ({ ...visitor })),
+    visitors: scenario.visitors.map((visitor) => ({ ...visitor, queueState: "active" as const })),
     raidOpportunities: scenario.raidOpportunities.map((opportunity) => ({
       ...opportunity,
       interestedOperatorIds: [...opportunity.interestedOperatorIds],

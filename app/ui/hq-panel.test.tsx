@@ -45,9 +45,9 @@ describe("hq panel", () => {
       policies: {
         contractPosture: "balanced",
         objectiveBias: "standard_clearance",
-        recoveryTriage: "stabilize_and_rotate",
-        staffingPriority: "balanced",
-        rosterFlow: "balanced",
+        recoveryTriage: "balanced_rotation",
+        staffingPriority: "balanced_schedule",
+        rosterFlow: "selective_intake",
       },
       contractLifecycle: "idle",
       building: {

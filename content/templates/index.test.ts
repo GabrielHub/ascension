@@ -11,7 +11,7 @@ import {
 import { bossTemplates } from "./bosses";
 import { createTemplateRegistry } from "./index";
 import { presenterTemplates } from "./presenters";
-import { rivalDrafts, validateRivalDrafts } from "./rivals";
+import { readyToWireRivals, validateRivalRecords } from "./rivals";
 import { siteConceptTemplates } from "./site-concepts";
 
 describe("template registry", () => {
@@ -88,20 +88,22 @@ describe("template registry", () => {
     });
   });
 
-  it("validates rival draft metadata, status contracts, and shipped asset paths", () => {
-    expect(validateRivalDrafts()).toEqual([]);
+  it("validates rival records, status contracts, and shipped asset paths", () => {
+    expect(validateRivalRecords()).toEqual([]);
 
-    rivalDrafts
-      .filter((rival) => rival.status === "ready-to-wire")
-      .forEach((rival) => {
-        expect(rival.assetsShipped).toBe(true);
-        expect(
-          existsSync(resolve(process.cwd(), "public", rival.assetPaths.leaderPortrait.slice(1))),
-        ).toBe(true);
-        expect(
-          existsSync(resolve(process.cwd(), "public", rival.assetPaths.insignia.slice(1))),
-        ).toBe(true);
-      });
+    readyToWireRivals.forEach((rival) => {
+      expect(rival.assetsShipped).toBe(true);
+      expect(rival.assetPaths).not.toBeNull();
+      if (!rival.assetPaths) {
+        return;
+      }
+      expect(
+        existsSync(resolve(process.cwd(), "public", rival.assetPaths.leaderPortrait.slice(1))),
+      ).toBe(true);
+      expect(existsSync(resolve(process.cwd(), "public", rival.assetPaths.insignia.slice(1)))).toBe(
+        true,
+      );
+    });
   });
 
   it("uses only canonical pressure tags in event templates", () => {

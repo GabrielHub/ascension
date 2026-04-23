@@ -842,7 +842,7 @@ function chooseUpgradeAction(
   const preferredUpgradeId =
     options.scenarioProfile === "skilled" ? options.preferredUpgradeId : undefined;
   const preferredSelection =
-    preferredUpgradeId && candidateUpgrades.includes(preferredUpgradeId)
+    preferredUpgradeId && (candidateUpgrades as readonly string[]).includes(preferredUpgradeId)
       ? preferredUpgradeId
       : chosen;
 
@@ -2497,7 +2497,7 @@ export async function buildEarlyCampaignSimulationSuite(
           startSeed: resolvedOptions.startSeed,
           contractLimit: resolvedOptions.contractLimit,
           tickMinutes: resolvedOptions.tickMinutes,
-          scenarioProfiles: resolvedOptions.scenarioProfiles,
+          scenarioProfiles: [...resolvedOptions.scenarioProfiles],
         },
         aggregate: {
           runCount: runs.length,

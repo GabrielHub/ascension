@@ -714,13 +714,13 @@ Exit criteria:
 
 ### Phase 2 — Rival Framework
 
-- [ ] Confirm the prerequisite [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) has produced enough rivals that are marked `ready-to-wire`, with stable ids / asset references.
+- [ ] Confirm the prerequisite [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) has produced enough rivals that are marked `ready-to-wire`, with stable ids / asset references exposed through the aggregate rival-record export.
 - [ ] Author rival template data for the first rival set:
   - leader identity
   - guild identity
   - pressure style
   - move families
-  - branding / portrait references
+  - shipped asset references
 - [ ] Add ECS-backed rival entities and save/load support for mutable rival state.
 - [ ] Implement one hidden competitive-score formula built from:
   - roster rank score using the locked non-linear rank table
@@ -761,7 +761,7 @@ Exit criteria:
 
 ### Phase 4 — Rival Content Pass
 
-- [ ] Integrate the approved rivals produced by the prerequisite [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) that are already marked `ready-to-wire`.
+- [ ] Integrate the approved rivals produced by the prerequisite [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) that are already marked `ready-to-wire`, consuming the slim ready-to-wire definitions rather than any in-progress authoring notes.
 - [ ] Add portraits, visual direction, interruption hooks, and branding surfaces for those rivals where the gameplay/UI implementation now consumes them.
 - [ ] Author repeatable rival move families with rival-specific framing and variable payload.
 - [ ] Add enough event variation that rivals feel persistent rather than random or one-off.

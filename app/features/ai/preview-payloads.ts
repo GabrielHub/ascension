@@ -26,7 +26,7 @@ interface PreviewIncidentSource extends Pick<
   | "presenterExpression"
 > {
   boundContext: {
-    operatorIds: string[];
+    operatorIds: readonly string[];
     roomId?: string;
   };
 }

@@ -722,7 +722,7 @@ function buildUpgradeCostLedger(): EarlyCampaignEconomyLedger["ledgers"]["upgrad
           : canonicalRoomTemplateIds.has(upgrade.targetId),
       ...(incomeDeltaPerDay !== 0 ? { incomeDeltaPerDay } : {}),
       ...(recoveryRateDelta !== 0 ? { recoveryRateDelta } : {}),
-      ...(futureCashCostMultiplier
+      ...(futureCashCostMultiplier && "multiplier" in futureCashCostMultiplier
         ? { futureCashCostMultiplier: futureCashCostMultiplier.multiplier }
         : {}),
       notes: [

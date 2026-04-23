@@ -228,7 +228,7 @@ function parseSaveSlotId(value: unknown, path: string): SaveSlotId {
     fail(path, `must be one of ${SAVE_SLOT_IDS.join(", ")}.`);
   }
 
-  return slotId;
+  return slotId as SaveSlotId;
 }
 
 function parseCompatibilityVersion(value: unknown, path: string): string {
@@ -508,7 +508,7 @@ function sanitizeLegacyContentReferences(record: Record<string, unknown>): {
         changed = true;
         canonicalizeBodegaSlice = mappedBuildingId === "building/bodega";
       }
-      sanitizedBuildingId = buildingRecord.activeBuildingId;
+      sanitizedBuildingId = String(buildingRecord.activeBuildingId);
     }
     sanitized.building = buildingRecord;
   }
@@ -1614,9 +1614,10 @@ function parseActiveRaidSnapshotWithFallback(
 
   return {
     id: packetId,
-    ...(record.contractSiteId === undefined
-      ? {}
-      : { contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`) }),
+    contractSiteId:
+      record.contractSiteId === undefined
+        ? ""
+        : expectString(record.contractSiteId, `${path}.contractSiteId`),
     missionId: expectString(record.missionId, `${path}.missionId`),
     startedAt: expectString(record.startedAt, `${path}.startedAt`),
     startedTick: expectInteger(startedTick, `${path}.startedTick`),
@@ -1702,15 +1703,23 @@ function parseRaidSummarySnapshot(
 
   return {
     id: expectString(record.id, `${path}.id`),
-    ...(record.contractSiteId === undefined
-      ? {}
-      : { contractSiteId: expectString(record.contractSiteId, `${path}.contractSiteId`) }),
+    contractSiteId:
+      record.contractSiteId === undefined
+        ? ""
+        : expectString(record.contractSiteId, `${path}.contractSiteId`),
+    opportunityId:
+      typeof record.opportunityId === "string" ? record.opportunityId : String(record.id ?? ""),
     missionId: expectString(record.missionId, `${path}.missionId`),
+    location: typeof record.location === "string" ? record.location : "",
     startedAt: expectString(record.startedAt, `${path}.startedAt`),
     endedAt: expectString(record.endedAt, `${path}.endedAt`),
     result: parseRaidResult(record.result, `${path}.result`),
     reputationDelta: expectNumber(record.reputationDelta, `${path}.reputationDelta`),
     cashDelta: expectNumber(record.cashDelta, `${path}.cashDelta`),
+    threat: typeof record.threat === "number" ? record.threat : 0,
+    intel: typeof record.intel === "number" ? record.intel : 0,
+    reward: typeof record.reward === "number" ? record.reward : 0,
+    cohesion: typeof record.cohesion === "number" ? record.cohesion : 0,
     ...(record.treatmentCost === undefined
       ? {}
       : { treatmentCost: expectNumber(record.treatmentCost, `${path}.treatmentCost`) }),
@@ -2230,7 +2239,7 @@ function parseWorldSnapshot(
 
   if (schemaVersion >= 7) {
     const knownOperatorIds = new Set(operators.items.map((op) => op.id));
-    const knownRoomIds = new Set(rooms.map((room) => room.id));
+    const knownRoomIds = new Set(rooms.map(({ room }) => room.id));
     const activeOperatorIds = new Set(
       operators.items.filter((op) => op.lifecycle.status === "active").map((op) => op.id),
     );
@@ -2360,6 +2369,7 @@ function parseWorldSnapshot(
     operators.items.forEach((operator, operatorIndex) => {
       if (
         operator.lifecycle.status === "dead" &&
+        operator.lifecycle.deathRaidSummaryId !== undefined &&
         !knownRaidSummaryIds.has(operator.lifecycle.deathRaidSummaryId)
       ) {
         fail(
@@ -2394,7 +2404,7 @@ function parseWorldSnapshot(
         }
       });
 
-      const outcomeRecords = packet.resolutionPacket.operatorOutcomes;
+      const outcomeRecords = packet.resolutionPacket?.operatorOutcomes;
       if (!Array.isArray(outcomeRecords)) {
         return;
       }

@@ -910,7 +910,7 @@ export function getCultureSummaryLabel(summary: string): string {
     .map((part) => part.trim())
     .filter(Boolean)
     .map((part) => {
-      if (TONE_META[part]) return getToneMeta(part).label;
+      if ((TONE_META as DisplayRegistry)[part]) return getToneMeta(part).label;
       return getSignalMeta(part).label;
     })
     .join(", ");
@@ -967,7 +967,7 @@ export function getIncidentCategoryMeta(category: string): DisplayMeta {
 }
 
 export function getRaidContributingFactorMeta(factor: string): DisplayMeta | null {
-  const entry = RAID_CONTRIBUTING_FACTOR_META[factor];
+  const entry = (RAID_CONTRIBUTING_FACTOR_META as DisplayRegistry)[factor];
   return entry ? toDisplayMeta(entry) : null;
 }
 

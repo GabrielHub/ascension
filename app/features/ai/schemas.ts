@@ -104,7 +104,7 @@ export interface IncidentFramingChoiceOutput {
   resolutionSummary: string;
 }
 
-export interface IncidentFramingOutput {
+export interface IncidentFramingOutput extends Record<string, unknown> {
   title: string;
   briefing: string;
   choices: IncidentFramingChoiceOutput[];
@@ -175,7 +175,7 @@ export interface OperatorIdentityPayload {
   };
 }
 
-export interface OperatorIdentityOutput {
+export interface OperatorIdentityOutput extends Record<string, unknown> {
   specialtyTag: string;
   appearance: OperatorIdentityAppearancePayload;
   preferences: OperatorIdentityPreferencesPayload;

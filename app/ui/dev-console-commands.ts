@@ -46,6 +46,7 @@ type DevConsoleSession = Pick<
   | "mode"
   | "phase1View"
   | "registry"
+  | "simulation"
   | "slotId"
   | "state"
   | "worldSnapshot"

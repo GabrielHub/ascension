@@ -28,6 +28,7 @@ describe("interruption host", () => {
         boundContext: {
           operatorIds: ["operator/vera-santos"],
         },
+        copySource: "authored",
         presenterId: "presenter/assistant",
         presenterExpression: "concerned",
       },
@@ -74,6 +75,7 @@ describe("interruption host", () => {
         boundContext: {
           operatorIds: ["operator/vera-santos"],
         },
+        copySource: "authored",
       },
     };
 

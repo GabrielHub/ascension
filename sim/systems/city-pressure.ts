@@ -95,7 +95,7 @@ export function lookupDistrictTemplate(districtId: string): DistrictTemplate | u
 }
 
 export function lookupFactionTemplate(factionId: string): FactionTemplate | undefined {
-  return factionById.get(factionId);
+  return (factionById as unknown as ReadonlyMap<string, FactionTemplate>).get(factionId);
 }
 
 function clampDistrict(d: DistrictPressureSnapshot): void {

@@ -1685,7 +1685,7 @@ export function composeHqWorldGeometry(
         ...(() => {
           const seed = rooms.find((candidate) => candidate.id === room.id);
           const opening = seed
-            ? getRecipe(seed.templateId, seed.functionTag, seed.roomStateId).openings[0]
+            ? getRecipe(seed.templateId, seed.functionTag).openings[0]
             : undefined;
           if (!seed || !opening) {
             return {};

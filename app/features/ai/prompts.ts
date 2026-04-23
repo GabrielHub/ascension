@@ -186,7 +186,7 @@ export function buildUserPrompt(
 ): string {
   switch (surface) {
     case "incident-framing": {
-      const p = payload as IncidentFramingPayload;
+      const p = payload as unknown as IncidentFramingPayload;
 
       return [
         "AUTHORITATIVE INCIDENT PAYLOAD",
@@ -223,7 +223,7 @@ export function buildUserPrompt(
       ].join("\n");
     }
     case "operator-identity": {
-      const p = payload as OperatorIdentityPayload;
+      const p = payload as unknown as OperatorIdentityPayload;
 
       return [
         "AUTHORITATIVE RECRUIT PAYLOAD",

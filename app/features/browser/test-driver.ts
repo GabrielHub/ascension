@@ -10,7 +10,7 @@ import {
 } from "save";
 import type { RuntimeSession } from "app/features/runtime";
 import type { EventLogEntry, HqViewModel, OperationsViewModel } from "app/ui/view-models";
-import type { FocusPayload } from "render";
+import type { FocusPayload, HqDebugOverlays } from "render";
 import {
   createAscensionSimulation,
   createBootstrapWorldSnapshot,
@@ -234,6 +234,7 @@ function buildClosedBodegaRaidSummaries(): WorldSnapshot["raidSummaries"] {
     return {
       id: `raid/late-bodega-${contractNumber}`,
       contractSiteId: `contract/late-bodega-${contractNumber}`,
+      opportunityId: `opportunity/late-bodega-${contractNumber}`,
       missionId: "mission/clearance",
       startedAt: `2026-02-${String(contractNumber).padStart(2, "0")}T18:00:00.000Z`,
       endedAt: `2026-02-${String(contractNumber).padStart(2, "0")}T20:00:00.000Z`,
@@ -336,7 +337,10 @@ function createRelocationReadyWorld(): WorldSnapshot {
   upgradedWorld.building.activeBuildingTier = 4;
   upgradedWorld.building.roomSlotCount = 7;
   upgradedWorld.building.operatorSlotCount = 10;
-  upgradedWorld.operators = [...baseOperators, ...extraOperators];
+  upgradedWorld.operators = [
+    ...baseOperators,
+    ...extraOperators,
+  ] as unknown as typeof upgradedWorld.operators;
   upgradedWorld.operatorDispositions = [
     ...(upgradedWorld.operatorDispositions ?? []),
     ...extraOperators.map((operator, index) => ({
@@ -348,7 +352,8 @@ function createRelocationReadyWorld(): WorldSnapshot {
     })),
   ];
   upgradedWorld.visitors = [];
-  upgradedWorld.raidSummaries = buildClosedBodegaRaidSummaries();
+  upgradedWorld.raidSummaries =
+    buildClosedBodegaRaidSummaries() as unknown as typeof upgradedWorld.raidSummaries;
   upgradedWorld.guidanceState = buildCompletedOpeningGuidanceState(upgradedWorld);
   upgradedWorld.activeRaidPackets = [];
   upgradedWorld.contractSite = null;
@@ -503,7 +508,7 @@ function readInterruption(session: RuntimeSession): BrowserTestSnapshot["interru
     return null;
   }
 
-  const payload = interruption.payload as Record<string, unknown>;
+  const payload = interruption.payload as unknown as Record<string, unknown>;
   const choices = Array.isArray(payload.choices)
     ? payload.choices
         .map((choice) =>
@@ -560,8 +565,9 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
         : null,
       contractSiteId: operations.contractSite?.contractSiteId ?? null,
       contractSiteName: operations.contractSite?.siteConceptName ?? null,
-      latestRaidSummaryFactors:
-        operations.raidHistory[operations.raidHistory.length - 1]?.contributingFactors ?? [],
+      latestRaidSummaryFactors: [
+        ...(operations.raidHistory[operations.raidHistory.length - 1]?.contributingFactors ?? []),
+      ],
       postedContractIds: operations.postedContracts.map((contract) => contract.postingId),
       postedContractNames: operations.postedContracts.map((contract) => contract.siteConceptName),
       raidSummaryCount: operations.raidHistory.length,
@@ -576,7 +582,7 @@ function buildSnapshot(payload: BrowserDriverPayload): BrowserTestSnapshot {
     guidance: readGuidanceState(session),
     incident: readIncidentState(session),
     interruption: readInterruption(session),
-    inventory: session.worldSnapshot.inventoryStacks.map((stack) => ({ ...stack })),
+    inventory: (session.worldSnapshot.inventoryStacks ?? []).map((stack) => ({ ...stack })),
     navigation: {
       activeTab,
       focusTargetId: focus?.targetId ?? null,

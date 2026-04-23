@@ -662,9 +662,13 @@ describe("runtime session AI request registry", () => {
     await session.commands.tick(0);
 
     await waitForAssertion(() => {
-      expect(session.phase1View.activeInterruption?.payload.kind).toBe("incident");
-      expect(session.phase1View.activeInterruption?.payload.copySource).toBe("generated");
-      expect(session.phase1View.activeInterruption?.payload.title).toBe("Dock Discipline Notice");
+      const payload = session.phase1View.activeInterruption?.payload;
+      expect(payload?.kind).toBe("incident");
+      if (payload?.kind !== "incident") {
+        throw new Error("expected incident interruption payload");
+      }
+      expect(payload.copySource).toBe("generated");
+      expect(payload.title).toBe("Dock Discipline Notice");
     });
   });
 
@@ -738,8 +742,12 @@ describe("runtime session AI request registry", () => {
     await session.commands.tick(0);
 
     await waitForAssertion(() => {
-      expect(session.phase1View.activeInterruption?.payload.kind).toBe("incident");
-      expect(session.phase1View.activeInterruption?.payload.copySource).toBe("authored");
+      const payload = session.phase1View.activeInterruption?.payload;
+      expect(payload?.kind).toBe("incident");
+      if (payload?.kind !== "incident") {
+        throw new Error("expected incident interruption payload");
+      }
+      expect(payload.copySource).toBe("authored");
     });
 
     expect(vi.mocked(localAiClient.generate)).not.toHaveBeenCalled();

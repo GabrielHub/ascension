@@ -67,7 +67,9 @@ function buildClosedBodegaRaidSummaries(): WorldSnapshot["raidSummaries"] {
     return {
       id: `raid/late-bodega-${contractNumber}`,
       contractSiteId: `contract/late-bodega-${contractNumber}`,
+      opportunityId: `opportunity/late-bodega-${contractNumber}`,
       missionId: "mission/clearance",
+      location: "district/lower-east-side",
       startedAt: `2026-02-${String(contractNumber).padStart(2, "0")}T18:00:00.000Z`,
       endedAt: `2026-02-${String(contractNumber).padStart(2, "0")}T20:00:00.000Z`,
       result: index % 5 === 0 ? "mixed" : "success",
@@ -169,7 +171,10 @@ export function createRelocationReadyWorld(): WorldSnapshot {
   upgradedWorld.building.activeBuildingTier = 4;
   upgradedWorld.building.roomSlotCount = 7;
   upgradedWorld.building.operatorSlotCount = 10;
-  upgradedWorld.operators = [...baseOperators, ...extraOperators];
+  upgradedWorld.operators = [
+    ...baseOperators,
+    ...extraOperators,
+  ] as unknown as typeof upgradedWorld.operators;
   upgradedWorld.operatorDispositions = [
     ...(upgradedWorld.operatorDispositions ?? []),
     ...extraOperators.map((operator, index) => ({
@@ -181,7 +186,8 @@ export function createRelocationReadyWorld(): WorldSnapshot {
     })),
   ];
   upgradedWorld.visitors = [];
-  upgradedWorld.raidSummaries = buildClosedBodegaRaidSummaries();
+  upgradedWorld.raidSummaries =
+    buildClosedBodegaRaidSummaries() as unknown as typeof upgradedWorld.raidSummaries;
   upgradedWorld.guidanceState = buildCompletedOpeningGuidanceState(upgradedWorld);
   upgradedWorld.activeRaidPackets = [];
   upgradedWorld.contractSite = null;
@@ -302,9 +308,12 @@ export function createPortersUpgradeCampaignSeedWorld(): WorldSnapshot {
 export interface PortersUpgradeCampaignReport {
   activeBuildingId: string;
   appliedUpgradeIds: string[];
-  contractBriefing: ReturnType<
-    ReturnType<typeof createAscensionSimulation>["getPhase1View"]
-  >["contractSite"]["briefing"];
+  contractBriefing: {
+    source: "briefing_room" | "briefing_room_and_prep";
+    status: "briefed" | "drilled";
+    opportunityIntelBonus: number;
+    bossIntelBonus: number;
+  } | null;
   latestRaidSummaryFactors: string[];
   placedRoomTemplateIds: string[];
 }
@@ -366,8 +375,8 @@ export async function runPortersUpgradeCampaign(): Promise<PortersUpgradeCampaig
     const latestSummary = phase1View.raidSummaries[phase1View.raidSummaries.length - 1];
     if (
       phase1View.raidSummaries.length > initialRaidSummaryCount &&
-      latestSummary?.contributingFactors.includes("dock:staged") &&
-      latestSummary?.contributingFactors.includes("deck:aired_out")
+      latestSummary?.contributingFactors?.includes("dock:staged") &&
+      latestSummary?.contributingFactors?.includes("deck:aired_out")
     ) {
       break;
     }

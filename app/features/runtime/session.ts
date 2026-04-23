@@ -346,7 +346,7 @@ function getStructuredRecordSlice(
   key: "guidanceState" | "incidentState" | "interruptionQueue",
 ): Record<string, unknown> | null {
   const value = snapshot[key];
-  return value && typeof value === "object" ? value : null;
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
 function buildOpeningFirstIncidentPersistenceSignature(snapshot: WorldSnapshot): string | null {
@@ -1100,7 +1100,9 @@ function createRuntimeSession(
           !occupiedSlotKeys.has(getSlotKey(slot.floorIndex, slot.slotId)),
       )
       .map((slot) => {
-        const kind = unlockedSlotKeys.has(getSlotKey(slot.floorIndex, slot.slotId))
+        const kind: "available" | "locked" = unlockedSlotKeys.has(
+          getSlotKey(slot.floorIndex, slot.slotId),
+        )
           ? "available"
           : "locked";
         return {

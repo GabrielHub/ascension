@@ -46,7 +46,7 @@ Use this loop for every rival guild:
 2. metadata approval
 3. asset briefing from approved metadata
 4. asset generation
-5. ready-to-wire handoff
+5. ready-to-wire handoff and metadata cleanup
 
 Rules:
 
@@ -90,10 +90,14 @@ Each rival must include:
 - favored contract lane, district, or sponsor angle when useful
 - rivalry fantasy summary: why this guild is irritating, dangerous, or memorable as a competitor
 - tone / voice notes for rival-facing copy
+- interruption copy tone notes
+
+Additional authoring-only fields are required before a rival can leave metadata / asset production:
+
 - visual branding notes
 - leader portrait brief
 - guild presentation / logo brief
-- interruption copy tone notes
+- dossier / interruption motif notes when they materially guide first-pass asset work
 
 ### Required Ready-To-Wire Copy Surfaces
 
@@ -116,17 +120,16 @@ Each rival must include:
 
 - stable portrait asset id or portrait brief id
 - stable branding / insignia asset id or branding brief id
-- leader portrait brief or final portrait asset
-- guild mark / insignia brief or final branding asset
-- dossier / interruption motif notes
-- color direction
-- typography direction when useful for later UI treatment
+- leader portrait brief or final portrait asset while the rival is still in authoring
+- guild mark / insignia brief or final branding asset while the rival is still in authoring
+- dossier / interruption motif notes, color direction, and typography direction only when they are still needed to finish assets or later UI treatment
 
 For this plan:
 
 - `metadata-approved` does not require final assets
-- `ready-to-wire` does require either final assets or explicitly approved first-pass runtime assets
+- `ready-to-wire` does require final first-pass runtime assets with stable shipped paths
 - do not mark a rival `ready-to-wire` on briefs alone
+- once a rival becomes `ready-to-wire`, remove portrait / insignia / motif brief prose from the consumable checked-in record so later implementation reads a slim runtime definition rather than an art packet
 
 ## First-Pass Asset Set
 
@@ -138,6 +141,13 @@ Required first-pass asset set per rival:
 - one canonical leader portrait used for current-rival reads, interruption surfaces, and dossier surfaces
 - one guild insignia / logo mark as a PNG
 - one simple rival dossier / interruption motif direction that can be expressed in UI styling later
+
+Co-principal exception:
+
+- default to one portrait featuring one leader
+- if a rival's identity is inseparable from a paired leadership act, ship one shared canonical portrait instead of two separate portraits
+- shared portraits are still a scope cap, not a scope increase: one file, one approved composition, no extra expression family
+- shared portraits must still read at small UI sizes; do not use the co-principal exception to justify a busy scene that only works at full resolution
 
 Decision:
 
@@ -203,17 +213,28 @@ Rules:
 
 Recommended ownership split:
 
-- `content/templates/rivals.ts` is the current source-of-truth file for rival metadata and asset-path references
+- `content/templates/rival-records/<rival-id>.ts` owns the per-rival checked-in record
+- `content/templates/rivals.ts` aggregates those records, validates status-specific requirements, and exposes the slim `ready-to-wire` slice for gameplay implementation
 - `public/data/rivals/<rival-id>/` owns the runtime-facing portrait and insignia files
 
 This keeps the rival asset contract aligned with the existing presenter pattern while still staying narrower than the presenter family.
+
+### Record Lifecycle
+
+Use one checked-in file per rival under `content/templates/rival-records/`.
+
+Lifecycle rule:
+
+- while a rival is still `concept-draft`, `metadata-in-progress`, `metadata-approved`, or `assets-in-progress`, that record may include transient authoring notes such as branding notes, portrait briefs, insignia briefs, and dossier motif direction
+- when a rival reaches `ready-to-wire`, promote that same record into a slim consumable definition by deleting the transient art-brief fields and keeping only the stable gameplay-facing identity, copy, and runtime asset paths
+- the gameplay refactor should consume the aggregate `ready-to-wire` export from `content/templates/rivals.ts`, not parse in-progress authoring notes directly
 
 ### Required Structural Readiness Fields
 
 Each rival must also include:
 
 - stable file / record location for authored metadata
-- for the current slice, that location is the rival's entry inside `content/templates/rivals.ts`
+- for the current slice, that location is the rival's per-rival file inside `content/templates/rival-records/`
 - named move-family affinities compatible with the main rival-pressure plan
 - clear differentiation notes from other completed rivals
 - explicit approval that the rival is ready for later ECS/template wiring
@@ -270,11 +291,11 @@ Specific constraints:
 
 ## Deliverables
 
-- one checked-in rival record in `content/templates/rivals.ts` for each rival
+- one checked-in per-rival record in `content/templates/rival-records/` for each rival
 - one approved metadata package for each `metadata-approved` rival
 - first-pass portrait / branding briefs for each rival that has entered asset production
 - final runtime-facing rival art assets for each `ready-to-wire` rival
-- stable content ids and asset-reference names that the gameplay refactor can target
+- stable content ids and asset-reference names that the gameplay refactor can target through the aggregate `content/templates/rivals.ts` export
 - a clear per-rival status showing whether that rival is:
   - `concept-draft`
   - `metadata-in-progress`
@@ -313,7 +334,7 @@ Exit criteria:
 
 - [ ] Define the completion contract fields once and apply them to every rival created under this plan.
 - [ ] Use back-and-forth review to define each rival's metadata before any asset generation starts.
-- [ ] Add each rival as a typed record in `content/templates/rivals.ts`.
+- [ ] Add each rival as a typed per-rival record in `content/templates/rival-records/<rival-id>.ts`.
 - [ ] Write a full rival package for each rival against the locked metadata contract:
   - stable id
   - leader name
@@ -326,7 +347,7 @@ Exit criteria:
   - branding notes
   - portrait brief
   - ready-to-wire copy surfaces
-- [ ] Store runtime-facing asset references in that same `content/templates/rivals.ts` record.
+- [ ] Store runtime-facing asset references in that same per-rival record once filenames are known.
 - [ ] Ensure each new rival occupies a distinct competitive fantasy and does not duplicate another rival's tone or role.
 - [ ] Lock stable ids and naming conventions that later ECS/template work can reference.
 - [ ] Mark a rival `metadata-approved` only when the metadata and copy surfaces are stable enough that later asset work does not need to invent tone or identity.
@@ -344,6 +365,7 @@ Exit criteria:
   - guild mark / insignia
   - dossier or interruption motif
 - [ ] Record the expected runtime filenames and public paths for each rival asset.
+- [ ] Keep asset-brief prose in the per-rival record only while that rival is still in authoring.
 - [ ] Specify which parts of each asset are final-production targets versus approved temporary first-pass surfaces.
 - [ ] Verify that the asset direction reads clearly at likely UI scales and in grayscale / low-saturation contexts where needed.
 - [ ] Move the rival to `assets-in-progress` when the asset brief is approved.
@@ -359,6 +381,7 @@ Exit criteria:
 - [ ] Produce the first-pass guild branding assets for the same rivals.
 - [ ] Produce any needed interruption or dossier-ready derived treatments.
 - [ ] Place each rival's runtime-facing files under `public/data/rivals/<rival-id>/` with stable filenames.
+- [ ] Before marking a rival `ready-to-wire`, trim the checked-in record down to the slim consumable definition: remove portrait / insignia / motif brief prose and keep the shipped asset paths, copy surfaces, and gameplay-facing identity fields.
 - [ ] Review completed rivals together to ensure they feel like competitors in the same city and industry, not art from different games.
 - [ ] Mark a rival `ready-to-wire` only after final runtime-facing portrait and insignia assets exist and the metadata package is already approved.
 
@@ -369,7 +392,7 @@ Exit criteria:
 
 ### Phase 4 — Handoff To Gameplay Refactor
 
-- [ ] Publish the stable rival definitions, ids, asset references, and per-rival status in a form the gameplay refactor can consume.
+- [ ] Publish the stable rival definitions, ids, asset references, and per-rival status through the aggregate `content/templates/rivals.ts` module in a form the gameplay refactor can consume.
 - [ ] Link the output of this plan from the main skyscraper rival-pressure refactor plan as a prerequisite input.
 - [ ] Confirm which rivals are actually `ready-to-wire`.
 - [ ] Confirm which later gameplay tasks now have enough authored rival content to proceed in parallel.

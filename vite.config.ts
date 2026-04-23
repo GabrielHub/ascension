@@ -3,7 +3,13 @@ import path from "node:path";
 
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, type PluginOption, type UserConfig } from "vite-plus";
+import {
+  defineConfig,
+  type ConfigEnv,
+  type ConfigPluginContext,
+  type PluginOption,
+  type UserConfig,
+} from "vite-plus";
 
 import { createSvgCatalogWatcherPlugin } from "./vite-plugins/svg-catalog-watcher.ts";
 
@@ -37,18 +43,22 @@ function wrapPluginOption(pluginOption: PluginOption): PluginOption {
     const wrappedPlugin = { ...pluginOption };
 
     if (typeof originalConfig === "function") {
-      wrappedPlugin.config = async (...args) => {
-        const config = await originalConfig(...args);
-        return stripDeprecatedEsbuildConfig(config);
+      wrappedPlugin.config = async function (
+        this: ConfigPluginContext,
+        config: UserConfig,
+        env: ConfigEnv,
+      ) {
+        const nextConfig = await originalConfig.call(this, config, env);
+        return stripDeprecatedEsbuildConfig(nextConfig === undefined ? undefined : nextConfig);
       };
       return wrappedPlugin;
     }
 
     wrappedPlugin.config = {
       ...originalConfig,
-      handler: async (...args) => {
-        const config = await originalConfig.handler?.(...args);
-        return stripDeprecatedEsbuildConfig(config);
+      handler: async function (this: ConfigPluginContext, config: UserConfig, env: ConfigEnv) {
+        const nextConfig = await originalConfig.handler?.call(this, config, env);
+        return stripDeprecatedEsbuildConfig(nextConfig === undefined ? undefined : nextConfig);
       },
     };
     return wrappedPlugin;
@@ -88,30 +98,35 @@ const STATIC_ROUTE_DEFINITIONS: StaticRouteDefinition[] = [
     path: "",
   },
   {
+    hasErrorBoundary: false,
     id: "routes/start-screen",
     index: true,
     key: "app/routes/start-screen.tsx?__react-router-build-client-route",
     parentId: "root",
   },
   {
+    hasErrorBoundary: false,
     id: "routes/game",
     key: "app/routes/game.tsx?__react-router-build-client-route",
     parentId: "root",
     path: "game",
   },
   {
+    hasErrorBoundary: false,
     id: "routes/svg-playground",
     key: "app/routes/svg-playground.tsx?__react-router-build-client-route",
     parentId: "root",
     path: "svg-playground",
   },
   {
+    hasErrorBoundary: false,
     id: "routes/svg-assets",
     key: "app/routes/svg-assets.tsx?__react-router-build-client-route",
     parentId: "root",
     path: "svg-assets",
   },
   {
+    hasErrorBoundary: false,
     id: "routes/audio-playground",
     key: "app/routes/audio-playground.tsx?__react-router-build-client-route",
     parentId: "root",

@@ -41,6 +41,7 @@ import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
 import { visitorQualityToRank } from "lib/visitor-rank";
 
 import type { VisibleGear } from "./operator-parts";
+import type { RaidEventKind } from "./raid-world";
 import { resolveVisibleGear, getLoadedParts } from "./operator-parts";
 import {
   getEffectLabel,
@@ -201,7 +202,7 @@ export interface RaidOpportunityViewModel {
 
 export interface RaidEventViewModel {
   id: string;
-  kind: string;
+  kind: RaidEventKind;
   message: string;
   tick: number;
 }
@@ -1025,8 +1026,8 @@ function mapUpgradeTemplate(
     description?: string;
     target: "building" | "room";
     targetId: string;
-    requirements: Array<{ type: string; [k: string]: unknown }>;
-    effects: Array<{ type: string; [k: string]: unknown }>;
+    requirements: readonly { type: string; [k: string]: unknown }[];
+    effects: readonly { type: string; [k: string]: unknown }[];
   },
   appliedIds: readonly string[],
   affordableIds: readonly string[],
@@ -1296,8 +1297,8 @@ export function buildHqViewFromPhase1(
 
   const rooms: RoomViewModel[] = view.rooms.map((room) => {
     const template = registry.roomById.get(room.templateId) ?? registry.rooms[0];
-    const reservedFootprint = toFootprintViewModel(room.reservedFootprint ?? room.footprint);
-    const activeFootprint = toFootprintViewModel(room.activeFootprint ?? room.footprint);
+    const reservedFootprint = toFootprintViewModel(room.reservedFootprint);
+    const activeFootprint = toFootprintViewModel(room.activeFootprint);
     return {
       id: room.id,
       templateId: room.templateId,
@@ -1621,15 +1622,15 @@ export function buildOpsViewFromPhase1(
 
   const raidHistory: RaidSummaryViewModel[] = view.raidSummaries.map((summary) => ({
     id: summary.id,
-    contractSiteId: summary.contractSiteId,
+    contractSiteId: summary.contractSiteId ?? "",
     missionName: resolveMissionName(summary.missionId, registry),
     missionId: summary.missionId,
-    startedAt: summary.startedAt,
-    endedAt: summary.endedAt,
+    startedAt: summary.startedAt ?? "",
+    endedAt: summary.endedAt ?? "",
     result: summary.result,
     reputationDelta: summary.reputationDelta,
     cashDelta: summary.cashDelta,
-    location: getLocationLabel(summary.location),
+    location: getLocationLabel(summary.location ?? ""),
     narrativeTags: summary.narrativeTags,
     contributingFactors: summary.contributingFactors ?? [],
     operatorOutcomes: (summary.operatorOutcomes ?? []).map((outcome) => ({
@@ -1803,11 +1804,7 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       activeFootprint,
       prepRecipes: [],
       craftRecipes: [],
-      training: buildRoomTrainingViewModel(
-        { tags: template.tags, isOperational },
-        snapshot.operators ?? [],
-        0,
-      ),
+      training: buildRoomTrainingViewModel({ tags: template.tags, isOperational }, [], 0),
     };
   });
 
@@ -1891,12 +1888,12 @@ export function buildHqViewModel(snapshot: WorldSnapshot, registry: TemplateRegi
       lifecycle,
       combat: mapCombatViewModel(combat),
       training: buildOperatorTrainingViewModel(
-        rec(op as Record<string, unknown>, "training") as {
+        (rec(op as Record<string, unknown>, "training") as {
           strength?: number;
           speed?: number;
           endurance?: number;
           resilience?: number;
-        } | null,
+        } | null) ?? undefined,
       ),
       refusalRisk: false,
       quitRisk: false,
@@ -2044,8 +2041,8 @@ function mapRaidSummary(
     contractSiteId: summary.contractSiteId ?? "",
     missionName: resolveMissionName(summary.missionId, registry),
     missionId: summary.missionId,
-    startedAt: summary.startedAt,
-    endedAt: summary.endedAt,
+    startedAt: summary.startedAt ?? "",
+    endedAt: summary.endedAt ?? "",
     result: summary.result,
     reputationDelta: summary.reputationDelta,
     cashDelta: summary.cashDelta,
@@ -2093,6 +2090,7 @@ export function buildOperationsViewModel(
     activeRaids: snapshot.activeRaidPackets.map((r) => mapActiveRaid(r, registry)),
     raidHistory: snapshot.raidSummaries.map((s) => mapRaidSummary(s, registry)),
     raidWorld: null,
+    minuteOfDay: snapshot.time.minuteOfDay,
   };
 }
 

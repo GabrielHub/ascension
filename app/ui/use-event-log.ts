@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { RuntimeSession } from "app/features/runtime/session";
+import type { FocusTargetKind } from "render";
 
 import type { EventLogEntry, EventLogKind } from "./view-models";
 
@@ -14,7 +15,7 @@ interface EventLogNavActions {
   setActiveTab: (tab: ShellTab) => void;
   setHqCategory: (cat: HqCategory | null) => void;
   setOpsCategory: (cat: OpsCategory | null) => void;
-  setFocus: (payload: { targetKind: string; targetId: string } | null) => void;
+  setFocus: (payload: { targetKind: FocusTargetKind; targetId: string } | null) => void;
   openOpsTeam: (teamId: string) => void;
   openOpsHistorySummary: (summaryId: string) => void;
 }

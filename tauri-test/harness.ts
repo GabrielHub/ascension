@@ -153,7 +153,7 @@ export class TauriDesktopHarness {
         "tauri:options": {
           application: applicationPath,
         },
-      },
+      } as object,
     });
 
     await this.waitUntil(
@@ -321,7 +321,7 @@ export class TauriDesktopHarness {
     this.assertBrowser();
 
     try {
-      return await this.browser!.getLogs("browser");
+      return (await this.browser!.getLogs("browser")).map((entry) => String(entry));
     } catch {
       return [];
     }

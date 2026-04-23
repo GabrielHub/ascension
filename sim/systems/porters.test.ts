@@ -545,6 +545,7 @@ describe("Consumable encounter intervention (behavior)", () => {
       elapsedMinutes: 10,
       rngSeed: 42,
       rngCursor: 0,
+      reactionHooks: [],
       initiativeQueue: ["ally-1", "boss-1"],
       pendingRoundStart: false,
       actors: {

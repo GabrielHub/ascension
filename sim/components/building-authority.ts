@@ -72,11 +72,11 @@ export interface PostedContract {
   /** Runtime-owned board intel provenance for the current posting. */
   boardIntel: ContractBoardIntelState;
   /** Owning district for this contract. */
-  districtId: string;
+  districtId?: string;
   /** Sponsoring faction for this contract. */
-  sponsorFactionId: string;
+  sponsorFactionId?: string;
   /** City-pressure tags affecting this contract. */
-  pressureTags: readonly string[];
+  pressureTags?: readonly string[];
 }
 
 export interface ContractResultSummary {
@@ -92,12 +92,13 @@ export interface ContractResultSummary {
   operatorDeaths: number;
   resolvedAtTick: number;
   /** District this contract was in. */
-  districtId: string;
+  districtId?: string;
   /** Faction that sponsored this contract. */
-  sponsorFactionId: string;
+  sponsorFactionId?: string;
 }
 
 export interface ActiveRaidResolutionPacket {
+  [key: string]: unknown;
   result: "success" | "failure" | "mixed";
   reputationDelta: number;
   cashDelta: number;
@@ -172,9 +173,9 @@ export interface ContractSiteState {
   /** Contract rank (F-U). */
   rank: ContractRank;
   /** Owning district for this contract. */
-  districtId: string;
+  districtId?: string;
   /** Sponsoring faction for this contract. */
-  sponsorFactionId: string;
+  sponsorFactionId?: string;
   /** Whether the dungeon boss has been defeated. */
   bossDefeated: boolean;
   /** Whether the ordinary contract objective has been completed. */

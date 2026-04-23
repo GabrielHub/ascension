@@ -201,6 +201,7 @@ function createIncidentInterruption(): InterruptionInstance {
       title: "Personnel Friction Report",
       briefing: "Two operators are at each other's throats.",
       subjectSummary: "Test Operators",
+      copySource: "authored",
       choices: [
         {
           choiceId: "mediate",
@@ -252,6 +253,9 @@ describe("guidance system", () => {
     context.runtimeState.incidentState.pendingIncident = {
       instanceId: "incident-1",
       templateId: "incident/personnel-friction",
+      templateName: "Personnel Friction",
+      category: "personnel_conflict",
+      tags: [],
       triggerFamily: "operator_conflict",
       boundContext: {
         operatorIds: ["operator/a", "operator/b"],
@@ -285,6 +289,9 @@ describe("guidance system", () => {
     context.runtimeState.incidentState.pendingIncident = {
       instanceId: "incident-1",
       templateId: "incident/personnel-friction",
+      templateName: "Personnel Friction",
+      category: "personnel_conflict",
+      tags: [],
       triggerFamily: "operator_conflict",
       boundContext: {
         operatorIds: ["operator/a", "operator/b"],
@@ -426,6 +433,8 @@ describe("guidance system", () => {
         intel: 40,
         reward: 92,
         cohesion: 58,
+        briefingSource: null,
+        briefingStatus: null,
         resolutionPacket: {
           result: "mixed",
           reputationDelta: 2,

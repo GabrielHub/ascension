@@ -54,7 +54,7 @@ function createMinimalRegistry(items: ItemTemplate[]): TemplateRegistry {
     buildingIndexById: new Map(),
     roomIndexById: new Map(),
     upgradeIndexById: new Map(),
-  };
+  } as unknown as TemplateRegistry;
 }
 
 function createTestContext(items: ItemTemplate[] = []): SimSystemContext {

@@ -1191,8 +1191,8 @@ export function createTemplateRegistry(): TemplateRegistry {
   const enemyFamilies = [...enemyFamilyTemplates];
   const prepRecipes = [...prepRecipeTemplates];
   const districts = [...districtTemplates];
-  const factions = [...factionTemplates];
-  const craftRecipes = [...craftRecipeTemplates];
+  const factions = [...factionTemplates] as unknown as FactionTemplate[];
+  const craftRecipes = [...craftRecipeTemplates] as unknown as CraftRecipeTemplate[];
 
   const resourceLookup = makeLookup("resources", resources, issues);
   const buildingLookup = makeLookup("buildings", buildings, issues);

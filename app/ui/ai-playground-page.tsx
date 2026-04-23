@@ -344,14 +344,14 @@ function SurfaceCard({
           <>
             {surface === "incident-framing" && payload && (
               <IncidentFramingPreview
-                output={record.result.output as IncidentFramingOutput}
+                output={record.result.output as unknown as IncidentFramingOutput}
                 payload={payload}
               />
             )}
             {surface === "operator-identity" && payload && (
               <OperatorIdentityPreview
                 hqView={hqPreview}
-                output={record.result.output as OperatorIdentityOutput}
+                output={record.result.output as unknown as OperatorIdentityOutput}
                 subjectId={subjectId}
               />
             )}
@@ -511,7 +511,9 @@ export function AiPlaygroundPage() {
     };
   }, [session]);
 
-  const surfaces = [incidentSurface, operatorSurface].filter(Boolean);
+  const surfaces = [incidentSurface, operatorSurface].filter(
+    (entry): entry is NonNullable<typeof entry> => entry !== null,
+  );
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(200,168,76,0.08),transparent_35%),linear-gradient(180deg,#060608_0%,#0c1224_48%,#060608_100%)]">

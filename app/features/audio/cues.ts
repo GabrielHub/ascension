@@ -129,10 +129,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Satisfying rising chord when purchasing an upgrade.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.01, decay: 0.2, sustain: 0.05, release: 0.4 },
-        },
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.05, release: 0.4 },
       }).connect(sfxBus);
       const now = Tone.now();
       synth.triggerAttackRelease("G4", "16n", now);
@@ -228,10 +226,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Rising chord when accepting a new operator.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 0.5 },
-        },
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.02, decay: 0.3, sustain: 0.1, release: 0.5 },
       }).connect(sfxBus);
       synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n");
       setTimeout(() => synth.dispose(), 2000);
@@ -245,7 +241,6 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Tense metallic hit when a raid team deploys.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.MetalSynth({
-        frequency: 200,
         envelope: { attack: 0.001, decay: 0.2, release: 0.15 },
         harmonicity: 3.1,
         modulationIndex: 16,
@@ -253,7 +248,7 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
         octaves: 1,
       }).connect(sfxBus);
       synth.volume.value = -12;
-      synth.triggerAttackRelease("16n");
+      synth.triggerAttackRelease(200, "16n");
       setTimeout(() => synth.dispose(), 1500);
     },
   }),
@@ -281,7 +276,6 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Sharp activation hit when Boss commits the team to the encounter.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.MetalSynth({
-        frequency: 260,
         envelope: { attack: 0.001, decay: 0.28, release: 0.18 },
         harmonicity: 4,
         modulationIndex: 20,
@@ -289,7 +283,7 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
         octaves: 1.5,
       }).connect(sfxBus);
       synth.volume.value = -10;
-      synth.triggerAttackRelease("16n");
+      synth.triggerAttackRelease(260, "16n");
       setTimeout(() => synth.dispose(), 1500);
     },
   }),
@@ -336,10 +330,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Short brass-like fanfare on boss defeat.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.02, decay: 0.24, sustain: 0.08, release: 0.45 },
-        },
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.02, decay: 0.24, sustain: 0.08, release: 0.45 },
       }).connect(sfxBus);
       const now = Tone.now();
       synth.triggerAttackRelease(["C4", "G4"], "8n", now);
@@ -372,10 +364,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Triumphant short fanfare on successful raid return.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.02, decay: 0.2, sustain: 0.1, release: 0.4 },
-        },
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.02, decay: 0.2, sustain: 0.1, release: 0.4 },
       }).connect(sfxBus);
       const now = Tone.now();
       synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
@@ -468,7 +458,6 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Short metallic lock-in when equipping gear.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.MetalSynth({
-        frequency: 300,
         envelope: { attack: 0.001, decay: 0.08, release: 0.05 },
         harmonicity: 5,
         modulationIndex: 8,
@@ -476,7 +465,7 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
         octaves: 1,
       }).connect(sfxBus);
       synth.volume.value = -16;
-      synth.triggerAttackRelease("32n");
+      synth.triggerAttackRelease(300, "32n");
       setTimeout(() => synth.dispose(), 600);
     },
   }),
@@ -538,10 +527,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Grand chord when relocation is confirmed.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.04, decay: 0.4, sustain: 0.15, release: 0.6 },
-        },
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.04, decay: 0.4, sustain: 0.15, release: 0.6 },
       }).connect(sfxBus);
       const now = Tone.now();
       synth.triggerAttackRelease(["C4", "E4", "G4"], "4n", now);
@@ -556,10 +543,8 @@ export const STARTER_CUES: readonly AudioCueDefinition[] = [
     description: "Warm arrival tone when settling into the new headquarters.",
     play({ Tone, sfxBus }) {
       const synth = new Tone.PolySynth(Tone.Synth, {
-        options: {
-          oscillator: { type: "sine" },
-          envelope: { attack: 0.08, decay: 0.5, sustain: 0.2, release: 0.8 },
-        },
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.08, decay: 0.5, sustain: 0.2, release: 0.8 },
       }).connect(sfxBus);
       synth.volume.value = -4;
       synth.triggerAttackRelease(["G3", "B3", "D4", "G4"], "1n");

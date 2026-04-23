@@ -670,10 +670,7 @@ function buildCraftComparisons(
   craftCosts: ReturnType<typeof buildCraftCosts>,
   marketFallbacks: ReturnType<typeof buildMarketFallbacks>,
 ) {
-  const fallbackByCategory = new Map<
-    string,
-    (ReturnType<typeof buildMarketFallbacks>[number] | null)[]
-  >();
+  const fallbackByCategory = new Map<string, ReturnType<typeof buildMarketFallbacks>[number][]>();
 
   for (const fallback of marketFallbacks) {
     const key = `${fallback.category}:${fallback.rank}`;

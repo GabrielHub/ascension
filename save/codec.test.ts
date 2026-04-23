@@ -458,6 +458,7 @@ describe("save codec", () => {
     expect(hydrated.save.world.activeRaidPackets).toEqual([
       {
         id: "raid/legacy",
+        contractSiteId: "",
         missionId: "mission/clearance",
         startedAt: "2026-03-19T09:15:00.000Z",
         startedTick: 555,
@@ -480,12 +481,19 @@ describe("save codec", () => {
     expect(hydrated.save.world.raidSummaries).toEqual([
       {
         id: "raid/completed",
+        contractSiteId: "",
+        opportunityId: "raid/completed",
         missionId: "mission/extraction",
+        location: "",
         startedAt: "2026-03-19T07:00:00.000Z",
         endedAt: "2026-03-19T07:30:00.000Z",
         result: "mixed",
         reputationDelta: -1,
         cashDelta: 60,
+        reward: 0,
+        threat: 0,
+        intel: 0,
+        cohesion: 0,
         operatorOutcomes: [
           {
             operatorId: "operator/7",
@@ -600,7 +608,7 @@ describe("save codec", () => {
     });
 
     expect(hydrated.changed).toBe(true);
-    expect(hydrated.save.world.operators[0].appearance.presetId).toBeTruthy();
+    expect(hydrated.save.world.operators?.[0]?.appearance.presetId).toBeTruthy();
   });
 
   it("strips legacy portraitId appearance keys and marks changed", () => {
@@ -627,7 +635,7 @@ describe("save codec", () => {
     });
 
     expect(hydrated.changed).toBe(true);
-    expect(hydrated.save.world.operators[0].appearance.presetId).toBeTruthy();
+    expect(hydrated.save.world.operators?.[0]?.appearance.presetId).toBeTruthy();
   });
 
   it("migrates schema 5 appearance saves and preserves approved visible gear ids", () => {
@@ -649,7 +657,7 @@ describe("save codec", () => {
                   accessoryPartId: "accessory/chain",
                 },
               },
-            },
+            } as unknown as NonNullable<PersistedSaveGame["world"]["operators"]>[number],
           ],
         },
       },
@@ -1017,7 +1025,7 @@ describe("save codec", () => {
                   accessoryPartId: "accessory/chain",
                 },
               },
-            },
+            } as unknown as NonNullable<PersistedSaveGame["world"]["operators"]>[number],
           ],
         },
       },
@@ -1164,7 +1172,7 @@ describe("save codec", () => {
       },
     });
     expect(hydrated.changed).toBe(true);
-    expect(hydrated.save.world.operators[0].appearance.presetId).not.toBe("portrait/debug");
+    expect(hydrated.save.world.operators?.[0]?.appearance.presetId).not.toBe("portrait/debug");
 
     // Unknown visibleGear fields still fail
     expect(() =>

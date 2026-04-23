@@ -726,8 +726,9 @@ function getTranscriptEncounter(
           typeof enemyHpFraction === "number" &&
           Number.isFinite(enemyHpFraction)
         ) {
+          const currentEncounter: NonNullable<RaidPresentationTeam["encounter"]> = openEncounter;
           openEncounter = {
-            ...openEncounter,
+            ...currentEncounter,
             healthFraction: clamp(enemyHpFraction, 0, 1),
           };
         }
@@ -3912,7 +3913,9 @@ export function bidOnContract(context: SimSystemContext, postingId: string): boo
   };
 
   // Increment district recent contract count
-  const districtState = context.runtimeState.cityState?.districts[posting.districtId];
+  const districtState = posting.districtId
+    ? context.runtimeState.cityState?.districts[posting.districtId]
+    : undefined;
   if (districtState) {
     districtState.recentContractCount += 1;
     districtState.lastResolvedTick = currentMinute;
