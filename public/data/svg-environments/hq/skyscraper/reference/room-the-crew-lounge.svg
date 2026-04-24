@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 360 290">
+  <!-- REFERENCE FIXTURE: The Crew Lounge, Skyscraper floor 2.
+       Authored footprint: 2 cols x 5 rows. Origin (200,100).
+       Floor corners: N(0,0)=(200,100), E(2,0)=(296,148),
+                      S(2,5)=(56,268), W(0,5)=(-40,220). -->
+
+  <polygon points="200,100 296,148 56,268 -40,220"
+    fill="#2a2d36" stroke="#14161c" stroke-width="1.1"/>
+
+  <g stroke="rgba(170,170,190,0.16)" stroke-width="0.5">
+    <line x1="152" y1="124" x2="248" y2="172"/>
+    <line x1="104" y1="148" x2="200" y2="196"/>
+    <line x1="56" y1="172" x2="152" y2="220"/>
+    <line x1="8" y1="196" x2="104" y2="244"/>
+    <line x1="248" y1="124" x2="8" y2="244"/>
+  </g>
+
+  <polygon points="200,16 -40,136 -40,220 200,100"
+    fill="#353a46" stroke="#191d26" stroke-width="1"/>
+  <polygon points="200,16 296,64 296,148 200,100"
+    fill="#2d323d" stroke="#161a21" stroke-width="1"/>
+
+  <text x="128" y="286" font-family="monospace" font-size="11" fill="#c9a34a" text-anchor="middle" opacity="0.9">THE CREW LOUNGE</text>
+  <text x="128" y="10" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Skyscraper reference fixture — not used in runtime</text>
+</svg>

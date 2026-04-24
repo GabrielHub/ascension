@@ -42,6 +42,7 @@ const UNSAVED_CHANGES_MESSAGE = "Discard unsaved scene-builder changes?";
 const BUILDINGS: { id: string; label: string }[] = [
   { id: "building/bodega", label: "Bodega" },
   { id: "building/porters", label: "Porter's" },
+  { id: "building/skyscraper", label: "Skyscraper" },
 ];
 
 const PREVIEW_PHASE_LABELS: Readonly<Record<HqTimeOfDayPhase, string>> = {

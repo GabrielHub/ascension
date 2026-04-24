@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 360 290">
+  <!-- Props-only scene layer: The Crew Lounge, Skyscraper floor 2.
+       Authored footprint: 2 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Narrow decompression lounge tucked beside the clinic and dojo:
+       a deep modular sofa running down the length, a low coffee table
+       with magazines and two mugs, a wall-leaning TV console with a
+       flat panel, a coffee/snack cart, a tall lamp, and a corner
+       succulent stand. No walls, floors, grids, or structural pieces. -->
+
+  <defs>
+    <linearGradient id="loungeCharcoal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2e343f"/>
+      <stop offset="1" stop-color="#141820"/>
+    </linearGradient>
+    <linearGradient id="loungeSofaTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4c5664"/>
+      <stop offset="1" stop-color="#2d343e"/>
+    </linearGradient>
+    <linearGradient id="loungeWalnut" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a3a22"/>
+      <stop offset="1" stop-color="#2a1a0e"/>
+    </linearGradient>
+    <radialGradient id="loungeScreenGlow" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#3a6fb0" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#0a1828" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="loungeLamp" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#f4d480" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#4a3214" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Runner rug down the length of the room -->
+  <g id="rug">
+    <polygon points="140,148 228,192 80,264 -8,220"
+      fill="#2a2d40" stroke="#0f1119" stroke-width="0.5"/>
+    <polygon points="152,156 220,190 80,260 12,226"
+      fill="#3b4258" opacity="0.75"/>
+  </g>
+
+  <!-- Modular sectional sofa along the east side of the room.
+       Runs from c~1.3,r~0.5 down to c~1.7,r~4.2 — L-turn at south end.
+       Seat height ~22, back height ~44. -->
+  <g id="sofa">
+    <!-- Main seat cushion slab (iso parallelogram) -->
+    <polygon points="240,122 278,140 178,240 140,220"
+      fill="url(#loungeSofaTop)" stroke="#0b0d14" stroke-width="0.5"/>
+    <!-- Seat front apron -->
+    <polygon points="140,220 178,240 178,252 140,232"
+      fill="url(#loungeCharcoal)" stroke="#060810" stroke-width="0.4"/>
+    <!-- Seat south end cap -->
+    <polygon points="178,240 278,140 278,152 178,252"
+      fill="#1a1d26" stroke="#060810" stroke-width="0.35"/>
+    <!-- Backrest (upright) along the back edge -->
+    <polygon points="264,108 280,116 180,216 164,208"
+      fill="url(#loungeCharcoal)" stroke="#070910" stroke-width="0.45"/>
+    <polygon points="262,112 278,120 180,214 166,206"
+      fill="#3a404d" opacity="0.85"/>
+    <!-- Scatter cushions (2) -->
+    <polygon points="230,144 250,154 222,188 204,178" fill="#6a4c2a" stroke="#2a1a0e" stroke-width="0.3"/>
+    <polygon points="226,150 244,158 220,184 204,176" fill="#8a6a3a" opacity="0.85"/>
+    <polygon points="196,188 216,198 188,228 170,218" fill="#3a5a6a" stroke="#112028" stroke-width="0.3"/>
+    <polygon points="192,194 212,204 186,224 168,214" fill="#4a6a78" opacity="0.85"/>
+    <!-- L-return cushion at south foot -->
+    <polygon points="140,220 188,244 144,266 96,242"
+      fill="url(#loungeSofaTop)" stroke="#0b0d14" stroke-width="0.45"/>
+    <polygon points="96,242 144,266 144,278 96,254"
+      fill="url(#loungeCharcoal)" stroke="#060810" stroke-width="0.35"/>
+  </g>
+
+  <!-- Low coffee table in front of the sofa -->
+  <g id="coffee-table">
+    <polygon points="104,200 168,232 120,256 56,224"
+      fill="url(#loungeWalnut)" stroke="#0b0503" stroke-width="0.45"/>
+    <polygon points="56,224 120,256 120,270 56,238"
+      fill="#120904" stroke="#060302" stroke-width="0.35"/>
+    <polygon points="120,256 168,232 168,246 120,270"
+      fill="#0a0502" stroke="#050301" stroke-width="0.3"/>
+    <!-- Two mugs -->
+    <polygon points="100,220 112,226 112,232 100,226" fill="#c9b999" stroke="#5a4a3a" stroke-width="0.3"/>
+    <polygon points="100,224 112,230 112,231 100,225" fill="#6a2818"/>
+    <polygon points="130,232 142,238 142,244 130,238" fill="#f1e9d0" stroke="#6a5a4a" stroke-width="0.3"/>
+    <!-- Magazine stack -->
+    <polygon points="78,224 118,244 116,248 76,228" fill="#c82a38" stroke="#4a0d14" stroke-width="0.3"/>
+    <polygon points="78,220 120,240 120,244 78,224" fill="#ecd478" stroke="#6a5012" stroke-width="0.25"/>
+  </g>
+
+  <!-- TV console along the west wall zone.
+       Flat panel + cabinet below. -->
+  <g id="tv-console">
+    <!-- Cabinet top -->
+    <polygon points="-22,148 54,186 34,212 -42,174"
+      fill="url(#loungeWalnut)" stroke="#0b0503" stroke-width="0.45"/>
+    <!-- Cabinet front -->
+    <polygon points="-42,174 34,212 34,226 -42,188"
+      fill="#1a1008" stroke="#060302" stroke-width="0.35"/>
+    <!-- Shelf hints -->
+    <line x1="-38" y1="198" x2="30" y2="222" stroke="#0a0503" stroke-width="0.4"/>
+    <!-- Books/tchotchkes on top -->
+    <rect x="-18" y="174" width="4" height="8" fill="#6a2828" transform="rotate(27 -18 174)"/>
+    <rect x="-10" y="178" width="4" height="8" fill="#2a4a6a" transform="rotate(27 -10 178)"/>
+    <rect x="-2" y="182" width="4" height="8" fill="#5a6a2a" transform="rotate(27 -2 182)"/>
+    <!-- Flat panel tilted back, upright but faces south-east viewer -->
+    <polygon points="-26,110 34,140 34,184 -26,154"
+      fill="#0a0e14" stroke="#03060a" stroke-width="0.5"/>
+    <polygon points="-22,114 30,140 30,180 -22,152"
+      fill="url(#loungeScreenGlow)"/>
+    <polygon points="-20,118 28,144 28,176 -20,150"
+      fill="#1a3a58" opacity="0.55"/>
+    <!-- Stand foot -->
+    <polygon points="-10,152 10,162 10,166 -10,156" fill="#12161c" stroke="#060810" stroke-width="0.3"/>
+  </g>
+
+  <!-- Coffee / snack cart at north end -->
+  <g id="coffee-cart">
+    <polygon points="224,96 274,120 258,142 208,118"
+      fill="url(#loungeCharcoal)" stroke="#060810" stroke-width="0.45"/>
+    <polygon points="208,118 258,142 258,158 208,134"
+      fill="#14171e" stroke="#050608" stroke-width="0.35"/>
+    <polygon points="258,142 274,120 274,136 258,158"
+      fill="#0d0f14" stroke="#030405" stroke-width="0.3"/>
+    <!-- Wheels -->
+    <ellipse cx="214" cy="156" rx="4" ry="2" fill="#0a0c12"/>
+    <ellipse cx="252" cy="158" rx="4" ry="2" fill="#0a0c12"/>
+    <!-- Espresso machine on top -->
+    <polygon points="228,102 256,116 254,128 226,114" fill="#cacfd8" stroke="#4a5260" stroke-width="0.35"/>
+    <polygon points="230,104 254,115 252,124 230,113" fill="#7a828e" opacity="0.8"/>
+    <rect x="240" y="108" width="4" height="6" fill="#12161c" transform="rotate(24 240 108)"/>
+    <!-- Mug row -->
+    <polygon points="262,120 268,122 268,126 262,124" fill="#e8dec2"/>
+    <polygon points="270,124 276,126 276,130 270,128" fill="#e8dec2"/>
+  </g>
+
+  <!-- Floor lamp between sofa south end and table -->
+  <g id="floor-lamp">
+    <polygon points="30,232 50,240 50,242 30,234" fill="#1a1008" stroke="#050302" stroke-width="0.3"/>
+    <line x1="40" y1="234" x2="40" y2="180" stroke="#2a1a0e" stroke-width="1.3"/>
+    <polygon points="30,180 52,180 54,168 28,168" fill="#2a1a0e" stroke="#080504" stroke-width="0.4"/>
+    <polygon points="30,180 52,180 48,188 34,188" fill="url(#loungeLamp)"/>
+  </g>
+
+  <!-- Corner succulent stand (south, by the L-return) -->
+  <g id="succulents">
+    <polygon points="60,258 84,268 78,276 54,266" fill="#2a1a0e" stroke="#080504" stroke-width="0.35"/>
+    <polygon points="62,258 82,266 82,268 62,260" fill="#3a2414"/>
+    <g fill="#2d5a3d" stroke="#0a1812" stroke-width="0.3">
+      <ellipse cx="68" cy="254" rx="4" ry="3"/>
+      <ellipse cx="76" cy="256" rx="3" ry="2"/>
+      <ellipse cx="72" cy="250" rx="3" ry="2"/>
+    </g>
+  </g>
+</svg>

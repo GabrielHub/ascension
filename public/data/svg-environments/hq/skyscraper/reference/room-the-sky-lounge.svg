@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 620 420">
+  <!-- REFERENCE FIXTURE: The Sky Lounge, Skyscraper Penthouse floor.
+       Authored footprint: 7 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+       Floor corners: N(0,0)=(200,100), E(7,0)=(536,268),
+                      S(7,5)=(296,388), W(0,5)=(-40,220).
+       Design reference only — the runtime ships the props-only scene in
+       recipes/scene-the-sky-lounge.svg. -->
+
+  <!-- Floor plane -->
+  <polygon points="200,100 536,268 296,388 -40,220"
+    fill="#2a2730" stroke="#13111a" stroke-width="1.1"/>
+
+  <!-- Grid overlay -->
+  <g stroke="rgba(200,180,150,0.16)" stroke-width="0.5">
+    <!-- c-axis -->
+    <line x1="152" y1="124" x2="488" y2="292"/>
+    <line x1="104" y1="148" x2="440" y2="316"/>
+    <line x1="56" y1="172" x2="392" y2="340"/>
+    <line x1="8" y1="196" x2="344" y2="364"/>
+    <!-- r-axis -->
+    <line x1="248" y1="124" x2="8" y2="244"/>
+    <line x1="296" y1="148" x2="56" y2="268"/>
+    <line x1="344" y1="172" x2="104" y2="292"/>
+    <line x1="392" y1="196" x2="152" y2="316"/>
+    <line x1="440" y1="220" x2="200" y2="340"/>
+    <line x1="488" y1="244" x2="248" y2="364"/>
+  </g>
+
+  <!-- West wall. Wall height 84. -->
+  <polygon points="200,16 -40,136 -40,220 200,100"
+    fill="#332f3c" stroke="#181523" stroke-width="1"/>
+  <!-- North wall. Wall height 84. -->
+  <polygon points="200,16 536,184 536,268 200,100"
+    fill="#2c2834" stroke="#14121c" stroke-width="1"/>
+
+  <text x="248" y="412" font-family="monospace" font-size="11" fill="#d8ba72" text-anchor="middle" opacity="0.9">THE SKY LOUNGE</text>
+  <text x="248" y="10" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Skyscraper reference fixture — not used in runtime</text>
+</svg>

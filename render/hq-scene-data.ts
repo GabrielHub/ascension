@@ -1523,11 +1523,23 @@ const PORTERS_EXTERIOR_SCENE: HqSceneComposition = {
   placements: PORTERS_EXTERIOR_PLACEMENTS,
 };
 
+// Skyscraper exterior placements are populated in Phase 4 once shell-relative
+// backdrop SVGs exist. Starts empty so the composition resolves without
+// falling back to a bodega or Porter's exterior scene.
+const SKYSCRAPER_EXTERIOR_PLACEMENTS: readonly HqStaticPlacementDef[] = [];
+
+const SKYSCRAPER_EXTERIOR_SCENE: HqSceneComposition = {
+  buildingId: "building/skyscraper",
+  sceneId: "skyscraper-exterior",
+  placements: SKYSCRAPER_EXTERIOR_PLACEMENTS,
+};
+
 // ── Scene lookup ─────────────────────────────────────────────────────────
 
 const EXTERIOR_SCENES: Readonly<Record<string, HqSceneComposition>> = {
   "building/bodega": BODEGA_EXTERIOR_SCENE,
   "building/porters": PORTERS_EXTERIOR_SCENE,
+  "building/skyscraper": SKYSCRAPER_EXTERIOR_SCENE,
 };
 
 function resolveScenePlacementAssetUrl(

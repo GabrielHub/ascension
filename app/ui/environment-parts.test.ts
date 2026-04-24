@@ -377,6 +377,18 @@ describe("shipped index style", () => {
     expect(findEnvPartById(index.parts, "shell/porters-stacked-shell")).toBeDefined();
   });
 
+  it("returns the skyscraper style and resolves skyscraper asset roots", () => {
+    const index = getLoadedEnvPartsIndex("building/skyscraper");
+
+    expect(index.style).toBe("skyscraper-midtown-isometric");
+    expect(index.paths.partsRoot).toBe("/data/svg-environments/hq/skyscraper/parts");
+    expect(index.paths.referenceRoot).toBe("/data/svg-environments/hq/skyscraper/reference");
+    expect(index.paths.recipesRoot).toBe("/data/svg-environments/hq/skyscraper/recipes");
+    expect(index.paths.partsRoot).not.toContain("bodega");
+    expect(index.paths.referenceRoot).not.toContain("bodega");
+    expect(index.paths.recipesRoot).not.toContain("bodega");
+  });
+
   it("contains no flat/cross-section or room-kit entries", () => {
     const parts = getLoadedEnvParts();
     const staleIds = parts.filter(

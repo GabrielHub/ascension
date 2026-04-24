@@ -1,4 +1,5 @@
 import {
+  getBuildingLayoutDefinition,
   getFloorStackLayer,
   getVisibleBuildingFloors,
   type BuildingFloorLayout,
@@ -1132,6 +1133,10 @@ export function buildPerimeterTiles(
 
   const isWaterfrontRear = buildingId === "building/porters";
   const isCornerStreet = buildingId === "building/bodega";
+  // Skyscraper hovers in altitude; street/sidewalk/alley/pier/water dressings
+  // would fight the tower read. Every non-building cell becomes "void" so the
+  // skyline comes from shell-relative backdrop SVGs, not ground-plane filler.
+  const isTowerAltitude = buildingId === "building/skyscraper";
 
   // Occupied cells set
   const occupied = new Set<string>();
@@ -1157,7 +1162,9 @@ export function buildPerimeterTiles(
       if (occupied.has(`${c},${r}`)) continue;
 
       let kind: HqPerimeterTile["kind"];
-      if (r < minRow) {
+      if (isTowerAltitude) {
+        kind = "void";
+      } else if (r < minRow) {
         if (isWaterfrontRear) {
           kind = r >= minRow - 4 ? "pier" : "water";
         } else {
@@ -1373,13 +1380,46 @@ function buildRoomProps(
 
 // ── Building layout: corridor + empty-slot tiles ─────────────────────────
 
-const CORRIDOR_TINT = "#2a2420";
-const EMPTY_SLOT_TINT = "#1c1a18";
-const LOCKED_SLOT_TINT = "#161514";
-const BUILDING_WALL_LEFT = "#2c2014";
-const BUILDING_WALL_RIGHT = "#352616";
+interface HqStructuralPalette {
+  corridor: string;
+  emptySlot: string;
+  lockedSlot: string;
+  wallLeft: string;
+  wallRight: string;
+}
 
-function buildCorridorTiles(layout: BuildingFloorLayout | undefined): HqFloorTile[] {
+const DEFAULT_STRUCTURAL_PALETTE: HqStructuralPalette = {
+  corridor: "#2a2420",
+  emptySlot: "#1c1a18",
+  lockedSlot: "#161514",
+  wallLeft: "#2c2014",
+  wallRight: "#352616",
+};
+
+// Skyscraper reads as a midtown office tower: polished concrete floors, steel
+// and cool-gray structure. Warm bodega/Porter's browns would fight the glass
+// tower envelope, so the skyscraper gets its own cool-neutral palette.
+const SKYSCRAPER_STRUCTURAL_PALETTE: HqStructuralPalette = {
+  corridor: "#2a2e34",
+  emptySlot: "#1a1d22",
+  lockedSlot: "#131519",
+  wallLeft: "#2c343e",
+  wallRight: "#3a4452",
+};
+
+const STRUCTURAL_PALETTES: Record<string, HqStructuralPalette> = {
+  "building/skyscraper": SKYSCRAPER_STRUCTURAL_PALETTE,
+};
+
+export function getHqStructuralPalette(buildingId?: string): HqStructuralPalette {
+  if (!buildingId) return DEFAULT_STRUCTURAL_PALETTE;
+  return STRUCTURAL_PALETTES[buildingId] ?? DEFAULT_STRUCTURAL_PALETTE;
+}
+
+function buildCorridorTiles(
+  layout: BuildingFloorLayout | undefined,
+  palette: HqStructuralPalette,
+): HqFloorTile[] {
   if (!layout) return [];
   // Every cell inside the shell that isn't a room slot is a corridor.
   const slotCells = new Set<string>();
@@ -1399,7 +1439,7 @@ function buildCorridorTiles(layout: BuildingFloorLayout | undefined): HqFloorTil
           floorIndex: layout.floorIndex,
           col: c,
           row: r,
-          tint: CORRIDOR_TINT,
+          tint: palette.corridor,
           roomId: "corridor",
         });
       }
@@ -1408,10 +1448,13 @@ function buildCorridorTiles(layout: BuildingFloorLayout | undefined): HqFloorTil
   return tiles;
 }
 
-function buildExpansionSlotTiles(expansionSlots: readonly HqExpansionSlotSeed[]): HqFloorTile[] {
+function buildExpansionSlotTiles(
+  expansionSlots: readonly HqExpansionSlotSeed[],
+  palette: HqStructuralPalette,
+): HqFloorTile[] {
   const tiles: HqFloorTile[] = [];
   for (const slot of expansionSlots) {
-    const tint = slot.kind === "available" ? EMPTY_SLOT_TINT : LOCKED_SLOT_TINT;
+    const tint = slot.kind === "available" ? palette.emptySlot : palette.lockedSlot;
     for (let c = slot.footprint.col; c < slot.footprint.col + slot.footprint.cols; c++) {
       for (let r = slot.footprint.row; r < slot.footprint.row + slot.footprint.rows; r++) {
         tiles.push({ floorIndex: slot.floorIndex, col: c, row: r, tint, roomId: slot.id });
@@ -1422,7 +1465,10 @@ function buildExpansionSlotTiles(expansionSlots: readonly HqExpansionSlotSeed[])
 }
 
 /** Build a single continuous wall along the building shell exterior. */
-function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWallSegment[] {
+function buildBuildingShellWalls(
+  layout: BuildingFloorLayout | undefined,
+  palette: HqStructuralPalette,
+): HqWallSegment[] {
   if (!layout) return [];
   const sh = layout.shell;
   const segments: HqWallSegment[] = [];
@@ -1435,7 +1481,7 @@ function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWal
       row: r,
       side: "left",
       kind: "solid",
-      tint: BUILDING_WALL_LEFT,
+      tint: palette.wallLeft,
       roomId: "building-shell",
     });
   }
@@ -1448,7 +1494,7 @@ function buildBuildingShellWalls(layout: BuildingFloorLayout | undefined): HqWal
       row: sh.row,
       side: "right",
       kind: "solid",
-      tint: BUILDING_WALL_RIGHT,
+      tint: palette.wallRight,
       roomId: "building-shell",
     });
   }
@@ -1622,14 +1668,15 @@ export function composeHqWorldGeometry(
   const originY = 180;
 
   // Build modular geometry
+  const structuralPalette = getHqStructuralPalette(options.buildingId);
   const floorTiles = [
     ...buildFloorTiles(rooms),
-    ...visibleFloorLayouts.flatMap((layout) => buildCorridorTiles(layout)),
-    ...buildExpansionSlotTiles(reservedSlots),
+    ...visibleFloorLayouts.flatMap((layout) => buildCorridorTiles(layout, structuralPalette)),
+    ...buildExpansionSlotTiles(reservedSlots, structuralPalette),
   ];
   const wallSegments =
     visibleFloorLayouts.length > 0
-      ? visibleFloorLayouts.flatMap((layout) => buildBuildingShellWalls(layout))
+      ? visibleFloorLayouts.flatMap((layout) => buildBuildingShellWalls(layout, structuralPalette))
       : buildWallSegments(rooms);
   const perimeterTiles = buildPerimeterTiles(perimeterFootprints, options.buildingId);
 
@@ -1792,6 +1839,7 @@ export function composeHqWorldGeometry(
 function buildBackdropSnapshot(
   minuteOfDay: number,
   buildingId?: string,
+  activeFloorIndex = 0,
 ): HqBackdropSnapshot | null {
   const renderConfig = getBuildingRenderConfig(buildingId);
   const manifest = buildingId
@@ -1800,18 +1848,32 @@ function buildBackdropSnapshot(
   if (!manifest) return null;
 
   const phase = resolveTimeOfDayPhase(minuteOfDay);
-  const profile = manifest.phases[phase];
+  const activeElevationBandId = buildingId
+    ? getBuildingElevationBandId(buildingId, activeFloorIndex)
+    : null;
+  const profile =
+    (activeElevationBandId ? manifest.elevationBands[activeElevationBandId]?.[phase] : null) ??
+    manifest.phases[phase];
 
   return {
     phase,
     profileId: manifest.profileId,
-    elevationBandId: manifest.elevationBandId,
+    elevationBandId: activeElevationBandId ?? manifest.elevationBandId,
     assetRoot: renderConfig.paths.partsRoot,
     zones: profile.zones,
     ambientTint: profile.ambientTint,
     fogColor: profile.fogColor,
     shadowIntensity: profile.shadowIntensity,
   };
+}
+
+function getBuildingElevationBandId(buildingId: string, floorIndex: number): string | null {
+  const definition = getBuildingLayoutDefinition(buildingId);
+  for (const stage of definition?.stages ?? []) {
+    const floor = stage.floors.find((candidate) => candidate.floorIndex === floorIndex);
+    if (floor) return floor.elevationBandId;
+  }
+  return null;
 }
 
 // ── Snapshot assembly ─────────────────────────────────────────────────────
@@ -1824,7 +1886,9 @@ export function createHqWorldSnapshot(
   buildingId?: string,
 ): HqWorldSnapshot {
   const backdrop =
-    minuteOfDay !== undefined ? buildBackdropSnapshot(minuteOfDay, buildingId) : null;
+    minuteOfDay !== undefined
+      ? buildBackdropSnapshot(minuteOfDay, buildingId, geometry.layout.activeFloorIndex)
+      : null;
   const phase = backdrop?.phase;
 
   return {

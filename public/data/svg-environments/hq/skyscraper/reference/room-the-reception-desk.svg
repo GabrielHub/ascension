@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 430 270">
+  <!-- REFERENCE FIXTURE: The Reception Desk (Front Desk), Skyscraper floor 0.
+       Authored footprint: 3 cols x 3 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+       Floor corners: N(0,0)=(200,100), E(3,0)=(344,172),
+                      S(3,3)=(200,244), W(0,3)=(56,172).
+       Design reference only — the runtime ships the props-only scene in
+       recipes/scene-the-reception-desk.svg. -->
+
+  <polygon points="200,100 344,172 200,244 56,172"
+    fill="#2a2d36" stroke="#14161c" stroke-width="1.1"/>
+
+  <g stroke="rgba(170,170,190,0.16)" stroke-width="0.5">
+    <line x1="152" y1="124" x2="296" y2="196"/>
+    <line x1="104" y1="148" x2="248" y2="220"/>
+    <line x1="248" y1="124" x2="104" y2="196"/>
+    <line x1="296" y1="148" x2="152" y2="220"/>
+  </g>
+
+  <polygon points="200,16 56,88 56,172 200,100"
+    fill="#353a46" stroke="#191d26" stroke-width="1"/>
+  <polygon points="200,16 344,88 344,172 200,100"
+    fill="#2d323d" stroke="#161a21" stroke-width="1"/>
+
+  <text x="190" y="264" font-family="monospace" font-size="11" fill="#c9a34a" text-anchor="middle" opacity="0.9">THE RECEPTION DESK</text>
+  <text x="190" y="10" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Skyscraper reference fixture — not used in runtime</text>
+</svg>

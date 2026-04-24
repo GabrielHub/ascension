@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 480 340">
+  <!-- REFERENCE FIXTURE: The Executive Office, Skyscraper floor 7.
+       Authored footprint: 4 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+       Floor corners: N(0,0)=(200,100), E(4,0)=(392,196),
+                      S(4,5)=(152,316), W(0,5)=(-40,220).
+       Design reference only — the runtime ships the props-only scene in
+       recipes/scene-the-executive-office.svg. -->
+
+  <!-- Floor plane -->
+  <polygon points="200,100 392,196 152,316 -40,220"
+    fill="#2a2d36" stroke="#14161c" stroke-width="1.1"/>
+
+  <!-- Grid overlay -->
+  <g stroke="rgba(170,170,190,0.16)" stroke-width="0.5">
+    <!-- c-axis lines -->
+    <line x1="152" y1="124" x2="344" y2="220"/>
+    <line x1="104" y1="148" x2="296" y2="244"/>
+    <line x1="56" y1="172" x2="248" y2="268"/>
+    <line x1="8" y1="196" x2="200" y2="292"/>
+    <!-- r-axis lines -->
+    <line x1="248" y1="124" x2="8" y2="244"/>
+    <line x1="296" y1="148" x2="56" y2="268"/>
+    <line x1="344" y1="172" x2="104" y2="292"/>
+  </g>
+
+  <!-- West wall (N to W corner). Wall height 84. -->
+  <polygon points="200,16 -40,136 -40,220 200,100"
+    fill="#353a46" stroke="#191d26" stroke-width="1"/>
+  <!-- North wall (N to E corner). Wall height 84. -->
+  <polygon points="200,16 392,112 392,196 200,100"
+    fill="#2d323d" stroke="#161a21" stroke-width="1"/>
+
+  <text x="176" y="336" font-family="monospace" font-size="11" fill="#c9a34a" text-anchor="middle" opacity="0.9">THE EXECUTIVE OFFICE</text>
+  <text x="176" y="10" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Skyscraper reference fixture — not used in runtime</text>
+</svg>

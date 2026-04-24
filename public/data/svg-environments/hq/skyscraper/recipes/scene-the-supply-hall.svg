@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 500 360">
+  <!-- Props-only scene layer: The Supply Hall, Skyscraper floor 3.
+       Authored footprint: 5 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Logistics staging for the fabrication loop next door: two rows
+       of tall industrial metal shelving loaded with crates and gear
+       bins, a pallet-jack staging area in the middle, a clipboard
+       inventory desk in the south-east, and a dock-door shutter
+       implication via a heavy roller gate frame along the south-west
+       wall zone. No walls, floors, grids, or structural elements. -->
+
+  <defs>
+    <linearGradient id="supShelfBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a6370"/>
+      <stop offset="1" stop-color="#202632"/>
+    </linearGradient>
+    <linearGradient id="supShelfShadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a303c"/>
+      <stop offset="1" stop-color="#0e131c"/>
+    </linearGradient>
+    <linearGradient id="supCrate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a4828"/>
+      <stop offset="1" stop-color="#2c1b0e"/>
+    </linearGradient>
+    <linearGradient id="supCrateAlt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a6a2a"/>
+      <stop offset="1" stop-color="#1e2c0e"/>
+    </linearGradient>
+    <linearGradient id="supGate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a434e"/>
+      <stop offset="1" stop-color="#14181f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dock-door gate frame at south-west wall implication (upright, facing east).
+       Stands against the col 0 edge between r=3..5. -->
+  <g id="dock-gate">
+    <!-- Frame uprights and lintel -->
+    <polygon points="-38,200 -14,212 -14,308 -38,296"
+      fill="url(#supGate)" stroke="#060a10" stroke-width="0.5"/>
+    <!-- Horizontal slats -->
+    <g stroke="#1a202a" stroke-width="0.5" fill="#2a303c">
+      <polygon points="-38,220 -14,232 -14,240 -38,228"/>
+      <polygon points="-38,240 -14,252 -14,260 -38,248"/>
+      <polygon points="-38,260 -14,272 -14,280 -38,268"/>
+      <polygon points="-38,280 -14,292 -14,300 -38,288"/>
+    </g>
+    <!-- Caution striping -->
+    <polygon points="-38,308 -14,296 -14,304 -38,316" fill="#ecd478" stroke="#5a4018" stroke-width="0.3"/>
+  </g>
+
+  <!-- ====== NORTH SHELVING (back row) along r=0..1, spanning c=0.3..4.7 ====== -->
+  <g id="shelf-north">
+    <!-- Shelf frame base -->
+    <polygon points="214,114 426,220 426,236 214,130"
+      fill="url(#supShelfBody)" stroke="#060a10" stroke-width="0.5"/>
+    <polygon points="210,118 214,114 214,130 210,134" fill="#141820"/>
+    <polygon points="422,224 426,220 426,236 422,240" fill="#0a0e14"/>
+    <!-- Back panel -->
+    <polygon points="214,52 426,158 426,220 214,114"
+      fill="url(#supShelfShadow)" stroke="#060a10" stroke-width="0.4"/>
+    <!-- Horizontal shelves (3 levels) -->
+    <polygon points="218,78 422,180 422,188 218,86" fill="#3a434e" stroke="#060a10" stroke-width="0.35"/>
+    <polygon points="218,112 422,214 422,222 218,120" fill="#3a434e" stroke="#060a10" stroke-width="0.35"/>
+    <!-- Top of shelf (floor of the shelf box) -->
+    <polygon points="218,52 422,158 422,162 218,56" fill="#2a303c" stroke="#060a10" stroke-width="0.35"/>
+
+    <!-- Boxes on top shelf -->
+    <polygon points="224,64 258,82 250,96 218,78" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="218,78 250,96 250,108 218,90" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+    <polygon points="250,96 258,82 258,94 250,108" fill="#14080a" stroke="#050302" stroke-width="0.25"/>
+    <polygon points="264,84 298,102 290,116 258,98" fill="url(#supCrateAlt)" stroke="#0d1a04" stroke-width="0.35"/>
+    <polygon points="258,98 290,116 290,128 258,110" fill="#1a2a08" stroke="#050a02" stroke-width="0.3"/>
+    <polygon points="304,104 338,122 330,136 298,118" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="298,118 330,136 330,148 298,130" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+    <polygon points="344,124 378,142 370,156 338,138" fill="url(#supCrateAlt)" stroke="#0d1a04" stroke-width="0.35"/>
+    <polygon points="338,138 370,156 370,168 338,150" fill="#1a2a08" stroke="#050a02" stroke-width="0.3"/>
+
+    <!-- Boxes on middle shelf -->
+    <polygon points="224,100 270,124 262,138 218,114" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="218,114 262,138 262,150 218,126" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+    <polygon points="278,128 318,148 310,162 270,142" fill="url(#supCrateAlt)" stroke="#0d1a04" stroke-width="0.35"/>
+    <polygon points="270,142 310,162 310,174 270,154" fill="#1a2a08" stroke="#050a02" stroke-width="0.3"/>
+    <polygon points="326,152 372,176 364,190 320,166" fill="#3a434e" stroke="#060a10" stroke-width="0.35"/>
+    <polygon points="320,166 364,190 364,202 320,178" fill="#1a202a" stroke="#050608" stroke-width="0.3"/>
+    <polygon points="378,180 414,198 406,210 372,192" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="372,192 406,210 406,222 372,204" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+  </g>
+
+  <!-- ====== SOUTH SHELVING row at r=3..4, spanning c=0.3..4.7 (facing north) ====== -->
+  <g id="shelf-south">
+    <polygon points="118,258 330,364 330,376 118,270" display="none"/>
+    <!-- Shelf base (at r=3) -->
+    <polygon points="118,214 330,320 330,332 118,226"
+      fill="url(#supShelfBody)" stroke="#060a10" stroke-width="0.45"/>
+    <!-- Back panel (upright, height 64) -->
+    <polygon points="118,150 330,256 330,320 118,214"
+      fill="url(#supShelfShadow)" stroke="#060a10" stroke-width="0.4"/>
+    <polygon points="122,178 326,280 326,288 122,186" fill="#3a434e" stroke="#060a10" stroke-width="0.3"/>
+    <polygon points="122,210 326,312 326,320 122,218" fill="#3a434e" stroke="#060a10" stroke-width="0.3"/>
+
+    <!-- Boxes on top (upper shelf) -->
+    <polygon points="128,162 166,180 158,194 122,174" fill="url(#supCrateAlt)" stroke="#0d1a04" stroke-width="0.35"/>
+    <polygon points="122,174 158,194 158,206 122,186" fill="#1a2a08" stroke="#050a02" stroke-width="0.3"/>
+    <polygon points="176,186 214,204 206,218 170,198" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="170,198 206,218 206,230 170,210" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+    <polygon points="224,210 262,228 254,242 218,222" fill="url(#supCrateAlt)" stroke="#0d1a04" stroke-width="0.35"/>
+    <polygon points="218,222 254,242 254,254 218,234" fill="#1a2a08" stroke="#050a02" stroke-width="0.3"/>
+    <polygon points="272,234 310,252 302,266 266,246" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.35"/>
+    <polygon points="266,246 302,266 302,278 266,258" fill="#2a1808" stroke="#080302" stroke-width="0.3"/>
+
+    <!-- Gear bins on lower shelf (labeled by color) -->
+    <polygon points="138,214 172,230 166,242 132,226" fill="#c8223a" stroke="#4a0d14" stroke-width="0.3"/>
+    <polygon points="132,226 166,242 166,254 132,238" fill="#8a1620" stroke="#2a080e" stroke-width="0.25"/>
+    <polygon points="182,236 216,252 210,264 176,248" fill="#3aa0d6" stroke="#0e3a5a" stroke-width="0.3"/>
+    <polygon points="176,248 210,264 210,276 176,260" fill="#1e5a7a" stroke="#05192a" stroke-width="0.25"/>
+    <polygon points="226,258 260,274 254,286 220,270" fill="#ecd478" stroke="#5a4018" stroke-width="0.3"/>
+    <polygon points="220,270 254,286 254,298 220,282" fill="#a07812" stroke="#2a1a04" stroke-width="0.25"/>
+    <polygon points="270,280 304,296 298,308 264,292" fill="#9ad0a4" stroke="#2a5a3a" stroke-width="0.3"/>
+    <polygon points="264,292 298,308 298,320 264,304" fill="#4a7a5a" stroke="#0e2418" stroke-width="0.25"/>
+  </g>
+
+  <!-- ====== PALLET-JACK / STACKED PALLETS in center aisle (c=1.5..3.5, r=1.5..2.5) ====== -->
+  <g id="pallets">
+    <!-- Pallet A -->
+    <polygon points="204,172 276,208 252,232 180,196" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.45"/>
+    <polygon points="180,196 252,232 252,240 180,204" fill="#2a1808" stroke="#080302" stroke-width="0.35"/>
+    <polygon points="252,232 276,208 276,216 252,240" fill="#14080a" stroke="#050302" stroke-width="0.3"/>
+    <!-- Big crate on pallet -->
+    <polygon points="210,150 264,178 244,194 192,170" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.45"/>
+    <polygon points="192,170 244,194 244,212 192,188" fill="#2a1808" stroke="#080302" stroke-width="0.35"/>
+    <polygon points="244,194 264,178 264,196 244,212" fill="#14080a" stroke="#050302" stroke-width="0.3"/>
+    <!-- Stencil marks -->
+    <polygon points="208,180 230,192 228,198 206,186" fill="#ecd478" opacity="0.85"/>
+    <polygon points="210,184 216,187 215,191 209,188" fill="#14080a"/>
+    <polygon points="220,190 226,193 225,197 219,194" fill="#14080a"/>
+
+    <!-- Pallet-jack next to pallet -->
+    <polygon points="280,220 316,238 308,250 272,232" fill="#f0a422" stroke="#5a3c08" stroke-width="0.35"/>
+    <polygon points="272,232 308,250 308,262 272,244" fill="#a56a10" stroke="#3a2204" stroke-width="0.3"/>
+    <!-- Handle -->
+    <line x1="316" y1="238" x2="340" y2="204" stroke="#f0a422" stroke-width="1.6"/>
+    <line x1="316" y1="238" x2="340" y2="204" stroke="#1a1008" stroke-width="0.4"/>
+    <!-- Wheels -->
+    <ellipse cx="280" cy="256" rx="3.5" ry="1.8" fill="#14080a"/>
+    <ellipse cx="304" cy="258" rx="3.5" ry="1.8" fill="#14080a"/>
+  </g>
+
+  <!-- ====== INVENTORY DESK + STOOL (south-east corner) ====== -->
+  <g id="desk">
+    <polygon points="356,242 404,266 380,290 332,266"
+      fill="#3a434e" stroke="#060a10" stroke-width="0.45"/>
+    <polygon points="332,266 380,290 380,302 332,278" fill="#14181f" stroke="#030406" stroke-width="0.35"/>
+    <polygon points="380,290 404,266 404,278 380,302" fill="#0a0c10" stroke="#020304" stroke-width="0.3"/>
+    <!-- Computer terminal -->
+    <polygon points="358,238 386,252 386,270 358,256" fill="#0a0e14" stroke="#03060a" stroke-width="0.35"/>
+    <polygon points="360,240 384,252 384,268 360,256" fill="#2a6a8a" opacity="0.75"/>
+    <!-- Clipboard -->
+    <polygon points="368,270 396,284 392,296 364,282" fill="#3a2414" stroke="#120806" stroke-width="0.3"/>
+    <polygon points="370,272 394,283 392,294 370,282" fill="#efe5cc" stroke="#6a604a" stroke-width="0.3"/>
+    <line x1="374" y1="278" x2="388" y2="286" stroke="#6a6050" stroke-width="0.3"/>
+    <line x1="374" y1="282" x2="388" y2="290" stroke="#6a6050" stroke-width="0.3"/>
+
+    <!-- Stool -->
+    <polygon points="300,278 328,292 320,300 292,286" fill="#2a303c" stroke="#0a0c12" stroke-width="0.35"/>
+    <ellipse cx="310" cy="290" rx="10" ry="4" fill="#1a1f28"/>
+    <line x1="310" y1="292" x2="310" y2="310" stroke="#0a0c12" stroke-width="0.8"/>
+    <ellipse cx="310" cy="310" rx="9" ry="3.5" fill="#14181f" stroke="#050608" stroke-width="0.3"/>
+  </g>
+
+  <!-- ====== HANDTRUCK parked near dock gate (sw) ====== -->
+  <g id="handtruck">
+    <polygon points="-18,220 18,238 10,250 -26,232" fill="#3a434e" stroke="#060a10" stroke-width="0.35"/>
+    <polygon points="-26,232 10,250 10,262 -26,244" fill="#14181f" stroke="#060810" stroke-width="0.3"/>
+    <line x1="-4" y1="228" x2="-2" y2="198" stroke="#5a6370" stroke-width="1.2"/>
+    <line x1="12" y1="236" x2="14" y2="206" stroke="#5a6370" stroke-width="1.2"/>
+    <line x1="-2" y1="198" x2="14" y2="206" stroke="#5a6370" stroke-width="0.8"/>
+    <!-- Small box on handtruck -->
+    <polygon points="-16,214 14,230 8,238 -22,222" fill="url(#supCrate)" stroke="#1a0f06" stroke-width="0.3"/>
+  </g>
+</svg>

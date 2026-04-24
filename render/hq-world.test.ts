@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { getHqEnvironmentRenderConfig } from "lib/hq-environment-manifest";
+import {
+  getHqEnvironmentRenderConfig,
+  getHqEnvironmentRenderConfigForBuilding,
+} from "lib/hq-environment-manifest";
 
-import { composeHqWorldGeometry, createHqWorldSnapshot } from "./hq-world";
+import {
+  buildPerimeterTiles,
+  composeHqWorldGeometry,
+  createHqWorldSnapshot,
+  getHqStructuralPalette,
+} from "./hq-world";
 
 function createRoomSeed(
   overrides: Partial<Parameters<typeof composeHqWorldGeometry>[0][number]> = {},
@@ -110,6 +118,68 @@ describe("HQ world navigation", () => {
       expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(expectedOffsetX, 6);
       expect(scene.y - room.floorPoints[0]!.y).toBeCloseTo(expectedOffsetY, 6);
     }
+  });
+
+  it("centers scenes inside a non-canonical skyscraper slot footprint via the shared scene system", () => {
+    // The skyscraper ships multiple slot shapes that differ from the canonical
+    // 4x3 scene frame (e.g. 2x5 compliance office, 7x5 lobby/sky lounge). This
+    // test proves the shared centering math resolves correctly for a narrow
+    // skyscraper slot using the shipped compliance-office scene binding.
+    const skyscraperConfig = getHqEnvironmentRenderConfigForBuilding("building/skyscraper");
+    const defaultConfig = getHqEnvironmentRenderConfig();
+    const skyscraperScene = skyscraperConfig.composition.sceneSystem;
+    const defaultScene = defaultConfig.composition.sceneSystem;
+    expect(skyscraperScene.canonicalOrigin).toEqual(defaultScene.canonicalOrigin);
+    expect(skyscraperScene.canonicalViewBox).toEqual(defaultScene.canonicalViewBox);
+    expect(skyscraperScene.roomFootprint).toEqual(defaultScene.roomFootprint);
+
+    // slot/compliance-office on floor 7 is 2 cols wide, 5 rows deep — the
+    // narrowest production skyscraper slot and the worst case for centering.
+    const complianceFootprint = { cols: 2, rows: 5 };
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/register-skyscraper-compliance",
+          templateId: "room/compliance_office:tier_1",
+          roomStateId: "room-state/compliance-office:1",
+          slotId: "slot/compliance-office",
+          floorIndex: 7,
+          name: "The Compliance Office",
+          reservedFootprint: {
+            col: 5,
+            row: 2,
+            cols: complianceFootprint.cols,
+            rows: complianceFootprint.rows,
+          },
+          activeFootprint: {
+            col: 5,
+            row: 2,
+            cols: complianceFootprint.cols,
+            rows: complianceFootprint.rows,
+          },
+        }),
+      ],
+      { buildingId: "building/skyscraper", floorIndex: 7, buildingTier: 4 },
+    );
+
+    const room = geometry.rooms[0]!;
+    const scene = geometry.roomProps[0]!;
+    const sceneViewBox = { minX: -50, minY: 0 };
+    const sceneOrigin = [200, 100] as const;
+    const dc = (complianceFootprint.cols - complianceFootprint.cols) / 2;
+    const dr = (complianceFootprint.rows - complianceFootprint.rows) / 2;
+    const expectedOffsetX =
+      -(sceneOrigin[0] - sceneViewBox.minX) +
+      (dc - dr) * (skyscraperConfig.composition.tileWidth / 2);
+    const expectedOffsetY =
+      -(sceneOrigin[1] - sceneViewBox.minY) +
+      (dc + dr) * (skyscraperConfig.composition.tileHeight / 2);
+
+    expect(scene.assetUrl).toBe(
+      "/data/svg-environments/hq/skyscraper/recipes/scene-the-compliance-office.svg",
+    );
+    expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(expectedOffsetX, 6);
+    expect(scene.y - room.floorPoints[0]!.y).toBeCloseTo(expectedOffsetY, 6);
   });
 
   it("uses the authored full-slot scene frame for Porter's restaurant floor", () => {
@@ -221,6 +291,44 @@ describe("HQ world navigation", () => {
     expect(snapshot.effects.shadowIntensity).toBe(snapshot.backdrop?.shadowIntensity);
   });
 
+  it("selects skyscraper backdrop assets from the active floor elevation band", () => {
+    const cases = [
+      {
+        floorIndex: 0,
+        elevationBandId: "ground-floor",
+        rearAsset: "background/iso-bg-ground-floor-plaza",
+      },
+      {
+        floorIndex: 1,
+        elevationBandId: "mid-tower",
+        rearAsset: "background/iso-bg-mid-tower-neighbors",
+      },
+      {
+        floorIndex: 4,
+        elevationBandId: "rooftop",
+        rearAsset: "background/iso-bg-rooftop-skyline",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const geometry = composeHqWorldGeometry([], {
+        buildingId: "building/skyscraper",
+        buildingTier: 5,
+        floorIndex: testCase.floorIndex,
+      });
+      const snapshot = createHqWorldSnapshot(
+        "Skyscraper",
+        geometry,
+        [],
+        720,
+        "building/skyscraper",
+      );
+
+      expect(snapshot.backdrop?.elevationBandId).toBe(testCase.elevationBandId);
+      expect(snapshot.backdrop?.zones.rear).toEqual([testCase.rearAsset]);
+    }
+  });
+
   it("stacks visible upper floors above the ground floor for multi-story buildings", () => {
     const geometry = composeHqWorldGeometry(
       [
@@ -313,5 +421,100 @@ describe("HQ world navigation", () => {
     expect(scene.height).toBe(540);
     expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(-240, 6);
     expect(scene.y - room.floorPoints[0]!.y).toBeCloseTo(-100, 6);
+  });
+});
+
+describe("HQ structural palette", () => {
+  it("returns the default warm palette for bodega", () => {
+    const palette = getHqStructuralPalette("building/bodega");
+    expect(palette.corridor).toBe("#2a2420");
+    expect(palette.wallLeft).toBe("#2c2014");
+    expect(palette.wallRight).toBe("#352616");
+  });
+
+  it("returns the default warm palette for Porter's", () => {
+    const palette = getHqStructuralPalette("building/porters");
+    expect(palette.corridor).toBe("#2a2420");
+    expect(palette.wallLeft).toBe("#2c2014");
+    expect(palette.wallRight).toBe("#352616");
+  });
+
+  it("returns a cool-neutral palette for the skyscraper", () => {
+    const palette = getHqStructuralPalette("building/skyscraper");
+    expect(palette.corridor).toBe("#2a2e34");
+    expect(palette.emptySlot).toBe("#1a1d22");
+    expect(palette.lockedSlot).toBe("#131519");
+    expect(palette.wallLeft).toBe("#2c343e");
+    expect(palette.wallRight).toBe("#3a4452");
+    expect(palette.corridor).not.toBe(getHqStructuralPalette("building/bodega").corridor);
+  });
+});
+
+describe("HQ skyscraper structural contract", () => {
+  it("tints skyscraper corridor tiles with the skyscraper palette", () => {
+    const geometry = composeHqWorldGeometry([], {
+      buildingId: "building/skyscraper",
+      buildingTier: 1,
+      floorIndex: 1,
+    });
+
+    const corridors = geometry.modular.floorTiles.filter((tile) => tile.roomId === "corridor");
+    const skyscraperPalette = getHqStructuralPalette("building/skyscraper");
+
+    expect(corridors.length).toBeGreaterThan(0);
+    for (const tile of corridors) {
+      expect(tile.tint).toBe(skyscraperPalette.corridor);
+    }
+  });
+
+  it("tints skyscraper shell walls with the skyscraper palette", () => {
+    const geometry = composeHqWorldGeometry([], {
+      buildingId: "building/skyscraper",
+      buildingTier: 1,
+      floorIndex: 0,
+    });
+
+    const walls = geometry.modular.wallSegments.filter((seg) => seg.roomId === "building-shell");
+    const skyscraperPalette = getHqStructuralPalette("building/skyscraper");
+
+    expect(walls.length).toBeGreaterThan(0);
+    const leftWalls = walls.filter((seg) => seg.side === "left");
+    const rightWalls = walls.filter((seg) => seg.side === "right");
+    expect(leftWalls.length).toBeGreaterThan(0);
+    expect(rightWalls.length).toBeGreaterThan(0);
+    for (const seg of leftWalls) expect(seg.tint).toBe(skyscraperPalette.wallLeft);
+    for (const seg of rightWalls) expect(seg.tint).toBe(skyscraperPalette.wallRight);
+  });
+});
+
+describe("HQ perimeter tiles", () => {
+  it("emits only void tiles for the skyscraper (no sidewalk/street/alley/pier/water)", () => {
+    const tiles = buildPerimeterTiles(
+      [{ col: 0, row: 0, cols: 12, rows: 8 }],
+      "building/skyscraper",
+    );
+
+    expect(tiles.length).toBeGreaterThan(0);
+    const kinds = new Set(tiles.map((tile) => tile.kind));
+    expect(kinds.has("void")).toBe(true);
+    expect(kinds.has("sidewalk")).toBe(false);
+    expect(kinds.has("street")).toBe(false);
+    expect(kinds.has("alley")).toBe(false);
+    expect(kinds.has("pier")).toBe(false);
+    expect(kinds.has("water")).toBe(false);
+  });
+
+  it("preserves bodega corner-street perimeter behavior", () => {
+    const tiles = buildPerimeterTiles([{ col: 0, row: 0, cols: 16, rows: 10 }], "building/bodega");
+    const kinds = new Set(tiles.map((tile) => tile.kind));
+    expect(kinds.has("street")).toBe(true);
+    expect(kinds.has("sidewalk")).toBe(true);
+  });
+
+  it("preserves Porter's waterfront rear perimeter behavior", () => {
+    const tiles = buildPerimeterTiles([{ col: 0, row: 0, cols: 12, rows: 18 }], "building/porters");
+    const kinds = new Set(tiles.map((tile) => tile.kind));
+    expect(kinds.has("pier")).toBe(true);
+    expect(kinds.has("water")).toBe(true);
   });
 });

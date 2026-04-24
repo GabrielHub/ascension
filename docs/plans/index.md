@@ -8,7 +8,6 @@ The Porter's-era gameplay baseline is shipped, and the Porter's HQ package is no
 
 There are three active checked-in plans right now:
 
-- [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — checklist for turning the shipped 21-room tower gameplay stack into a real skyscraper HQ asset package
 - [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
 - [Narrative Event Presenter Remediation](./narrative-event-presenter-remediation.md) — tighten presenter ownership so every narrative beat, including AI-framed incidents, resolves to a domain-correct presenter with presenter-specific voice rules
 

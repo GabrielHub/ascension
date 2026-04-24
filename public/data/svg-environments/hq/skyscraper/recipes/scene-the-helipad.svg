@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 570 390">
+  <!-- Props-only scene layer: The Helipad, Skyscraper floor 4 (rooftop).
+       Authored footprint: 6 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Rooftop arrivals: a big iso "H" touchdown pad painted on the
+       deck with a circle boundary, perimeter aviation hazard lights,
+       a fuel drum on a dolly parked off the pad to the north, a
+       canvas wind sock on its pole at the north-east corner, two
+       flight-case crates in the south-west, and an operator bench
+       beside a small flight-ops cart. Nothing structural — the pad
+       paint is treated as surface graphic, not floor. -->
+
+  <defs>
+    <linearGradient id="heliPaint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6e388"/>
+      <stop offset="1" stop-color="#b8851a"/>
+    </linearGradient>
+    <linearGradient id="heliDrum" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c0312a"/>
+      <stop offset="1" stop-color="#4a0d08"/>
+    </linearGradient>
+    <linearGradient id="heliSteel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a8490"/>
+      <stop offset="1" stop-color="#2a323c"/>
+    </linearGradient>
+    <linearGradient id="heliCase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a303c"/>
+      <stop offset="1" stop-color="#0e131c"/>
+    </linearGradient>
+    <radialGradient id="heliLight" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#f4d480" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#3a2608" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Touchdown circle: isometric ellipse at pad center (c ~ 3, r ~ 2.5).
+       Center = iso(3, 2.5) = (200+(0.5)*48, 100+(5.5)*24) = (224, 232).
+       Iso ellipse: rx_iso ~ 2.5 tiles in c = 120, ry_iso matched in iso 2:1. -->
+  <g id="touchdown">
+    <!-- Outer ring -->
+    <ellipse cx="224" cy="232" rx="140" ry="70"
+      fill="none" stroke="#f6e388" stroke-width="2.2" opacity="0.95"/>
+    <ellipse cx="224" cy="232" rx="128" ry="64"
+      fill="none" stroke="#b8851a" stroke-width="1.1" opacity="0.85"/>
+    <!-- Painted H: three iso parallelogram strokes (two uprights + crossbar).
+         Use the canonical 2:1 axes for the uprights (parallel to r axis). -->
+    <!-- Upright 1 (left-leg) -->
+    <polygon points="168,212 184,220 216,268 200,260"
+      fill="url(#heliPaint)" stroke="#5a3e08" stroke-width="0.6"/>
+    <!-- Upright 2 (right-leg) -->
+    <polygon points="232,244 248,252 280,300 264,292"
+      fill="url(#heliPaint)" stroke="#5a3e08" stroke-width="0.6"/>
+    <!-- Crossbar -->
+    <polygon points="188,238 260,274 264,282 192,246"
+      fill="url(#heliPaint)" stroke="#5a3e08" stroke-width="0.55"/>
+  </g>
+
+  <!-- Perimeter aviation hazard lights on the outer ring edge.
+       Place six small lamps spaced around the ellipse. -->
+  <g id="perimeter-lights">
+    <g fill="url(#heliLight)" stroke="#6a4818" stroke-width="0.3">
+      <ellipse cx="84"  cy="232" rx="5" ry="2.5"/>
+      <ellipse cx="224" cy="162" rx="5" ry="2.5"/>
+      <ellipse cx="364" cy="232" rx="5" ry="2.5"/>
+      <ellipse cx="224" cy="302" rx="5" ry="2.5"/>
+      <ellipse cx="140" cy="192" rx="4.5" ry="2.2"/>
+      <ellipse cx="308" cy="272" rx="4.5" ry="2.2"/>
+    </g>
+    <g fill="#3a2608">
+      <circle cx="84"  cy="232" r="1.5"/>
+      <circle cx="224" cy="162" r="1.5"/>
+      <circle cx="364" cy="232" r="1.5"/>
+      <circle cx="224" cy="302" r="1.5"/>
+      <circle cx="140" cy="192" r="1.3"/>
+      <circle cx="308" cy="272" r="1.3"/>
+    </g>
+  </g>
+
+  <!-- Wind sock at north-east corner (c~5, r~0.5). -->
+  <g id="windsock">
+    <!-- Pole base -->
+    <polygon points="418,192 438,200 438,210 418,202" fill="url(#heliSteel)" stroke="#0a0e14" stroke-width="0.35"/>
+    <!-- Pole -->
+    <rect x="427" y="110" width="2.8" height="90" fill="#3a434e"/>
+    <!-- Hoop -->
+    <ellipse cx="428" cy="112" rx="9" ry="3.5" fill="none" stroke="#7a8490" stroke-width="0.8"/>
+    <!-- Windsock fabric (tapered, billowing to the south) -->
+    <polygon points="436,110 468,118 462,132 432,124" fill="#f6a533" stroke="#5a3a08" stroke-width="0.35"/>
+    <polygon points="462,120 488,126 482,138 458,130" fill="#ecd478" stroke="#5a4018" stroke-width="0.3"/>
+    <polygon points="480,126 496,130 490,140 474,136" fill="#f6a533" stroke="#5a3a08" stroke-width="0.3"/>
+    <polygon points="490,134 504,138 498,148 484,144" fill="#ecd478" opacity="0.9"/>
+  </g>
+
+  <!-- Fuel drum on dolly (north corner, off-pad). -->
+  <g id="fuel-drum">
+    <!-- Dolly base -->
+    <polygon points="260,160 306,182 294,198 248,176" fill="url(#heliSteel)" stroke="#0a0e14" stroke-width="0.4"/>
+    <polygon points="248,176 294,198 294,208 248,186" fill="#1a1f28" stroke="#060810" stroke-width="0.35"/>
+    <!-- Wheels -->
+    <ellipse cx="256" cy="204" rx="3.5" ry="1.8" fill="#0a0c12"/>
+    <ellipse cx="286" cy="208" rx="3.5" ry="1.8" fill="#0a0c12"/>
+    <!-- Drum (upright cylinder) -->
+    <ellipse cx="276" cy="168" rx="16" ry="6.5" fill="url(#heliDrum)" stroke="#3a0a08" stroke-width="0.45"/>
+    <polygon points="260,168 292,168 292,184 260,184" fill="url(#heliDrum)" stroke="#3a0a08" stroke-width="0.45"/>
+    <ellipse cx="276" cy="184" rx="16" ry="6.5" fill="#4a0e08" stroke="#2a0604" stroke-width="0.4"/>
+    <!-- Band + cap -->
+    <polygon points="260,172 292,172 292,174 260,174" fill="#2a0604" opacity="0.85"/>
+    <ellipse cx="276" cy="168" rx="14" ry="5.5" fill="#a82820" opacity="0.85"/>
+    <circle cx="276" cy="168" r="2" fill="#5a1208"/>
+    <!-- Handle -->
+    <line x1="296" y1="188" x2="320" y2="174" stroke="#7a8490" stroke-width="1.4"/>
+    <line x1="296" y1="188" x2="320" y2="174" stroke="#14181f" stroke-width="0.4"/>
+  </g>
+
+  <!-- Flight cases in SW corner (off-pad) -->
+  <g id="flight-cases">
+    <!-- Case 1 -->
+    <polygon points="0,272 60,302 36,326 -24,296" fill="url(#heliCase)" stroke="#040608" stroke-width="0.5"/>
+    <polygon points="-24,296 36,326 36,342 -24,312" fill="#0a0c12" stroke="#030405" stroke-width="0.4"/>
+    <polygon points="36,326 60,302 60,318 36,342" fill="#050608" stroke="#020303" stroke-width="0.3"/>
+    <!-- Case corner guards (brass) -->
+    <polygon points="-6,296 4,301 4,305 -6,300" fill="#c9a34a"/>
+    <polygon points="26,312 36,317 36,321 26,316" fill="#c9a34a"/>
+    <polygon points="56,304 60,306 60,310 56,308" fill="#c9a34a"/>
+    <!-- Latch -->
+    <rect x="4" y="310" width="6" height="2" fill="#c9a34a" transform="rotate(27 4 310)"/>
+
+    <!-- Case 2 (stacked behind) -->
+    <polygon points="12,252 66,280 46,300 -8,272" fill="url(#heliCase)" stroke="#040608" stroke-width="0.45"/>
+    <polygon points="-8,272 46,300 46,310 -8,282" fill="#0a0c12" stroke="#030405" stroke-width="0.35"/>
+    <polygon points="46,300 66,280 66,292 46,310" fill="#050608" stroke="#020303" stroke-width="0.3"/>
+    <polygon points="6,272 14,276 14,280 6,276" fill="#c9a34a"/>
+    <polygon points="38,288 46,292 46,296 38,292" fill="#c9a34a"/>
+  </g>
+
+  <!-- Operator bench + flight-ops cart (south-east corner, off pad) -->
+  <g id="ops-bench">
+    <!-- Bench -->
+    <polygon points="330,280 404,316 390,330 316,294" fill="#3a434e" stroke="#060a10" stroke-width="0.45"/>
+    <polygon points="316,294 390,330 390,340 316,304" fill="#1a1f28" stroke="#060810" stroke-width="0.35"/>
+    <!-- Legs -->
+    <line x1="326" y1="300" x2="326" y2="320" stroke="#14181f" stroke-width="1.2"/>
+    <line x1="386" y1="328" x2="386" y2="348" stroke="#14181f" stroke-width="1.2"/>
+    <!-- Helmet on bench -->
+    <ellipse cx="346" cy="296" rx="7" ry="4" fill="#efe5cc" stroke="#4a4030" stroke-width="0.35"/>
+    <polygon points="340,295 352,296 352,298 340,297" fill="#14181f"/>
+    <!-- Cart beside bench -->
+    <polygon points="408,288 450,308 436,320 394,300" fill="url(#heliCase)" stroke="#040608" stroke-width="0.4"/>
+    <polygon points="394,300 436,320 436,336 394,316" fill="#0a0c12" stroke="#030405" stroke-width="0.3"/>
+    <polygon points="436,320 450,308 450,324 436,336" fill="#050608" stroke="#020303" stroke-width="0.3"/>
+    <ellipse cx="400" cy="330" rx="3.5" ry="1.8" fill="#14181f"/>
+    <ellipse cx="430" cy="338" rx="3.5" ry="1.8" fill="#14181f"/>
+    <!-- Radio unit on top -->
+    <polygon points="412,282 442,296 438,306 408,292" fill="#12161c" stroke="#050709" stroke-width="0.3"/>
+    <rect x="418" y="280" width="3" height="5" fill="#3ad67a" transform="rotate(27 418 280)"/>
+    <line x1="414" y1="280" x2="420" y2="260" stroke="#6a6a6a" stroke-width="0.5"/>
+  </g>
+</svg>

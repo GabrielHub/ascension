@@ -11,6 +11,7 @@ import {
   getHqEnvironmentRenderConfigForBuilding,
 } from "lib/hq-environment-manifest";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
+import { findHqRoomSceneBinding } from "lib/svg-asset-contract";
 import { deriveRecruitRank, visitorQualityToRank } from "lib/visitor-rank";
 import { getAvailableContractRanksForReputation } from "./contract-economy";
 import { siteConceptTemplates } from "content/templates/site-concepts";
@@ -156,6 +157,14 @@ describe("skyscraper layout", () => {
     expect(floors[0]!.elevationBandId).toBe("ground-floor");
     expect(floors[4]!.elevationBandId).toBe("rooftop");
   });
+
+  it("exposes selectable floors at every skyscraper upgrade stage for the scene builder", () => {
+    for (const tier of [1, 2, 3, 4, 5]) {
+      const floors = getBuildingFloors("building/skyscraper", tier);
+      expect(floors.length).toBeGreaterThan(0);
+      expect(floors.every((floor) => typeof floor.floorIndex === "number")).toBe(true);
+    }
+  });
 });
 
 // ── Skyscraper environment wiring ───────────────────────────────────────
@@ -165,6 +174,16 @@ describe("skyscraper environment manifest", () => {
     const config = getHqEnvironmentRenderConfigForBuilding("building/skyscraper");
     expect(config).toBeDefined();
     expect(config.composition.sceneSystem.roomFootprint.cols).toBeGreaterThan(0);
+  });
+
+  it("does not resolve bodega asset roots for the skyscraper", () => {
+    const config = getHqEnvironmentRenderConfigForBuilding("building/skyscraper");
+    expect(config.paths.partsRoot).toBe("/data/svg-environments/hq/skyscraper/parts");
+    expect(config.paths.referenceRoot).toBe("/data/svg-environments/hq/skyscraper/reference");
+    expect(config.paths.recipesRoot).toBe("/data/svg-environments/hq/skyscraper/recipes");
+    expect(config.paths.partsRoot).not.toContain("bodega");
+    expect(config.paths.referenceRoot).not.toContain("bodega");
+    expect(config.paths.recipesRoot).not.toContain("bodega");
   });
 
   it("exposes a backdrop manifest for the tower", () => {
@@ -688,5 +707,353 @@ describe("skyscraper floor purchase flow", () => {
       "upgrade/building/skyscraper:specialist_training_floor",
     ]);
     expect(snapshot.activeBuildingTier).toBe(3);
+  });
+});
+
+// ── Skyscraper room-scene binding matrix ────────────────────────────────
+//
+// The 21-room binding matrix derived from the Room Inventory in
+// docs/plans/skyscraper-hq-asset-foundation.md crossed with the live layouts
+// in content/building-layouts.ts. This is the single source of truth that
+// scene-binding registration (Phase 6+) must match room-for-room.
+
+interface SkyscraperRoomBinding {
+  label: string;
+  templateId: string;
+  roomStateId: string;
+  slotId: string;
+  floorIndex: number;
+  cols: number;
+  rows: number;
+  elevationBandId: "ground-floor" | "mid-tower" | "rooftop";
+  tier: number;
+}
+
+const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
+  // Floor 0 — ground-floor
+  {
+    label: "Lobby",
+    templateId: "room/lobby:tier_1",
+    roomStateId: "room-state/lobby:1",
+    slotId: "slot/lobby",
+    floorIndex: 0,
+    cols: 7,
+    rows: 5,
+    elevationBandId: "ground-floor",
+    tier: 1,
+  },
+  {
+    label: "Front Desk",
+    templateId: "room/reception:tier_1",
+    roomStateId: "room-state/reception:1",
+    slotId: "slot/reception",
+    floorIndex: 0,
+    cols: 3,
+    rows: 3,
+    elevationBandId: "ground-floor",
+    tier: 1,
+  },
+  // Floor 1 — operations
+  {
+    label: "Bullpen",
+    templateId: "room/bullpen:tier_1",
+    roomStateId: "room-state/bullpen:1",
+    slotId: "slot/bullpen",
+    floorIndex: 1,
+    cols: 7,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  {
+    label: "Situation Room",
+    templateId: "room/situation_room:tier_1",
+    roomStateId: "room-state/situation-room:1",
+    slotId: "slot/situation-room",
+    floorIndex: 1,
+    cols: 3,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  // Floor 2 — recovery & training
+  {
+    label: "Clinic",
+    templateId: "room/clinic:tier_1",
+    roomStateId: "room-state/clinic:1",
+    slotId: "slot/clinic",
+    floorIndex: 2,
+    cols: 4,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  {
+    label: "Dojo",
+    templateId: "room/dojo:tier_1",
+    roomStateId: "room-state/dojo:1",
+    slotId: "slot/dojo",
+    floorIndex: 2,
+    cols: 4,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  {
+    label: "Crew Lounge",
+    templateId: "room/crew_lounge:tier_1",
+    roomStateId: "room-state/crew-lounge:1",
+    slotId: "slot/lounge",
+    floorIndex: 2,
+    cols: 2,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  // Floor 3 — logistics
+  {
+    label: "Supply Hall",
+    templateId: "room/supply_hall:tier_1",
+    roomStateId: "room-state/supply-hall:1",
+    slotId: "slot/supply-hall",
+    floorIndex: 3,
+    cols: 5,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  {
+    label: "Fabrication Bay",
+    templateId: "room/fabrication_bay:tier_1",
+    roomStateId: "room-state/fabrication-bay:1",
+    slotId: "slot/fabrication-bay",
+    floorIndex: 3,
+    cols: 5,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 1,
+  },
+  // Floor 4 — rooftop
+  {
+    label: "Helipad",
+    templateId: "room/rooftop_helipad:tier_1",
+    roomStateId: "room-state/rooftop-helipad:1",
+    slotId: "slot/helipad",
+    floorIndex: 4,
+    cols: 6,
+    rows: 5,
+    elevationBandId: "rooftop",
+    tier: 1,
+  },
+  {
+    label: "Sky Garden",
+    templateId: "room/sky_garden:tier_1",
+    roomStateId: "room-state/sky-garden:1",
+    slotId: "slot/sky-garden",
+    floorIndex: 4,
+    cols: 6,
+    rows: 5,
+    elevationBandId: "rooftop",
+    tier: 1,
+  },
+  // Floor 5 — Nightlife expansion
+  {
+    label: "Club",
+    templateId: "room/club:tier_1",
+    roomStateId: "room-state/club:1",
+    slotId: "slot/club",
+    floorIndex: 5,
+    cols: 7,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 2,
+  },
+  {
+    label: "Green Room",
+    templateId: "room/green_room:tier_1",
+    roomStateId: "room-state/green-room:1",
+    slotId: "slot/green-room",
+    floorIndex: 5,
+    cols: 3,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 2,
+  },
+  // Floor 6 — Specialist Training expansion
+  {
+    label: "Drill Floor",
+    templateId: "room/drill_floor:tier_1",
+    roomStateId: "room-state/drill-floor:1",
+    slotId: "slot/drill-floor",
+    floorIndex: 6,
+    cols: 4,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 3,
+  },
+  {
+    label: "Recon Course",
+    templateId: "room/recon_course:tier_1",
+    roomStateId: "room-state/recon-course:1",
+    slotId: "slot/recon-course",
+    floorIndex: 6,
+    cols: 3,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 3,
+  },
+  {
+    label: "Trauma Bay",
+    templateId: "room/trauma_bay:tier_1",
+    roomStateId: "room-state/trauma-bay:1",
+    slotId: "slot/trauma-bay",
+    floorIndex: 6,
+    cols: 3,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 3,
+  },
+  // Floor 7 — Executive expansion
+  {
+    label: "Executive Office",
+    templateId: "room/executive_office:tier_1",
+    roomStateId: "room-state/executive-office:1",
+    slotId: "slot/executive-office",
+    floorIndex: 7,
+    cols: 4,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 4,
+  },
+  {
+    label: "Compliance Office",
+    templateId: "room/compliance_office:tier_1",
+    roomStateId: "room-state/compliance-office:1",
+    slotId: "slot/compliance-office",
+    floorIndex: 7,
+    cols: 2,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 4,
+  },
+  {
+    label: "War Room",
+    templateId: "room/war_room:tier_1",
+    roomStateId: "room-state/war-room:1",
+    slotId: "slot/war-room",
+    floorIndex: 7,
+    cols: 4,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 4,
+  },
+  // Floor 8 — Penthouse expansion
+  {
+    label: "Sky Lounge",
+    templateId: "room/sky_lounge:tier_1",
+    roomStateId: "room-state/sky-lounge:1",
+    slotId: "slot/sky-lounge",
+    floorIndex: 8,
+    cols: 7,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 5,
+  },
+  {
+    label: "Private Cellar",
+    templateId: "room/private_cellar:tier_1",
+    roomStateId: "room-state/private-cellar:1",
+    slotId: "slot/private-cellar",
+    floorIndex: 8,
+    cols: 3,
+    rows: 5,
+    elevationBandId: "mid-tower",
+    tier: 5,
+  },
+];
+
+const PILOT_ROOM_LABELS = new Set([
+  "Lobby",
+  "Fabrication Bay",
+  "Executive Office",
+  "Compliance Office",
+  "War Room",
+  "Sky Lounge",
+]);
+
+const PHASE_5_MATRIX_COVERAGE_LABELS = new Set([...PILOT_ROOM_LABELS, "Helipad", "Sky Garden"]);
+
+describe("skyscraper room-scene binding matrix", () => {
+  it("covers every one of the 21 shipped skyscraper rooms", () => {
+    expect(SKYSCRAPER_ROOM_BINDING_MATRIX).toHaveLength(21);
+    const slotIds = new Set(SKYSCRAPER_ROOM_BINDING_MATRIX.map((entry) => entry.slotId));
+    expect(slotIds.size).toBe(21);
+    const templateIds = new Set(SKYSCRAPER_ROOM_BINDING_MATRIX.map((entry) => entry.templateId));
+    expect(templateIds.size).toBe(21);
+  });
+
+  it.each(SKYSCRAPER_ROOM_BINDING_MATRIX)(
+    "maps $label to the correct slot, floor, footprint, and elevation band",
+    ({ templateId, slotId, floorIndex, cols, rows, elevationBandId, tier }) => {
+      const floor = getBuildingLayout("building/skyscraper", floorIndex, tier);
+      expect(floor, `missing floor ${floorIndex} at tier ${tier}`).toBeDefined();
+      expect(floor!.elevationBandId).toBe(elevationBandId);
+
+      const slot = floor!.slots.find((entry) => entry.slotId === slotId);
+      expect(slot, `missing slot ${slotId} on floor ${floorIndex}`).toBeDefined();
+      expect(slot!.cols).toBe(cols);
+      expect(slot!.rows).toBe(rows);
+      expect(slot!.startingTemplateId).toBe(templateId);
+    },
+  );
+
+  it("covers every pilot room defined in the plan and the phase-5 matrix probes", () => {
+    const pilotEntries = SKYSCRAPER_ROOM_BINDING_MATRIX.filter((entry) =>
+      PILOT_ROOM_LABELS.has(entry.label),
+    );
+    expect(pilotEntries.map((entry) => entry.label).sort()).toEqual(
+      [
+        "Compliance Office",
+        "Executive Office",
+        "Fabrication Bay",
+        "Lobby",
+        "Sky Lounge",
+        "War Room",
+      ].sort(),
+    );
+
+    const matrixCoverage = SKYSCRAPER_ROOM_BINDING_MATRIX.filter((entry) =>
+      PHASE_5_MATRIX_COVERAGE_LABELS.has(entry.label),
+    );
+    expect(matrixCoverage.map((entry) => entry.label).sort()).toEqual(
+      [
+        "Compliance Office",
+        "Executive Office",
+        "Fabrication Bay",
+        "Helipad",
+        "Lobby",
+        "Sky Garden",
+        "Sky Lounge",
+        "War Room",
+      ].sort(),
+    );
+  });
+
+  it("registers room-scene bindings for every shipped skyscraper room", () => {
+    for (const entry of SKYSCRAPER_ROOM_BINDING_MATRIX) {
+      const binding = findHqRoomSceneBinding(
+        "building/skyscraper",
+        entry.templateId,
+        entry.roomStateId,
+      );
+      expect(binding, `scene binding missing for ${entry.label}`).toBeDefined();
+      expect(binding!.slotId).toBe(entry.slotId);
+      expect(binding!.floorIndex).toBe(entry.floorIndex);
+      expect(binding!.sceneFootprint).toEqual({ cols: entry.cols, rows: entry.rows });
+      expect(binding!.sceneOrigin).toEqual([200, 100]);
+      expect(binding!.assetId.startsWith("/data/svg-environments/hq/skyscraper/recipes/")).toBe(
+        true,
+      );
+    }
   });
 });

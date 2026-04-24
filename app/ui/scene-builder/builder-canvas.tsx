@@ -131,9 +131,44 @@ function getIsoRectBounds(
 const svgCache = new Map<string, string>();
 const svgLoadingSet = new Set<string>();
 const svgListeners = new Map<string, Set<() => void>>();
+const SVG_ASSETS_CHANGED_EVENT = "ascension:svg-assets-changed";
+
+interface SvgAssetChangedPayload {
+  path?: string;
+}
+
+function stripQuery(value: string): string {
+  return value.split("?")[0];
+}
+
+function matchesChangedSvg(url: string, payload: SvgAssetChangedPayload | undefined): boolean {
+  return !payload?.path || stripQuery(payload.path) === stripQuery(url);
+}
+
+function resolveSvgFetchUrl(url: string, revision: number): string {
+  if (!import.meta.env.DEV || revision === 0) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}svgRev=${revision}`;
+}
 
 function useSvgImage(url: string): string | null {
   const [dataUrl, setDataUrl] = useState<string | null>(() => svgCache.get(url) ?? null);
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    if (!import.meta.hot) return;
+
+    function onSvgAssetsChanged(payload: SvgAssetChangedPayload | undefined) {
+      if (!matchesChangedSvg(url, payload)) return;
+      svgCache.delete(url);
+      svgLoadingSet.delete(url);
+      setDataUrl(null);
+      setRevision((current) => current + 1);
+    }
+
+    import.meta.hot.on(SVG_ASSETS_CHANGED_EVENT, onSvgAssetsChanged);
+    return () => import.meta.hot?.off(SVG_ASSETS_CHANGED_EVENT, onSvgAssetsChanged);
+  }, [url]);
 
   useEffect(() => {
     if (svgCache.has(url)) {
@@ -145,26 +180,30 @@ function useSvgImage(url: string): string | null {
     const listener = () => setDataUrl(svgCache.get(url) ?? null);
     listeners.add(listener);
     svgListeners.set(url, listeners);
+    let cancelled = false;
 
     if (!svgLoadingSet.has(url)) {
       svgLoadingSet.add(url);
-      fetch(url)
+      fetch(resolveSvgFetchUrl(url, revision))
         .then((response) => response.text())
         .then((svgText) => {
+          if (cancelled) return;
           const blob = new Blob([svgText], { type: "image/svg+xml" });
           svgCache.set(url, URL.createObjectURL(blob));
           svgListeners.get(url)?.forEach((notify) => notify());
         })
         .catch(() => {
+          if (cancelled) return;
           svgCache.set(url, "");
           svgListeners.get(url)?.forEach((notify) => notify());
         });
     }
 
     return () => {
+      cancelled = true;
       listeners.delete(listener);
     };
-  }, [url]);
+  }, [revision, url]);
 
   return dataUrl;
 }

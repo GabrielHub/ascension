@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 570 390">
+  <!-- Props-only scene layer: The Sky Garden, Skyscraper floor 4 (rooftop).
+       Authored footprint: 6 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Rooftop prestige space: four raised rectangular planter beds
+       laid out as iso parallelograms with small trees and shrubs,
+       a wrought-iron bench along the east edge, a bistro table with
+       two chairs in the south-west, a pergola trellis spanning the
+       central walking path, and four stone path stones running
+       diagonally through the garden. No walls, floors, grids, or
+       structural elements — planters and pavers are treated as
+       surface props, not structure. -->
+
+  <defs>
+    <linearGradient id="sgPlanter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a6040"/>
+      <stop offset="1" stop-color="#32260f"/>
+    </linearGradient>
+    <linearGradient id="sgPlanterFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a3820"/>
+      <stop offset="1" stop-color="#1a1208"/>
+    </linearGradient>
+    <radialGradient id="sgFoliage" cx="0.5" cy="0.5" r="0.65">
+      <stop offset="0" stop-color="#6db060" stop-opacity="0.95"/>
+      <stop offset="0.7" stop-color="#2a6a3a" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#0f3a1a" stop-opacity="0.95"/>
+    </radialGradient>
+    <linearGradient id="sgPaver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a929c"/>
+      <stop offset="1" stop-color="#3a4048"/>
+    </linearGradient>
+    <linearGradient id="sgIron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a303c"/>
+      <stop offset="1" stop-color="#0a0c12"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Central path of stone pavers running north-east to south-west.
+       Four stones along a diagonal from (c=1,r=1) toward (c=5,r=4). -->
+  <g id="pavers">
+    <polygon points="200,148 232,164 220,188 188,172" fill="url(#sgPaver)" stroke="#1a2028" stroke-width="0.4"/>
+    <polygon points="272,184 304,200 292,224 260,208" fill="url(#sgPaver)" stroke="#1a2028" stroke-width="0.4"/>
+    <polygon points="344,220 376,236 364,260 332,244" fill="url(#sgPaver)" stroke="#1a2028" stroke-width="0.4"/>
+    <polygon points="416,256 448,272 436,296 404,280" fill="url(#sgPaver)" stroke="#1a2028" stroke-width="0.4"/>
+  </g>
+
+  <!-- Planter bed 1 (north-west, c=0.5..2.3, r=0.5..1.8).
+       NW(0.5,0.5)=(200,124), NE(2.3,0.5)=(286.4,167.2),
+       SE(2.3,1.8)=(262,198.4), SW(0.5,1.8)=(137.6,155.2). -->
+  <g id="planter-nw">
+    <!-- Top -->
+    <polygon points="200,124 286,167 262,198 138,155"
+      fill="url(#sgPlanter)" stroke="#140a06" stroke-width="0.5"/>
+    <!-- Front (south) apron -->
+    <polygon points="138,155 262,198 262,214 138,171"
+      fill="url(#sgPlanterFront)" stroke="#060302" stroke-width="0.4"/>
+    <!-- East apron -->
+    <polygon points="262,198 286,167 286,183 262,214"
+      fill="#1a1208" stroke="#060302" stroke-width="0.35"/>
+    <!-- Soil top -->
+    <polygon points="208,128 278,163 258,192 148,155"
+      fill="#2a180a" stroke="#0a0503" stroke-width="0.3"/>
+    <!-- Small ornamental tree -->
+    <rect x="215" y="100" width="2.4" height="42" fill="#3a2414" transform="rotate(27 215 100)"/>
+    <ellipse cx="234" cy="116" rx="22" ry="18" fill="url(#sgFoliage)" stroke="#0f2a18" stroke-width="0.4"/>
+    <ellipse cx="220" cy="108" rx="14" ry="12" fill="#5aa050" opacity="0.7"/>
+    <ellipse cx="244" cy="124" rx="16" ry="14" fill="#4a8844" opacity="0.8"/>
+    <!-- Low shrubs to the south of the tree -->
+    <ellipse cx="200" cy="168" rx="10" ry="5" fill="#4a8844" stroke="#0f2a18" stroke-width="0.3"/>
+    <ellipse cx="228" cy="182" rx="10" ry="5" fill="#5aa050" stroke="#0f2a18" stroke-width="0.3"/>
+  </g>
+
+  <!-- Planter bed 2 (north-east, c=3..5.5, r=0.3..1.3). -->
+  <g id="planter-ne">
+    <polygon points="330,116 450,176 426,204 306,144"
+      fill="url(#sgPlanter)" stroke="#140a06" stroke-width="0.5"/>
+    <polygon points="306,144 426,204 426,220 306,160"
+      fill="url(#sgPlanterFront)" stroke="#060302" stroke-width="0.4"/>
+    <polygon points="426,204 450,176 450,192 426,220"
+      fill="#1a1208" stroke="#060302" stroke-width="0.35"/>
+    <polygon points="338,120 442,172 422,198 316,144"
+      fill="#2a180a" stroke="#0a0503" stroke-width="0.3"/>
+    <!-- Tall tree -->
+    <rect x="378" y="92" width="2.8" height="56" fill="#3a2414" transform="rotate(27 378 92)"/>
+    <ellipse cx="396" cy="108" rx="26" ry="22" fill="url(#sgFoliage)" stroke="#0f2a18" stroke-width="0.4"/>
+    <ellipse cx="382" cy="98" rx="14" ry="12" fill="#5aa050" opacity="0.7"/>
+    <ellipse cx="410" cy="116" rx="18" ry="16" fill="#4a8844" opacity="0.8"/>
+    <!-- Smaller shrubs -->
+    <ellipse cx="350" cy="160" rx="10" ry="5" fill="#6db060" stroke="#0f2a18" stroke-width="0.3"/>
+    <ellipse cx="390" cy="180" rx="10" ry="5" fill="#4a8844" stroke="#0f2a18" stroke-width="0.3"/>
+    <!-- Flowers pops -->
+    <circle cx="360" cy="160" r="1.6" fill="#e63d5a"/>
+    <circle cx="400" cy="180" r="1.6" fill="#f4b070"/>
+  </g>
+
+  <!-- Planter bed 3 (south-west, c=0.3..1.8, r=2.8..4.5). -->
+  <g id="planter-sw">
+    <polygon points="72,252 140,286 116,314 48,280"
+      fill="url(#sgPlanter)" stroke="#140a06" stroke-width="0.5"/>
+    <polygon points="48,280 116,314 116,326 48,292"
+      fill="url(#sgPlanterFront)" stroke="#060302" stroke-width="0.4"/>
+    <polygon points="116,314 140,286 140,298 116,326"
+      fill="#1a1208" stroke="#060302" stroke-width="0.35"/>
+    <polygon points="80,256 132,283 112,308 58,280"
+      fill="#2a180a" stroke="#0a0503" stroke-width="0.3"/>
+    <!-- Low grasses / tall shrub -->
+    <ellipse cx="96" cy="274" rx="16" ry="10" fill="url(#sgFoliage)" stroke="#0f2a18" stroke-width="0.4"/>
+    <ellipse cx="85" cy="268" rx="8" ry="6" fill="#6db060" opacity="0.85"/>
+    <!-- Thin grass blades -->
+    <g stroke="#9ad0a4" stroke-width="0.5" stroke-linecap="round">
+      <line x1="90" y1="270" x2="86" y2="258"/>
+      <line x1="94" y1="272" x2="92" y2="258"/>
+      <line x1="98" y1="274" x2="98" y2="260"/>
+      <line x1="102" y1="276" x2="104" y2="262"/>
+      <line x1="106" y1="278" x2="110" y2="264"/>
+    </g>
+    <circle cx="100" cy="268" r="1.4" fill="#ecd478"/>
+  </g>
+
+  <!-- Planter bed 4 (south-central, c=2.8..4.8, r=2.8..4.5). -->
+  <g id="planter-s">
+    <polygon points="252,260 344,306 320,334 228,288"
+      fill="url(#sgPlanter)" stroke="#140a06" stroke-width="0.5"/>
+    <polygon points="228,288 320,334 320,346 228,300"
+      fill="url(#sgPlanterFront)" stroke="#060302" stroke-width="0.4"/>
+    <polygon points="320,334 344,306 344,318 320,346"
+      fill="#1a1208" stroke="#060302" stroke-width="0.35"/>
+    <polygon points="260,264 336,302 316,328 238,290"
+      fill="#2a180a" stroke="#0a0503" stroke-width="0.3"/>
+    <!-- Multi-stem shrubs -->
+    <ellipse cx="284" cy="292" rx="20" ry="14" fill="url(#sgFoliage)" stroke="#0f2a18" stroke-width="0.4"/>
+    <ellipse cx="274" cy="284" rx="10" ry="8" fill="#6db060" opacity="0.85"/>
+    <ellipse cx="300" cy="302" rx="12" ry="9" fill="#5aa050" opacity="0.85"/>
+    <!-- Small flowering pops -->
+    <circle cx="284" cy="286" r="1.6" fill="#e63d5a"/>
+    <circle cx="294" cy="296" r="1.6" fill="#f4b070"/>
+    <circle cx="272" cy="290" r="1.4" fill="#ecd478"/>
+  </g>
+
+  <!-- Wrought-iron bench on the east wall zone (c ~ 5.5, r ~ 2..3) -->
+  <g id="bench">
+    <!-- Seat top -->
+    <polygon points="410,212 470,242 454,258 394,228"
+      fill="url(#sgIron)" stroke="#030405" stroke-width="0.5"/>
+    <polygon points="394,228 454,258 454,268 394,238"
+      fill="#080a10" stroke="#020304" stroke-width="0.4"/>
+    <!-- Backrest -->
+    <polygon points="412,188 472,218 472,238 412,208"
+      fill="url(#sgIron)" stroke="#030405" stroke-width="0.45"/>
+    <!-- Decorative scrolls on backrest -->
+    <g stroke="#4a5260" stroke-width="0.5" fill="none">
+      <path d="M 420 204 Q 428 196 436 206 Q 444 196 452 212"/>
+      <path d="M 444 220 Q 452 212 460 222 Q 468 212 472 226"/>
+    </g>
+    <!-- Legs -->
+    <line x1="402" y1="236" x2="402" y2="256" stroke="#0a0c12" stroke-width="1.2"/>
+    <line x1="446" y1="260" x2="446" y2="280" stroke="#0a0c12" stroke-width="1.2"/>
+  </g>
+
+  <!-- Bistro table + 2 chairs (south-west path, between planters 3 and 4) -->
+  <g id="bistro">
+    <!-- Table top (small iso parallelogram ~ 1x1) -->
+    <polygon points="186,282 226,302 210,318 170,298"
+      fill="#d8dde5" stroke="#5a6370" stroke-width="0.45"/>
+    <polygon points="190,286 222,302 208,314 178,300"
+      fill="#a9b4c2" opacity="0.85"/>
+    <!-- Pedestal -->
+    <line x1="198" y1="310" x2="198" y2="332" stroke="#14181f" stroke-width="1.4"/>
+    <polygon points="186,332 212,340 210,344 184,336" fill="#14181f" stroke="#060810" stroke-width="0.35"/>
+    <!-- Tea set -->
+    <polygon points="194,288 204,292 204,298 194,294" fill="#f6a533"/>
+    <polygon points="206,292 214,294 214,298 206,296" fill="#efe5cc"/>
+    <!-- Chair A -->
+    <g>
+      <polygon points="148,290 176,302 164,312 136,300" fill="url(#sgIron)" stroke="#030405" stroke-width="0.35"/>
+      <polygon points="136,300 164,312 164,322 136,310" fill="#080a10" stroke="#020304" stroke-width="0.3"/>
+      <polygon points="148,272 176,284 176,302 148,290" fill="url(#sgIron)" stroke="#030405" stroke-width="0.3"/>
+    </g>
+    <!-- Chair B -->
+    <g>
+      <polygon points="224,316 252,328 240,338 212,326" fill="url(#sgIron)" stroke="#030405" stroke-width="0.35"/>
+      <polygon points="212,326 240,338 240,348 212,336" fill="#080a10" stroke="#020304" stroke-width="0.3"/>
+      <polygon points="224,298 252,310 252,328 224,316" fill="url(#sgIron)" stroke="#030405" stroke-width="0.3"/>
+    </g>
+  </g>
+
+  <!-- Pergola trellis overhead spanning central path (upright posts + crossbeams).
+       Posts at tile corners near (c=2,r=2) and (c=4,r=3). -->
+  <g id="pergola">
+    <!-- Post A base -->
+    <polygon points="196,192 212,200 212,204 196,196" fill="#3a2414"/>
+    <!-- Post A upright -->
+    <rect x="200" y="128" width="3" height="70" fill="#4a3014"/>
+    <!-- Post B base -->
+    <polygon points="340,264 356,272 356,276 340,268" fill="#3a2414"/>
+    <!-- Post B upright -->
+    <rect x="344" y="198" width="3" height="72" fill="#4a3014"/>
+    <!-- Top beam between posts (iso parallelogram along +c/+r direction) -->
+    <polygon points="202,128 350,202 350,210 202,136" fill="#5a3a22" stroke="#2a1408" stroke-width="0.4"/>
+    <!-- Cross slats (perpendicular) -->
+    <g stroke="#3a2414" stroke-width="1" opacity="0.9">
+      <line x1="220" y1="140" x2="228" y2="126"/>
+      <line x1="254" y1="156" x2="262" y2="142"/>
+      <line x1="288" y1="172" x2="296" y2="158"/>
+      <line x1="322" y1="190" x2="330" y2="176"/>
+    </g>
+    <!-- Climbing vine hints -->
+    <g stroke="#2a6a3a" stroke-width="0.4" fill="none" opacity="0.85">
+      <path d="M 210 140 Q 220 144 224 132"/>
+      <path d="M 260 166 Q 272 170 276 158"/>
+      <path d="M 310 192 Q 322 196 326 184"/>
+    </g>
+    <circle cx="224" cy="132" r="1.2" fill="#e63d5a"/>
+    <circle cx="276" cy="158" r="1.2" fill="#f4b070"/>
+    <circle cx="326" cy="184" r="1.2" fill="#ecd478"/>
+  </g>
+</svg>

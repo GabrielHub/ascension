@@ -43,6 +43,7 @@ interface RawBackdropManifest {
   profileId?: string;
   elevationBandId?: string | null;
   phases?: Partial<Record<string, RawBackdropPhaseProfile>>;
+  elevationBands?: Record<string, { phases?: Partial<Record<string, RawBackdropPhaseProfile>> }>;
 }
 
 interface RawHqEnvironmentManifest {
@@ -215,6 +216,9 @@ export interface HqBackdropManifest {
   profileId: string;
   elevationBandId: string | null;
   phases: Readonly<Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>>;
+  elevationBands: Readonly<
+    Record<string, Readonly<Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>>>
+  >;
 }
 
 const DEFAULT_PHASE_PROFILE: HqBackdropPhaseProfile = {
@@ -269,15 +273,9 @@ export function getHqBackdropManifest(): HqBackdropManifest | null {
 
 const _backdropByBuilding = new Map<string, HqBackdropManifest | null>();
 
-function parseBackdropManifestFromRaw(
-  raw: RawBackdropManifest | undefined,
-): HqBackdropManifest | null {
-  if (!raw || typeof raw !== "object") return null;
-
-  const profileId = typeof raw.profileId === "string" ? raw.profileId : "unknown";
-  const elevationBandId = typeof raw.elevationBandId === "string" ? raw.elevationBandId : null;
-
-  const rawPhases = raw.phases;
+function parseBackdropPhases(
+  rawPhases: Partial<Record<string, RawBackdropPhaseProfile>> | undefined,
+): Record<HqTimeOfDayPhase, HqBackdropPhaseProfile> | null {
   if (!rawPhases || typeof rawPhases !== "object") return null;
 
   for (const phase of ALL_PHASES) {
@@ -288,8 +286,32 @@ function parseBackdropManifestFromRaw(
   for (const phase of ALL_PHASES) {
     phases[phase] = parseBackdropPhaseProfile(rawPhases[phase]);
   }
+  return phases;
+}
 
-  return { profileId, elevationBandId, phases };
+function parseBackdropManifestFromRaw(
+  raw: RawBackdropManifest | undefined,
+): HqBackdropManifest | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const profileId = typeof raw.profileId === "string" ? raw.profileId : "unknown";
+  const elevationBandId = typeof raw.elevationBandId === "string" ? raw.elevationBandId : null;
+  const phases = parseBackdropPhases(raw.phases);
+
+  if (!phases) return null;
+
+  const elevationBands: Record<
+    string,
+    Readonly<Record<HqTimeOfDayPhase, HqBackdropPhaseProfile>>
+  > = {};
+  for (const [bandId, band] of Object.entries(raw.elevationBands ?? {})) {
+    const bandPhases = parseBackdropPhases(band.phases);
+    if (bandPhases) {
+      elevationBands[bandId] = bandPhases;
+    }
+  }
+
+  return { profileId, elevationBandId, phases, elevationBands };
 }
 
 /**

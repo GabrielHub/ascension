@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 480 340">
+  <!-- Props-only scene layer: The War Room, Skyscraper floor 7.
+       Authored footprint: 4 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Strategic planning room: central conference table with backlit city
+       inlay and dossier stacks, six executive chairs on the long sides,
+       a pair of wall-hung strategic display screens on the back wall,
+       a sidebar intel cart, a tactical status board, and a lectern near
+       the entry. No walls, floors, tile grids, room outlines, or
+       structural elements. -->
+
+  <defs>
+    <linearGradient id="warTableTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d2230"/>
+      <stop offset="1" stop-color="#0e1220"/>
+    </linearGradient>
+    <linearGradient id="warTableFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141824"/>
+      <stop offset="1" stop-color="#060810"/>
+    </linearGradient>
+    <radialGradient id="warScreenGlow" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#7db2e0" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#325878" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#182738" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="warInlayGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7dc0ec" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#1e3a5c" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Central planning table (cols 1-3, rows 1-3) -->
+  <g id="plan-table">
+    <!-- Table top (long conference slab) -->
+    <polygon points="224,172 344,232 216,296 96,236"
+      fill="url(#warTableTop)" stroke="#05080f" stroke-width="0.7"/>
+    <!-- Front apron face -->
+    <polygon points="96,236 216,296 216,308 96,248"
+      fill="url(#warTableFront)" stroke="#04060b" stroke-width="0.5"/>
+    <!-- East end cap -->
+    <polygon points="344,232 216,296 216,308 344,244"
+      fill="#080a10" stroke="#03040a" stroke-width="0.45"/>
+    <!-- Edge highlight -->
+    <line x1="224" y1="172" x2="344" y2="232" stroke="#4a5a74" stroke-width="0.5" opacity="0.85"/>
+    <line x1="224" y1="172" x2="96" y2="236" stroke="#4a5a74" stroke-width="0.45" opacity="0.7"/>
+    <!-- Inlaid city map on tabletop (backlit) -->
+    <polygon points="224,192 320,240 216,272 120,224"
+      fill="url(#warInlayGlow)" opacity="0.75"/>
+    <!-- Roads -->
+    <line x1="236" y1="200" x2="300" y2="232" stroke="#b8dcee" stroke-width="0.5" opacity="0.75"/>
+    <line x1="252" y1="208" x2="220" y2="226" stroke="#b8dcee" stroke-width="0.5" opacity="0.7"/>
+    <line x1="180" y1="228" x2="268" y2="260" stroke="#b8dcee" stroke-width="0.5" opacity="0.7"/>
+    <line x1="200" y1="220" x2="208" y2="264" stroke="#b8dcee" stroke-width="0.4" opacity="0.65"/>
+    <!-- Pushpin markers -->
+    <circle cx="260" cy="224" r="2.2" fill="#e65a3c"/>
+    <circle cx="200" cy="240" r="2.2" fill="#e6c23c"/>
+    <circle cx="230" cy="256" r="2.2" fill="#4ec6c9"/>
+    <!-- Dossier stack -->
+    <polygon points="134,236 156,246 154,250 132,240" fill="#d5b972" stroke="#7d6838" stroke-width="0.3"/>
+    <polygon points="134,232 156,242 156,246 134,236" fill="#e7cb86" stroke="#7d6838" stroke-width="0.3"/>
+    <!-- Coffee cup (commander's mug) -->
+    <polygon points="268,212 276,216 276,220 268,216" fill="#1a1e24"/>
+    <polygon points="268,210 276,214 276,216 268,212" fill="#2d323a"/>
+    <path d="M276,214 L280,214 L280,218 L276,218" stroke="#1a1e24" stroke-width="0.8" fill="none"/>
+  </g>
+
+  <!-- Six executive chairs around the table -->
+  <g id="chairs">
+    <!-- North side of table: three chairs -->
+    <g id="chair-n1">
+      <polygon points="168,136 200,152 192,158 160,142" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="160,142 192,158 192,168 160,152" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="168,120 200,136 200,152 168,136" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="170,124 198,136 198,150 170,136" fill="#323a50" opacity="0.85"/>
+    </g>
+    <g id="chair-n2">
+      <polygon points="204,156 236,172 228,178 196,162" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="196,162 228,178 228,188 196,172" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="204,140 236,156 236,172 204,156" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="206,144 234,156 234,170 206,156" fill="#323a50" opacity="0.85"/>
+    </g>
+    <g id="chair-n3">
+      <polygon points="240,176 272,192 264,198 232,182" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="232,182 264,198 264,208 232,192" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="240,160 272,176 272,192 240,176" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="242,164 270,176 270,190 242,176" fill="#323a50" opacity="0.85"/>
+    </g>
+    <!-- South side of table: three chairs -->
+    <g id="chair-s1">
+      <polygon points="192,292 220,306 212,312 184,298" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="184,298 212,312 212,322 184,308" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="192,276 220,290 220,306 192,292" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="194,280 218,290 218,304 194,292" fill="#323a50" opacity="0.85"/>
+    </g>
+    <g id="chair-s2">
+      <polygon points="160,272 188,286 180,292 152,278" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="152,278 180,292 180,302 152,288" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="160,256 188,270 188,286 160,272" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="162,260 186,270 186,284 162,272" fill="#323a50" opacity="0.85"/>
+    </g>
+    <g id="chair-s3">
+      <polygon points="128,252 156,266 148,272 120,258" fill="#1d2230" stroke="#05080f" stroke-width="0.35"/>
+      <polygon points="120,258 148,272 148,282 120,268" fill="#12161f" stroke="#05080b" stroke-width="0.3"/>
+      <polygon points="128,236 156,250 156,266 128,252" fill="#262c3e" stroke="#090c15" stroke-width="0.35"/>
+      <polygon points="130,240 154,250 154,264 130,252" fill="#323a50" opacity="0.85"/>
+    </g>
+  </g>
+
+  <!-- Two wall-hung strategic display screens (upright against back wall hint) -->
+  <g id="screens">
+    <!-- West screen -->
+    <polygon points="158,72 218,102 218,140 158,110" fill="#1a1e26" stroke="#050709" stroke-width="0.5"/>
+    <polygon points="162,78 214,104 214,136 162,110" fill="url(#warScreenGlow)"/>
+    <!-- Map-like lines on screen -->
+    <line x1="168" y1="92" x2="208" y2="112" stroke="#b8dcee" stroke-width="0.5" opacity="0.85"/>
+    <line x1="168" y1="104" x2="208" y2="124" stroke="#b8dcee" stroke-width="0.4" opacity="0.75"/>
+    <line x1="184" y1="98" x2="184" y2="124" stroke="#b8dcee" stroke-width="0.35" opacity="0.7"/>
+    <circle cx="196" cy="112" r="1.6" fill="#e65a3c"/>
+    <!-- East screen -->
+    <polygon points="254,120 314,150 314,186 254,156" fill="#1a1e26" stroke="#050709" stroke-width="0.5"/>
+    <polygon points="258,124 310,150 310,180 258,154" fill="url(#warScreenGlow)"/>
+    <line x1="264" y1="136" x2="304" y2="156" stroke="#b8dcee" stroke-width="0.5" opacity="0.85"/>
+    <line x1="264" y1="148" x2="304" y2="168" stroke="#b8dcee" stroke-width="0.4" opacity="0.75"/>
+    <rect x="276" y="152" width="16" height="7" fill="#3c7a5a" opacity="0.85"/>
+    <rect x="276" y="152" width="10" height="7" fill="#62b490" opacity="0.85"/>
+  </g>
+
+  <!-- Sidebar intel cart (col 0 north side, row 0-1) -->
+  <g id="intel-cart">
+    <polygon points="92,148 132,168 116,176 76,156" fill="#2d323a" stroke="#0e1014" stroke-width="0.4"/>
+    <polygon points="76,156 116,176 116,188 76,168" fill="#181b22" stroke="#080a0d" stroke-width="0.35"/>
+    <polygon points="116,176 132,168 132,180 116,188" fill="#0c0e12" stroke="#050607" stroke-width="0.3"/>
+    <!-- Radio / comms unit -->
+    <polygon points="84,146 108,158 106,162 82,150" fill="#12161c" stroke="#05080c" stroke-width="0.3"/>
+    <rect x="88" y="149" width="14" height="3" fill="#3c8a66"/>
+    <circle cx="104" cy="153" r="1.2" fill="#e6c23c"/>
+    <!-- Dossiers -->
+    <polygon points="112,162 124,168 122,172 110,166" fill="#d5b972" stroke="#7d6838" stroke-width="0.3"/>
+    <polygon points="112,158 124,164 124,168 112,162" fill="#e7cb86" stroke="#7d6838" stroke-width="0.3"/>
+  </g>
+
+  <!-- Status/assignment board on west wall (col 0, row 2-3, upright) -->
+  <g id="status-board">
+    <!-- Board body -->
+    <polygon points="20,192 72,218 72,268 20,242" fill="#2a2218" stroke="#0e0b06" stroke-width="0.4"/>
+    <polygon points="24,196 68,218 68,262 24,240" fill="#3a2e1e" opacity="0.9"/>
+    <!-- Header bar -->
+    <rect x="28" y="200" width="36" height="4" fill="#5a3a22" transform="skewY(26.565)"/>
+    <!-- Pinned notes -->
+    <polygon points="32,212 42,217 42,224 32,219" fill="#e5d9b2"/>
+    <polygon points="46,218 56,223 56,230 46,225" fill="#d5bbee"/>
+    <polygon points="30,228 40,233 40,240 30,235" fill="#b5d7ec"/>
+    <polygon points="46,234 56,239 56,246 46,241" fill="#e5d9b2"/>
+    <polygon points="32,244 42,249 42,256 32,251" fill="#f2c5a8"/>
+    <!-- Red string connecting pins -->
+    <line x1="36" y1="216" x2="50" y2="222" stroke="#a82a2a" stroke-width="0.4"/>
+    <line x1="50" y1="222" x2="36" y2="232" stroke="#a82a2a" stroke-width="0.4"/>
+    <line x1="36" y1="232" x2="52" y2="238" stroke="#a82a2a" stroke-width="0.4"/>
+  </g>
+
+  <!-- Lectern (south-east entry zone) -->
+  <g id="lectern">
+    <polygon points="292,248 324,264 316,270 284,254" fill="#1d2230" stroke="#05080f" stroke-width="0.4"/>
+    <polygon points="284,254 316,270 316,290 284,274" fill="#12161f" stroke="#05080b" stroke-width="0.35"/>
+    <polygon points="316,270 324,264 324,282 316,290" fill="#080a10" stroke="#030408" stroke-width="0.3"/>
+    <!-- Sloped reading surface -->
+    <polygon points="296,244 322,258 314,266 288,252" fill="#323a50" stroke="#10131c" stroke-width="0.35"/>
+    <polygon points="300,248 318,256 314,262 296,254" fill="#ece3cc" stroke="#8a8170" stroke-width="0.3"/>
+    <!-- Small mic -->
+    <line x1="310" y1="246" x2="312" y2="240" stroke="#1a1e24" stroke-width="0.8"/>
+    <ellipse cx="312" cy="238" rx="1.4" ry="0.6" fill="#2d323a"/>
+  </g>
+</svg>

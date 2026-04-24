@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 480 340">
+  <!-- Props-only scene layer: The Clinic, Skyscraper floor 2.
+       Authored footprint: 4 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Dedicated medical recovery: two exam beds on rails with IV
+       stands and vitals monitors, a glass-front supply cabinet along
+       the north wall zone, a chart desk with task lamp and clipboard,
+       a rolling stool, and a wash station with a soap dispenser.
+       No walls, floors, grids, or structural elements. -->
+
+  <defs>
+    <linearGradient id="clinLinen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4ecf2"/>
+      <stop offset="1" stop-color="#a9b4c2"/>
+    </linearGradient>
+    <linearGradient id="clinFrame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c0c8d2"/>
+      <stop offset="1" stop-color="#5a6370"/>
+    </linearGradient>
+    <linearGradient id="clinCabinet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfe5ec"/>
+      <stop offset="1" stop-color="#8a95a2"/>
+    </linearGradient>
+    <radialGradient id="clinMonitor" cx="0.5" cy="0.5" r="0.65">
+      <stop offset="0" stop-color="#3ad67a" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0a1812" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="clinLampGlow" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#f4d480" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#4a3214" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Exam bed 1 (north-east area, long axis along +r) -->
+  <g id="bed-a">
+    <!-- Mattress top -->
+    <polygon points="254,146 326,182 214,250 142,214"
+      fill="url(#clinLinen)" stroke="#3a4450" stroke-width="0.5"/>
+    <!-- Bed frame / skirt front -->
+    <polygon points="142,214 214,250 214,262 142,226"
+      fill="url(#clinFrame)" stroke="#1a202a" stroke-width="0.4"/>
+    <polygon points="214,250 326,182 326,194 214,262"
+      fill="#5a6370" stroke="#1a202a" stroke-width="0.35"/>
+    <!-- Pillow -->
+    <polygon points="262,150 294,166 276,182 244,166" fill="#fafcff" stroke="#6a7380" stroke-width="0.35"/>
+    <!-- Blanket fold at foot -->
+    <polygon points="164,224 216,250 204,260 152,234" fill="#2a5a6a" stroke="#0a2028" stroke-width="0.35"/>
+    <polygon points="168,226 214,248 206,256 160,232" fill="#3a7a8a" opacity="0.85"/>
+    <!-- Legs -->
+    <line x1="150" y1="226" x2="150" y2="240" stroke="#1a202a" stroke-width="1.2"/>
+    <line x1="210" y1="258" x2="210" y2="272" stroke="#1a202a" stroke-width="1.2"/>
+  </g>
+
+  <!-- Exam bed 2 (south-east zone) -->
+  <g id="bed-b">
+    <polygon points="206,218 278,254 166,322 94,286"
+      fill="url(#clinLinen)" stroke="#3a4450" stroke-width="0.5"/>
+    <polygon points="94,286 166,322 166,334 94,298"
+      fill="url(#clinFrame)" stroke="#1a202a" stroke-width="0.4"/>
+    <polygon points="166,322 278,254 278,266 166,334"
+      fill="#5a6370" stroke="#1a202a" stroke-width="0.35"/>
+    <polygon points="214,222 246,238 228,254 196,238" fill="#fafcff" stroke="#6a7380" stroke-width="0.35"/>
+    <polygon points="116,296 168,322 156,332 104,306" fill="#2a5a6a" stroke="#0a2028" stroke-width="0.35"/>
+    <polygon points="120,298 166,320 158,328 112,304" fill="#3a7a8a" opacity="0.85"/>
+    <line x1="102" y1="298" x2="102" y2="312" stroke="#1a202a" stroke-width="1.2"/>
+    <line x1="162" y1="330" x2="162" y2="344" stroke="#1a202a" stroke-width="1.2"/>
+  </g>
+
+  <!-- IV stand + vitals monitor between the two beds -->
+  <g id="iv-stand-a">
+    <!-- Pole -->
+    <line x1="302" y1="178" x2="302" y2="106" stroke="#7a8490" stroke-width="1"/>
+    <!-- Base (5-spoke star, suggested as ellipse) -->
+    <ellipse cx="302" cy="180" rx="6" ry="2.4" fill="#4a5360" stroke="#14181e" stroke-width="0.35"/>
+    <!-- Hanger -->
+    <line x1="302" y1="108" x2="312" y2="108" stroke="#7a8490" stroke-width="0.7"/>
+    <!-- IV bag -->
+    <polygon points="310,110 320,114 320,130 310,126" fill="#e4ecf2" stroke="#5a6370" stroke-width="0.3"/>
+    <polygon points="311,112 319,116 319,122 311,120" fill="#9ad0a4" opacity="0.75"/>
+  </g>
+  <g id="monitor-a">
+    <!-- Mounted vitals monitor on thin pole -->
+    <line x1="330" y1="186" x2="330" y2="122" stroke="#5a6370" stroke-width="0.8"/>
+    <polygon points="318,120 350,136 350,160 318,144"
+      fill="#0a0e14" stroke="#03060a" stroke-width="0.4"/>
+    <polygon points="320,122 348,136 348,158 320,144"
+      fill="url(#clinMonitor)"/>
+    <!-- Sine wave -->
+    <polyline points="322,152 326,146 330,150 334,144 338,152 342,146 346,152"
+      fill="none" stroke="#8af0a8" stroke-width="0.5"/>
+  </g>
+
+  <!-- Supply cabinet along the north wall zone (back) -->
+  <g id="supply-cabinet">
+    <polygon points="62,122 174,178 174,244 62,188"
+      fill="url(#clinCabinet)" stroke="#14181e" stroke-width="0.55"/>
+    <!-- Glass front (slightly lighter) -->
+    <polygon points="66,126 170,178 170,238 66,186"
+      fill="#3a4858" opacity="0.7"/>
+    <!-- Shelf lines -->
+    <line x1="66" y1="146" x2="170" y2="198" stroke="#8a95a2" stroke-width="0.4"/>
+    <line x1="66" y1="166" x2="170" y2="218" stroke="#8a95a2" stroke-width="0.4"/>
+    <line x1="66" y1="186" x2="170" y2="238" stroke="#8a95a2" stroke-width="0.4"/>
+    <!-- Bottles/boxes on shelves -->
+    <rect x="74" y="134" width="5" height="9" fill="#ecd478"/>
+    <rect x="86" y="140" width="5" height="9" fill="#e4ecf2"/>
+    <rect x="98" y="146" width="5" height="9" fill="#9ad0a4"/>
+    <rect x="110" y="152" width="5" height="9" fill="#ecd478"/>
+    <rect x="122" y="158" width="5" height="9" fill="#e4ecf2"/>
+    <rect x="134" y="164" width="5" height="9" fill="#e63d5a"/>
+    <rect x="146" y="170" width="5" height="9" fill="#e4ecf2"/>
+    <rect x="80" y="158" width="5" height="9" fill="#9ad0a4"/>
+    <rect x="92" y="164" width="5" height="9" fill="#ecd478"/>
+    <rect x="104" y="170" width="5" height="9" fill="#e4ecf2"/>
+    <rect x="116" y="176" width="5" height="9" fill="#9ad0a4"/>
+    <rect x="128" y="182" width="5" height="9" fill="#e63d5a"/>
+    <rect x="140" y="188" width="5" height="9" fill="#ecd478"/>
+    <!-- Red cross medallion -->
+    <polygon points="70,122 78,126 78,132 70,128" fill="#e63d5a"/>
+    <rect x="71" y="124" width="4" height="1" fill="#fafcff" transform="rotate(27 71 124)"/>
+    <rect x="72.5" y="123" width="1" height="4" fill="#fafcff" transform="rotate(27 72.5 123)"/>
+  </g>
+
+  <!-- Chart desk (south-west corner) with lamp, clipboard, and stool -->
+  <g id="chart-desk">
+    <polygon points="-14,216 66,256 42,284 -38,244"
+      fill="#3a4450" stroke="#0a0e14" stroke-width="0.5"/>
+    <polygon points="-38,244 42,284 42,298 -38,258"
+      fill="#1a2028" stroke="#060810" stroke-width="0.4"/>
+    <polygon points="42,284 66,256 66,270 42,298"
+      fill="#0e131c" stroke="#040608" stroke-width="0.35"/>
+    <!-- Task lamp -->
+    <polygon points="-4,232 6,236 6,238 -4,234" fill="#1a1008"/>
+    <line x1="1" y1="234" x2="-2" y2="220" stroke="#3a2820" stroke-width="1"/>
+    <line x1="-2" y1="220" x2="8" y2="216" stroke="#3a2820" stroke-width="0.9"/>
+    <polygon points="6,210 20,214 18,220 4,216" fill="#cacfd8" stroke="#4a5260" stroke-width="0.35"/>
+    <polygon points="8,214 18,218 16,222 10,218" fill="url(#clinLampGlow)"/>
+    <!-- Clipboard -->
+    <polygon points="18,240 46,254 44,270 16,256" fill="#3a2414" stroke="#120806" stroke-width="0.35"/>
+    <polygon points="20,242 44,253 44,266 20,254" fill="#efe5cc" stroke="#6a604a" stroke-width="0.3"/>
+    <line x1="24" y1="248" x2="40" y2="256" stroke="#6a6050" stroke-width="0.3"/>
+    <line x1="24" y1="252" x2="40" y2="260" stroke="#6a6050" stroke-width="0.3"/>
+    <line x1="24" y1="256" x2="40" y2="264" stroke="#6a6050" stroke-width="0.3"/>
+    <!-- Rolling stool -->
+    <polygon points="44,270 66,280 56,286 34,276" fill="#2a303c" stroke="#0a0c12" stroke-width="0.35"/>
+    <ellipse cx="50" cy="282" rx="10" ry="4" fill="#1a1f28"/>
+    <line x1="50" y1="282" x2="50" y2="296" stroke="#0a0c12" stroke-width="0.8"/>
+    <ellipse cx="50" cy="298" rx="9" ry="3.5" fill="#14181f" stroke="#050608" stroke-width="0.3"/>
+    <circle cx="44" cy="298" r="1.6" fill="#0a0c12"/>
+    <circle cx="56" cy="298" r="1.6" fill="#0a0c12"/>
+    <circle cx="50" cy="300" r="1.6" fill="#0a0c12"/>
+  </g>
+
+  <!-- Wash station on east wall zone -->
+  <g id="wash-station">
+    <polygon points="334,202 382,226 372,244 324,220"
+      fill="url(#clinCabinet)" stroke="#14181e" stroke-width="0.45"/>
+    <polygon points="324,220 372,244 372,260 324,236"
+      fill="#8a95a2" stroke="#2a333e" stroke-width="0.35"/>
+    <polygon points="372,244 382,226 382,242 372,260"
+      fill="#5a6370" stroke="#1a202a" stroke-width="0.3"/>
+    <!-- Basin -->
+    <polygon points="340,214 370,228 362,240 332,226" fill="#c0c8d2" stroke="#3a4450" stroke-width="0.35"/>
+    <polygon points="344,218 366,228 360,236 338,226" fill="#3a4858" opacity="0.7"/>
+    <!-- Faucet -->
+    <line x1="356" y1="208" x2="356" y2="220" stroke="#7a8490" stroke-width="0.8"/>
+    <line x1="356" y1="220" x2="350" y2="224" stroke="#7a8490" stroke-width="0.8"/>
+    <!-- Soap / dispenser -->
+    <polygon points="376,216 384,220 384,228 376,224" fill="#9ad0a4" stroke="#2a5a3a" stroke-width="0.3"/>
+  </g>
+</svg>

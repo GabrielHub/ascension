@@ -71,6 +71,116 @@ describe("svg asset contract", () => {
     ).toBe("/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg");
   });
 
+  it("resolves every skyscraper room scene through the contract", () => {
+    const expectedScenes = [
+      ["room/lobby:tier_1", "room-state/lobby:1", "scene-the-lobby"],
+      ["room/reception:tier_1", "room-state/reception:1", "scene-the-reception-desk"],
+      ["room/bullpen:tier_1", "room-state/bullpen:1", "scene-the-bullpen"],
+      ["room/situation_room:tier_1", "room-state/situation-room:1", "scene-the-situation-room"],
+      ["room/clinic:tier_1", "room-state/clinic:1", "scene-the-clinic"],
+      ["room/dojo:tier_1", "room-state/dojo:1", "scene-the-dojo"],
+      ["room/crew_lounge:tier_1", "room-state/crew-lounge:1", "scene-the-crew-lounge"],
+      ["room/supply_hall:tier_1", "room-state/supply-hall:1", "scene-the-supply-hall"],
+      ["room/fabrication_bay:tier_1", "room-state/fabrication-bay:1", "scene-the-fabrication-bay"],
+      ["room/rooftop_helipad:tier_1", "room-state/rooftop-helipad:1", "scene-the-helipad"],
+      ["room/sky_garden:tier_1", "room-state/sky-garden:1", "scene-the-sky-garden"],
+      ["room/club:tier_1", "room-state/club:1", "scene-the-club"],
+      ["room/green_room:tier_1", "room-state/green-room:1", "scene-the-green-room"],
+      ["room/drill_floor:tier_1", "room-state/drill-floor:1", "scene-the-drill-floor"],
+      ["room/recon_course:tier_1", "room-state/recon-course:1", "scene-the-recon-course"],
+      ["room/trauma_bay:tier_1", "room-state/trauma-bay:1", "scene-the-trauma-bay"],
+      [
+        "room/executive_office:tier_1",
+        "room-state/executive-office:1",
+        "scene-the-executive-office",
+      ],
+      [
+        "room/compliance_office:tier_1",
+        "room-state/compliance-office:1",
+        "scene-the-compliance-office",
+      ],
+      ["room/war_room:tier_1", "room-state/war-room:1", "scene-the-war-room"],
+      ["room/sky_lounge:tier_1", "room-state/sky-lounge:1", "scene-the-sky-lounge"],
+      ["room/private_cellar:tier_1", "room-state/private-cellar:1", "scene-the-private-cellar"],
+    ] as const;
+
+    for (const [templateId, roomStateId, fileBase] of expectedScenes) {
+      expect(resolveHqRoomSceneAssetUrl("building/skyscraper", templateId, roomStateId)).toBe(
+        `/data/svg-environments/hq/skyscraper/recipes/${fileBase}.svg`,
+      );
+    }
+  });
+
+  it("carries per-room scene overrides for skyscraper scenes whose slot differs from canonical 4x3", () => {
+    const bindings = getSvgRuntimeBindings();
+    const complianceBinding = bindings.find(
+      (binding) =>
+        binding.kind === "hq-room-scene" &&
+        binding.buildingId === "building/skyscraper" &&
+        binding.templateId === "room/compliance_office:tier_1",
+    );
+    expect(complianceBinding).toBeDefined();
+    if (complianceBinding?.kind === "hq-room-scene") {
+      expect(complianceBinding.sceneFootprint).toEqual({ cols: 2, rows: 5 });
+      expect(complianceBinding.sceneViewBox).toEqual({
+        minX: -50,
+        minY: 0,
+        width: 360,
+        height: 290,
+      });
+      expect(complianceBinding.sceneOrigin).toEqual([200, 100]);
+    }
+
+    const skyLoungeBinding = bindings.find(
+      (binding) =>
+        binding.kind === "hq-room-scene" &&
+        binding.buildingId === "building/skyscraper" &&
+        binding.templateId === "room/sky_lounge:tier_1",
+    );
+    expect(skyLoungeBinding).toBeDefined();
+    if (skyLoungeBinding?.kind === "hq-room-scene") {
+      expect(skyLoungeBinding.sceneFootprint).toEqual({ cols: 7, rows: 5 });
+      expect(skyLoungeBinding.sceneViewBox).toEqual({
+        minX: -50,
+        minY: 0,
+        width: 620,
+        height: 420,
+      });
+    }
+
+    const greenRoomBinding = bindings.find(
+      (binding) =>
+        binding.kind === "hq-room-scene" &&
+        binding.buildingId === "building/skyscraper" &&
+        binding.templateId === "room/green_room:tier_1",
+    );
+    expect(greenRoomBinding).toBeDefined();
+    if (greenRoomBinding?.kind === "hq-room-scene") {
+      expect(greenRoomBinding.sceneFootprint).toEqual({ cols: 3, rows: 5 });
+      expect(greenRoomBinding.sceneViewBox).toEqual({
+        minX: -50,
+        minY: 0,
+        width: 430,
+        height: 320,
+      });
+    }
+  });
+
+  it("resolves skyscraper shell and backdrop SVGs to their skyscraper asset paths", () => {
+    expect(resolveHqEnvironmentAssetUrl("building/skyscraper", "shell/skyscraper-core-shell")).toBe(
+      "/data/svg-environments/hq/skyscraper/parts/shell/skyscraper-core-shell.svg",
+    );
+    expect(
+      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-ground-floor-plaza"),
+    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-ground-floor-plaza.svg");
+    expect(
+      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-mid-tower-neighbors"),
+    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-mid-tower-neighbors.svg");
+    expect(
+      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-rooftop-skyline"),
+    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-rooftop-skyline.svg");
+  });
+
   it("builds preview footprints for staged Porter's waterfront rooms using their real tier", () => {
     expect(
       getHqBindingPreviewFootprint({

@@ -404,6 +404,7 @@ const ENV_CATEGORY_ORDER: EnvPartCategory[] = ["scene", "prop", "background", "a
 const HQ_BUILDINGS = [
   { id: "building/bodega", label: "Bodega" },
   { id: "building/porters", label: "Porter's" },
+  { id: "building/skyscraper", label: "Skyscraper" },
 ] as const;
 
 /** Scale presets for each asset category */

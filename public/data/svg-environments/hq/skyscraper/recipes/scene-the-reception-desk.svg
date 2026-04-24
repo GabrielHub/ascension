@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 430 270">
+  <!-- Props-only scene layer: The Reception Desk (Front Desk), floor 0.
+       Authored footprint: 3 cols x 3 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+
+       Institutional front desk: a wide L-shaped walnut counter with a
+       sign-in ledger, task lamp, visitor phone, and nameplate; a mail
+       slot / pigeonhole cabinet along the back wall zone; a pair of
+       waiting-area chairs on the south-west; small brass floor lamp
+       and a potted fiddle-leaf. No walls, floors, tile grids, labels,
+       or structural elements. -->
+
+  <defs>
+    <linearGradient id="recWalnutTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a4428"/>
+      <stop offset="0.55" stop-color="#4c2f1a"/>
+      <stop offset="1" stop-color="#2c1b0e"/>
+    </linearGradient>
+    <linearGradient id="recWalnutFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a2414"/>
+      <stop offset="1" stop-color="#1a1009"/>
+    </linearGradient>
+    <linearGradient id="recBrass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d2a64a"/>
+      <stop offset="1" stop-color="#6f4a1a"/>
+    </linearGradient>
+    <radialGradient id="recLampGlow" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#f4d480" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#6a4818" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Area rug under the waiting zone (south-west) -->
+  <g id="rug">
+    <polygon points="96,184 192,232 148,254 52,206"
+      fill="#2c3040" stroke="#0f1119" stroke-width="0.5"/>
+    <polygon points="108,192 184,230 148,248 72,210"
+      fill="#3b4258" opacity="0.8"/>
+  </g>
+
+  <!-- Reception counter: L-shaped walnut, north and east legs.
+       North leg: c~0.3-2.7, r~0.3-1.1.
+       East leg: c~2.0-2.7, r~1.1-2.1. Counter height ~24. -->
+  <g id="counter-north">
+    <!-- Counter top (iso parallelogram) -->
+    <polygon points="214,113 344,178 326,208 186,137"
+      fill="url(#recWalnutTop)" stroke="#140a05" stroke-width="0.7"/>
+    <!-- Front apron (south-facing) -->
+    <polygon points="186,137 326,208 326,232 186,161"
+      fill="url(#recWalnutFront)" stroke="#0a0503" stroke-width="0.5"/>
+    <!-- End cap east -->
+    <polygon points="326,208 344,178 344,204 326,232"
+      fill="#120904" stroke="#070302" stroke-width="0.4"/>
+    <!-- Edge highlights -->
+    <line x1="214" y1="113" x2="344" y2="178" stroke="#8a5a36" stroke-width="0.6" opacity="0.85"/>
+    <line x1="214" y1="113" x2="186" y2="137" stroke="#8a5a36" stroke-width="0.45" opacity="0.7"/>
+    <!-- Sign-in ledger (open book) -->
+    <polygon points="232,142 272,162 266,170 226,150" fill="#efe5cc" stroke="#8a8170" stroke-width="0.35"/>
+    <polygon points="248,150 272,162 270,165 246,153" fill="#c9b999" stroke="#8a7a5a" stroke-width="0.3"/>
+    <line x1="240" y1="153" x2="264" y2="165" stroke="#6a6050" stroke-width="0.3" opacity="0.8"/>
+    <line x1="240" y1="156" x2="264" y2="168" stroke="#6a6050" stroke-width="0.3" opacity="0.8"/>
+    <!-- Brass nameplate centered on apron -->
+    <polygon points="238,180 282,200 282,208 238,188" fill="url(#recBrass)" stroke="#3d2810" stroke-width="0.35"/>
+    <polygon points="242,183 278,199 278,204 242,187" fill="#1d130a" opacity="0.6"/>
+    <!-- Task lamp + shade -->
+    <g id="task-lamp">
+      <polygon points="216,128 224,132 224,134 216,130" fill="#1f130a"/>
+      <line x1="220" y1="130" x2="218" y2="112" stroke="#3a2820" stroke-width="1.1"/>
+      <line x1="218" y1="112" x2="228" y2="108" stroke="#3a2820" stroke-width="0.9"/>
+      <polygon points="226,100 240,106 238,112 224,106" fill="#1e2a36" stroke="#0a1118" stroke-width="0.4"/>
+      <polygon points="228,106 238,110 234,116 228,112" fill="url(#recLampGlow)"/>
+    </g>
+    <!-- Visitor phone -->
+    <polygon points="280,156 306,168 304,172 278,160" fill="#121820" stroke="#050810" stroke-width="0.3"/>
+    <polygon points="282,154 306,165 306,168 282,157" fill="#1f2630" stroke="#070a10" stroke-width="0.25"/>
+    <line x1="284" y1="155" x2="302" y2="163" stroke="#303a46" stroke-width="0.4"/>
+    <!-- Small paperclip tray -->
+    <polygon points="214,152 228,159 226,162 212,155" fill="#3a2c1c" stroke="#0e0804" stroke-width="0.3"/>
+  </g>
+
+  <!-- East leg of counter (wraps south along east wall) -->
+  <g id="counter-east">
+    <polygon points="292,186 338,209 320,239 274,216"
+      fill="url(#recWalnutTop)" stroke="#140a05" stroke-width="0.6"/>
+    <polygon points="274,216 320,239 320,255 274,232"
+      fill="url(#recWalnutFront)" stroke="#0a0503" stroke-width="0.45"/>
+    <polygon points="320,239 338,209 338,225 320,255"
+      fill="#120904" stroke="#070302" stroke-width="0.35"/>
+    <!-- Small visitor binder stack -->
+    <polygon points="298,200 316,209 316,214 298,205" fill="#6a2a2a" stroke="#2a0f0f" stroke-width="0.3"/>
+    <polygon points="298,196 318,205 318,209 298,200" fill="#8a3a3a" stroke="#2a0f0f" stroke-width="0.25"/>
+  </g>
+
+  <!-- Mail-slot / pigeonhole cabinet along back wall (col 0 zone) -->
+  <g id="pigeonholes">
+    <polygon points="82,116 166,158 166,192 82,150"
+      fill="#2a1a0e" stroke="#0d0604" stroke-width="0.6"/>
+    <polygon points="86,120 162,158 162,188 86,150"
+      fill="#1c110a" stroke="#08040a" stroke-width="0.4"/>
+    <!-- Slot grid: 4 cols x 3 rows inside cabinet -->
+    <g stroke="#3a2818" stroke-width="0.4" fill="#120a06">
+      <polygon points="90,124 106,132 106,138 90,130"/>
+      <polygon points="110,134 126,142 126,148 110,140"/>
+      <polygon points="130,144 146,152 146,158 130,150"/>
+      <polygon points="150,154 158,158 158,164 150,160"/>
+      <polygon points="90,138 106,146 106,152 90,144"/>
+      <polygon points="110,148 126,156 126,162 110,154"/>
+      <polygon points="130,158 146,166 146,172 130,164"/>
+      <polygon points="150,168 158,172 158,178 150,174"/>
+      <polygon points="90,152 106,160 106,166 90,158"/>
+      <polygon points="110,162 126,170 126,176 110,168"/>
+      <polygon points="130,172 146,180 146,186 130,178"/>
+    </g>
+    <!-- A few paper slips tucked in slots -->
+    <rect x="94" y="129" width="6" height="4" fill="#efe5cc" transform="rotate(20 94 129)"/>
+    <rect x="114" y="139" width="6" height="4" fill="#c9b999" transform="rotate(20 114 139)"/>
+    <rect x="134" y="149" width="6" height="4" fill="#efe5cc" transform="rotate(20 134 149)"/>
+  </g>
+
+  <!-- Two waiting chairs at south-west, angled inward -->
+  <g id="waiting-chairs">
+    <!-- Chair A -->
+    <g>
+      <polygon points="108,212 136,226 128,232 100,218" fill="#2a2d36" stroke="#090b10" stroke-width="0.35"/>
+      <polygon points="100,218 128,232 128,244 100,230" fill="#1a1c24" stroke="#060810" stroke-width="0.3"/>
+      <polygon points="108,196 136,210 136,226 108,212" fill="#383c46" stroke="#0a0c12" stroke-width="0.35"/>
+      <polygon points="110,198 134,210 134,224 110,212" fill="#4a4e58" opacity="0.8"/>
+    </g>
+    <!-- Chair B -->
+    <g>
+      <polygon points="146,232 174,246 166,252 138,238" fill="#2a2d36" stroke="#090b10" stroke-width="0.35"/>
+      <polygon points="138,238 166,252 166,264 138,250" fill="#1a1c24" stroke="#060810" stroke-width="0.3"/>
+      <polygon points="146,216 174,230 174,246 146,232" fill="#383c46" stroke="#0a0c12" stroke-width="0.35"/>
+      <polygon points="148,218 172,230 172,244 148,230" fill="#4a4e58" opacity="0.8"/>
+    </g>
+  </g>
+
+  <!-- Floor lamp between chairs and counter -->
+  <g id="floor-lamp">
+    <polygon points="72,208 88,216 88,218 72,210" fill="#1a1008" stroke="#050302" stroke-width="0.3"/>
+    <line x1="80" y1="210" x2="80" y2="162" stroke="#2a1a0e" stroke-width="1.3"/>
+    <polygon points="72,160 88,160 90,148 70,148" fill="#2a1a0e" stroke="#080504" stroke-width="0.4"/>
+    <polygon points="72,160 88,160 84,168 76,168" fill="url(#recLampGlow)"/>
+  </g>
+
+  <!-- Potted fiddle-leaf in NE corner (between counter east and wall) -->
+  <g id="fiddle-leaf">
+    <polygon points="320,160 338,168 336,184 318,176" fill="#3a2a1c" stroke="#12080a" stroke-width="0.4"/>
+    <polygon points="322,162 336,168 336,180 322,174" fill="#533b24" opacity="0.85"/>
+    <g fill="#1f3d2a" stroke="#0a1a12" stroke-width="0.3">
+      <ellipse cx="320" cy="148" rx="5" ry="8" transform="rotate(-10 320 148)"/>
+      <ellipse cx="330" cy="140" rx="6" ry="10" transform="rotate(10 330 140)"/>
+      <ellipse cx="336" cy="152" rx="5" ry="9"/>
+      <ellipse cx="326" cy="130" rx="4" ry="7" transform="rotate(-15 326 130)"/>
+    </g>
+  </g>
+</svg>

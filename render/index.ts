@@ -9,6 +9,7 @@ export * from "./operator-detail-svg";
 export * from "./svg-parts";
 export * from "./types";
 export * from "./world-canvas";
+export * from "./world-canvas-helpers";
 export * from "./world-effects";
 
 export function buildRaidWorldSnapshot(

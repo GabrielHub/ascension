@@ -1,6 +1,6 @@
 import type { FactionTemplate } from "./shared";
 
-export const factionTemplates = [
+export const factionTemplates: readonly FactionTemplate[] = [
   {
     id: "faction/city-licensing",
     name: "City Licensing Bureau",
@@ -53,4 +53,4 @@ export const factionTemplates = [
     contractModifierProfile: { priorityBidDiscount: 0.9 },
     pressureResponseProfile: { scrutinyGain: 1.0, cooldownTicks: 400 },
   },
-] satisfies readonly FactionTemplate[];
+];

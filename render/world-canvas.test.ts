@@ -8,7 +8,7 @@ import {
   preparePerimeterRenderData,
   projectWorldRectToScreen,
   sampleHqDofIntensity,
-} from "./world-canvas";
+} from "./world-canvas-helpers";
 
 function createSnapshot() {
   const geometry = composeHqWorldGeometry([

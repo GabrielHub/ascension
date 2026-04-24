@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 620 420">
+  <!-- REFERENCE FIXTURE: The Lobby, Skyscraper ground-floor public entry.
+       Authored footprint: 7 cols x 5 rows. Origin (200,100).
+       iso(c,r) = (200+(c-r)*48, 100+(c+r)*24).
+       Floor corners: N(0,0)=(200,100), E(7,0)=(536,268),
+                      S(7,5)=(296,388), W(0,5)=(-40,220).
+       Design reference only — the runtime ships the props-only scene extracted
+       into recipes/scene-the-lobby.svg. -->
+
+  <!-- Floor plane -->
+  <polygon points="200,100 536,268 296,388 -40,220"
+    fill="#2c313a" stroke="#171a1f" stroke-width="1.1"/>
+
+  <!-- Grid overlay for reference -->
+  <g stroke="rgba(160,170,184,0.18)" stroke-width="0.5">
+    <!-- c-axis lines (varying r) -->
+    <line x1="152" y1="124" x2="488" y2="292"/>
+    <line x1="104" y1="148" x2="440" y2="316"/>
+    <line x1="56" y1="172" x2="392" y2="340"/>
+    <line x1="8" y1="196" x2="344" y2="364"/>
+    <!-- r-axis lines (varying c) -->
+    <line x1="248" y1="124" x2="8" y2="244"/>
+    <line x1="296" y1="148" x2="56" y2="268"/>
+    <line x1="344" y1="172" x2="104" y2="292"/>
+    <line x1="392" y1="196" x2="152" y2="316"/>
+    <line x1="440" y1="220" x2="200" y2="340"/>
+    <line x1="488" y1="244" x2="248" y2="364"/>
+  </g>
+
+  <!-- West wall (from N corner down to W corner). Wall height 84. -->
+  <polygon points="200,16 -40,136 -40,220 200,100"
+    fill="#363e4b" stroke="#1b2029" stroke-width="1"/>
+
+  <!-- North/back wall (from N to E corner). Wall height 84. -->
+  <polygon points="200,16 536,184 536,268 200,100"
+    fill="#2e3642" stroke="#181c24" stroke-width="1"/>
+
+  <!-- Wall-edge accent (glass top strip, corporate) -->
+  <line x1="200" y1="16" x2="536" y2="184" stroke="#4a5566" stroke-width="1.6"/>
+  <line x1="200" y1="16" x2="-40" y2="136" stroke="#4a5566" stroke-width="1.6"/>
+
+  <!-- Reference labels -->
+  <text x="248" y="412" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.9">THE LOBBY</text>
+  <text x="248" y="10" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Skyscraper reference fixture — not used in runtime</text>
+</svg>

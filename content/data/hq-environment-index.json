@@ -994,11 +994,255 @@
     "building/skyscraper": {
       "style": "skyscraper-midtown-isometric",
       "paths": {
-        "partsRoot": "/data/svg-environments/hq/bodega/parts",
-        "referenceRoot": "/data/svg-environments/hq/bodega/reference",
-        "recipesRoot": "/data/svg-environments/hq/bodega/recipes"
+        "partsRoot": "/data/svg-environments/hq/skyscraper/parts",
+        "referenceRoot": "/data/svg-environments/hq/skyscraper/reference",
+        "recipesRoot": "/data/svg-environments/hq/skyscraper/recipes"
       },
-      "parts": [],
+      "parts": [
+        {
+          "id": "shell/skyscraper-core-shell",
+          "category": "shell",
+          "tags": ["building", "shell", "skyscraper", "midtown", "mirrored-glass", "isometric"],
+          "scale": "building",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-ground-floor-plaza",
+          "category": "background",
+          "tags": [
+            "skyscraper",
+            "midtown",
+            "ground-floor",
+            "plaza",
+            "neighbor-towers",
+            "isometric",
+            "backdrop"
+          ],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-mid-tower-neighbors",
+          "category": "background",
+          "tags": [
+            "skyscraper",
+            "midtown",
+            "mid-tower",
+            "neighbor-towers",
+            "altitude",
+            "haze",
+            "isometric",
+            "backdrop"
+          ],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-rooftop-skyline",
+          "category": "background",
+          "tags": [
+            "skyscraper",
+            "midtown",
+            "rooftop",
+            "skyline",
+            "air-traffic",
+            "clouds",
+            "city-glow",
+            "isometric",
+            "backdrop"
+          ],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-lobby",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "lobby", "ground-floor"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-reception-desk",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "reception", "ground-floor"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-bullpen",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "bullpen", "mid-tower"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-situation-room",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "situation-room", "intel"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-clinic",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "recovery", "clinic", "medical"],
+          "scale": "room",
+          "roomFamily": "recovery",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-dojo",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "training", "dojo", "conditioning"],
+          "scale": "room",
+          "roomFamily": "training",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-crew-lounge",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "recovery", "crew-lounge"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-supply-hall",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "logistics", "supply-hall", "staging"],
+          "scale": "room",
+          "roomFamily": "logistics",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-fabrication-bay",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "fabrication", "crafting"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-helipad",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "helipad", "rooftop"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-sky-garden",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "sky-garden", "rooftop"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-club",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "club", "recruitment"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-green-room",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "green-room", "backstage"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-drill-floor",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "training", "drill-floor", "field-lead"],
+          "scale": "room",
+          "roomFamily": "training",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-recon-course",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "training", "recon-course", "scout"],
+          "scale": "room",
+          "roomFamily": "training",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-trauma-bay",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "training", "trauma-bay", "medic"],
+          "scale": "room",
+          "roomFamily": "training",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-executive-office",
+          "category": "scene",
+          "tags": [
+            "skyscraper",
+            "room",
+            "props-only",
+            "operations",
+            "executive",
+            "office",
+            "admin"
+          ],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-compliance-office",
+          "category": "scene",
+          "tags": [
+            "skyscraper",
+            "room",
+            "props-only",
+            "operations",
+            "compliance",
+            "office",
+            "admin"
+          ],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-war-room",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "operations", "war-room", "strategy"],
+          "scale": "room",
+          "roomFamily": "operations",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-sky-lounge",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "lounge", "penthouse"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        },
+        {
+          "id": "recipes/scene-the-private-cellar",
+          "category": "scene",
+          "tags": ["skyscraper", "room", "props-only", "social", "private-cellar", "penthouse"],
+          "scale": "room",
+          "roomFamily": "social",
+          "status": "approved"
+        }
+      ],
       "composition": {
         "tileWidth": 96,
         "tileHeight": 48,
@@ -1024,6 +1268,188 @@
       "backdrop": {
         "profileId": "skyscraper-midtown",
         "elevationBandId": "ground-floor",
+        "elevationBands": {
+          "ground-floor": {
+            "phases": {
+              "sunrise": {
+                "ambientTint": "rgba(180, 160, 130, 0.12)",
+                "fogColor": "rgba(200, 190, 170, 0.18)",
+                "shadowIntensity": 0.12,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "day": {
+                "ambientTint": "rgba(0, 0, 0, 0)",
+                "fogColor": "rgba(0, 0, 0, 0)",
+                "shadowIntensity": 0.18,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "sunset": {
+                "ambientTint": "rgba(200, 140, 60, 0.14)",
+                "fogColor": "rgba(180, 120, 60, 0.08)",
+                "shadowIntensity": 0.22,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "night": {
+                "ambientTint": "rgba(18, 26, 44, 0.22)",
+                "fogColor": "rgba(10, 14, 28, 0.14)",
+                "shadowIntensity": 0.3,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              }
+            }
+          },
+          "mid-tower": {
+            "phases": {
+              "sunrise": {
+                "ambientTint": "rgba(180, 160, 130, 0.12)",
+                "fogColor": "rgba(200, 190, 170, 0.18)",
+                "shadowIntensity": 0.12,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "day": {
+                "ambientTint": "rgba(0, 0, 0, 0)",
+                "fogColor": "rgba(0, 0, 0, 0)",
+                "shadowIntensity": 0.18,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "sunset": {
+                "ambientTint": "rgba(200, 140, 60, 0.14)",
+                "fogColor": "rgba(180, 120, 60, 0.08)",
+                "shadowIntensity": 0.22,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "night": {
+                "ambientTint": "rgba(18, 26, 44, 0.22)",
+                "fogColor": "rgba(10, 14, 28, 0.14)",
+                "shadowIntensity": 0.3,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              }
+            }
+          },
+          "rooftop": {
+            "phases": {
+              "sunrise": {
+                "ambientTint": "rgba(180, 160, 130, 0.12)",
+                "fogColor": "rgba(200, 190, 170, 0.18)",
+                "shadowIntensity": 0.12,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "day": {
+                "ambientTint": "rgba(0, 0, 0, 0)",
+                "fogColor": "rgba(0, 0, 0, 0)",
+                "shadowIntensity": 0.18,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "sunset": {
+                "ambientTint": "rgba(200, 140, 60, 0.14)",
+                "fogColor": "rgba(180, 120, 60, 0.08)",
+                "shadowIntensity": 0.22,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              },
+              "night": {
+                "ambientTint": "rgba(18, 26, 44, 0.22)",
+                "fogColor": "rgba(10, 14, 28, 0.14)",
+                "shadowIntensity": 0.3,
+                "zones": {
+                  "belowShell": [],
+                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "leftFlank": [],
+                  "rightFlank": [],
+                  "fore": [],
+                  "aboveShell": [],
+                  "fxOverlay": []
+                }
+              }
+            }
+          }
+        },
         "phases": {
           "sunrise": {
             "ambientTint": "rgba(180, 160, 130, 0.12)",
@@ -1031,7 +1457,7 @@
             "shadowIntensity": 0.12,
             "zones": {
               "belowShell": [],
-              "rear": [],
+              "rear": ["background/iso-bg-ground-floor-plaza"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1045,7 +1471,7 @@
             "shadowIntensity": 0.18,
             "zones": {
               "belowShell": [],
-              "rear": [],
+              "rear": ["background/iso-bg-ground-floor-plaza"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1059,7 +1485,7 @@
             "shadowIntensity": 0.22,
             "zones": {
               "belowShell": [],
-              "rear": [],
+              "rear": ["background/iso-bg-ground-floor-plaza"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1073,7 +1499,7 @@
             "shadowIntensity": 0.3,
             "zones": {
               "belowShell": [],
-              "rear": [],
+              "rear": ["background/iso-bg-ground-floor-plaza"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],

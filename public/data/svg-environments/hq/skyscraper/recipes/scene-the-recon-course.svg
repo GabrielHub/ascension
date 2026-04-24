@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 430 320">
+  <!-- Props-only scene layer: The Recon Course, Skyscraper Specialist Training floor.
+       Authored footprint: 3 cols x 5 rows. Origin (200,100).
+       Scout training with freestanding obstacle panels, sensor pylons, cover
+       blocks, rope rig, low-light console, and reset crates. No walls, floors,
+       grids, labels, or structure. -->
+
+  <defs>
+    <linearGradient id="reconPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#344857"/>
+      <stop offset="1" stop-color="#14202a"/>
+    </linearGradient>
+    <radialGradient id="reconLed" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#7fffd4" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#073c34" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g id="freestanding-panels">
+    <polygon points="92,104 146,131 146,226 92,199" fill="url(#reconPanel)" stroke="#071014" stroke-width="0.55"/>
+    <polygon points="100,114 138,133 138,214 100,195" fill="#1b2e38" opacity="0.85"/>
+    <ellipse cx="118" cy="150" rx="6" ry="2.5" fill="url(#reconLed)"/>
+    <ellipse cx="126" cy="180" rx="6" ry="2.5" fill="#141b22"/>
+
+    <polygon points="240,152 300,182 300,272 240,242" fill="url(#reconPanel)" stroke="#071014" stroke-width="0.55"/>
+    <polygon points="248,162 292,184 292,260 248,238" fill="#1b2e38" opacity="0.85"/>
+    <polyline points="254,190 270,198 276,188 288,194" fill="none" stroke="#7fffd4" stroke-width="1" opacity="0.8"/>
+  </g>
+
+  <g id="cover-maze">
+    <polygon points="146,190 210,222 190,234 126,202" fill="#29313a" stroke="#080b0e" stroke-width="0.4"/>
+    <polygon points="126,202 190,234 190,252 126,220" fill="#141a20" stroke="#050608" stroke-width="0.35"/>
+    <polygon points="210,222 190,234 190,252 210,240" fill="#0e1217" stroke="#040506" stroke-width="0.3"/>
+
+    <polygon points="58,238 122,270 102,282 38,250" fill="#29313a" stroke="#080b0e" stroke-width="0.4"/>
+    <polygon points="38,250 102,282 102,300 38,268" fill="#141a20" stroke="#050608" stroke-width="0.35"/>
+
+    <polygon points="210,246 274,278 254,290 190,258" fill="#29313a" stroke="#080b0e" stroke-width="0.4"/>
+    <polygon points="190,258 254,290 254,308 190,276" fill="#141a20" stroke="#050608" stroke-width="0.35"/>
+  </g>
+
+  <g id="rope-rig">
+    <line x1="168" y1="118" x2="168" y2="210" stroke="#26303a" stroke-width="2.2"/>
+    <line x1="320" y1="194" x2="320" y2="286" stroke="#26303a" stroke-width="2.2"/>
+    <line x1="168" y1="118" x2="320" y2="194" stroke="#9b7840" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 180 126 Q 200 150 220 144 T 262 164 T 304 184" fill="none" stroke="#c79d55" stroke-width="1.4" opacity="0.9"/>
+    <polygon points="154,210 182,224 168,232 140,218" fill="#1a2028"/>
+    <polygon points="306,286 334,300 320,308 292,294" fill="#1a2028"/>
+  </g>
+
+  <g id="sensor-pylons">
+    <g>
+      <polygon points="64,164 88,176 88,190 64,178" fill="#1a2129" stroke="#07090c" stroke-width="0.35"/>
+      <line x1="76" y1="116" x2="76" y2="174" stroke="#202a33" stroke-width="2"/>
+      <ellipse cx="76" cy="112" rx="8" ry="3" fill="url(#reconLed)"/>
+    </g>
+    <g>
+      <polygon points="318,218 342,230 342,244 318,232" fill="#1a2129" stroke="#07090c" stroke-width="0.35"/>
+      <line x1="330" y1="170" x2="330" y2="228" stroke="#202a33" stroke-width="2"/>
+      <ellipse cx="330" cy="166" rx="8" ry="3" fill="url(#reconLed)"/>
+    </g>
+  </g>
+
+  <g id="low-light-console">
+    <polygon points="142,260 210,294 188,308 120,274" fill="#151b22" stroke="#05070a" stroke-width="0.4"/>
+    <polygon points="120,274 188,308 188,322 120,288" fill="#0b0f14" stroke="#030405" stroke-width="0.3"/>
+    <polygon points="152,262 198,285 184,294 138,271" fill="#2f3e48" opacity="0.8"/>
+    <ellipse cx="160" cy="274" rx="8" ry="3" fill="url(#reconLed)" opacity="0.85"/>
+    <ellipse cx="184" cy="286" rx="5" ry="2" fill="#e2bd63" opacity="0.8"/>
+  </g>
+
+  <g id="reset-crates">
+    <polygon points="284,104 326,125 310,136 268,115" fill="#2c362f" stroke="#0a0e0b" stroke-width="0.35"/>
+    <polygon points="268,115 310,136 310,152 268,131" fill="#172119" stroke="#060806" stroke-width="0.3"/>
+    <polygon points="326,125 310,136 310,152 326,141" fill="#101710" stroke="#040604" stroke-width="0.25"/>
+  </g>
+</svg>

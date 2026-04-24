@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 0 430 320">
+  <!-- REFERENCE FIXTURE: The Recon Course, Skyscraper Specialist Training floor.
+       Design reference only. Runtime ships the props-only scene in
+       recipes/scene-the-recon-course.svg. -->
+  <polygon points="200,100 344,172 104,292 -40,220" fill="#242a32" stroke="#11161d" stroke-width="1.1"/>
+  <polygon points="200,16 -40,136 -40,220 200,100" fill="#303746" stroke="#151a22" stroke-width="1"/>
+  <polygon points="200,16 344,88 344,172 200,100" fill="#28313d" stroke="#111820" stroke-width="1"/>
+  <g opacity="0.12" stroke="#d5dde8" stroke-width="0.6">
+    <line x1="152" y1="124" x2="-88" y2="244"/>
+    <line x1="104" y1="148" x2="-136" y2="268"/>
+    <line x1="56" y1="172" x2="-184" y2="292"/>
+    <line x1="248" y1="124" x2="8" y2="244"/>
+    <line x1="296" y1="148" x2="56" y2="268"/>
+  </g>
+  <image href="../recipes/scene-the-recon-course.svg" x="-50" y="0" width="430" height="320"/>
+  <text x="150" y="306" font-family="monospace" font-size="10" fill="#aeb9c5" text-anchor="middle" opacity="0.8">THE RECON COURSE - REFERENCE ONLY</text>
+</svg>

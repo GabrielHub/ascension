@@ -11,6 +11,17 @@ export function createSvgCatalogWatcherPlugin(): PluginOption {
     apply: "serve",
     configureServer(server) {
       const publicData = path.resolve("public", "data");
+      const publicRoot = path.resolve("public");
+
+      function isPublicSvg(filePath: string): boolean {
+        const normalized = path.resolve(filePath).replace(/\\/g, "/");
+        return normalized.includes("/public/data/") && normalized.endsWith(".svg");
+      }
+
+      function toPublicUrl(filePath: string): string {
+        const relativePath = path.relative(publicRoot, path.resolve(filePath)).replace(/\\/g, "/");
+        return `/${relativePath}`;
+      }
 
       function regenerate() {
         exec("npx tsx scripts/generate-svg-asset-catalog.ts", (error, stdout, stderr) => {
@@ -33,17 +44,26 @@ export function createSvgCatalogWatcherPlugin(): PluginOption {
         });
       }
 
-      function onSvgChange(filePath: string) {
-        const normalized = filePath.replace(/\\/g, "/");
-        if (!normalized.includes("public/data/") || !normalized.endsWith(".svg")) return;
+      function onSvgTreeChange(filePath: string) {
+        if (!isPublicSvg(filePath)) return;
 
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(regenerate, 300);
       }
 
-      server.watcher.on("add", onSvgChange);
-      server.watcher.on("unlink", onSvgChange);
-      server.watcher.on("change", onSvgChange);
+      function onSvgContentChange(filePath: string) {
+        if (!isPublicSvg(filePath)) return;
+
+        server.hot.send({
+          type: "custom",
+          event: "ascension:svg-assets-changed",
+          data: { path: toPublicUrl(filePath) },
+        });
+      }
+
+      server.watcher.on("add", onSvgTreeChange);
+      server.watcher.on("unlink", onSvgTreeChange);
+      server.watcher.on("change", onSvgContentChange);
 
       server.watcher.add(path.join(publicData, "**", "*.svg"));
     },
