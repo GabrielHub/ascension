@@ -41,6 +41,9 @@ export interface HqRoomSceneBinding {
   slotId: string;
   floorIndex: number;
   assetId: string;
+  sceneFootprint?: Readonly<{ cols: number; rows: number }>;
+  sceneViewBox?: Readonly<{ minX: number; minY: number; width: number; height: number }>;
+  sceneOrigin?: readonly [number, number];
 }
 
 export interface HqEnvironmentBinding {
@@ -319,6 +322,9 @@ const HQ_ROOM_SCENE_BINDINGS = [
     slotId: "slot/floor",
     floorIndex: 0,
     assetId: "/data/svg-environments/hq/porters/recipes/scene-the-floor.svg",
+    sceneFootprint: { cols: 10, rows: 10 },
+    sceneViewBox: { minX: -330, minY: 0, width: 1060, height: 640 },
+    sceneOrigin: [200, 100],
   },
   {
     buildingId: "building/porters",
@@ -407,6 +413,9 @@ const HQ_ROOM_SCENE_BINDINGS = [
     slotId: "slot/workshop",
     floorIndex: 2,
     assetId: "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
+    sceneFootprint: { cols: 12, rows: 4 },
+    sceneViewBox: { minX: -40, minY: 0, width: 900, height: 540 },
+    sceneOrigin: [200, 100],
   },
 ] as const;
 
@@ -713,6 +722,9 @@ export function getSvgAssetRegistry(): SvgAssetRegistry {
       slotId: binding.slotId,
       floorIndex: binding.floorIndex,
       assetId: binding.assetId,
+      sceneFootprint: binding.sceneFootprint,
+      sceneViewBox: binding.sceneViewBox,
+      sceneOrigin: binding.sceneOrigin,
     });
     markAssetLive(binding.assetId);
   }

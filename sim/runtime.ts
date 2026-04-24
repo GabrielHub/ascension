@@ -7,11 +7,14 @@ import {
   type WorldSnapshot,
 } from "save";
 import {
-  type CityState,
-  createDefaultCityState,
-  cityStateFromSnapshot,
-  cityStateToSnapshot,
-} from "./components/city-state";
+  type PublicPressureState,
+  createDefaultPublicPressureState,
+  createDefaultRivalPressureState,
+  publicPressureStateFromSnapshots,
+  publicPressureStateToSnapshot,
+  rivalPressureStateFromSnapshot,
+  rivalPressureStateToSnapshot,
+} from "./components/public-pressure";
 import { isOperatorAppearanceRecipeId, selectOperatorAppearanceRecipeId } from "save/appearance";
 import type { TemplateRegistry } from "content/templates";
 import { siteConceptById, type ContractRank } from "content/templates/site-concepts";
@@ -1324,7 +1327,8 @@ export function createBaseSimRuntimeState(
       | "incidentState"
       | "guidanceState"
       | "deferIncidentPresentation"
-      | "cityState"
+      | "publicPressure"
+      | "rivalPressure"
       | "presenterUnlocks"
     >
   > = {},
@@ -1368,7 +1372,8 @@ export function createBaseSimRuntimeState(
     combatPackageRegistry: buildCombatPackageRegistry(COMBAT_PACKAGES),
     worldTimeFrozen: false,
     deferIncidentPresentation: overrides.deferIncidentPresentation ?? false,
-    cityState: overrides.cityState ?? createDefaultCityState(),
+    publicPressure: overrides.publicPressure ?? createDefaultPublicPressureState(),
+    rivalPressure: overrides.rivalPressure ?? createDefaultRivalPressureState(),
     presenterUnlocks: overrides.presenterUnlocks ?? [],
   };
 }
@@ -1404,16 +1409,22 @@ function createRuntimeState(
     ) as SimRuntimeState["interruptionQueue"],
     incidentState: restoreIncidentStateFromSnapshot(snapshot) as SimRuntimeState["incidentState"],
     guidanceState: restoreGuidanceStateFromSnapshot(snapshot) as SimRuntimeState["guidanceState"],
-    cityState: restoreCityStateFromSnapshot(snapshot),
+    publicPressure: restorePublicPressureFromSnapshot(snapshot),
+    rivalPressure: rivalPressureStateFromSnapshot(snapshot.rivalPressure),
     presenterUnlocks: restorePresenterUnlocksFromSnapshot(snapshot),
   });
 }
 
-function restoreCityStateFromSnapshot(snapshot: Phase1RuntimeWorldSnapshot): CityState {
-  if (snapshot.cityPressure) {
-    return cityStateFromSnapshot(snapshot.cityPressure);
+function restorePublicPressureFromSnapshot(
+  snapshot: Phase1RuntimeWorldSnapshot,
+): PublicPressureState {
+  if (snapshot.publicPressure) {
+    return publicPressureStateFromSnapshots(
+      snapshot.publicPressure,
+      snapshot.factionRelationships ?? [],
+    );
   }
-  return createDefaultCityState();
+  return createDefaultPublicPressureState();
 }
 
 function restorePresenterUnlocksFromSnapshot(
@@ -2631,7 +2642,10 @@ function applyWorldSnapshot(
         lootAutomation: {
           autoSellEnabled: BuildingAuthority.lootAutomationEnabled[buildingEntity] === 1,
         },
-        cityPressure: cityStateToSnapshot(runtimeState.cityState ?? createDefaultCityState()),
+        ...publicPressureStateToSnapshot(
+          runtimeState.publicPressure ?? createDefaultPublicPressureState(),
+        ),
+        rivalPressure: rivalPressureStateToSnapshot(runtimeState.rivalPressure),
         presenterUnlocks: runtimeState.presenterUnlocks.map((entry) => ({ ...entry })),
         // Encounter, interruption, and incident persistence
         ...(runtimeState.activeEncounter

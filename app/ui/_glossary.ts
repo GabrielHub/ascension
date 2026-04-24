@@ -109,10 +109,6 @@ const FACTION_META = {
     label: "Borough Contracts Authority",
     tip: "Controls borough-level contract allocation and priority bidding.",
   },
-  "faction/rival-guild-market": {
-    label: "Rival Guild Market",
-    tip: "The collective competitive pressure from other guilds bidding for contracts and talent.",
-  },
 } satisfies DisplayRegistry;
 
 const RESOURCE_META = {
@@ -723,7 +719,6 @@ const EFFECT_TYPE_META = {
 const INCIDENT_CATEGORY_META = {
   personnel_conflict: { label: "Personnel Conflict", tip: "" },
   injury_setback: { label: "Injury Setback", tip: "" },
-  rival_poaching: { label: "Rival Poaching", tip: "" },
   contract_deadline: { label: "Contract Deadline", tip: "" },
   morale_surge: { label: "Morale Surge", tip: "" },
   room_tension: { label: "Room Tension", tip: "" },
@@ -745,10 +740,6 @@ const INCIDENT_CATEGORY_META = {
   borough_hearing: {
     label: "Borough Hearing",
     tip: "A faction has convened a hearing on contract performance.",
-  },
-  rival_interference: {
-    label: "Rival Interference",
-    tip: "A competing guild is actively undermining your operations.",
   },
   grief_memorial: { label: "Grief and Memorial", tip: "The roster is processing a recent loss." },
   team_fracture: { label: "Team Fracture", tip: "A team is breaking apart after a casualty." },

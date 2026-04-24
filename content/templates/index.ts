@@ -866,11 +866,11 @@ function validateFactionTemplates(
       });
     }
 
-    if (template.kind !== "institution" && template.kind !== "rival_guild") {
+    if (template.kind !== "institution") {
       issues.push({
         category: "factions",
         templateId: template.id,
-        message: `kind must be "institution" or "rival_guild", got "${template.kind}".`,
+        message: `kind must be "institution", got "${template.kind}".`,
       });
     }
   });

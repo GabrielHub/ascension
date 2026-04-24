@@ -1,90 +1,102 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
   <!-- Props-only scene layer: The Backstock
-       First-pass placeholder for annex storage and logistics.
-       No walls, floor, tile grid, or labels. -->
+       Annex storage and logistics. No walls, floor, tile grid, or labels. -->
 
-  <!-- Shelf wall left -->
-  <polygon points="122,90 188,123 162,136 96,103"
-    fill="#3d3938" stroke="#282625" stroke-width="0.6"/>
-  <polygon points="96,103 162,136 162,214 96,181"
-    fill="#4a4444" stroke="#302b2b" stroke-width="0.6"/>
-  <polygon points="188,123 162,136 162,214 188,201"
-    fill="#302b2b" stroke="#242020" stroke-width="0.5"/>
-  <line x1="96" y1="124" x2="162" y2="157" stroke="#2b2727" stroke-width="0.55"/>
-  <line x1="96" y1="145" x2="162" y2="178" stroke="#2b2727" stroke-width="0.55"/>
-  <line x1="96" y1="166" x2="162" y2="199" stroke="#2b2727" stroke-width="0.55"/>
-  <polygon points="102,108 120,117 120,123 102,114" fill="#85633c"/>
-  <polygon points="124,118 144,128 144,134 124,124" fill="#56643b"/>
-  <polygon points="146,129 158,135 158,141 146,135" fill="#c0c7d0"/>
-  <polygon points="102,130 120,139 120,146 102,137" fill="#353b45"/>
-  <polygon points="124,140 142,149 142,156 124,147" fill="#8c3b3b"/>
-  <polygon points="102,151 124,162 124,169 102,158" fill="#3b3227"/>
-  <polygon points="128,164 154,177 154,185 128,172" fill="#5f4a32"/>
+  <!-- Left storage rack, held inside the canonical room footprint -->
+  <g id="left-rack">
+    <polygon points="136,104 190,131 168,142 114,115"
+      fill="#444343" stroke="#272525" stroke-width="0.65"/>
+    <polygon points="114,115 168,142 168,198 114,171"
+      fill="#494544" stroke="#2b2928" stroke-width="0.65"/>
+    <polygon points="190,131 168,142 168,198 190,187"
+      fill="#302d2d" stroke="#242121" stroke-width="0.55"/>
+    <line x1="114" y1="132" x2="168" y2="159" stroke="#2b2928" stroke-width="0.55"/>
+    <line x1="114" y1="150" x2="168" y2="177" stroke="#2b2928" stroke-width="0.55"/>
+    <line x1="114" y1="168" x2="168" y2="195" stroke="#2b2928" stroke-width="0.55"/>
 
-  <!-- Shelf wall right -->
-  <polygon points="276,98 350,135 324,148 250,111"
-    fill="#3d3938" stroke="#282625" stroke-width="0.6"/>
-  <polygon points="250,111 324,148 324,232 250,195"
-    fill="#4a4444" stroke="#302b2b" stroke-width="0.6"/>
-  <polygon points="350,135 324,148 324,232 350,219"
-    fill="#302b2b" stroke="#242020" stroke-width="0.5"/>
-  <line x1="250" y1="134" x2="324" y2="171" stroke="#2b2727" stroke-width="0.55"/>
-  <line x1="250" y1="157" x2="324" y2="194" stroke="#2b2727" stroke-width="0.55"/>
-  <line x1="250" y1="180" x2="324" y2="217" stroke="#2b2727" stroke-width="0.55"/>
-  <polygon points="256,116 276,126 276,132 256,122" fill="#c6b38c"/>
-  <polygon points="280,128 302,139 302,145 280,134" fill="#475b7c"/>
-  <polygon points="304,140 318,147 318,154 304,147" fill="#6a7445"/>
-  <polygon points="256,140 278,151 278,159 256,148" fill="#3b3227"/>
-  <polygon points="282,153 304,164 304,171 282,160" fill="#8b5e39"/>
-  <polygon points="256,164 280,176 280,184 256,172" fill="#3b3d46"/>
-  <polygon points="284,178 316,194 316,203 284,187" fill="#5f4a32"/>
+    <polygon points="121,120 138,128.5 138,136 121,127.5" fill="#6f5331"/>
+    <polygon points="143,131 158,138.5 158,146 143,138.5" fill="#55613a"/>
+    <polygon points="123,139 144,149.5 144,157 123,146.5" fill="#303944"/>
+    <polygon points="148,151.5 162,158.5 162,166 148,159" fill="#9f4a3f"/>
+    <polygon points="123,160 151,174 151,183 123,169" fill="#5a452f"/>
+  </g>
 
-  <!-- Pallet / floor stock -->
-  <polygon points="174,198 244,233 218,246 148,211"
-    fill="#7b5b34" stroke="#543d22" stroke-width="0.5"/>
-  <line x1="166" y1="207" x2="236" y2="242" stroke="#5d4426" stroke-width="0.6"/>
-  <line x1="156" y1="212" x2="226" y2="247" stroke="#5d4426" stroke-width="0.6"/>
-  <line x1="176" y1="197" x2="150" y2="210" stroke="#5d4426" stroke-width="0.6"/>
-  <line x1="199" y1="208" x2="173" y2="221" stroke="#5d4426" stroke-width="0.6"/>
-  <line x1="222" y1="220" x2="196" y2="233" stroke="#5d4426" stroke-width="0.6"/>
+  <!-- Right storage rack, smaller than the old wall-to-wall shelf -->
+  <g id="right-rack">
+    <polygon points="264,112 326,143 304,154 242,123"
+      fill="#454444" stroke="#272525" stroke-width="0.65"/>
+    <polygon points="242,123 304,154 304,212 242,181"
+      fill="#4a4645" stroke="#2b2928" stroke-width="0.65"/>
+    <polygon points="326,143 304,154 304,212 326,201"
+      fill="#302d2d" stroke="#242121" stroke-width="0.55"/>
+    <line x1="242" y1="141" x2="304" y2="172" stroke="#2b2928" stroke-width="0.55"/>
+    <line x1="242" y1="160" x2="304" y2="191" stroke="#2b2928" stroke-width="0.55"/>
+    <line x1="242" y1="179" x2="304" y2="210" stroke="#2b2928" stroke-width="0.55"/>
 
-  <!-- Stacked boxes -->
-  <polygon points="176,170 200,182 224,170 200,158"
-    fill="#4d3a26" stroke="#362718" stroke-width="0.5"/>
-  <polygon points="176,170 200,182 200,206 176,194"
-    fill="#5c4730" stroke="#3b2c1c" stroke-width="0.45"/>
-  <polygon points="200,182 224,170 224,194 200,206"
-    fill="#453421" stroke="#322416" stroke-width="0.45"/>
-  <line x1="200" y1="158" x2="200" y2="182" stroke="rgba(220,190,120,0.15)" stroke-width="1.4"/>
+    <polygon points="249,128 267,137 267,144 249,135" fill="#c1ad82"/>
+    <polygon points="272,139.5 290,148.5 290,155.5 272,146.5" fill="#465978"/>
+    <polygon points="249,149.5 274,162 274,170 249,157.5" fill="#3b3227"/>
+    <polygon points="279,164.5 298,174 298,182 279,172.5" fill="#875b38"/>
+    <polygon points="249,170.5 284,188 284,197 249,179.5" fill="#555039"/>
+  </g>
 
-  <polygon points="206,154 226,164 246,154 226,144"
-    fill="#5a452d" stroke="#3b2c1c" stroke-width="0.5"/>
-  <polygon points="206,154 226,164 226,184 206,174"
-    fill="#684f34" stroke="#42301e" stroke-width="0.45"/>
-  <polygon points="226,164 246,154 246,174 226,184"
-    fill="#503d28" stroke="#362818" stroke-width="0.45"/>
+  <!-- Center crates, separated from racks for clear circulation -->
+  <g id="center-crates">
+    <polygon points="188,165 214,178 190,190 164,177"
+      fill="#604729" stroke="#382516" stroke-width="0.5"/>
+    <polygon points="164,177 190,190 190,213 164,200"
+      fill="#6c5133" stroke="#3c2b1b" stroke-width="0.45"/>
+    <polygon points="214,178 190,190 190,213 214,201"
+      fill="#4c3824" stroke="#342315" stroke-width="0.45"/>
+    <line x1="164" y1="187" x2="190" y2="200" stroke="#3c2b1b" stroke-width="0.5"/>
 
-  <!-- Gear crate -->
-  <polygon points="130,208 152,219 174,208 152,197"
-    fill="#2e4030" stroke="#203022" stroke-width="0.45"/>
-  <polygon points="130,208 152,219 152,236 130,225"
-    fill="#29392b" stroke="#1d2b1f" stroke-width="0.4"/>
-  <polygon points="152,219 174,208 174,225 152,236"
-    fill="#223224" stroke="#18261a" stroke-width="0.4"/>
-  <line x1="130" y1="214" x2="152" y2="225" stroke="#415645" stroke-width="0.65"/>
-  <line x1="152" y1="225" x2="174" y2="214" stroke="#3b4e3e" stroke-width="0.55"/>
+    <polygon points="218,152 242,164 219,176 195,164"
+      fill="#6b4e2f" stroke="#3c2b1b" stroke-width="0.5"/>
+    <polygon points="195,164 219,176 219,198 195,186"
+      fill="#745637" stroke="#42301e" stroke-width="0.45"/>
+    <polygon points="242,164 219,176 219,198 242,186"
+      fill="#523d27" stroke="#362818" stroke-width="0.45"/>
+    <line x1="195" y1="173" x2="219" y2="185" stroke="#3c2b1b" stroke-width="0.45"/>
+  </g>
 
-  <!-- Clipboard / inventory sheet -->
-  <polygon points="228,188 242,195 238,198 224,191"
-    fill="#d8c9a1" stroke="#9d8658" stroke-width="0.25"/>
-  <line x1="229" y1="191" x2="237" y2="195" stroke="#8b7346" stroke-width="0.25"/>
-  <line x1="228" y1="193" x2="235" y2="196" stroke="#8b7346" stroke-width="0.25"/>
+  <!-- Compact pallet, inside the front edge of the room -->
+  <g id="pallet">
+    <polygon points="198,211 257,240 234,252 175,222"
+      fill="#7a5932" stroke="#543d22" stroke-width="0.5"/>
+    <line x1="185" y1="217" x2="244" y2="247" stroke="#5d4426" stroke-width="0.6"/>
+    <line x1="196" y1="212" x2="255" y2="241" stroke="#5d4426" stroke-width="0.6"/>
+    <line x1="207" y1="207" x2="230" y2="219" stroke="#5d4426" stroke-width="0.6"/>
+    <line x1="191" y1="226" x2="214" y2="214" stroke="#5d4426" stroke-width="0.6"/>
+    <line x1="213" y1="237" x2="236" y2="225" stroke="#5d4426" stroke-width="0.6"/>
+  </g>
 
-  <!-- Hand truck -->
-  <circle cx="284" cy="236" r="5" fill="#2b3138"/>
-  <circle cx="304" cy="226" r="5" fill="#2b3138"/>
-  <line x1="282" y1="176" x2="284" y2="231" stroke="#4d5968" stroke-width="2.2"/>
-  <line x1="298" y1="168" x2="304" y2="221" stroke="#4d5968" stroke-width="2.2"/>
-  <line x1="282" y1="176" x2="298" y2="168" stroke="#4d5968" stroke-width="2.2"/>
-  <line x1="274" y1="218" x2="296" y2="208" stroke="#4d5968" stroke-width="2.2"/>
+  <!-- Gear case -->
+  <g id="gear-case">
+    <polygon points="122,205 147,217.5 169,206.5 144,194"
+      fill="#314435" stroke="#203022" stroke-width="0.45"/>
+    <polygon points="122,205 147,217.5 147,232 122,219.5"
+      fill="#29392b" stroke="#1d2b1f" stroke-width="0.4"/>
+    <polygon points="147,217.5 169,206.5 169,221 147,232"
+      fill="#223224" stroke="#18261a" stroke-width="0.4"/>
+    <line x1="122" y1="212" x2="147" y2="224.5" stroke="#415645" stroke-width="0.65"/>
+    <line x1="147" y1="224.5" x2="169" y2="213.5" stroke="#3b4e3e" stroke-width="0.55"/>
+  </g>
+
+  <!-- Inventory sheet on open floor, not overlapping the crate stack -->
+  <g id="inventory-sheet">
+    <polygon points="246,199 260,206 255,208.5 241,201.5"
+      fill="#d8c9a1" stroke="#9d8658" stroke-width="0.25"/>
+    <line x1="247" y1="202" x2="255" y2="206" stroke="#8b7346" stroke-width="0.25"/>
+    <line x1="246" y1="204" x2="253" y2="207" stroke="#8b7346" stroke-width="0.25"/>
+  </g>
+
+  <!-- Hand truck parked inside the right side of the room -->
+  <g id="hand-truck">
+    <ellipse cx="302" cy="225" rx="4" ry="2.2" fill="#2b3138"/>
+    <ellipse cx="318" cy="217" rx="4" ry="2.2" fill="#2b3138"/>
+    <line x1="301" y1="172" x2="302" y2="221" stroke="#4d5968" stroke-width="2.1"/>
+    <line x1="314" y1="166" x2="318" y2="213" stroke="#4d5968" stroke-width="2.1"/>
+    <line x1="301" y1="172" x2="314" y2="166" stroke="#4d5968" stroke-width="2.1"/>
+    <line x1="295" y1="208" x2="315" y2="198" stroke="#4d5968" stroke-width="2.1"/>
+  </g>
 </svg>

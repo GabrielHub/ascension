@@ -1036,29 +1036,29 @@ const COMMANDS: DevConsoleCommand[] = [
       return ok("Boss commitment triggered");
     },
   },
-  // ── City Pressure ─────────────────────────────────────────────────
+  // ── Public Pressure ───────────────────────────────────────────────
   {
     name: "city district",
     family: "Contracts",
     args: "<districtId> <field> <value>",
-    help: "Set a district pressure field (attention, trust, containmentDebt)",
+    help: "Set a district pressure field (heat, standing, containment)",
     examples: [
-      "/city district district/lower-east-side trust 80",
-      "/city district district/bronx-overpass attention 50",
+      "/city district district/lower-east-side standing 80",
+      "/city district district/bronx-overpass heat 50",
     ],
     execute: (args, ctx) => {
       if (args.length < 3) return err("Usage: /city district <districtId> <field> <value>");
       const districtId = args[0];
       const field = args[1];
       const value = Number(args[2]);
-      if (!["attention", "trust", "containmentDebt"].includes(field)) {
-        return err(`Invalid field: ${field}. Use attention, trust, or containmentDebt.`);
+      if (!["heat", "standing", "containment"].includes(field)) {
+        return err(`Invalid field: ${field}. Use heat, standing, or containment.`);
       }
       if (Number.isNaN(value)) return err("Value must be a number.");
       void ctx.session.commands.dispatch({
         type: "sim/dev-set-district",
         districtId,
-        field: field as "attention" | "trust" | "containmentDebt",
+        field: field as "heat" | "standing" | "containment",
         value,
       });
       return ok(`Set ${districtId} ${field} = ${value}`);
@@ -1068,24 +1068,21 @@ const COMMANDS: DevConsoleCommand[] = [
     name: "city faction",
     family: "Contracts",
     args: "<factionId> <field> <value>",
-    help: "Set a faction standing field (standing, scrutiny, leverage)",
-    examples: [
-      "/city faction faction/city-licensing scrutiny 60",
-      "/city faction faction/rival-guild-market leverage 40",
-    ],
+    help: "Set a faction relationship field (standing)",
+    examples: ["/city faction faction/city-licensing standing 20"],
     execute: (args, ctx) => {
       if (args.length < 3) return err("Usage: /city faction <factionId> <field> <value>");
       const factionId = args[0];
       const field = args[1];
       const value = Number(args[2]);
-      if (!["standing", "scrutiny", "leverage"].includes(field)) {
-        return err(`Invalid field: ${field}. Use standing, scrutiny, or leverage.`);
+      if (!["standing"].includes(field)) {
+        return err(`Invalid field: ${field}. Use standing.`);
       }
       if (Number.isNaN(value)) return err("Value must be a number.");
       void ctx.session.commands.dispatch({
         type: "sim/dev-set-faction",
         factionId,
-        field: field as "standing" | "scrutiny" | "leverage",
+        field: field as "standing",
         value,
       });
       return ok(`Set ${factionId} ${field} = ${value}`);
@@ -1095,25 +1092,24 @@ const COMMANDS: DevConsoleCommand[] = [
     name: "city dump",
     family: "Contracts",
     args: "",
-    help: "Dump current city pressure state to console",
+    help: "Dump current public pressure state to console",
     examples: ["/city dump"],
     execute: (_args, ctx) => {
-      const cityPressure = ctx.session.worldSnapshot?.cityPressure;
-      if (!cityPressure) return err("No city pressure state available.");
-      console.log("[dev-console] cityPressure", cityPressure);
-      const districtSummary = cityPressure.districts
+      const publicPressure = ctx.session.worldSnapshot?.publicPressure;
+      if (!publicPressure) return err("No public pressure state available.");
+      console.log("[dev-console] publicPressure", publicPressure);
+      const districtSummary = publicPressure.districts
         .map(
           (d) =>
-            `  ${d.districtId}: trust=${d.trust} attn=${d.attention} debt=${d.containmentDebt} contracts=${d.recentContractCount}`,
+            `  ${d.districtId}: standing=${d.standing} heat=${d.heat} containment=${d.containment} contracts=${d.recentContractCount}`,
         )
         .join("\n");
-      const factionSummary = cityPressure.factions
-        .map(
-          (f) =>
-            `  ${f.factionId}: standing=${f.standing} scrutiny=${f.scrutiny} leverage=${f.leverage}`,
-        )
+      const factionSummary = (ctx.session.worldSnapshot?.factionRelationships ?? [])
+        .map((f) => `  ${f.factionId}: standing=${f.standing}`)
         .join("\n");
-      return ok(`City Pressure:\nDistricts:\n${districtSummary}\nFactions:\n${factionSummary}`);
+      return ok(
+        `Public Pressure:\nDistricts:\n${districtSummary}\nRelationships:\n${factionSummary}`,
+      );
     },
   },
   {

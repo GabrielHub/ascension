@@ -108,13 +108,14 @@ import {
   tabButtonClass,
 } from "./styles";
 import {
-  buildCityPressureView,
+  buildCurrentRivalView,
   buildEquipmentViewModels,
   buildHqViewFromPhase1,
   buildInventoryViewModels,
   buildLootAutomationViewModel,
   buildMarketItemViewModels,
   buildOpsViewFromPhase1,
+  buildPublicPressureView,
   buildRoomCultureViewModels,
   buildTeamViewModels,
   enrichOperatorsWithAutonomy,
@@ -1109,7 +1110,8 @@ interface HqStackRenderContext {
   lootAutomation: LootAutomationViewModel | null;
   equipment: readonly EquipmentViewModel[];
   marketItems: readonly MarketItemViewModel[];
-  cityPressure: ReturnType<typeof buildCityPressureView>;
+  publicPressure: ReturnType<typeof buildPublicPressureView>;
+  currentRival: ReturnType<typeof buildCurrentRivalView>;
   callbacks: GameCallbacks;
   handleOperatorInspectedGuidance: () => void;
   handleFocusChange: (focus: FocusPayload | null) => void;
@@ -1148,7 +1150,8 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
     lootAutomation,
     equipment,
     marketItems,
-    cityPressure,
+    publicPressure,
+    currentRival,
     callbacks,
     handleOperatorInspectedGuidance,
     handleFocusChange,
@@ -1402,7 +1405,8 @@ function buildHqStackEntries(ctx: HqStackRenderContext): PanelStackEntry[] {
                   operators={hq.operators}
                   relocationGate={hq.relocationGate}
                   callbacks={callbacks}
-                  cityPressure={cityPressure}
+                  publicPressure={publicPressure}
+                  currentRival={currentRival}
                 />
               </PanelFrame>
             ),
@@ -2352,10 +2356,18 @@ export function GameShell() {
             deferredPhase1View,
             registry,
             phase2?.inventory,
-            session.state.worldSnapshot.cityPressure,
+            session.state.worldSnapshot.publicPressure,
+            session.state.worldSnapshot.factionRelationships,
           )
         : null,
-    [deferredPhase1View, registry, session, phase2, session?.state.worldSnapshot.cityPressure],
+    [
+      deferredPhase1View,
+      registry,
+      session,
+      phase2,
+      session?.state.worldSnapshot.publicPressure,
+      session?.state.worldSnapshot.factionRelationships,
+    ],
   );
   const operations = useMemo(
     () =>
@@ -2427,9 +2439,21 @@ export function GameShell() {
     [phase2, registry],
   );
 
-  const cityPressure = useMemo(
-    () => buildCityPressureView(session?.state.worldSnapshot.cityPressure),
-    [session?.state.worldSnapshot.cityPressure],
+  const publicPressure = useMemo(
+    () =>
+      buildPublicPressureView(
+        session?.state.worldSnapshot.publicPressure,
+        session?.state.worldSnapshot.factionRelationships,
+      ),
+    [
+      session?.state.worldSnapshot.publicPressure,
+      session?.state.worldSnapshot.factionRelationships,
+    ],
+  );
+
+  const currentRival = useMemo(
+    () => buildCurrentRivalView(session?.state.worldSnapshot.rivalPressure),
+    [session?.state.worldSnapshot.rivalPressure],
   );
 
   const { entries: eventLog, handleEntryClick: handleEventLogEntryClick } = useEventLog(
@@ -3175,7 +3199,8 @@ export function GameShell() {
                   lootAutomation,
                   equipment,
                   marketItems,
-                  cityPressure,
+                  publicPressure,
+                  currentRival,
                   callbacks,
                   handleOperatorInspectedGuidance,
                   handleFocusChange,

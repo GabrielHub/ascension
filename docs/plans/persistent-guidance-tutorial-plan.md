@@ -234,7 +234,7 @@ The persistent system is not done until it can introduce every item below throug
 ### 4.5 Pressure And Management
 
 - [ ] Room blockers.
-- [ ] City / faction / institutional pressure.
+- [ ] Public / faction / institutional pressure.
 - [ ] Management policy surfaces.
 - [ ] Incidents that represent a new category of consequence (not just one-off events).
 

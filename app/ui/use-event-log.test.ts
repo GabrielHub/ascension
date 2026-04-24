@@ -15,8 +15,9 @@ function makeActions() {
 }
 
 describe("normalizeEventLogKind", () => {
-  it("preserves city-pressure events as first-class event-log entries", () => {
-    expect(normalizeEventLogKind("city_pressure")).toBe("city_pressure");
+  it("preserves public and rival pressure events as first-class event-log entries", () => {
+    expect(normalizeEventLogKind("public_pressure")).toBe("public_pressure");
+    expect(normalizeEventLogKind("rival_pressure")).toBe("rival_pressure");
   });
 
   it("falls back unknown runtime event kinds to event_change", () => {

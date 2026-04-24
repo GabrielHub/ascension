@@ -3,7 +3,7 @@ import type { PolicyState } from "lib/policies";
 export const SAVE_SLOT_IDS = ["slot/1", "slot/2", "slot/3"] as const;
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export const CURRENT_SAVE_SCHEMA_VERSION = 19;
+export const CURRENT_SAVE_SCHEMA_VERSION = 21;
 export const CURRENT_CONTENT_COMPATIBILITY = "preproduction-track-b";
 
 export interface SaveSlotMetadata {
@@ -450,43 +450,95 @@ export interface LootAutomationSnapshot {
   autoSellEnabled: boolean;
 }
 
-// ── Phase 4: City pressure save state ───────────────────────────────
+// ── Public pressure save state ──────────────────────────────────────
 
-export interface DistrictPressureSnapshot {
+export type PublicPressureSource = "regulator" | "press" | "sponsor" | "public";
+
+export interface DistrictPublicPressureSnapshot {
   districtId: string;
-  attention: number;
-  trust: number;
-  containmentDebt: number;
+  standing: number;
+  heat: number;
+  containment: number;
   recentContractCount: number;
   lastResolvedTick: number;
 }
 
-export interface FactionStandingSnapshot {
+export interface FactionRelationshipSnapshot {
   factionId: string;
   standing: number;
-  scrutiny: number;
-  leverage: number;
   cooldownUntilTick: number;
 }
 
-export interface CityPressureSnapshot {
-  districts: DistrictPressureSnapshot[];
-  factions: FactionStandingSnapshot[];
+export interface PublicPressureSnapshot {
+  score: number;
+  dominantSource: PublicPressureSource | null;
+  cooldownsBySource: Record<PublicPressureSource, number>;
+  districts: DistrictPublicPressureSnapshot[];
 }
 
-export function createDefaultDistrictPressure(districtId: string): DistrictPressureSnapshot {
+export type RivalTrend = "rising" | "stable" | "slipping";
+export type RivalStrengthBand = "below" | "peer" | "above";
+
+export interface RivalInstanceSnapshot {
+  rivalId: string;
+  ladderPosition: number;
+  strengthBand: RivalStrengthBand;
+  intensity: number;
+  aggression: number;
+  trend: RivalTrend;
+  isPrimary: boolean;
+  introducedAtTick: number | null;
+  lastMoveTick: number | null;
+  recentMoveIds: string[];
+  lastMoveTicksByMoveId?: Record<string, number>;
+  departedOperatorId?: string | null;
+  missedProspectId?: string | null;
+  sourceTick?: number | null;
+  sourceReason?: string | null;
+}
+
+export interface RivalPressureSnapshot {
+  active: boolean;
+  currentPrimaryRivalId: string | null;
+  rivals: RivalInstanceSnapshot[];
+}
+
+export function createDefaultDistrictPublicPressure(
+  districtId: string,
+): DistrictPublicPressureSnapshot {
   return {
     districtId,
-    attention: 0,
-    trust: 50,
-    containmentDebt: 0,
+    standing: 50,
+    heat: 0,
+    containment: 0,
     recentContractCount: 0,
     lastResolvedTick: 0,
   };
 }
 
-export function createDefaultFactionStanding(factionId: string): FactionStandingSnapshot {
-  return { factionId, standing: 0, scrutiny: 0, leverage: 0, cooldownUntilTick: 0 };
+export function createDefaultFactionRelationship(factionId: string): FactionRelationshipSnapshot {
+  return { factionId, standing: 0, cooldownUntilTick: 0 };
+}
+
+export function createDefaultPublicPressure(): Omit<PublicPressureSnapshot, "districts"> {
+  return {
+    score: 0,
+    dominantSource: null,
+    cooldownsBySource: {
+      regulator: 0,
+      press: 0,
+      sponsor: 0,
+      public: 0,
+    },
+  };
+}
+
+export function createDefaultRivalPressure(): RivalPressureSnapshot {
+  return {
+    active: false,
+    currentPrimaryRivalId: null,
+    rivals: [],
+  };
 }
 
 export interface WorldSnapshot extends SaveStructuredRecord {
@@ -522,7 +574,9 @@ export interface WorldSnapshot extends SaveStructuredRecord {
   incidentState?: object | null;
   guidanceState?: object | null;
   raidRuns?: RaidRunSnapshot[];
-  cityPressure?: CityPressureSnapshot | null;
+  publicPressure?: PublicPressureSnapshot | null;
+  factionRelationships?: FactionRelationshipSnapshot[];
+  rivalPressure?: RivalPressureSnapshot | null;
   presenterUnlocks?: PresenterUnlockSnapshot[];
 }
 

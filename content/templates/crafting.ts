@@ -202,7 +202,7 @@ export const craftRecipeTemplates = [
   // ── C-rank recipes (skyscraper endgame entry) ───────────────────────
   // Produced in the skyscraper's Fabrication Bay using C-rank monster parts
   // plus bridging inputs from Porter's-era D-rank ledgers. Each recipe pins
-  // a district tag so the craft surface stays rooted in the city pressure
+  // a district tag so the craft surface stays rooted in public pressure
   // model even once the guild has moved into the tower.
   {
     id: "craft-recipe/skyscraper-endgame/market-scythe",
@@ -399,7 +399,7 @@ export const craftRecipeTemplates = [
     ],
     requiredDistrictTags: ["infrastructure:port"],
     requiredFactionStanding: {
-      "faction/rival-guild-market": 5,
+      "faction/borough-contracts": 5,
     },
   },
   {
@@ -421,7 +421,7 @@ export const craftRecipeTemplates = [
     ],
     requiredDistrictTags: ["infrastructure:port"],
     requiredFactionStanding: {
-      "faction/rival-guild-market": 5,
+      "faction/borough-contracts": 5,
     },
   },
 ] satisfies readonly CraftRecipeTemplate[];

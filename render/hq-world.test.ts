@@ -112,6 +112,32 @@ describe("HQ world navigation", () => {
     }
   });
 
+  it("uses the authored full-slot scene frame for Porter's restaurant floor", () => {
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/floor",
+          templateId: "room/floor:tier_1",
+          roomStateId: "room-state/floor:1",
+          slotId: "slot/floor",
+          name: "The Floor",
+          functionTag: "room:social",
+          reservedFootprint: { col: 1, row: 8, cols: 10, rows: 10 },
+          activeFootprint: { col: 1, row: 8, cols: 10, rows: 10 },
+        }),
+      ],
+      { buildingId: "building/porters", floorIndex: 0, buildingTier: 1 },
+    );
+
+    const scene = geometry.roomProps[0]!;
+    const room = geometry.rooms[0]!;
+
+    expect(scene.assetUrl).toBe("/data/svg-environments/hq/porters/recipes/scene-the-floor.svg");
+    expect(scene.width).toBe(1060);
+    expect(scene.height).toBe(640);
+    expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(-530, 6);
+  });
+
   it("tracks reserved shell bounds separately from active room bounds", () => {
     const geometry = composeHqWorldGeometry([
       createRoomSeed({
@@ -279,8 +305,13 @@ describe("HQ world navigation", () => {
     );
 
     expect(geometry.roomProps).toHaveLength(1);
-    expect(geometry.roomProps[0]?.assetUrl).toBe(
-      "/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg",
-    );
+    const scene = geometry.roomProps[0]!;
+    const room = geometry.rooms[0]!;
+
+    expect(scene.assetUrl).toBe("/data/svg-environments/hq/porters/recipes/scene-the-workshop.svg");
+    expect(scene.width).toBe(900);
+    expect(scene.height).toBe(540);
+    expect(scene.x - room.floorPoints[0]!.x).toBeCloseTo(-240, 6);
+    expect(scene.y - room.floorPoints[0]!.y).toBeCloseTo(-100, 6);
   });
 });

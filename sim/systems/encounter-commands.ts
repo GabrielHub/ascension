@@ -36,7 +36,8 @@ import {
 import type { InterventionId } from "./encounter-types";
 import { getInventoryCount, removeFromInventory } from "./inventory";
 import { advanceRelocationBeat, initiateRelocation } from "./relocation";
-import type { RelocationPayload } from "./interruptions";
+import type { RelocationPayload, RivalMovePayload } from "./interruptions";
+import { resolveRivalMoveChoice } from "./rival-pressure";
 
 // Lazy-bound guidance command handlers (registered after module init).
 let lazyHandleGuidanceComplete:
@@ -296,6 +297,14 @@ export function applyEncounterCommand(
         if (guidanceBeatId) {
           lazyHandleGuidanceComplete?.(context, guidanceBeatId, "acknowledged");
         }
+      }
+      // Rival move interruptions: apply choice effects through consequence handlers
+      if (resolved?.payload?.kind === "rival_move" && payload.choiceId) {
+        resolveRivalMoveChoice(
+          context,
+          resolved.payload as RivalMovePayload,
+          payload.choiceId as string,
+        );
       }
       return true;
     }

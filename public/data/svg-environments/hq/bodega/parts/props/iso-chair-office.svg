@@ -1,27 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 30 40 52">
-  <!-- Isometric office chair.
-       Swivel chair with back rest, seat, post, and star base. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 12 60 74">
+  <!-- Isometric office chair: curved back, rounded cushion, gas lift, and casters. -->
 
-  <!-- Back rest -->
-  <polygon points="32,40 48,32 64,40 48,44"
-    fill="#263358" stroke="#0d1225" stroke-width="0.6"/>
-  <!-- Back rest thickness -->
-  <polygon points="32,40 48,44 48,48 32,44"
-    fill="#1a2440"/>
-  <polygon points="64,40 48,44 48,48 64,44"
-    fill="#1a2440"/>
+  <!-- Back support -->
+  <path d="M39 51 L36 36" fill="none" stroke="#151923" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M51 47 L54 32" fill="none" stroke="#11151d" stroke-width="2.2" stroke-linecap="round"/>
 
-  <!-- Seat cushion -->
-  <polygon points="30,52 48,60 66,52 48,44"
-    fill="#1a2440" stroke="#0d1225" stroke-width="0.5"/>
+  <!-- Curved padded backrest -->
+  <path d="M37 21 C42 17 52 20 61 26 C66 30 68 38 66 46 C65 51 61 54 56 52 L38 43 C33 40 31 31 33 26 C34 23 35 22 37 21 Z"
+    fill="#2c3d64" stroke="#0d1225" stroke-width="0.9"/>
+  <path d="M60 27 C66 31 68 39 66 46 C65 50 62 53 58 53 C60 45 59 35 60 27 Z"
+    fill="#1c2947" opacity="0.65"/>
+  <path d="M38 29 C44 29 52 32 59 38" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.9"/>
+  <path d="M37 37 C44 38 51 41 57 47" fill="none" stroke="rgba(0,0,0,0.16)" stroke-width="0.8"/>
 
-  <!-- Post -->
-  <line x1="48" y1="60" x2="48" y2="72" stroke="#252525" stroke-width="2.5"/>
+  <!-- Rounded seat cushion -->
+  <path d="M27 50 C27 48 28 47 31 46 L45 39 C48 38 51 38 54 40 L67 46 C71 48 72 50 68 53 L53 61 C50 63 47 63 44 61 L29 54 C27 53 26 52 27 50 Z"
+    fill="#2d3e66" stroke="#0d1225" stroke-width="0.9"/>
+  <path d="M28 52 C33 55 39 58 45 61 C48 63 51 63 54 61 L68 53 C68 56 67 57 65 58 L53 65 C50 67 47 67 44 65 L30 58 C28 57 27 55 28 52 Z"
+    fill="#1e2b49" stroke="#0d1225" stroke-width="0.7"/>
+  <path d="M33 50 L47 43 L63 50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
 
-  <!-- Star base (simplified ellipse) -->
-  <ellipse cx="48" cy="74" rx="14" ry="5" fill="#252525" opacity="0.8"/>
-  <!-- Caster dots -->
-  <circle cx="35" cy="74" r="1.5" fill="#3a3838"/>
-  <circle cx="61" cy="74" r="1.5" fill="#3a3838"/>
-  <circle cx="48" cy="78" r="1.5" fill="#3a3838"/>
+  <!-- Arm rests -->
+  <path d="M30 53 L30 46 L40 41" fill="none" stroke="#151a24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M66 53 L66 47 L56 42" fill="none" stroke="#111721" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 46 L40 41" fill="none" stroke="#24304d" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M66 47 L56 42" fill="none" stroke="#1b2742" stroke-width="3.2" stroke-linecap="round"/>
+
+  <!-- Gas lift -->
+  <path d="M45 64 L51 64 L51 74 L45 74 Z" fill="#232629"/>
+  <path d="M48 64 L51 64 L51 74 L48 74 Z" fill="#34383c"/>
+
+  <!-- Caster base aligned to the canonical iso axes -->
+  <line x1="48" y1="74" x2="31" y2="65.5" stroke="#242424" stroke-width="2.4" stroke-linecap="round"/>
+  <line x1="48" y1="74" x2="65" y2="65.5" stroke="#1d1d1d" stroke-width="2.4" stroke-linecap="round"/>
+  <line x1="48" y1="74" x2="31" y2="82.5" stroke="#1d1d1d" stroke-width="2.4" stroke-linecap="round"/>
+  <line x1="48" y1="74" x2="65" y2="82.5" stroke="#181818" stroke-width="2.4" stroke-linecap="round"/>
+  <ellipse cx="48" cy="74" rx="4" ry="2" fill="#303030" stroke="#111" stroke-width="0.5"/>
+
+  <!-- Casters -->
+  <ellipse cx="31" cy="65.5" rx="3.4" ry="2.1" fill="#3b3a3a" stroke="#171717" stroke-width="0.5"/>
+  <ellipse cx="65" cy="65.5" rx="3.4" ry="2.1" fill="#343333" stroke="#171717" stroke-width="0.5"/>
+  <ellipse cx="31" cy="82.5" rx="3.4" ry="2.1" fill="#302f2f" stroke="#171717" stroke-width="0.5"/>
+  <ellipse cx="65" cy="82.5" rx="3.4" ry="2.1" fill="#2a2929" stroke="#171717" stroke-width="0.5"/>
 </svg>

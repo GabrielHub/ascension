@@ -88,6 +88,62 @@ describe("interruption host", () => {
     expect(html).toContain("Push through");
   });
 
+  it("routes rival move interruptions to the rival move modal", () => {
+    const interruption: InterruptionInstance = {
+      instanceId: "interruption-rival-move",
+      type: "rival_move",
+      priority: 55,
+      blockingMode: "blocking",
+      createdAtMinute: 2400,
+      sourceSystem: "rival-pressure",
+      dismissible: false,
+      persistence: "persistent",
+      payload: {
+        kind: "rival_move",
+        rivalId: "rival/test",
+        moveTemplateId: "rival-move/test/sponsor",
+        shortDisplayName: "Test",
+        guildName: "Test Guild",
+        leaderName: "Test Leader",
+        leaderPortrait: "/data/rivals/test/leader-neutral.png",
+        insignia: "/data/rivals/test/insignia.png",
+        pressureLane: "sponsor-network",
+        family: "sponsor_interference",
+        message: "Test Guild moved on a sponsor.",
+        briefing: "A sponsor is asking why Test Guild got the meeting first.",
+        intensity: 61,
+        aggression: 38,
+        intensityDelta: 4,
+        publicPressureDelta: 2,
+        trend: "rising",
+        warRoomMitigated: true,
+        dayNumber: 3,
+        choices: [
+          {
+            choiceId: "counter",
+            label: "Counter",
+            description: "Put your own relationship on the table.",
+            consequenceSummary: "Treasury down, standing steadies.",
+            effects: [{ kind: "treasury_delta", targetRef: "guild", value: -50 }],
+          },
+        ],
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <InterruptionHost
+        activeInterruption={interruption}
+        onResolve={vi.fn()}
+        onDismiss={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("rival-move-modal");
+    expect(html).toContain("Test Guild");
+    expect(html).toContain("A sponsor is asking why Test Guild got the meeting first.");
+    expect(html).toContain('data-choice-id="counter"');
+  });
+
   it("renders skyscraper relocation decision copy against the final HQ target", () => {
     const interruption: InterruptionInstance = {
       instanceId: "interruption-relocation-skyscraper",

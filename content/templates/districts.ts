@@ -65,7 +65,7 @@ export const districtTemplates = [
     description:
       "Old shipping terminals and warehouse rows at the water's edge. Fewer eyes, but the borough contract board watches every job that touches the port.",
     siteConceptIds: getDistrictSiteConceptIds("district/red-hook-waterfront"),
-    primaryFactionIds: ["faction/borough-contracts", "faction/rival-guild-market"],
+    primaryFactionIds: ["faction/borough-contracts", "faction/emergency-management"],
     pressureBias: -1,
     rewardBias: 2,
     rareMaterialDropTags: ["material:brine-crystal"],

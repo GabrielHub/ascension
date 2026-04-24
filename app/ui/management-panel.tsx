@@ -12,17 +12,15 @@ import {
 
 import {
   SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
-  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
   SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
-} from "sim/systems/city-pressure";
+} from "sim/systems/public-pressure";
 
 import {
-  buildVisibleInstitutionView,
-  type CityPressureView,
+  type CurrentRivalView,
   type GameCallbacks,
   type HqViewModel,
-  type VisibleInstitutionBand,
-  type VisibleInstitutionView,
+  type PublicPressureBand,
+  type PublicPressureView,
 } from "./view-models";
 
 interface ManagementPanelProps {
@@ -35,7 +33,8 @@ interface ManagementPanelProps {
   operators: HqViewModel["operators"];
   relocationGate: HqViewModel["relocationGate"];
   callbacks: GameCallbacks;
-  cityPressure?: CityPressureView | null;
+  publicPressure?: PublicPressureView | null;
+  currentRival?: CurrentRivalView | null;
 }
 
 function formatContractLifecycle(contractLifecycle: HqViewModel["contractLifecycle"]): string {
@@ -583,191 +582,470 @@ function RelocationCard({
   );
 }
 
-const SKYSCRAPER_EXECUTIVE_ROOM_META: Record<string, { label: string; summary: string }> = {
-  [SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID]: {
-    label: "Executive Office",
-    summary: "Scales positive standing gains from contract outcomes (+40%).",
-  },
-  [SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID]: {
-    label: "Compliance Office",
-    summary: "Bleeds faction scrutiny each hour and softens scandal incidents.",
-  },
-  [SKYSCRAPER_WAR_ROOM_TEMPLATE_ID]: {
-    label: "War Room",
-    summary: "Stacks x1.5 on briefing-room intel and unlocks counter-op framing.",
-  },
-};
-
-const VISIBLE_INSTITUTION_BAND_COPY: Record<
-  VisibleInstitutionBand,
+const PUBLIC_PRESSURE_BAND_COPY: Record<
+  PublicPressureBand,
   { label: string; summary: string; accent: string }
 > = {
-  emerging: {
-    label: "Emerging",
-    summary:
-      "The tower is on the map, but regulators and rivals still treat the guild as a newcomer.",
+  quiet: {
+    label: "Quiet",
+    summary: "No one is writing about the guild this week.",
     accent: "badge-slate",
   },
-  recognized: {
-    label: "Recognized",
-    summary:
-      "The guild reads as an institutional player. Factions answer calls and rivals start coordinating against the name.",
+  watched: {
+    label: "Watched",
+    summary: "Officials, sponsors, and press are watching for the next misstep.",
     accent: "badge-ember",
   },
-  prestige: {
-    label: "Prestige",
-    summary:
-      "The tower is the address a borough chair expects to hear from. Every move is visible, and every missed signal is remembered.",
+  exposed: {
+    label: "Exposed",
+    summary: "Someone is looking to make an example of the guild.",
+    accent: "badge-ember",
+  },
+  crackdown: {
+    label: "Crackdown",
+    summary: "The guild is on page one. Every move draws an audit.",
     accent: "badge-gold",
   },
 };
 
-function VisibleInstitutionSection({ institution }: { institution: VisibleInstitutionView }) {
-  const bandCopy = VISIBLE_INSTITUTION_BAND_COPY[institution.band];
-  const offsettingRooms = institution.offsettingRoomTemplateIds
-    .map((id) => SKYSCRAPER_EXECUTIVE_ROOM_META[id])
-    .filter((meta): meta is { label: string; summary: string } => meta !== undefined);
+const PRESSURE_SOURCE_LABELS: Record<NonNullable<PublicPressureView["dominantSource"]>, string> = {
+  regulator: "Regulator",
+  press: "Press",
+  sponsor: "Sponsor",
+  public: "Public",
+};
+
+const PRESSURE_SOURCE_ORDER: ReadonlyArray<NonNullable<PublicPressureView["dominantSource"]>> = [
+  "regulator",
+  "press",
+  "sponsor",
+  "public",
+];
+
+function PressureSourceIcon({
+  source,
+}: {
+  source: NonNullable<PublicPressureView["dominantSource"]>;
+}) {
+  switch (source) {
+    case "regulator":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor">
+          <path d="M3 21V8l9-5 9 5v13" />
+          <path d="M9 21v-7h6v7" />
+        </svg>
+      );
+    case "press":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor">
+          <path d="M4 4h16v16H4z" />
+          <path d="M4 9h16M9 4v16" />
+        </svg>
+      );
+    case "sponsor":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor">
+          <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
+        </svg>
+      );
+    case "public":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor">
+          <circle cx="12" cy="8" r="3" />
+          <path d="M5 21c0-4 3-7 7-7s7 3 7 7" />
+        </svg>
+      );
+  }
+}
+
+function PublicPressureSection({ pressure }: { pressure: PublicPressureView }) {
+  const bandCopy = PUBLIC_PRESSURE_BAND_COPY[pressure.band];
+  const activeDistricts = pressure.districts.filter(
+    (d) => d.recentContractCount > 0 || d.heat > 10 || d.containment > 10,
+  );
+  const activeFactions = pressure.factionRelationships.filter(
+    (f) => f.standing !== 0 || f.onCooldown,
+  );
+  const score = Math.max(0, Math.min(100, Math.round(pressure.score)));
+  const dialCircumference = 188;
+  const dashOffset = dialCircumference * (1 - score / 100);
 
   return (
-    <section
-      className="glass-card space-y-3 rounded-2xl p-4"
-      data-testid="visible-institution-summary"
-    >
+    <section className="glass-card space-y-4 rounded-2xl p-4" data-testid="public-pressure-summary">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            Visible Institution
-          </h4>
-          <p className="mt-1 text-sm leading-relaxed text-silver/55">{bandCopy.summary}</p>
+        <div className="min-w-0">
+          <p className="font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.32em] text-gold">
+            Public Pressure
+          </p>
+          <p className="mt-2 font-[family-name:var(--font-display)] text-lg font-light leading-tight text-silver-bright">
+            {bandCopy.summary}
+          </p>
         </div>
         <span
           className={`badge ${bandCopy.accent} shrink-0`}
-          data-testid="visible-institution-band"
-          data-band={institution.band}
+          data-testid="public-pressure-band"
+          data-band={pressure.band}
         >
-          {bandCopy.label} · {institution.score}
+          {bandCopy.label}
         </span>
       </div>
 
-      <div className="grid gap-2 text-xs text-silver/60 sm:grid-cols-3">
-        <div className="glass-card-inset rounded-xl p-3">
-          <p className="uppercase tracking-[0.12em] text-gold/55">Reputation</p>
-          <p className="mt-1 text-sm text-silver-bright">{Math.round(institution.reputation)}</p>
+      <div className="flex items-center gap-5">
+        <div className="relative h-[6.875rem] w-[9.75rem] shrink-0">
+          <svg
+            viewBox="0 0 156 110"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            className="h-full w-full overflow-visible"
+          >
+            <defs>
+              <linearGradient id="rivalPressureDialGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#c8a84c" />
+                <stop offset="0.55" stopColor="#d4541e" />
+                <stop offset="1" stopColor="#a82a14" />
+              </linearGradient>
+            </defs>
+            <path
+              className="fill-none stroke-[rgba(200,168,76,0.08)] [stroke-width:6]"
+              d="M 18 92 A 60 60 0 0 1 138 92"
+              strokeLinecap="round"
+            />
+            <path
+              className="fill-none transition-[stroke-dashoffset] duration-[600ms] ease-[cubic-bezier(0.2,0.8,0.3,1)] [filter:drop-shadow(0_0_6px_rgba(212,84,30,0.45))] [stroke:url(#rivalPressureDialGradient)] [stroke-width:6]"
+              d="M 18 92 A 60 60 0 0 1 138 92"
+              strokeLinecap="round"
+              strokeDasharray={dialCircumference}
+              strokeDashoffset={dashOffset}
+            />
+            <line
+              className={`[stroke-width:1] ${score >= 25 ? "stroke-gold" : "stroke-[rgba(200,168,76,0.2)]"}`}
+              x1="33"
+              y1="32"
+              x2="38"
+              y2="36"
+            />
+            <line
+              className={`[stroke-width:1] ${score >= 50 ? "stroke-gold" : "stroke-[rgba(200,168,76,0.2)]"}`}
+              x1="78"
+              y1="22"
+              x2="78"
+              y2="28"
+            />
+            <line
+              className={`[stroke-width:1] ${score >= 75 ? "stroke-gold" : "stroke-[rgba(200,168,76,0.2)]"}`}
+              x1="123"
+              y1="32"
+              x2="118"
+              y2="36"
+            />
+          </svg>
+          <div
+            className="absolute bottom-2 left-0 right-0 text-center font-[family-name:var(--font-display)] text-[2.4rem] font-extralight leading-none tracking-[0.02em] text-silver-bright tabular-nums"
+            data-testid="public-pressure-score"
+          >
+            {score}
+          </div>
+          <div className="absolute -bottom-2 left-0 right-0 text-center font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.32em] text-[rgba(149,144,127,0.7)]">
+            Score
+          </div>
         </div>
-        <div className="glass-card-inset rounded-xl p-3">
-          <p className="uppercase tracking-[0.12em] text-gold/55">Avg Standing</p>
-          <p className="mt-1 text-sm text-silver-bright">{institution.averageStanding}</p>
-        </div>
-        <div className="glass-card-inset rounded-xl p-3">
-          <p className="uppercase tracking-[0.12em] text-gold/55">Tower Tier</p>
-          <p className="mt-1 text-sm text-silver-bright">T{institution.buildingTier}</p>
+
+        <div className="min-w-0 flex-1">
+          <p className="font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.32em] text-silver/60">
+            Pressure Vector
+          </p>
+          <div className="mt-2 grid grid-cols-4 gap-1.5">
+            {PRESSURE_SOURCE_ORDER.map((source) => {
+              const isDominant = pressure.dominantSource === source;
+              return (
+                <div
+                  key={source}
+                  className={`relative flex flex-col items-center rounded-lg border px-1 py-2 text-center transition-colors duration-200 ${
+                    isDominant
+                      ? "border-ember bg-[linear-gradient(180deg,rgba(212,84,30,0.1),rgba(212,84,30,0))] text-smolder shadow-[0_0_0_1px_rgba(212,84,30,0.2),0_6px_20px_-8px_rgba(212,84,30,0.5)]"
+                      : "border-[rgba(200,168,76,0.12)] bg-[rgba(255,255,255,0.012)] text-silver/55"
+                  }`}
+                  data-source={source}
+                  data-dominant={isDominant ? "true" : undefined}
+                >
+                  <span
+                    className={`block h-[18px] w-[18px] ${isDominant ? "opacity-100" : "opacity-45"}`}
+                  >
+                    <PressureSourceIcon source={source} />
+                  </span>
+                  <span className="mt-1 font-[family-name:var(--font-display)] text-xs uppercase tracking-[0.18em]">
+                    {PRESSURE_SOURCE_LABELS[source]}
+                  </span>
+                  {isDominant && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -bottom-[3px] left-1/2 h-[2px] w-8 -translate-x-1/2 rounded-sm bg-ember"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {offsettingRooms.length > 0 && (
-        <div
-          className="glass-card-inset space-y-2 rounded-xl p-3"
-          data-testid="visible-institution-rooms"
-        >
-          <p className="text-xs uppercase tracking-[0.12em] text-gold/55">
-            Executive Floor offsets
+      {activeDistricts.length > 0 && (
+        <div className="border-t border-dashed border-[rgba(200,168,76,0.1)] pt-3">
+          <p className="mb-2 flex items-baseline justify-between font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.32em] text-silver/55">
+            <span>Active Districts</span>
+            <span className="text-gold">
+              {String(activeDistricts.length).padStart(2, "0")} /{" "}
+              {String(pressure.districts.length).padStart(2, "0")}
+            </span>
           </p>
-          <ul className="space-y-1.5">
-            {offsettingRooms.map((room) => (
-              <li key={room.label} className="text-sm leading-relaxed text-silver/70">
-                <span className="text-silver-bright">{room.label}.</span> {room.summary}
-              </li>
-            ))}
+          <ul className="divide-y divide-[rgba(200,168,76,0.04)]">
+            {activeDistricts.map((d) => {
+              const heatTone = d.heat >= 70 ? "bg-magma" : d.heat >= 40 ? "bg-ember" : "bg-gold";
+              const containmentTone =
+                d.containment >= 70 ? "bg-magma" : d.containment >= 40 ? "bg-ember" : "bg-gold";
+              const standingPercent = Math.max(0, Math.min(100, d.standing));
+              const heatPercent = Math.max(0, Math.min(100, d.heat));
+              const containmentPercent = Math.max(0, Math.min(100, d.containment));
+              return (
+                <li
+                  key={d.districtId}
+                  className="flex items-center justify-between gap-3 py-2"
+                  data-district={d.districtId}
+                >
+                  <div className="min-w-0">
+                    <p className="font-[family-name:var(--font-display)] text-sm font-normal text-silver-bright">
+                      {d.name}
+                    </p>
+                    <p className="font-[family-name:var(--font-display)] text-xs uppercase tracking-[0.06em] text-silver/45">
+                      {d.recentContractCount > 0
+                        ? `${d.recentContractCount} contract${d.recentContractCount === 1 ? "" : "s"}`
+                        : d.containment >= 50
+                          ? "Containment lingering"
+                          : "Background hum"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <PressureMicroBar
+                      glyph={`S ${Math.round(d.standing)}`}
+                      tone="bg-gold"
+                      fillPercent={standingPercent}
+                    />
+                    <PressureMicroBar
+                      glyph={`H ${Math.round(d.heat)}`}
+                      tone={heatTone}
+                      fillPercent={heatPercent}
+                    />
+                    <PressureMicroBar
+                      glyph={`C ${Math.round(d.containment)}`}
+                      tone={containmentTone}
+                      fillPercent={containmentPercent}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
 
-      {institution.pressureThreats.length > 0 && (
-        <div
-          className="glass-card-inset space-y-1 rounded-xl p-3"
-          data-testid="visible-institution-threats"
-        >
-          <p className="text-xs uppercase tracking-[0.12em] text-gold/55">
-            Families threatening to fire
+      {activeFactions.length > 0 && (
+        <div className="border-t border-dashed border-[rgba(200,168,76,0.1)] pt-3">
+          <p className="mb-2 flex items-baseline justify-between font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.32em] text-silver/55">
+            <span>Faction Signals</span>
+            <span className="text-gold">
+              {String(activeFactions.length).padStart(2, "0")} /{" "}
+              {String(pressure.factionRelationships.length).padStart(2, "0")}
+            </span>
           </p>
-          <p className="text-sm leading-relaxed text-silver/70">
-            {institution.pressureThreats.join(" · ")}
-          </p>
+          <ul className="divide-y divide-[rgba(200,168,76,0.04)]">
+            {activeFactions.map((faction) => {
+              const standing = Math.round(faction.standing);
+              const standingPercent = Math.max(0, Math.min(100, standing + 50));
+              const tone = standing < -25 ? "bg-magma" : standing < 0 ? "bg-ember" : "bg-gold";
+              return (
+                <li
+                  key={faction.factionId}
+                  className="flex items-center justify-between gap-3 py-2"
+                  data-faction={faction.factionId}
+                >
+                  <div className="min-w-0">
+                    <p className="font-[family-name:var(--font-display)] text-sm font-normal text-silver-bright">
+                      {faction.name}
+                    </p>
+                    <p className="font-[family-name:var(--font-display)] text-xs uppercase tracking-[0.06em] text-silver/45">
+                      {faction.onCooldown ? "Access cooling" : "Relationship signal"}
+                    </p>
+                  </div>
+                  <PressureMicroBar
+                    glyph={`R ${standing > 0 ? `+${standing}` : standing}`}
+                    tone={tone}
+                    fillPercent={standingPercent}
+                  />
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
     </section>
   );
 }
 
-function CityPressureSummaryCard({
-  cityPressure,
-  institution,
+function PressureMicroBar({
+  glyph,
+  tone,
+  fillPercent,
 }: {
-  cityPressure: CityPressureView;
-  institution: VisibleInstitutionView | null;
+  glyph: string;
+  tone: string;
+  fillPercent: number;
 }) {
-  const activeDistricts = cityPressure.districts.filter(
-    (d) => d.recentContractCount > 0 || d.attention > 10 || d.containmentDebt > 10,
-  );
-  const pressuredFactions = cityPressure.factions.filter(
-    (f) => f.scrutiny >= 20 || f.standing <= -10 || f.leverage >= 20,
-  );
-  const hasCityPressure = activeDistricts.length > 0 || pressuredFactions.length > 0;
-  if (!institution && !hasCityPressure) return null;
-
   return (
-    <div className="space-y-3">
-      {institution && <VisibleInstitutionSection institution={institution} />}
-      {hasCityPressure && (
-        <section
-          className="glass-card space-y-2 rounded-2xl p-4"
-          data-testid="city-pressure-summary"
-        >
-          <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gold/80">
-            City Pressure
+    <span className="inline-flex flex-col items-end gap-0.5">
+      <span className="relative block h-[3px] w-9 overflow-hidden rounded-sm bg-[rgba(200,168,76,0.07)]">
+        <span
+          className={`absolute inset-y-0 left-0 ${tone}`}
+          style={{ width: `${fillPercent}%` }}
+        />
+      </span>
+      <span className="font-[family-name:var(--font-display)] text-xs tracking-[0.08em] text-silver/45 tabular-nums">
+        {glyph}
+      </span>
+    </span>
+  );
+}
+
+const RIVAL_LANE_LABELS: Record<string, string> = {
+  prestige: "Prestige Track",
+  "labor-market": "Labor Market",
+  "sponsor-network": "Sponsor Network",
+  hybrid: "Hybrid Pressure",
+};
+
+const RIVAL_STRENGTH_LABELS: Record<string, string> = {
+  above: "above tier",
+  peer: "peer tier",
+  below: "below tier",
+};
+
+function CurrentRivalSection({ rival }: { rival: CurrentRivalView }) {
+  const intensity = Math.max(0, Math.min(100, Math.round(rival.intensity)));
+  const aggression = Math.max(0, Math.min(100, Math.round(rival.aggression)));
+  const intensitySummary =
+    intensity >= 75
+      ? "Pressing hard"
+      : intensity >= 45
+        ? "Working the angles"
+        : "Probing for cracks";
+  const trendLabel = rival.trend.charAt(0).toUpperCase() + rival.trend.slice(1);
+  const laneLabel = RIVAL_LANE_LABELS[rival.pressureLane] ?? rival.pressureLane;
+  const strengthLabel = RIVAL_STRENGTH_LABELS[rival.strengthBand] ?? rival.strengthBand;
+  return (
+    <section
+      className="glass-card group relative min-h-[28rem] overflow-visible rounded-2xl px-5 pb-5 pt-6"
+      data-testid="current-rival-summary"
+      data-rival-id={rival.rivalId}
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-10 z-0 h-[33rem] w-[19rem] rounded-[50%] bg-[radial-gradient(ellipse_at_60%_30%,rgba(212,84,30,0.16)_0%,rgba(212,84,30,0.04)_35%,transparent_65%)]"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-4 right-4 top-0 z-[1] h-px opacity-70 bg-[linear-gradient(90deg,transparent,var(--color-ember)_35%,var(--color-smolder)_50%,var(--color-ember)_65%,transparent)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-2 -top-14 z-[3] h-[35rem] w-56 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.3,1)] group-hover:-translate-y-1.5 [filter:drop-shadow(-12px_14px_22px_rgba(0,0,0,0.6))_drop-shadow(0_0_32px_rgba(212,84,30,0.18))]"
+      >
+        <img
+          src={rival.leaderPortrait}
+          alt=""
+          className="block h-full w-full object-contain object-top"
+        />
+      </div>
+
+      <p className="relative z-[2] mb-4 font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.4em] text-gold">
+        Current Rival
+      </p>
+
+      <div className="relative z-[2] flex max-w-[65%] items-start gap-4">
+        <span className="inline-block h-16 w-16 shrink-0 overflow-hidden rounded-[0.875rem] bg-[#0a0810] shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_0_0_2px_rgba(200,168,76,0.18),0_12px_24px_-8px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <img src={rival.insignia} alt="" className="block h-full w-full object-cover" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 font-[family-name:var(--font-display)] text-xs font-normal uppercase tracking-[0.32em] text-smolder">
+            <span aria-hidden="true" className="inline-block h-px w-4 bg-ember" />
+            {laneLabel} · {strengthLabel}
+          </p>
+          <h4 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-extralight leading-none tracking-[0.01em] text-silver-bright">
+            {rival.shortDisplayName}
           </h4>
-          {activeDistricts.map((d) => (
-            <div
-              key={d.districtId}
-              className="flex items-center justify-between gap-2 text-sm text-silver/70"
+          <p className="mt-2 font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.16em] text-silver/55">
+            <span className="text-gold">Field lead</span> {rival.leaderName}
+          </p>
+        </div>
+      </div>
+
+      <p className="relative z-[2] mt-5 max-w-[60%] border-l border-transparent pl-3 text-sm leading-relaxed text-silver/85 [border-image:linear-gradient(180deg,rgba(200,168,76,0.6),transparent)_1]">
+        {rival.oneLiner}
+      </p>
+
+      <div className="relative z-[2] mt-5 grid max-w-[60%] grid-cols-2 gap-3">
+        <div className="rounded-xl border border-[rgba(200,168,76,0.12)] bg-[rgba(0,0,0,0.32)] px-3 py-3 backdrop-blur-sm">
+          <p className="font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.28em] text-silver/55">
+            Intensity
+          </p>
+          <p
+            className="mt-2 font-[family-name:var(--font-display)] text-2xl font-light leading-none text-silver-bright tabular-nums"
+            data-testid="current-rival-intensity"
+          >
+            {intensity}
+          </p>
+          <div className="relative mt-2 h-[3px] overflow-hidden rounded-sm bg-[rgba(200,168,76,0.06)]">
+            <span
+              className="absolute inset-0 origin-left bg-[linear-gradient(90deg,var(--color-gold)_0%,var(--color-ember)_60%,var(--color-magma)_100%)] shadow-[0_0_8px_rgba(212,84,30,0.6)]"
+              style={{ transform: `scaleX(${intensity / 100})` }}
+            />
+          </div>
+          <p className="mt-2 font-[family-name:var(--font-display)] text-xs font-normal uppercase tracking-[0.18em] text-smolder">
+            {intensitySummary}
+          </p>
+        </div>
+        <div className="rounded-xl border border-[rgba(200,168,76,0.12)] bg-[rgba(0,0,0,0.32)] px-3 py-3 backdrop-blur-sm">
+          <p className="font-[family-name:var(--font-display)] text-xs font-light uppercase tracking-[0.28em] text-silver/55">
+            Trend
+          </p>
+          <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-light leading-none text-silver-bright">
+            {trendLabel}
+          </p>
+          <p className="mt-2 inline-flex items-center gap-1 font-[family-name:var(--font-display)] text-xs font-normal uppercase tracking-[0.18em] text-smolder">
+            <span
+              aria-hidden="true"
+              className={
+                rival.trend === "rising"
+                  ? "inline-block animate-rival-trend-rise motion-reduce:animate-none"
+                  : ""
+              }
             >
-              <span className="truncate">{d.name}</span>
-              <span className="flex shrink-0 gap-3 text-xs">
-                <span title="Trust">T {Math.round(d.trust)}</span>
-                <span className={d.attention >= 40 ? "text-ember" : ""} title="Attention">
-                  A {Math.round(d.attention)}
-                </span>
-                <span
-                  className={d.containmentDebt >= 50 ? "text-magma" : ""}
-                  title="Containment debt"
-                >
-                  C {Math.round(d.containmentDebt)}
-                </span>
-              </span>
-            </div>
-          ))}
-          {pressuredFactions.map((f) => (
-            <div
-              key={f.factionId}
-              className="flex items-center justify-between gap-2 text-sm text-silver/70"
-            >
-              <span className="truncate">{f.name}</span>
-              <span className="flex shrink-0 gap-3 text-xs">
-                <span title="Standing">S {Math.round(f.standing)}</span>
-                <span className={f.scrutiny >= 40 ? "text-ember" : ""} title="Scrutiny">
-                  Sc {Math.round(f.scrutiny)}
-                </span>
-                {f.leverage > 0 && (
-                  <span className={f.leverage >= 30 ? "text-magma" : ""} title="Leverage">
-                    L {Math.round(f.leverage)}
-                  </span>
-                )}
-              </span>
-            </div>
-          ))}
-        </section>
-      )}
-    </div>
+              {rival.trend === "rising" ? "▲" : rival.trend === "slipping" ? "▼" : "—"}
+            </span>
+            Aggression {aggression}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative z-[2] mt-5 flex max-w-[60%] items-center gap-3 rounded-lg border border-[rgba(200,168,76,0.18)] border-l-2 border-l-gold bg-[linear-gradient(90deg,rgba(200,168,76,0.06),rgba(200,168,76,0)_60%)] px-3 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="font-[family-name:var(--font-display)] text-xs font-normal uppercase tracking-[0.32em] text-gold">
+            War Room
+          </p>
+          <p className="mt-0.5 font-[family-name:var(--font-display)] text-sm font-light text-silver-bright">
+            Counter brief queued for the next move
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -781,19 +1059,19 @@ export function ManagementPanel({
   operators,
   relocationGate,
   callbacks,
-  cityPressure,
+  publicPressure,
+  currentRival,
 }: ManagementPanelProps) {
   const guildName = guild.guildName;
-  const institution =
-    building.id === "building/skyscraper" && cityPressure
-      ? buildVisibleInstitutionView(
-          guild.reputation,
-          cityPressure,
-          building.id,
-          building.tier,
-          rooms.filter((room) => room.isOperational).map((room) => room.templateId),
-        )
-      : null;
+  const operationalRoomTemplateIds = rooms
+    .filter((room) => room.isOperational)
+    .map((room) => room.templateId);
+  const complianceOfficeActive =
+    building.id === "building/skyscraper" &&
+    operationalRoomTemplateIds.includes(SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID);
+  const warRoomActive =
+    building.id === "building/skyscraper" &&
+    operationalRoomTemplateIds.includes(SKYSCRAPER_WAR_ROOM_TEMPLATE_ID);
 
   return (
     <div className="animate-enter space-y-4" data-testid="management-panel">
@@ -810,9 +1088,11 @@ export function ManagementPanel({
         />
       </div>
 
-      {cityPressure && (
-        <CityPressureSummaryCard cityPressure={cityPressure} institution={institution} />
+      {publicPressure && complianceOfficeActive && (
+        <PublicPressureSection pressure={publicPressure} />
       )}
+
+      {currentRival && warRoomActive && <CurrentRivalSection rival={currentRival} />}
 
       {building.id === "building/porters" && (
         <PortersCampaignCard rooms={rooms} upgrades={upgrades} operators={operators} />

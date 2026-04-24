@@ -24,6 +24,11 @@ import { SeededRng, weightedChoice } from "../uncertainty";
 import { seedFromSimulationKey } from "./seed-utils";
 import type { SimSystem } from "./types";
 
+const RIVAL_GATED_EVENT_IDS: ReadonlySet<string> = new Set([
+  "event/outside_recruitment_offer",
+  "event/rival_dockside_bid",
+]);
+
 function getAverageValue(values: number[]): number {
   if (values.length === 0) {
     return 50;
@@ -179,6 +184,9 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
     return;
   }
 
+  const rivalPressureActive =
+    context.runtimeState.rivalPressure?.active === true &&
+    context.runtimeState.rivalPressure.currentPrimaryRivalId != null;
   const selection = weightedChoice(
     new SeededRng(
       seedFromSimulationKey(
@@ -186,7 +194,13 @@ export const advanceEventPressureSystem: SimSystem = (context, deltaMs) => {
         `event:${currentMinute}:${BuildingAuthority.pressure[buildingEntity]}`,
       ),
     ),
-    candidateTemplates.map(({ index, template }) => ({ item: index, weight: template.weight })),
+    candidateTemplates.map(({ index, template }) => ({
+      item: index,
+      weight:
+        rivalPressureActive && RIVAL_GATED_EVENT_IDS.has(template.id)
+          ? template.weight * 0.25
+          : template.weight,
+    })),
   );
   const nextTemplateIndex = selection.outcome;
   const template = context.registry.events[nextTemplateIndex];

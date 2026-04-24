@@ -1,62 +1,141 @@
-import type { ReadyToWireRivalRecord } from "./schema";
+import type { RivalRecord } from "./schema";
 
 export const asgardRivalRecord = {
   id: "rival/asgard",
-  status: "ready-to-wire",
   guildName: "Asgard",
   shortDisplayName: "Asgard",
-  branchSuffix: "Tribeca",
-  parentGuild: null,
   leader: {
-    fullName: 'Elias "Odin" Wren',
-    ageRange: "presents as mid-70s; believed mid-40s",
-    background:
-      'Formerly Elias Wren, a Silicon Alley data-analytics founder who cashed out in the late 2010s. After an attunement event c. 2023, he used tech-exit resources to aggressively scrub "Elias Wren" from public records, SEC filings, archived press, and social platforms, then rebuilt his public identity around the single name "Odin." The circumstances of the attunement event are not a matter of public record; he lost his left eye during it and emerged with three attunement manifestations that map one-to-one onto Odin Allfather (a skin-contact memory-touch that pulls flashes of recent memory, intent, and emotional residue rather than full literal recall, a pair of corporeal attunement-manifest ravens that accompany him constantly, and a ceremonial spear he carries publicly and calls Gungnir). Presents himself physically as a man in his mid-70s — long silver-grey hair, full grey beard, weathered complexion styled and maintained with a former tech founder\'s budget — while his visible torso unambiguously belongs to a man in his mid-40s. Industry attempts to prove the connection on record have failed.',
-    isAttuned: true,
-    operatorRank: null,
+    name: 'Elias "Odin" Wren',
   },
-  districtAnchor: "Tribeca, Manhattan",
-  districtIdHint: "district/tribeca",
-  baseLocation:
-    "A converted industrial warehouse in Tribeca. The public floor is a modern-Scandinavian-luxury timber hall with exposed oak beams, iron-framed glazing, a single long communal table, and a functioning open hearth that raised genuine objections from the fire marshal during inspection. A brushed-steel dispatch bullpen sits behind a glass wall at the back. Odin's office on the mezzanine is a private cell with a single ceremonial desk of oiled blackened oak and a wall mount for Gungnir. His two ravens are present throughout the space at all times.",
-  publicPitch:
-    "Asgard — a private-capital clearance firm founded by Odin, operating under full NYC licensing out of Tribeca.",
-  internalSummary:
-    "A ladder-rung-above rival who unlocks in the same competitive bracket as Straits Meridian, A-List Media, and Ashford Capital Partners but occupies a distinct shape: Asgard is personal. The firm is its founder and very little else behind him. Odin is former Silicon Alley founder Elias Wren, who emerged from an undisclosed attunement event in the early 2020s with three manifestations that map one-to-one onto the Norse Allfather — a skin-contact read that surfaces flashes of recent memory, intent, and emotional residue, two corporeal ravens that accompany him at all times, and a spear he carries publicly and calls Gungnir. Having no competing framework for why his specific attunements materialized on that specific pattern, he sincerely concluded he is Odin, scrubbed his prior identity from public records with tech-exit-scale resources, and has presented himself as the Allfather continuously since. He is unranked by policy — he refuses assessment on the grounds that the Allfather is not a candidate — and the spear's behavior in the rare instances he has fielded with it is enough that no one, including verified A-rank peers at other firms, contests the unranked status. His operators know he is not old, know the aged-appearance is a costume, and continue to play along in full because he is legitimately powerful, pays them exceptionally, and — not incidentally — his skin-contact read makes quiet defection or bid games feel unsafe around him. The tone inside Asgard is cult-of-personality sincerity and quiet workplace cynicism held in careful balance. The player is below Asgard on capital, below on media prestige, below on intelligence (Odin has met most people who matter), and cannot poach from Asgard on money alone. The player beats Asgard on volume of real clearance output, on contracts beneath Odin's personal interest, and on any engagement structured to avoid skin contact with the principal.",
-  pressureStyle:
-    "Capital-excess bidding and principal-centric commercial edge with a rarely-deployed but mythologically-specific principal threat. Asgard loses to the player on clearance volume, on outer-borough intelligence, on contracts not large enough to interest Odin, and on engagements the player structures to avoid any direct meeting with the principal. Asgard beats the player on tech-exit-scale capital runway that funds loss-leader prestige contracts the player cannot match, on the principal-handshake intelligence advantage that gives Asgard unnerving partial visibility into competitor intent, bid posture, and wavering operator loyalty after in-person contact, on cult-of-Odin operator retention that withstands poaching offers the player would need to float far above market to disturb, on press-myth amplification that cements the firm's prestige with profile features the player cannot counter-author, and on the rare tier-event deployment where Odin himself appears with Gungnir and the contested bid quietly evaporates.",
   pressureLane: "hybrid",
-  moveFamilyAffinities: [
-    "capital-excess bidding (tech-exit runway funds loss-leader prestige contracts that profitable competitors cannot match on margin alone)",
-    "principal-handshake intelligence (Odin personally onboards hires, opens negotiations, and attends industry events; his skin-contact read gives the firm partial visibility into competitor intent and operator wavering that no one can explain on record)",
-    "cult-of-Odin operator retention (sworn operator base with Norse internal rank vocabulary, weekly Long Hall dinners at the Tribeca warehouse, and 'seat at the long table' offer-letter language; poaching offers die at the compound and the operator-tenure curve is not financially explainable)",
-    "principal field-deployment as tier event (Odin himself takes the field with Gungnir on prestige contracts; rare, theatrical, legally unranked but universally uncontested; the scheduling threat alone reshapes competitor bid behavior)",
-    "press-myth amplification (the one-eyed tech-exit founder who calls himself Odin is an irresistible profile piece; quarterly features cement the firm's prestige regardless of what it actually cleared that quarter — distinct from A-List Media in that Odin passively attracts press rather than actively curating it)",
-  ],
-  rivalryFantasy:
-    "You are not competing with a firm. You are competing with a man who believes he is a god, and the people around him — his operators, his PR, the industry press, the licensing board — have all quietly agreed that the easiest thing is to let him believe it. When you walk into his Tribeca warehouse he stands at the hearth with two ravens at his shoulder and offers his hand, and you either shake it and accept that he has gotten a read on you or you refuse and become the person who publicly declined the Allfather's hand. The operators you trained and paid to hire leave to 'take their seat at the long table' and never come back. Your bids are anticipated before they are filed. The press cannot stop profiling him. And on the rare contested contract where it genuinely matters, he appears in person with a spear, and the room empties out. He is a ridiculous man. He is also genuinely dangerous. The rivalry fantasy is the slow realization that the whole city has agreed to play along and you are the only person left insisting he is a mid-40s founder from Silicon Alley.",
-  toneAndVoice:
-    "Performed archaic English layered over an unscrubbed tech-founder cadence that slips out at the edges. Addresses people by attunement-coded titles — 'warrior,' 'seer,' 'craftsman,' 'thane' — in casual speech, rarely by surname. Refers to his ravens by name (Huginn, Muninn) in the third person as if they are colleagues. Uses 'my hall' for the warehouse and 'the Nine' for the licensed districts. Never breaks character when confronted directly; his responses to skepticism are benevolent and tired, as if he has heard it all before across many lifetimes. Occasional tech-founder idioms ('optionality,' 'flywheel,' 'narrative compression') leak into his mythological register, and neither he nor anyone around him acknowledges the leak. Warm to those inside his hall. Courteously othering to outsiders. Never raises his voice. Never insults. Treats the licensing board with the exact polite civility the Aesir would extend to the Vanir.",
-  interruptionCopySamples: [
-    "Asgard has filed a competing bid. The All-Father welcomes a conversation — his calendar is open this week, in his hall.",
-    "A seat at the long table has been offered to one of your operators. The decision is theirs, of course.",
-    "Odin will be present on-site this weekend. Asgard respectfully suggests that any contested claim be withdrawn before field resolution becomes necessary.",
-    "The ravens flew this morning. The All-Father is aware of your Brooklyn Heights approach.",
-  ],
   copy: {
-    leaderboardName: "Asgard — Tribeca",
-    dossierOneLiner:
-      "Asgard is the Tribeca clearance firm of an anonymous Silicon Alley tech founder whose undisclosed attunement event left him with Odin's one-eye, two ravens, and a spear — and he has answered only to 'Odin' since.",
     currentRivalOneLiner:
       "Odin would like you to shake his hand. Everyone around him has agreed not to ask what the handshake does.",
-    publicBlurb:
-      "Asgard is a private-capital licensed clearance firm founded in Tribeca in the mid-2020s by Odin, the firm's sole principal. Asgard operates from a converted industrial warehouse and holds full NYC licensing. Asgard does not disclose its founder's prior identity.",
-    internalAuthorNote:
-      'Supports repeated "everyone plays along" beats — no journalist lands the old name cleanly on record, no operator confirms the costume on record, and every formal filing routes through a structure that keeps the myth intact in public. Supports principal-handshake intelligence beats — competitors and operators repeatedly discover that information they thought was private is partially legible to Asgard after a casual industry-event contact with Odin, but the read should stay bounded to recent intent, emotional residue, and strategic posture rather than omniscient mind-reading. Supports tier-event principal-deployment beats — Odin fielding with Gungnir is a rare, reshape-the-bid-landscape event, not a routine move; the threat of deployment moves markets. Supports cult-of-Odin retention beats — operators who have "taken their seat at the long table" will not leave for any counter-offer the player can float. Reusable visual and tonal seams: the ravens as a constant signature (portraits, meeting photos, and press appearances always include them), the face-body age mismatch as a repeatable comedy note, the Norse internal rank vocabulary and "Long Hall" dinner language, the tech-founder idiom leakage into his mythological register, the scrubbed-identity information seam (the public version is never fully pinned down). Attunement-axis foil across the roster: Adrian fields (B-rank), Celeste won\'t (A-rank verified, beneath her), Ren can\'t (A-rank claimed, unverified), Monty doesn\'t pretend (unattuned), and Odin refuses assessment (attuned, unranked-by-policy — no one contests the refusal because the spear does). Distinct from Golden Phoenix on ladder: Asgard is a ladder-rung-above rival, not a peer. Distinct from Ashford on commercial lane: Monty\'s sponsor-network is inherited social capital channeled through named clubs and boards; Odin\'s edge is personal capital, personal handshake intel, and personal myth — Asgard has no network behind the man. Avoid villain framing: his brand is warm, mythic, and above the tedium of hostility — the danger is that he means it.',
   },
   assetPaths: {
     leaderPortrait: "/data/rivals/asgard/leader-neutral.png",
     insignia: "/data/rivals/asgard/insignia.png",
   },
-  assetsShipped: true,
-} satisfies ReadyToWireRivalRecord;
+  narrativeProfile: {
+    operatingBase:
+      "A converted industrial warehouse in Tribeca. The public floor is a modern-Scandinavian timber hall with exposed oak beams, iron-framed glazing, a single long communal table, and a functioning open hearth the fire marshal argued about during inspection. A brushed-steel dispatch bullpen sits behind a glass wall at the back. Odin's mezzanine office holds a ceremonial desk of oiled blackened oak and a wall mount for Gungnir. His two corporeal ravens are present throughout the space at all times.",
+    publicPitch:
+      "Asgard — a private-capital clearance firm founded by Odin, operating under full NYC licensing out of Tribeca.",
+    pressureStyle:
+      "Capital-excess bidding and principal-centric commercial edge with a rarely-deployed, mythologically-specific principal threat. Asgard loses to you on clearance volume, outer-borough intelligence, and contracts too small to interest Odin. They beat you on tech-exit runway for loss-leader prestige bids, the principal-handshake intelligence advantage, cult-of-Odin operator retention, press-myth amplification, and the rare tier event where Odin himself appears with Gungnir and the contested bid quietly evaporates.",
+    rivalryFantasy:
+      "You are not competing with a firm. You are competing with a man who believes he is a god, and the people around him have quietly agreed the easiest thing is to let him believe it. You walk into his Tribeca hall and he offers his hand at the hearth with two ravens at his shoulder. The operators you trained leave to take their seat at the long table and never come back. The press cannot stop profiling him. He is a ridiculous man and genuinely dangerous, and the whole city has agreed to play along.",
+    toneAndVoice:
+      "Performed archaic English layered over an unscrubbed tech-founder cadence that slips at the edges. Addresses people by attunement-coded titles — warrior, seer, craftsman, thane. Refers to Huginn and Muninn by name as if they are colleagues. 'My hall,' 'the Nine.' Never breaks character when confronted. Occasional tech-founder idioms (optionality, flywheel) leak into the mythological register and no one acknowledges the leak. Warm to those inside his hall. Courteously othering to outsiders. Never raises his voice.",
+  },
+  moves: [
+    {
+      id: "rival-move/asgard/competing-bid-handshake",
+      family: "contract_challenge",
+      weight: 10,
+      cooldownMinutes: 1440,
+      briefingTemplate:
+        "Asgard has filed a competing bid. The All-Father welcomes a conversation — his calendar is open this week, in his hall.",
+      basePublicPressureDelta: 5,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "accept-the-hall",
+          label: "Accept the meeting at the hall",
+          description: "Shake the offered hand and sit for the conversation at the long table.",
+          consequenceSummary: "Contract pressure eases. Odin leaves knowing more than you brought.",
+          effects: [
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+            { kind: "intel_delta", targetRef: "guild", value: -3 },
+          ],
+        },
+        {
+          choiceId: "counter-by-wire",
+          label: "Counter-bid in writing, skip the hall",
+          description: "File your own amended bid and decline the hearth invitation.",
+          consequenceSummary: "Treasury down. No handshake, no leak.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -160 },
+            { kind: "reputation_delta", targetRef: "guild", value: 1 },
+          ],
+        },
+        {
+          choiceId: "decline-publicly",
+          label: "Publicly decline the All-Father",
+          description: "Let industry press learn you refused the hand.",
+          consequenceSummary: "Press gravity tilts toward Asgard.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 4 },
+            { kind: "reputation_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/asgard/long-table-offer",
+      family: "recruitment_market_loss",
+      weight: 8,
+      cooldownMinutes: 2880,
+      briefingTemplate:
+        "A seat at the long table has been offered to one of your operators. The decision is theirs, of course.",
+      basePublicPressureDelta: 3,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "match-the-offer",
+          label: "Match the offer",
+          description: "Float a retention package above your current band.",
+          consequenceSummary: "Treasury spent. Operator stays, for now.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -120 },
+            { kind: "loyalty_delta", targetRef: "team", value: 1 },
+          ],
+        },
+        {
+          choiceId: "let-them-walk",
+          label: "Let them take the seat",
+          description: "Accept the loss; the operator goes to Asgard.",
+          consequenceSummary: "Morale dips. Industry notes the trend.",
+          effects: [
+            { kind: "morale_delta", targetRef: "team", value: -2 },
+            { kind: "team_cohesion_delta", targetRef: "team", value: -1 },
+            { kind: "public_pressure_delta", targetRef: "guild", value: 2 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/asgard/principal-field-threat",
+      family: "site_arrival",
+      weight: 5,
+      cooldownMinutes: 4320,
+      briefingTemplate:
+        "Odin will be present on-site this weekend. Asgard respectfully suggests that any contested claim be withdrawn before field resolution becomes necessary.",
+      basePublicPressureDelta: 8,
+      baseIntensityDelta: 4,
+      choices: [
+        {
+          choiceId: "withdraw-claim",
+          label: "Withdraw the contested claim",
+          description: "Pull out before the principal arrives.",
+          consequenceSummary: "Treasury untouched. Reputation takes the knock.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: -2 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "hold-the-site",
+          label: "Hold the site",
+          description: "Field your crew anyway; let Odin arrive if he arrives.",
+          consequenceSummary: "Intensity spikes. Reputation up if the floor still ships.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+          ],
+        },
+      ],
+    },
+  ],
+} satisfies RivalRecord;

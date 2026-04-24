@@ -554,7 +554,7 @@ function buildDRankContractPostings() {
       risk: metricEnvelope("risk"),
       bidCost: metricEnvelope("bidCost"),
       notes: [
-        "Computed at D-rank with neutral city pressure and guild intel fixed at 0.",
+        "Computed at D-rank with neutral public pressure and guild intel fixed at 0.",
         `Mission base duration: ${mission.baseDurationHours}h.`,
       ],
     };

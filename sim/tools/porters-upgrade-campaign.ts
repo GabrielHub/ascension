@@ -275,8 +275,8 @@ export function createPortersUpgradeCampaignSeedWorld(): WorldSnapshot {
     itemId,
     quantity,
   }));
-  if (relocatedWorld.cityPressure) {
-    relocatedWorld.cityPressure.factions = relocatedWorld.cityPressure.factions.map((faction) =>
+  if (relocatedWorld.factionRelationships) {
+    relocatedWorld.factionRelationships = relocatedWorld.factionRelationships.map((faction) =>
       faction.factionId === "faction/emergency-management"
         ? { ...faction, standing: Math.max(faction.standing, 5) }
         : faction,

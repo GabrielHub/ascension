@@ -35,7 +35,8 @@ const VALID_KINDS: Set<string> = new Set<EventLogKind>([
   "raid_result",
   "team_status",
   "room_culture",
-  "city_pressure",
+  "public_pressure",
+  "rival_pressure",
   "incident_resolved",
   "social_fallout",
 ]);

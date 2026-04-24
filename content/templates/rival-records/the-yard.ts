@@ -1,65 +1,130 @@
-import type { ReadyToWireRivalRecord } from "./schema";
+import type { RivalRecord } from "./schema";
 
 export const theYardRivalRecord = {
   id: "rival/the-yard",
-  status: "ready-to-wire",
   guildName: "The Yard",
   shortDisplayName: "The Yard",
-  branchSuffix: "Parkchester",
-  parentGuild: null,
   leader: {
-    fullName: 'Tahmina "Mina" Hossain',
-    ageRange: "late 20s",
-    background:
-      "Bangladeshi-American, born and raised in Parkchester, the Bronx. Oldest of three in a family that came up from Jamaica, Queens before she was born and has been in the same Parkchester Metropolitan Oval apartment since 2001. Public school through Christopher Columbus HS in Pelham Parkway. Attuned at nineteen during a 2017 licensing screen; initial B-rank license, reclassified A in 2021 after two years of clearance work with Halcyon Clearance Group — a mid-Manhattan prestige clearance firm that specialized in insured-tier commercial dungeon contracts and carried the client-book reputation of the city's cleanest combat roster. Was the designated front-line defender on Halcyon's Priority Response team. In March 2024, on a Hunts Point insured-commercial clearance that escalated past its threat briefing, Halcyon's Priority Response team was wiped in under six minutes; Mina was the only member to walk out of the site, with her commissioned plate taking the specific helmet crack she still fields in. Halcyon dissolved administratively by late 2024 after the firm's insurance reserves collapsed under claim load. The other Priority Response survivors — two field leads and the team medic who had rotated off that raid — stepped off field work inside the year: one took a clearance-operations research fellowship at Columbia, one runs licensing liaison for the State Attuned Affairs Office in Albany, one teaches tactical briefing at the NYU Kressel Pipeline. Mina is the only member of the former Halcyon Priority Response roster still fielding. Founded The Yard out of a converted Castle Hill Avenue auto-body yard in spring 2025 with a partial severance settlement from the Halcyon dissolution and a loan from a family cousin who runs a Parkchester car-service dispatch. Still lives in the same Parkchester apartment she grew up in. Speaks Bengali at home and in the neighborhood; English everywhere else.",
-    isAttuned: true,
-    operatorRank: "A",
+    name: 'Tahmina "Mina" Hossain',
   },
-  districtAnchor: "Parkchester, the Bronx",
-  districtIdHint: "district/parkchester",
-  baseLocation:
-    "A converted two-story former auto-body and taxi-dispatch building on a light-industrial stretch of Castle Hill Avenue, a ten-minute walk from the Parkchester 6 stop. The original business's repainted roll-up steel gate fronts the sidewalk with THE YARD stenciled across it in oxide-red block caps over whatever the previous tenant's shop name used to say; the old sign panel is still visible under the paint if you look. Behind the gate: a chain-link enclosed asphalt yard with weight sleds, a full-kit armor drill rack, a shield-wall drill circle chalked directly onto the asphalt, and a single folding card table where Mina takes walk-in applicant interviews on clear days. Ground-floor interior: a small front office with a dispatch desk, contract filings in a gray steel four-drawer, and a folding chair for clients; past the office, the old body shop's tooled concrete floor now serves as indoor drill space for bad-weather training, with armor lockers along one wall and a working smith's bench in the back corner where the commissioned plate is maintained between contracts. Upstairs: Mina's office, which is a desk and two chairs, and a roster bunk room with six cots for rookies who do not make it home between shifts. No signage outside beyond the painted gate. No reception. Clients ring the gate bell.",
-  publicPitch:
-    "The Yard — a Bronx combat-clearance guild out of Parkchester, founded and fielded by licensed A-rank attuned Tahmina Hossain.",
-  internalSummary:
-    "A below-and-climbing labor-market rival occupying the roster's only 'A-rank principal who actually fields and visibly takes hits' slot. Mina is a Parkchester-raised Bangladeshi-American A-rank attuned and the sole surviving fielder of the former Halcyon Clearance Group Priority Response team, which was wiped on a Hunts Point insured-commercial clearance in March 2024; Halcyon dissolved by late 2024, the other survivors stepped off field work, and Mina opened The Yard out of a Castle Hill Avenue converted auto-body yard in spring 2025 as a deliberate repudiation of the prestige-firm model that killed her team. The Yard is combat-first, mid-tier, high-tempo, and structurally small: a rotating roster of rookies Mina recruits out of Parkchester and adjacent Bronx neighborhoods — kids other licensed guilds would not look at — drilled hard through an eight-month cycle and fielded in rookie-plus-Mina crews on mid-tier combat clearances around the Bronx and increasingly into upper Manhattan and Hunts Point. The guild grinds contract volume; it does not pursue prestige, media, sponsor networks, or above-tier work. The rivalry runs on three overlapping edges: pipeline-training supply (The Yard's rookies become the mid-tier market's hires in twelve to eighteen months, and wash-outs arrive at the player's guild pre-hardened with Mina's tactical habits and a compensation anchor Mina set), mid-tier combat contract absorption (Mina's crews grind the bread-and-butter Bronx combat volume the player's roster depends on for base revenue), and visible-principal-in-the-field pressure (Mina is on-site at every contract in damaged commissioned plate with the specific Halcyon-wipe helmet crack, and her visibility is a standing industry signal). Distinct from every existing rival: Kin compresses labor-market through U-rank indifference and vibes-audition recruiting; V compresses it through zero-overhead margin economics and charm-poach recruiting; The Yard compresses it through pipeline-training supply and high-tempo mid-tier combat throughput. Distinct on attunement axis: Adrian fields (B-rank), Celeste will not (A verified, beneath her), Ren cannot (A claimed, unverified), Monty does not pretend (unattuned by choice), Odin refuses ranking (attuned, unranked-by-policy), Frankie fields on a whim (U-rank), Vesper categorically cannot field (non-human principal), DELILA is cosmetically attuned (F-rank figurehead) — Mina is A-rank and actively fields with visible accumulated damage. The player is below The Yard on mid-tier combat contract throughput in the Bronx, on borough-native recruiting among rookies who trust Mina before they trust any Manhattan firm, and on principal-in-the-field credibility in the clearance-operator community. The player beats The Yard on any contract gated by media polish, on above-tier work Mina does not pursue, on Manhattan commercial clearances where Halcyon-adjacent client memory is a cost rather than an asset, and on any engagement requiring executive-team sophistication Mina has neither built nor wanted.",
-  pressureStyle:
-    "Pipeline-training labor-market supply layered with mid-tier combat contract absorption and visible-principal-in-the-field signal. The Yard loses to the player on any contract gated by media polish, executive-suite sophistication, or sponsor-network credentialing, on above-tier and institutional contracts Mina does not pursue, on Manhattan prestige-commercial clearances where Halcyon-adjacent client memory quietly costs The Yard the bid, and on any contract where the client's decision-maker requires a glossy principal rather than one who arrives on-site in accumulated plate at dawn. The Yard beats the player on Bronx and Hunts Point mid-tier combat throughput (Mina's rookie-plus-A-rank crews grind a volume of bread-and-butter combat clearances the player's roster cannot match shift-for-shift), on pipeline-trained operator supply (Mina's eight-month drill cycle produces reliable mid-tier combat operators out of rookies other licensed guilds will not look at, and those operators become the mid-tier hires the player is competing for in twelve to eighteen months), on wash-out compensation anchoring (rookies who do not finish the cycle arrive at the player's guild pre-hardened with The Yard's specific tactical habits and a compensation ask Mina implicitly set), on borough-native recruiting trust (Parkchester and Castle Hill rookies trust Mina before they trust any Manhattan guild that has never stood on their block), and on principal-in-the-field credibility (Mina is visibly on-site in damaged commissioned plate at every Yard contract; the specific Halcyon-wipe helmet crack she fields in is an industry-recognized signal that the principal has survived what a Manhattan prestige roster did not, and it reads as a standing rebuke to any guild whose principal does not deploy).",
   pressureLane: "labor-market",
-  moveFamilyAffinities: [
-    "pipeline-training operator supply (Mina runs an eight-month drill cycle on rookies recruited out of Parkchester, Castle Hill, Soundview, and adjacent Bronx neighborhoods — kids whose credentials, license class, or recruitment-circuit pedigree would keep them out of the player's intake — and produces reliable mid-tier combat operators on the other end; those operators become the mid-tier hires the player is chasing in twelve to eighteen months)",
-    "wash-out compensation anchoring (rookies who do not finish the Yard cycle apply to the player's guild pre-hardened, carrying The Yard's specific shield-wall and armor-discipline tactical habits and an implicit compensation ask Mina set inside her own payroll; the player negotiates from below that anchor or loses the candidate)",
-    "mid-tier combat contract absorption (The Yard grinds a high volume of mid-tier combat clearances in the Bronx and into Hunts Point and upper Manhattan; Mina's rookie-plus-A-rank crews ship contracts shift after shift because they are drilled for endurance and tempo, and the bread-and-butter volume the player's guild depends on for base revenue is where The Yard hits hardest)",
-    "visible-principal-in-the-field signal (Mina is on-site at every Yard contract in damaged commissioned plate; the specific Halcyon-wipe helmet crack she fields in is an industry-recognized signal; her visibility on a clearance site reads in the operator community as a standing statement that the principal is not above the work, and any guild whose principal does not deploy carries that asymmetry into recruiting conversations)",
-    "borough-native recruiting trust (Parkchester and adjacent Bronx rookies trust Mina before they trust any Manhattan guild that has never stood on their block; her intake captures candidates the player's recruiting never reaches, and the player's Bronx recruiting tends to meet a candidate who has already had a Yard conversation)",
-    "anti-prestige repudiation branding (The Yard's public brand — the stenciled roll-up gate, the chain-link drill yard, the absence of press, the refusal of above-tier work — is a deliberate inversion of the Halcyon-prestige register that killed Mina's old team; for operators and clients with prestige-firm scar tissue, the repudiation is itself the pitch, and the player's more polished surfaces read to that audience as the pattern Halcyon matched)",
-    "taskmaster attrition as a standing industry fact (not every rookie finishes the cycle; Mina is known to be hard on effort discipline, shield-wall form, and flinch correction, and the washout rate is part of the operator-community understanding of what 'trained at The Yard' means — which raises the market value of operators who did finish and sets the compensation conversation for ones who did not)",
-  ],
-  rivalryFantasy:
-    "You cannot out-polish her. She does not want what you want. The Yard takes the Bronx mid-tier combat contracts your roster depends on for volume, shift after shift, and Mina is on every one of them in the damaged plate the whole industry knows the crack in. The rookie you passed on last fall is fielding for her now and has shipped four contracts in six weeks. The recruit you are interviewing next week trained at The Yard and did not finish, and the compensation conversation starts at a number you did not choose. The Parkchester kid you drove an hour to meet at a Castle Hill diner has already sat at Mina's folding card table in the drill yard and been offered a bunk and an eight-month cycle, and your hour drive is for a conversation that has already ended. You are meaningfully better-funded, better-branded, better-connected, and structurally above The Yard on every surface that shows up in a trade-press profile — and the profile does not run, because Mina does not sit for them, and the Bronx does not read them. The rivalry fantasy is not that Mina is winning; she is not competing for your position. The rivalry fantasy is that the city's mid-tier combat labor market has quietly reoriented around her drill yard, that the operators you need in two years are her rookies this year, and that her visible presence at dawn in a helmet cracked by the wipe your industry prefers not to discuss is a standing argument against the kind of guild you are trying to be. There is no insult in it. Mina does not speak about your guild, and would not, and you would almost prefer if she did.",
-  toneAndVoice:
-    "Direct outer-borough New York cadence with the specific flatness of a person who has been on a clearance site for four hours already when you meet her. Not tired as performance; just someone finishing their second coffee without ceremony. Bronx working-class register, no code-switch up for clients or licensing officers; the same voice to a rookie on their first drill morning, to a contract office, to a sponsor's general counsel. Uses the industry vocabulary flatly — 'the site,' 'the contract,' 'the roster,' 'the cycle' — without the modifiers a prestige principal would layer in. Does not perform warmth. Does not perform toughness either; the toughness is structural, not affective. When Mina corrects a rookie, the correction is specific, brief, and not repeated, and the rookie does the thing correctly the next time or leaves the cycle. When Mina declines a client, the decline is one sentence and the client does not argue. Never references Halcyon on record; when asked, replies that Halcyon is dissolved and the question is already answered. Never discusses the helmet crack; when photographed, does not remove the helmet for the shot. Low-affect, specific, present, short. Bengali surfaces only in family and neighborhood contexts that do not appear in player-facing copy. Rookies on the cycle call her 'Mina'; clients call her 'Ms. Hossain' in the first meeting and 'Mina' by the third. She answers to both without commenting on the shift. The voice is not cold — it is simply the voice of a person who does not need the conversation to do anything other than what it is for.",
-  interruptionCopySamples: [
-    "The Yard has taken the Hunts Point commercial-clearance contract you bid on. Mina is already on-site in the damaged plate with three rookies you recognize from last winter's open-house intake.",
-    "A prospect you passed on in the fall is fielding for The Yard. He has shipped four mid-tier clearances in six weeks. His LinkedIn-equivalent licensing profile now lists 'Cycle 2025-Q2, The Yard, Parkchester' as the only credential.",
-    "A former Yard rookie has applied to your guild. She did not finish Mina's eight-month cycle. Her compensation ask is tighter than you expected and she does not negotiate on the shield-drill language in her cover letter.",
-    "Two of your operators saw Mina at the West Farms clearance yard at 7:20 this morning. The helmet crack was visible without the hood. She nodded at them and went back to briefing her crew.",
-    "A Bronx clearance-industry newsletter has run a 400-word profile naming The Yard the most-hired-away-from combat pipeline in the borough. The profile does not include comment from Mina. The reporter noted, in a footnote, that the request was declined in one sentence.",
-  ],
   copy: {
-    leaderboardName: "The Yard — Parkchester",
-    dossierOneLiner:
-      "The Yard is a Bronx combat-clearance guild out of a converted Castle Hill Avenue auto-body yard, founded and fielded by licensed A-rank attuned Tahmina Hossain — the only former Halcyon Clearance Group Priority Response fielder still raiding after the team's March 2024 wipe and Halcyon's late-2024 dissolution.",
     currentRivalOneLiner:
       "Mina is on-site in the damaged plate at 7am and your best Bronx recruit trained at The Yard.",
-    publicBlurb:
-      "The Yard is a licensed New York clearance guild based in Parkchester, the Bronx, operating since spring 2025 out of a converted facility on Castle Hill Avenue. Principal and designated first-line fielder is A-rank attuned Tahmina Hossain. The Yard operates an eight-month rookie training cycle and takes mid-tier combat-clearance contracts in the Bronx and adjacent districts. The guild does not maintain a press office. Applicant interviews are conducted in person at the Castle Hill facility by Tahmina Hossain.",
-    internalAuthorNote:
-      "Supports repeated mid-tier combat contract loss beats — The Yard grinds bread-and-butter Bronx combat volume shift after shift, and the player loses base-revenue contracts to Mina's drilled rookie-plus-A-rank crews rather than to a single prestige competitor. Supports repeated pipeline-training recruiting beats — prospects the player passed on surface six to twelve months later as fielding Yard operators, and wash-outs arrive at the player's guild pre-hardened with Mina's specific shield-wall and armor-discipline tactical habits and an implicit compensation anchor Mina set. Supports visible-principal-in-the-field beats — Mina fields every contract; she is on-site in damaged commissioned plate at dawn in all weather, visible to passing operators and the occasional news camera, and her presence at a Bronx clearance site is itself reusable pressure copy. Supports Halcyon-wipe anchor beats sparingly — the commissioned plate carries the specific helmet crack from the March 2024 Halcyon Priority Response wipe; the crack is maintained, not repaired; Halcyon dissolved institutionally by late 2024; the other survivors are alive and working (Columbia research fellowship, State Attuned Affairs Office licensing liaison, NYU Kressel Pipeline tactical briefing instructor); Mina is the only former Priority Response member still fielding. The Halcyon thread is a worldbuilding anchor, not a reveal arc — drop references into dossier and interruption copy sparingly, never resolve them into a long-form flashback, and never write Mina as avenging her team. Supports anti-prestige repudiation beats — The Yard's stenciled gate, chain-link drill yard, absent press office, and refusal of above-tier work are a standing public argument against the prestige-firm register, and the player's own glossier surfaces read to a scar-tissued operator audience as the pattern Halcyon matched. Attunement-axis slot across the roster: Adrian fields (B-rank), Celeste will not (A verified, beneath her), Ren cannot (A claimed, unverified), Monty does not pretend (unattuned by choice), Odin refuses ranking (attuned, unranked-by-policy), Frankie fields on a whim (U-rank), Vesper categorically cannot field (non-human principal), DELILA is cosmetically attuned (F-rank figurehead) — Mina is the roster's only 'A-rank who actually takes contracts and takes hits' slot and this should be protected when future A-rank rivals are added. Labor-market-lane variety across the roster: Kin compresses the mid-tier through U-rank indifference and vibes-audition recruiting; V compresses it through zero-overhead margin economics and charm-poach recruiting; The Yard compresses it through pipeline-training supply and high-tempo mid-tier combat throughput. The three should not converge — if a future labor-market rival collapses toward any of these three seams, rewrite. Geographic slot: Kin is Ridgewood (Queens), V is Long Island City (Queens), NYU Kressel is Greenwich Village (Manhattan), A-List Media / Ashford / Asgard / Straits Meridian / Golden Phoenix Palace are Manhattan-centered — The Yard is the first Bronx-anchored rival, and the Bronx-native recruiting and Halcyon-scarred Hunts Point commercial-clearance context should stay local to this rival. Reusable visual seams: Mina's silhouette on-site at dawn in accumulated commissioned plate; the specific Halcyon-wipe helmet crack; the tattered combat hood under the helmet; the hand-painted 'THE YARD' stencil over the repainted roll-up gate; the restrained Bengali-architectural geometric grace note on pauldrons and on the insignia as a maker's seal. Reusable tonal seams: Mina's even, low-affect Bronx cadence; no performance for clients; no mentor softness for rookies; the one-sentence client decline; the 'Halcyon is dissolved and the question is already answered' deflection; the refusal of press comment as a standing gesture rather than a messaging strategy. Avoid: paladin / crusader / Christian-knight framing (secular-modern-paladin silhouette only; no cross iconography; no holy-light halation; no sunburst heraldry; the word 'paladin' is a silhouette description and must not appear in player-facing copy); religious-Muslim-signal framing (Mina is Bangladeshi-American from Parkchester; her faith, if any, is not the story; the under-helmet hood is a tattered combat hood, not hijab); avenging-sole-survivor framing (Halcyon dissolved institutionally, the other survivors are alive and working, and there is no avenging arc); warm-mentor framing (she is a taskmaster; effort earns tolerance, flinch earns correction, affection is not a workplace output); inspirational-underdog framing (The Yard is not a scrappy feel-good story; it is a functioning grinding combat-clearance business); gothic-grimdark or theatrical-battle-damaged aesthetic (the damage is maintained working wear, smith-kept, not decorative grit); Halcyon-as-live-rival drift (Halcyon is dissolved; do not resurrect it, do not write Halcyon-era characters as active antagonists); any framing that privileges Mina's personal trauma over The Yard's institutional identity in branding or marketing surfaces.",
   },
   assetPaths: {
     leaderPortrait: "/data/rivals/the-yard/leader-neutral.png",
     insignia: "/data/rivals/the-yard/insignia.png",
   },
-  assetsShipped: true,
-} satisfies ReadyToWireRivalRecord;
+  narrativeProfile: {
+    operatingBase:
+      "A converted two-story former auto-body and taxi-dispatch building on a light-industrial stretch of Castle Hill Avenue, ten minutes from the Parkchester 6 stop. The original business's repainted roll-up steel gate fronts the sidewalk with THE YARD stenciled across it in oxide-red block caps. Behind the gate: a chain-link enclosed asphalt yard with weight sleds, a full-kit armor drill rack, a shield-wall drill circle chalked onto the asphalt, and a single folding card table where Mina takes walk-in applicant interviews. Ground floor: dispatch office, indoor drill space, armor lockers along one wall, a working smith's bench in the back corner where the commissioned plate is maintained. Upstairs: Mina's office and a roster bunk room with six cots.",
+    publicPitch:
+      "The Yard — a Bronx combat-clearance guild out of Parkchester, founded and fielded by licensed A-rank attuned Tahmina Hossain.",
+    pressureStyle:
+      "Pipeline-training labor-market supply layered with mid-tier combat contract absorption and visible-principal-in-the-field signal. The Yard loses to you on any contract gated by media polish, executive-suite sophistication, or sponsor-network credentialing, on above-tier and institutional contracts Mina does not pursue, and on Manhattan prestige-commercial clearances where Halcyon-adjacent client memory quietly costs the bid. The Yard beats you on Bronx and Hunts Point mid-tier combat throughput, on pipeline-trained operator supply (Mina's eight-month drill cycle produces reliable mid-tier operators from rookies other guilds will not look at), on wash-out compensation anchoring (Yard wash-outs arrive at your guild pre-hardened with Mina's tactical habits and an implicit compensation ask), on borough-native recruiting trust, and on principal-in-the-field credibility — Mina is visibly on-site in damaged commissioned plate at every Yard contract.",
+    rivalryFantasy:
+      "You cannot out-polish her. She does not want what you want. The Yard takes the Bronx mid-tier combat contracts your roster depends on for volume, shift after shift, and Mina is on every one of them in the damaged plate the whole industry knows the crack in. The rookie you passed on last fall is fielding for her now. The recruit you are interviewing next week trained at The Yard and did not finish, and the compensation conversation starts at a number you did not choose. You are meaningfully better-funded, better-branded, better-connected — and the trade-press profile does not run, because Mina does not sit for them, and the Bronx does not read them. The rivalry fantasy is not that Mina is winning; she is not competing for your position. The rivalry fantasy is that the city's mid-tier combat labor market has quietly reoriented around her drill yard, and her visible presence at dawn in a helmet cracked by the wipe your industry prefers not to discuss is a standing argument against the kind of guild you are trying to be.",
+    toneAndVoice:
+      "Direct outer-borough New York cadence with the specific flatness of a person who has been on a clearance site for four hours already when you meet her. Bronx working-class register, no code-switch up for clients or licensing officers; the same voice to a rookie on their first drill morning, to a contract office, to a sponsor's general counsel. Uses industry vocabulary flatly — 'the site,' 'the contract,' 'the roster,' 'the cycle' — without the modifiers a prestige principal would layer in. Does not perform warmth. Does not perform toughness either; the toughness is structural, not affective. Corrections are specific, brief, and not repeated. Declines are one sentence and the client does not argue. Never references Halcyon on record; when asked, replies that Halcyon is dissolved and the question is already answered. Never discusses the helmet crack; when photographed, does not remove the helmet for the shot. Low-affect, specific, present, short.",
+  },
+  moves: [
+    {
+      id: "rival-move/the-yard/commercial-contract-taken",
+      family: "contract_challenge",
+      weight: 9,
+      cooldownMinutes: 1440,
+      briefingTemplate:
+        "The Yard has taken the Hunts Point commercial-clearance contract you bid on. Mina is already on-site in the damaged plate with three rookies you recognize from last winter's open-house intake.",
+      basePublicPressureDelta: 5,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "file-scope-protest",
+          label: "File a scope protest",
+          description: "Challenge the award on procurement grounds.",
+          consequenceSummary: "Treasury cost. Contract stays with The Yard.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -140 },
+            { kind: "reputation_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "rotate-to-next",
+          label: "Rotate the crew onto the next contract",
+          description: "Accept the loss. Keep shipping volume.",
+          consequenceSummary: "Morale dips. No cost.",
+          effects: [
+            { kind: "morale_delta", targetRef: "team", value: -2 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/the-yard/washout-compensation-anchor",
+      family: "recruitment_market_loss",
+      weight: 8,
+      cooldownMinutes: 2880,
+      briefingTemplate:
+        "A former Yard rookie has applied to your guild. She did not finish Mina's eight-month cycle. Her compensation ask is tighter than you expected and she does not negotiate on the shield-drill language in her cover letter.",
+      basePublicPressureDelta: 2,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "accept-anchor",
+          label: "Sign at her ask",
+          description: "Take the pre-hardened operator at Mina's implicit compensation anchor.",
+          consequenceSummary: "Treasury cost. Team cohesion up.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -90 },
+            { kind: "team_cohesion_delta", targetRef: "team", value: 2 },
+          ],
+        },
+        {
+          choiceId: "counter-below",
+          label: "Counter below her ask",
+          description: "Try to negotiate under The Yard's compensation floor.",
+          consequenceSummary: "Candidate walks. Morale dips.",
+          effects: [
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+            { kind: "loyalty_delta", targetRef: "team", value: -1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/the-yard/principal-at-dawn",
+      family: "public_comparison",
+      weight: 7,
+      cooldownMinutes: 2160,
+      briefingTemplate:
+        "Two of your operators saw Mina at the West Farms clearance yard at 7:20 this morning. The helmet crack was visible without the hood. She nodded at them and went back to briefing her crew.",
+      basePublicPressureDelta: 4,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "deploy-principal",
+          label: "Field a visible senior on the next site",
+          description:
+            "Match the principal-in-the-field signal. Put a senior operator on dawn briefing.",
+          consequenceSummary: "Reputation up. Morale holds.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+            { kind: "morale_delta", targetRef: "team", value: 1 },
+          ],
+        },
+        {
+          choiceId: "ignore-comparison",
+          label: "Keep the command structure",
+          description: "Do not match the field-presence theatre.",
+          consequenceSummary: "Public pressure rises. Team cohesion holds.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+            { kind: "team_cohesion_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+  ],
+} satisfies RivalRecord;

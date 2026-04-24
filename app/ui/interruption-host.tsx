@@ -12,6 +12,7 @@ import type { GuidancePayload, RelocationPayload } from "sim/systems/interruptio
 import { GameModal } from "./game-modal";
 import { getIncidentCategoryMeta } from "./_glossary";
 import { PresenterPanel, type PresenterBindingProps } from "./presenter-panel";
+import { RivalMoveModal } from "./rival-move-modal";
 
 // ── Props ─────────────────────────────────────────────────────────────────
 
@@ -583,6 +584,11 @@ export function InterruptionHost({
     case "guidance":
       return (
         <GuidanceModal instance={activeInterruption} payload={payload} onResolve={handleResolve} />
+      );
+
+    case "rival_move":
+      return (
+        <RivalMoveModal instance={activeInterruption} payload={payload} onResolve={handleResolve} />
       );
 
     default:

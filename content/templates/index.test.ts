@@ -27,7 +27,7 @@ describe("template registry", () => {
     expect(registry.items).toHaveLength(166);
     expect(registry.prepRecipes).toHaveLength(6);
     expect(registry.districts).toHaveLength(5);
-    expect(registry.factions).toHaveLength(5);
+    expect(registry.factions).toHaveLength(4);
     expect(registry.craftRecipes).toHaveLength(19);
     expect(registry.dropTables).toHaveLength(102);
     expect(registry.missions.map((mission) => mission.id)).toEqual([
@@ -88,15 +88,10 @@ describe("template registry", () => {
     });
   });
 
-  it("validates rival records, status contracts, and shipped asset paths", () => {
+  it("validates rival records and shipped asset paths", () => {
     expect(validateRivalRecords()).toEqual([]);
 
     readyToWireRivals.forEach((rival) => {
-      expect(rival.assetsShipped).toBe(true);
-      expect(rival.assetPaths).not.toBeNull();
-      if (!rival.assetPaths) {
-        return;
-      }
       expect(
         existsSync(resolve(process.cwd(), "public", rival.assetPaths.leaderPortrait.slice(1))),
       ).toBe(true);
@@ -115,7 +110,6 @@ describe("template registry", () => {
       "pressure:loyalty",
       "pressure:cash",
       "pressure:time",
-      "pressure:rivalry",
       "pressure:exposure",
       "pressure:prestige",
     ]);
@@ -146,7 +140,6 @@ describe("template registry", () => {
     expect(categories).toContain("departure_warning");
     expect(categories).toContain("room_tension");
     expect(categories).toContain("supply_shortage");
-    expect(categories).toContain("rival_poaching");
     expect(categories).toContain("morale_surge");
     expect(categories).toContain("contract_opportunity");
   });

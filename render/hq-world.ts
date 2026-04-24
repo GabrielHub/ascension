@@ -12,6 +12,7 @@ import {
 } from "lib/hq-environment-manifest";
 import {
   HQ_PROP_ASSET_PATHS,
+  findHqRoomSceneBinding,
   type HqFallbackPropAssetKey,
   resolveHqRoomSceneAssetUrl,
 } from "lib/svg-asset-contract";
@@ -1297,24 +1298,26 @@ function buildRoomProps(
     const activeTopCorner = projectIso(active.col, active.row, floorOrigin.x, floorOrigin.y);
     const roomOpacity = room.isOperational ? 1 : 0.35;
 
-    const resolvedSceneUrl = resolveHqRoomSceneAssetUrl(
-      buildingId,
-      room.templateId,
-      room.roomStateId,
-    );
+    const sceneBinding = findHqRoomSceneBinding(buildingId, room.templateId, room.roomStateId);
+    const resolvedSceneUrl =
+      sceneBinding?.assetId ??
+      resolveHqRoomSceneAssetUrl(buildingId, room.templateId, room.roomStateId);
 
     if (resolvedSceneUrl) {
-      // Room scenes are authored in a canonical footprint (usually 4x3). Center that
-      // authored frame within the runtime slot so wider/taller rooms still align.
-      const sceneAnchorCol = reserved.col + (reserved.cols - sceneSystem.roomFootprint.cols) / 2;
-      const sceneAnchorRow = reserved.row + (reserved.rows - sceneSystem.roomFootprint.rows) / 2;
+      const authoredFootprint = sceneBinding?.sceneFootprint ?? sceneSystem.roomFootprint;
+      const authoredViewBox = sceneBinding?.sceneViewBox ?? sceneSystem.canonicalViewBox;
+      const authoredOrigin = sceneBinding?.sceneOrigin ?? sceneSystem.canonicalOrigin;
+      // Room scenes declare the footprint they were authored against. Center that
+      // authored frame inside the runtime slot so wider/taller rooms still align.
+      const sceneAnchorCol = reserved.col + (reserved.cols - authoredFootprint.cols) / 2;
+      const sceneAnchorRow = reserved.row + (reserved.rows - authoredFootprint.rows) / 2;
       const scene = {
-        svgOriginX: sceneSystem.canonicalOrigin[0],
-        svgOriginY: sceneSystem.canonicalOrigin[1],
-        svgWidth: sceneSystem.canonicalViewBox.width,
-        svgHeight: sceneSystem.canonicalViewBox.height,
-        viewBoxMinX: sceneSystem.canonicalViewBox.minX,
-        viewBoxMinY: sceneSystem.canonicalViewBox.minY,
+        svgOriginX: authoredOrigin[0],
+        svgOriginY: authoredOrigin[1],
+        svgWidth: authoredViewBox.width,
+        svgHeight: authoredViewBox.height,
+        viewBoxMinX: authoredViewBox.minX,
+        viewBoxMinY: authoredViewBox.minY,
       };
       const placement: HqStaticPlacementDef = {
         id: `${room.id}/scene`,

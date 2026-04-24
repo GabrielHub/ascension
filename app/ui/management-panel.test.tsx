@@ -2,11 +2,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { readyToWireRivals } from "content/templates/rivals";
 import { DEFAULT_POLICY_STATE } from "lib/policies";
 import { createBootstrapSimulation } from "sim";
 
 import { ManagementPanel } from "./management-panel";
-import { buildCityPressureView, buildHqViewFromPhase1, type GameCallbacks } from "./view-models";
+import {
+  buildCurrentRivalView,
+  buildHqViewFromPhase1,
+  buildPublicPressureView,
+  type GameCallbacks,
+} from "./view-models";
 
 const DEFAULT_GUILD = {
   guildName: "Red Hook Guild",
@@ -402,22 +408,102 @@ describe("management panel", () => {
     expect(html).toContain("Unlocks: The Workshop");
   });
 
-  it("renders the city-pressure summary when active district and faction pressure exists", () => {
+  it("renders public pressure only when the skyscraper Compliance Office is operational", () => {
     const html = renderToStaticMarkup(
       <ManagementPanel
         guild={DEFAULT_GUILD}
         policies={DEFAULT_POLICY_STATE}
         contractLifecycle="bidding"
         building={{
-          id: "building/porters",
-          name: "Porter's",
+          id: "building/skyscraper",
+          name: "Ascension Tower",
           description: "",
           tier: 1,
-          activeFloorIndex: 0,
-          floorCount: 2,
-          usedRoomSlots: 7,
-          totalRoomSlots: 7,
-          operatorSlots: 12,
+          activeFloorIndex: 6,
+          floorCount: 8,
+          usedRoomSlots: 18,
+          totalRoomSlots: 18,
+          operatorSlots: 28,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[
+          {
+            id: "room-instance/compliance-office",
+            templateId: "room/compliance_office:tier_1",
+            name: "The Compliance Office",
+            description: "",
+            tier: 1,
+            floorIndex: 6,
+            slotId: "slot-b",
+            roomStateId: "room-state/compliance-office",
+            capacity: 1,
+            occupancy: 1,
+            isOperational: true,
+            appliedUpgradeIds: [],
+            availableUpgradeIds: [],
+            tags: [],
+            reservedFootprint: { col: 1, row: 0, cols: 1, rows: 1 },
+            activeFootprint: { col: 1, row: 0, cols: 1, rows: 1 },
+            prepRecipes: [],
+            craftRecipes: [],
+            training: null,
+          },
+        ]}
+        upgrades={[]}
+        operators={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+        publicPressure={buildPublicPressureView(
+          {
+            score: 58,
+            dominantSource: "regulator",
+            cooldownsBySource: { regulator: 0, press: 0, sponsor: 0, public: 0 },
+            districts: [
+              {
+                districtId: "district/red-hook-waterfront",
+                heat: 42,
+                standing: 55,
+                containment: 18,
+                recentContractCount: 2,
+                lastResolvedTick: 480,
+              },
+            ],
+          },
+          [
+            {
+              factionId: "faction/labor-safety",
+              standing: -12,
+              cooldownUntilTick: 0,
+            },
+          ],
+        )}
+      />,
+    );
+
+    expect(html).toContain("Public Pressure");
+    expect(html).toContain("Red Hook Waterfront");
+    expect(html).toContain("Labor &amp; Safety Board");
+    expect(html).toContain("Exposed");
+    expect(html).toContain("regulator");
+  });
+
+  it("hides public pressure when the Compliance Office is unavailable", () => {
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guild={DEFAULT_GUILD}
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="bidding"
+        building={{
+          id: "building/skyscraper",
+          name: "Ascension Tower",
+          description: "",
+          tier: 1,
+          activeFloorIndex: 6,
+          floorCount: 8,
+          usedRoomSlots: 18,
+          totalRoomSlots: 18,
+          operatorSlots: 28,
           unlockedRoomTemplateIds: [],
           availableBuildingUpgradeIds: [],
         }}
@@ -426,36 +512,22 @@ describe("management panel", () => {
         operators={[]}
         relocationGate={null}
         callbacks={callbacks}
-        cityPressure={buildCityPressureView({
-          districts: [
-            {
-              districtId: "district/red-hook-waterfront",
-              attention: 42,
-              trust: 55,
-              containmentDebt: 18,
-              recentContractCount: 2,
-              lastResolvedTick: 480,
-            },
-          ],
-          factions: [
-            {
-              factionId: "faction/labor-safety",
-              standing: -12,
-              scrutiny: 45,
-              leverage: 0,
-              cooldownUntilTick: 0,
-            },
-          ],
+        publicPressure={buildPublicPressureView({
+          score: 58,
+          dominantSource: "regulator",
+          cooldownsBySource: { regulator: 0, press: 0, sponsor: 0, public: 0 },
+          districts: [],
         })}
       />,
     );
 
-    expect(html).toContain("City Pressure");
-    expect(html).toContain("Red Hook Waterfront");
-    expect(html).toContain("Labor &amp; Safety Board");
+    expect(html).not.toContain("Public Pressure");
   });
 
-  it("renders the skyscraper visible-institution summary with active executive-floor offsets", () => {
+  it("renders the named current rival only when the skyscraper War Room is operational", () => {
+    const primaryRival = readyToWireRivals[0];
+    expect(primaryRival).toBeDefined();
+
     const html = renderToStaticMarkup(
       <ManagementPanel
         guild={{
@@ -478,48 +550,6 @@ describe("management panel", () => {
           availableBuildingUpgradeIds: [],
         }}
         rooms={[
-          {
-            id: "room-instance/executive-office",
-            templateId: "room/executive_office:tier_1",
-            name: "The Executive Office",
-            description: "",
-            tier: 1,
-            floorIndex: 6,
-            slotId: "slot-a",
-            roomStateId: "room-state/executive-office",
-            capacity: 1,
-            occupancy: 1,
-            isOperational: true,
-            appliedUpgradeIds: [],
-            availableUpgradeIds: [],
-            tags: [],
-            reservedFootprint: { col: 0, row: 0, cols: 1, rows: 1 },
-            activeFootprint: { col: 0, row: 0, cols: 1, rows: 1 },
-            prepRecipes: [],
-            craftRecipes: [],
-            training: null,
-          },
-          {
-            id: "room-instance/compliance-office",
-            templateId: "room/compliance_office:tier_1",
-            name: "The Compliance Office",
-            description: "",
-            tier: 1,
-            floorIndex: 6,
-            slotId: "slot-b",
-            roomStateId: "room-state/compliance-office",
-            capacity: 1,
-            occupancy: 1,
-            isOperational: true,
-            appliedUpgradeIds: [],
-            availableUpgradeIds: [],
-            tags: [],
-            reservedFootprint: { col: 1, row: 0, cols: 1, rows: 1 },
-            activeFootprint: { col: 1, row: 0, cols: 1, rows: 1 },
-            prepRecipes: [],
-            craftRecipes: [],
-            training: null,
-          },
           {
             id: "room-instance/war-room",
             templateId: "room/war_room:tier_1",
@@ -546,59 +576,81 @@ describe("management panel", () => {
         operators={[]}
         relocationGate={null}
         callbacks={callbacks}
-        cityPressure={buildCityPressureView({
-          districts: [],
-          factions: [
+        currentRival={buildCurrentRivalView({
+          active: true,
+          currentPrimaryRivalId: primaryRival!.id,
+          rivals: [
             {
-              factionId: "faction/city-licensing",
-              standing: 55,
-              scrutiny: 35,
-              leverage: 0,
-              cooldownUntilTick: 0,
-            },
-            {
-              factionId: "faction/labor-safety",
-              standing: 50,
-              scrutiny: 0,
-              leverage: 0,
-              cooldownUntilTick: 0,
-            },
-            {
-              factionId: "faction/emergency-management",
-              standing: 48,
-              scrutiny: 0,
-              leverage: 0,
-              cooldownUntilTick: 0,
-            },
-            {
-              factionId: "faction/borough-contracts",
-              standing: 52,
-              scrutiny: 34,
-              leverage: 0,
-              cooldownUntilTick: 0,
-            },
-            {
-              factionId: "faction/rival-guild-market",
-              standing: 0,
-              scrutiny: 0,
-              leverage: 28,
-              cooldownUntilTick: 0,
+              rivalId: primaryRival!.id,
+              ladderPosition: 1,
+              strengthBand: "peer",
+              intensity: 64,
+              aggression: 52,
+              trend: "rising",
+              isPrimary: true,
+              introducedAtTick: 100,
+              lastMoveTick: null,
+              recentMoveIds: [],
             },
           ],
         })}
       />,
     );
 
-    expect(html).toContain("Visible Institution");
-    expect(html).toContain("Prestige");
-    expect(html).toContain("Executive Floor offsets");
-    expect(html).toContain("Executive Office");
-    expect(html).toContain("Compliance Office");
-    expect(html).toContain("War Room");
-    expect(html).toContain("Licensing audit");
-    expect(html).toContain("Borough hearing");
-    expect(html).toContain("Rival poaching");
-    expect(html).toContain("Sponsor demand");
-    expect(html).toContain("Press exposure");
+    expect(html).toContain("Current Rival");
+    expect(html).toContain(primaryRival!.shortDisplayName);
+    expect(html).toContain(primaryRival!.leader.name);
+  });
+
+  it("hides the named current rival when the War Room is unavailable", () => {
+    const primaryRival = readyToWireRivals[0];
+    expect(primaryRival).toBeDefined();
+
+    const html = renderToStaticMarkup(
+      <ManagementPanel
+        guild={DEFAULT_GUILD}
+        policies={DEFAULT_POLICY_STATE}
+        contractLifecycle="bidding"
+        building={{
+          id: "building/skyscraper",
+          name: "Ascension Tower",
+          description: "",
+          tier: 4,
+          activeFloorIndex: 6,
+          floorCount: 8,
+          usedRoomSlots: 18,
+          totalRoomSlots: 18,
+          operatorSlots: 28,
+          unlockedRoomTemplateIds: [],
+          availableBuildingUpgradeIds: [],
+        }}
+        rooms={[]}
+        upgrades={[]}
+        operators={[]}
+        relocationGate={null}
+        callbacks={callbacks}
+        currentRival={buildCurrentRivalView({
+          active: true,
+          currentPrimaryRivalId: primaryRival!.id,
+          rivals: [
+            {
+              rivalId: primaryRival!.id,
+              ladderPosition: 1,
+              strengthBand: "peer",
+              intensity: 64,
+              aggression: 52,
+              trend: "rising",
+              isPrimary: true,
+              introducedAtTick: 100,
+              lastMoveTick: null,
+              recentMoveIds: [],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(html).not.toContain("Current Rival");
+    expect(html).not.toContain(primaryRival!.shortDisplayName);
   });
 });

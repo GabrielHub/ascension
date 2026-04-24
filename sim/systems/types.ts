@@ -3,7 +3,8 @@ import type { World } from "bitecs";
 import type { TemplateRegistry } from "content/templates";
 import type { CombatPackageRegistry } from "content/templates/combat-packages";
 import type { RuntimeCueId } from "lib/runtime-cues";
-import type { CityState } from "../components/city-state";
+import type { PublicPressureState } from "../components/public-pressure";
+import type { RivalPressureSnapshot } from "save/types";
 import type { BossEncounterInstance } from "./encounter-types";
 import type { InterruptionQueueState } from "./interruptions";
 import type { IncidentState } from "./incidents";
@@ -136,7 +137,8 @@ export interface SimRuntimeState {
   combatPackageRegistry: CombatPackageRegistry;
   worldTimeFrozen: boolean;
   deferIncidentPresentation?: boolean;
-  cityState?: CityState;
+  publicPressure?: PublicPressureState;
+  rivalPressure?: RivalPressureSnapshot;
   presenterUnlocks: PresenterUnlockState[];
 }
 

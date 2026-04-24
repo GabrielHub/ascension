@@ -1,206 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
-  <!-- REFERENCE FIXTURE: The Floor — Porter's public dining room.
-       4 cols x 3 rows. Origin (200,100). Canonical Porter's room-scene frame.
-       Design reference only — the runtime ships the props-only scene
-       (recipes/scene-the-floor.svg) extracted below. -->
-
-  <!-- Room-box surfaces: floor diamond, left wall, back wall -->
-  <polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
-  <polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
-  <polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
-  <line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
-  <line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
-  <!-- Tile guides along the r-axis -->
-  <line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-  <line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-  <line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-  <text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE FLOOR</text>
-  <text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-330 0 1060 640">
+  <!-- REFERENCE FIXTURE: The Floor, Porter's public dining room.
+       10 cols x 10 rows. Origin (200,100). Design reference only.
+       Runtime uses the props-only scene in recipes/scene-the-floor.svg. -->
 
   <defs>
-    <g id="chair-w">
-      <line x1="11" y1="3" x2="11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="-11" y1="3" x2="-11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
-      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,-6 -12,0 -12,-17 0,-23" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-2,-7 -10,-3 -10,-15 -2,-19" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
-      <polygon points="0,-23 -12,-17 -13,-18 -1,-24" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
-      <polygon points="-12,-17 -13,-18 -13,-1 -12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-    </g>
-    <g id="chair-n">
-      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
-      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,-6 12,0 12,-17 0,-23" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="2,-7 10,-3 10,-15 2,-19" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
-      <polygon points="0,-23 12,-17 13,-18 1,-24" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
-      <polygon points="12,-17 13,-18 13,-1 12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-    </g>
-    <g id="chair-s">
-      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
-      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 -12,0 -12,-17 0,-11" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-2,5 -10,1 -10,-11 -2,-7" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
-      <polygon points="-12,-17 0,-11 1,-12 -11,-18" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
-      <polygon points="-12,-17 -11,-18 -11,-1 -12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-    </g>
-    <g id="chair-e">
-      <line x1="-11" y1="3" x2="-11" y2="13" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="0" y1="9" x2="0" y2="18" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="11" y1="3" x2="11" y2="11" stroke="#2a1810" stroke-width="1.6" stroke-linecap="round"/>
-      <polygon points="-12,0 0,6 12,0 0,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="-10,0 0,5 10,0 0,-5" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.4"/>
-      <polygon points="-12,0 0,6 0,9 -12,3" fill="#3a2618" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 12,0 12,3 0,9" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-      <polygon points="0,6 12,0 12,-17 0,-11" fill="#4a3220" stroke="#3a2618" stroke-width="0.5"/>
-      <polygon points="2,5 10,1 10,-11 2,-7" fill="#8a5e3a" stroke="#6a4624" stroke-width="0.3" opacity="0.85"/>
-      <polygon points="12,-17 0,-11 -1,-12 11,-18" fill="#5a3c24" stroke="#3a2618" stroke-width="0.3"/>
-      <polygon points="12,-17 11,-18 11,-1 12,0" fill="#301e10" stroke="#2a1810" stroke-width="0.3"/>
-    </g>
-    <g id="dining-table-2top">
-      <line x1="0" y1="-24" x2="0" y2="0" stroke="#241810" stroke-width="2"/>
-      <polygon points="-48,0 0,24 0,28 -48,4" fill="#2c2418" stroke="#241810" stroke-width="0.4"/>
-      <polygon points="48,0 0,24 0,28 48,4" fill="#302818" stroke="#241810" stroke-width="0.4"/>
-      <polygon points="0,-24 48,0 0,24 -48,0" fill="#4a3220" stroke="#3a2618" stroke-width="0.7"/>
-      <line x1="0" y1="-24" x2="-48" y2="0" stroke="rgba(255,235,200,0.12)" stroke-width="0.55"/>
-      <line x1="0" y1="-24" x2="48" y2="0" stroke="rgba(255,235,200,0.08)" stroke-width="0.45"/>
-      <line x1="-30" y1="-12" x2="24" y2="16" stroke="#3a2618" stroke-width="0.35" opacity="0.32"/>
-      <line x1="-20" y1="-2" x2="20" y2="18" stroke="#3a2618" stroke-width="0.3" opacity="0.26"/>
-      <line x1="-12" y1="6" x2="14" y2="19" stroke="#3a2618" stroke-width="0.25" opacity="0.22"/>
-      <line x1="-48" y1="4" x2="-46" y2="24" stroke="#2a1810" stroke-width="2"/>
-      <line x1="48" y1="4" x2="46" y2="24" stroke="#2a1810" stroke-width="2"/>
-      <line x1="0" y1="28" x2="0" y2="48" stroke="#2a1810" stroke-width="2"/>
-      <line x1="-46" y1="18" x2="46" y2="18" stroke="#241810" stroke-width="0.55" opacity="0.55"/>
-    </g>
-    <g id="dining-table-communal">
-      <line x1="-12" y1="-30" x2="-12" y2="-6" stroke="#241810" stroke-width="2"/>
-      <polygon points="-60,-6 12,30 12,34 -60,-2" fill="#2c2418" stroke="#241810" stroke-width="0.4"/>
-      <polygon points="60,6 12,30 12,34 60,10" fill="#302818" stroke="#241810" stroke-width="0.4"/>
-      <polygon points="-12,-30 60,6 12,30 -60,-6" fill="#4a3220" stroke="#3a2618" stroke-width="0.7"/>
-      <line x1="-12" y1="-30" x2="-60" y2="-6" stroke="rgba(255,235,200,0.12)" stroke-width="0.55"/>
-      <line x1="-12" y1="-30" x2="60" y2="6" stroke="rgba(255,235,200,0.08)" stroke-width="0.45"/>
-      <line x1="-42" y1="-18" x2="36" y2="22" stroke="#3a2618" stroke-width="0.35" opacity="0.3"/>
-      <line x1="-30" y1="-6" x2="30" y2="24" stroke="#3a2618" stroke-width="0.3" opacity="0.25"/>
-      <line x1="-18" y1="6" x2="18" y2="25" stroke="#3a2618" stroke-width="0.25" opacity="0.2"/>
-      <line x1="-60" y1="-2" x2="-58" y2="18" stroke="#2a1810" stroke-width="2"/>
-      <line x1="60" y1="10" x2="58" y2="30" stroke="#2a1810" stroke-width="2"/>
-      <line x1="12" y1="34" x2="12" y2="54" stroke="#2a1810" stroke-width="2"/>
-      <line x1="-58" y1="12" x2="58" y2="24" stroke="#241810" stroke-width="0.55" opacity="0.55"/>
-    </g>
-    <g id="plate">
-      <ellipse cx="0" cy="0" rx="7" ry="2.8" fill="#e8e2d4" stroke="#a89c88" stroke-width="0.5"/>
-      <ellipse cx="0" cy="0" rx="5" ry="2" fill="#d8ccb8" stroke="#a89c88" stroke-width="0.3"/>
-      <ellipse cx="0" cy="-0.2" rx="3.2" ry="1.2" fill="rgba(120,80,40,0.2)"/>
-    </g>
-    <g id="wineglass">
-      <ellipse cx="0" cy="0" rx="2.4" ry="1" fill="rgba(200,220,235,0.28)" stroke="rgba(170,200,215,0.45)" stroke-width="0.3"/>
-      <polygon points="-2.3,0 2.3,0 1.9,5 -1.9,5" fill="rgba(200,220,235,0.22)" stroke="rgba(170,200,215,0.4)" stroke-width="0.3"/>
-      <ellipse cx="0" cy="0" rx="1.8" ry="0.6" fill="rgba(170,200,215,0.5)"/>
-      <line x1="0" y1="5" x2="0" y2="8.5" stroke="rgba(170,200,215,0.5)" stroke-width="0.5"/>
-      <ellipse cx="0" cy="8.8" rx="1.5" ry="0.5" fill="rgba(170,200,215,0.35)" stroke="rgba(170,200,215,0.5)" stroke-width="0.3"/>
-    </g>
-    <g id="candle-votive">
-      <ellipse cx="0" cy="3.5" rx="2.6" ry="1" fill="#7a5424" stroke="#3a2412" stroke-width="0.3"/>
-      <polygon points="-2.6,-0.3 2.6,-0.3 2.6,3.5 -2.6,3.5" fill="#c8904c" stroke="#3a2412" stroke-width="0.3"/>
-      <polygon points="-2,-0.3 2,-0.3 2,3 -2,3" fill="#e8b868" opacity="0.55"/>
-      <ellipse cx="0" cy="-0.3" rx="2.6" ry="1" fill="#5a3a18" stroke="#3a2412" stroke-width="0.3"/>
-      <ellipse cx="0" cy="-0.3" rx="1.6" ry="0.6" fill="rgba(40,22,10,0.9)"/>
-      <ellipse cx="0" cy="-1.6" rx="0.7" ry="1.6" fill="#ffd66a" opacity="0.92"/>
-      <ellipse cx="0" cy="-1.4" rx="0.4" ry="0.9" fill="#fff4b8"/>
-    </g>
-    <g id="potted-plant">
-      <polygon points="-10,6 0,12 10,6 0,0" fill="#7a3a1c" stroke="#3e1d0e" stroke-width="0.5"/>
-      <polygon points="-10,-2 0,4 10,-2 0,-8" fill="#9a4e26" stroke="#4e230e" stroke-width="0.5"/>
-      <polygon points="-10,-2 0,4 0,12 -10,6" fill="#5c2a14" stroke="#3e1d0e" stroke-width="0.4"/>
-      <polygon points="0,4 10,-2 10,6 0,12" fill="#7c3a1c" stroke="#3e1d0e" stroke-width="0.4"/>
-      <ellipse cx="0" cy="-4.2" rx="8" ry="3" fill="#2a1a0e" stroke="#150a04" stroke-width="0.3"/>
-      <path d="M 0 -5 C -9 -16, -18 -14, -14 -2 C -6 -8, -2 -8, 0 -5" fill="#4e8046" stroke="#244c24" stroke-width="0.5"/>
-      <path d="M 0 -5 C 9 -16, 18 -14, 14 -2 C 6 -8, 2 -8, 0 -5" fill="#548a4c" stroke="#244c24" stroke-width="0.5"/>
-      <path d="M 0 -6 C -6 -22, 0 -28, 4 -14 C 2 -10, -2 -8, 0 -6" fill="#5e9454" stroke="#2a5228" stroke-width="0.4"/>
-      <path d="M 0 -6 C 8 -22, 14 -18, 10 -8 C 4 -12, 2 -8, 0 -6" fill="#6aa460" opacity="0.85"/>
-      <path d="M -2 -8 C -10 -20, -4 -26, 2 -18" fill="#70ae64" opacity="0.75"/>
-    </g>
-    <g id="pendant-milkglass">
-      <line x1="0" y1="-38" x2="0" y2="-12" stroke="#2f2117" stroke-width="1.2"/>
-      <ellipse cx="0" cy="-12" rx="2.6" ry="1.1" fill="#7a5a2e" stroke="#3a2512" stroke-width="0.4"/>
-      <polygon points="-2.6,-12 2.6,-12 2.3,-9 -2.3,-9" fill="#5a3e1a" stroke="#3a2512" stroke-width="0.3"/>
-      <ellipse cx="0" cy="-4" rx="8.5" ry="5" fill="#f4ead0" stroke="#b89a5a" stroke-width="0.5"/>
-      <ellipse cx="0" cy="-5" rx="6.5" ry="3" fill="#ffdfa0" opacity="0.72"/>
-      <ellipse cx="-2.5" cy="-5.5" rx="2.2" ry="1.1" fill="rgba(255,255,255,0.55)"/>
-      <ellipse cx="0" cy="-0.2" rx="6" ry="2" fill="#e8d8a8" stroke="#b89a5a" stroke-width="0.3"/>
-    </g>
-    <g id="ceiling-fan">
-      <line x1="0" y1="-24" x2="0" y2="-4" stroke="#2a2014" stroke-width="1.2"/>
-      <ellipse cx="0" cy="-3" rx="5" ry="2.2" fill="#3a2a18" stroke="#1e1408" stroke-width="0.5"/>
-      <ellipse cx="0" cy="-3.8" rx="4" ry="1.5" fill="#5a4228" stroke="#1e1408" stroke-width="0.3"/>
-      <polygon points="0,-3 36,12 38,15 2,0" fill="#6c4a2c" stroke="#2a1a0e" stroke-width="0.4"/>
-      <polygon points="0,-3 -36,12 -38,15 -2,0" fill="#5a3a22" stroke="#2a1a0e" stroke-width="0.4"/>
-      <polygon points="0,-3 36,-18 38,-15 2,0" fill="#7e5a34" stroke="#3a2514" stroke-width="0.4"/>
-      <polygon points="0,-3 -36,-18 -38,-15 -2,0" fill="#6a4828" stroke="#2a1a0e" stroke-width="0.4"/>
-      <circle cx="0" cy="-3" r="1.2" fill="#2a1810" stroke="#1e1408" stroke-width="0.3"/>
-    </g>
+    <pattern id="floor-plank" width="96" height="48" patternUnits="userSpaceOnUse">
+      <path d="M0,24 L48,0 L96,24 L48,48 Z" fill="none" stroke="rgba(0,0,0,0.16)" stroke-width="0.6"/>
+      <path d="M24,12 L72,36" stroke="rgba(255,235,190,0.07)" stroke-width="0.6"/>
+    </pattern>
   </defs>
 
-  <use href="#potted-plant" x="188" y="118"/>
+  <polygon points="200,100 680,340 200,580 -280,340" fill="#3a2a1d" stroke="#27190f" stroke-width="1.4"/>
+  <polygon points="200,100 680,340 200,580 -280,340" fill="url(#floor-plank)" opacity="0.72"/>
 
-  <g>
-    <use href="#chair-w" x="162" y="131"/>
-    <use href="#dining-table-2top" x="190" y="143"/>
-    <use href="#plate" x="172" y="138"/>
-    <use href="#plate" x="208" y="148"/>
-    <use href="#wineglass" x="178" y="134"/>
-    <use href="#wineglass" x="214" y="144"/>
-    <use href="#candle-votive" x="190" y="143"/>
-    <use href="#chair-e" x="212" y="163"/>
+  <polygon points="200,16 680,256 680,340 200,100" fill="#3a2a20" stroke="#261a12" stroke-width="1.1"/>
+  <polygon points="200,16 -280,256 -280,340 200,100" fill="#33241b" stroke="#261a12" stroke-width="1.1"/>
+  <line x1="200" y1="16" x2="200" y2="100" stroke="#514031" stroke-width="1.5"/>
+  <line x1="-280" y1="340" x2="200" y2="580" stroke="rgba(255,235,190,0.18)" stroke-width="1"/>
+  <line x1="680" y1="340" x2="200" y2="580" stroke="rgba(255,235,190,0.12)" stroke-width="1"/>
+
+  <g stroke="rgba(0,0,0,0.18)" stroke-width="0.55">
+    <line x1="248" y1="124" x2="-232" y2="364"/>
+    <line x1="296" y1="148" x2="-184" y2="388"/>
+    <line x1="344" y1="172" x2="-136" y2="412"/>
+    <line x1="392" y1="196" x2="-88" y2="436"/>
+    <line x1="440" y1="220" x2="-40" y2="460"/>
+    <line x1="488" y1="244" x2="8" y2="484"/>
+    <line x1="536" y1="268" x2="56" y2="508"/>
+    <line x1="584" y1="292" x2="104" y2="532"/>
+    <line x1="632" y1="316" x2="152" y2="556"/>
+    <line x1="152" y1="124" x2="632" y2="364"/>
+    <line x1="104" y1="148" x2="584" y2="388"/>
+    <line x1="56" y1="172" x2="536" y2="412"/>
+    <line x1="8" y1="196" x2="488" y2="436"/>
+    <line x1="-40" y1="220" x2="440" y2="460"/>
+    <line x1="-88" y1="244" x2="392" y2="484"/>
+    <line x1="-136" y1="268" x2="344" y2="508"/>
+    <line x1="-184" y1="292" x2="296" y2="532"/>
+    <line x1="-232" y1="316" x2="248" y2="556"/>
   </g>
 
-  <use href="#potted-plant" x="95" y="172"/>
-
-  <g>
-    <use href="#chair-w" x="160" y="178"/>
-    <use href="#chair-n" x="226" y="184"/>
-    <use href="#dining-table-communal" x="200" y="196"/>
-    <use href="#plate" x="180" y="192"/>
-    <use href="#plate" x="220" y="200"/>
-    <use href="#plate" x="208" y="183"/>
-    <use href="#plate" x="192" y="209"/>
-    <use href="#wineglass" x="186" y="188"/>
-    <use href="#wineglass" x="226" y="196"/>
-    <use href="#wineglass" x="214" y="179"/>
-    <use href="#wineglass" x="198" y="205"/>
-    <use href="#candle-votive" x="200" y="196"/>
-    <use href="#chair-s" x="176" y="209"/>
-    <use href="#chair-e" x="240" y="216"/>
-  </g>
-
-  <g>
-    <use href="#chair-w" x="278" y="189"/>
-    <use href="#dining-table-2top" x="306" y="201"/>
-    <use href="#plate" x="288" y="196"/>
-    <use href="#plate" x="324" y="206"/>
-    <use href="#wineglass" x="294" y="192"/>
-    <use href="#wineglass" x="330" y="202"/>
-    <use href="#candle-votive" x="306" y="201"/>
-    <use href="#chair-e" x="328" y="221"/>
-  </g>
-
-  <use href="#potted-plant" x="248" y="254"/>
-
-  <use href="#pendant-milkglass" x="190" y="77"/>
-  <use href="#pendant-milkglass" x="200" y="130"/>
-  <use href="#pendant-milkglass" x="306" y="135"/>
-  <use href="#ceiling-fan" x="248" y="88"/>
+  <image href="../recipes/scene-the-floor.svg" x="-330" y="0" width="1060" height="640"/>
 </svg>

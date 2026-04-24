@@ -1,67 +1,139 @@
-import type { ReadyToWireRivalRecord } from "./schema";
+import type { RivalRecord } from "./schema";
 
 export const keystoneRivalRecord = {
   id: "rival/keystone",
-  status: "ready-to-wire",
   guildName: "Keystone",
   shortDisplayName: "Keystone",
-  branchSuffix: "SoHo",
-  parentGuild: null,
   leader: {
-    fullName: "Aaliyah Beaumont",
-    ageRange: "28",
-    background:
-      "Black-American, raised between Harlem and the Upper West Side. Mother is a retired Alvin Ailey principal dancer who now teaches master classes at the company; father is a creative director at a major American fashion house. Hunter College High School to Columbia. Attuned at nineteen; initial B-rank license, reclassified A at twenty-three after two years of fielded clearance work. Signed with Ashford Capital Partners in 2023 as the subsidiary's inaugural marquee attuned operator, fronting ACP's first prestige-tier bids and legitimizing the Ashford & Dane name on its new clearance license. Her signature manifestation — industry-nicknamed the Suspend — was an inertia freeze that let her hold a pose mid-flight for approximately half a second; Dungeon Quarterly ran the Suspend silhouette on two covers and the footage crossed over into fashion editorial and late-night talk-show B-roll. In March 2025, on an Ashford Capital Partners Madison Avenue private-collection clearance that escalated past its briefed threat assessment, Aaliyah took a hit that fractured her lumbar vertebrae and severed the specific nerve pathway the Suspend manifests on. She retains A-rank classification and her other attunement manifestations. The Suspend is medically and mechanically inaccessible under combat stress and is not expected to return. Released from her Ashford Capital Partners contract during convalescence through an arrangement the Ashford family handled personally. Founded Keystone in SoHo in late 2025 with her severance and her name. Wears a platinum-and-titanium spinal orthosis — a couture collaboration, medically functional — in every public appearance.",
-    isAttuned: true,
-    operatorRank: "A",
+    name: "Aaliyah Beaumont",
   },
-  districtAnchor: "SoHo, Manhattan",
-  districtIdHint: "district/soho",
-  baseLocation:
-    "A cast-iron loft on Greene Street between Prince and Spring, a block from the Prada and Chanel flagships. Ground floor: polished concrete, exposed cast-iron columns painted matte black, gallery-white walls, a single long reception desk in blackened oak, and a muted wall-mounted screen that plays rolling footage of her pre-injury career on loop — press meetings happen here, and she does not watch the screen. A small dispatch desk is tucked behind a frosted-glass partition at the back. Upstairs: her private office, minimalist, glass-walled, with a custom ergonomic chair sized for the spinal orthosis and a framed first-cover Dungeon Quarterly print on the wall her assistant hung that she has not taken down. No third floor — Keystone's operational roster is small enough to fit on one working floor.",
-  publicPitch:
-    "Keystone — a licensed SoHo clearance firm founded by A-rank attuned Aaliyah Beaumont.",
-  internalSummary:
-    "A ladder-rung-above rival who unlocks in the same competitive bracket as Straits Meridian, A-List Media, Ashford, Asgard, and NYU Kressel, and occupies a distinct shape: Keystone is a legacy-gravity firm founded by Aaliyah Beaumont, the 28-year-old former Ashford Capital Partners marquee attuned operator whose signature inertia-freeze manifestation — industry-nicknamed the Suspend — was destroyed on a March 2025 Madison Avenue clearance that fractured her lumbar spine. She retains A-rank certification and her other attunement manifestations but cannot trigger the Suspend under combat stress; the board carries her on an inactive-field annotation she cannot remove. Keystone was founded in late 2025 in a SoHo cast-iron loft with her severance and her name; the firm is new enough that the industry is still waiting to see whether she can turn the transition around. She cannot. She has no management experience, no operational inheritance from her arts-and-fashion family, no playbook for scouting or coaching operators, and her instinct is to pattern-match candidates to her own pre-injury peak — which produces a roster that looks like her on paper and does not move like her in the field. Sponsors retain Keystone because her name is the brand. Press runs comeback-narrative features because her story is too good to let go of. Her leaderboard seat reflects career totals the Suspend generated before March. The player is below Keystone on sponsor-network gravity, on press coverage, on legacy-weighted leaderboard ranking, and on the above-the-line candidate pipeline of attuned prospects who sign to work under the legend. The player beats Keystone on real clearance throughput, on candidate judgment, on operator retention, and on the slow public accumulation of evidence that the firm is not turning around. Direct foil to Ashford Capital Partners on both the attunement axis and the firm-history axis: Monty does not pretend, has never fielded, and runs the inherited-social-capital firm the family built him; Aaliyah earned her credentials, was Monty's marquee hire, and is now trying to run a firm she has never been trained to run. Direct foil to A-List Media on the ranking-claim axis: Ren is A-rank claimed-and-never-verified, Aaliyah is A-rank documented-and-ended — Ren hides the question of whether the rank was ever real, Aaliyah carries the visible answer of what the rank used to do.",
-  pressureStyle:
-    "Legacy-gravity prestige and marquee sponsor-network leverage layered with a labor-market deficit the firm cannot yet hide. Keystone loses to the player on real clearance throughput, on candidate judgment (Aaliyah scouts for pre-injury-Her on paper and her roster underperforms), on operator retention (she coaches operators against her own peak footage, turnover is high, and the written reasons for exits are polite and vague), on contracts that require operational speed her roster cannot deliver, and on any bid where the sponsor or client has already seen Keystone's recent clearance results rather than the pre-March highlight reel. Keystone beats the player on legacy-weighted leaderboard ranking (her career totals and the Suspend footage carry forward and currently dominate activity-weighted inputs), on marquee sponsor retention (retainers signed because the legend's name is on the letterhead), on comeback-narrative press coverage (aligned press frames every middling clearance as a step toward a return to form that will not arrive), on above-the-line candidate pipeline (attuned prospects sign to work under the legend before the player has met them), on fashion and lifestyle press bleed (the couture spinal orthosis generates its own editorial coverage independent of clearance volume), and on social-calendar presence (she is on the list at sponsor galas, museum benefits, and fashion events the player cannot buy into on a single season).",
   pressureLane: "hybrid",
-  moveFamilyAffinities: [
-    "legacy-weighted leaderboard gravity (Aaliyah's career totals and the Suspend footage dominate activity-weighted ranking inputs; Keystone ranks above firms with meaningfully better current output, and the ranking will take time to erode even as current performance fails to justify it)",
-    "marquee sponsor retention (retainers are signed because Aaliyah Beaumont's name is on the letterhead; Keystone's sponsor book is front-loaded with retainers that closed on the legend's pre-injury reputation and does not yet reflect current clearance work)",
-    "comeback-narrative press (aligned dungeon-beat and lifestyle press frame every mid-tier Keystone clearance as a step toward the Suspend's return; the comeback narrative the industry wants is something medical reality will not deliver, and the narrative prints anyway)",
-    "roster-against-highlight-reel coaching failure (Aaliyah reviews her operators against her own pre-injury footage; turnover is high, operator exits are polite and vague in writing, and no one publicly connects the pattern)",
-    "failed scouting as recurring seam (Keystone signs candidates who pattern-match to Aaliyah at twenty-four and underperforms them; the player signs candidates Aaliyah passed on who field at competitive quality in the same season)",
-    "signature-move ghost (the Suspend footage recirculates constantly on social platforms, in fashion editorial, in late-night B-roll, and in industry retrospectives; Aaliyah does not control the footage, sponsors and press still ask her about the manifestation's return, and she answers graciously in every interview)",
-    "couture-brace press cycle (the platinum-and-titanium spinal orthosis is itself a recurring fashion-press subject; the brace is independently marketable and accrues prestige to Keystone regardless of clearance outcomes — distinct from A-List Media's active press curation, Keystone's press is drawn by Aaliyah's own biographical gravity and by the visible injury)",
-    "Ashford-social-calendar overlap (Aaliyah remains on Monty Ashford's permanent guest list; she attends the same Upper East Side galas and private-collection benefits, Monty sends a handwritten note and a bottle of the '82 on the March anniversary, and the relationship is warmly maintained to Keystone's sponsor-network benefit and Aaliyah's private ambivalence)",
-  ],
-  rivalryFantasy:
-    "You watched her highlight reel before you got your own license. The Suspend was on Dungeon Quarterly twice. When Ashford put her on their marquee you knew her name before you knew your district's licensing officer. Then the Madison Avenue incident happened, and she did not come back, and when she came back she had the brace. Now she has founded her own firm eight blocks from your office, sponsors are signing retainers with her name because she is Aaliyah Beaumont, and she has never scouted an operator in her life. Her roster looks like her on paper and does not move like her in the field. She will not be fielding. Her assistant forwarded your congratulatory email on the firm launch and she replied warmly, personally, and asked if you wanted to grab coffee. The next week she passed on a candidate who has since been the best operator on your bench this quarter. Next month she takes a prestige contract you wanted because the sponsor remembers her from the cover. She will be courteous at the licensing-board mixer, wearing the spine in couture, and you will not be able to tell her that you were twelve when her footage came out and it made you want this job. She is ranked above you. She is working harder than you are. She is not getting better fast enough.",
-  toneAndVoice:
-    "Composed, warmly professional, dancer-trained precision in word choice — she picks phrases the way she used to pick landings. Press-ready cadence, natural pauses engineered to sound unrehearsed. Natural Harlem-and-Upper-West-Side inflection surfaces only with her assistant, her mother, or the small number of former Ashford-roster colleagues she still talks to. She never raises her voice; her mother was an Ailey principal and she knows how to hold a room at low volume. She never insults publicly. Her frustration with her operators leaks in roster-review subtext — small pauses, specific word choices, the phrase 'that's close' carrying more edge than the words do. In public she is gracious about the Suspend, gracious about the brace, gracious about comeback questions; privately she is running out of patience with people who expect her to be who she was eighteen months ago. Never references the Madison Avenue incident on record; when asked, redirects to Keystone's forward calendar and means it. Occasional dancer-lineage vocabulary ('the first position,' 'the turn') slips into her guild-internal coaching language in ways that confuse rookies who have never trained in a studio.",
-  interruptionCopySamples: [
-    "Keystone has filed a competing bid. Aaliyah Beaumont's office has cc'd you a warm personal note and an invitation to the SoHo loft for coffee at her convenience.",
-    "A candidate you interviewed twice last month has signed with Keystone. Your intake notes flag that the candidate looks, on paper, very much like Aaliyah Beaumont at twenty-four.",
-    "Vogue's September issue previews a feature on Aaliyah Beaumont's spinal orthosis collaboration. Your firm is listed in the sidebar as one of several young-founder competitors in her bracket.",
-    "Dungeon Quarterly has re-run the Suspend-cover silhouette on its fifteen-year retrospective cover this month. Keystone's press office has declined to comment. The magazine mentions the Madison Avenue incident in paragraph six.",
-    "Two of your operators saw Aaliyah Beaumont at the Frick spring gala last night in a black open-back gown and the platinum spinal orthosis. She was photographed beside Monty Ashford. Your firm was not on the guest list.",
-    "A mid-tier SoHo clearance Keystone ran last week shipped two operators short. The aligned press framing is a learning-moment profile. The profile does not mention that Aaliyah is coaching her roster against her own pre-injury footage; your industry does know.",
-  ],
   copy: {
-    leaderboardName: "Keystone — SoHo",
-    dossierOneLiner:
-      "Keystone is Aaliyah Beaumont's SoHo-based licensed clearance firm, founded in late 2025 after the March 2025 Madison Avenue clearance that ended her signature inertia-freeze manifestation and her career as Ashford Capital Partners' marquee attuned operator.",
     currentRivalOneLiner:
       "Aaliyah Beaumont is still ranked above you on career totals from the year she was on the Dungeon Quarterly cover. Her roster looks like her on paper and does not move like her in the field.",
-    publicBlurb:
-      "Keystone is an independent licensed clearance firm founded in 2025 in SoHo, Manhattan by A-rank attuned Aaliyah Beaumont, the former Ashford Capital Partners marquee operator. Keystone operates from a renovated cast-iron loft on Greene Street and holds full NYC licensing.",
-    internalAuthorNote:
-      "Supports legacy-gravity pressure beats — Keystone's sponsor book is front-loaded with retainers that closed on Aaliyah's pre-injury reputation, her leaderboard seat is carried by career totals and Suspend footage that dominate activity-weighted inputs, and the ranking will take time to erode even as current clearance performance fails to justify it. Supports comeback-narrative press beats — aligned dungeon-beat and lifestyle press frame every mid-tier Keystone clearance as a step toward the Suspend's return, and the narrative prints regardless of what medical reality will deliver. Supports roster-against-highlight-reel coaching-failure beats — Aaliyah reviews her operators against her own pre-injury footage, turnover is high, written reasons for exits are polite and vague, and no one publicly connects the pattern. Supports failed-scouting recurring beats — Keystone signs candidates who pattern-match to Aaliyah at twenty-four and underperforms them; the player signs candidates Aaliyah passed on who field at competitive quality in the same season. Supports signature-move-ghost beats — the Suspend footage recirculates constantly across social, editorial, and retrospective surfaces, Aaliyah does not control the footage, and she answers comeback questions graciously in every interview. Supports couture-brace press-cycle beats — the platinum-and-titanium spinal orthosis is an independently marketable fashion subject and accrues prestige to Keystone regardless of clearance volume; this is a passive fashion-press draw distinct from A-List Media's active press curation. Supports the Ashford-social-calendar overlap seam — Aaliyah remains on Monty Ashford's permanent guest list, the two appear at the same Upper East Side galas and private-collection benefits, and Monty sends a handwritten note and a bottle of the '82 on the March anniversary; the relationship is warmly maintained to Keystone's sponsor-network benefit and Aaliyah's private ambivalence, and it is a reusable crossover seam between the two rivals. Attunement-axis foil across the roster: Adrian fields (B-rank), Celeste won't (A verified, beneath her), Ren can't (A claimed, never verified), Monty doesn't pretend (unattuned), Odin refuses ranking (attuned, unranked-by-policy), Frankie fields on a whim (U-rank), Vesper categorically cannot field (non-human principal), DELILA is cosmetically attuned (F-rank figurehead), Mina is A-rank and fields in damaged plate — Aaliyah is A-rank verified, has documented peak-career field footage, and can no longer deploy her signature manifestation under combat stress; she is permitted to field and does not, and the board carries her on an inactive-field annotation she cannot remove. This slot is distinct and should be protected: Aaliyah is the only rival whose field career was documented-and-ended, and the Suspend is specifically, publicly, named-and-gone. Hybrid-lane variety across the roster: Asgard is personal-hybrid (Odin generates all edges), NYU Kressel is institutional-hybrid (the machine generates all edges), Keystone is legacy-hybrid (Aaliyah's pre-injury career generates prestige and sponsor-network edges that will not regenerate). The three hybrids should not converge. Reusable visual seams: the platinum-and-titanium spinal orthosis as the firm's signature visual motif (portrait, insignia, dossier), the back-turned-looking-over-shoulder portrait composition, the keystone-arch-with-vertebral-column insignia, the SoHo cast-iron loft's rolling Suspend-footage screen that Aaliyah does not watch. Reusable tonal seams: composed-warmly-professional press voice; dancer-trained phrasing precision; the 'that's close' frustration subtext in roster review; the gracious comeback-question deflection; the private ambivalence about the Ashford connection. Direct foil to Ren Castillo (A-List Media): both are young women above the player on ranking with A-rank credentials; Ren is claimed-and-never-deployed, Aaliyah is documented-and-ended — Ren hides the question of whether the rank was ever real, Aaliyah carries the visible answer of what the rank used to do. Avoid: avenging-injury framing (she is not seeking redress); comeback-is-coming framing (the Suspend is gone and the copy should not tease otherwise); pity framing (she is poised, marketable, and not asking for sympathy); any framing that privileges the injury over Keystone's institutional identity in branding or marketing surfaces; arm-candy-founder framing (Keystone is her firm, not a vehicle for someone else); villain framing of her management failures (she is struggling, not malicious); any framing that resolves whether her other attunement manifestations are field-viable — leave the question open, with the visible inactive-field annotation doing the work; and Halcyon-adjacent tonal drift (the March 2025 Madison Avenue incident is an Ashford contract, not a wipe event; it is not the Halcyon register and must not converge toward it).",
   },
   assetPaths: {
     leaderPortrait: "/data/rivals/keystone/leader-neutral.png",
     insignia: "/data/rivals/keystone/insignia.png",
   },
-  assetsShipped: true,
-} satisfies ReadyToWireRivalRecord;
+  narrativeProfile: {
+    operatingBase:
+      "A cast-iron loft on Greene Street between Prince and Spring, a block from the Prada and Chanel flagships. Polished concrete, exposed cast-iron columns painted matte black, gallery-white walls, and a blackened-oak reception desk. A muted wall-mounted screen plays rolling footage of her pre-injury career on loop — Aaliyah does not watch it. Upstairs: her private office with a custom ergonomic chair sized for the spinal orthosis and a framed first-cover Dungeon Quarterly print her assistant hung.",
+    publicPitch:
+      "Keystone — a licensed SoHo clearance firm founded by A-rank attuned Aaliyah Beaumont.",
+    pressureStyle:
+      "Legacy-gravity prestige and marquee sponsor-network leverage layered with a labor-market deficit the firm cannot yet hide. Keystone loses to you on real clearance throughput, on candidate judgment, on operator retention, and on any bid where the client has seen recent results rather than the pre-March highlight reel. Keystone beats you on legacy-weighted leaderboard ranking, on marquee sponsor retention, on comeback-narrative press coverage, on above-the-line candidate pipeline, on couture-brace press bleed, and on social-calendar presence at galas you cannot buy into.",
+    rivalryFantasy:
+      "You watched her highlight reel before you got your own license. The Suspend was on Dungeon Quarterly twice. Now she has founded her own firm eight blocks from your office, sponsors are signing retainers with her name, and she has never scouted an operator in her life. Her roster looks like her on paper and does not move like her in the field. Her assistant forwards your congratulatory email and she replies personally, asking if you want to grab coffee. The next week she passes on a candidate who has since been the best operator on your bench. She is ranked above you. She is working harder than you are. She is not getting better fast enough.",
+    toneAndVoice:
+      "Composed, warmly professional, dancer-trained precision in word choice — she picks phrases the way she used to pick landings. Press-ready cadence, pauses engineered to sound unrehearsed. She never raises her voice. She never insults publicly. Her frustration with her operators leaks in roster-review subtext — small pauses, the phrase 'that's close' carrying more edge than the words do. Gracious about the Suspend, gracious about the brace, gracious about comeback questions. Never references the Madison Avenue incident on record.",
+  },
+  moves: [
+    {
+      id: "rival-move/keystone/legacy-leaderboard-bid",
+      family: "contract_challenge",
+      weight: 9,
+      cooldownMinutes: 1440,
+      briefingTemplate:
+        "Keystone has filed a competing bid. Aaliyah Beaumont's office has cc'd you a warm personal note and an invitation to the SoHo loft for coffee at her convenience.",
+      basePublicPressureDelta: 6,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "accept-coffee",
+          label: "Accept the coffee invite",
+          description: "Sit with her in the SoHo loft. Keep it cordial.",
+          consequenceSummary: "Reputation up. Contract position weakens.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+          ],
+        },
+        {
+          choiceId: "match-bid-quietly",
+          label: "Match the bid",
+          description: "Counter on value and skip the coffee. Let the work speak.",
+          consequenceSummary: "Treasury down. Contract held.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -150 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "decline-publicly",
+          label: "Publicly decline the invite",
+          description: "Skip the coffee. Let aligned press frame it however it frames.",
+          consequenceSummary: "Public pressure rises. Morale holds.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+            { kind: "morale_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/keystone/pattern-match-recruit-loss",
+      family: "recruitment_market_loss",
+      weight: 7,
+      cooldownMinutes: 2880,
+      briefingTemplate:
+        "A candidate you interviewed twice last month has signed with Keystone. Your intake notes flag that the candidate looks, on paper, very much like Aaliyah Beaumont at twenty-four.",
+      basePublicPressureDelta: 3,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "watch-and-wait",
+          label: "Watch and wait",
+          description: "Aaliyah's coaching failure will return the candidate to market.",
+          consequenceSummary: "No cost. Intel banks for later.",
+          effects: [
+            { kind: "intel_delta", targetRef: "guild", value: 2 },
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+          ],
+        },
+        {
+          choiceId: "sign-passed-candidates",
+          label: "Sign the candidates she passed on",
+          description: "Move on the operators Aaliyah's scouting filter rejected.",
+          consequenceSummary: "Team cohesion up. Treasury down.",
+          effects: [
+            { kind: "team_cohesion_delta", targetRef: "team", value: 2 },
+            { kind: "treasury_delta", targetRef: "guild", value: -80 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/keystone/comeback-narrative-cover",
+      family: "press_gravity",
+      weight: 7,
+      cooldownMinutes: 2160,
+      briefingTemplate:
+        "Dungeon Quarterly has re-run the Suspend-cover silhouette on its fifteen-year retrospective cover this month. Keystone's press office has declined to comment. The magazine mentions the Madison Avenue incident in paragraph six.",
+      basePublicPressureDelta: 5,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "place-counter-profile",
+          label: "Place a counter-profile",
+          description: "Pitch your guild's recent work to the same editors.",
+          consequenceSummary: "Treasury cost. Reputation up.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -70 },
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+          ],
+        },
+        {
+          choiceId: "ignore-cover",
+          label: "Ignore the cover",
+          description: "Keep shipping work. The comeback narrative will erode on its own.",
+          consequenceSummary: "Public pressure rises. Morale holds.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+            { kind: "morale_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+  ],
+} satisfies RivalRecord;

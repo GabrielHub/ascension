@@ -16,5 +16,8 @@ export type {
   IncidentPayload,
   InterruptionInstance,
   RaidBossCommitmentPayload,
+  RivalMoveFamily,
+  RivalMovePayload,
+  RivalMoveTrend,
   WarningPayload,
 } from "./systems/interruptions";

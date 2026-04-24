@@ -1,35 +1,163 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
-  <!-- Props-only scene layer: The Dock. Waterfront staging and departure. -->
-<g><polygon points="118,180 136,190 136,210 118,200" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="154,180 136,190 136,210 154,200" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="136,170 154,180 136,190 118,180" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="128" y1="182" x2="144" y2="190" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="168,194 186,204 186,224 168,214" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="204,194 186,204 186,224 204,214" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="186,184 204,194 186,204 168,194" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="178" y1="196" x2="194" y2="204" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="220,180 238,190 238,210 220,200" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="256,180 238,190 238,210 256,200" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="238,170 256,180 238,190 220,180" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="230" y1="182" x2="246" y2="190" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="274,196 292,206 292,226 274,216" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="310,196 292,206 292,226 310,216" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="292,186 310,196 292,206 274,196" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="284" y1="198" x2="300" y2="206" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="86,194 96,200 96,218 86,212" fill="#414b50" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="106,194 96,200 96,218 106,212" fill="#354045" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="96,188 106,194 96,200 86,194" fill="#5a646a" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="204,212 214,218 214,236 204,230" fill="#414b50" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="224,212 214,218 214,236 224,230" fill="#354045" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="214,206 224,212 214,218 204,212" fill="#5a646a" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="322,194 332,200 332,218 322,212" fill="#414b50" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="342,194 332,200 332,218 342,212" fill="#354045" stroke="#1b2226" stroke-width="0.9"/>
-<polygon points="332,188 342,194 332,200 322,194" fill="#5a646a" stroke="#1b2226" stroke-width="0.9"/>
-<ellipse cx="152" cy="200" rx="15" ry="8" fill="none" stroke="#ac8a54" stroke-width="3" opacity="0.95"/>
-<ellipse cx="282" cy="204" rx="15" ry="8" fill="none" stroke="#ac8a54" stroke-width="3" opacity="0.95"/>
-<polygon points="171,148 214,162 214,184 171,170" fill="#4f5357" stroke="#24282d" stroke-width="0.9"/>
-<polygon points="257,148 214,162 214,184 257,170" fill="#41464a" stroke="#24282d" stroke-width="0.9"/>
-<polygon points="214,134 257,148 214,162 171,148" fill="#6d6f73" stroke="#24282d" stroke-width="0.9"/>
-<line x1="192" y1="150" x2="192" y2="174" stroke="#282d32" stroke-width="1.3"/>
-<line x1="236" y1="150" x2="236" y2="174" stroke="#282d32" stroke-width="1.3"/></g>
+  <!-- Props-only scene layer: The Dock.
+       Waterfront staging and departure surface for Porter's.
+       Built in the approved bodega room-scene language: dense hand-placed
+       isometric props, readable work surfaces, practical clutter, no walls,
+       no floors, no tile grid, no labels, and no broad detached shadows. -->
+
+  <!-- == BACK CHECKLIST BOARD ========================================== -->
+  <g id="dock-checklist-board">
+    <polygon points="222,76 286,108 294,104 230,72"
+      fill="#6f5637" stroke="#4f3822" stroke-width="0.55"/>
+    <polygon points="222,76 286,108 286,152 222,120"
+      fill="#8b673f" stroke="#5a3f25" stroke-width="0.55"/>
+    <polygon points="286,108 294,104 294,148 286,152"
+      fill="#6e5032" stroke="#4b351e" stroke-width="0.45"/>
+    <line x1="232" y1="125" x2="232" y2="174" stroke="#343b40" stroke-width="2"/>
+    <line x1="278" y1="148" x2="278" y2="196" stroke="#343b40" stroke-width="2"/>
+    <line x1="232" y1="172" x2="246" y2="165" stroke="#343b40" stroke-width="1.4"/>
+    <line x1="278" y1="194" x2="292" y2="187" stroke="#343b40" stroke-width="1.4"/>
+    <polygon points="232,86 248,94 248,106 232,98"
+      fill="#e0d5be" stroke="#b69c72" stroke-width="0.25"/>
+    <polygon points="252,97 270,106 270,118 252,109"
+      fill="#d1d8dc" stroke="#8da0a6" stroke-width="0.22"/>
+    <polygon points="233,104 249,112 249,124 233,116"
+      fill="#c4b082" stroke="#927442" stroke-width="0.22"/>
+    <polygon points="253,115 276,126 276,138 253,127"
+      fill="#e8e0d0" stroke="#b7a891" stroke-width="0.22"/>
+    <line x1="240" y1="88" x2="240" y2="104" stroke="#9d3b2e" stroke-width="1"/>
+    <line x1="261" y1="117" x2="261" y2="134" stroke="#2f684b" stroke-width="1"/>
+    <line x1="222" y1="120" x2="286" y2="152" stroke="rgba(255,235,200,0.08)" stroke-width="0.4"/>
+  </g>
+
+  <!-- == LEFT LINE RACK ================================================= -->
+  <g id="line-rack-left">
+    <polygon points="98,124 164,157 142,168 76,135"
+      fill="#3c3935" stroke="#282521" stroke-width="0.6"/>
+    <polygon points="76,135 142,168 142,206 76,173"
+      fill="#44403b" stroke="#2b2824" stroke-width="0.58"/>
+    <polygon points="164,157 142,168 142,206 164,195"
+      fill="#2e2a26" stroke="#24211d" stroke-width="0.5"/>
+    <line x1="76" y1="151" x2="142" y2="184" stroke="#282521" stroke-width="0.55"/>
+    <line x1="98" y1="124" x2="98" y2="184" stroke="#282521" stroke-width="0.45"/>
+    <line x1="120" y1="135" x2="120" y2="195" stroke="#282521" stroke-width="0.45"/>
+    <ellipse cx="100" cy="146" rx="15" ry="7" fill="none" stroke="#b69058" stroke-width="2.4"/>
+    <ellipse cx="102" cy="146" rx="9" ry="4.2" fill="none" stroke="#705337" stroke-width="1.2" opacity="0.8"/>
+    <ellipse cx="134" cy="162" rx="14" ry="6.5" fill="none" stroke="#b69058" stroke-width="2.2"/>
+    <polygon points="86,169 106,179 106,186 86,176" fill="#47545b" stroke="#30383e" stroke-width="0.3"/>
+    <polygon points="110,181 132,192 132,199 110,188" fill="#6c5133" stroke="#3d2c1d" stroke-width="0.3"/>
+    <polygon points="136,132 148,138 148,150 136,144" fill="#8f492f" stroke="#5d2f1f" stroke-width="0.25"/>
+  </g>
+
+  <!-- == RIGHT GEAR RACK =============================================== -->
+  <g id="departure-gear-rack">
+    <polygon points="314,116 366,142 344,153 292,127"
+      fill="#3f4240" stroke="#272a28" stroke-width="0.6"/>
+    <polygon points="292,127 344,153 344,211 292,185"
+      fill="#474a48" stroke="#2d302e" stroke-width="0.58"/>
+    <polygon points="366,142 344,153 344,211 366,200"
+      fill="#303230" stroke="#242624" stroke-width="0.5"/>
+    <line x1="292" y1="145" x2="344" y2="171" stroke="#292c2a" stroke-width="0.55"/>
+    <line x1="292" y1="164" x2="344" y2="190" stroke="#292c2a" stroke-width="0.55"/>
+    <line x1="314" y1="116" x2="314" y2="196" stroke="#292c2a" stroke-width="0.45"/>
+    <polygon points="300,133 318,142 318,149 300,140" fill="#b77f3e"/>
+    <polygon points="322,144 338,152 338,159 322,151" fill="#314655"/>
+    <polygon points="300,154 324,166 324,174 300,162" fill="#5c4931"/>
+    <polygon points="328,168 340,174 340,183 328,177" fill="#d2c7a8" opacity="0.85"/>
+    <polygon points="300,176 318,185 318,196 300,187" fill="#313941"/>
+    <polygon points="322,187 340,196 340,205 322,196" fill="#79583a"/>
+    <path d="M352,148 Q360,159 352,170 Q344,159 352,148"
+      fill="none" stroke="#b69058" stroke-width="2" opacity="0.9"/>
+  </g>
+
+  <!-- == HERO STAGING TABLE ============================================ -->
+  <g id="dock-staging-table">
+    <line x1="176" y1="178" x2="176" y2="202" stroke="#241810" stroke-width="2.2"/>
+    <line x1="288" y1="234" x2="288" y2="258" stroke="#241810" stroke-width="2.2"/>
+    <line x1="136" y1="198" x2="136" y2="222" stroke="#241810" stroke-width="2.2"/>
+    <line x1="248" y1="254" x2="248" y2="278" stroke="#241810" stroke-width="2.2"/>
+    <polygon points="176,168 288,224 248,244 136,188"
+      fill="#5f4b37" stroke="#3e3023" stroke-width="0.8"/>
+    <polygon points="136,188 248,244 248,254 136,198"
+      fill="#3d2c1d" stroke="#2b1f14" stroke-width="0.55"/>
+    <polygon points="288,224 248,244 248,254 288,234"
+      fill="#322417" stroke="#251a10" stroke-width="0.5"/>
+    <line x1="176" y1="168" x2="136" y2="188" stroke="rgba(255,235,200,0.12)" stroke-width="0.55"/>
+    <line x1="176" y1="168" x2="288" y2="224" stroke="rgba(255,235,200,0.08)" stroke-width="0.5"/>
+    <line x1="154" y1="190" x2="266" y2="246" stroke="#463525" stroke-width="0.35" opacity="0.35"/>
+    <line x1="176" y1="180" x2="240" y2="212" stroke="#463525" stroke-width="0.3" opacity="0.3"/>
+
+    <!-- folded chart -->
+    <polygon points="188,178 226,197 212,204 174,185"
+      fill="#ded5c2" stroke="#b9a987" stroke-width="0.3"/>
+    <line x1="190" y1="183" x2="212" y2="194" stroke="#9e8b6a" stroke-width="0.25"/>
+    <line x1="200" y1="179" x2="186" y2="192" stroke="#9e8b6a" stroke-width="0.25"/>
+    <line x1="207" y1="187" x2="217" y2="192" stroke="#2e6f8a" stroke-width="0.45" opacity="0.7"/>
+
+    <!-- radio -->
+    <polygon points="226,190 248,201 236,207 214,196"
+      fill="#29313a" stroke="#1d2329" stroke-width="0.35"/>
+    <polygon points="214,196 236,207 236,217 214,206"
+      fill="#333b45" stroke="#222931" stroke-width="0.3"/>
+    <polygon points="248,201 236,207 236,217 248,211"
+      fill="#242b33" stroke="#1b2027" stroke-width="0.3"/>
+    <circle cx="223" cy="204" r="2.2" fill="#15191e"/>
+    <circle cx="231" cy="208" r="2" fill="#15191e"/>
+    <line x1="242" y1="196" x2="252" y2="185" stroke="#59636d" stroke-width="1.1"/>
+
+    <!-- clipboard and hand lantern -->
+    <polygon points="250,207 274,219 264,224 240,212"
+      fill="#3f5365" stroke="#283744" stroke-width="0.32"/>
+    <line x1="250" y1="211" x2="264" y2="218" stroke="rgba(220,230,220,0.16)" stroke-width="0.35"/>
+    <ellipse cx="168" cy="188" rx="5" ry="2.2" fill="#c59b54" stroke="#6d4a22" stroke-width="0.35"/>
+    <rect x="164" y="188" width="8" height="10" rx="1" fill="#6d4a22" stroke="#3d2915" stroke-width="0.3"/>
+    <rect x="166" y="190" width="4" height="5" fill="rgba(255,205,90,0.22)"/>
+  </g>
+
+  <!-- == FRONT CARGO AND DEPARTURE DETAILS ============================= -->
+  <g id="front-cargo">
+    <polygon points="118,218 146,232 166,222 138,208"
+      fill="#7b5834" stroke="#4b321c" stroke-width="0.5"/>
+    <polygon points="118,218 146,232 146,252 118,238"
+      fill="#6b4d31" stroke="#3d2a19" stroke-width="0.45"/>
+    <polygon points="146,232 166,222 166,242 146,252"
+      fill="#4f3824" stroke="#342315" stroke-width="0.45"/>
+    <line x1="118" y1="227" x2="146" y2="241" stroke="#3d2a19" stroke-width="0.45"/>
+    <line x1="138" y1="208" x2="138" y2="229" stroke="rgba(210,170,90,0.22)" stroke-width="1.5"/>
+
+    <polygon points="184,228 210,241 230,231 204,218"
+      fill="#314236" stroke="#203025" stroke-width="0.45"/>
+    <polygon points="184,228 210,241 210,259 184,246"
+      fill="#2b392f" stroke="#1b2a20" stroke-width="0.42"/>
+    <polygon points="210,241 230,231 230,249 210,259"
+      fill="#223126" stroke="#17241b" stroke-width="0.42"/>
+    <line x1="184" y1="236" x2="210" y2="249" stroke="#405447" stroke-width="0.6"/>
+    <line x1="210" y1="249" x2="230" y2="239" stroke="#394b3f" stroke-width="0.55"/>
+
+    <polygon points="282,232 308,245 328,235 302,222"
+      fill="#755437" stroke="#4c3320" stroke-width="0.48"/>
+    <polygon points="282,232 308,245 308,265 282,252"
+      fill="#684a30" stroke="#3f2b1b" stroke-width="0.42"/>
+    <polygon points="308,245 328,235 328,255 308,265"
+      fill="#4d3724" stroke="#332316" stroke-width="0.42"/>
+    <polygon points="292,224 312,234 326,227 306,217"
+      fill="#8b623c" stroke="#4c3320" stroke-width="0.4"/>
+    <polygon points="292,224 312,234 312,245 292,235"
+      fill="#755437" stroke="#3f2b1b" stroke-width="0.35"/>
+    <polygon points="312,234 326,227 326,238 312,245"
+      fill="#5a3f29" stroke="#332316" stroke-width="0.35"/>
+
+    <ellipse cx="90" cy="216" rx="10" ry="4.6" fill="#333a40" stroke="#1d2226" stroke-width="0.55"/>
+    <rect x="80" y="202" width="20" height="14" fill="#333a40"/>
+    <ellipse cx="90" cy="202" rx="10" ry="4.6" fill="#444c52" stroke="#272e33" stroke-width="0.55"/>
+    <path d="M84,202 Q84,192 90,190 Q96,192 96,202"
+      fill="none" stroke="#5f6a72" stroke-width="1"/>
+    <line x1="80" y1="209" x2="100" y2="209" stroke="#4b555d" stroke-width="0.6"/>
+
+    <ellipse cx="350" cy="220" rx="12" ry="5.8" fill="none" stroke="#b69058" stroke-width="2.3"/>
+    <ellipse cx="350" cy="220" rx="6.8" ry="3.1" fill="none" stroke="#6d5030" stroke-width="1.1"/>
+    <polygon points="338,232 352,239 346,242 332,235"
+      fill="#c8b78d" stroke="#8d7650" stroke-width="0.28"/>
+    <line x1="340" y1="235" x2="346" y2="238" stroke="#7a6240" stroke-width="0.25"/>
+  </g>
 </svg>

@@ -1,478 +1,110 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
   <!-- Props-only scene layer: The Break Room.
-       Private upstairs decompression at Porter's. The first headquarters tier
-       where social/recovery separates from the dining area: cork board of
-       staff memos, kitchenette with drip coffee and a microwave, mini-fridge
-       with shift schedule magnets, a battered leather sectional, a coffee
-       table scarred by mug rings, a wall-mounted flatscreen, and a plant
-       somebody is failing to keep alive. Lived-in, not curated.
+       Private upstairs decompression at Porter's. Sparse, practical room
+       contents only: a worn sofa facing the TV, kitchenette, cork board, and TV.
        Origin (200,100). iso(c,r) = (200+(c-r)*48, 100+(c+r)*24). -->
 
-  <!-- ====================================================================
-       BACK-LEFT WALL (c=0): cork bulletin board with staff memos.
-       Mounted along r=0.7..2.0, z=28..58 above floor.
-       Wall vector: along +r is screen (-48,+24) per tile.
-       ==================================================================== -->
-  <!-- Board frame -->
-  <polygon points="166,86 104,117 104,147 166,116"
+  <!-- Back-left wall fixture: staff cork board. -->
+  <polygon points="156,82 100,110 100,138 156,110"
     fill="#6d4920" stroke="#3a2612" stroke-width="0.7"/>
-  <!-- Cork field -->
-  <polygon points="163,89 107,117 107,144 163,116"
+  <polygon points="153,86 103,111 103,134 153,109"
     fill="#b88856"/>
-  <polygon points="163,89 107,117 163,102 163,89"
-    fill="#c49668" opacity="0.4"/>
-  <!-- Pinned schedule (large white sheet) -->
-  <polygon points="154,95 128,108 128,125 154,112"
-    fill="#efe5cf" stroke="#5c3a1e" stroke-width="0.35" opacity="0.95"/>
-  <line x1="150" y1="99" x2="133" y2="108" stroke="#8a6a3c" stroke-width="0.3" opacity="0.55"/>
-  <line x1="150" y1="103" x2="133" y2="112" stroke="#8a6a3c" stroke-width="0.3" opacity="0.55"/>
-  <line x1="150" y1="107" x2="133" y2="116" stroke="#8a6a3c" stroke-width="0.3" opacity="0.55"/>
-  <line x1="150" y1="111" x2="141" y2="115" stroke="#8a6a3c" stroke-width="0.3" opacity="0.5"/>
-  <!-- Yellow sticky note -->
-  <polygon points="148,116 136,122 136,130 148,124"
-    fill="#f2c97a" stroke="#805e20" stroke-width="0.3" opacity="0.95"/>
-  <!-- Polaroid photo -->
-  <polygon points="124,112 112,118 112,128 124,122"
-    fill="#f1ead4" stroke="#5c3a1e" stroke-width="0.3"/>
-  <polygon points="123,114 113,119 113,125 123,120"
-    fill="#3d5a6a" opacity="0.85"/>
-  <!-- Memo card blue -->
-  <polygon points="122,130 110,136 110,143 122,137"
-    fill="#d9dde2" stroke="#2d3a44" stroke-width="0.3" opacity="0.9"/>
-  <!-- Thumbtacks -->
-  <circle cx="141" cy="102" r="0.9" fill="#c45151"/>
-  <circle cx="142" cy="120" r="0.9" fill="#d4a21a"/>
-  <circle cx="118" cy="115" r="0.9" fill="#2f7b56"/>
-  <circle cx="116" cy="133" r="0.9" fill="#c45151"/>
+  <polygon points="145,93 123,104 123,119 145,108"
+    fill="#efe5cf" stroke="#5c3a1e" stroke-width="0.35"/>
+  <line x1="141" y1="98" x2="127" y2="105" stroke="#8a6a3c" stroke-width="0.3" opacity="0.55"/>
+  <line x1="141" y1="102" x2="127" y2="109" stroke="#8a6a3c" stroke-width="0.3" opacity="0.55"/>
+  <line x1="141" y1="106" x2="130" y2="111" stroke="#8a6a3c" stroke-width="0.3" opacity="0.5"/>
+  <polygon points="120,116 109,122 109,130 120,124"
+    fill="#f2c97a" stroke="#805e20" stroke-width="0.3"/>
+  <polygon points="149,116 137,122 137,130 149,124"
+    fill="#d9dde2" stroke="#2d3a44" stroke-width="0.3"/>
+  <circle cx="135" cy="99" r="0.9" fill="#c45151"/>
+  <circle cx="116" cy="122" r="0.9" fill="#d4a21a"/>
+  <circle cx="144" cy="121" r="0.9" fill="#2f7b56"/>
 
-  <!-- ====================================================================
-       BACK-RIGHT WALL (r=0): flatscreen TV, wall-mounted mid-wall.
-       Along c=1.75..2.75, z=30..62.
-       Wall vector: along +c is screen (+48,+24) per tile.
-       ==================================================================== -->
-  <!-- Bezel -->
-  <polygon points="284,70 332,94 332,128 284,104"
+  <!-- Back-right wall fixture: flatscreen. -->
+  <polygon points="304,78 350,101 350,132 304,109"
     fill="#0f1318" stroke="#05080b" stroke-width="0.7"/>
-  <!-- Screen -->
-  <polygon points="287,73 329,94 329,124 287,103"
+  <polygon points="307,82 347,102 347,128 307,108"
     fill="#1a2630" stroke="#0a0e13" stroke-width="0.4"/>
-  <!-- Screen reflection band -->
-  <polygon points="287,73 329,94 305,98 287,89"
-    fill="#2f4050" opacity="0.55"/>
-  <!-- Faint sports crawl / HUD line -->
-  <line x1="292" y1="117" x2="326" y2="117.5" stroke="#4a5a68" stroke-width="0.3" opacity="0.55"/>
-  <!-- Power LED -->
-  <circle cx="308" cy="108" r="0.7" fill="#6a4020"/>
-  <!-- Cable drop to outlet -->
-  <line x1="308" y1="104" x2="308" y2="128" stroke="#0e1116" stroke-width="0.8" opacity="0.9"/>
-  <line x1="308" y1="128" x2="304" y2="130" stroke="#0e1116" stroke-width="0.8" opacity="0.9"/>
+  <polygon points="307,82 347,102 324,106 307,98"
+    fill="#2f4050" opacity="0.5"/>
+  <line x1="326" y1="109" x2="326" y2="132" stroke="#0e1116" stroke-width="0.8"/>
+  <line x1="326" y1="132" x2="321" y2="135" stroke="#0e1116" stroke-width="0.8"/>
 
-  <!-- ====================================================================
-       KITCHENETTE COUNTER — back-right, r=0..0.4, c=0.3..1.8.
-       Counter top z=28. White laminate with worn brown edge.
-       Floor corners: NW(214,107) NE(286,143) SE(267,153) SW(195,117).
-       Top corners (z=28):   NW(214,79)  NE(286,115) SE(267,125) SW(195,89).
-       ==================================================================== -->
-  <!-- Toe-kick shadow on floor under counter -->
-  <polygon points="197,118 265,152 265,154 197,120"
-    fill="rgba(0,0,0,0.35)"/>
-  <!-- Counter SW front face -->
-  <polygon points="195,89 267,125 267,153 195,117"
-    fill="#c9c6b9" stroke="#57544b" stroke-width="0.5"/>
-  <!-- Front shading gradient toward floor -->
-  <polygon points="195,105 267,141 267,153 195,117"
-    fill="#9a978b" opacity="0.6"/>
-  <!-- Cabinet door seams (vertical on iso) -->
-  <line x1="231" y1="107" x2="231" y2="135" stroke="#57544b" stroke-width="0.5"/>
-  <line x1="248" y1="116" x2="248" y2="144" stroke="#57544b" stroke-width="0.45" opacity="0.8"/>
-  <!-- Horizontal reveal between door and counter lip -->
-  <line x1="195" y1="95" x2="267" y2="131" stroke="#57544b" stroke-width="0.4" opacity="0.8"/>
-  <!-- Drawer pulls (small iso bars) -->
-  <rect x="220" y="116" width="5" height="1.3" rx="0.3" fill="#55524a"/>
-  <rect x="238" y="125" width="5" height="1.3" rx="0.3" fill="#55524a"/>
-  <!-- Counter SE side face -->
-  <polygon points="267,125 286,115 286,143 267,153"
-    fill="#a8a598" stroke="#57544b" stroke-width="0.5"/>
-  <!-- Counter top (laminate) -->
-  <polygon points="214,79 286,115 267,125 195,89"
-    fill="#e4e2d6" stroke="#57544b" stroke-width="0.6"/>
-  <line x1="214" y1="79" x2="195" y2="89" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
-  <line x1="214" y1="79" x2="286" y2="115" stroke="rgba(255,255,255,0.25)" stroke-width="0.35"/>
-  <!-- Backsplash tile strip on wall behind counter (along r=0) -->
-  <polygon points="214,79 286,115 286,112 214,76"
-    fill="#7c7d81" opacity="0.55"/>
+  <!-- Back-right kitchenette, aligned to the canonical floor axes. -->
+  <polygon points="197,132 281,174 281,177 197,135"
+    fill="rgba(0,0,0,0.28)"/>
+  <polygon points="196,106 282,149 282,174 196,131"
+    fill="#c9c6b9" stroke="#57544b" stroke-width="0.55"/>
+  <polygon points="282,149 310,135 310,160 282,174"
+    fill="#a8a598" stroke="#57544b" stroke-width="0.55"/>
+  <polygon points="224,92 310,135 282,149 196,106"
+    fill="#e4e2d6" stroke="#57544b" stroke-width="0.65"/>
+  <line x1="224" y1="92" x2="196" y2="106" stroke="rgba(255,255,255,0.38)" stroke-width="0.4"/>
+  <line x1="224" y1="92" x2="310" y2="135" stroke="rgba(255,255,255,0.22)" stroke-width="0.35"/>
+  <line x1="224" y1="120" x2="224" y2="145" stroke="#57544b" stroke-width="0.45"/>
+  <line x1="253" y1="135" x2="253" y2="160" stroke="#57544b" stroke-width="0.45"/>
+  <line x1="196" y1="113" x2="282" y2="156" stroke="#57544b" stroke-width="0.4" opacity="0.8"/>
+  <rect x="214" y="126" width="5" height="1.3" rx="0.3" fill="#55524a"/>
+  <rect x="243" y="141" width="5" height="1.3" rx="0.3" fill="#55524a"/>
 
-  <!-- ====================================================================
-       APPLIANCES on counter top. Counter top z=28.
-       ==================================================================== -->
-  <!-- MICROWAVE. Base footprint c=0.5..0.85, r=0.05..0.25, top z=28+18=46. -->
-  <!-- Base on counter: NW(0.5,0.05)=(221.6,81.2)  NE(0.85,0.05)=(238.4,89.6)  SE(0.85,0.25)=(228.8,94.4)  SW(0.5,0.25)=(212,86) -->
-  <!-- Top (z=46): same x, y-=18. -->
-  <polygon points="222,63 238,72 229,77 212,68"
+  <!-- Microwave and one grounded isometric coffee maker on the counter. -->
+  <polygon points="232,73 254,84 243,90 221,79"
     fill="#2d3238" stroke="#121518" stroke-width="0.4"/>
-  <polygon points="212,68 229,77 229,94 212,86"
+  <polygon points="221,79 243,90 243,106 221,95"
     fill="#383d44" stroke="#191c20" stroke-width="0.45"/>
-  <polygon points="229,77 238,72 238,90 229,94"
+  <polygon points="243,90 254,84 254,100 243,106"
     fill="#22262c" stroke="#121518" stroke-width="0.4"/>
-  <!-- Microwave door (big darker inset on SW face) -->
-  <polygon points="214,71 225,77 225,90 214,85"
+  <polygon points="225,83 238,89 238,100 225,94"
     fill="#1a1d22" stroke="#0d0f13" stroke-width="0.3"/>
-  <!-- Door window -->
-  <polygon points="216,73 222,76 222,84 216,81"
+  <polygon points="227,85 235,89 235,96 227,92"
     fill="#303743" opacity="0.85"/>
-  <!-- Keypad strip -->
-  <rect x="225.4" y="79" width="2.8" height="9" rx="0.3" fill="#18191d" transform="skewY(-26.5)"/>
-  <!-- Handle -->
-  <rect x="214.2" y="80" width="1.3" height="4.6" rx="0.3" fill="#6b6e74"/>
+  <circle cx="249" cy="94" r="0.8" fill="#bca06b"/>
+  <circle cx="249" cy="98" r="0.8" fill="#6c7177"/>
 
-  <!-- COFFEE MAKER. Base c=1.05..1.35, r=0.05..0.25, height 22. -->
-  <!-- NW(1.05,0.05)=(250.4,98.4)  NE(1.35,0.05)=(264.8,105.6)  SE(1.35,0.25)=(255.2,110.4)  SW(1.05,0.25)=(240.8,103.2) -->
-  <!-- On top of counter (z=28): NW(250,70) NE(265,78) SE(255,82) SW(241,75) -->
-  <!-- Top (z=50): y-=22 from base. NW(250,48) NE(265,56) SE(255,60) SW(241,53) -->
-  <!-- Machine body -->
-  <polygon points="250,70 265,78 255,82 241,75"
-    fill="#3a3530" stroke="#1e1b18" stroke-width="0.4"/>
-  <polygon points="241,75 255,82 255,97 241,90"
-    fill="#2a2622" stroke="#161311" stroke-width="0.4"/>
-  <polygon points="255,82 265,78 265,92 255,97"
-    fill="#1f1c19" stroke="#100e0d" stroke-width="0.35"/>
-  <!-- Carafe (slight glass sheen) -->
-  <polygon points="245,82 253,86 253,95 245,91"
-    fill="#171513" stroke="#0d0b0a" stroke-width="0.3"/>
-  <polygon points="246,83 250,85 250,92 246,90"
+  <polygon points="258,109 280,120 270,126 248,115"
+    fill="#2b2724" stroke="#171412" stroke-width="0.35"/>
+  <polygon points="258,91 280,102 270,108 248,97"
+    fill="#4b4640" stroke="#1e1b18" stroke-width="0.4"/>
+  <polygon points="248,97 270,108 270,126 248,115"
+    fill="#302b27" stroke="#161311" stroke-width="0.45"/>
+  <polygon points="270,108 280,102 280,120 270,126"
+    fill="#24201d" stroke="#100e0d" stroke-width="0.4"/>
+  <polygon points="252,101 263,107 263,121 252,115"
+    fill="#151311" stroke="#0d0b0a" stroke-width="0.3"/>
+  <polygon points="254,104 261,108 261,117 254,113"
     fill="#4a3a28" opacity="0.7"/>
-  <!-- Top plate / warmer -->
-  <polygon points="250,62 263,69 255,73 241,66"
-    fill="#4c4842" stroke="#1e1b18" stroke-width="0.35"/>
-
-  <!-- KETTLE. Base c=0.95..1.08, r=0.25..0.4. Squat chrome kettle. -->
-  <!-- Center base (c=1.0, r=0.33): iso = (232.2, 107.9); z=28 → (232, 80) -->
-  <ellipse cx="232" cy="80" rx="6" ry="3" fill="#8a8f96" stroke="#3f4249" stroke-width="0.35"/>
-  <ellipse cx="232" cy="80" rx="4.5" ry="2.25" fill="#b3b8be" opacity="0.85"/>
-  <path d="M 226,80 Q 226,72 232,72 Q 238,72 238,80"
-    fill="#9ba0a6" stroke="#3f4249" stroke-width="0.35"/>
-  <ellipse cx="232" cy="72" rx="4.5" ry="2" fill="#c7ccd1" stroke="#3f4249" stroke-width="0.35"/>
-  <rect x="232.6" y="70" width="1.2" height="2" fill="#6e7278"/>
-  <path d="M 227,76 Q 223,74 222,78" stroke="#3f4249" stroke-width="0.5" fill="none"/>
-
-  <!-- TWO MUGS on counter, near front edge -->
-  <!-- Mug A at (c=1.55, r=0.32), z=28 → (259.6, 104.7-28) = (260, 77) -->
-  <ellipse cx="260" cy="76" rx="2.6" ry="1.3" fill="#d9dde2" stroke="#5a5f64" stroke-width="0.3"/>
-  <path d="M 257.4,76 L 257.4,80 A 2.6,1.3 0 0 0 262.6,80 L 262.6,76"
+  <polygon points="268,100 276,104 272,107 264,103"
+    fill="#6b6258" stroke="#302a24" stroke-width="0.25"/>
+  <circle cx="276" cy="113" r="0.8" fill="#bca06b"/>
+  <ellipse cx="293" cy="119" rx="2.6" ry="1.3" fill="#d9dde2" stroke="#5a5f64" stroke-width="0.3"/>
+  <path d="M 290.4,119 L 290.4,123 A 2.6,1.3 0 0 0 295.6,123 L 295.6,119"
     fill="#b6bac0" stroke="#5a5f64" stroke-width="0.3"/>
-  <ellipse cx="260" cy="76" rx="2" ry="0.95" fill="rgba(30,15,6,0.75)"/>
-  <path d="M 262.6,77 Q 264.4,77.5 263.9,79.2 Q 263,80 262.4,79.5" stroke="#5a5f64" stroke-width="0.4" fill="none"/>
-  <!-- Mug B at (c=1.3, r=0.33), (251, 84.7) → (251, 85). Tipped on side? No, upright, slightly smaller. -->
-  <ellipse cx="251" cy="86" rx="2.4" ry="1.2" fill="#a8553a" stroke="#4f2416" stroke-width="0.3"/>
-  <path d="M 248.6,86 L 248.6,90 A 2.4,1.2 0 0 0 253.4,90 L 253.4,86"
-    fill="#7b3a24" stroke="#4f2416" stroke-width="0.3"/>
-  <ellipse cx="251" cy="86" rx="1.9" ry="0.9" fill="rgba(30,15,6,0.65)"/>
+  <ellipse cx="293" cy="119" rx="2" ry="0.95" fill="rgba(30,15,6,0.72)"/>
 
-  <!-- ====================================================================
-       MINI-FRIDGE — on floor beside counter. Footprint c=1.9..2.4, r=0..0.5.
-       Top z=34. Floor: NW(291,146) NE(315,158) SE(291,170) SW(267,158)
-       Top:   NW(291,112) NE(315,124) SE(291,136) SW(267,124)
-       ==================================================================== -->
-  <!-- Contact shadow -->
-  <ellipse cx="291" cy="170" rx="22" ry="4.6" fill="rgba(0,0,0,0.3)"/>
-  <!-- SW front face -->
-  <polygon points="267,124 291,136 291,170 267,158"
-    fill="#e4e0d4" stroke="#7a7664" stroke-width="0.5"/>
-  <!-- SE side face -->
-  <polygon points="291,136 315,124 315,158 291,170"
-    fill="#b9b5a8" stroke="#7a7664" stroke-width="0.5"/>
-  <!-- Top face -->
-  <polygon points="291,112 315,124 291,136 267,124"
-    fill="#f1eee2" stroke="#7a7664" stroke-width="0.5"/>
-  <!-- Door seam (horizontal split for freezer compartment) -->
-  <line x1="267,134" x2="291,146" stroke="#7a7664" stroke-width="0.4"/>
-  <line x1="267" y1="134" x2="291" y2="146" stroke="#7a7664" stroke-width="0.45"/>
-  <!-- Door handle (vertical) -->
-  <rect x="272" y="139" width="1.6" height="18" rx="0.4" fill="#6b6858"/>
-  <!-- Fridge magnets -->
-  <rect x="275" y="144" width="5" height="3.5" fill="#c45151" stroke="#55201d" stroke-width="0.25"/>
-  <rect x="283" y="151" width="4" height="3" fill="#2f7b56" stroke="#1d3a29" stroke-width="0.25"/>
-  <polygon points="278,156 284,159 284,163 278,160" fill="#d4a21a" stroke="#6b4f10" stroke-width="0.25"/>
-
-  <!-- ====================================================================
-       TALL STORAGE LOCKER — back-left, c=0..0.4, r=1.3..1.9.
-       Top z=64. Floor NW(134,161) NE(154,171) SE(125,185) SW(106,175).
-       ==================================================================== -->
-  <!-- Contact shadow -->
-  <ellipse cx="130" cy="186" rx="20" ry="4" fill="rgba(0,0,0,0.28)"/>
-  <!-- SW front face (facing camera) -->
-  <polygon points="106,111 125,121 125,185 106,175"
-    fill="#3a4249" stroke="#1b2025" stroke-width="0.55"/>
-  <!-- SE side face -->
-  <polygon points="125,121 154,107 154,171 125,185"
-    fill="#2c3238" stroke="#1b2025" stroke-width="0.5"/>
-  <!-- Top face -->
-  <polygon points="134,97 154,107 125,121 106,111"
-    fill="#4c535a" stroke="#1b2025" stroke-width="0.55"/>
-  <!-- Locker door lines (three stacked) -->
-  <line x1="106" y1="132" x2="125" y2="142" stroke="#1b2025" stroke-width="0.45"/>
-  <line x1="106" y1="153" x2="125" y2="163" stroke="#1b2025" stroke-width="0.45"/>
-  <!-- Ventilation slats -->
-  <line x1="109" y1="118" x2="122" y2="124" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <line x1="109" y1="120.5" x2="122" y2="127" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <line x1="109" y1="139" x2="122" y2="145" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <line x1="109" y1="141.5" x2="122" y2="148" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <line x1="109" y1="160" x2="122" y2="166" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <line x1="109" y1="162.5" x2="122" y2="169" stroke="#1b2025" stroke-width="0.3" opacity="0.7"/>
-  <!-- Door handles (small horizontal bars) -->
-  <rect x="118" y="128" width="4" height="1" rx="0.2" fill="#bca06b"/>
-  <rect x="118" y="149" width="4" height="1" rx="0.2" fill="#bca06b"/>
-  <rect x="118" y="170" width="4" height="1" rx="0.2" fill="#bca06b"/>
-  <!-- Name tag on top door -->
-  <polygon points="110,119 118,123 118,126 110,122" fill="#efe5cf" opacity="0.85"/>
-
-  <!-- ====================================================================
-       FLOOR LAMP — between locker and sofa. Footprint c=0.35, r=1.05.
-       Pole base (197,125). Height 76 screen units.
-       ==================================================================== -->
-  <ellipse cx="197" cy="153" rx="5.5" ry="1.7" fill="rgba(0,0,0,0.3)"/>
-  <ellipse cx="197" cy="153" rx="4" ry="1.2" fill="#1e1e1e" stroke="#0a0a0a" stroke-width="0.35"/>
-  <line x1="197" y1="152" x2="197" y2="80" stroke="#1a1a1a" stroke-width="1.5"/>
-  <!-- Shade (iso trapezoid: top smaller, bottom wider) -->
-  <polygon points="188,78 206,78 210,62 184,62"
-    fill="#dac890" stroke="#8a7a48" stroke-width="0.5"/>
-  <ellipse cx="197" cy="78" rx="9" ry="2.6" fill="#b9a56a" stroke="#8a7a48" stroke-width="0.35"/>
-  <ellipse cx="197" cy="62" rx="13" ry="3.6" fill="#f0dfa4" stroke="#8a7a48" stroke-width="0.4"/>
-  <!-- Warm glow hint -->
-  <ellipse cx="197" cy="71" rx="9" ry="2" fill="#f6e9b8" opacity="0.55"/>
-
-  <!-- ====================================================================
-       AREA RUG — centered under sofa + coffee table.
-       Footprint 2 cols × 1.4 rows, center (c=1.6, r=1.55).
-       iso center = (202.4, 175.6). For 2×1.4:
-         NW Δ=(-14.4, -40.8) NE Δ=(81.6, 14.4) SE Δ=(14.4, 40.8) SW Δ=(-81.6, -14.4)
-         NW=(188,135) NE=(284,190) SE=(217,216) SW=(121,161).
-       ==================================================================== -->
-  <polygon points="188,135 284,190 217,216 121,161"
-    fill="#552a25" stroke="#2a120e" stroke-width="0.5"/>
-  <!-- Inner border -->
-  <polygon points="193,140 279,189 218,212 127,161"
-    fill="#6e3a33" opacity="0.95"/>
-  <!-- Center medallion (simple diamond) -->
-  <polygon points="206,168 240,187 221,198 187,179"
-    fill="#3a1a16" opacity="0.85"/>
-  <polygon points="213,176 232,187 221,194 202,183"
-    fill="#c48e66" opacity="0.4"/>
-  <!-- Iso-axis pinstripes -->
-  <line x1="200,156" x2="235,176" stroke="#3a1a16" stroke-width="0.3" opacity="0.5"/>
-  <line x1="200" y1="156" x2="235" y2="176" stroke="#3a1a16" stroke-width="0.3" opacity="0.5"/>
-  <line x1="215" y1="148" x2="258" y2="173" stroke="#3a1a16" stroke-width="0.3" opacity="0.5"/>
-  <line x1="165" y1="155" x2="200" y2="175" stroke="#3a1a16" stroke-width="0.3" opacity="0.5"/>
-  <line x1="150" y1="163" x2="185" y2="183" stroke="#3a1a16" stroke-width="0.3" opacity="0.45"/>
-  <!-- Tassel fringe along SW edge -->
-  <line x1="125" y1="162" x2="122" y2="164" stroke="#3a1a16" stroke-width="0.4"/>
-  <line x1="138" y1="170" x2="135" y2="172" stroke="#3a1a16" stroke-width="0.4"/>
-  <line x1="152" y1="178" x2="149" y2="180" stroke="#3a1a16" stroke-width="0.4"/>
-  <line x1="166" y1="186" x2="163" y2="188" stroke="#3a1a16" stroke-width="0.4"/>
-  <line x1="180" y1="194" x2="177" y2="196" stroke="#3a1a16" stroke-width="0.4"/>
-  <line x1="194" y1="202" x2="191" y2="204" stroke="#3a1a16" stroke-width="0.4"/>
-
-  <!-- ====================================================================
-       SECTIONAL SOFA (L-SHAPE).
-       Main segment: 1.6 cols × 0.7 rows, center (c=1.0, r=0.95).
-       Short arm:    0.7 cols × 1.0 rows, center (c=2.15, r=1.3).
-       Leather, worn maroon. Backrest on N/NE edges (toward walls).
-       Main seat top z=14. Backrest top z=38.
-       ==================================================================== -->
-
-  <!-- MAIN SEGMENT (west-half sofa)
-       Floor NW(0.2,0.6)=(181,119)  NE(1.8,0.6)=(257,158)
-             SE(1.8,1.3)=(224,177)  SW(0.2,1.3)=(148,138)
-       Seat top (z=14): NW(181,105) NE(257,144) SE(224,163) SW(148,124)
-       Backrest top edge (z=38, on NW edge between NW and NE): (181,81) (257,120)
-  -->
-  <!-- Contact shadow -->
-  <polygon points="151,139 257,191 225,199 149,149"
-    fill="rgba(0,0,0,0.3)"/>
-  <!-- Backrest SE-visible face: from NW_seat(181,105) to NE_seat(257,144) to NE_back_top(257,120) to NW_back_top(181,81) -->
-  <polygon points="181,105 257,144 257,120 181,81"
-    fill="#4f2824" stroke="#2a120e" stroke-width="0.5"/>
-  <polygon points="181,105 257,144 257,138 181,99"
-    fill="#3c1d19" opacity="0.6"/>
-  <!-- Backrest top cap (thin iso strip pushing NW) -->
-  <polygon points="181,81 257,120 256,119 180,80"
-    fill="#6b3a34" stroke="#2a120e" stroke-width="0.35"/>
-  <polygon points="181,81 180,80 180,104 181,105"
-    fill="#2a120e"/>
-  <!-- Seat cushion top diamond -->
-  <polygon points="181,105 257,144 224,163 148,124"
+  <!-- Rear view of a worn sofa facing the TV wall. -->
+  <polygon points="112,192 210,241 248,222 150,173"
+    fill="rgba(0,0,0,0.24)"/>
+  <polygon points="150,158 248,207 210,226 112,177"
     fill="#6b3a34" stroke="#2a120e" stroke-width="0.55"/>
-  <!-- Cushion seams (along iso axes) -->
-  <line x1="205" y1="116" x2="172" y2="134" stroke="#4a211e" stroke-width="0.5" opacity="0.8"/>
-  <line x1="233" y1="130" x2="200" y2="148" stroke="#4a211e" stroke-width="0.5" opacity="0.8"/>
-  <line x1="200" y1="114" x2="233" y2="130" stroke="#4a211e" stroke-width="0.35" opacity="0.55"/>
-  <!-- Cushion highlight -->
-  <polygon points="181,105 257,144 233,155 172,125"
-    fill="#7e453e" opacity="0.35"/>
-  <!-- Seat SW front face (thickness) -->
-  <polygon points="148,124 224,163 224,170 148,131"
-    fill="#3c1d19" stroke="#1e0b09" stroke-width="0.4"/>
-  <!-- Seat SE side face -->
-  <polygon points="224,163 257,144 257,151 224,170"
-    fill="#2f1613" stroke="#1e0b09" stroke-width="0.4"/>
-  <!-- Feet (small dark boxes at base corners) -->
-  <polygon points="148,131 152,133 152,138 148,136" fill="#1a0d0b"/>
-  <polygon points="220,168 224,170 224,177 220,175" fill="#1a0d0b"/>
-  <polygon points="253,149 257,151 257,158 253,156" fill="#1a0d0b"/>
-  <!-- Armrest on SW short end: small block rising z=14..24 above seat -->
-  <polygon points="148,124 157,128 157,138 148,134"
-    fill="#5a2e29" stroke="#2a120e" stroke-width="0.4"/>
-  <polygon points="148,114 157,118 157,128 148,124"
-    fill="#6b3a34" stroke="#2a120e" stroke-width="0.4"/>
-  <polygon points="148,114 157,118 156,117 147,113"
-    fill="#4a2420"/>
-  <!-- Throw blanket draped over SW armrest (tan) -->
-  <polygon points="150,113 158,117 157,138 149,134"
-    fill="#b49166" stroke="#6b4926" stroke-width="0.35" opacity="0.95"/>
-  <line x1="152" y1="118" x2="157" y2="120" stroke="#6b4926" stroke-width="0.3" opacity="0.7"/>
-  <line x1="151" y1="124" x2="157" y2="126" stroke="#6b4926" stroke-width="0.3" opacity="0.6"/>
-  <line x1="151" y1="130" x2="157" y2="132" stroke="#6b4926" stroke-width="0.3" opacity="0.6"/>
-
-  <!-- Scatter pillow on seat (dark green, iso-aligned) -->
-  <polygon points="198,124 213,132 208,137 193,129"
-    fill="#3f5d3e" stroke="#243826" stroke-width="0.35"/>
-  <polygon points="198,124 213,132 213,135 198,127"
-    fill="#2f4a30" opacity="0.85"/>
-
-  <!-- SHORT ARM (east chaise)
-       Floor NW(1.8,0.8)=(248,162)  NE(2.5,0.8)=(282,179)
-             SE(2.5,1.8)=(234,202)  SW(1.8,1.8)=(200,186)
-       Seat top (z=14): NW(248,148) NE(282,165) SE(234,188) SW(200,172)
-       Backrest top edge (z=38, on NE edge): NE_back_top(282,141) SE_back_top(234,164)
-  -->
-  <!-- Backrest SW-visible face: from NE_seat(282,165) down to SE_seat(234,188), up to SE_back_top(234,164), across to NE_back_top(282,141) -->
-  <polygon points="282,165 234,188 234,164 282,141"
-    fill="#4f2824" stroke="#2a120e" stroke-width="0.5"/>
-  <polygon points="282,165 234,188 234,183 282,160"
-    fill="#3c1d19" opacity="0.6"/>
-  <polygon points="282,141 234,164 233,163 281,140"
+  <line x1="181" y1="174" x2="143" y2="193" stroke="#4a211e" stroke-width="0.45" opacity="0.55"/>
+  <line x1="214" y1="190" x2="176" y2="209" stroke="#4a211e" stroke-width="0.45" opacity="0.55"/>
+  <polygon points="112,151 210,200 210,235 112,186"
+    fill="#4f2824" stroke="#2a120e" stroke-width="0.6"/>
+  <polygon points="112,151 210,200 215,197 117,148"
     fill="#6b3a34" stroke="#2a120e" stroke-width="0.35"/>
-  <polygon points="234,164 233,163 233,187 234,188"
-    fill="#2a120e"/>
-  <!-- Seat cushion top -->
-  <polygon points="248,148 282,165 234,188 200,172"
-    fill="#6b3a34" stroke="#2a120e" stroke-width="0.55"/>
-  <line x1="265" y1="157" x2="217" y2="180" stroke="#4a211e" stroke-width="0.5" opacity="0.8"/>
-  <line x1="248" y1="148" x2="234" y2="188" stroke="#4a211e" stroke-width="0.35" opacity="0.5"/>
-  <polygon points="248,148 282,165 258,176 224,160"
-    fill="#7e453e" opacity="0.3"/>
-  <!-- Seat SW front face -->
-  <polygon points="200,172 234,188 234,195 200,179"
-    fill="#3c1d19" stroke="#1e0b09" stroke-width="0.4"/>
-  <!-- Seat SE side face -->
-  <polygon points="234,188 234,195 234,202 234,195"
-    fill="#2f1613"/>
-  <polygon points="234,188 234,202 200,186 200,179"
-    fill="#3c1d19" stroke="#1e0b09" stroke-width="0.4"/>
-  <!-- Feet -->
-  <polygon points="200,179 204,181 204,186 200,184" fill="#1a0d0b"/>
-  <polygon points="230,193 234,195 234,202 230,200" fill="#1a0d0b"/>
-  <polygon points="278,163 282,165 282,172 278,170" fill="#1a0d0b"/>
-  <!-- Pillow on chaise -->
-  <polygon points="252,170 268,177 263,183 247,176"
-    fill="#8a6a3c" stroke="#4a3a1e" stroke-width="0.35"/>
-  <polygon points="252,170 268,177 268,180 252,173"
-    fill="#6c5030" opacity="0.85"/>
-
-  <!-- ====================================================================
-       COFFEE TABLE — long rectangle in front of sofa.
-       Footprint 1.4 cols × 0.55 rows, center (c=1.8, r=1.95).
-       iso center = (193.6, 190). For 1.4×0.55:
-         NW Δ=(-20.4, -46.8) NE Δ=(46.8, 20.4) SE Δ=(20.4, 46.8) SW Δ=(-46.8, -20.4)
-         NW=(173,143) NE=(240,210) SE=(214,237) SW=(147,170).
-       Table top at z=16. Top thickness 3 screen units.
-       ==================================================================== -->
-  <!-- Ground shadow -->
-  <ellipse cx="194" cy="205" rx="38" ry="6.5" fill="rgba(0,0,0,0.3)"/>
-  <!-- Hidden legs running from top down -->
-  <line x1="173" y1="143" x2="173" y2="159" stroke="#1e140a" stroke-width="1.5" opacity="0.9"/>
-  <line x1="240" y1="178" x2="240" y2="194" stroke="#1e140a" stroke-width="1.6"/>
-  <line x1="214" y1="205" x2="214" y2="221" stroke="#1e140a" stroke-width="1.6"/>
-  <line x1="147" y1="170" x2="147" y2="186" stroke="#1e140a" stroke-width="1.6"/>
-  <!-- Top thickness underside (SW and SE faces) -->
-  <polygon points="147,154 214,189 214,192 147,157"
-    fill="#2a1a10" stroke="#1e140a" stroke-width="0.4"/>
-  <polygon points="240,178 214,189 214,192 240,181"
-    fill="#2f1e12" stroke="#1e140a" stroke-width="0.4"/>
-  <!-- Table top diamond (dark scratched wood) -->
-  <polygon points="173,143 240,178 214,189 147,154"
-    fill="#3a2618" stroke="#1e140a" stroke-width="0.6"/>
-  <!-- Wood grain along iso axes -->
-  <line x1="173" y1="143" x2="147" y2="154" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
-  <line x1="173" y1="143" x2="240" y2="178" stroke="rgba(255,255,255,0.07)" stroke-width="0.45"/>
-  <line x1="160" y1="149" x2="227" y2="184" stroke="#2a1810" stroke-width="0.35" opacity="0.55"/>
-  <line x1="155" y1="155" x2="220" y2="188" stroke="#2a1810" stroke-width="0.3" opacity="0.4"/>
-  <!-- Coffee ring stains -->
-  <ellipse cx="180" cy="164" rx="3.8" ry="1.9" fill="none" stroke="rgba(30,15,6,0.55)" stroke-width="0.55"/>
-  <ellipse cx="205" cy="175" rx="3" ry="1.5" fill="none" stroke="rgba(30,15,6,0.45)" stroke-width="0.5"/>
-  <!-- Gouged corner scuff -->
-  <line x1="235" y1="177" x2="238" y2="178" stroke="#1e140a" stroke-width="0.6"/>
-
-  <!-- ============= ITEMS ON COFFEE TABLE (top z=16) ============= -->
-  <!-- Open paperback / magazine splayed on SE half -->
-  <polygon points="200,170 224,183 220,188 196,175"
-    fill="#efe5cf" stroke="#8a6a3c" stroke-width="0.35"/>
-  <line x1="212" y1="176" x2="210" y2="180" stroke="#8a6a3c" stroke-width="0.35" opacity="0.8"/>
-  <line x1="204" y1="172.5" x2="218" y2="180" stroke="#b0a078" stroke-width="0.3" opacity="0.7"/>
-  <line x1="203.5" y1="173.5" x2="217.5" y2="181" stroke="#b0a078" stroke-width="0.3" opacity="0.55"/>
-  <line x1="203" y1="174.5" x2="217" y2="182" stroke="#b0a078" stroke-width="0.3" opacity="0.5"/>
-  <!-- Mug (white, iso cylinder) on NW of table -->
-  <path d="M 167.5,155 A 2.6,1.3 0 0 0 172.7,155 L 172.7,160 A 2.6,1.3 0 0 1 167.5,160 Z"
-    fill="#efe5cf" stroke="#8a8372" stroke-width="0.35"/>
-  <ellipse cx="170.1" cy="155" rx="2.6" ry="1.3" fill="#d8d0c0" stroke="#8a8372" stroke-width="0.3"/>
-  <ellipse cx="170.1" cy="155" rx="2" ry="0.95" fill="rgba(30,15,6,0.75)"/>
-  <path d="M 172.7,156 Q 174.6,156.5 174,158.2 Q 173.1,159 172.4,158.5" stroke="#8a8372" stroke-width="0.4" fill="none"/>
-  <!-- Deck of playing cards (small stack) -->
-  <polygon points="185,158 195,163 194,167 184,162"
-    fill="#efe5cf" stroke="#2a120e" stroke-width="0.3"/>
-  <polygon points="185,157 195,162 194,166 184,161"
-    fill="#d8d0c0" stroke="#2a120e" stroke-width="0.25"/>
-  <polygon points="185,156 195,161 194,165 184,160"
-    fill="#efe5cf" stroke="#2a120e" stroke-width="0.3"/>
-  <circle cx="190" cy="161.5" r="0.8" fill="#c45151"/>
-  <!-- TV remote -->
-  <polygon points="175,175 191,183 189,186 173,178"
-    fill="#2a2a2a" stroke="#0d0d0d" stroke-width="0.3"/>
-  <circle cx="179" cy="178" r="0.55" fill="#c45151"/>
-  <circle cx="183" cy="180" r="0.45" fill="#bca06b"/>
-  <circle cx="186" cy="181.5" r="0.4" fill="#6c7177"/>
-
-  <!-- ====================================================================
-       HOUSEPLANT — front-right corner, c=3.0, r=1.4 (floor).
-       Terracotta pot on floor, leafy plant above.
-       ==================================================================== -->
-  <ellipse cx="277" cy="213" rx="13" ry="3.6" fill="rgba(0,0,0,0.3)"/>
-  <!-- Pot: frustum iso. Base at c=3.0, r=1.4 → iso (277, 205). -->
-  <polygon points="270,206 284,206 287,194 267,194"
-    fill="#a8553a" stroke="#5c2a1a" stroke-width="0.45"/>
-  <polygon points="270,206 284,206 287,208 267,208"
-    fill="#7b3a24" stroke="#5c2a1a" stroke-width="0.35"/>
-  <ellipse cx="277" cy="194" rx="10" ry="2.6" fill="#c76844" stroke="#5c2a1a" stroke-width="0.4"/>
-  <ellipse cx="277" cy="194" rx="8" ry="2" fill="#4a2a1e" opacity="0.9"/>
-  <!-- Soil highlight -->
-  <ellipse cx="277" cy="194" rx="7" ry="1.6" fill="#3a1f14" opacity="0.7"/>
-  <!-- Rim highlight -->
-  <path d="M 267,194 Q 277,197 287,194" stroke="#d47e5a" stroke-width="0.35" fill="none" opacity="0.6"/>
-  <!-- Leaves (layered paths, iso-camera drapeover) -->
-  <path d="M 277,193 Q 268,180 265,167 Q 272,172 277,178 Z"
-    fill="#5d8a56" stroke="#2d4a2a" stroke-width="0.5"/>
-  <path d="M 277,193 Q 285,178 290,165 Q 284,172 279,180 Z"
-    fill="#4b7448" stroke="#2d4a2a" stroke-width="0.5"/>
-  <path d="M 277,193 Q 273,175 277,158 Q 281,172 280,182 Z"
-    fill="#6ea260" stroke="#2d4a2a" stroke-width="0.5"/>
-  <path d="M 277,193 Q 263,187 256,177 Q 266,183 275,188 Z"
-    fill="#4b7448" stroke="#2d4a2a" stroke-width="0.5"/>
-  <path d="M 277,193 Q 291,188 298,178 Q 288,184 279,189 Z"
-    fill="#5d8a56" stroke="#2d4a2a" stroke-width="0.5"/>
-  <!-- Leaf veins -->
-  <path d="M 277,193 Q 275,182 276,170" stroke="#2d4a2a" stroke-width="0.3" fill="none" opacity="0.6"/>
-  <path d="M 277,193 Q 282,182 286,170" stroke="#2d4a2a" stroke-width="0.3" fill="none" opacity="0.55"/>
-  <!-- Drooping sad leaf (the one that's dying) -->
-  <path d="M 285,194 Q 294,198 296,204" stroke="#6b5a22" stroke-width="0.6" fill="none"/>
-  <ellipse cx="295" cy="202" rx="2.6" ry="1.2" fill="#8a7a3a" transform="rotate(28 295 202)"/>
+  <polygon points="210,200 248,181 248,216 210,235"
+    fill="#3c1d19" stroke="#1e0b09" stroke-width="0.5"/>
+  <polygon points="210,200 248,181 253,178 215,197"
+    fill="#5a2e29" stroke="#2a120e" stroke-width="0.35"/>
+  <polygon points="112,186 210,235 210,244 112,195"
+    fill="#3c1d19" stroke="#1e0b09" stroke-width="0.45"/>
+  <polygon points="210,235 248,216 248,225 210,244"
+    fill="#2f1613" stroke="#1e0b09" stroke-width="0.45"/>
+  <line x1="145" y1="168" x2="145" y2="203" stroke="#3a1a16" stroke-width="0.45" opacity="0.65"/>
+  <line x1="178" y1="185" x2="178" y2="220" stroke="#3a1a16" stroke-width="0.45" opacity="0.65"/>
+  <polygon points="112,195 116,197 116,204 112,202" fill="#1a0d0b"/>
+  <polygon points="206,242 210,244 210,251 206,249" fill="#1a0d0b"/>
+  <polygon points="244,223 248,225 248,232 244,230" fill="#1a0d0b"/>
 </svg>

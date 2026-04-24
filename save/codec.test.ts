@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getRoomActiveFootprint, getRoomStateId } from "lib/hq-room-state";
 import { DEFAULT_POLICY_STATE } from "lib/policies";
+import { readyToWireRivals } from "content/templates/rivals";
 
 import {
   CURRENT_CONTENT_COMPATIBILITY,
@@ -2546,125 +2547,212 @@ describe("save codec", () => {
     expect(guidance.completedBeatIds).toContain("guidance/opening/bodega-overview");
   });
 
-  it("round-trips city pressure state through storage preparation", () => {
+  it("hydrates saves to default public pressure", () => {
     const base = createBaseSave();
-    const cityPressure = {
-      districts: [
-        {
-          districtId: "district/lower-east-side",
-          attention: 10,
-          trust: 45,
-          containmentDebt: 3,
-          recentContractCount: 2,
-          lastResolvedTick: 100,
+    const result = hydratePersistedSaveGame(base);
+    expect(result.save.world.publicPressure).toBeDefined();
+    expect(result.save.world.publicPressure!.score).toBe(0);
+    expect(result.save.world.factionRelationships).toHaveLength(4);
+    expect(result.save.world.rivalPressure).toEqual({
+      active: false,
+      currentPrimaryRivalId: null,
+      rivals: [],
+    });
+  });
+
+  it("migrates legacy city pressure into public pressure and faction relationships", () => {
+    const base = createBaseSave();
+    const legacySave = {
+      ...base,
+      schemaVersion: 19,
+      world: {
+        ...base.world,
+        publicPressure: undefined,
+        factionRelationships: undefined,
+        cityPressure: {
+          districts: [
+            {
+              districtId: "district/lower-east-side",
+              attention: 36,
+              trust: 42,
+              containmentDebt: 18,
+              recentContractCount: 2,
+              lastResolvedTick: 1200,
+            },
+          ],
+          factions: [
+            {
+              factionId: "faction/city-licensing",
+              standing: -12,
+              scrutiny: 44,
+              leverage: 3,
+              cooldownUntilTick: 3000,
+            },
+          ],
         },
-      ],
-      factions: [
-        {
-          factionId: "faction/city-licensing",
-          standing: 5,
-          scrutiny: 12,
-          leverage: 3,
-          cooldownUntilTick: 200,
-        },
-      ],
-    };
-    const normalized = preparePersistedSaveGameForStorage({
+      },
+    } as unknown as PersistedSaveGame;
+
+    const result = hydratePersistedSaveGame(legacySave);
+
+    expect(result.changed).toBe(true);
+    expect(result.save.world.publicPressure).toEqual(
+      expect.objectContaining({
+        score: 44,
+        dominantSource: "regulator",
+      }),
+    );
+    expect(
+      result.save.world.publicPressure!.districts.find(
+        (district) => district.districtId === "district/lower-east-side",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        standing: 42,
+        heat: 36,
+        containment: 18,
+        recentContractCount: 2,
+        lastResolvedTick: 1200,
+      }),
+    );
+    expect(
+      result.save.world.factionRelationships!.find(
+        (faction) => faction.factionId === "faction/city-licensing",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        standing: -12,
+        cooldownUntilTick: 3000,
+      }),
+    );
+  });
+
+  it("round-trips rival recent-move ids through hydration", () => {
+    const primary = readyToWireRivals[0];
+    const base = createBaseSave();
+    const prepared = preparePersistedSaveGameForStorage({
       ...base,
       world: {
         ...base.world,
-        cityPressure,
+        rivalPressure: {
+          active: true,
+          currentPrimaryRivalId: primary.id,
+          rivals: [
+            {
+              rivalId: primary.id,
+              ladderPosition: 1,
+              strengthBand: "peer",
+              intensity: 45,
+              aggression: 30,
+              trend: "rising",
+              isPrimary: true,
+              introducedAtTick: 1000,
+              lastMoveTick: 2400,
+              recentMoveIds: [primary.moves[0].id],
+              departedOperatorId: null,
+              missedProspectId: null,
+              sourceTick: 1000,
+              sourceReason: "war_room_unlock",
+            },
+          ],
+        },
       },
     });
-    expect(normalized.world.cityPressure).toBeDefined();
-    expect(normalized.world.cityPressure!.districts).toHaveLength(5);
-    expect(normalized.world.cityPressure!.districts[0].districtId).toBe("district/lower-east-side");
-    expect(normalized.world.cityPressure!.districts[0].trust).toBe(45);
-    expect(normalized.world.cityPressure!.districts[1]).toEqual({
-      districtId: "district/queens-railyard",
-      attention: 0,
-      trust: 50,
-      containmentDebt: 0,
-      recentContractCount: 0,
-      lastResolvedTick: 0,
-    });
-    expect(normalized.world.cityPressure!.factions).toHaveLength(5);
-    expect(normalized.world.cityPressure!.factions[0].factionId).toBe("faction/city-licensing");
-    expect(normalized.world.cityPressure!.factions[0].standing).toBe(5);
-    expect(normalized.world.cityPressure!.factions[1]).toEqual({
-      factionId: "faction/labor-safety",
-      standing: 0,
-      scrutiny: 0,
-      leverage: 0,
-      cooldownUntilTick: 0,
-    });
+
+    const result = hydratePersistedSaveGame(prepared);
+    const restored = result.save.world.rivalPressure!;
+    expect(restored.active).toBe(true);
+    expect(restored.currentPrimaryRivalId).toBe(primary.id);
+    expect(restored.rivals).toHaveLength(1);
+    expect(restored.rivals[0].recentMoveIds).toEqual([primary.moves[0].id]);
   });
 
-  it("hydrates saves without city pressure as undefined", () => {
+  it("hydrates pre-schema-21 rival instances with an empty recentMoveIds list", () => {
+    const primary = readyToWireRivals[0];
     const base = createBaseSave();
-    const result = hydratePersistedSaveGame(base);
-    expect(result.save.world.cityPressure).toBeUndefined();
+    const legacyRival = {
+      rivalId: primary.id,
+      ladderPosition: 1,
+      strengthBand: "peer",
+      intensity: 40,
+      aggression: 25,
+      trend: "stable",
+      isPrimary: true,
+      introducedAtTick: 500,
+      lastMoveTick: null,
+      departedOperatorId: null,
+      missedProspectId: null,
+      sourceTick: 500,
+      sourceReason: "war_room_unlock",
+    };
+    const legacyWorld = {
+      ...base.world,
+      rivalPressure: {
+        active: true,
+        currentPrimaryRivalId: primary.id,
+        rivals: [legacyRival],
+      },
+    } as unknown as PersistedSaveGame["world"];
+
+    const result = hydratePersistedSaveGame({ ...base, world: legacyWorld });
+    const restored = result.save.world.rivalPressure!;
+    expect(result.changed).toBe(true);
+    expect(restored.rivals[0].recentMoveIds).toEqual([]);
   });
 
-  it("rejects city pressure entries for unknown district ids", () => {
+  it("normalizes rival primary flags to the current primary id", () => {
+    const first = readyToWireRivals[0];
+    const second = readyToWireRivals[1];
     const base = createBaseSave();
-
-    expect(() =>
-      hydratePersistedSaveGame({
-        ...base,
-        world: {
-          ...base.world,
-          cityPressure: {
-            districts: [
-              {
-                districtId: "district/not-real",
-                attention: 1,
-                trust: 2,
-                containmentDebt: 3,
-                recentContractCount: 4,
-                lastResolvedTick: 5,
-              },
-            ],
-            factions: [],
-          },
+    const result = hydratePersistedSaveGame({
+      ...base,
+      world: {
+        ...base.world,
+        rivalPressure: {
+          active: true,
+          currentPrimaryRivalId: second.id,
+          rivals: [
+            {
+              rivalId: first.id,
+              ladderPosition: 1,
+              strengthBand: "above",
+              intensity: 45,
+              aggression: 30,
+              trend: "stable",
+              isPrimary: true,
+              introducedAtTick: 1000,
+              lastMoveTick: null,
+              recentMoveIds: [],
+              departedOperatorId: null,
+              missedProspectId: null,
+              sourceTick: 1000,
+              sourceReason: "war_room_unlock",
+            },
+            {
+              rivalId: second.id,
+              ladderPosition: 2,
+              strengthBand: "peer",
+              intensity: 55,
+              aggression: 35,
+              trend: "rising",
+              isPrimary: false,
+              introducedAtTick: 1000,
+              lastMoveTick: null,
+              recentMoveIds: [],
+              departedOperatorId: null,
+              missedProspectId: null,
+              sourceTick: 1000,
+              sourceReason: "war_room_unlock",
+            },
+          ],
         },
-      }),
-    ).toThrowError(
-      /save\.world\.cityPressure\.districts\[0\]\.districtId must reference a known district id, got "district\/not-real"\./,
-    );
-  });
+      },
+    });
 
-  it("rejects duplicate city pressure faction ids", () => {
-    const base = createBaseSave();
-
-    expect(() =>
-      hydratePersistedSaveGame({
-        ...base,
-        world: {
-          ...base.world,
-          cityPressure: {
-            districts: [],
-            factions: [
-              {
-                factionId: "faction/city-licensing",
-                standing: 1,
-                scrutiny: 2,
-                leverage: 3,
-                cooldownUntilTick: 4,
-              },
-              {
-                factionId: "faction/city-licensing",
-                standing: 5,
-                scrutiny: 6,
-                leverage: 7,
-                cooldownUntilTick: 8,
-              },
-            ],
-          },
-        },
-      }),
-    ).toThrowError(
-      /save\.world\.cityPressure\.factions\[1\]\.factionId duplicates factionId "faction\/city-licensing"\./,
-    );
+    expect(result.changed).toBe(true);
+    expect(result.save.world.rivalPressure!.rivals.map((rival) => rival.isPrimary)).toEqual([
+      false,
+      true,
+    ]);
   });
 });

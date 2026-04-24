@@ -15,7 +15,8 @@ export type InterruptionType =
   | "relocation"
   | "announcement"
   | "warning"
-  | "guidance";
+  | "guidance"
+  | "rival_move";
 
 export type InterruptionBlockingMode = "blocking" | "acknowledgment" | "deferrable";
 
@@ -44,7 +45,8 @@ export type InterruptionPayload =
   | RelocationPayload
   | AnnouncementPayload
   | WarningPayload
-  | GuidancePayload;
+  | GuidancePayload
+  | RivalMovePayload;
 
 export interface SettingsPayload {
   kind: "settings";
@@ -140,6 +142,66 @@ export interface GuidancePayload extends PresenterBinding {
   fallbackBody?: string;
 }
 
+export type RivalMoveFamily =
+  | "recruitment_market_loss"
+  | "sponsor_interference"
+  | "public_comparison"
+  | "contract_challenge"
+  | "site_arrival"
+  | "press_gravity";
+
+export type RivalMoveTrend = "rising" | "stable" | "slipping";
+
+export type RivalMoveEffectKind =
+  | "morale_delta"
+  | "loyalty_delta"
+  | "treasury_delta"
+  | "reputation_delta"
+  | "intel_delta"
+  | "team_cohesion_delta"
+  | "contract_pressure_delta"
+  | "faction_relationship_delta"
+  | "public_pressure_delta";
+
+export type RivalMoveEffectTargetRef = "guild" | "team" | `faction:${string}`;
+
+export interface RivalMovePayloadEffect {
+  kind: RivalMoveEffectKind;
+  targetRef: RivalMoveEffectTargetRef;
+  value: number;
+}
+
+export interface RivalMovePayloadChoice {
+  choiceId: string;
+  label: string;
+  description: string;
+  consequenceSummary: string;
+  effects: readonly RivalMovePayloadEffect[];
+}
+
+export interface RivalMovePayload {
+  kind: "rival_move";
+  rivalId: string;
+  moveTemplateId: string;
+  shortDisplayName: string;
+  guildName: string;
+  leaderName: string;
+  leaderPortrait: string;
+  insignia: string;
+  pressureLane: string;
+  family: RivalMoveFamily;
+  message: string;
+  briefing: string;
+  intensity: number;
+  aggression: number;
+  intensityDelta: number;
+  publicPressureDelta: number;
+  trend: RivalMoveTrend;
+  warRoomMitigated: boolean;
+  dayNumber: number;
+  choices: readonly RivalMovePayloadChoice[];
+}
+
 // ── Interruption queue state ─────────────────────────────────────────────
 
 export interface InterruptionQueueState {
@@ -164,6 +226,7 @@ const INTERRUPTION_PRIORITY: Record<InterruptionType, number> = {
   relocation: 85,
   incident: 70,
   guidance: 60,
+  rival_move: 55,
   announcement: 50,
   settings: 10,
 };

@@ -35,10 +35,10 @@ import {
   pushRuntimeEvent,
 } from "./commands";
 import {
-  applyFactionScrutinyDelta,
-  applyFactionStandingDelta,
+  applyFactionRelationshipDelta,
+  applyPublicPressureDelta,
   SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
-} from "./city-pressure";
+} from "./public-pressure";
 import {
   applyRoomCultureShiftFromIncident,
   applySocialRecoveryAfterDistrictWin,
@@ -48,6 +48,7 @@ import {
 } from "./social";
 import { SeededRng, weightedChoice, type WeightedItem } from "../uncertainty";
 import { seedFromSimulationKey } from "./seed-utils";
+import { hasEligibleCurrentRivalMove } from "./rival-pressure";
 
 // ── Incident template schema ─────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export type IncidentTriggerFamily =
   | "operator_conflict"
   | "grief_fallout"
   | "injury_setback"
-  | "rival_poaching"
+  | "retention_pressure"
   | "contract_pressure"
   | "room_breakdown"
   | "compliance_pressure"
@@ -77,8 +78,8 @@ export type ConsequenceKind =
   | "injury_progression"
   | "departure_risk"
   | "contract_pressure_delta"
-  | "faction_standing_delta"
-  | "faction_scrutiny_delta";
+  | "faction_relationship_delta"
+  | "public_pressure_delta";
 
 export type ConsequenceTargetRef =
   | "subject_a"
@@ -353,17 +354,17 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
   {
     id: "incident/rival-recruitment-offer",
     name: "External Recruitment Offer",
-    category: "rival_poaching",
-    tags: ["rival", "retention", "loyalty"],
+    category: "departure_warning",
+    tags: ["retention", "loyalty"],
     weight: 20,
-    triggerFamily: "rival_poaching",
+    triggerFamily: "retention_pressure",
     pressureTags: ["pressure:retention", "pressure:economy"],
     pressureThreshold: 50,
     requiredContext: ["operator_a"],
     cooldownMinutes: 960,
     noveltyWeight: 1.3,
     briefingTemplate:
-      "A competing guild has approached {operator_a} with a better offer. They haven't committed yet.",
+      "{operator_a} has a better offer from outside the guild. They haven't committed yet.",
     choices: [
       {
         choiceId: "counter_offer",
@@ -1598,21 +1599,21 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
     ],
   },
 
-  // ── Rival interference ───────────────────────────────────────────────
+  // ── Outside market pressure ──────────────────────────────────────────
   {
     id: "incident/rival-contract-sabotage",
-    name: "Rival Contract Interference",
-    category: "rival_interference",
-    tags: ["rival", "sabotage", "contract"],
+    name: "Contract Board Interference",
+    category: "contract_opportunity",
+    tags: ["contract", "sabotage", "market"],
     weight: 22,
-    triggerFamily: "faction_pressure",
+    triggerFamily: "contract_pressure",
     pressureTags: ["pressure:contract", "pressure:reputation"],
     pressureThreshold: 45,
     requiredContext: ["operator_a", "faction"],
     cooldownMinutes: 1440,
     noveltyWeight: 1.2,
     briefingTemplate:
-      "Intel suggests {faction} has been undermining your current contract. Field equipment has been tampered with, and {operator_a} reported interference during the last deployment.",
+      "Intel suggests a competing clearance outfit has been undermining your current contract with help from {faction}. Field equipment has been tampered with, and {operator_a} reported interference during the last deployment.",
     choices: [
       {
         choiceId: "investigate_and_expose",
@@ -1628,7 +1629,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
       {
         choiceId: "harden_operations",
         label: "Harden Operations",
-        description: "Increase security protocols. Don't give them another opening.",
+        description: "Increase security protocols. Do not give the outside outfit another opening.",
         consequenceSummary: "Treasury cost, contract pressure eased.",
         effects: [
           { kind: "treasury_delta", targetRef: "guild", value: -50 },
@@ -1649,18 +1650,18 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
   },
   {
     id: "incident/rival-recruitment-raid",
-    name: "Rival Recruitment Push",
-    category: "rival_interference",
-    tags: ["rival", "retention", "operators"],
+    name: "Outside Recruitment Push",
+    category: "departure_warning",
+    tags: ["retention", "operators", "market"],
     weight: 18,
-    triggerFamily: "faction_pressure",
+    triggerFamily: "retention_pressure",
     pressureTags: ["pressure:retention", "pressure:loyalty"],
     pressureThreshold: 50,
     requiredContext: ["operator_a", "operator_b"],
     cooldownMinutes: 1440,
     noveltyWeight: 1.1,
     briefingTemplate:
-      "A rival guild has been approaching your operators directly. {operator_a} and {operator_b} both received offers this week.",
+      "Other clearance employers have been approaching your operators directly. {operator_a} and {operator_b} both received offers this week.",
     choices: [
       {
         choiceId: "retention_bonuses",
@@ -2202,7 +2203,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "treasury_delta", targetRef: "guild", value: -220 },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/city-licensing",
             value: -14,
           },
@@ -2217,12 +2218,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "reputation_delta", targetRef: "guild", value: -1 },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/city-licensing",
             value: -18,
           },
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/city-licensing",
             value: 5,
           },
@@ -2236,12 +2237,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Free today, heavy scrutiny escalation, standing damaged.",
         effects: [
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/city-licensing",
             value: 16,
           },
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/city-licensing",
             value: -10,
           },
@@ -2276,7 +2277,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Standing climbs, reputation lifts, scrutiny unmoved.",
         effects: [
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 14,
           },
@@ -2292,7 +2293,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "treasury_delta", targetRef: "guild", value: -90 },
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 6,
           },
@@ -2306,82 +2307,14 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Standing falls with the sponsor; scrutiny climbs across regulators.",
         effects: [
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: -8,
           },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 10,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "incident/rival-guild-poaching-push",
-    name: "Rival Guild Poaching Push",
-    category: "rival_poaching",
-    tags: ["skyscraper", "rival", "roster", "faction"],
-    weight: 18,
-    triggerFamily: "rival_poaching",
-    pressureTags: ["pressure:rivalry", "pressure:loyalty"],
-    pressureThreshold: 50,
-    requiredContext: ["operator_a"],
-    cooldownMinutes: 2160,
-    noveltyWeight: 1.2,
-    briefingTemplate:
-      "A rival tower across the river is running a coordinated poaching campaign against {guildName}. {operator_a} is the first name on their list — the offer is already on the table. The War Room can plan a counter-op. Or the guild can absorb the loss.",
-    requiredBuildingIds: ["building/skyscraper"],
-    preferredRoomTemplateIds: ["room/war_room:tier_1"],
-    choices: [
-      {
-        choiceId: "war_room_counter_op",
-        label: "Run a Counter-Op",
-        description:
-          "War Room plans a quiet counter-move against the rival's pipeline. The hit lands on them, not on {guildName}.",
-        consequenceSummary: "Loyalty steadies, rival leverage cut back, intel gained.",
-        requiredOperationalRoomTemplateIds: ["room/war_room:tier_1"],
-        effects: [
-          { kind: "loyalty_delta", targetRef: "subject_a", value: 8 },
-          {
-            kind: "faction_scrutiny_delta",
-            targetRef: "faction:faction/rival-guild-market",
-            value: -10,
-          },
-          {
-            kind: "faction_standing_delta",
-            targetRef: "faction:faction/rival-guild-market",
-            value: -6,
-          },
-          { kind: "intel_delta", targetRef: "guild", value: 6 },
-        ],
-      },
-      {
-        choiceId: "match_the_offer",
-        label: "Match the Offer",
-        description:
-          "Pay whatever the rival is paying, plus a little more. {operator_a} stays, but the budget line bleeds.",
-        consequenceSummary: "Treasury hit, loyalty shore-up, rival unimpeded.",
-        effects: [
-          { kind: "treasury_delta", targetRef: "guild", value: -160 },
-          { kind: "loyalty_delta", targetRef: "subject_a", value: 5 },
-        ],
-      },
-      {
-        choiceId: "let_them_walk",
-        label: "Let Them Walk",
-        description:
-          "If the offer is that good, matching it only buys more of the same later. Accept the loss and plan around it.",
-        consequenceSummary: "Loyalty collapses, departure risk spikes, rival leverage surges.",
-        effects: [
-          { kind: "loyalty_delta", targetRef: "subject_a", value: -10 },
-          { kind: "departure_risk", targetRef: "subject_a", value: 30 },
-          {
-            kind: "faction_standing_delta",
-            targetRef: "faction:faction/rival-guild-market",
-            value: -4,
           },
         ],
       },
@@ -2413,12 +2346,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Standing recovers if clean, reputation holds steady.",
         effects: [
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 8,
           },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/borough-contracts",
             value: -6,
           },
@@ -2434,12 +2367,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "treasury_delta", targetRef: "guild", value: -140 },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/borough-contracts",
             value: -12,
           },
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 2,
           },
@@ -2453,12 +2386,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Standing drops, reputation falls, scrutiny climbs.",
         effects: [
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: -12,
           },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 10,
           },
@@ -2494,7 +2427,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "reputation_delta", targetRef: "guild", value: 6 },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/city-licensing",
             value: 10,
           },
@@ -2508,12 +2441,12 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         consequenceSummary: "Standing lifts with the sponsor, scrutiny and reputation hold.",
         effects: [
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/borough-contracts",
             value: 6,
           },
           {
-            kind: "faction_scrutiny_delta",
+            kind: "public_pressure_delta",
             targetRef: "faction:faction/city-licensing",
             value: 3,
           },
@@ -2528,7 +2461,7 @@ export const INCIDENT_TEMPLATES: readonly IncidentTemplate[] = [
         effects: [
           { kind: "reputation_delta", targetRef: "guild", value: -5 },
           {
-            kind: "faction_standing_delta",
+            kind: "faction_relationship_delta",
             targetRef: "faction:faction/city-licensing",
             value: -4,
           },
@@ -2595,8 +2528,8 @@ export function validateIncidentTemplates(
             );
           }
           if (
-            effect.kind !== "faction_standing_delta" &&
-            effect.kind !== "faction_scrutiny_delta"
+            effect.kind !== "faction_relationship_delta" &&
+            effect.kind !== "public_pressure_delta"
           ) {
             issues.push(
               `${template.id}:${choice.choiceId} targets faction but uses non-faction kind "${effect.kind}".`,
@@ -2604,7 +2537,8 @@ export function validateIncidentTemplates(
           }
         }
         if (
-          (effect.kind === "faction_standing_delta" || effect.kind === "faction_scrutiny_delta") &&
+          (effect.kind === "faction_relationship_delta" ||
+            effect.kind === "public_pressure_delta") &&
           !(typeof effect.targetRef === "string" && effect.targetRef.startsWith("faction:"))
         ) {
           issues.push(
@@ -2709,21 +2643,21 @@ function hasRequiredIncidentContext(
   }
 
   if (template.requiredContext.includes("district")) {
-    const cityState = context.runtimeState.cityState;
-    if (!cityState) return false;
+    const publicPressure = context.runtimeState.publicPressure;
+    if (!publicPressure) return false;
     const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
     const hasDistrict =
-      contractSite?.districtId || Object.values(cityState.districts).some((d) => d.attention > 0);
+      contractSite?.districtId || Object.values(publicPressure.districts).some((d) => d.heat > 0);
     if (!hasDistrict) return false;
   }
 
   if (template.requiredContext.includes("faction")) {
-    const cityState = context.runtimeState.cityState;
-    if (!cityState) return false;
+    const publicPressure = context.runtimeState.publicPressure;
+    if (!publicPressure) return false;
     const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
     const hasFaction =
       contractSite?.sponsorFactionId ||
-      Object.values(cityState.factions).some((f) => f.scrutiny > 0);
+      Object.values(publicPressure.factionRelationships).some((f) => f.standing !== 0);
     if (!hasFaction) return false;
   }
 
@@ -2741,6 +2675,12 @@ function hasRequiredIncidentContext(
   return true;
 }
 
+const RIVAL_GATED_INCIDENT_IDS: ReadonlySet<string> = new Set([
+  "incident/rival-recruitment-offer",
+  "incident/rival-contract-sabotage",
+  "incident/rival-recruitment-raid",
+]);
+
 function buildEligibleIncidentTemplates(
   context: SimSystemContext,
   state: IncidentState,
@@ -2750,6 +2690,10 @@ function buildEligibleIncidentTemplates(
 ): IncidentTemplate[] {
   const mercyWindowActive = isOpeningIncidentMercyWindowActive(context);
   const activeBuildingId = getActiveBuildingId(context);
+  const activeRivalCoversIncidents = hasEligibleCurrentRivalMove(
+    context.runtimeState.rivalPressure,
+    currentMinute,
+  );
   const recentFamilyCounts = new Map<string, number>();
   if (!options.ignoreRecentFamilyLimit) {
     for (const historyEntry of state.history) {
@@ -2763,6 +2707,9 @@ function buildEligibleIncidentTemplates(
     }
   }
   return INCIDENT_TEMPLATES.filter((template) => {
+    if (activeRivalCoversIncidents && RIVAL_GATED_INCIDENT_IDS.has(template.id)) {
+      return false;
+    }
     if (mercyWindowActive && !OPENING_SAFE_INCIDENT_CATEGORY_SET.has(template.category)) {
       return false;
     }
@@ -3055,22 +3002,22 @@ function bindIncidentSubjects(
     }
   }
 
-  // Bind district from active contract site or highest-attention district
+  // Bind district from active contract site or highest-heat district
   if (template.requiredContext.includes("district")) {
     const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
     if (contractSite?.districtId) {
       districtId = contractSite.districtId;
-    } else if (context.runtimeState.cityState) {
-      const districts = Object.values(context.runtimeState.cityState.districts);
+    } else if (context.runtimeState.publicPressure) {
+      const districts = Object.values(context.runtimeState.publicPressure.districts);
       const highest = districts.reduce<(typeof districts)[0] | undefined>(
-        (best, d) => (!best || d.attention > best.attention ? d : best),
+        (best, d) => (!best || d.heat > best.heat ? d : best),
         undefined,
       );
       districtId = highest?.districtId;
     }
   }
 
-  // Bind faction from active contract sponsor or highest-scrutiny faction
+  // Bind faction from active contract sponsor or strongest relationship signal
   if (template.requiredContext.includes("faction")) {
     if (template.fixedFactionId) {
       factionId = template.fixedFactionId;
@@ -3078,10 +3025,10 @@ function bindIncidentSubjects(
       const contractSite = BuildingAuthority.contractSite[context.singletonEntities.building];
       if (contractSite?.sponsorFactionId) {
         factionId = contractSite.sponsorFactionId;
-      } else if (context.runtimeState.cityState) {
-        const factions = Object.values(context.runtimeState.cityState.factions);
+      } else if (context.runtimeState.publicPressure) {
+        const factions = Object.values(context.runtimeState.publicPressure.factionRelationships);
         const highest = factions.reduce<(typeof factions)[0] | undefined>(
-          (best, f) => (!best || f.scrutiny > best.scrutiny ? f : best),
+          (best, f) => (!best || Math.abs(f.standing) > Math.abs(best.standing) ? f : best),
           undefined,
         );
         factionId = highest?.factionId;
@@ -3189,13 +3136,14 @@ export function resolveIncident(
     applySocialFalloutAfterScandal(context, netReputation <= -5 ? "major" : "minor");
   }
 
-  // Apply district pressure writeback when district-bound incidents resolve
-  if (incident.boundContext.districtId && context.runtimeState.cityState) {
-    const district = context.runtimeState.cityState.districts[incident.boundContext.districtId];
+  // Apply district public-pressure writeback when district-bound incidents resolve.
+  if (incident.boundContext.districtId && context.runtimeState.publicPressure) {
+    const district =
+      context.runtimeState.publicPressure.districts[incident.boundContext.districtId];
     if (district) {
       if (netReputation > 0) {
-        district.trust = clamp(district.trust + Math.round(netReputation * 0.5), 0, 100);
-        district.attention = clamp(district.attention - Math.round(netReputation * 0.3), 0, 100);
+        district.standing = clamp(district.standing + Math.round(netReputation * 0.5), 0, 100);
+        district.heat = clamp(district.heat - Math.round(netReputation * 0.3), 0, 100);
         if (
           incident.category === "containment_demand" ||
           incident.category === "district_backlash"
@@ -3203,20 +3151,17 @@ export function resolveIncident(
           applySocialRecoveryAfterDistrictWin(context);
         }
       } else if (netReputation < 0) {
-        district.trust = clamp(district.trust + Math.round(netReputation * 0.4), 0, 100);
+        district.standing = clamp(district.standing + Math.round(netReputation * 0.4), 0, 100);
       }
     }
   }
 
-  // Apply faction scrutiny adjustment when faction-bound incidents resolve
-  if (incident.boundContext.factionId && context.runtimeState.cityState) {
-    const faction = context.runtimeState.cityState.factions[incident.boundContext.factionId];
+  if (incident.boundContext.factionId && context.runtimeState.publicPressure) {
+    const faction =
+      context.runtimeState.publicPressure.factionRelationships[incident.boundContext.factionId];
     if (faction) {
       if (netReputation > 0) {
-        faction.scrutiny = clamp(faction.scrutiny - Math.round(netReputation * 0.3), 0, 100);
         faction.standing = clamp(faction.standing + Math.round(netReputation * 0.2), -100, 100);
-      } else if (netReputation < 0) {
-        faction.scrutiny = clamp(faction.scrutiny - Math.round(netReputation * 0.4), 0, 100);
       }
     }
   }
@@ -3395,41 +3340,45 @@ function applyConsequenceEffect(
         -40,
         40,
       );
-      if (incident.boundContext.districtId && context.runtimeState.cityState) {
-        const district = context.runtimeState.cityState.districts[incident.boundContext.districtId];
+      if (incident.boundContext.districtId && context.runtimeState.publicPressure) {
+        const district =
+          context.runtimeState.publicPressure.districts[incident.boundContext.districtId];
         if (district) {
-          district.attention = clamp(district.attention + Math.round(effect.value * 0.5), 0, 100);
+          district.heat = clamp(district.heat + Math.round(effect.value * 0.5), 0, 100);
         }
       }
-      if (incident.boundContext.factionId && context.runtimeState.cityState) {
-        const faction = context.runtimeState.cityState.factions[incident.boundContext.factionId];
-        if (faction) {
-          faction.scrutiny = clamp(faction.scrutiny + Math.round(effect.value * 0.3), 0, 100);
-        }
+      if (context.runtimeState.publicPressure) {
+        applyPublicPressureDelta(context.runtimeState.publicPressure, effect.value, "public");
       }
       break;
     }
-    case "faction_standing_delta": {
-      const cityState = context.runtimeState.cityState;
-      if (!cityState) break;
+    case "faction_relationship_delta": {
+      const publicPressure = context.runtimeState.publicPressure;
+      if (!publicPressure) break;
       const factionId = resolveFactionTarget(effect.targetRef);
       if (factionId) {
-        applyFactionStandingDelta(cityState, factionId, effect.value);
+        applyFactionRelationshipDelta(publicPressure, factionId, effect.value);
       }
       break;
     }
-    case "faction_scrutiny_delta": {
-      const cityState = context.runtimeState.cityState;
-      if (!cityState) break;
+    case "public_pressure_delta": {
+      const publicPressure = context.runtimeState.publicPressure;
+      if (!publicPressure) break;
       const factionId = resolveFactionTarget(effect.targetRef);
       if (factionId) {
-        applyFactionScrutinyDelta(cityState, factionId, effect.value);
+        applyPublicPressureDelta(publicPressure, effect.value, sourceForFactionPressure(factionId));
       }
       break;
     }
     default:
       break;
   }
+}
+
+function sourceForFactionPressure(factionId: string): "regulator" | "press" | "sponsor" | "public" {
+  if (factionId === "faction/borough-contracts") return "sponsor";
+  if (factionId === "faction/emergency-management") return "public";
+  return "regulator";
 }
 
 function resolveFactionTarget(targetRef: ConsequenceEffect["targetRef"]): string | undefined {

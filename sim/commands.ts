@@ -268,13 +268,13 @@ export type SimCommand =
   | {
       type: "sim/dev-set-district";
       districtId: string;
-      field: "attention" | "trust" | "containmentDebt";
+      field: "heat" | "standing" | "containment";
       value: number;
     }
   | {
       type: "sim/dev-set-faction";
       factionId: string;
-      field: "standing" | "scrutiny" | "leverage";
+      field: "standing";
       value: number;
     };
 

@@ -34,14 +34,14 @@ export interface CraftRecipeAvailability {
   missingDistrictTags: readonly string[];
 }
 
-interface FactionStandingLike {
+interface FactionRelationshipLike {
   standing: number;
 }
 
 /**
  * Build availability for all craft recipes that target the given room.
  *
- * District and faction checks use the currently unlocked city-pressure state
+ * District and faction checks use the currently unlocked public-pressure state
  * to decide whether the player has access to district-linked requirements.
  */
 export function buildCraftRecipeAvailability(
@@ -50,10 +50,10 @@ export function buildCraftRecipeAvailability(
   buildingTier: number,
   cashOnHand: number,
   inventory: readonly InventoryStackLike[],
-  /** Accessible district tags unlocked through city pressure. */
+  /** Accessible district tags unlocked through public pressure. */
   accessibleDistrictTags: readonly string[],
   /** Faction standings keyed by faction id. */
-  factionStandings: Readonly<Record<string, FactionStandingLike>>,
+  factionStandings: Readonly<Record<string, FactionRelationshipLike>>,
   registry: TemplateRegistry,
 ): CraftRecipeAvailability[] {
   const inventoryByItem = new Map(inventory.map((s) => [s.itemId, s.quantity]));
@@ -80,7 +80,7 @@ function buildSingleRecipeAvailability(
   cashOnHand: number,
   inventoryByItem: ReadonlyMap<string, number>,
   accessibleDistrictTags: readonly string[],
-  factionStandings: Readonly<Record<string, FactionStandingLike>>,
+  factionStandings: Readonly<Record<string, FactionRelationshipLike>>,
 ): CraftRecipeAvailability {
   const inputs: CraftRecipeInputAvailability[] = recipe.inputItems.map((input) => {
     const quantityOwned = inventoryByItem.get(input.itemId) ?? 0;

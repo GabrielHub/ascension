@@ -4,19 +4,17 @@ This folder is reserved for active execution plans only. Completed work should b
 
 ## Current State
 
-The Porter's-era gameplay baseline is shipped, and the Porter's HQ package is now grounded in real building-specific assets rather than bodega placeholders. Remaining HQ environment work should stay narrow and contract-driven instead of reopening broad package-grounding plans. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice are all shipped and folded back into the roadmap.
+The Porter's-era gameplay baseline is shipped, and the Porter's HQ package is now grounded in real building-specific assets rather than bodega placeholders. Remaining HQ environment work should stay narrow and contract-driven instead of reopening broad package-grounding plans. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), the public-pressure layer, and the first named-rival pressure loop are all shipped and folded back into the roadmap and product docs.
 
-There are seven active checked-in plans right now:
+There are three active checked-in plans right now:
 
-- [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — prerequisite work for the tower package: scene-builder support, shell sizing, and elevation-band definition before room-scene production
-- [Rival Guild Definition And Asset Plan](./rival-guild-definition-and-asset-plan.md) — define the first rival guild packet, portrait/branding direction, and stable rival ids before the broader skyscraper rival-pressure gameplay refactor depends on them
-- [Skyscraper Rival Pressure Refactor](./skyscraper-rival-pressure-refactor.md) — collapse tower-end public pressure into one lighter lane, promote rival guild leaders into the main endgame-pressure surface, and keep skyscraper pressure meaningfully room-gated
-- [Operations UI Cascade Refactor](./operations-ui-cascade-refactor.md) — apply the same right-anchored cascading panel model to Contracts, Active, Opportunities, and History so Operations no longer depends on the older monolithic bottom-panel composition
+- [Skyscraper HQ Asset Foundation](./skyscraper-hq-asset-foundation.md) — checklist for turning the shipped 21-room tower gameplay stack into a real skyscraper HQ asset package
 - [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
 - [Narrative Event Presenter Remediation](./narrative-event-presenter-remediation.md) — tighten presenter ownership so every narrative beat, including AI-framed incidents, resolves to a domain-correct presenter with presenter-specific voice rules
-- [Operator And Staff Remediation](./operator-and-staff-remediation.md) — collapse generic staff into the presenter roster, add presenter HQ walkers, and refactor operator combat into a rank-gated block-chain model
 
 The HQ UI Cascade Refactor shipped: HQ now uses one right-anchored cascading panel stack for rooms, people, management, teams, inventory, and market. Room slots, staff assignment, visitor recruitment/replace, and the floor switcher all run through the cascade or a floating HQ-world control, so the plan has been retired.
+
+The skyscraper rival-pressure refactor and rival guild event-content pass shipped: public pressure is the live external-pressure model, Visible Institution is retired, War Room unlocks a named current-rival surface, every runtime-ready rival ships with a narrative profile and authored move templates, and the current rival move loop is save-backed and covered by validation/tests. Future leaderboard, rival history, direct rival battles, and rival HQ work remain product-scope questions under [Rival Guild Creation](../product/rival-guilds.md), not active execution plans.
 
 ## Shared Execution Contract
 

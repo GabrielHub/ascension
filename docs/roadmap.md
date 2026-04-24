@@ -32,7 +32,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The template registry covers resources, buildings, rooms, upgrades, items, missions, events, bosses, enemies, and combat packages with deterministic validation.
 - Phase 2 content breadth is in place through authored gear families, loot families, additional room families for later tiers, and expanded operator/presenter/runtime content definitions.
-- Phase 4 shared midgame contracts are now locked in data: districts, factions, city-pressure save state, craft recipes, workshop ids, and explicit `rankTone` escalation metadata.
+- Phase 4 shared midgame contracts are now locked in data: districts, factions, public-pressure save state, craft recipes, workshop ids, and explicit `rankTone` escalation metadata.
 - Porter's-era content remediation is shipped through additional D-rank site packets, expanded boss and enemy coverage, promoted recruit identities, non-gear item visual contracts, and runtime asset-parity validation.
 - The Phase 2 asset-production contract is documented and locked around canon-first briefs, recipe previews, modular production, props-only room scenes, controlled item variants, and viewer/playground review.
 
@@ -80,7 +80,7 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The operations view supports the full contract loop: a resolved-contract review beat, a posted-contract bidding board, and the secured active contract site as the live raid map.
 - New game boots into a generated posted-contract bidding state; preview/dev mode seeds an active contract for in-media-res tooling.
-- Posted contracts now carry persistent `districtId`, `sponsorFactionId`, and `pressureTags`; city-pressure writeback changes future postings and contract fallout instead of living only in flavor text.
+- Posted contracts now carry persistent `districtId`, `sponsorFactionId`, and `pressureTags`; public-pressure writeback changes future postings and contract fallout instead of living only in flavor text.
 - Operators autonomously evaluate raid opportunities, form teams, launch raids, return with persistent summaries, and can permanently die or depart.
 - Raid resolution is stat-driven and boss-aware: missions carry explicit enemy group profiles and boss combat profiles with tags, weaknesses, and threat values.
 - Boss tags (area-damage, summon-pressure, resilience-pierce, recovery-suppress, speed-drain, intel-resist) raise challenge difficulty; boss weaknesses reward matching team composition.
@@ -149,16 +149,17 @@ The implementation itself is the source of truth. This section is organized by s
 
 - The deterministic base game is no longer blocked on Porter's differentiation or AI transport bring-up. Both are shipped.
 - The current shipped baseline is a playable bodega-to-Porter's-to-skyscraper management game with browser and desktop hosts, onboarding, interruptions, encounters, audio, and optional local-first AI variation.
-- Phase 4 is complete. Shared contract lock, city pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
+- Phase 4 is complete. Shared contract lock, public pressure, Porter's content remediation, durable crafting, deeper social/incident fallout, and encounter breadth expansion are all shipped in code.
 - Midgame remediation is complete. The Porter's-era D-rank band now has browser regression coverage across contracts, workshop use, incidents, and encounter handoff; deterministic D-rank economy reporting; tuned workshop authored data; and the narrow management-surface fixes that verification exposed.
 - The skyscraper HQ baseline and the first C-rank endgame-entry band are shipped. The tower exposes a bounded starter floor stack, C-rank contracts once reputation clears the threshold, a C-rank craft family in the Fabrication Bay, and rank-aware recruit generation that stops flattening new hires to F at every building.
 - The skyscraper floor expansion arc is shipped. The tower now grows from its baseline five-floor stack into the canonical nine-floor endgame footprint through the Nightlife, Specialist Training, Executive, and Penthouse upgrades, each delivering authored starter rooms ready for consequence wiring.
-- Executive Floor institutional pressure is shipped. Executive Office, Compliance Office, and War Room each carry distinct mechanical consequences — standing multipliers on contract outcomes, bounded per-tick scrutiny decay, and a war-room intel stack on top of the briefing-room bonus. Five skyscraper-gated incident templates (licensing audit, sponsor prestige demand, rival poaching, borough hearing, press exposure) compose new pressure tags over existing trigger families, `faction_standing_delta` and `faction_scrutiny_delta` consequence kinds write faction state through incident choices, and a Visible Institution summary section in the management panel makes skyscraper-scale pressure legible.
+- Executive Floor public pressure is shipped. Executive Office, Compliance Office, and War Room each carry distinct mechanical consequences: standing multipliers on contract outcomes, bounded public-pressure cooling, and a war-room intel stack on top of the briefing-room bonus. Five skyscraper-gated incident templates (licensing audit, sponsor prestige demand, rival poaching, borough hearing, press exposure) compose new pressure tags over existing trigger families, public-pressure and faction-relationship consequence kinds write state through incident choices, and Public Pressure plus Current Rival management sections make skyscraper-scale pressure legible.
+- The skyscraper rival-pressure refactor and rival event content pass are shipped. Every exported rival record carries a narrative profile and at least three authored `RivalMoveTemplate` entries validated at module load. Rival pressure selects from the active rival's authored moves with cooldown and recent-move memory, raises blocking persistent `rival_move` interruptions, and routes choice effects through the same consequence kinds as incidents (`morale_delta`, `loyalty_delta`, `treasury_delta`, `reputation_delta`, `intel_delta`, `team_cohesion_delta`, `contract_pressure_delta`, `faction_relationship_delta`, `public_pressure_delta`) against `guild`, `team`, or `faction:<id>` targets. Generic rival-coded incidents and outside-employer events are suppressed only while a current rival move is eligible so authored rival decisions become the primary competitive pressure source without leaving cooldown gaps empty.
 
 ## Next Steps
 
 1. Wire consequences for the remaining expansion-floor rooms as separate narrow slices: Nightlife recruitment (Club, Green Room), Specialist Training role-specific training (Drill Floor, Recon Course, Trauma Bay), and Penthouse A-rank recruitment (Sky Lounge, Private Cellar).
-2. Stage additional endgame pressure inside the skyscraper now that institutional pressure is shipped: bigger raid envelopes, and the first B-rank content packet when the C-rank band proves itself.
+2. Stage additional endgame pressure inside the skyscraper now that public pressure and named-rival pressure are shipped: bigger raid envelopes, and the first B-rank content packet when the C-rank band proves itself.
 3. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
 4. Keep AI work narrow and layered: better prompt grounding, more eval fixtures, broader incident framing coverage, and later recap or description surfaces only when their deterministic payloads are already stable.
 
@@ -197,9 +198,9 @@ Exit criteria:
 
 ## Practical Build Order
 
-1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, Porter's-era midgame remediation, skyscraper HQ baseline, the first C-rank endgame-entry content/economy/recruit band, the skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), and the Executive Floor institutional-pressure slice.
+1. Completed: content infrastructure, playable bodega, bodega visuals, bodega endgame, Porter's baseline, Porter's functional differentiation, Phase 4 external-pressure work, Porter's-era midgame remediation, skyscraper HQ baseline, the first C-rank endgame-entry content/economy/recruit band, the skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), public pressure, and the first named-rival pressure loop.
 2. Fan out to the remaining expansion-floor consequence slices (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment).
-3. Stage additional endgame pressure — bigger raid envelopes, the first B-rank content packet — on top of the shipped institutional-pressure surface.
+3. Stage additional endgame pressure — bigger raid envelopes, the first B-rank content packet — on top of the shipped public-pressure and named-rival surfaces.
 4. Continue HQ environment cleanup where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
 5. Broaden optional AI content only after the next deterministic systems pass stabilizes the structured payloads worth varying.
 

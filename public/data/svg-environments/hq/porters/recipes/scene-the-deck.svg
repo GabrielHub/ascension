@@ -3,8 +3,11 @@
        Salt-air waterfront downtime. Concrete fire pit anchors the room,
        ringed by a weather-grey sectional and concrete stool cubes. An
        outdoor kitchen runs the back edge with a stainless grill and a
-       row of bar stools. A tall potted tree and a front herb planter
-       soften the hard surfaces. Warm string lights drape overhead.
+       row of bar stools. The furniture is spread wide across the
+       canonical frame so the deck reads as open waterfront downtime
+       rather than a cramped indoor lounge. A tall potted tree and a
+       front herb planter soften the hard surfaces. Warm string lights
+       drape overhead.
        Grid: 4 cols x 3 rows. Origin (200,100). Tile 96x48.
        iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z). -->
 
@@ -34,7 +37,7 @@
   <!-- 1. BACK-NW POTTED TREE                                           -->
   <!-- Pot footprint (c=0.05,r=0.20)→(c=0.35,r=0.50). Height 14.        -->
   <!-- ================================================================ -->
-  <ellipse cx="193" cy="120" rx="17" ry="5" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(-54 2)">
   <!-- SW front face -->
   <polygon points="178.4,99.2 192.8,106.4 192.8,120.4 178.4,113.2"
     fill="#6a6055" stroke="#3a342c" stroke-width="0.45"/>
@@ -61,12 +64,13 @@
   <!-- Leaf clusters highlights -->
   <ellipse cx="191" cy="48" rx="5" ry="4" fill="#52785a" opacity="0.75"/>
   <ellipse cx="202" cy="54" rx="4" ry="3.5" fill="#4a7052" opacity="0.7"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 2. NW STRING-LIGHT POST (behind counter west end)                -->
   <!-- Base (c=0.55,r=0.05) → (224, 114.4). Height 58, top (224, 56.4). -->
   <!-- ================================================================ -->
-  <ellipse cx="224" cy="116" rx="4" ry="1.6" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(38 -12)">
   <rect x="222.8" y="56" width="2.4" height="58" fill="#2a2218" stroke="#120d08" stroke-width="0.35"/>
   <polygon points="220.4,56 227.6,56 226.4,53 221.6,53" fill="#3a2e20" stroke="#120d08" stroke-width="0.3"/>
 
@@ -118,7 +122,8 @@
     fill="#2a2820" stroke="#141208" stroke-width="0.35"/>
   <polygon points="297,137 315,146 311,148 293,139"
     fill="#8a8e96" opacity="0.85"/>
-  <rect x="304" y="139" width="1.3" height="5" rx="0.3" fill="#444a52" transform="skewY(26.5)"/>
+  <path d="M 306,139.4 L 308.4,140.6 L 308.4,145 L 306,143.8 Z"
+    fill="#444a52" stroke="#22272d" stroke-width="0.25"/>
 
   <!-- ================================================================ -->
   <!-- 4. STAINLESS GRILL on counter                                    -->
@@ -168,14 +173,16 @@
   <use href="#deckBarStool" transform="translate(209.6 140.8)"/>
   <use href="#deckBarStool" transform="translate(245.6 158.8)"/>
   <use href="#deckBarStool" transform="translate(281.6 176.8)"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 6. SE STRING-LIGHT POST (front-right of room)                    -->
   <!-- Base (c=3.2,r=1.0) → iso(2.2,4.2) = (305.6, 200.8). Top y=142.8. -->
   <!-- ================================================================ -->
-  <ellipse cx="305.6" cy="202.4" rx="4" ry="1.6" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(40 4)">
   <rect x="304.4" y="142.8" width="2.4" height="58" fill="#2a2218" stroke="#120d08" stroke-width="0.35"/>
   <polygon points="302,142.8 309.2,142.8 308,139.8 303.2,139.8" fill="#3a2e20" stroke="#120d08" stroke-width="0.3"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 7. SECTIONAL SOFA (main segment south of counter)                -->
@@ -185,6 +192,7 @@
        Backrest top (z=34, on NW edge r=1.35):
               NW_back_top(149.6,105.6) NE_back_top(255.2,158.4)              -->
   <!-- ================================================================ -->
+  <g transform="translate(-34 12)">
   <!-- Contact shadow -->
   <polygon points="120,156 255,193 224,210 119,166"
     fill="rgba(0,0,0,0.3)"/>
@@ -236,12 +244,13 @@
   <line x1="121" y1="136" x2="127" y2="139" stroke="#6e5a32" stroke-width="0.3" opacity="0.6"/>
   <line x1="121" y1="142" x2="127" y2="145" stroke="#6e5a32" stroke-width="0.3" opacity="0.55"/>
   <line x1="121" y1="148" x2="127" y2="151" stroke="#6e5a32" stroke-width="0.3" opacity="0.55"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 8. SIDE TABLE (concrete cube, east end of sofa)                  -->
   <!-- Footprint (c=2.65,r=1.55)→(c=2.95,r=1.85). Height 12.            -->
   <!-- ================================================================ -->
-  <ellipse cx="253" cy="216" rx="14" ry="4" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(52 2)">
   <polygon points="238.4,196 252.8,203.2 252.8,215.2 238.4,208"
     fill="#7a7368" stroke="#40392e" stroke-width="0.4"/>
   <polygon points="252.8,203.2 267.2,196 267.2,208 252.8,215.2"
@@ -256,11 +265,13 @@
   <ellipse cx="258" cy="193" rx="2" ry="1" fill="rgba(200,220,220,0.45)" stroke="#5a6060" stroke-width="0.3"/>
   <path d="M 256,193 L 256,196 A 2,1 0 0 0 260,196 L 260,193"
     fill="rgba(120,145,145,0.35)" stroke="#5a6060" stroke-width="0.3"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 9. FIRE PIT (central focal, south of sofa)                       -->
   <!-- Center at (c=1.7, r=2.4) → iso(-0.7, 4.1) = (166, 198).          -->
   <!-- ================================================================ -->
+  <g transform="translate(24 20)">
   <!-- Ground shadow -->
   <ellipse cx="166" cy="205" rx="27" ry="11" fill="rgba(0,0,0,0.32)"/>
   <!-- Bowl lower body (narrower base ellipse) -->
@@ -290,13 +301,14 @@
   <ellipse cx="171" cy="191" rx="2" ry="1" fill="#ff9a40" opacity="0.8"/>
   <ellipse cx="167" cy="193" rx="1.6" ry="0.8" fill="#ffb258" opacity="0.7"/>
   <ellipse cx="173" cy="188" rx="1.2" ry="0.6" fill="#fff0b8" opacity="0.75"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 10. CONCRETE STOOL CUBE (south of fire pit)                      -->
   <!-- Footprint (c=1.4,r=2.75)→(c=1.7,r=3.0). Height 12.               -->
   <!-- (Small cube seat, one of a pair implied — keeping scene calm.)    -->
   <!-- ================================================================ -->
-  <ellipse cx="135" cy="214" rx="13" ry="3.8" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(104 22)">
   <polygon points="118.4,193.6 132.8,200.8 132.8,212.8 118.4,205.6"
     fill="#7e7769" stroke="#40392e" stroke-width="0.4"/>
   <polygon points="132.8,200.8 147.2,193.6 147.2,205.6 132.8,212.8"
@@ -304,12 +316,13 @@
   <polygon points="132.8,186.4 147.2,193.6 132.8,200.8 118.4,193.6"
     fill="#9e9789" stroke="#40392e" stroke-width="0.5"/>
   <line x1="118.4" y1="193.6" x2="132.8" y2="186.4" stroke="rgba(255,255,255,0.18)" stroke-width="0.4"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 11. FRONT-SOUTH HERB PLANTER                                      -->
   <!-- Footprint (c=2.35,r=2.55)→(c=2.7,r=2.9). Height 11.              -->
   <!-- ================================================================ -->
-  <ellipse cx="195" cy="235" rx="18" ry="5" fill="rgba(0,0,0,0.28)"/>
+  <g transform="translate(84 22)">
   <!-- SW front face -->
   <polygon points="175.2,211.6 191.2,219.6 191.2,230.6 175.2,222.6"
     fill="#5a4028" stroke="#2e2014" stroke-width="0.45"/>
@@ -336,41 +349,42 @@
   <line x1="183" y1="200" x2="184" y2="197" stroke="#4a7050" stroke-width="0.6" stroke-linecap="round"/>
   <line x1="198" y1="203" x2="199" y2="200" stroke="#4a7050" stroke-width="0.6" stroke-linecap="round"/>
   <line x1="186" y1="199" x2="185" y2="196" stroke="#3f5d3e" stroke-width="0.5" stroke-linecap="round"/>
+  </g>
 
   <!-- ================================================================ -->
   <!-- 12. STRING LIGHTS (overlay, draped NW post → SE post)            -->
   <!-- NW top (224, 56.4). SE top (305.6, 142.8). Sag midpoint y+=30.   -->
   <!-- ================================================================ -->
-  <path d="M 224,56 Q 264,128 305.6,143"
+  <path d="M 262,44 Q 306,118 345.6,146.8"
     fill="none" stroke="#1e1810" stroke-width="0.8"/>
   <!-- Bulbs along the string (10 bulbs distributed along path) -->
   <g>
-    <ellipse cx="236" cy="75" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="236" cy="75" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="236" y1="73.2" x2="236" y2="72" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="275" cy="64" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="275" cy="64" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="275" y1="62.2" x2="275" y2="61" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="247" cy="90" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="247" cy="90" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="247" y1="88.2" x2="247" y2="87" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="287" cy="82" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="287" cy="82" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="287" y1="80.2" x2="287" y2="79" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="257" cy="103" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="257" cy="103" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="257" y1="101.2" x2="257" y2="100" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="298" cy="98" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="298" cy="98" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="298" y1="96.2" x2="298" y2="95" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="267" cy="114" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="267" cy="114" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="267" y1="112.2" x2="267" y2="111" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="309" cy="111" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="309" cy="111" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="309" y1="109.2" x2="309" y2="108" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="277" cy="123" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="277" cy="123" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="277" y1="121.2" x2="277" y2="120" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="320" cy="123" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="320" cy="123" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="320" y1="121.2" x2="320" y2="120" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="287" cy="131" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="287" cy="131" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="287" y1="129.2" x2="287" y2="128" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="331" cy="134" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="331" cy="134" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="331" y1="132.2" x2="331" y2="131" stroke="#1e1810" stroke-width="0.5"/>
 
-    <ellipse cx="297" cy="138" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
-    <circle cx="297" cy="138" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
-    <line x1="297" y1="136.2" x2="297" y2="135" stroke="#1e1810" stroke-width="0.5"/>
+    <ellipse cx="341" cy="143" rx="3.2" ry="3.2" fill="url(#deckBulbGlow)"/>
+    <circle cx="341" cy="143" r="1.3" fill="#ffe3a0" stroke="#a86020" stroke-width="0.3"/>
+    <line x1="341" y1="141.2" x2="341" y2="140" stroke="#1e1810" stroke-width="0.5"/>
   </g>
 </svg>

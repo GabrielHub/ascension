@@ -53,16 +53,4 @@ export const factionTemplates = [
     contractModifierProfile: { priorityBidDiscount: 0.9 },
     pressureResponseProfile: { scrutinyGain: 1.0, cooldownTicks: 400 },
   },
-  {
-    id: "faction/rival-guild-market",
-    name: "Rival Guild Market",
-    kind: "rival_guild",
-    tags: ["faction:competitive", "pressure:poaching"],
-    description:
-      "The collective weight of competing guilds bidding for the same contracts and the same talent. Not one organization — more like the weather.",
-    preferredDistrictIds: ["district/red-hook-waterfront"],
-    incidentCategoryBias: ["rival_poaching", "contract_opportunity"],
-    contractModifierProfile: { bidCompetitionMultiplier: 1.15 },
-    pressureResponseProfile: { scrutinyGain: 0.5, cooldownTicks: 150 },
-  },
 ] satisfies readonly FactionTemplate[];

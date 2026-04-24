@@ -1,71 +1,150 @@
-import type { ReadyToWireRivalRecord } from "./schema";
+import type { RivalRecord } from "./schema";
 
 export const nyuKresselRivalRecord = {
   id: "rival/nyu-kressel",
-  status: "ready-to-wire",
   guildName: "NYU Kressel",
   shortDisplayName: "NYU Kressel",
-  branchSuffix: "Washington Square",
-  parentGuild: {
-    name: "New York University",
-    origin: "Manhattan, New York",
-    foundedYear: 1831,
-    summary:
-      "A private research university founded in 1831 and headquartered around Washington Square in Greenwich Village. Operates major professional schools in business (Stern), engineering (Tandon), the arts (Tisch, including the Clive Davis Institute), law, medicine, and continuing professional studies, with an endowment in the multi-billions and a global alumni network of roughly 600,000. Chartered NYU Kressel in 2024 as a revenue-diversification venture of the NYU Office of Economic Initiatives, under naming rights endowed by the Kressel family — a mid-20th-century NYC-Jewish-American real-estate dynasty long embedded in NYU's trustee and capital-campaign history — with operational stewardship shared between the Dean of the School of Professional Studies, the Provost's Office, and a nine-member Executive Committee of senior NYU administrators.",
-  },
   leader: {
-    fullName: 'Delilah "DELILA" Marchetti',
-    ageRange: "late 30s",
-    background:
-      "Italian-American, raised in Huntington, Long Island. Clive Davis Institute of Recorded Music BFA 2011. Featured vocalist on 'Afterglow,' a 2014 Billboard Hot 100 entry that peaked in the low forties and faded inside eighteen months; nothing charting afterwards. Worked through the mid-to-late 2010s as a session vocalist, brand-jingle voice, and private vocal coach in Manhattan; effectively off-stage by 2021. Hired by NYU in mid-2024 as the inaugural Executive Director of Public Engagement for NYU Kressel — the camera-ready, press-ready, recruitment-panel-ready public face of the guild — on a staff appointment line, not a faculty line, and not a principal line. Attuned at F-rank during a 2023 licensing screen; her only manifestations are a trained-voice-adjacent projection boost that reads on microphone as unusually warm presence and a pair of large, saturated violet irises that are unambiguously attunement-marked and were a non-trivial factor in the hire. Neither manifestation is useful for clearance work and she has never entered a dungeon. She understands precisely what she was hired for, does the job with real craft, and does not pretend to be more than she is when asked directly — which is rarely, because the people speaking to her know better than to ask.",
-    isAttuned: true,
-    operatorRank: "F",
+    name: 'Delilah "DELILA" Marchetti',
   },
-  districtAnchor: "Greenwich Village, Manhattan",
-  districtIdHint: "district/greenwich-village",
-  baseLocation:
-    "A renovated wing of the Kressel Center on Washington Square South, tucked between Bobst Library and the Silver Center with NYU's violet-and-cream building flags overhead. The public ground floor is an institutional lobby in warm limestone and parchment-cream millwork with a central reception desk upholstered in NYU violet, a wall-mounted cast-bronze KRESSEL plaque under the NYU torch glyph, and a silver-framed portrait of the Dean of the School of Professional Studies hung opposite the doors. DELILA's Public Engagement office sits just off the lobby behind a glass door with her name on it; visitors are shown to a parchment-upholstered bench and offered espresso from the NYU-branded machine while she finishes her previous meeting. The guild dispatch hall on the second floor runs on standard university departmental furniture and institutional-IT hardware, arranged open-plan around a corkboard of NYU Kressel Pipeline Fellowship postings. The Kressel Executive Office itself occupies the third floor, is not accessible to visitors, and is the floor every substantive decision is routed to.",
-  publicPitch:
-    "NYU Kressel — New York University's licensed clearance guild, operating from Washington Square under full NYC licensing since 2024.",
-  internalSummary:
-    "A ladder-rung-above institutional-hybrid rival who unlocks in the same competitive bracket as Straits Meridian, A-List Media, Ashford, and Asgard, but occupies a distinct shape: NYU Kressel is the machine. The guild is a revenue-diversification venture of NYU's Office of Economic Initiatives, operationally co-owned by the Dean of the School of Professional Studies, the Provost's Office, and a nine-member Executive Committee of senior administrators. The guild's public-engagement layer is Delilah 'DELILA' Marchetti, a Clive Davis Institute alumna hired in 2024 as the camera-ready face of the house: F-rank attuned with cosmetic-only manifestations, warm and genuinely charming in person, conversationally polished, and structurally powerless to answer any operational question the player cares about. Every player interaction routes through DELILA. Every substantive question dies in the Kressel Executive Office inbox, from which responses arrive unsigned under an institutional title. The hybrid thesis is that NYU's name alone floats the guild's prestige above most private competitors, NYU's trustee and alumni bench quietly feeds the sponsor-network layer, and NYU's undergraduate and graduate programs pipeline operator recruits into tuition-forgiveness fellowship tracks the player cannot match on compensation. Distinct from Asgard on principal shape: Asgard is personal-hybrid — if Odin walks out, the machine stops. NYU Kressel is institutional-hybrid — a Dean can retire mid-contract and the guild does not notice. The player is below NYU Kressel on institutional prestige, below on alumni-network sponsor intelligence, below on undergraduate-pipeline recruiting economics, and structurally unable to speak to anyone at the guild with authority to say yes. The player beats NYU Kressel on operational speed (the nine-member committee cannot move quickly), on contracts NYU has not yet decided are worth institutional attention, and on any engagement where the player can reach the client's decision-maker without going through the Kressel Executive Office.",
-  pressureStyle:
-    "Institutional-prestige pricing, alumni-network sponsor capture, and pipeline-recruitment pressure layered with a uniquely sincere figurehead-barrier tonal edge. NYU Kressel loses to the player on decision speed (the Executive Committee cannot be convened mid-negotiation), on contracts beneath NYU's institutional-attention threshold, on outer-borough intelligence (NYU's center of gravity is Washington Square and its sponsor-network assumptions reflect that), and on engagements the player can route directly to a client decision-maker without touching the Kressel Executive Office. NYU Kressel beats the player on institutional prestige — 'we're NYU' closes bids without negotiation — on the alumni-bench sponsor-network advantage that surfaces client introductions, general-counsel commonalities, and trustee connections the player cannot manufacture, on the pipeline-recruitment economics of the Kressel Fellowship (graduate-tuition-forgiveness packages matched against the player's cash compensation), on research-backed credentialing (the NYU Dungeon Studies Journal, peer-reviewed clearance-operations papers, and faculty appointments for senior operators make NYU Kressel operators feel professionally anchored in a way private-firm operators cannot replicate), on figurehead-curated media presence (DELILA's quotes and profiles accrue to the guild while the real principals stay out of frame), on committee-scale bid resilience (when a contract is challenged, NYU's nine-member committee and outside counsel respond with institutional pace — slow but legally unbreakable), and on figurehead-barrier routing (every player-facing interaction routes through DELILA, who has no decision authority, and the Kressel Executive Office remains structurally unreachable).",
   pressureLane: "hybrid",
-  moveFamilyAffinities: [
-    "institutional-prestige pricing (the NYU name alone floats bid rates above most private-firm competitors and closes mid-tier contracts without negotiation; client general counsel who attended NYU Law treats the brand as a professional default rather than a vendor)",
-    "alumni-network sponsor capture (NYU's trustee bench, Stern corporate boards, and 600,000-plus global alumni produce client introductions, general-counsel commonalities, and trustee-to-trustee conversations the player has no manufactured equivalent to; the sponsor typically has an NYU tie the player learns about after the bid has already quietly closed)",
-    "Kressel Pipeline Fellowship recruitment (top CAS, Tandon, Stern, and Tisch undergraduates are pipelined into operator tracks on tuition-forgiveness and graduate-placement packages the player cannot match on cash compensation, with the Fellowship's prestige branding making NYU Kressel the default destination for ambitious licensed attuned students before the player has had a chance to recruit)",
-    "research-backed credentialing (the NYU Dungeon Studies Journal, peer-reviewed operations research, faculty-line appointments for senior operators, and NYU continuing-professional-studies clearance certificates give Kressel operators a professional-anchor feel private-firm operators cannot replicate; the credentialing halo also makes the guild's public posture feel more authoritative than its actual clearance volume warrants)",
-    "figurehead-curated media presence (DELILA is the quoted, interviewed, photographed face of every Kressel public communication; editorial and lifestyle coverage accrues to the guild through her while the Dean, Provost, and Executive Committee remain out of frame — a passive press gravity distinct from A-List Media's active curation)",
-    "committee-scale bid resilience (contested contracts, operator-poaching disputes, and licensing-board inquiries are absorbed by NYU's nine-member Executive Committee and outside counsel at institutional pace — the response is slow enough to be frustrating and legally thorough enough to be unbreakable; the player cannot out-lawyer the guild and cannot force a faster clock)",
-    "figurehead-barrier routing (every player-facing interaction with NYU Kressel routes through DELILA, who is warm, attentive, and structurally powerless — she has no decision authority, cannot speak for the Executive Office, and cannot introduce the player to anyone who can; the player's attempts to escalate past her return warm notes from DELILA herself promising to pass the question along, and the Kressel Executive Office responds when it chooses, under an unsigned institutional title, on its own schedule)",
-  ],
-  rivalryFantasy:
-    "You are not competing with a person. You are competing with a two-hundred-year-old university that decided clearance was a revenue line and built a machine. The face of the machine is a former singer you genuinely like. Every meeting on Washington Square starts with DELILA greeting you by name, offering you espresso, and telling you — honestly — that she'll make sure your question gets back to the team. It does. The team does not answer. Your best CAS-undergraduate recruit never applied to you because NYU had her on the Kressel Pipeline at nineteen. Your Hunters Point sponsor's general counsel turns out to be NYU Law '08 and the contract is already drifting before the call you are not copied on. Every question you send to the Kressel Executive Office is answered, eventually, on their schedule, under a title rather than a name. The rivalry fantasy is the slow realization that the whole apparatus is working on you — the institutional name, the alumni bench, the Fellowship, the peer-reviewed journal, the nine-person committee, the polite-and-unsigned email — and the only human you can reach inside it is as powerless to resolve the interaction as you are. DELILA knows. You know she knows. Neither of you can do anything about it. That is the rivalry fantasy, and it is not angry. It is quietly, institutionally, sincerely tired.",
-  toneAndVoice:
-    "DELILA is warmly enthusiastic, genuinely polished in an ex-performer way, and sincerely kind. Light residual industry slang from 2014 slips out unforced ('love that,' 'so real,' 'I'm obsessed with that for you') without tipping into parody; she is not a caricature of a former singer. She speaks the guild's positioning in the language NYU gave her — 'the Kressel Pipeline,' 'our Executive Office,' 'the institutional review,' 'the Dean's priorities this quarter' — in clean institutional cadence, and when the player asks a substantive operational question she says 'that's such a great question — I'll make sure that gets back to the team' and genuinely intends to pass it along, and genuinely expects nothing from the team by way of response. Never cynical about NYU on record. Never sarcastic about her own role; she understands it precisely and has made peace with it. Warm eye contact, present listening, remembers small details from prior meetings. The Kressel Executive Office, when it corresponds directly with the player, writes in the register of any senior NYU administrator's office — careful, institutional, legally reviewed, signed only with a title and 'Kressel Executive Office, New York University' rather than a name. The two voices should read as authored by the same institution: DELILA is the warm front-of-house, the Executive Office is the quiet back-of-house, and neither voice ever condescends to the player — the machine is polite. The sadness in the tone is structural, not performed.",
-  interruptionCopySamples: [
-    "NYU Kressel has filed a competing bid. DELILA is cc'd on the correspondence and sends her regards; the Kressel Executive Office has attached the formal bid under separate cover, unsigned.",
-    "Your top CAS undergraduate recruit has declined your offer. She'll be joining the NYU Kressel Pipeline Fellowship with full graduate-tuition forgiveness. DELILA has invited her to the Fellowship welcome reception at Bobst Library.",
-    "The Hunters Point sponsor's general counsel is NYU Law, class of 2008. Counsel and the Kressel Executive Office are scheduled for a call Thursday afternoon. You were not copied on the invitation. DELILA has sent you a warm note about an unrelated panel next month.",
-    "DELILA would love to have you at the NYU Kressel Alumni Reception at Bobst Library on the 18th. The Dean of the School of Professional Studies will be present in the room. He will not be introduced.",
-    "The Kressel Executive Office has responded to your query of three weeks ago. The response is careful, institutional, four paragraphs long, and does not answer the question. It is signed 'Kressel Executive Office, New York University.'",
-  ],
   copy: {
-    leaderboardName: "NYU Kressel — Washington Square",
-    dossierOneLiner:
-      "NYU Kressel is New York University's licensed clearance guild out of Washington Square. The face of the house is DELILA — a Clive Davis alumna hired in 2024 — who has no decision authority; the real voices are the Dean of the School of Professional Studies, the Provost's Office, and a nine-member Executive Committee you will never meet.",
     currentRivalOneLiner:
       "DELILA has sent you a warm note thanking you for your interest. The Kressel Executive Office was not copied and will respond when it chooses.",
-    publicBlurb:
-      "NYU Kressel is the licensed clearance guild of New York University, operating from the Kressel Center on Washington Square South since 2024. The guild's public engagement office is led by Executive Director Delilah Marchetti. All operational, bid, contract, licensing, and operator questions are handled through the Kressel Executive Office.",
-    internalAuthorNote:
-      "Supports institutional-hybrid pressure beats across all three adjacent lanes simultaneously — the prestige floor NYU's name provides, the sponsor-network intelligence NYU's trustee-and-alumni bench produces, and the labor-market economics the Kressel Pipeline Fellowship enables on undergraduate and graduate pipelines the player cannot match. Distinct from Asgard on principal shape: Asgard is personal-hybrid (one man generates all three pressure edges; if Odin walks out, the machine stops), NYU Kressel is institutional-hybrid (the machine generates all three pressure edges and the principal is interchangeable — a Dean can retire mid-contract and the guild does not notice). This is the intended hybrid-lane variety across the roster and should be protected when future hybrids are added. Supports the figurehead-barrier seam uniquely to this rival — every player interaction routes through DELILA, who is warm, attentive, and structurally powerless to answer operational questions; the player cannot escalate past her, and the Kressel Executive Office remains structurally unreachable. The distinct pathos is that neither the player nor DELILA has the authority to resolve the interaction, and they both feel it — this is the tonal thesis and the rival's unique tonal register, and drift toward villain-figurehead, complicit-figurehead, or arm-candy-figurehead framing should be rewritten. Supports repeat alumni-network sponsor beats (client general counsel revealed to be NYU Law alumni; trustee introductions surfacing after the bid has closed; Stern corporate-board ties feeding sponsor contracts), repeat Pipeline recruitment beats (top CAS, Tandon, Stern, and Tisch undergraduates committed to the Fellowship before the player has had a chance to recruit; graduate tuition-forgiveness packages the player cannot match on cash), and repeat institutional-legal beats (the Executive Committee responding to contested contracts and operator-poaching disputes at institutional pace — slow enough to be frustrating, thorough enough to be legally unbreakable). Reusable visual and tonal seams: NYU institutional violet at full saturation rather than muted, the canonical torch glyph, the KRESSEL wordmark in the NYU Caslon serif tradition, the parchment-cream institutional-stationery ground, the coral-pink active-rivalry accent, the 'Kressel Executive Office, New York University' unsigned institutional-title correspondence voice, DELILA's warm personal notes that never close the loop, NYU-violet-and-cream building flags and staff lanyards as constant location markers, the Dean-in-the-room-but-never-introduced beat, and institutional-pace response times as a repeatable comedy-of-frustration seam. Attunement-axis foil across the roster: Adrian fields (B-rank), Celeste won't (A-rank verified, beneath her), Ren can't (A-rank claimed, unverified), Monty doesn't pretend (unattuned by choice), Odin refuses ranking (attuned, unranked by policy), Frankie fields on a whim (U-rank), Vesper categorically cannot be ranked or field (unranked by regulatory exclusion as a non-human principal), and DELILA is cosmetically attuned (F-rank, manifestations are a voice-presence bump and violet irises — useless for clearance and explicitly part of the hire). DELILA's F-rank slot also opens space for future content where an NYU Kressel A-rank or S-rank operator deploys and is handled by the Executive Office rather than by DELILA, reinforcing that she is not the principal. Avoid: framing DELILA as scheming or complicit (she is sincere), reducing her to decorative arm-candy (she has real craft at her actual job, which is not the job the player needs her to do), reading the Dean / Provost / Executive Committee as mustache-twirling antagonists (they are administrators optimizing a revenue line, not villains), the 'sinister university' gothic register (NYU's brand here is sincerely institutional, not conspiratorial), music-industry-promo tonal drift in any guild-owned copy (DELILA's performer past is biographical context, not brand identity), and any framing that privileges DELILA's personal glamour over the institutional identity in branding or marketing surfaces.",
   },
   assetPaths: {
     leaderPortrait: "/data/rivals/nyu-kressel/leader-neutral.png",
     insignia: "/data/rivals/nyu-kressel/insignia.png",
   },
-  assetsShipped: true,
-} satisfies ReadyToWireRivalRecord;
+  narrativeProfile: {
+    operatingBase:
+      "A renovated wing of the Kressel Center on Washington Square South, tucked between Bobst Library and the Silver Center under NYU's violet-and-cream building flags. An institutional lobby in warm limestone with a central reception desk upholstered in NYU violet, a cast-bronze KRESSEL plaque under the torch glyph, and a silver-framed portrait of the Dean opposite the doors. DELILA's Public Engagement office sits just off the lobby; visitors are offered espresso from the NYU-branded machine while she finishes her previous meeting. The Kressel Executive Office occupies the third floor, is not accessible to visitors, and is where every substantive decision is routed.",
+    publicPitch:
+      "NYU Kressel — New York University's licensed clearance guild, operating from Washington Square under full NYC licensing since 2024.",
+    pressureStyle:
+      "Institutional-prestige pricing, alumni-network sponsor capture, and pipeline-recruitment pressure layered with a sincere figurehead-barrier tonal edge. NYU Kressel loses to you on decision speed, on contracts beneath NYU's institutional-attention threshold, on outer-borough intelligence, and on engagements you can route directly to a client decision-maker. NYU Kressel beats you on institutional prestige, on the alumni-bench sponsor-network advantage, on Kressel Fellowship tuition-forgiveness pipelines, on research-backed credentialing, on figurehead-curated media presence, on committee-scale bid resilience, and on figurehead-barrier routing where every player-facing interaction dies at DELILA's desk.",
+    rivalryFantasy:
+      "You are not competing with a person. You are competing with a two-hundred-year-old university that decided clearance was a revenue line and built a machine. The face of the machine is a former singer you genuinely like. Every meeting on Washington Square starts with DELILA greeting you by name, offering espresso, and telling you — honestly — that she'll make sure your question gets back to the team. It does. The team does not answer. Your best CAS-undergraduate recruit never applied to you because NYU had her on the Kressel Pipeline at nineteen. DELILA knows. You know she knows. Neither of you can do anything about it.",
+    toneAndVoice:
+      "DELILA is warmly enthusiastic, genuinely polished in an ex-performer way, and sincerely kind. Light residual industry slang from 2014 slips out unforced ('love that,' 'so real,' 'I'm obsessed with that for you') without tipping into parody. She speaks the guild's positioning in the language NYU gave her — 'the Kressel Pipeline,' 'our Executive Office,' 'the institutional review.' When you ask a substantive operational question she says 'that's such a great question — I'll make sure that gets back to the team' and genuinely intends to pass it along. The Kressel Executive Office, when it corresponds directly, is signed only with a title and 'Kressel Executive Office, New York University.' The sadness in the tone is structural, not performed.",
+  },
+  moves: [
+    {
+      id: "rival-move/nyu-kressel/institutional-competing-bid",
+      family: "contract_challenge",
+      weight: 9,
+      cooldownMinutes: 1440,
+      briefingTemplate:
+        "NYU Kressel has filed a competing bid. DELILA is cc'd on the correspondence and sends her regards; the Kressel Executive Office has attached the formal bid under separate cover, unsigned.",
+      basePublicPressureDelta: 5,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "escalate-committee",
+          label: "Escalate past DELILA",
+          description: "Write to the Executive Office directly. Await the unsigned reply.",
+          consequenceSummary: "Intel cost. Contract position marginally held.",
+          effects: [
+            { kind: "intel_delta", targetRef: "guild", value: -2 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "route-around",
+          label: "Route around the Executive Office",
+          description:
+            "Approach the client's decision-maker directly before the committee responds.",
+          consequenceSummary: "Treasury cost. Reputation up.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -110 },
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+          ],
+        },
+        {
+          choiceId: "concede-gracefully",
+          label: "Concede the contract",
+          description: "Send DELILA a warm note and focus on work below NYU's threshold.",
+          consequenceSummary: "Public pressure rises. Morale holds.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+            { kind: "morale_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/nyu-kressel/pipeline-fellowship-capture",
+      family: "recruitment_market_loss",
+      weight: 8,
+      cooldownMinutes: 2880,
+      briefingTemplate:
+        "Your top CAS undergraduate recruit has declined your offer. She'll be joining the NYU Kressel Pipeline Fellowship with full graduate-tuition forgiveness. DELILA has invited her to the Fellowship welcome reception at Bobst Library.",
+      basePublicPressureDelta: 4,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "match-fellowship",
+          label: "Match the fellowship economics",
+          description: "Structure a multi-year package with tuition offset.",
+          consequenceSummary: "Treasury hit. Loyalty holds.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -140 },
+            { kind: "loyalty_delta", targetRef: "team", value: 1 },
+          ],
+        },
+        {
+          choiceId: "rebuild-pipeline",
+          label: "Rebuild your recruiting pipeline outside NYU",
+          description: "Pivot to CUNY, Fordham, and specialist academies.",
+          consequenceSummary: "Team cohesion up. Slow yield.",
+          effects: [
+            { kind: "team_cohesion_delta", targetRef: "team", value: 2 },
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/nyu-kressel/alumni-network-capture",
+      family: "sponsor_interference",
+      weight: 7,
+      cooldownMinutes: 2160,
+      briefingTemplate:
+        "The Hunters Point sponsor's general counsel is NYU Law, class of 2008. Counsel and the Kressel Executive Office are scheduled for a call Thursday afternoon. You were not copied on the invitation. DELILA has sent you a warm note about an unrelated panel next month.",
+      basePublicPressureDelta: 6,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "counsel-outreach",
+          label: "Put your counsel on a parallel track",
+          description: "Force the sponsor to respond on formal terms before Thursday.",
+          consequenceSummary: "Treasury cost. Contract salvageable.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -90 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+          ],
+        },
+        {
+          choiceId: "attend-panel",
+          label: "Accept DELILA's panel invite",
+          description: "Show up at the NYU event. Be in the room, even at the margin.",
+          consequenceSummary: "Reputation up. Intel cost.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+            { kind: "intel_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "move-on",
+          label: "Move on from the contract",
+          description: "Redirect bid effort to a sponsor without an NYU Law general counsel.",
+          consequenceSummary: "No cost. Public pressure creeps.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 2 },
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+          ],
+        },
+      ],
+    },
+  ],
+} satisfies RivalRecord;

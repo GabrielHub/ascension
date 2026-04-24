@@ -13,13 +13,13 @@ Documentation is intentionally narrow.
 
 - The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
 - The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
-- Phase 4 is complete. Contract lock, city pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter breadth are all shipped.
+- Phase 4 is complete. Contract lock, public pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter breadth are all shipped.
 - Midgame remediation is complete. The shipped Porter's-era baseline now has stronger browser coverage, deterministic D-rank economy reporting, workshop tuning, and the verified UX fixes needed by that loop.
 
 ## Planned Work
 
-- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, and Executive Floor institutional-pressure slice are all shipped.
-- The next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped institutional pressure.
+- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, public-pressure layer, and first named-rival pressure loop are all shipped.
+- The next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped skyscraper pressure.
 - Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
 - Active execution should stay split into narrow checked-in slices under `docs/plans/` rather than another umbrella phase doc.
 - Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.

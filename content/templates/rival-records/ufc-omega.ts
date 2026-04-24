@@ -1,66 +1,140 @@
-import type { ReadyToWireRivalRecord } from "./schema";
+import type { RivalRecord } from "./schema";
 
 export const ufcOmegaRivalRecord = {
   id: "rival/ufc-omega",
-  status: "ready-to-wire",
   guildName: "UFC Omega",
   shortDisplayName: "Omega",
-  branchSuffix: "Crown Heights",
-  parentGuild: null,
   leader: {
-    fullName: "Maya & Aiko Brooks",
-    ageRange: "early 30s (identical twin sisters, same birthday)",
-    background:
-      "Japanese African-American identical twin sisters, Brooklyn-raised on the Crown Heights / Bed-Stuy border in the same apartment through high school and the same gym from age nine. Japanese first-generation mother from Sunnyside, African-American father from Brownsville, both public-school teachers. Both sisters came up through Gleason's youth boxing program, crossed into amateur MMA at sixteen, went pro at nineteen, and signed UFC contracts at twenty-two on the same fight card — one of the only confirmed twin-sister signings in promotion history. Maya, fighting under the ring name 'Longfuse,' came up at strawweight with a counter-puncher's game and a reputation for grinding opponents past the fifth round; career record 9-3 with one title-eliminator appearance in 2022. Aiko, fighting as 'Goodnight,' came up at flyweight with a pressure-striker's game and six knockout finishes in nine wins before the pivot. In November 2023, between camps, the sisters attended a Midtown licensing screening together on a casual dare from their striking coach and were attuned in a single shared event no post-event analysis has been able to reconstruct — the screening operator's contemporaneous filing describes a coupled manifestation occurring simultaneously in both sisters, with no prior precedent on record at the New York licensing board. Maya emerged with a full-back glyph tattoo that charges on combat-stress and radiates throughout engagement; Aiko emerged with matched neck-and-arm node tattoos that draw power from Maya's reactor and discharge through her hands, amplifying her strikes when within sustained line-of-sight of her sister. Individually assessed, each sister was rated A-rank at the December 2023 post-event evaluation. Paired, the New York licensing board issued the twins a Unique rating — the first U-rank rating on record for a paired-attunement pair, and the first U-rank issued to a sibling pair of any kind. The UFC signed a spinoff-league deal four weeks after the paired-U rating became industry-public. UFC Omega launched in February 2024 with Maya and Aiko Brooks as co-principals and the headline draw of the league's first broadcast card. Both still live in Crown Heights.",
-    isAttuned: true,
-    operatorRank: "A",
+    name: "Maya & Aiko Brooks",
   },
-  districtAnchor: "Crown Heights, Brooklyn",
-  districtIdHint: "district/crown-heights",
-  baseLocation:
-    "The Bedford-Union Armory on Bedford Avenue in Crown Heights — a Romanesque Revival redbrick drill-hall structure converted into UFC Omega's NY flagship venue in early 2024. The preserved landmark exterior fronts a fully rebuilt interior. The original drill hall is now the broadcast arena floor: a reconfigurable staging footprint that seats roughly eighteen hundred for undercard cage events and reconfigures for on-site raid-night broadcast staging, with a suspended four-sided broadcast rig, overhead lighting truss, and ringwalk tunnel cut through the south wall. Second floor: the fighters' training gym, a full heavy-bag row, two sparring rings, a mat-matted grappling floor, and weight rooms converted from the original barracks. Third floor: broadcast control, talent holding, the twins' shared private office (two desks facing each other across a single window), a small production meeting room, and a dispatch office for UFC Omega's clearance-licensing and contract operations. Rear yard: broadcast truck bays and a loading dock that double as the fighters' walk-in for event nights. Front marquee mounted above the preserved stone archway cycles between upcoming card promos, clearance-night countdowns, and ESPN-partnered ranking updates.",
-  publicPitch:
-    "UFC Omega — combat-clearance at its highest level, broadcast live from the Bedford-Union Armory.",
-  internalSummary:
-    "A significantly-above-the-player rival occupying a commercial register no other rival on the roster holds: broadcast-native combat sport. UFC Omega is the Ultimate Fighting Championship's licensed dungeon-clearance spinoff promotion, founded in February 2024 after the UFC acquired broadcast rights to a handful of early-era high-profile clearances and saw a commercial structure no existing clearance firm was building. UFC Omega's New York operations are run by co-principals Maya and Aiko Brooks — identical twin sisters, Japanese African-American, Crown Heights-raised, former UFC fighters at the tail of contender-level pro careers when they were attuned together in a single shared event in November 2023. Their attunement manifestations are coupled: Maya carries a full-back glyph tattoo that serves as the reactor — it charges on combat-stress and radiates throughout engagement — and Aiko carries neck-and-arm node tattoos that draw power from her sister's reactor and discharge through her hands, amplifying her brass-knuckle strikes to a level no unarmed combatant should reach. Each sister is individually rated A-rank; paired, the licensing board rated them Unique, the first paired-U rating on record. The paired-U rating is what made them the UFC's flagship spinoff signing: the league's entire commercial thesis is built around the fact that the Brooks twins are a televisable ranked-unique combat act nobody else has. UFC Omega holds a weekly broadcast clearance card in partnership with ESPN, maintains a national ranked team leaderboard that runs in the sports ticker alongside UFC proper, operates a training academy that recruits across athletic disciplines (ex-gymnasts, ex-sprinters, ex-dancers, ex-combat-sports, ex-climbers), and bundles broadcast-network, sponsor, and merchandising deals into clearance contracts at a scale no indie guild can match with clearance fees alone. The player competes against UFC Omega on contracts UFC Omega cannot touch: gag-order work, survivor-sensitive contracts, NDA-gated commercial clearances, floors with no broadcast value that the schedule-protected twins cannot personally headline, and late-night emergency contracts in conflict with the broadcast schedule. Everything else goes to UFC Omega because the client wants the ESPN mention, the walkout coverage, the PPV tie-in, or the merch drop. UFC Omega's structural weakness is that the league's commercial model forbids quiet work and the roster's output collapses toward scheduled-headline nights; the feed-mill burns operators out in two to three years, and ring-brand alumni flow back onto the open market regularly, a seam where the player actually benefits by picking up discarded talent at discount.",
-  pressureStyle:
-    "National-broadcast commercial edge crossed with cross-discipline labor-market recruiting, anchored by paired-unique principal talent that actually fields. UFC Omega loses to the player on any contract gated by broadcast exclusion (gag orders, NDAs, survivor-sensitive work, government or defense-adjacent contracts), on any floor with no highlight value that the twins cannot personally headline, on late-night emergency contracts that conflict with the broadcast schedule, and on the client pool that actively prefers quiet, discreet clearance. UFC Omega beats the player on UFC-scale capital runway that funds loss-leader contracts the player cannot match on margin alone, on the national recruiting funnel (recruits see Omega promos during UFC cards, and the academy closes them at rates the player cannot match with compensation alone), on the ranked-league leaderboard that runs weekly in the ESPN ticker beside real sports, on bundled sponsor capture where energy drinks, fight gear, and broadcast networks are rolled into clearance contracts at volumes clearance fees alone cannot reach, on cross-discipline athletic recruiting through an academy pipeline that pulls from sprint, gymnastics, dance, climb, and combat-sports populations the player's guild cannot source, on walkout-and-weigh-in press amplification where every Omega clearance gets pregame, walkout, in-ring interview, and post-fight coverage, and on the tier-event headline draw where the Brooks twins personally walk out for a PPV-scale contested clearance and the scheduling threat alone reshapes competitor bid behavior. The one seam that runs the other way is the feed-mill alumni flow: UFC Omega burns operators out in two to three years, and the player can quietly pick up ring-brand alumni off the open market at discount — a rare rivalry move where UFC Omega's own commercial model pressures its roster for the player's long-term benefit.",
   pressureLane: "hybrid",
-  moveFamilyAffinities: [
-    "broadcast-gated contract capture (UFC Omega has standing deals with national developers, REITs, and real-estate franchises that specifically want telegenic league-branded clearances; 'cleared by UFC Omega' is a rentable asset for luxury towers, and the player cannot bundle the coverage leg at any price)",
-    "national-recruiting-pipeline funnel (recruits see Omega promos during UFC fight cards, and the academy closes them at rates the player cannot match with compensation alone; the pipeline pulls cross-discipline athletic talent — ex-gymnasts, ex-sprinters, ex-dancers, ex-climbers, ex-combat-sports — through an eight-week combine the player's guild does not have the infrastructure to run)",
-    "paired-unique twin-headline tier event (Maya and Aiko personally walking out together for a contested PPV-scale clearance is a rare, reshape-the-bid-landscape event; the scheduling threat alone moves competitor markets, and when the twins are booked for a contract the only other guilds that file competing bids are the ones willing to lose on the broadcast leg alone)",
-    "bundled sponsor capture (energy drinks, fight gear, broadcast networks, and consumer-merchandise deals rolled into clearance contracts at volumes clearance fees alone cannot reach; sponsors buy UFC Omega contracts as advertising spend, not as clearance spend, which bends the commercial math against any indie firm)",
-    "ESPN-leaderboard prestige (UFC Omega's ranked team leaderboard runs weekly in the sports ticker alongside UFC proper, UFL, and major-league results; most clients check the ticker before any licensing-board record, and guilds not on the ranking register as invisible to the broadcast-literate client pool)",
-    "walkout-and-weigh-in press amplification (every Omega clearance gets pregame coverage, walkout broadcast, in-ring interview, and post-fight analysis; the player's clearances do not trend regardless of execution quality, and the clip-culture gap accrues to Omega's recruiting and sponsor standing independent of clearance volume)",
-    "feed-mill alumni flow (distinct commercial seam — UFC Omega's broadcast pace and injury rate burns operators out in two to three years, and ring-brand alumni flow onto the open market regularly; the player can quietly pick up Omega-trained operators at discount, a rare rivalry move where the league's own commercial model pressures its roster for the player's long-term benefit)",
-  ],
-  rivalryFantasy:
-    "You clear a Brooklyn Heights floor clean at two in the morning and file the paperwork by dawn. Nobody covers it. UFC Omega is clearing Greenpoint on the same weekend — a contract they bid against you for and won on the broadcast leg — and their pregame runs Friday at eight, Maya does the walkout, Aiko cracks her knuckles on-screen in the ringwalk tunnel, and the clip of her finishing the floor-three boss hits three million views before Sunday night. Your clearance was better work. Everybody who matters watched theirs. Two of your interview candidates signed with the Omega academy on Tuesday; one of them trains with Aiko's team now. The ESPN Monday ticker has Omega up a rank and lists your guild nowhere. The rivalry fantasy is the slow acceptance that UFC Omega has rewritten the job itself. Clearance used to be a profession. It is now, also, content. You will lose contracts you could clear in your sleep to a league that cannot quietly clear anything, and the clients will pick the broadcast every single time until they need you because the contract is too sensitive to televise. UFC Omega are not villains. Maya and Aiko will show up to a charity card. They will genuinely respect your work in post-fight interviews and name your guild on ESPN without irony. Aiko will crack her knuckles on the walkout tunnel camera, Maya will do the breakdown in the booth between floors, and the main event will run over slot. You will file your paperwork under a bridge while their post-fight presser streams in a cab window two blocks away.",
-  toneAndVoice:
-    "Fight-media-trained English from years of UFC walkouts, weigh-in face-offs, press junkets, and post-fight interviews. Brooklyn cadence filtered through ESPN polish — declarative, confident, unhurried, reflexively finding the camera and finding the light. Japanese-American and African-American Brooklyn inflections both surface naturally and are never code-switched away; both sisters will drop neighborhood vocabulary into a broadcast hit without adjusting. Both use fight-sport terminology for clearance work — 'the main event,' 'the walkout,' 'the card,' 'the finish,' 'the tape,' 'the gameplan,' 'camp week' — with no self-awareness that the translation is strange, because to them clearance is a combat sport now. Maya is the strategist register: quieter, breakdown-focused, the fighter who talks about training camp and setups and corrects her sister's media answers with a flat hand on the forearm. Aiko is the showman register: camera-forward, finisher-confident, the fighter who sells the next card and lands the walkout quote. Neither is falsely humble and neither is arrogant; they have earned their positions on actual pro records and speak accordingly. They are warm to peers and genuinely respectful of rivals who do real work — the fighter's post-fight handshake is the register, not the promoter's post-fight spin. They do not trash-talk. They do not need to. The insult, if there is one, is that every room they walk into is a headliner's room by default and every conversation they have about a competitor is a broadcast that gets clipped. On the rare occasions one twin speaks without the other in the frame, the other is almost always one shot away on the same cut.",
-  interruptionCopySamples: [
-    "UFC Omega has filed a competing bid on the Clinton Hill residential cluster. Broadcast slot confirmed for Friday at eight. Maya and Aiko are headlining. ESPN pregame runs at seven-thirty.",
-    "Tonight's ESPN ticker has UFC Omega at number three in the national clearance ranking. Your guild is not on the ranking. It has never been on the ranking.",
-    "Two of your interview candidates signed with the Omega academy this week. Relocation packages included personal meetings with Maya Brooks at the Bedford-Union Armory and a walkout-track session with an Omega-sponsored production studio.",
-    "UFC Omega's weekend PPV drew 2.4 million pay-per-view buys. ESPN's Monday coverage mentioned your Queens clearance the same night in paragraph nine. The lead paragraph compared Aiko Brooks's floor-three finish to her 2022 UFC Fight Night knockout of the year.",
-    "Maya Brooks is on The Tonight Show tomorrow. The segment is titled 'The Twins Who Fight Together.' Producers have asked whether your guild would like to be named as 'the next generation of indie shops.' They will name you either way.",
-    "Aiko Brooks pulled out of this Saturday's Flatbush card at weigh-in. Sprain in the left hand. The undercard headline has been restructured and the main event rolls over to next week. Your contracted Flatbush overlap just cleared.",
-  ],
   copy: {
-    leaderboardName: "UFC Omega — Crown Heights",
-    dossierOneLiner:
-      "UFC Omega is the UFC's combat-clearance spinoff league, broadcast live from the Bedford-Union Armory and co-principaled by Maya and Aiko Brooks — identical-twin former UFC fighters whose paired attunement is rated Unique and whose weekly clearance card runs on ESPN.",
     currentRivalOneLiner:
       "Maya and Aiko Brooks headline every Omega broadcast. They clear messier than you, faster than you, and on ESPN by Monday morning.",
-    publicBlurb:
-      "UFC Omega is the licensed dungeon-clearance league operated by the Ultimate Fighting Championship, headquartered at the Bedford-Union Armory in Crown Heights and founded in February 2024. The league's New York operations are run by co-principals Maya and Aiko Brooks, former UFC fighters and UFC Omega's first fully attuned signing class. UFC Omega broadcasts weekly clearance cards in partnership with ESPN, maintains a ranked national team leaderboard, and operates a training academy that recruits across athletic disciplines. Applicant combine cycles are announced quarterly and held at the Bedford-Union Armory.",
-    internalAuthorNote:
-      "Supports repeated out-broadcast beats — the player clears the same caliber of floor, Omega's clearance trends, the player's does not, and the commercial gap does not close regardless of execution quality. Supports broadcast-gated contract capture as the recurring commercial seam: clients pick UFC Omega specifically because they want the ESPN mention, the walkout coverage, the PPV tie-in, or the merch bundle, and the player competes by structuring bids around broadcast-exclusion contracts (gag orders, NDAs, survivor-sensitive work, government-adjacent clearances) that Omega cannot touch. Supports cross-discipline recruiting pipeline pressure — the academy pulls athletic talent from sprint, gymnastics, dance, climb, and combat-sports populations the player's guild cannot source, and candidates the player interviewed surface three months later in Omega walkout-track promos. Supports the twin-gimmick headline tier event sparingly — Maya and Aiko personally walking out together for a contested clearance is a rare, bid-reshape-scale event, not a routine move; the booking threat alone moves markets, and when the twins are on the card the only other guilds filing competing bids are the ones willing to lose on the broadcast leg alone. Supports the feed-mill alumni flow seam where the player benefits — Omega burns out operators in two or three years, and the player can pick up ring-brand alumni at discount once the broadcast pace catches up with them. Supports paired-attunement visual seams — Maya's full-back glyph glowing during walkouts, Aiko's neck-and-arm nodes igniting at weigh-ins and finish sequences, and the split-frame broadcast composition that always pairs the twins on-camera even when only one is speaking. Attunement-axis slot across the roster: Adrian fields (B-rank), Celeste will not (A verified, beneath her), Ren cannot (A claimed, unverified), Monty does not pretend (unattuned by choice), Odin refuses assessment (attuned, unranked-by-policy), Frankie fields on a whim (U-rank, solo), Vesper categorically cannot field (non-human principal), Mina fields as taskmaster (A-rank, visibly damaged plate), DELILA is cosmetically attuned (F-rank figurehead) — Maya and Aiko are paired-U, individually A each, and field as the commercial product. The paired-U slot is distinct from Frankie's solo-U slot and should be protected when future U-rank rivals are added. Commercial-lane foil: Golden Phoenix has HK-institutional backing, Straits Meridian has international-institutional, Asgard has tech-personal, Ashford has inherited-social, A-List is DIY editorial, V is post-human zero-overhead, Kin has no backing at all, The Yard is anti-prestige Bronx-working — UFC Omega is national-broadcast sports-league institutional, a register none of the others touch. Ring-name convention: Maya 'Longfuse' Brooks (reactor register, patience-and-finish nickname lane) and Aiko 'Goodnight' Brooks (striker register, KO-artist nickname lane). Broadcast commentators use ring names; press uses family names; operators inside the league use first names. Reusable visual and tonal seams: Bedford-Union Armory marquee establishing shot; split-frame twin promo composition; Maya's back-glyph glow during walkout sequences; Aiko's knuckle-crack gesture as a reusable broadcast-ready signature; twin catchphrase banter in pre-fight hype (Maya sets up, Aiko lands); ESPN ticker appearances that list Omega rank and omit the player; Omega-branded walkout jackets on academy alumni at open auditions; the paired-U rating referenced dryly on weigh-in chyrons without explanation. Avoid: wrestling-heel framing (no manufactured villainy; the twins are fighter-polite in post-fight interviews, including about the player); anime-team framing (no signature poses, no team-color uniforms beyond actual Omega fight kit, no synchronized gestures treated as dramatic beats); magical-girl framing (the tattoo glow is combat-functional under broadcast lighting, not decorative); Her / Vesper-style uncanny intimacy (the twins are warm and real, not uncanny); sole-survivor / underdog framing (they are significantly above the player, not climbing); broadcast-sports parody (the league is a real commercial operation competing legitimately, not satire). Avoid also the matching-twin-gimmick register where the sisters dress identically or speak in sync; their brand is paired-but-distinct (complementary fight-camp personas, complementary wardrobes on broadcast, complementary media roles), not mirror-image. The insult, if any, is structural: every room Omega walks into is a headliner's room by default, and the player is the undercard profile that runs in paragraph nine.",
   },
   assetPaths: {
     leaderPortrait: "/data/rivals/ufc-omega/leader-neutral.png",
     insignia: "/data/rivals/ufc-omega/insignia.png",
   },
-  assetsShipped: true,
-} satisfies ReadyToWireRivalRecord;
+  narrativeProfile: {
+    operatingBase:
+      "The Bedford-Union Armory on Bedford Avenue in Crown Heights — a Romanesque Revival redbrick drill-hall structure converted into UFC Omega's NY flagship venue in early 2024. The preserved landmark exterior fronts a fully rebuilt interior. The original drill hall is now the broadcast arena floor: a reconfigurable staging footprint that seats roughly eighteen hundred for undercard cage events and reconfigures for on-site raid-night broadcast staging, with a suspended four-sided broadcast rig, overhead lighting truss, and ringwalk tunnel cut through the south wall. Second floor: the fighters' training gym, heavy-bag row, two sparring rings, a grappling floor, weight rooms. Third floor: broadcast control, talent holding, the twins' shared private office, production meeting room, dispatch for clearance-licensing operations. Rear yard: broadcast truck bays and a loading dock.",
+    publicPitch:
+      "UFC Omega — combat-clearance at its highest level, broadcast live from the Bedford-Union Armory.",
+    pressureStyle:
+      "National-broadcast commercial edge crossed with cross-discipline labor-market recruiting, anchored by paired-unique principal talent that actually fields. UFC Omega loses to you on any contract gated by broadcast exclusion (gag orders, NDAs, survivor-sensitive work, government-adjacent contracts), on floors with no highlight value the twins cannot headline, and on late-night emergency contracts conflicting with the broadcast schedule. UFC Omega beats you on UFC-scale capital runway, on the national recruiting funnel (recruits see Omega promos during UFC cards), on the weekly ESPN-ticker ranked-league leaderboard, on bundled sponsor capture (energy drinks, fight gear, broadcast networks rolled into clearance contracts), on cross-discipline athletic recruiting, on walkout-and-weigh-in press amplification, and on the tier-event headline draw where the twins personally walk out for a PPV-scale contested clearance. The one seam running the other way is feed-mill alumni flow — Omega burns operators out in two to three years, and ring-brand alumni come onto the open market at discount.",
+    rivalryFantasy:
+      "You clear a Brooklyn Heights floor clean at two in the morning and file the paperwork by dawn. Nobody covers it. UFC Omega is clearing Greenpoint on the same weekend — a contract they bid against you for and won on the broadcast leg — and their pregame runs Friday at eight, Maya does the walkout, Aiko cracks her knuckles on-screen in the ringwalk tunnel, and the clip of her finishing the floor-three boss hits three million views before Sunday night. Your clearance was better work. Everybody who matters watched theirs. Two of your interview candidates signed with the Omega academy on Tuesday. The ESPN Monday ticker has Omega up a rank and lists your guild nowhere. UFC Omega are not villains — they will genuinely respect your work in post-fight interviews and name your guild on ESPN without irony. You will file your paperwork under a bridge while their post-fight presser streams in a cab window two blocks away.",
+    toneAndVoice:
+      "Fight-media-trained English from years of UFC walkouts, weigh-in face-offs, press junkets, and post-fight interviews. Brooklyn cadence filtered through ESPN polish — declarative, confident, unhurried, reflexively finding the camera and finding the light. Japanese-American and African-American Brooklyn inflections both surface naturally and are never code-switched away. Both use fight-sport terminology for clearance work — 'the main event,' 'the walkout,' 'the card,' 'the finish,' 'the tape,' 'camp week' — with no self-awareness that the translation is strange. Maya is the strategist register: quieter, breakdown-focused. Aiko is the showman register: camera-forward, finisher-confident. Neither is falsely humble and neither is arrogant. Warm to peers, genuinely respectful of rivals who do real work. They do not trash-talk. The insult, if there is one, is that every room they walk into is a headliner's room by default and every conversation about a competitor is a broadcast that gets clipped.",
+  },
+  moves: [
+    {
+      id: "rival-move/ufc-omega/espn-broadcast-bid",
+      family: "contract_challenge",
+      weight: 10,
+      cooldownMinutes: 1440,
+      briefingTemplate:
+        "UFC Omega has filed a competing bid on the Clinton Hill residential cluster. Broadcast slot confirmed for Friday at eight. Maya and Aiko are headlining. ESPN pregame runs at seven-thirty.",
+      basePublicPressureDelta: 7,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "counter-on-quiet",
+          label: "Counter with an NDA-package pitch",
+          description:
+            "Pitch the client on broadcast exclusion — gag order, private walkthrough, no cameras.",
+          consequenceSummary: "Treasury cost. Contract salvageable.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -110 },
+            { kind: "contract_pressure_delta", targetRef: "guild", value: -2 },
+          ],
+        },
+        {
+          choiceId: "match-broadcast",
+          label: "Offer a counter-broadcast package",
+          description: "Spin up press coverage to match Omega's production.",
+          consequenceSummary: "Treasury bleeds. Reputation up.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -200 },
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+          ],
+        },
+        {
+          choiceId: "concede-broadcast-leg",
+          label: "Concede the broadcast-leg contract",
+          description: "Accept the loss. Focus on floors Omega cannot televise.",
+          consequenceSummary: "No cost. Public pressure rises.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 4 },
+            { kind: "morale_delta", targetRef: "team", value: -1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/ufc-omega/academy-signing",
+      family: "recruitment_market_loss",
+      weight: 8,
+      cooldownMinutes: 2880,
+      briefingTemplate:
+        "Two of your interview candidates signed with the Omega academy this week. Relocation packages included personal meetings with Maya Brooks at the Bedford-Union Armory and a walkout-track session with an Omega-sponsored production studio.",
+      basePublicPressureDelta: 4,
+      baseIntensityDelta: 3,
+      choices: [
+        {
+          choiceId: "pick-up-alumni",
+          label: "Pick up Omega alumni off the open market",
+          description: "Move on burnt-out ring-brand alumni Omega has cycled through.",
+          consequenceSummary: "Team cohesion up. Treasury cost.",
+          effects: [
+            { kind: "treasury_delta", targetRef: "guild", value: -90 },
+            { kind: "team_cohesion_delta", targetRef: "team", value: 2 },
+          ],
+        },
+        {
+          choiceId: "pivot-pipeline",
+          label: "Pivot the recruiting pipeline",
+          description: "Refocus on candidates Omega does not scout.",
+          consequenceSummary: "Morale holds. Intel cost.",
+          effects: [
+            { kind: "intel_delta", targetRef: "guild", value: -2 },
+            { kind: "loyalty_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "rival-move/ufc-omega/tonight-show-segment",
+      family: "press_gravity",
+      weight: 7,
+      cooldownMinutes: 2160,
+      briefingTemplate:
+        "Maya Brooks is on The Tonight Show tomorrow. The segment is titled 'The Twins Who Fight Together.' Producers have asked whether your guild would like to be named as 'the next generation of indie shops.' They will name you either way.",
+      basePublicPressureDelta: 5,
+      baseIntensityDelta: 2,
+      choices: [
+        {
+          choiceId: "engage-segment",
+          label: "Accept the 'indie shops' framing",
+          description: "Send a quote. Take the namecheck on the segment.",
+          consequenceSummary: "Reputation up. Public pressure holds.",
+          effects: [
+            { kind: "reputation_delta", targetRef: "guild", value: 2 },
+            { kind: "intel_delta", targetRef: "guild", value: -1 },
+          ],
+        },
+        {
+          choiceId: "decline-segment",
+          label: "Decline to comment",
+          description: "Let the segment run without your quote. The framing runs anyway.",
+          consequenceSummary: "Morale holds. Public pressure rises.",
+          effects: [
+            { kind: "public_pressure_delta", targetRef: "guild", value: 3 },
+            { kind: "morale_delta", targetRef: "team", value: 1 },
+          ],
+        },
+      ],
+    },
+  ],
+} satisfies RivalRecord;

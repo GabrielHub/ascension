@@ -1,6 +1,6 @@
 import type { TemplateRegistry } from "content/templates";
-import { factionTemplates } from "content/templates/factions";
 import { siteConceptById } from "content/templates/site-concepts";
+import { readyToWireRivalById } from "content/templates/rivals";
 import {
   DEFAULT_POLICY_STATE,
   type PolicyContractLifecycle,
@@ -10,12 +10,14 @@ import {
 } from "lib/policies";
 import type {
   ActiveRaidSnapshot,
-  CityPressureSnapshot,
+  FactionRelationshipSnapshot,
   GoalCheckGrade,
   GoalCheckKind,
+  PublicPressureSnapshot,
   RaidRunSnapshot,
   RaidStepKind,
   RaidSummarySnapshot,
+  RivalPressureSnapshot,
   WorldSnapshot,
 } from "save";
 import { selectOperatorAppearanceRecipeId } from "save/appearance";
@@ -31,11 +33,6 @@ import {
 } from "sim";
 import { districtTemplates } from "content/templates/districts";
 import { getTrainingDerivedBonus, getTrainingStatusLabel } from "sim/systems/training";
-import {
-  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
-  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
-  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
-} from "sim/systems/city-pressure";
 import { getBuildingFloors } from "content/building-layouts";
 import { formatSlotLabel, getSlotKey } from "lib/hq-room-state";
 import { visitorQualityToRank } from "lib/visitor-rank";
@@ -556,7 +553,8 @@ export type EventLogKind =
   | "raid_result"
   | "team_status"
   | "room_culture"
-  | "city_pressure"
+  | "public_pressure"
+  | "rival_pressure"
   | "incident_resolved"
   | "social_fallout";
 
@@ -738,164 +736,112 @@ export interface OperationsViewModel {
   minuteOfDay: number;
 }
 
-// ── City pressure view-models ────────────────────────────────────────
+// ── Public pressure and rival view-models ────────────────────────────
 
-export interface DistrictPressureView {
+export interface DistrictPublicPressureView {
   districtId: string;
   name: string;
-  attention: number;
-  trust: number;
-  containmentDebt: number;
+  heat: number;
+  standing: number;
+  containment: number;
   recentContractCount: number;
 }
 
-export interface FactionStandingView {
+export interface FactionRelationshipView {
   factionId: string;
   name: string;
-  kind: "institution" | "rival_guild";
   standing: number;
-  scrutiny: number;
-  leverage: number;
   onCooldown: boolean;
 }
 
-export interface CityPressureView {
-  districts: readonly DistrictPressureView[];
-  factions: readonly FactionStandingView[];
-}
+export type PublicPressureBand = "quiet" | "watched" | "exposed" | "crackdown";
 
-export type VisibleInstitutionBand = "emerging" | "recognized" | "prestige";
-
-export interface VisibleInstitutionView {
-  band: VisibleInstitutionBand;
+export interface PublicPressureView {
   score: number;
-  averageStanding: number;
-  reputation: number;
-  buildingTier: number;
-  cooldownFactionIds: readonly string[];
-  offsettingRoomTemplateIds: readonly string[];
-  pressureThreats: readonly string[];
+  band: PublicPressureBand;
+  dominantSource: PublicPressureSnapshot["dominantSource"];
+  districts: readonly DistrictPublicPressureView[];
+  factionRelationships: readonly FactionRelationshipView[];
 }
 
-export function buildCityPressureView(
-  cityPressure: CityPressureSnapshot | null | undefined,
-): CityPressureView {
-  if (!cityPressure) {
-    return { districts: [], factions: [] };
+export interface CurrentRivalView {
+  rivalId: string;
+  shortDisplayName: string;
+  guildName: string;
+  oneLiner: string;
+  pressureLane: string;
+  leaderName: string;
+  leaderPortrait: string;
+  insignia: string;
+  intensity: number;
+  aggression: number;
+  trend: string;
+  strengthBand: string;
+}
+
+function publicPressureBand(score: number): PublicPressureBand {
+  if (score >= 75) return "crackdown";
+  if (score >= 50) return "exposed";
+  if (score >= 25) return "watched";
+  return "quiet";
+}
+
+export function buildPublicPressureView(
+  publicPressure: PublicPressureSnapshot | null | undefined,
+  factionRelationships: readonly FactionRelationshipSnapshot[] = [],
+): PublicPressureView {
+  if (!publicPressure) {
+    return {
+      score: 0,
+      band: "quiet",
+      dominantSource: null,
+      districts: [],
+      factionRelationships: [],
+    };
   }
   return {
-    districts: cityPressure.districts.map((d) => ({
+    score: publicPressure.score,
+    band: publicPressureBand(publicPressure.score),
+    dominantSource: publicPressure.dominantSource,
+    districts: publicPressure.districts.map((d) => ({
       districtId: d.districtId,
       name: getLocationLabel(d.districtId),
-      attention: d.attention,
-      trust: d.trust,
-      containmentDebt: d.containmentDebt,
+      heat: d.heat,
+      standing: d.standing,
+      containment: d.containment,
       recentContractCount: d.recentContractCount,
     })),
-    factions: cityPressure.factions.map((f) => ({
+    factionRelationships: factionRelationships.map((f) => ({
       factionId: f.factionId,
       name: getFactionLabel(f.factionId),
-      kind: factionTemplates.find((t) => t.id === f.factionId)?.kind ?? "institution",
       standing: f.standing,
-      scrutiny: f.scrutiny,
-      leverage: f.leverage,
       onCooldown: f.cooldownUntilTick > 0,
     })),
   };
 }
 
-const VISIBLE_INSTITUTION_SKYSCRAPER_ROOM_TEMPLATE_IDS = [
-  SKYSCRAPER_EXECUTIVE_OFFICE_TEMPLATE_ID,
-  SKYSCRAPER_COMPLIANCE_OFFICE_TEMPLATE_ID,
-  SKYSCRAPER_WAR_ROOM_TEMPLATE_ID,
-] as const;
-
-const VISIBLE_INSTITUTION_PRESTIGE_SCORE_THRESHOLD = 62;
-const VISIBLE_INSTITUTION_RECOGNIZED_SCORE_THRESHOLD = 34;
-
-const REPUTATION_SCORE_WEIGHT = 0.45;
-const STANDING_SCORE_WEIGHT = 0.4;
-const TIER_BONUS_WEIGHT = 0.15;
-const REPUTATION_SCALE = 0.8;
-const STANDING_SCORE_SCALE = 0.5;
-const TIER_BONUS_PER_TIER = 10;
-const TIER_BONUS_CAP = 50;
-
-const PRESSURE_THREAT_SCRUTINY_THRESHOLD = 30;
-const PRESSURE_THREAT_LEVERAGE_THRESHOLD = 25;
-
-export function buildVisibleInstitutionView(
-  reputation: number,
-  cityPressure: CityPressureView,
-  buildingId: string,
-  buildingTier: number,
-  operationalRoomTemplateIds: readonly string[] = [],
-): VisibleInstitutionView {
-  const institutionFactions = cityPressure.factions.filter((f) => f.kind === "institution");
-  const averageStanding =
-    institutionFactions.length > 0
-      ? institutionFactions.reduce((sum, f) => sum + f.standing, 0) / institutionFactions.length
-      : 0;
-
-  const repScore = Math.max(0, Math.min(100, reputation * REPUTATION_SCALE));
-  const standingScore = Math.max(0, Math.min(100, (averageStanding + 100) * STANDING_SCORE_SCALE));
-  const tierBonus =
-    buildingId === "building/skyscraper"
-      ? Math.min(TIER_BONUS_CAP, buildingTier * TIER_BONUS_PER_TIER)
-      : 0;
-  const score = Math.round(
-    repScore * REPUTATION_SCORE_WEIGHT +
-      standingScore * STANDING_SCORE_WEIGHT +
-      tierBonus * TIER_BONUS_WEIGHT,
+export function buildCurrentRivalView(
+  rivalPressure: RivalPressureSnapshot | null | undefined,
+): CurrentRivalView | null {
+  if (!rivalPressure?.active || !rivalPressure.currentPrimaryRivalId) return null;
+  const instance = rivalPressure.rivals.find(
+    (rival) => rival.rivalId === rivalPressure.currentPrimaryRivalId,
   );
-
-  let band: VisibleInstitutionBand;
-  if (score >= VISIBLE_INSTITUTION_PRESTIGE_SCORE_THRESHOLD) band = "prestige";
-  else if (score >= VISIBLE_INSTITUTION_RECOGNIZED_SCORE_THRESHOLD) band = "recognized";
-  else band = "emerging";
-
-  const cooldownFactionIds = cityPressure.factions
-    .filter((f) => f.onCooldown)
-    .map((f) => f.factionId);
-
-  const operationalRoomSet = new Set(operationalRoomTemplateIds);
-  const offsettingRoomTemplateIds = VISIBLE_INSTITUTION_SKYSCRAPER_ROOM_TEMPLATE_IDS.filter((id) =>
-    operationalRoomSet.has(id),
-  );
-
-  const pressureThreats: string[] = [];
-  const cityLicensingHighScrutiny = cityPressure.factions.some(
-    (f) =>
-      f.factionId === "faction/city-licensing" && f.scrutiny >= PRESSURE_THREAT_SCRUTINY_THRESHOLD,
-  );
-  const boroughContractsHighScrutiny = cityPressure.factions.some(
-    (f) =>
-      f.factionId === "faction/borough-contracts" &&
-      f.scrutiny >= PRESSURE_THREAT_SCRUTINY_THRESHOLD,
-  );
-  const rivalLeverageHigh = cityPressure.factions.some(
-    (f) =>
-      f.factionId === "faction/rival-guild-market" &&
-      f.leverage >= PRESSURE_THREAT_LEVERAGE_THRESHOLD,
-  );
-  if (cityLicensingHighScrutiny) pressureThreats.push("Licensing audit");
-  if (boroughContractsHighScrutiny) pressureThreats.push("Borough hearing");
-  if (rivalLeverageHigh) pressureThreats.push("Rival poaching");
-  if (band === "prestige") {
-    pressureThreats.push("Sponsor demand", "Press exposure");
-  } else if (band === "recognized") {
-    pressureThreats.push("Sponsor demand");
-  }
-
+  const template = readyToWireRivalById.get(rivalPressure.currentPrimaryRivalId);
+  if (!instance || !template) return null;
   return {
-    band,
-    score,
-    averageStanding: Math.round(averageStanding * 10) / 10,
-    reputation,
-    buildingTier,
-    cooldownFactionIds,
-    offsettingRoomTemplateIds,
-    pressureThreats,
+    rivalId: template.id,
+    shortDisplayName: template.shortDisplayName,
+    guildName: template.guildName,
+    oneLiner: template.copy.currentRivalOneLiner,
+    pressureLane: template.pressureLane,
+    leaderName: template.leader.name,
+    leaderPortrait: template.assetPaths.leaderPortrait,
+    insignia: template.assetPaths.insignia,
+    intensity: instance.intensity,
+    aggression: instance.aggression,
+    trend: instance.trend,
+    strengthBand: instance.strengthBand,
   };
 }
 
@@ -1207,14 +1153,15 @@ function buildCraftRecipesForRoom(
   buildingTier: number,
   cashOnHand: number,
   inventory: readonly Phase2InventoryView[],
-  cityPressure: CityPressureSnapshot | null | undefined,
+  publicPressure: PublicPressureSnapshot | null | undefined,
+  factionRelationships: readonly FactionRelationshipSnapshot[] = [],
   registry: TemplateRegistry,
 ): CraftRecipeViewModel[] {
-  // Build district tag set: districts with trust > 0 (player has operated there)
+  // Build district tag set: districts with standing > 0 (player has operated there).
   const activeDistrictTags: string[] = [];
-  if (cityPressure) {
-    for (const ds of cityPressure.districts) {
-      if (ds.trust > 0) {
+  if (publicPressure) {
+    for (const ds of publicPressure.districts) {
+      if (ds.standing > 0) {
         const dt = districtTemplates.find((d) => d.id === ds.districtId);
         if (dt) activeDistrictTags.push(...dt.tags);
       }
@@ -1223,10 +1170,8 @@ function buildCraftRecipesForRoom(
 
   // Build faction standings keyed by faction id
   const factionStandings: Record<string, { standing: number }> = {};
-  if (cityPressure) {
-    for (const f of cityPressure.factions) {
-      factionStandings[f.factionId] = { standing: f.standing };
-    }
+  for (const f of factionRelationships) {
+    factionStandings[f.factionId] = { standing: f.standing };
   }
 
   return buildCraftRecipeAvailability(
@@ -1283,7 +1228,8 @@ export function buildHqViewFromPhase1(
   view: Phase1RuntimeView,
   registry: TemplateRegistry,
   inventory?: readonly Phase2InventoryView[],
-  cityPressure?: CityPressureSnapshot | null,
+  publicPressure?: PublicPressureSnapshot | null,
+  factionRelationships?: readonly FactionRelationshipSnapshot[],
 ): HqViewModel {
   const identity = view.identity;
   const buildingTemplate =
@@ -1329,7 +1275,8 @@ export function buildHqViewFromPhase1(
         view.building.tier,
         view.resources.cash,
         inventory ?? [],
-        cityPressure,
+        publicPressure,
+        factionRelationships ?? [],
         registry,
       ),
       training: buildRoomTrainingViewModel(

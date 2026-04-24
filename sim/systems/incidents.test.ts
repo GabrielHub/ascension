@@ -2,6 +2,7 @@ import { addComponent, addEntity, createWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
 
 import { templateRegistry } from "content/templates";
+import { readyToWireRivals } from "content/templates/rivals";
 import { buildCombatPackageRegistry } from "content/templates/combat-packages";
 
 import {
@@ -11,7 +12,7 @@ import {
   RoomInstance,
   WorldTimeState,
 } from "../components";
-import { createDefaultCityState } from "../components/city-state";
+import { createDefaultPublicPressureState } from "../components/public-pressure";
 import type { PendingIncident } from "./incidents";
 import {
   computeIncidentTemplateSelectionWeight,
@@ -165,7 +166,8 @@ function createIncidentContext(options?: {
       combatPackageRegistry: buildCombatPackageRegistry([]),
       worldTimeFrozen: false,
       deferIncidentPresentation: false,
-      cityState: createDefaultCityState(),
+      publicPressure: createDefaultPublicPressureState(),
+      rivalPressure: { active: false, currentPrimaryRivalId: null, rivals: [] },
       presenterUnlocks: [],
     },
   };
@@ -187,10 +189,12 @@ function prepSkyscraperContext(options?: {
     securedContractCount: 5,
     lastTrackedContractSiteId: null,
   };
-  if (context.runtimeState.cityState) {
-    context.runtimeState.cityState.factions["faction/city-licensing"].scrutiny = 40;
-    context.runtimeState.cityState.factions["faction/labor-safety"].scrutiny = 40;
-  }
+  context.runtimeState.publicPressure!.score = 40;
+  context.runtimeState.publicPressure!.dominantSource = "regulator";
+  context.runtimeState.publicPressure!.districts["district/lower-east-side"].heat = 40;
+  context.runtimeState.publicPressure!.factionRelationships["faction/city-licensing"].standing =
+    -20;
+  context.runtimeState.publicPressure!.factionRelationships["faction/labor-safety"].standing = -20;
   return context;
 }
 
@@ -214,6 +218,33 @@ function findIncidentCandidate(context: SimSystemContext, templateId: string): P
   }
 
   throw new Error(`Could not select incident template ${templateId}.`);
+}
+
+function setActiveRivalPressure(context: SimSystemContext, currentMinute: number): void {
+  const rival = readyToWireRivals[0];
+  expect(rival).toBeDefined();
+  context.runtimeState.rivalPressure = {
+    active: true,
+    currentPrimaryRivalId: rival!.id,
+    rivals: [
+      {
+        rivalId: rival!.id,
+        ladderPosition: 1,
+        strengthBand: "peer",
+        intensity: 50,
+        aggression: 45,
+        trend: "rising",
+        isPrimary: true,
+        introducedAtTick: 0,
+        lastMoveTick: currentMinute,
+        recentMoveIds: [],
+        departedOperatorId: null,
+        missedProspectId: null,
+        sourceTick: 0,
+        sourceReason: "war_room_unlock",
+      },
+    ],
+  };
 }
 
 describe("incident interruption payloads", () => {
@@ -383,7 +414,6 @@ describe("incident interruption payloads", () => {
     const skyscraperCategories = [
       "licensing_audit",
       "sponsor_ultimatum",
-      "rival_poaching",
       "borough_hearing",
       "regulatory_scrutiny",
     ];
@@ -406,16 +436,15 @@ describe("incident interruption payloads", () => {
     }
   });
 
-  it("exposes at least one skyscraper-gated incident per intended family", () => {
+  it("exposes at least one skyscraper-gated incident per public-pressure family", () => {
     const skyscraperTemplates = INCIDENT_TEMPLATES.filter((template) =>
       template.requiredBuildingIds?.includes("building/skyscraper"),
     );
     const families = new Set(skyscraperTemplates.map((t) => t.triggerFamily));
 
-    expect(skyscraperTemplates.length).toBeGreaterThanOrEqual(5);
+    expect(skyscraperTemplates.length).toBeGreaterThanOrEqual(4);
     expect(families).toContain("compliance_pressure");
     expect(families).toContain("sponsor_demand");
-    expect(families).toContain("rival_poaching");
     expect(families).toContain("district_fallout");
     expect(families).toContain("faction_pressure");
   });
@@ -436,20 +465,22 @@ describe("incident interruption payloads", () => {
       );
       const hasNewPressureTag = template.pressureTags.some(
         (tag) =>
-          tag === "pressure:rivalry" || tag === "pressure:exposure" || tag === "pressure:prestige",
+          tag === "pressure:regulatory" ||
+          tag === "pressure:exposure" ||
+          tag === "pressure:prestige",
       );
       expect(hasNewPressureTag).toBe(true);
     });
   });
 
-  it("requires every skyscraper template to carry at least one faction consequence effect", () => {
+  it("requires every skyscraper template to carry public-pressure or relationship effects", () => {
     INCIDENT_TEMPLATES.filter((t) =>
       t.requiredBuildingIds?.includes("building/skyscraper"),
     ).forEach((template) => {
       const hasFactionEffect = template.choices.some((choice) =>
         choice.effects.some(
           (effect) =>
-            effect.kind === "faction_standing_delta" || effect.kind === "faction_scrutiny_delta",
+            effect.kind === "faction_relationship_delta" || effect.kind === "public_pressure_delta",
         ),
       );
       expect(hasFactionEffect).toBe(true);
@@ -480,22 +511,6 @@ describe("incident interruption payloads", () => {
     expect(complianceWeight).toBeLessThan(baselineWeight);
   });
 
-  it("hides the war-room counter-op choice until the War Room is operational", () => {
-    const withoutWarRoom = findIncidentCandidate(
-      prepSkyscraperContext(),
-      "incident/rival-guild-poaching-push",
-    );
-    expect(withoutWarRoom.choices.map((choice) => choice.choiceId)).not.toContain(
-      "war_room_counter_op",
-    );
-
-    const withWarRoom = findIncidentCandidate(
-      prepSkyscraperContext({ roomTemplateId: "room/war_room:tier_1" }),
-      "incident/rival-guild-poaching-push",
-    );
-    expect(withWarRoom.choices.map((choice) => choice.choiceId)).toContain("war_room_counter_op");
-  });
-
   it("hides the plea-deal choice until the Compliance Office is operational", () => {
     const withoutCompliance = findIncidentCandidate(
       prepSkyscraperContext(),
@@ -524,6 +539,47 @@ describe("incident interruption payloads", () => {
     );
 
     expect(sponsorDemand.boundContext.factionId).toBe("faction/borough-contracts");
+  });
+
+  it("suppresses rival-coded incidents only while a current rival move is eligible", () => {
+    const primaryRival = readyToWireRivals[0];
+    expect(primaryRival).toBeDefined();
+    const eligibleMinute = Math.max(...primaryRival!.moves.map((move) => move.cooldownMinutes)) + 1;
+    const blockedContext = prepSkyscraperContext();
+    setActiveRivalPressure(blockedContext, 0);
+
+    const blocked = selectIncidentCandidate(
+      blockedContext,
+      blockedContext.runtimeState.incidentState,
+      eligibleMinute,
+      100,
+      {
+        allowedCategories: ["departure_warning"],
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+        seedKey: "rival-gated:block",
+      },
+    );
+    expect(blocked).toBeNull();
+
+    const fallbackContext = prepSkyscraperContext();
+    setActiveRivalPressure(fallbackContext, eligibleMinute);
+    const fallback = selectIncidentCandidate(
+      fallbackContext,
+      fallbackContext.runtimeState.incidentState,
+      eligibleMinute,
+      100,
+      {
+        allowedCategories: ["departure_warning"],
+        ignorePressureThreshold: true,
+        ignoreCooldowns: true,
+        ignoreRecentFamilyLimit: true,
+        seedKey: "rival-gated:fallback",
+      },
+    );
+
+    expect(fallback?.templateId).toMatch(/^incident\/rival-recruitment-/);
   });
 
   it("emits an event-log entry when an incident is queued", () => {

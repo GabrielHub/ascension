@@ -1,34 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
-  <!-- REFERENCE FIXTURE: The Infirmary — First dedicated recovery room
-       4 cols x 3 rows. Origin (200, 100). Canonical Porter's room-scene frame.
-       Design reference only — the runtime ships the props-only scene extracted below. -->
-<polygon points="200,100 392,196 248,268 56,172" fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
-<polygon points="152,40 56,88 56,172 152,124" fill="#34251c" stroke="#251a13" stroke-width="1"/>
-<polygon points="200,16 392,112 392,196 200,100" fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
-<line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
-<line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
-<line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-<line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-<line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-<text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE INFIRMARY</text>
-<text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
-<g><polygon points="182,154 230,176 230,194 182,172" fill="#b8c0c8" stroke="#2b3540" stroke-width="0.9"/>
-<polygon points="278,154 230,176 230,194 278,172" fill="#a7b1bb" stroke="#2b3540" stroke-width="0.9"/>
-<polygon points="230,132 278,154 230,176 182,154" fill="#f0ede7" stroke="#2b3540" stroke-width="0.9"/>
-<polygon points="200,140 218,149 200,158 182,149" fill="#d4d9dd" stroke="#a6b0b8" stroke-width="0.8"/>
-<polygon points="240,144 264,156 240,168 216,156" fill="#dbe8f6" opacity="0.7"/>
-<polygon points="103,129 124,140 124,198 103,187" fill="#4e5d68" stroke="#1b2328" stroke-width="0.9"/>
-<polygon points="145,129 124,140 124,198 145,187" fill="#42505b" stroke="#1b2328" stroke-width="0.9"/>
-<polygon points="124,118 145,129 124,140 103,129" fill="#6d7b85" stroke="#1b2328" stroke-width="0.9"/>
-<polygon points="302,153 314,160 314,194 302,187" fill="#8c9aa6" stroke="#263039" stroke-width="0.9"/>
-<polygon points="326,153 314,160 314,194 326,187" fill="#758390" stroke="#263039" stroke-width="0.9"/>
-<polygon points="314,146 326,153 314,160 302,153" fill="#cbd6df" stroke="#263039" stroke-width="0.9"/>
-<ellipse cx="314" cy="140" rx="10" ry="8" fill="#7fb9d5" stroke="#36576b" stroke-width="0.8" opacity="0.85"/>
-<polygon points="274,201 286,208 286,234 274,227" fill="#a7b0b7" stroke="#33404b" stroke-width="0.9"/>
-<polygon points="298,201 286,208 286,234 298,227" fill="#939ca4" stroke="#33404b" stroke-width="0.9"/>
-<polygon points="286,194 298,201 286,208 274,201" fill="#d5d9dd" stroke="#33404b" stroke-width="0.9"/>
-<polygon points="300,90 324,102 324,132 300,120" fill="#7a8f5c" stroke="#241d16" stroke-width="0.9"/>
-<line x1="310" y1="100" x2="326" y2="108" stroke="rgba(255,255,255,0.25)" stroke-width="1.1"/>
-<circle cx="308" cy="116" r="2" fill="#c45151"/>
-<circle cx="328" cy="124" r="2" fill="#d7bc54"/></g>
+  <!-- REFERENCE FIXTURE: The Infirmary — first dedicated recovery room.
+       4 cols x 3 rows. Origin (200,100). Canonical Porter's room-scene frame.
+       Design reference only: runtime uses recipes/scene-the-infirmary.svg as
+       the props-only scene over engine-rendered structure. -->
+
+  <!-- Right wall: converted upstairs Porter's room, warm worn plaster. -->
+  <polygon points="200,16 392,112 392,196 200,100"
+    fill="#3b2b1f" stroke="#2a1e15" stroke-width="1"/>
+  <line x1="200" y1="42" x2="392" y2="138" stroke="rgba(255,238,210,0.06)" stroke-width="0.5"/>
+  <line x1="200" y1="70" x2="392" y2="166" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+
+  <!-- Left wall: door/opening remains structural and engine-rendered in game. -->
+  <polygon points="152,40 56,88 56,172 152,124"
+    fill="#34251c" stroke="#251a13" stroke-width="1"/>
+  <line x1="200" y1="16" x2="200" y2="100" stroke="#4b3a2b" stroke-width="1.6"/>
+  <line x1="152" y1="40" x2="152" y2="124" stroke="#4b3a2b" stroke-width="1.6"/>
+  <line x1="200" y1="26" x2="152" y2="50" stroke="#4b3a2b" stroke-width="1.15"/>
+
+  <!-- Floor: reference-only, the live room floor is engine-rendered. -->
+  <polygon points="200,100 392,196 248,268 56,172"
+    fill="#3a2a1d" stroke="#2b1d12" stroke-width="1.1"/>
+  <line x1="248" y1="124" x2="104" y2="196" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <line x1="296" y1="148" x2="152" y2="220" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <line x1="344" y1="172" x2="200" y2="244" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+  <line x1="152" y1="124" x2="344" y2="220" stroke="rgba(255,238,210,0.04)" stroke-width="0.45"/>
+  <line x1="104" y1="148" x2="296" y2="244" stroke="rgba(255,238,210,0.04)" stroke-width="0.45"/>
+
+  <!-- Pull the production props-only layer into the preview so reference
+       and live review modes stay synchronized. -->
+  <image href="../recipes/scene-the-infirmary.svg" x="20" y="0" width="420" height="310" preserveAspectRatio="none"/>
+
+  <text x="220" y="296" font-family="monospace" font-size="11" fill="#c8a84c" text-anchor="middle" opacity="0.82">THE INFIRMARY</text>
+  <text x="220" y="14" font-family="monospace" font-size="7" fill="#8f8476" text-anchor="middle">Porter's reference fixture — not used in runtime</text>
 </svg>

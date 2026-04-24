@@ -11,7 +11,7 @@ This file owns future-facing gameplay-system direction for operators, raids, res
 - Lower-rank content should never disappear completely. Progression should shift weighted pools upward instead of hard-deleting F or E outcomes from the game.
 - The first post-bodega building is Porter's, a dual-use bar and restaurant with converted upstairs operational rooms and a waterfront expansion.
 - The first post-bodega building now unlocks systems and room families that do not fit in a bodega, not just more capacity.
-- The shipped Porter's-era pressure band now comes from the dungeon economy, the operator labor market, city-pressure writeback, incident fallout, and encounter escalation; heavier institutional and political escalation can layer in later tiers.
+- The shipped Porter's-era pressure band now comes from the dungeon economy, the operator labor market, public-pressure writeback, incident fallout, and encounter escalation; heavier public, rival, institutional, and political escalation can layer in later tiers.
 - The shipped bodega expansion centers intel, logistics, and staging support, and Porter's builds on those surfaces instead of re-solving them as bodega problems.
 - Porter's starter state should not regress room count or staging compared with the fully upgraded bodega, and the shipped upgrade path should remain above that floor.
 - Headquarters progression is intentionally capped at three buildings: the bodega, Porter's, and one final skyscraper headquarters.

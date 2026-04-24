@@ -1,34 +1,162 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 0 420 310">
-  <!-- Props-only scene layer: The Prep Room. Staging and consumable prep. -->
-<g><polygon points="167,164 210,178 210,200 167,186" fill="#4f5357" stroke="#24282d" stroke-width="0.9"/>
-<polygon points="253,164 210,178 210,200 253,186" fill="#41464a" stroke="#24282d" stroke-width="0.9"/>
-<polygon points="210,150 253,164 210,178 167,164" fill="#6d6f73" stroke="#24282d" stroke-width="0.9"/>
-<line x1="188" y1="166" x2="188" y2="190" stroke="#282d32" stroke-width="1.3"/>
-<line x1="232" y1="166" x2="232" y2="190" stroke="#282d32" stroke-width="1.3"/>
-<polygon points="98,130 126,142 126,206 98,194" fill="#4d3a2d" stroke="#211810" stroke-width="0.9"/>
-<polygon points="154,130 126,142 126,206 154,194" fill="#3d2d23" stroke="#211810" stroke-width="0.9"/>
-<polygon points="126,118 154,130 126,142 98,130" fill="#67503c" stroke="#211810" stroke-width="0.9"/>
-<line x1="110" y1="138" x2="134" y2="150" stroke="#2b2118" stroke-width="1.1"/>
-<line x1="110" y1="152" x2="134" y2="164" stroke="#2b2118" stroke-width="1.1"/>
-<line x1="110" y1="166" x2="134" y2="178" stroke="#2b2118" stroke-width="1.1"/>
-<polygon points="266,130 294,142 294,206 266,194" fill="#4d3a2d" stroke="#211810" stroke-width="0.9"/>
-<polygon points="322,130 294,142 294,206 322,194" fill="#3d2d23" stroke="#211810" stroke-width="0.9"/>
-<polygon points="294,118 322,130 294,142 266,130" fill="#67503c" stroke="#211810" stroke-width="0.9"/>
-<line x1="278" y1="138" x2="302" y2="150" stroke="#2b2118" stroke-width="1.1"/>
-<line x1="278" y1="152" x2="302" y2="164" stroke="#2b2118" stroke-width="1.1"/>
-<line x1="278" y1="166" x2="302" y2="178" stroke="#2b2118" stroke-width="1.1"/>
-<polygon points="132,204 150,214 150,234 132,224" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="168,204 150,214 150,234 168,224" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="150,194 168,204 150,214 132,204" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="142" y1="206" x2="158" y2="214" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="252,208 270,218 270,238 252,228" fill="#5f4732" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="288,208 270,218 270,238 288,228" fill="#4d3928" stroke="#241a13" stroke-width="0.9"/>
-<polygon points="270,198 288,208 270,218 252,208" fill="#816444" stroke="#241a13" stroke-width="0.9"/>
-<line x1="262" y1="210" x2="278" y2="218" stroke="#3b2b1d" stroke-width="1.1"/>
-<polygon points="205,149 214,154 214,160 205,155" fill="#a59977" stroke="#473c31" stroke-width="0.9"/>
-<polygon points="223,149 214,154 214,160 223,155" fill="#91845f" stroke="#473c31" stroke-width="0.9"/>
-<polygon points="214,144 223,149 214,154 205,149" fill="#d9cfad" stroke="#473c31" stroke-width="0.9"/>
-<polygon points="188,109 212,118 212,128 188,119" fill="#604023" stroke="#261a0f" stroke-width="0.9"/>
-<polygon points="236,109 212,118 212,128 236,119" fill="#4e351e" stroke="#261a0f" stroke-width="0.9"/>
-<polygon points="212,100 236,109 212,118 188,109" fill="#7d532f" stroke="#261a0f" stroke-width="0.9"/></g>
+  <!-- Props-only scene layer: The Prep Room (Porter's tier)
+       Dedicated staging and lightweight consumable prep.
+       Grid: 4 cols x 3 rows. Origin (200,100). iso(c,r,z) = (200+(c-r)*48, 100+(c+r)*24-z).
+       Strictly props-only: no walls, floors, tile grid, room outline, or labels. -->
+
+  <defs>
+    <radialGradient id="prepPendantGlow" cx="50%" cy="50%" r="58%">
+      <stop offset="0%" stop-color="#fff0bc" stop-opacity="0.88"/>
+      <stop offset="58%" stop-color="#e9a946" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#6a3c12" stop-opacity="0"/>
+    </radialGradient>
+
+    <g id="prep-vial-red">
+      <ellipse cx="0" cy="0" rx="2.7" ry="1" fill="#f1d0c8" stroke="#512018" stroke-width="0.25"/>
+      <polygon points="-2.7,0 2.7,0 2.1,8 -2.1,8" fill="#9a3528" stroke="#512018" stroke-width="0.3"/>
+      <ellipse cx="0" cy="8" rx="2.1" ry="0.8" fill="#672016" stroke="#512018" stroke-width="0.2"/>
+      <polygon points="-1.25,3 1.2,3.45 1.05,4.8 -1.35,4.35" fill="#f6e9d6" opacity="0.55"/>
+    </g>
+    <g id="prep-vial-blue">
+      <ellipse cx="0" cy="0" rx="2.7" ry="1" fill="#d8ecf2" stroke="#162a38" stroke-width="0.25"/>
+      <polygon points="-2.7,0 2.7,0 2.1,8 -2.1,8" fill="#31586a" stroke="#162a38" stroke-width="0.3"/>
+      <ellipse cx="0" cy="8" rx="2.1" ry="0.8" fill="#1f3848" stroke="#162a38" stroke-width="0.2"/>
+      <polygon points="-1.25,3 1.2,3.45 1.05,4.8 -1.35,4.35" fill="#f6e9d6" opacity="0.55"/>
+    </g>
+    <g id="prep-vial-amber">
+      <ellipse cx="0" cy="0" rx="2.7" ry="1" fill="#f1dfb6" stroke="#4a2c10" stroke-width="0.25"/>
+      <polygon points="-2.7,0 2.7,0 2.1,8 -2.1,8" fill="#b0782c" stroke="#4a2c10" stroke-width="0.3"/>
+      <ellipse cx="0" cy="8" rx="2.1" ry="0.8" fill="#76501d" stroke="#4a2c10" stroke-width="0.2"/>
+      <polygon points="-1.25,3 1.2,3.45 1.05,4.8 -1.35,4.35" fill="#fff5d8" opacity="0.5"/>
+    </g>
+    <g id="prep-cloth-roll">
+      <ellipse cx="0" cy="0" rx="7" ry="2.8" fill="#e8dcc4" stroke="#77664e" stroke-width="0.35"/>
+      <ellipse cx="0" cy="0" rx="3.5" ry="1.3" fill="#b8a98a" stroke="#77664e" stroke-width="0.25"/>
+      <polygon points="-7,0 7,0 7,6 -7,6" fill="#cfc0a0" stroke="#77664e" stroke-width="0.3"/>
+      <ellipse cx="0" cy="6" rx="7" ry="2.8" fill="#d8c9aa" stroke="#77664e" stroke-width="0.3"/>
+    </g>
+    <g id="prep-tote-green">
+      <polygon points="0,0 20,10 8,16 -12,6" fill="#435437" stroke="#1d2718" stroke-width="0.45"/>
+      <polygon points="-12,6 8,16 8,31 -12,21" fill="#2c3b28" stroke="#1d2718" stroke-width="0.4"/>
+      <polygon points="20,10 8,16 8,31 20,25" fill="#536846" stroke="#1d2718" stroke-width="0.4"/>
+      <polygon points="-7,11 1,15 1,17 -7,13" fill="#d6c37c" opacity="0.34"/>
+      <line x1="-8" y1="20" x2="8" y2="28" stroke="#1d2718" stroke-width="0.35" opacity="0.75"/>
+    </g>
+    <g id="prep-tote-red">
+      <polygon points="0,0 20,10 8,16 -12,6" fill="#7c3325" stroke="#2b0f0a" stroke-width="0.45"/>
+      <polygon points="-12,6 8,16 8,31 -12,21" fill="#512018" stroke="#2b0f0a" stroke-width="0.4"/>
+      <polygon points="20,10 8,16 8,31 20,25" fill="#8f4432" stroke="#2b0f0a" stroke-width="0.4"/>
+      <polygon points="-7,11 1,15 1,17 -7,13" fill="#f0e6d2" opacity="0.42"/>
+      <polygon points="13,19.5 17,17.5 17,18.7 13,20.7" fill="#f0e6d2" opacity="0.82"/>
+      <polygon points="14.2,18.1 15.5,18.75 15.5,22.15 14.2,21.5" fill="#f0e6d2" opacity="0.82"/>
+    </g>
+    <g id="prep-tote-navy">
+      <polygon points="0,0 20,10 8,16 -12,6" fill="#2f4352" stroke="#111c25" stroke-width="0.45"/>
+      <polygon points="-12,6 8,16 8,31 -12,21" fill="#20313c" stroke="#111c25" stroke-width="0.4"/>
+      <polygon points="20,10 8,16 8,31 20,25" fill="#3f596a" stroke="#111c25" stroke-width="0.4"/>
+      <polygon points="-7,11 1,15 1,17 -7,13" fill="#d6c37c" opacity="0.32"/>
+      <polyline points="12,19 14,21.5 13.2,21.5 15.2,24.5" fill="none" stroke="#d6c37c" stroke-width="0.65"/>
+    </g>
+  </defs>
+
+  <g id="checklist-board">
+    <polygon points="147,78 86,108 86,143 147,113" fill="#28313a" stroke="#11171d" stroke-width="0.75"/>
+    <polygon points="143,82 90,108 90,137 143,111" fill="#3b4751" stroke="#182129" stroke-width="0.35"/>
+    <polygon points="99,106 120,96 122,116 101,126" fill="#d9ceb4" stroke="#77664e" stroke-width="0.25"/>
+    <line x1="102" y1="109" x2="118" y2="101" stroke="#4c3a22" stroke-width="0.25" opacity="0.75"/>
+    <line x1="102" y1="113" x2="119" y2="105" stroke="#4c3a22" stroke-width="0.25" opacity="0.65"/>
+    <line x1="103" y1="117" x2="119" y2="110" stroke="#4c3a22" stroke-width="0.25" opacity="0.55"/>
+    <circle cx="108" cy="100" r="1.1" fill="#b74638" stroke="#54160e" stroke-width="0.2"/>
+    <polygon points="122,116 140,108 142,124 124,132" fill="#d6b15c" stroke="#75531b" stroke-width="0.25"/>
+    <line x1="126" y1="119" x2="138" y2="113" stroke="#493018" stroke-width="0.25" opacity="0.62"/>
+    <line x1="126" y1="123" x2="139" y2="117" stroke="#493018" stroke-width="0.25" opacity="0.52"/>
+    <circle cx="132" cy="111" r="1" fill="#426d44" stroke="#1a321c" stroke-width="0.2"/>
+  </g>
+
+  <g id="supply-rack">
+    <polygon points="247,78 346,128 324,139 225,89" fill="#646867" stroke="#16191a" stroke-width="0.6"/>
+    <polygon points="225,89 324,139 324,191 225,142" fill="#494d4c" stroke="#16191a" stroke-width="0.75"/>
+    <polygon points="346,128 324,139 324,191 346,180" fill="#333736" stroke="#16191a" stroke-width="0.65"/>
+    <polygon points="225,109 324,158 346,148 247,98" fill="#252929" stroke="#121415" stroke-width="0.4"/>
+    <polygon points="225,131 324,180 346,170 247,120" fill="#252929" stroke="#121415" stroke-width="0.4"/>
+    <line x1="263" y1="98" x2="263" y2="151" stroke="#242829" stroke-width="0.75"/>
+    <line x1="301" y1="117" x2="301" y2="170" stroke="#242829" stroke-width="0.75" opacity="0.85"/>
+  </g>
+  <use href="#prep-tote-red" x="248" y="95"/>
+  <use href="#prep-tote-green" x="286" y="114"/>
+  <use href="#prep-tote-navy" x="266" y="131"/>
+  <g id="rack-small-supplies">
+    <use href="#prep-vial-amber" x="238" y="139"/>
+    <use href="#prep-vial-blue" x="251" y="145"/>
+    <polygon points="287,154 314,168 304,173 277,159" fill="#c9bea2" stroke="#6e6048" stroke-width="0.3"/>
+    <polygon points="277,159 304,173 304,178 277,164" fill="#a99a78" stroke="#6e6048" stroke-width="0.3"/>
+    <polygon points="314,168 304,173 304,178 314,173" fill="#8f7f60" stroke="#6e6048" stroke-width="0.25"/>
+    <line x1="282" y1="161" x2="303" y2="172" stroke="#7a6848" stroke-width="0.25" opacity="0.75"/>
+  </g>
+
+  <g id="rinse-station">
+    <polygon points="129,122 184,149 158,162 103,135" fill="#77818a" stroke="#2c3338" stroke-width="0.65"/>
+    <polygon points="103,135 158,162 158,183 103,156" fill="#4d5961" stroke="#232a2f" stroke-width="0.65"/>
+    <polygon points="184,149 158,162 158,183 184,170" fill="#39434a" stroke="#232a2f" stroke-width="0.6"/>
+    <polygon points="122,131 157,148 144,154 109,137" fill="#263238" stroke="#151c20" stroke-width="0.35"/>
+    <polygon points="126,132 156,147 144,152 114,138" fill="#78929b" stroke="#283840" stroke-width="0.25"/>
+    <ellipse cx="148" cy="141" rx="6.7" ry="2.6" fill="#213239" opacity="0.55"/>
+    <path d="M163 132 Q165 121 156 120" fill="none" stroke="#c7c9c8" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="156" cy="120" rx="4.1" ry="1.5" fill="#d7d9d8" stroke="#6b7172" stroke-width="0.25"/>
+    <line x1="116" y1="148" x2="116" y2="170" stroke="#20272c" stroke-width="1.1"/>
+    <line x1="149" y1="164" x2="149" y2="186" stroke="#20272c" stroke-width="1.1"/>
+    <line x1="176" y1="153" x2="176" y2="175" stroke="#20272c" stroke-width="1.1"/>
+  </g>
+
+  <g id="prep-island">
+    <polygon points="170,151 251,191 211,211 130,171" fill="#8a9295" stroke="#2f373a" stroke-width="0.75"/>
+    <polygon points="130,171 211,211 211,235 130,195" fill="#596369" stroke="#273036" stroke-width="0.75"/>
+    <polygon points="251,191 211,211 211,235 251,215" fill="#424d53" stroke="#273036" stroke-width="0.7"/>
+    <line x1="146" y1="179" x2="226" y2="219" stroke="#273036" stroke-width="0.5" opacity="0.85"/>
+    <line x1="170" y1="191" x2="170" y2="215" stroke="#273036" stroke-width="0.85"/>
+    <line x1="211" y1="211" x2="211" y2="235" stroke="#1e2529" stroke-width="1"/>
+    <line x1="234" y1="199" x2="234" y2="223" stroke="#1e2529" stroke-width="0.9"/>
+    <polygon points="142,186 153,191 153,193.8 142,188.8" fill="#c2c7c8" opacity="0.5"/>
+    <polygon points="184,207 195,212 195,214.7 184,209.7" fill="#c2c7c8" opacity="0.45"/>
+  </g>
+
+  <g id="island-top">
+    <polygon points="153,158 181,172 168,178 140,164" fill="#394048" stroke="#161b20" stroke-width="0.35"/>
+    <polygon points="143,164 168,176 168,179 143,167" fill="#20262c" stroke="#11161a" stroke-width="0.25"/>
+    <use href="#prep-vial-red" x="153" y="159"/>
+    <use href="#prep-vial-blue" x="165" y="165"/>
+
+    <polygon points="191,161 225,178 210,185 176,168" fill="#d9ceb4" stroke="#6c604c" stroke-width="0.3"/>
+    <line x1="183" y1="169" x2="211" y2="183" stroke="#8d7a57" stroke-width="0.25"/>
+    <line x1="189" y1="166" x2="217" y2="180" stroke="#8d7a57" stroke-width="0.25" opacity="0.75"/>
+    <line x1="199" y1="165" x2="200" y2="183" stroke="#8d7a57" stroke-width="0.25" opacity="0.6"/>
+
+    <use href="#prep-cloth-roll" x="222" y="190"/>
+    <polygon points="188,192 208,202 198,207 178,197" fill="#7d4a32" stroke="#35180d" stroke-width="0.3"/>
+    <polygon points="178,197 198,207 198,210 178,200" fill="#5b3222" stroke="#35180d" stroke-width="0.25"/>
+    <polygon points="208,202 198,207 198,210 208,205" fill="#432417" stroke="#35180d" stroke-width="0.25"/>
+    <line x1="181" y1="199" x2="200" y2="208" stroke="#d9ceb4" stroke-width="0.45" opacity="0.7"/>
+  </g>
+
+  <g id="front-staging">
+    <polygon points="107,195 164,223 136,237 79,209" fill="#303a35" stroke="#1c2822" stroke-width="0.45" opacity="0.82"/>
+    <line x1="93" y1="207" x2="149" y2="234" stroke="#526157" stroke-width="0.35" opacity="0.5"/>
+    <polygon points="111,181 145,198 125,208 91,191" fill="#5e563a" stroke="#241f14" stroke-width="0.5"/>
+    <polygon points="91,191 125,208 125,222 91,205" fill="#4b442f" stroke="#241f14" stroke-width="0.5"/>
+    <polygon points="145,198 125,208 125,222 145,212" fill="#342f21" stroke="#241f14" stroke-width="0.45"/>
+    <line x1="99" y1="187" x2="132" y2="203" stroke="#20180e" stroke-width="1.25"/>
+    <line x1="91" y1="202" x2="125" y2="219" stroke="#20180e" stroke-width="1.5"/>
+    <line x1="91" y1="202" x2="125" y2="219" stroke="#7a5d3a" stroke-width="0.55"/>
+    <path d="M104,182 Q112,172 123,177" fill="none" stroke="#241f14" stroke-width="1.35"/>
+    <polygon points="106,212 110,214 110,216.4 106,214.4" fill="#b08a3a" stroke="#392a10" stroke-width="0.2"/>
+  </g>
+
+  <g id="pendant">
+    <line x1="237" y1="0" x2="237" y2="92" stroke="#24170d" stroke-width="0.8" opacity="0.85"/>
+    <circle cx="237" cy="104" r="29" fill="url(#prepPendantGlow)"/>
+    <ellipse cx="237" cy="92" rx="9" ry="2.8" fill="#2a1c12" stroke="#0d0804" stroke-width="0.4"/>
+    <polygon points="228,92 246,92 242,104 232,104" fill="#4a3524" stroke="#0d0804" stroke-width="0.45"/>
+    <ellipse cx="237" cy="104" rx="5.3" ry="1.7" fill="#2a1c12" stroke="#0d0804" stroke-width="0.35"/>
+    <ellipse cx="237" cy="107" rx="3.6" ry="1.2" fill="#fff0bc" opacity="0.92"/>
+  </g>
 </svg>

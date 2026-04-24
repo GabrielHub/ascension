@@ -202,7 +202,7 @@ Starter mapping direction:
 - [ ] `injury_setback` and `casualty_aftermath` -> doctor.
 - [ ] `room_breakdown` -> cook for kitchen/hospitality rooms, quartermaster for workshop/gear/logistics rooms, doctor for infirmary/trauma rooms, assistant otherwise.
 - [ ] `workshop_disruption` -> quartermaster.
-- [ ] `rival_poaching` and recruitment/nightlife social pressure -> bartender.
+- [ ] recruitment/nightlife social pressure -> bartender.
 - [ ] `compliance_pressure`, regulator scrutiny, borough hearings, sponsor prestige tied to institutional visibility -> compliance officer.
 - [ ] comfort-first recovery incidents with no medical consequence -> cook.
 

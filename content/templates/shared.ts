@@ -208,7 +208,6 @@ export interface EventTemplate extends TemplateBase {
     | "departure_warning"
     | "room_tension"
     | "supply_shortage"
-    | "rival_poaching"
     | "morale_surge"
     | "contract_opportunity";
   pressureTags: readonly string[];
@@ -315,7 +314,7 @@ export interface DistrictTemplate {
 
 // ── Phase 4: Factions ───────────────────────────────────────────────
 
-export type FactionKind = "institution" | "rival_guild";
+export type FactionKind = "institution";
 
 export interface FactionTemplate {
   id: string;

@@ -6,9 +6,9 @@ Ascension is a web-first management sim about running a dungeon-clearing guild i
 
 - The current shipped baseline covers the full bodega arc, relocation into Porter's, multi-floor HQ support, onboarding, runtime-owned incidents and encounter handoff, browser and desktop save hosts, and optional local-first AI generation.
 - The AI content layer is not an active bring-up plan anymore. The shipped baseline already includes localhost transport, settings, browser and desktop adapters, runtime request tracking, dev-console commands, and two live surfaces: `incident-framing` and `operator-identity`.
-- Phase 4 midgame breadth is complete: contract lock, city pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter expansion are all shipped.
+- Phase 4 midgame breadth is complete: contract lock, public pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter expansion are all shipped.
 - Midgame remediation is complete: the shipped Porter's-era baseline now has stronger browser coverage, deterministic D-rank economy reporting, tuned workshop economics, and the verified UX fixes needed by that loop.
-- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, and Executive Floor institutional-pressure slice are all shipped. Next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and, on top of shipped institutional pressure, the first B-rank content packet.
+- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, public-pressure layer, and first named-rival pressure loop are all shipped. Next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and, on top of shipped skyscraper pressure, the first B-rank content packet.
 
 ## What This README Is For
 

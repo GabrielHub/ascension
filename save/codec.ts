@@ -2,8 +2,10 @@ import {
   CURRENT_CONTENT_COMPATIBILITY,
   CURRENT_SAVE_SCHEMA_VERSION,
   SAVE_SLOT_IDS,
-  createDefaultDistrictPressure,
-  createDefaultFactionStanding,
+  createDefaultDistrictPublicPressure,
+  createDefaultFactionRelationship,
+  createDefaultPublicPressure,
+  createDefaultRivalPressure,
   type OperatorAppearanceSnapshot,
   type OperatorCombatSnapshot,
   type OperatorTrainingSnapshot,
@@ -14,9 +16,8 @@ import {
   type EquipmentAssignmentSnapshot,
   type FogOfWarSnapshot,
   type BuildingSnapshot,
-  type CityPressureSnapshot,
-  type DistrictPressureSnapshot,
-  type FactionStandingSnapshot,
+  type DistrictPublicPressureSnapshot,
+  type FactionRelationshipSnapshot,
   type GuildSnapshot,
   type InventoryStackSnapshot,
   type LootAutomationSnapshot,
@@ -28,12 +29,17 @@ import {
   type PersistedSaveGame,
   type PostedContractSnapshot,
   type PresenterUnlockSnapshot,
+  type PublicPressureSnapshot,
   type RaidOpportunitySnapshot,
   type RaidOperatorOutcomeSnapshot,
   type RaidSummarySnapshot,
   type RecurringTeamSnapshot,
   type RoomCultureSnapshot,
   type RoomSnapshot,
+  type RivalInstanceSnapshot,
+  type RivalPressureSnapshot,
+  type RivalStrengthBand,
+  type RivalTrend,
   type SaveCompactValue,
   type SaveSlotId,
   type SaveSlotMetadata,
@@ -53,6 +59,7 @@ import {
   type OperatorAppearancePartIndexEntry,
 } from "./appearance";
 import { templateRegistry } from "content/templates";
+import { readyToWireRivalById } from "content/templates/rivals";
 import { deriveOperatorCombatDefaults, normalizeOperatorRank } from "lib/operator-combat";
 import {
   CONTRACT_POSTURE_OPTIONS,
@@ -101,8 +108,11 @@ const CONTRACT_BOARD_INTEL_SOURCES = ["street", "back_office", "office"] as cons
 const CONTRACT_BOARD_INTEL_QUALITIES = ["rough", "reviewed", "dossier"] as const;
 const CONTRACT_BRIEFING_SOURCES = ["briefing_room", "briefing_room_and_prep"] as const;
 const CONTRACT_BRIEFING_STATUSES = ["briefed", "drilled"] as const;
-const CITY_PRESSURE_DISTRICT_IDS = templateRegistry.districts.map((district) => district.id);
-const CITY_PRESSURE_FACTION_IDS = templateRegistry.factions.map((faction) => faction.id);
+const PUBLIC_PRESSURE_DISTRICT_IDS = templateRegistry.districts.map((district) => district.id);
+const FACTION_RELATIONSHIP_FACTION_IDS = templateRegistry.factions.map((faction) => faction.id);
+const PUBLIC_PRESSURE_SOURCES = ["regulator", "press", "sponsor", "public"] as const;
+const RIVAL_TRENDS = ["rising", "stable", "slipping"] as const;
+const RIVAL_STRENGTH_BANDS = ["below", "peer", "above"] as const;
 
 interface OperatorAppearanceParseContext {
   getPartsIndex: () => Map<string, OperatorAppearancePartIndexEntry>;
@@ -1923,35 +1933,6 @@ function parseLootAutomationSnapshot(
   };
 }
 
-function parseDistrictPressureSnapshot(value: unknown, path: string): DistrictPressureSnapshot {
-  const record = expectRecord(value, path);
-  return {
-    districtId: expectString(record.districtId, `${path}.districtId`),
-    attention: expectNumber(record.attention, `${path}.attention`),
-    trust: expectNumber(record.trust, `${path}.trust`),
-    containmentDebt: expectNumber(record.containmentDebt, `${path}.containmentDebt`),
-    recentContractCount: expectNonNegativeInteger(
-      record.recentContractCount,
-      `${path}.recentContractCount`,
-    ),
-    lastResolvedTick: expectNonNegativeInteger(record.lastResolvedTick, `${path}.lastResolvedTick`),
-  };
-}
-
-function parseFactionStandingSnapshot(value: unknown, path: string): FactionStandingSnapshot {
-  const record = expectRecord(value, path);
-  return {
-    factionId: expectString(record.factionId, `${path}.factionId`),
-    standing: expectNumber(record.standing, `${path}.standing`),
-    scrutiny: expectNumber(record.scrutiny, `${path}.scrutiny`),
-    leverage: expectNumber(record.leverage, `${path}.leverage`),
-    cooldownUntilTick: expectNonNegativeInteger(
-      record.cooldownUntilTick,
-      `${path}.cooldownUntilTick`,
-    ),
-  };
-}
-
 function parsePresenterUnlockSnapshot(value: unknown, path: string): PresenterUnlockSnapshot {
   const record = expectRecord(value, path);
   return {
@@ -1961,37 +1942,78 @@ function parsePresenterUnlockSnapshot(value: unknown, path: string): PresenterUn
   };
 }
 
-function parseCityPressureSnapshot(
+function parsePublicPressureSource(
   value: unknown,
   path: string,
-): { cityPressure: CityPressureSnapshot | null | undefined; changed: boolean } {
+): PublicPressureSnapshot["dominantSource"] {
+  if (value === null) {
+    return null;
+  }
+  const source = expectString(value, path);
+  if (!PUBLIC_PRESSURE_SOURCES.some((candidate) => candidate === source)) {
+    fail(path, `must be one of ${PUBLIC_PRESSURE_SOURCES.join(", ")} or null.`);
+  }
+  return source as PublicPressureSnapshot["dominantSource"];
+}
+
+function parseDistrictPublicPressureSnapshot(
+  value: unknown,
+  path: string,
+): DistrictPublicPressureSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    districtId: expectString(record.districtId, `${path}.districtId`),
+    standing: expectNumber(record.standing, `${path}.standing`),
+    heat: expectNumber(record.heat, `${path}.heat`),
+    containment: expectNumber(record.containment, `${path}.containment`),
+    recentContractCount: expectNonNegativeInteger(
+      record.recentContractCount,
+      `${path}.recentContractCount`,
+    ),
+    lastResolvedTick: expectNonNegativeInteger(record.lastResolvedTick, `${path}.lastResolvedTick`),
+  };
+}
+
+function parseFactionRelationshipSnapshot(
+  value: unknown,
+  path: string,
+): FactionRelationshipSnapshot {
+  const record = expectRecord(value, path);
+  return {
+    factionId: expectString(record.factionId, `${path}.factionId`),
+    standing: expectNumber(record.standing, `${path}.standing`),
+    cooldownUntilTick: expectNonNegativeInteger(
+      record.cooldownUntilTick,
+      `${path}.cooldownUntilTick`,
+    ),
+  };
+}
+
+function parsePublicPressureSnapshot(
+  value: unknown,
+  path: string,
+): { publicPressure: PublicPressureSnapshot | null | undefined; changed: boolean } {
   if (value === undefined) {
     return {
-      cityPressure: undefined,
+      publicPressure: undefined,
       changed: false,
     };
   }
 
   if (value === null) {
     return {
-      cityPressure: null,
+      publicPressure: null,
       changed: false,
     };
   }
 
   const record = expectRecord(value, path);
   let changed = false;
-
   const parsedDistricts =
     record.districts === undefined
       ? ((changed = true), [])
-      : parseCollection(record.districts, `${path}.districts`, parseDistrictPressureSnapshot);
-  const parsedFactions =
-    record.factions === undefined
-      ? ((changed = true), [])
-      : parseCollection(record.factions, `${path}.factions`, parseFactionStandingSnapshot);
-
-  const districtById = new Map<string, DistrictPressureSnapshot>();
+      : parseCollection(record.districts, `${path}.districts`, parseDistrictPublicPressureSnapshot);
+  const districtById = new Map<string, DistrictPublicPressureSnapshot>();
   parsedDistricts.forEach((district, index) => {
     if (!templateRegistry.districtById.has(district.districtId)) {
       fail(
@@ -2008,7 +2030,149 @@ function parseCityPressureSnapshot(
     districtById.set(district.districtId, district);
   });
 
-  const factionById = new Map<string, FactionStandingSnapshot>();
+  const districts = PUBLIC_PRESSURE_DISTRICT_IDS.map((districtId) => {
+    const existing = districtById.get(districtId);
+    if (existing) return existing;
+    changed = true;
+    return createDefaultDistrictPublicPressure(districtId);
+  });
+
+  const cooldownRecord =
+    record.cooldownsBySource === undefined
+      ? {}
+      : expectRecord(record.cooldownsBySource, `${path}.cooldownsBySource`);
+  const cooldownsBySource = PUBLIC_PRESSURE_SOURCES.reduce(
+    (acc, source) => {
+      acc[source] =
+        cooldownRecord[source] === undefined
+          ? 0
+          : expectNonNegativeInteger(cooldownRecord[source], `${path}.cooldownsBySource.${source}`);
+      if (cooldownRecord[source] === undefined) changed = true;
+      return acc;
+    },
+    {} as PublicPressureSnapshot["cooldownsBySource"],
+  );
+
+  return {
+    publicPressure: {
+      score: expectNumber(record.score, `${path}.score`),
+      dominantSource: parsePublicPressureSource(record.dominantSource, `${path}.dominantSource`),
+      cooldownsBySource,
+      districts,
+    },
+    changed,
+  };
+}
+
+function parseFactionRelationships(
+  value: unknown,
+  path: string,
+): { factionRelationships: FactionRelationshipSnapshot[]; changed: boolean } {
+  let changed = false;
+  const parsed =
+    value === undefined
+      ? ((changed = true), [])
+      : parseCollection(value, path, parseFactionRelationshipSnapshot);
+  const relationshipById = new Map<string, FactionRelationshipSnapshot>();
+  parsed.forEach((relationship, index) => {
+    if (!templateRegistry.factionById.has(relationship.factionId)) {
+      fail(
+        `${path}[${index}].factionId`,
+        `must reference a known faction id, got "${relationship.factionId}".`,
+      );
+    }
+    if (relationshipById.has(relationship.factionId)) {
+      fail(`${path}[${index}].factionId`, `duplicates factionId "${relationship.factionId}".`);
+    }
+    relationshipById.set(relationship.factionId, relationship);
+  });
+
+  const factionRelationships = FACTION_RELATIONSHIP_FACTION_IDS.map((factionId) => {
+    const existing = relationshipById.get(factionId);
+    if (existing) return existing;
+    changed = true;
+    return createDefaultFactionRelationship(factionId);
+  });
+
+  return { factionRelationships, changed };
+}
+
+function parseLegacyCityPressureSnapshot(
+  value: unknown,
+  path: string,
+): {
+  publicPressure: PublicPressureSnapshot | undefined;
+  factionRelationships: FactionRelationshipSnapshot[] | undefined;
+  changed: boolean;
+} {
+  if (value === undefined || value === null) {
+    return { publicPressure: undefined, factionRelationships: undefined, changed: false };
+  }
+
+  const record = expectRecord(value, path);
+  const parsedDistricts =
+    record.districts === undefined
+      ? []
+      : parseCollection(record.districts, `${path}.districts`, (entry, entryPath) => {
+          const district = expectRecord(entry, entryPath);
+          return {
+            districtId: expectString(district.districtId, `${entryPath}.districtId`),
+            standing: expectNumber(district.trust, `${entryPath}.trust`),
+            heat: expectNumber(district.attention, `${entryPath}.attention`),
+            containment: expectNumber(district.containmentDebt, `${entryPath}.containmentDebt`),
+            recentContractCount: expectNonNegativeInteger(
+              district.recentContractCount,
+              `${entryPath}.recentContractCount`,
+            ),
+            lastResolvedTick: expectNonNegativeInteger(
+              district.lastResolvedTick,
+              `${entryPath}.lastResolvedTick`,
+            ),
+          } satisfies DistrictPublicPressureSnapshot;
+        });
+  const districtById = new Map<string, DistrictPublicPressureSnapshot>();
+  parsedDistricts.forEach((district, index) => {
+    if (!templateRegistry.districtById.has(district.districtId)) {
+      fail(
+        `${path}.districts[${index}].districtId`,
+        `must reference a known district id, got "${district.districtId}".`,
+      );
+    }
+    if (districtById.has(district.districtId)) {
+      fail(
+        `${path}.districts[${index}].districtId`,
+        `duplicates districtId "${district.districtId}".`,
+      );
+    }
+    districtById.set(district.districtId, district);
+  });
+
+  const districts = PUBLIC_PRESSURE_DISTRICT_IDS.map(
+    (districtId) => districtById.get(districtId) ?? createDefaultDistrictPublicPressure(districtId),
+  );
+
+  let factionScrutinyScore = 0;
+  const parsedFactions =
+    record.factions === undefined
+      ? []
+      : parseCollection(record.factions, `${path}.factions`, (entry, entryPath) => {
+          const faction = expectRecord(entry, entryPath);
+          const scrutiny = expectNumber(faction.scrutiny, `${entryPath}.scrutiny`);
+          factionScrutinyScore = Math.max(
+            factionScrutinyScore,
+            scrutiny,
+            expectNumber(faction.leverage, `${entryPath}.leverage`),
+          );
+          return {
+            factionId: expectString(faction.factionId, `${entryPath}.factionId`),
+            standing: expectNumber(faction.standing, `${entryPath}.standing`),
+            cooldownUntilTick: expectNonNegativeInteger(
+              faction.cooldownUntilTick,
+              `${entryPath}.cooldownUntilTick`,
+            ),
+          } satisfies FactionRelationshipSnapshot;
+        });
+  const factionById = new Map<string, FactionRelationshipSnapshot>();
   parsedFactions.forEach((faction, index) => {
     if (!templateRegistry.factionById.has(faction.factionId)) {
       fail(
@@ -2022,28 +2186,196 @@ function parseCityPressureSnapshot(
     factionById.set(faction.factionId, faction);
   });
 
-  const districts = CITY_PRESSURE_DISTRICT_IDS.map((districtId) => {
-    const existing = districtById.get(districtId);
-    if (existing) {
-      return existing;
-    }
-    changed = true;
-    return createDefaultDistrictPressure(districtId);
-  });
-
-  const factions = CITY_PRESSURE_FACTION_IDS.map((factionId) => {
-    const existing = factionById.get(factionId);
-    if (existing) {
-      return existing;
-    }
-    changed = true;
-    return createDefaultFactionStanding(factionId);
-  });
+  const factionRelationships = FACTION_RELATIONSHIP_FACTION_IDS.map(
+    (factionId) => factionById.get(factionId) ?? createDefaultFactionRelationship(factionId),
+  );
+  const districtPressureScore = districts.reduce(
+    (score, district) => Math.max(score, district.heat, district.containment),
+    0,
+  );
+  const score = Math.max(districtPressureScore, factionScrutinyScore);
 
   return {
-    cityPressure: {
+    publicPressure: {
+      ...createDefaultPublicPressure(),
+      score,
+      dominantSource:
+        score <= 0 ? null : factionScrutinyScore >= districtPressureScore ? "regulator" : "public",
       districts,
-      factions,
+    },
+    factionRelationships,
+    changed: true,
+  };
+}
+
+function parseRivalTrend(value: unknown, path: string): RivalTrend {
+  const trend = expectString(value, path);
+  if (!RIVAL_TRENDS.some((candidate) => candidate === trend)) {
+    fail(path, `must be one of ${RIVAL_TRENDS.join(", ")}.`);
+  }
+  return trend as RivalTrend;
+}
+
+function parseRivalStrengthBand(value: unknown, path: string): RivalStrengthBand {
+  const band = expectString(value, path);
+  if (!RIVAL_STRENGTH_BANDS.some((candidate) => candidate === band)) {
+    fail(path, `must be one of ${RIVAL_STRENGTH_BANDS.join(", ")}.`);
+  }
+  return band as RivalStrengthBand;
+}
+
+function parseNullableNonNegativeInteger(value: unknown, path: string): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  return expectNonNegativeInteger(value, path);
+}
+
+function parseRecentMoveIds(
+  value: unknown,
+  path: string,
+): { recentMoveIds: string[]; changed: boolean } {
+  if (value === undefined || value === null) {
+    return { recentMoveIds: [], changed: true };
+  }
+  if (!Array.isArray(value)) {
+    fail(path, "must be an array of strings.");
+  }
+  return {
+    recentMoveIds: value.map((entry, index) => expectString(entry, `${path}[${index}]`)),
+    changed: false,
+  };
+}
+
+function parseLastMoveTicksByMoveId(
+  value: unknown,
+  path: string,
+): { lastMoveTicksByMoveId: Record<string, number>; changed: boolean } {
+  if (value === undefined || value === null) {
+    return { lastMoveTicksByMoveId: {}, changed: true };
+  }
+  const record = expectRecord(value, path);
+  const lastMoveTicksByMoveId: Record<string, number> = {};
+  for (const [moveId, tick] of Object.entries(record)) {
+    lastMoveTicksByMoveId[moveId] = expectNonNegativeInteger(tick, `${path}.${moveId}`);
+  }
+  return { lastMoveTicksByMoveId, changed: false };
+}
+
+function parseRivalInstanceSnapshot(
+  value: unknown,
+  path: string,
+): { rival: RivalInstanceSnapshot | null; changed: boolean } {
+  const record = expectRecord(value, path);
+  const rivalId = expectString(record.rivalId, `${path}.rivalId`);
+  if (!readyToWireRivalById.has(rivalId)) {
+    return { rival: null, changed: true };
+  }
+  const recentMoveIds = parseRecentMoveIds(record.recentMoveIds, `${path}.recentMoveIds`);
+  const lastMoveTicksByMoveId = parseLastMoveTicksByMoveId(
+    record.lastMoveTicksByMoveId,
+    `${path}.lastMoveTicksByMoveId`,
+  );
+  return {
+    rival: {
+      rivalId,
+      ladderPosition: expectNonNegativeInteger(record.ladderPosition, `${path}.ladderPosition`),
+      strengthBand: parseRivalStrengthBand(record.strengthBand, `${path}.strengthBand`),
+      intensity: expectNumber(record.intensity, `${path}.intensity`),
+      aggression: expectNumber(record.aggression, `${path}.aggression`),
+      trend: parseRivalTrend(record.trend, `${path}.trend`),
+      isPrimary: expectBoolean(record.isPrimary, `${path}.isPrimary`),
+      introducedAtTick: parseNullableNonNegativeInteger(
+        record.introducedAtTick,
+        `${path}.introducedAtTick`,
+      ),
+      lastMoveTick: parseNullableNonNegativeInteger(record.lastMoveTick, `${path}.lastMoveTick`),
+      recentMoveIds: recentMoveIds.recentMoveIds,
+      lastMoveTicksByMoveId: lastMoveTicksByMoveId.lastMoveTicksByMoveId,
+      departedOperatorId:
+        record.departedOperatorId === undefined || record.departedOperatorId === null
+          ? null
+          : expectString(record.departedOperatorId, `${path}.departedOperatorId`),
+      missedProspectId:
+        record.missedProspectId === undefined || record.missedProspectId === null
+          ? null
+          : expectString(record.missedProspectId, `${path}.missedProspectId`),
+      sourceTick: parseNullableNonNegativeInteger(record.sourceTick, `${path}.sourceTick`),
+      sourceReason:
+        record.sourceReason === undefined || record.sourceReason === null
+          ? null
+          : expectString(record.sourceReason, `${path}.sourceReason`),
+    },
+    changed: recentMoveIds.changed || lastMoveTicksByMoveId.changed,
+  };
+}
+
+function parseRivalPressureSnapshot(
+  value: unknown,
+  path: string,
+): { rivalPressure: RivalPressureSnapshot; changed: boolean } {
+  if (value === undefined || value === null) {
+    return {
+      rivalPressure: createDefaultRivalPressure(),
+      changed: true,
+    };
+  }
+
+  const record = expectRecord(value, path);
+  let changed = false;
+  const parsedRivals = parseCollection(record.rivals, `${path}.rivals`, parseRivalInstanceSnapshot);
+  const rivals = parsedRivals.flatMap((entry) => {
+    if (entry.changed) {
+      changed = true;
+    }
+    if (entry.rival === null) {
+      changed = true;
+      return [];
+    }
+    return [entry.rival];
+  });
+  const primaryRivals = rivals.filter((rival) => rival.isPrimary);
+  let currentPrimaryRivalId =
+    record.currentPrimaryRivalId === null || record.currentPrimaryRivalId === undefined
+      ? null
+      : expectString(record.currentPrimaryRivalId, `${path}.currentPrimaryRivalId`);
+  if (currentPrimaryRivalId && !readyToWireRivalById.has(currentPrimaryRivalId)) {
+    currentPrimaryRivalId = null;
+    changed = true;
+  }
+  if (primaryRivals.length > 1) {
+    primaryRivals.slice(1).forEach((rival) => {
+      rival.isPrimary = false;
+    });
+    changed = true;
+  }
+  if (currentPrimaryRivalId === null && primaryRivals[0]) {
+    currentPrimaryRivalId = primaryRivals[0].rivalId;
+    changed = true;
+  }
+  if (currentPrimaryRivalId && !rivals.some((rival) => rival.rivalId === currentPrimaryRivalId)) {
+    currentPrimaryRivalId = null;
+    changed = true;
+  }
+  for (const rival of rivals) {
+    const shouldBePrimary =
+      currentPrimaryRivalId !== null && rival.rivalId === currentPrimaryRivalId;
+    if (rival.isPrimary !== shouldBePrimary) {
+      rival.isPrimary = shouldBePrimary;
+      changed = true;
+    }
+  }
+  const parsedActive = expectBoolean(record.active, `${path}.active`);
+  const active = parsedActive && currentPrimaryRivalId !== null && rivals.length > 0;
+  if (active !== parsedActive) {
+    changed = true;
+  }
+
+  return {
+    rivalPressure: {
+      active,
+      currentPrimaryRivalId,
+      rivals,
     },
     changed,
   };
@@ -2140,7 +2472,32 @@ function parseWorldSnapshot(
     record.lootAutomation,
     `${path}.lootAutomation`,
   );
-  const cityPressure = parseCityPressureSnapshot(record.cityPressure, `${path}.cityPressure`);
+  const parsedPublicPressure = parsePublicPressureSnapshot(
+    record.publicPressure,
+    `${path}.publicPressure`,
+  );
+  const legacyCityPressure = parseLegacyCityPressureSnapshot(
+    record.cityPressure,
+    `${path}.cityPressure`,
+  );
+  const publicPressure =
+    parsedPublicPressure.publicPressure === undefined ||
+    parsedPublicPressure.publicPressure === null
+      ? (legacyCityPressure.publicPressure ?? {
+          ...createDefaultPublicPressure(),
+          districts: PUBLIC_PRESSURE_DISTRICT_IDS.map(createDefaultDistrictPublicPressure),
+        })
+      : parsedPublicPressure.publicPressure;
+  const parsedFactionRelationships = parseFactionRelationships(
+    record.factionRelationships,
+    `${path}.factionRelationships`,
+  );
+  const factionRelationships =
+    record.factionRelationships === undefined
+      ? (legacyCityPressure.factionRelationships ??
+        FACTION_RELATIONSHIP_FACTION_IDS.map(createDefaultFactionRelationship))
+      : parsedFactionRelationships.factionRelationships;
+  const rivalPressure = parseRivalPressureSnapshot(record.rivalPressure, `${path}.rivalPressure`);
   const building = parseBuildingSnapshot(record.building, `${path}.building`, schemaVersion);
   const rooms = parseCollection(record.rooms, `${path}.rooms`, (entry, entryPath) =>
     parseRoomSnapshot(entry, entryPath, schemaVersion, building.building),
@@ -2494,9 +2851,9 @@ function parseWorldSnapshot(
       equipmentAssignments,
       policies: policies.policies,
       lootAutomation: lootAutomation.lootAutomation,
-      ...(cityPressure.cityPressure === undefined
-        ? {}
-        : { cityPressure: cityPressure.cityPressure }),
+      publicPressure,
+      factionRelationships,
+      rivalPressure: rivalPressure.rivalPressure,
       presenterUnlocks,
       // Encounter, interruption, and incident state: pass through if present, ignore if absent
       ...(record.activeEncounter && typeof record.activeEncounter === "object"
@@ -2534,7 +2891,13 @@ function parseWorldSnapshot(
       scheduler.changed ||
       policies.changed ||
       lootAutomation.changed ||
-      cityPressure.changed ||
+      parsedPublicPressure.changed ||
+      parsedPublicPressure.publicPressure == null ||
+      legacyCityPressure.changed ||
+      parsedFactionRelationships.changed ||
+      record.factionRelationships === undefined ||
+      rivalPressure.changed ||
+      record.rivalPressure == null ||
       guild.changed ||
       raidSummaryChanged ||
       phase2Changed ||

@@ -1728,33 +1728,27 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       return;
     }
     case "sim/dev-set-district": {
-      const district = context.runtimeState.cityState!.districts[command.districtId];
+      const district = context.runtimeState.publicPressure!.districts[command.districtId];
       if (!district) return;
       switch (command.field) {
-        case "attention":
-          district.attention = clamp(command.value, 0, 100);
+        case "heat":
+          district.heat = clamp(command.value, 0, 100);
           return;
-        case "trust":
-          district.trust = clamp(command.value, 0, 100);
+        case "standing":
+          district.standing = clamp(command.value, 0, 100);
           return;
-        case "containmentDebt":
-          district.containmentDebt = clamp(command.value, 0, 100);
+        case "containment":
+          district.containment = clamp(command.value, 0, 100);
           return;
       }
       return;
     }
     case "sim/dev-set-faction": {
-      const faction = context.runtimeState.cityState!.factions[command.factionId];
+      const faction = context.runtimeState.publicPressure!.factionRelationships[command.factionId];
       if (!faction) return;
       switch (command.field) {
         case "standing":
           faction.standing = clamp(command.value, -100, 100);
-          return;
-        case "scrutiny":
-          faction.scrutiny = clamp(command.value, 0, 100);
-          return;
-        case "leverage":
-          faction.leverage = clamp(command.value, 0, 100);
           return;
       }
       return;
@@ -1801,8 +1795,8 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
       // District tag gate: pool tags from all trusted districts
       const accessibleTags = new Set<string>();
       for (const dt of districtTemplates) {
-        const snapshot = context.runtimeState.cityState!.districts[dt.id];
-        if (snapshot && snapshot.trust > 0) {
+        const snapshot = context.runtimeState.publicPressure!.districts[dt.id];
+        if (snapshot && snapshot.standing > 0) {
           for (const tag of dt.tags) accessibleTags.add(tag);
         }
       }
@@ -1810,7 +1804,7 @@ export function applySimCommand(context: SimSystemContext, command: SimCommand):
 
       // Faction standing gate
       for (const [factionId, required] of Object.entries(craftRecipe.requiredFactionStanding)) {
-        const faction = context.runtimeState.cityState!.factions[factionId];
+        const faction = context.runtimeState.publicPressure!.factionRelationships[factionId];
         if (!faction || faction.standing < required) return;
       }
 
