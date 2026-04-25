@@ -204,7 +204,6 @@ Repo-specific correctional guidance only. Assume normal engineering competence.
 ## References
 
 - `docs/index.md`
-- `docs/roadmap.md`
 - `docs/product-plan.md`
 - `docs/product/index.md`
 - `docs/world-foundation.md`

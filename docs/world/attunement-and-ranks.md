@@ -1,6 +1,6 @@
 # Attunement And Ranks
 
-Some people have abilities that exceed normal human limits. In the world of Ascension, these abilities are called **attunements**. The player does not have one.
+Some people have abilities that exceed normal human limits. These abilities are called **attunements**. The player does not have one.
 
 ## How Attunements Work
 
@@ -24,7 +24,7 @@ Rank measures the innate ceiling of an operator's attunement. It is extremely di
 | A    | Extremely rare | Exceptional. Near the top of human attunement. Known in the industry by name.                                                   |
 | U    | Unique         | Singular endgame operators. Not randomly generated. Deterministic recruitment or unlock only, tied to specific late-game goals. |
 
-**Rank advancement is possible but extremely rare.** Most operators live and die at the rank they started with.
+**Rank does not advance.** An operator stays at the rank they were recruited at, for life. The only way to bring stronger operators into the guild is to recruit them.
 
 ## Rank Presentation And Escalation
 

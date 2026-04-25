@@ -1,6 +1,6 @@
 # World Content Rules
 
-This file owns future-facing content-reference rules for enemies, bosses, gear language, copy, naming, rank escalation, and Unique (`U`) treatment.
+Tone, naming, and rank-escalation rules for content authoring. This file owns the **rules** that govern enemies, bosses, weapons, copy, and Unique (`U`) treatment. Specific catalogs (named bosses, enemy archetypes per dungeon, weapon tables, unique rosters) live in `docs/product/`, not here.
 
 ## Rank Escalation Contract
 
@@ -10,29 +10,20 @@ The game needs a deliberate climb in tone and visual language as rank rises. Dif
 - D and C content can become more visibly rift-touched, specialized, and physically implausible. This is where the game starts leaning harder into impossible architecture, stranger materials, and rarer operator presence.
 - B and A content should feel institutionally famous, expensive, and hard to mistake for ordinary hazard work.
 - Unique (`U`) content is where the game can spend its most spectacular ideas: singular bosses, impossible spaces, celebrity operators, and signature gear.
-- This climb applies across dungeons, enemies, bosses, operators, and gear. Do not spend Unique (`U`) spectacle on early-rank content.
+- This climb applies across dungeons, enemies, bosses, operators, and weapons. Do not spend Unique (`U`) spectacle on early-rank content.
 
-## Enemy And Boss Definitions
+## Enemy And Boss Tone
 
 ### Enemies
 
-Enemies are hostile entities found inside dungeons. They are not people. They are products of whatever supernatural process creates dungeons - symptoms of the rift, not independent creatures with their own society.
+Enemies are hostile entities found inside dungeons. They are not people. They are products of whatever supernatural process creates dungeons — symptoms of the rift, not independent creatures with their own society.
 
 - Enemy design should reflect the dungeon's theme. A subway dungeon produces different hostiles than a park dungeon.
 - Enemies should feel like warped byproducts of the site, not generic monsters dropped into a themed backdrop.
-- Dungeons contain weaker and tougher enemies in a spectrum, but the boss is the only named unique entity.
+- Subway dungeon enemies look like distorted transit infrastructure come alive. Park dungeon enemies look like overgrown organic forms. The dungeon shapes its threats.
+- Dungeons contain weaker and tougher enemies in a spectrum, but the boss is the only named unique entity inside.
 
-### Enemy Categories
-
-| Category | Description                                                             |
-| -------- | ----------------------------------------------------------------------- |
-| Swarm    | Numerous, individually weak, dangerous in volume.                       |
-| Stalker  | Evasive, patient, strikes from concealment.                             |
-| Brute    | Direct, aggressive, durable. Blocks progress.                           |
-| Hazard   | Environmental or area-denial threat. May not be conventionally "alive." |
-| Sentinel | Guards specific areas. Escalates if provoked.                           |
-
-Enemies should have visual design language tied to their dungeon theme. Subway dungeon enemies look like distorted transit infrastructure come alive. Park dungeon enemies look like overgrown organic forms. The dungeon shapes its threats.
+Specific enemy archetypes and per-rank rosters live in `docs/product/`, not here.
 
 ### Bosses
 
@@ -47,59 +38,31 @@ Bosses anchor dungeons. A dungeon exists as long as its boss does. Killing the b
 - A boss should feel like the culmination of its dungeon's theme.
 - Bosses should have names. They are specific entities. Not "The Guardian" or "Dark Lord." Something that implies the dungeon's theme. For example, "The Dispatcher" for a subway boss or "The Superintendent" for a residential boss.
 - Lower-rank bosses should still feel like the warped core of a recognizable place. Higher-rank bosses can become stranger, more singular, and more visually extravagant as long as they still read as the culmination of that place.
-- Unique (`U`) bosses should be genuine spectacles - unique visual design, lore implications, and lasting world consequences.
+- Unique (`U`) bosses should be genuine spectacles — unique visual design, lore implications, and lasting world consequences.
+- Unique bosses are not recruitable. They are dungeon goals tied to Unique-operator unlock chains, not future operators themselves.
 
-## Gear And Weapon Logic
+## Weapon Logic
 
-Gear is functional equipment. It should feel consistent with the grounded-but-superhuman tone.
+Weapons are the only items in the game. No outfits, no accessories. Operators carry weapons; that is the entire equipment surface. Weapons should feel consistent with the grounded-but-superhuman tone.
 
-### Weapon Categories
+### Weapon Tone Climb
 
-| Category       | Type         | Style                    | Examples                                |
-| -------------- | ------------ | ------------------------ | --------------------------------------- |
-| Melee/Blade    | Close range  | Slashing or piercing     | Katana, dual daggers, combat knife      |
-| Ranged/Firearm | Long range   | Precision or suppression | Tactical rifle, sidearm, marksman rifle |
-| Melee/Impact   | Close range  | Blunt force              | Baton, hammer, shield                   |
-| Ranged/Thrown  | Medium range | Utility                  | Throwable charges, tactical grenades    |
+Weapons climb in tone with rank, not just stat power.
 
-### Outfit Categories
+- **F and E** — grounded, makeshift, plausibly improvised. Scissors, broken kitchen knives, bats, pipes. The kind of thing a desperate person grabs.
+- **D and C** — real weapons. Combat knives, sidearms, swords, tactical rifles. Equipment a professional would carry.
+- **B and A** — mystical weapons. Attunement-powered, visibly rift-touched. Recognizable as weapons but no longer ordinary. Each one can carry an authored effect beyond raw stats.
+- **Unique (`U`)** — named, signature weapons paired with specific Unique operators. The most extraordinary visual signatures in the game.
 
-| Category | Protection | Style                  | Examples                        |
-| -------- | ---------- | ---------------------- | ------------------------------- |
-| Heavy    | High       | Bulky, armored         | Heavy plate, riot gear          |
-| Tactical | Medium     | Practical, utilitarian | Tactical vest, field jacket     |
-| Stealth  | Low        | Concealment            | Stealth cloak, low-profile suit |
+### Weapon Rules
 
-### Accessory Categories
+- Weapons should look like equipment professionals carry into dangerous jobs. Not fantasy armor, not sci-fi power suits.
+- F and E should remain grounded, practical, and plausible. D and C can start showing stranger materials and silhouettes. B and A can carry mystical attunement signatures. Unique weapons can be the boldest.
+- Anyone can wield any weapon. There is no rank-locking on equip — a low-rank operator carrying a high-rank weapon is allowed, even if it looks absurd.
+- Weapon flavor should reinforce the dungeon-clearing-as-blue-collar-work tone, not heroic-knight-quest tone.
+- Unique (`U`) weapons are named and tied to operator identity. Each Unique weapon belongs to a specific Unique operator. Not every Unique operator has a Unique weapon, but every Unique weapon has an associated operator.
 
-| Category    | Function                 | Examples                  |
-| ----------- | ------------------------ | ------------------------- |
-| Tactical    | Communication, awareness | Comm earpiece, eye visor  |
-| Utility     | Field support            | Toolkit, med pouch        |
-| Concealment | Stealth, anonymity       | Tactical scarf, face wrap |
-
-### Gear Ranking
-
-Gear uses the same F-U rank scale as operators, enemies, and dungeons.
-
-| Gear Rank | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| F         | Basic. Functional but unimpressive.                                                        |
-| E         | Standard issue. Reliable for routine work.                                                 |
-| D         | Quality equipment. Noticeable improvement in the field.                                    |
-| C         | Specialized. Well-crafted, effective against serious threats.                              |
-| B         | Elite. Expensive, powerful, hard to acquire.                                               |
-| A         | Exceptional. Top-tier professional equipment.                                              |
-| U         | Unique. Named items tied to specific operators. Signature gear with celebrity recognition. |
-
-### Gear Rules
-
-- Gear should look like equipment professionals carry into dangerous jobs. Not fantasy armor, not sci-fi power suits. Higher-rank gear can look more impressive, but it should still read as equipment.
-- Gear should climb by rank without flattening the ladder. F and E should remain grounded, practical, and plausible. D and C can start showing stranger materials, silhouettes, and rift-touched detailing. A and U can carry the boldest signatures.
-- Weapon and gear compatibility should align with field role and attunement. Field leads favor heavier protection. Scouts favor mobility, visibility, and fast access tools. Medics carry stabilization and support kit.
-- Gear can be common, uncommon, or rare within its rank tier. Rarity reflects quality and specialization within the rank.
-- Operators should not wear raid gear inside the headquarters. HQ presentation is casual.
-- Unique (`U`) gear is unique, named, and tied to operator identity. Each Unique (`U`) operator should have signature equipment that contributes to their celebrity persona and visual presence.
+Per-tier weapon catalogs and unique weapon rosters live in `docs/product/`, not here.
 
 ## Copy And Naming Rules
 
@@ -132,11 +95,11 @@ Gear uses the same F-U rank scale as operators, enemies, and dungeons.
 - Dungeons should be named after the real location they have consumed, modified to be recognizable but wrong. For example, "Flatbush Substation" for a subway-themed dungeon in Brooklyn or "Lenox Terrace" for a residential dungeon in Harlem.
 - Boss names should be evocative and specific. Not generic titles. Something that implies the dungeon's theme and makes you slightly uncomfortable. For example, "The Dispatcher" for a subway boss or "The Superintendent" for a residential boss.
 
-### Naming Rules For Gear
+### Naming Rules For Weapons
 
-- Gear names should be functional and descriptive. "Tactical rifle" not "Shadowbane."
-- Higher-rank gear can have slightly more evocative names, but it should still sound like equipment rather than fantasy artifacts.
-- Unique (`U`) gear can have proper names. These are signature items tied to famous operators.
+- Weapon names should be functional and descriptive. "Tactical rifle" not "Shadowbane." "Broken kitchen knife" not "Cleaver of Doom."
+- Higher-rank weapons can have slightly more evocative names as they pick up mystical attunement, but they should still sound like equipment rather than fantasy artifacts.
+- Unique (`U`) weapons have proper names. These are signature items tied to famous operators.
 
 ### Naming Rules For Events
 
@@ -158,19 +121,20 @@ Unique (`U`) is the true endgame prestige tier. It deserves its own section beca
 ### Unique (U-Rank) Operators
 
 - Unique (`U`) operators are celebrities. They are known by name in-world. Other guilds talk about them.
-- Unique (`U`) operators are not randomly generated from the normal labor market.
+- Unique (`U`) operators are authored, not runtime-AI-generated. Their portrait assets may be produced by AI agents during content authoring, then manually reviewed and approved, with a glowing border.
+- Unique (`U`) operators are not visitors in the regular recruitment room. Each is unlocked through a deterministic gameplay goal — typically a specific dungeon defeated plus a currency threshold met. Unlock chains are authored per operator.
 - Unlocking a Unique (`U`) operator should feel extraordinary, not routine.
-- Unique (`U`) operators should be tied to deterministic late-game goals rather than probabilistic recruitment rolls.
-- Unique (`U`) operators have unique visual presentation: special effects in their appearance, unique gear, and distinct portrait treatment.
 - Unique (`U`) operators have high standards, strong opinions, and alternatives.
 
 ### Unique (U-Rank) Dungeons
 
 - Unique (`U`) dungeons are national emergencies. They are not routine contracts.
 - Clearing a Unique (`U`) dungeon should be a major story moment with lasting world consequences.
+- Unique bosses are not recruitable. They are dungeon-completion goals used to unlock Unique operator recruitment elsewhere.
 
-### Unique (U-Rank) Gear
+### Unique (U-Rank) Weapons
 
-- Unique (`U`) gear is unique, named, and tied to operator identity.
-- Each Unique (`U`) operator should have signature gear that contributes to their public persona.
-- Unique (`U`) gear should be visually distinctive - this is where the art budget goes.
+- Unique (`U`) weapons are unique, named, and tied to a specific Unique operator.
+- Not every Unique operator has a Unique weapon, but every Unique weapon has an associated Unique operator.
+- Unique weapons are unlocked through their own authored goal chain, separate from the operator's recruitment chain. The Unique Weapon room unlocks after the Unique Operator room.
+- Unique weapons have authored portraits with their own distinct glowing border. These may be produced by AI agents during content authoring, then manually reviewed and approved. This is where the weapon-art budget goes.

@@ -389,6 +389,28 @@ describe("shipped index style", () => {
     expect(index.paths.recipesRoot).not.toContain("bodega");
   });
 
+  it("registers the four skyscraper altitude backdrops from skyscraper roots", () => {
+    const index = getLoadedEnvPartsIndex("building/skyscraper");
+    const backgroundIds = new Set(
+      index.parts.filter((part) => part.category === "background").map((part) => part.id),
+    );
+
+    expect(backgroundIds).toEqual(
+      new Set([
+        "background/iso-bg-tower-altitude-sunrise",
+        "background/iso-bg-tower-altitude-day",
+        "background/iso-bg-tower-altitude-sunset",
+        "background/iso-bg-tower-altitude-night",
+      ]),
+    );
+
+    for (const id of backgroundIds) {
+      expect(envPartSvgPath(findEnvPartById(index.parts, id)!, index)).toContain(
+        "/data/svg-environments/hq/skyscraper/parts/background/",
+      );
+    }
+  });
+
   it("contains no flat/cross-section or room-kit entries", () => {
     const parts = getLoadedEnvParts();
     const staleIds = parts.filter(

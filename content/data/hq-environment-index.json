@@ -1008,31 +1008,15 @@
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-ground-floor-plaza",
+          "id": "background/iso-bg-tower-altitude-sunrise",
           "category": "background",
           "tags": [
             "skyscraper",
             "midtown",
-            "ground-floor",
-            "plaza",
-            "neighbor-towers",
-            "isometric",
-            "backdrop"
-          ],
-          "scale": "backdrop",
-          "roomFamily": null,
-          "status": "approved"
-        },
-        {
-          "id": "background/iso-bg-mid-tower-neighbors",
-          "category": "background",
-          "tags": [
-            "skyscraper",
-            "midtown",
-            "mid-tower",
+            "sunrise",
             "neighbor-towers",
             "altitude",
-            "haze",
+            "clouds",
             "isometric",
             "backdrop"
           ],
@@ -1041,15 +1025,48 @@
           "status": "approved"
         },
         {
-          "id": "background/iso-bg-rooftop-skyline",
+          "id": "background/iso-bg-tower-altitude-day",
           "category": "background",
           "tags": [
             "skyscraper",
             "midtown",
-            "rooftop",
-            "skyline",
-            "air-traffic",
+            "day",
+            "neighbor-towers",
+            "altitude",
             "clouds",
+            "isometric",
+            "backdrop"
+          ],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-tower-altitude-sunset",
+          "category": "background",
+          "tags": [
+            "skyscraper",
+            "midtown",
+            "sunset",
+            "neighbor-towers",
+            "altitude",
+            "clouds",
+            "isometric",
+            "backdrop"
+          ],
+          "scale": "backdrop",
+          "roomFamily": null,
+          "status": "approved"
+        },
+        {
+          "id": "background/iso-bg-tower-altitude-night",
+          "category": "background",
+          "tags": [
+            "skyscraper",
+            "midtown",
+            "night",
+            "neighbor-towers",
+            "altitude",
             "city-glow",
             "isometric",
             "backdrop"
@@ -1277,7 +1294,7 @@
                 "shadowIntensity": 0.12,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "rear": ["background/iso-bg-tower-altitude-sunrise.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1291,7 +1308,7 @@
                 "shadowIntensity": 0.18,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "rear": ["background/iso-bg-tower-altitude-day.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1305,7 +1322,7 @@
                 "shadowIntensity": 0.22,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "rear": ["background/iso-bg-tower-altitude-sunset.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1319,7 +1336,7 @@
                 "shadowIntensity": 0.3,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-ground-floor-plaza"],
+                  "rear": ["background/iso-bg-tower-altitude-night.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1337,7 +1354,7 @@
                 "shadowIntensity": 0.12,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "rear": ["background/iso-bg-tower-altitude-sunrise.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1351,7 +1368,7 @@
                 "shadowIntensity": 0.18,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "rear": ["background/iso-bg-tower-altitude-day.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1365,7 +1382,7 @@
                 "shadowIntensity": 0.22,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "rear": ["background/iso-bg-tower-altitude-sunset.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1379,7 +1396,7 @@
                 "shadowIntensity": 0.3,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-mid-tower-neighbors"],
+                  "rear": ["background/iso-bg-tower-altitude-night.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1397,7 +1414,7 @@
                 "shadowIntensity": 0.12,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "rear": ["background/iso-bg-tower-altitude-sunrise.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1411,7 +1428,7 @@
                 "shadowIntensity": 0.18,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "rear": ["background/iso-bg-tower-altitude-day.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1425,7 +1442,7 @@
                 "shadowIntensity": 0.22,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "rear": ["background/iso-bg-tower-altitude-sunset.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1439,7 +1456,7 @@
                 "shadowIntensity": 0.3,
                 "zones": {
                   "belowShell": [],
-                  "rear": ["background/iso-bg-rooftop-skyline"],
+                  "rear": ["background/iso-bg-tower-altitude-night.png"],
                   "leftFlank": [],
                   "rightFlank": [],
                   "fore": [],
@@ -1457,7 +1474,7 @@
             "shadowIntensity": 0.12,
             "zones": {
               "belowShell": [],
-              "rear": ["background/iso-bg-ground-floor-plaza"],
+              "rear": ["background/iso-bg-tower-altitude-sunrise.png"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1471,7 +1488,7 @@
             "shadowIntensity": 0.18,
             "zones": {
               "belowShell": [],
-              "rear": ["background/iso-bg-ground-floor-plaza"],
+              "rear": ["background/iso-bg-tower-altitude-day.png"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1485,7 +1502,7 @@
             "shadowIntensity": 0.22,
             "zones": {
               "belowShell": [],
-              "rear": ["background/iso-bg-ground-floor-plaza"],
+              "rear": ["background/iso-bg-tower-altitude-sunset.png"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],
@@ -1499,7 +1516,7 @@
             "shadowIntensity": 0.3,
             "zones": {
               "belowShell": [],
-              "rear": ["background/iso-bg-ground-floor-plaza"],
+              "rear": ["background/iso-bg-tower-altitude-night.png"],
               "leftFlank": [],
               "rightFlank": [],
               "fore": [],

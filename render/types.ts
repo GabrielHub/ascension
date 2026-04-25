@@ -66,6 +66,13 @@ export interface ActorMarker {
   moveProgress: number;
   tokenPalette?: ActorTokenPalette;
   portraitUrl?: string;
+  /**
+   * Rendering scale for the actor's portrait. "chibi" matches the small
+   * operator-token size; "portrait" is the larger full-body slot used by
+   * presenters that haven't been chibified yet. Defaults to "chibi" for
+   * operators/visitors and to "portrait" for presenters.
+   */
+  tokenSize?: "chibi" | "portrait";
 }
 
 export interface WorldEffectsSnapshot {
@@ -195,10 +202,17 @@ export interface HqPerimeterTile {
   kind: HqPerimeterKind;
 }
 
+export interface HqShellCell {
+  floorIndex: number;
+  col: number;
+  row: number;
+}
+
 export interface HqModularGeometry {
   floorTiles: readonly HqFloorTile[];
   wallSegments: readonly HqWallSegment[];
   perimeterTiles: readonly HqPerimeterTile[];
+  shellCells: readonly HqShellCell[];
 }
 
 // ── HQ world snapshot ─────────────────────────────────────────────────────

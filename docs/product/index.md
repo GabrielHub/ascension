@@ -1,70 +1,57 @@
-# Product Plan
+# Product Documentation
 
-This folder is the canonical product-plan source for future gameplay, system, progression, presentation, and data-model direction. Code and tests remain the source of truth for implemented behavior.
+This folder owns **content tables and content requirements** for *Hazard-Pay: Dungeon Management*. Reference it when **creating content or assets** — what to build, in what order, with what requirements.
 
-Use the roadmap for rollout order and deferred-depth staging. Use the world foundation for setting, tone, copy, and content identity guidance.
+This folder is **not** for tone, voice, or lore (see `docs/world/`), implementation steps (see `docs/plans/`), or gameplay logic (see code).
 
-## Current Planning State
+## How Product Docs Are Organized
 
-- The repo already ships the baseline game loop through the bodega arc, relocation into Porter's, multi-floor HQ support, management/onboarding/interruption surfaces, and the initial optional local-first AI runtime contract.
-- Phase 4 midgame breadth is shipped: external pressure, encounter and incident expansion, Porter's-era content remediation, and durable crafting now exist in the baseline product.
-- Midgame remediation is shipped: the Porter's loop now has stronger browser coverage, deterministic D-rank reporting, tuned workshop economics, and the narrow readability fixes required by that verification pass.
-- The skyscraper HQ baseline, the first C-rank endgame-entry band, the floor expansion arc, public pressure, and the first named-rival pressure loop are all shipped. The next product work is fanning out to the remaining expansion-floor consequence slices (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped skyscraper pressure.
+Two content shapes:
+
+- **Enumerated tables.** Strict, named-entry tables for finite content: presenters, rooms, floors, unique operators, unique weapons, unique dungeons, individual rivals, visual effects pool, key guide events.
+- **Pattern requirements.** Per-tier/per-rank requirement docs for content that expands infinitely following a pattern: regular operators by rank, regular weapons by tier, regular dungeons by rank, regular bosses, narrative event families.
+- **Hybrid (both).** Operators, weapons, dungeons, and rivals get BOTH a roster table AND a requirements doc. Each individual rival is canonically authored, but the rival system is infinitely expandable.
 
 ## File Map
 
-- [Asset Production Contract](./asset-production.md)
-- [Image Generation Prompting Guide](./image-generation-prompting-guide.md)
-- [Presentation Direction](./presentation.md)
-- [Gameplay Systems](./gameplay-systems.md)
-- [Content Taxonomy](./content-taxonomy.md)
-- [Rival Guild Creation](./rival-guilds.md)
+### Conventions
 
-## Implementation Guidance Note
+- [Content Taxonomy](./content-taxonomy.md) — IDs, tags, naming patterns, slash-delimited entity formats.
+- [Image Generation Prompting Guide](./image-generation-prompting-guide.md) — repo-specific raster image generation rules.
 
-- For HQ room-scene alignment guardrails (canonical scene frame, slot-centering behavior, and verification order), also follow the `HQ Room Scene Alignment Checklist` in both `AGENTS.md` and `CLAUDE.md`.
+### Pattern Requirements (in scope)
 
-## Premise
+- [Narrative Event Requirements](./narrative-events.md) — what makes a valid narrative event family.
+- [Guide Event Requirements](./guide-events.md) — what makes a valid guide objective.
+- [Rival Guild Creation](./rival-guilds.md) — rival guild content packet requirements for the rewrite. Implementation lives in `rewrite/rival-loop` and `rewrite/rivals-catalog`.
+- [Asset Pipeline Contract](./asset-pipeline.md) — asset family inventory, layer model, directory conventions, generation paths, workflow rules.
+- [Visual / UI Direction](./ui-direction.md) — color palette, panel patterns, tooltip pattern, animation library, consolidation rules. Replicates the existing game's visual language.
+- [Operator Rank Requirements](./operator-ranks.md) — stat envelopes, kit pool requirements, AI generation workflow, visual escalation per rank.
+- [Weapon Tier Requirements](./weapon-tiers.md) — stat budgets per tier, mystical effect rules, base / dungeon-bound / unique weapon categories, naming and visual escalation.
+- [Dungeon Rank Requirements](./dungeon-ranks.md) — dungeon structure, contract loop, boss complexity, enemy roster, loot model, theme bands, and visual escalation per rank.
+- [Unique Operator Requirements](./unique-operators.md) — authoring packet shape (operator + paired boss + paired dungeon, with optional unique weapon follow-on), identity, stat envelope, unique kit rules, unlock chain composition, custom-logic allowance, behavior canon.
+- [Unique Weapon Requirements](./unique-weapons.md) — stat budget, signature effect rules (paired-wielder lock), layered unlock chain after operator, equip behavior, custom-logic allowance, visual authoring.
+- [Unique Dungeon Requirements](./unique-dungeons.md) — mythical theme, unique boss complexity, loot model, post-defeat re-raidability, access gating, custom-logic allowance.
 
-Ascension is a management sim about building a dungeon-clearing guild in near-future New York City. The player starts with a shabby improvised headquarters and grows toward civic, commercial, and supernatural relevance. The fantasy is not direct combat. The fantasy is recognition, leverage, logistics, and upward mobility.
+### Enumerated Tables (in scope)
 
-## Core Fantasy
+- [Rooms Catalog](./rooms-catalog.md) — every room with feature ownership, click behavior, tier mechanics.
+- [Floors Catalog](./floors-catalog.md) — floor stack, prerequisite chains, and the Progression-Tier backbone.
+- [Room Themes](./room-themes.md) — visual canon for asset authoring (themes + per-tier visual trajectories).
+- [Presenters Catalog](./presenters-catalog.md) — room → presenter binding table and per-presenter beat ownership.
+- [Visual Effects Pool](./visual-effects-pool.md) — the 5 enumerated VFX with attack-type mapping, per-rank scaling, and color override rules.
 
-The game should make the player feel all of the following:
+## Design Backlog (Blocked Product Docs)
 
-- I found talent before richer guilds did.
-- I turned an embarrassing little operation into a serious institution.
-- My building reflects my ambition.
-- I send autonomous people into danger and live with the consequences.
-- New York feels like a real place distorted by a supernatural labor market.
+These product docs do not exist yet because they require a design back-and-forth to lock first. **Remove the entry from this list when the discussion is complete and the resulting product doc is authored** — do not just check it off, delete the line entirely.
 
-## Pillars
+Order is rough priority. Items marked with **(gateway)** unblock multiple downstream items.
 
-- Management over action. The player shapes conditions and policy, not moment-to-moment combat.
-- Place matters. This should read as New York, not generic urban fantasy.
-- Social recruitment is gameplay. Public-facing rooms should matter because they change who shows up and who stays.
-- Upward mobility is visible. Moving from bodega to larger headquarters should feel emotionally legible.
-- Autonomy creates stories. Operators should remain understandable but not fully obedient.
-- People remember treatment. Long-term trust, retention, and relationship consequences should matter.
+- **Unique operators / weapons / dungeons rosters** — once individual unique sub-plans start shipping, populate enumerated roster docs as a tracking surface for authored uniques. One roster doc per unique surface (operators / weapons / dungeons).
+- **Morale & Loyalty system doc** — flagged during dungeon-ranks pass: morale is referenced across docs but lacks a focused contract for how it decays, recovers, and gates dispatch. Recommend either a small `morale.md` product doc or expansion of HR section in rooms-catalog + operator stats section in operators-and-staff.
 
-## Future Product Priorities
+## Cross-Doc Rules
 
-- Finish replacing the remaining bodega-specific exterior fallback composition with fully package-driven HQ backdrop variants across sunrise, day, sunset, and night.
-- Broaden the late-bodega content pool only if later repeated-campaign evidence shows collapse into the same few recruits, sites, loadouts, and pressure patterns.
-- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse across shared elevation bands.
-- Grow skyscraper pressure further through stronger reputation, regulation, named rival competition, and factional response on top of the shipped public/rival pressure slice.
-- Push operator social memory, injury, recovery, and retention further so roster management stays central.
-- Increase mission and event variety without losing the observational, non-direct-control identity.
-
-## Document Boundaries
-
-- The world foundation reference owns setting, tone, thematic boundaries, naming rules, copy rules, and content identity guidance.
-- This product plan owns future gameplay, system, progression, and data-model decisions, including content-facing structures that affect runtime behavior.
-- The roadmap owns rollout order, transitional scope, and the explicit lighter-now versus deeper-later staging.
-
-## Canon Update Rule
-
-- The product plan, roadmap, and world foundation are the three living source documents for future-facing direction.
-- When a future-facing decision changes one of those documents and materially affects another, update the connected documents in the same pass.
-- If the intended shipped implementation is lighter in the current phase and deeper later, this product plan locks the target direction while the roadmap explicitly stages the lighter-now versus deeper-later rollout.
-- Phase plans derive from these documents. They do not invent canonical gameplay rules, taxonomies, or world facts on their own.
+- No layer duplicates content owned by another. World docs describe what something feels like; product docs link to that — they do not redescribe.
+- Information that lives in code is referenced from docs and plans, not re-stated.
+- When a sub-plan ships, its content table here gets a row marked `completed`. Tables track completion at a glance.

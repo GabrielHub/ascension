@@ -52,6 +52,7 @@ function cleanShell(shell: BuilderShell) {
     row: shell.row,
     cols: shell.cols,
     rows: shell.rows,
+    ...(shell.shape ? { shape: shell.shape } : {}),
   };
 }
 

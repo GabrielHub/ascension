@@ -47,6 +47,35 @@ describe("validateLayout", () => {
       },
     ]);
   });
+
+  it("flags slots that sit in chamfered shell cutouts", () => {
+    const warnings = validateLayout(
+      {
+        col: 0,
+        row: 0,
+        cols: 24,
+        rows: 16,
+        shape: { kind: "chamfered", cut: 3 },
+        dirty: false,
+      },
+      [
+        {
+          slotId: "slot/corner",
+          col: 0,
+          row: 0,
+          cols: 2,
+          rows: 2,
+          dirty: false,
+        },
+      ],
+    );
+
+    expect(warnings).toContainEqual(
+      expect.objectContaining({
+        id: "slot-outside-shell-slot/corner",
+      }),
+    );
+  });
 });
 
 describe("validatePlacements", () => {

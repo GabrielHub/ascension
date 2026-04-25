@@ -60,4 +60,18 @@ describe("layout export", () => {
     expect(output).toContain("export const PORTERS_FLOOR_0: BuildingFloorLayout");
     expect(output).toContain('slotId: "slot/bar"');
   });
+
+  it("preserves chamfered shell shape metadata on export", () => {
+    const output = JSON.parse(
+      exportLayoutAsJson(
+        "building/skyscraper",
+        0,
+        "ground-floor",
+        { ...shell, cols: 24, rows: 16, shape: { kind: "chamfered", cut: 3 } },
+        [],
+      ),
+    );
+
+    expect(output.floorLayout.shell.shape).toEqual({ kind: "chamfered", cut: 3 });
+  });
 });

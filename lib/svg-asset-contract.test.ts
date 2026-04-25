@@ -12,6 +12,7 @@ import {
   resolveOperatorPartAssetUrl,
   resolveRaidPartAssetUrl,
 } from "./svg-asset-contract";
+import { getRoomStateId } from "./hq-room-state";
 
 describe("svg asset contract", () => {
   it("resolves the bodega dining tier 1 room scene through the contract", () => {
@@ -76,32 +77,80 @@ describe("svg asset contract", () => {
       ["room/lobby:tier_1", "room-state/lobby:1", "scene-the-lobby"],
       ["room/reception:tier_1", "room-state/reception:1", "scene-the-reception-desk"],
       ["room/bullpen:tier_1", "room-state/bullpen:1", "scene-the-bullpen"],
-      ["room/situation_room:tier_1", "room-state/situation-room:1", "scene-the-situation-room"],
+      [
+        "room/situation_room:tier_1",
+        getRoomStateId("room/situation_room:tier_1", []),
+        "scene-the-situation-room",
+      ],
       ["room/clinic:tier_1", "room-state/clinic:1", "scene-the-clinic"],
       ["room/dojo:tier_1", "room-state/dojo:1", "scene-the-dojo"],
-      ["room/crew_lounge:tier_1", "room-state/crew-lounge:1", "scene-the-crew-lounge"],
-      ["room/supply_hall:tier_1", "room-state/supply-hall:1", "scene-the-supply-hall"],
-      ["room/fabrication_bay:tier_1", "room-state/fabrication-bay:1", "scene-the-fabrication-bay"],
-      ["room/rooftop_helipad:tier_1", "room-state/rooftop-helipad:1", "scene-the-helipad"],
-      ["room/sky_garden:tier_1", "room-state/sky-garden:1", "scene-the-sky-garden"],
+      [
+        "room/crew_lounge:tier_1",
+        getRoomStateId("room/crew_lounge:tier_1", []),
+        "scene-the-crew-lounge",
+      ],
+      [
+        "room/supply_hall:tier_1",
+        getRoomStateId("room/supply_hall:tier_1", []),
+        "scene-the-supply-hall",
+      ],
+      [
+        "room/fabrication_bay:tier_1",
+        getRoomStateId("room/fabrication_bay:tier_1", []),
+        "scene-the-fabrication-bay",
+      ],
+      [
+        "room/rooftop_helipad:tier_1",
+        getRoomStateId("room/rooftop_helipad:tier_1", []),
+        "scene-the-helipad",
+      ],
+      [
+        "room/sky_garden:tier_1",
+        getRoomStateId("room/sky_garden:tier_1", []),
+        "scene-the-sky-garden",
+      ],
       ["room/club:tier_1", "room-state/club:1", "scene-the-club"],
-      ["room/green_room:tier_1", "room-state/green-room:1", "scene-the-green-room"],
-      ["room/drill_floor:tier_1", "room-state/drill-floor:1", "scene-the-drill-floor"],
-      ["room/recon_course:tier_1", "room-state/recon-course:1", "scene-the-recon-course"],
-      ["room/trauma_bay:tier_1", "room-state/trauma-bay:1", "scene-the-trauma-bay"],
+      [
+        "room/green_room:tier_1",
+        getRoomStateId("room/green_room:tier_1", []),
+        "scene-the-green-room",
+      ],
+      [
+        "room/drill_floor:tier_1",
+        getRoomStateId("room/drill_floor:tier_1", []),
+        "scene-the-drill-floor",
+      ],
+      [
+        "room/recon_course:tier_1",
+        getRoomStateId("room/recon_course:tier_1", []),
+        "scene-the-recon-course",
+      ],
+      [
+        "room/trauma_bay:tier_1",
+        getRoomStateId("room/trauma_bay:tier_1", []),
+        "scene-the-trauma-bay",
+      ],
       [
         "room/executive_office:tier_1",
-        "room-state/executive-office:1",
+        getRoomStateId("room/executive_office:tier_1", []),
         "scene-the-executive-office",
       ],
       [
         "room/compliance_office:tier_1",
-        "room-state/compliance-office:1",
+        getRoomStateId("room/compliance_office:tier_1", []),
         "scene-the-compliance-office",
       ],
-      ["room/war_room:tier_1", "room-state/war-room:1", "scene-the-war-room"],
-      ["room/sky_lounge:tier_1", "room-state/sky-lounge:1", "scene-the-sky-lounge"],
-      ["room/private_cellar:tier_1", "room-state/private-cellar:1", "scene-the-private-cellar"],
+      ["room/war_room:tier_1", getRoomStateId("room/war_room:tier_1", []), "scene-the-war-room"],
+      [
+        "room/sky_lounge:tier_1",
+        getRoomStateId("room/sky_lounge:tier_1", []),
+        "scene-the-sky-lounge",
+      ],
+      [
+        "room/private_cellar:tier_1",
+        getRoomStateId("room/private_cellar:tier_1", []),
+        "scene-the-private-cellar",
+      ],
     ] as const;
 
     for (const [templateId, roomStateId, fileBase] of expectedScenes) {
@@ -121,12 +170,12 @@ describe("svg asset contract", () => {
     );
     expect(complianceBinding).toBeDefined();
     if (complianceBinding?.kind === "hq-room-scene") {
-      expect(complianceBinding.sceneFootprint).toEqual({ cols: 2, rows: 5 });
+      expect(complianceBinding.sceneFootprint).toEqual({ cols: 4, rows: 6 });
       expect(complianceBinding.sceneViewBox).toEqual({
-        minX: -50,
+        minX: -70,
         minY: 0,
-        width: 360,
-        height: 290,
+        width: 520,
+        height: 460,
       });
       expect(complianceBinding.sceneOrigin).toEqual([200, 100]);
     }
@@ -139,12 +188,12 @@ describe("svg asset contract", () => {
     );
     expect(skyLoungeBinding).toBeDefined();
     if (skyLoungeBinding?.kind === "hq-room-scene") {
-      expect(skyLoungeBinding.sceneFootprint).toEqual({ cols: 7, rows: 5 });
+      expect(skyLoungeBinding.sceneFootprint).toEqual({ cols: 13, rows: 8 });
       expect(skyLoungeBinding.sceneViewBox).toEqual({
-        minX: -50,
+        minX: -130,
         minY: 0,
-        width: 620,
-        height: 420,
+        width: 1120,
+        height: 700,
       });
     }
 
@@ -156,12 +205,12 @@ describe("svg asset contract", () => {
     );
     expect(greenRoomBinding).toBeDefined();
     if (greenRoomBinding?.kind === "hq-room-scene") {
-      expect(greenRoomBinding.sceneFootprint).toEqual({ cols: 3, rows: 5 });
+      expect(greenRoomBinding.sceneFootprint).toEqual({ cols: 5, rows: 6 });
       expect(greenRoomBinding.sceneViewBox).toEqual({
-        minX: -50,
+        minX: -80,
         minY: 0,
-        width: 430,
-        height: 320,
+        width: 600,
+        height: 460,
       });
     }
   });
@@ -171,14 +220,19 @@ describe("svg asset contract", () => {
       "/data/svg-environments/hq/skyscraper/parts/shell/skyscraper-core-shell.svg",
     );
     expect(
-      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-ground-floor-plaza"),
-    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-ground-floor-plaza.svg");
+      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-tower-altitude-day"),
+    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-tower-altitude-day.svg");
     expect(
-      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-mid-tower-neighbors"),
-    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-mid-tower-neighbors.svg");
+      resolveHqEnvironmentAssetUrl(
+        "building/skyscraper",
+        "background/iso-bg-tower-altitude-sunrise",
+      ),
+    ).toBe(
+      "/data/svg-environments/hq/skyscraper/parts/background/iso-bg-tower-altitude-sunrise.svg",
+    );
     expect(
-      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-rooftop-skyline"),
-    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-rooftop-skyline.svg");
+      resolveHqEnvironmentAssetUrl("building/skyscraper", "background/iso-bg-tower-altitude-night"),
+    ).toBe("/data/svg-environments/hq/skyscraper/parts/background/iso-bg-tower-altitude-night.svg");
   });
 
   it("builds preview footprints for staged Porter's waterfront rooms using their real tier", () => {

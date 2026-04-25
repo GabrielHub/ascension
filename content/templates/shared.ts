@@ -221,6 +221,12 @@ export interface PresenterTemplate extends TemplateBase {
   portraitByExpression: Readonly<Record<string, string>>;
   defaultExpression: string;
   /**
+   * Small in-world chibi token, sized to match operator chibis. Renders
+   * inside the velvet presenter ring in the HQ scene. The full
+   * `portraitByExpression` PNGs continue to be used for narrative modals.
+   */
+  chibiUrl?: string;
+  /**
    * Room template ids whose existence allows this presenter to appear in the
    * HQ. Mara's list should cover baseline ops rooms; every other presenter's
    * list should cover their domain-correct rooms.

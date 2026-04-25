@@ -2,43 +2,132 @@
 
 Repo-specific guide for raster image generation workflows. Use this whenever generated images are part of the approved production path.
 
-This guide is adapted from the OpenAI `gpt-image-1.5` prompting guide and extended with project-specific rules for Ascension's tone, consistency, and asset-family boundaries.
+This guide is adapted from the OpenAI image generation prompting guide and extended with project-specific rules for *Hazard-Pay: Dungeon Management*'s tone, consistency, and asset-family boundaries.
 
 Source reference:
 
-- [OpenAI Cookbook: GPT-image-1.5 Prompting Guide](https://raw.githubusercontent.com/openai/openai-cookbook/main/examples/multimodal/image-gen-1.5-prompting_guide.ipynb)
+- [OpenAI Cookbook: Image Generation Models Prompting Guide](https://developers.openai.com/cookbook/examples/multimodal/image-gen-models-prompting-guide)
 
 ## Purpose
 
 Use this guide when generating raster images for:
 
 - narrative presenter portraits
-- future prestige-tier portraits or promo art
-- future Unique (`U`) item hero renders
-- future boss concept sheets or non-runtime raster concept work
+- rival leader portraits and insignia
+- unique operator portraits (with glowing border treatment)
+- unique weapon portraits (with their own glowing border treatment)
+- HQ room raster backdrops
+- raid backdrop images (per dungeon, revealed by exploration)
+- regular operator portraits (AI-generated at content-authoring time)
 
 Do **not** use this guide to replace:
 
-- HQ room scene SVG workflows
-- modular operator SVG portraits used by the shipped runtime
+- chibi token assembly (composed from operator parts, not whole-image generated)
 - vector/logo/icon work that belongs in code-native or SVG pipelines
+
+## Model and Quality Defaults
+
+- Default model: `gpt-image-2`. Use it for all new portrait, hero, and concept work.
+- Treat `gpt-image-1.5` and `gpt-image-1` as legacy. Only retain those calls during a documented migration; retune prompts after comparing output, latency, and retry rate against `gpt-image-2`.
+- `gpt-image-2` does not support `input_fidelity`. The `input_fidelity` parameter only applies to the legacy `1.5` and `1` models.
+- Quality settings:
+  - `low` — high-volume exploration, thumbnails, throwaway iteration.
+  - `medium` — balanced default for most working passes.
+  - `high` — required for portrait approvals, identity-sensitive edits, dense in-image text, and any asset that will ship.
+- Resolution rules for `gpt-image-2`:
+  - both edges must be a multiple of 16
+  - aspect ratio at most 3:1
+  - total pixels between 655,360 and 8,294,400
+  - max edge length below 3840px
+  - treat anything above `2560x1440` (2K) as experimental
+  - presenter portrait canvas stays in the `1024x1536` family
+- For batch exploration use `n=4` to compare variants.
 
 ## Core Prompting Rules
 
-Use the same prompt logic every time:
+Write prompts in a consistent order:
 
-1. scene or backdrop
-2. subject
-3. key visual details
-4. framing and composition
-5. lighting and mood
-6. constraints and preserve list
+1. **Background / scene** — where the image lives
+2. **Subject** — who or what
+3. **Key details** — clothing, materials, props, posture, expression
+4. **Composition and framing** — viewpoint, layout, scale
+5. **Lighting and mood** — light quality, atmosphere, emotional tone
+6. **Constraints** — what to keep, what to avoid, what must not appear
 
-Keep prompts concrete. Specify clothing, posture, face angle, materials, and the intended use. Iterate with one change at a time instead of overloading the first prompt.
+Pick the format that is easiest to maintain. Labeled fields, short paragraphs, JSON-like blocks, and tag-style prompts all work — readability beats clever syntax. Iterate with one change per round instead of overloading the first prompt.
 
-## Ascension Visual Direction
+## Specificity And Quality Cues
 
-Ascension's raster character art uses a single locked visual language: **modern Korean action-webtoon portrait art** with grounded NYC supernatural-labor styling. This is the style contract for the shipped presenter roster and for any future recurring raster character family. Treat it as a hard spec, not a mood board.
+- Be concrete about materials, shapes, textures, and visual medium (photo, watercolor, 3D render, webtoon line art).
+- For photorealism, include the word **photorealistic** directly. Phrases like "real photograph", "taken on a real camera", "professional photography", and "iPhone photo" also engage the photoreal mode.
+- Camera and lens specs are interpreted loosely. Use them for general look and composition, not for engineering control.
+- Add quality levers only when they help the brief — for example *film grain*, *textured brushstrokes*, *macro detail*, *worn material*, *visible skin texture*. Do not stack them.
+- Avoid words that imply staging or studio polish when you want lived-in realism.
+
+## Composition Guidance
+
+- Specify framing and viewpoint (close-up, full-body, wide, top-down) and angle (eye-level, low-angle, slight 3/4).
+- Specify lighting and mood (soft diffuse, golden hour, high-contrast, controlled indoor light).
+- If layout matters, call out placement explicitly: "subject centered with negative space on either side", "logo top-right", "feet inside frame".
+- For wide, cinematic, low-light, rain, or neon scenes, add extra detail about scale, atmosphere, and color so the model has something to ground against.
+
+## People, Pose, And Action
+
+When the subject is a person, describe scale, framing, gaze, and object interaction explicitly:
+
+- "full body visible, feet included"
+- "slight 3/4 angle, front-facing to camera"
+- "looking at camera, calm and composed"
+- "hands holding a slim folder at hip height"
+- "weight on back foot, posture relaxed but attentive"
+
+These cues drive proportion, pose geometry, and gaze alignment. Vague pose language is the most common cause of awkward portraits.
+
+## Constraints And Preservation
+
+State exclusions and invariants explicitly. Examples:
+
+- "no watermark"
+- "no readable text in image"
+- "no logos or trademarks"
+- "preserve identity, hair, costume, and framing"
+
+For edits, use the pattern:
+
+> "Change only X. Keep everything else the same."
+
+Repeat the preserve list on every iteration. Drift compounds across rounds, and reasserting what must stay fixed is the cheapest way to keep a family coherent. For surgical edits, also state that saturation, contrast, layout, camera angle, and surrounding objects must not change.
+
+## Text In Images
+
+- Put literal text in **quotes** or **ALL CAPS**.
+- Specify typography as a constraint: font style, size, color, placement.
+- Spell tricky words letter-by-letter to improve character accuracy.
+- Use `quality="high"` whenever the image contains small text, dense info panels, or multi-font layouts.
+
+For Hazard-Pay portraits, the default is **no readable text in image** — badges and folders should read graphically, not literally.
+
+## Multi-Image Inputs
+
+When attaching reference images, address each one by index and role in the prompt text:
+
+- "Image 1: style anchor — apply its line, shading, and color discipline."
+- "Image 2: cast anchor — keep the subject's face, hair, and costume identical."
+
+Describe the interaction explicitly: "apply Image 1's style to a new portrait of the subject from Image 2", "transplant the prop from Image 1 onto the figure in Image 2".
+
+When refs are present, strip descriptive style adjectives from the prompt — they fight the reference. Keep identity, framing, and constraints in prose.
+
+## Iteration Strategy
+
+- Start from a clean base prompt and refine with single-change follow-ups.
+- Examples: "make lighting warmer", "remove the extra prop", "tighten the jaw line", "restore the previous hair shape".
+- Use phrases like "same style as before" or "the subject" to leverage context, but re-specify any critical detail that begins to drift.
+- Do not rewrite the whole prompt every round unless the base direction is wrong.
+
+## Visual Direction
+
+The game's raster character art uses a single locked visual language: **modern Korean action-webtoon portrait art** with grounded NYC supernatural-labor styling. This is the style contract for the shipped presenter roster and for any future recurring raster character family. Treat it as a hard spec, not a mood board.
 
 In prompts and checked-in docs, describe the style descriptively. Do not name external IP — informal reference to specific titles (e.g. Solo Leveling) is acceptable in internal discussion only, so the asset family stays legally and creatively its own.
 
@@ -113,20 +202,21 @@ The presenter family must read as if one artist drew the entire figure with one 
 - Props should be graphic and readable at a glance. Favor clean badge shapes and clear notebook or folder silhouettes over tiny clutter.
 - If shoes, hardware, folder edges, or hair shine start looking more rendered than the clothing and face, simplify them.
 
-## Reference-Image Workflow for Recurring Characters
+## Reference-Image Workflow For Recurring Characters
 
-Recurring presenter and hero portraits use a reference workflow that preserves both style and cast consistency across expressions.
+Recurring presenter and hero portraits use a reference workflow that preserves both style and cast consistency across expressions. Address each reference by index in the prompt.
 
-1. **Ref 1 — style anchor.** An approved external style board or approved project example of the locked style (linework, shading, color, character structure). Carries the visual language. Do not re-describe the style in prompt text when Ref 1 is present.
-2. **Ref 2 — cast anchor.** Use an approved project portrait only after the family has a valid neutral master. On a fresh family reset, skip stale legacy portraits and let the first approved neutral become the cast anchor.
-3. **Generate `neutral` first.** Prompt text does identity work (who, age, ethnicity, costume, composition, constraints). Ref 1 does style; Ref 2 does cast continuity when one exists.
+1. **Image 1 — style anchor.** An approved external style board or approved project example of the locked style (linework, shading, color, character structure). Carries the visual language. Do not re-describe the style in prompt text when Image 1 is present.
+2. **Image 2 — cast anchor.** Use an approved project portrait only after the family has a valid neutral master. On a fresh family reset, skip stale legacy portraits and let the first approved neutral become the cast anchor.
+3. **Generate `neutral` first.** Prompt text does identity work (who, age, ethnicity, costume, composition, constraints). Image 1 carries style; Image 2 carries cast continuity when one exists.
 4. **Approve the neutral** before generating other expressions.
-5. **Generate `concerned` / `serious` / `amused`** using the approved neutral as the reference image. Keep everything on the preserve list identical across expressions. Only the expression and minor posture change.
+5. **Generate `concerned` / `serious` / `amused`** using the approved neutral as the cast reference. Use the edit pattern: "Change only the expression and minor posture. Keep everything else the same." Repeat the preserve list every round.
 6. **Record** the winning prompt and preserve list in the character's `PresenterTemplate`.
+7. **Author the in-world chibi token.** Every presenter must ship with a hand-authored chibi SVG at `/data/presenters/{role}/chibi.svg`, wired through `PresenterTemplate.chibiUrl`. The chibi follows the operator marker style (32×40 viewBox, matching line weights and head proportions) and keys off one or two unmistakable silhouette cues from the approved neutral so the presenter reads as themselves at token size next to operator chibis. Full-body portraits are reserved for narrative modals; the world view always uses the chibi.
 
 ### Avoid over-prompting style when refs are present
 
-When Ref 1 is carrying the style:
+When Image 1 is carrying the style:
 
 - Strip descriptive style adjectives from the prompt text (they fight the reference).
 - Keep composition, framing, background, and negative constraints — those are framing rules, not style.
@@ -156,6 +246,7 @@ Defaults:
 - expression readable at modal size
 - clothing and styling must communicate role immediately
 - the whole figure must hold one consistent artist-hand; reject any localized rendering drift
+- generate at `quality="high"` for approved deliveries
 
 ### Prestige / Future Hero Assets
 
@@ -179,7 +270,7 @@ For any recurring character or recurring prestige asset family:
 1. write a short canon brief first
 2. generate a neutral master image
 3. approve the neutral master before variants
-4. generate variants by preserving the approved master
+4. generate variants by preserving the approved master ("change only X, keep everything else the same")
 5. record the winning prompt and preserve list
 6. review in-context, not only on a blank page
 
@@ -208,6 +299,7 @@ Generated transparency is not assumed.
 Default policy for the first raster portrait family:
 
 - generate on a plain warm-white or light neutral background
+- keep `background="opaque"` on the API call; run a downstream background-removal step if a true cutout is needed
 - keep strong edge contrast around hair, shoulders, and clothing
 - avoid white-on-white costume choices that kill separation
 - present the image in UI as a faux cutout on a dark portrait panel by default
@@ -237,54 +329,64 @@ Check:
 - expression readability
 - edge cleanliness
 - background contrast
-- tone fit with Ascension
+- tone fit with the locked visual direction
 
 ## Prompt Template
 
-Use this structure as a default:
+Use this structure as a default, in this order:
 
 ```text
 Use case: <asset family>
 Asset type: <where it will appear>
-Primary request: <what to generate>
-Subject: <who or what>
-Style/medium: <locked presenter house style / other>
-Composition/framing: <full-body presenter-roster canvas (~2:3 / 1024x1536), slight 3/4, centered, etc.>
-Lighting/mood: <lighting and emotional tone>
-Background: <plain warm-white / other controlled background>
+Background / scene: <plain warm-white / other controlled background>
+Subject: <who or what — identity, age, ethnicity, attitude>
 Key details: <hair, clothing, props, posture, facial read>
+Composition / framing: <viewpoint, scale, gaze, layout>
+Lighting / mood: <light quality, emotional tone>
+Style / medium: <locked presenter house style — or "carried by Image 1">
 Constraints: <must keep / must avoid>
-Avoid: <negative constraints>
+References: <Image 1: style anchor; Image 2: cast anchor (when present)>
 ```
 
 ## Presenter Prompt Example
 
-Prompt template below assumes Ref 1 (style anchor) is attached. If the family already has an approved neutral, attach that as Ref 2. Style adjectives are deliberately stripped — style is carried by the reference image.
+The example below assumes Image 1 (style anchor) is attached. If the family already has an approved neutral, attach that as Image 2. Style adjectives are deliberately stripped — style is carried by the reference image.
 
 ```text
 Use case: narrative presenter portrait
 Asset type: interruption modal portrait
-Style/medium: carried by the style reference image; do not add further style adjectives
-Primary request: recurring narrative portrait for the guild assistant
+Background / scene: plain warm-white background, no scene detail, designed for faux-cutout presentation on a dark portrait panel
 Subject: competent office assistant in a modern supernatural labor guild, late 20s to early 30s, Afro-Latina, dry and composed, visibly used to chaos
-Composition/framing: full-body standing portrait, centered in the shipped presenter-roster portrait canvas (~2:3 / 1024x1536), slight 3/4 angle, readable at interruption-modal size
-Lighting/mood: controlled indoor light, calm cinematic contrast, practical rather than glamorous
-Background: plain warm-white background, no scene detail, designed for faux-cutout presentation on a dark portrait panel
 Key details: textured dark curls pinned back, tailored charcoal blouse with rolled sleeves, fitted slacks, practical heels, worn lanyard badge, slim black folder, intelligent and slightly tired expression
-Constraints: single character only, no readable text in image, no logos, no clutter, no dramatic action pose, no armor
-Avoid: generic anime school styling, neon overload, fantasy armor, messy background, extra people
+Composition / framing: full-body standing portrait, centered in the shipped presenter-roster portrait canvas (~2:3 / 1024x1536), slight 3/4 angle, feet visible, readable at interruption-modal size
+Lighting / mood: controlled indoor light, calm cinematic contrast, practical rather than glamorous
+Style / medium: carried by Image 1; do not add further style adjectives
+Constraints: single character only, no readable text in image, no logos, no clutter, no dramatic action pose, no armor; preserve identity, hair, costume, and framing across expressions
+References: Image 1 — style anchor (linework, shading, color discipline)
+```
+
+### Expression Variant Edit Example
+
+Once a neutral is approved, generate variants with a surgical edit prompt. Reattach the approved neutral as the cast reference.
+
+```text
+Change only the expression and minor posture from the reference image.
+Make the expression concerned: tighter brow, slight frown, eyes still on camera.
+Keep everything else the same: face, hair, costume, framing, lighting, background, props.
+No new elements. No text. No logo. No camera angle change.
+References: Image 1 — style anchor; Image 2 — approved neutral master (cast anchor)
 ```
 
 ## Iteration Policy
 
 Iterate with one change at a time:
 
-- make the expression more concerned
-- keep the same face, reduce smile
-- keep everything else, darken jacket
-- keep the same framing, remove extra prop
+- "make the expression more concerned, keep everything else the same"
+- "keep the same face, reduce smile"
+- "keep everything else, darken the jacket"
+- "keep the same framing, remove the extra prop"
 
-Do not rewrite the whole prompt every round unless the base direction is wrong.
+Do not rewrite the whole prompt every round unless the base direction is wrong. If drift creeps in, restate the preserve list verbatim before describing the next change.
 
 ## Repository Use
 

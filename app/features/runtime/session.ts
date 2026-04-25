@@ -1483,7 +1483,9 @@ function createRuntimeSession(
         actorPreviousRoomId.set(presenter.id, roomId);
       }
       const movement = actorMovements.get(presenter.id);
-      const portraitUrl = presenter.portraitByExpression.neutral;
+      const useChibi = Boolean(presenter.chibiUrl);
+      const portraitUrl = useChibi ? presenter.chibiUrl : presenter.portraitByExpression.neutral;
+      const tokenSize: "chibi" | "portrait" = useChibi ? "chibi" : "portrait";
       if (movement) {
         const progress = Math.min(1, (nowMs - movement.startedAtMs) / movement.durationMs);
         if (progress >= 1) {
@@ -1504,6 +1506,7 @@ function createRuntimeSession(
             state: "moving" as ActorState,
             moveProgress: progress,
             portraitUrl,
+            tokenSize,
           };
         }
       }
@@ -1521,6 +1524,7 @@ function createRuntimeSession(
         state: "idle" as ActorState,
         moveProgress: 1,
         portraitUrl,
+        tokenSize,
       };
     });
 

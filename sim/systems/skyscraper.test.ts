@@ -4,12 +4,14 @@ import { templateRegistry as registry } from "content/templates";
 import {
   getBuildingFloors,
   getBuildingLayout,
+  isFootprintInsideBuildingShell,
   getVisibleBuildingFloors,
 } from "content/building-layouts";
 import {
   getHqBackdropManifestForBuilding,
   getHqEnvironmentRenderConfigForBuilding,
 } from "lib/hq-environment-manifest";
+import { getRoomStateId } from "lib/hq-room-state";
 import { deriveOperatorCombatDefaults } from "lib/operator-combat";
 import { findHqRoomSceneBinding } from "lib/svg-asset-contract";
 import { deriveRecruitRank, visitorQualityToRank } from "lib/visitor-rank";
@@ -137,13 +139,13 @@ describe("skyscraper layout", () => {
     }
   });
 
-  it("renders the lobby, operations, recovery, and logistics floors as one tower stack", () => {
+  it("renders only the selected skyscraper floor in the locked tower view", () => {
     expect(
       getVisibleBuildingFloors("building/skyscraper", 0, 1).map((floor) => floor.floorIndex),
-    ).toEqual([0, 1, 2, 3]);
+    ).toEqual([0]);
     expect(
       getVisibleBuildingFloors("building/skyscraper", 2, 1).map((floor) => floor.floorIndex),
-    ).toEqual([0, 1, 2, 3]);
+    ).toEqual([2]);
   });
 
   it("renders the rooftop as its own stand-alone floor view", () => {
@@ -163,6 +165,45 @@ describe("skyscraper layout", () => {
       const floors = getBuildingFloors("building/skyscraper", tier);
       expect(floors.length).toBeGreaterThan(0);
       expect(floors.every((floor) => typeof floor.floorIndex === "number")).toBe(true);
+    }
+  });
+
+  it("uses a 20x20 square shell for every skyscraper floor", () => {
+    const floors = getBuildingFloors("building/skyscraper", 5);
+    expect(floors).toHaveLength(9);
+
+    for (const floor of floors) {
+      expect(floor.shell).toEqual({
+        col: 0,
+        row: 0,
+        cols: 20,
+        rows: 20,
+      });
+    }
+  });
+
+  it("keeps every skyscraper room slot rectangular, inside the square shell, and non-overlapping", () => {
+    for (const floor of getBuildingFloors("building/skyscraper", 5)) {
+      for (const slot of floor.slots) {
+        expect(Number.isInteger(slot.col)).toBe(true);
+        expect(Number.isInteger(slot.row)).toBe(true);
+        expect(slot.cols).toBeGreaterThan(0);
+        expect(slot.rows).toBeGreaterThan(0);
+        expect(isFootprintInsideBuildingShell(floor.shell, slot)).toBe(true);
+      }
+
+      for (let index = 0; index < floor.slots.length; index++) {
+        for (let compareIndex = index + 1; compareIndex < floor.slots.length; compareIndex++) {
+          const left = floor.slots[index]!;
+          const right = floor.slots[compareIndex]!;
+          expect(
+            left.col < right.col + right.cols &&
+              left.col + left.cols > right.col &&
+              left.row < right.row + right.rows &&
+              left.row + left.rows > right.row,
+          ).toBe(false);
+        }
+      }
     }
   });
 });
@@ -510,11 +551,11 @@ describe("skyscraper expansion layout stages", () => {
     }
   });
 
-  it("renders all tower-core floors together when viewing any tower-core floor", () => {
+  it("keeps tower-core metadata while rendering only the selected floor", () => {
     const visibleFromLobby = getVisibleBuildingFloors("building/skyscraper", 0, 5).map(
       (floor) => floor.floorIndex,
     );
-    expect(visibleFromLobby).toEqual([0, 1, 2, 3, 5, 6, 7, 8]);
+    expect(visibleFromLobby).toEqual([0]);
   });
 
   it("keeps the Rooftop on its own when viewed", () => {
@@ -737,8 +778,8 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/lobby:1",
     slotId: "slot/lobby",
     floorIndex: 0,
-    cols: 7,
-    rows: 5,
+    cols: 12,
+    rows: 8,
     elevationBandId: "ground-floor",
     tier: 1,
   },
@@ -748,8 +789,8 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/reception:1",
     slotId: "slot/reception",
     floorIndex: 0,
-    cols: 3,
-    rows: 3,
+    cols: 4,
+    rows: 5,
     elevationBandId: "ground-floor",
     tier: 1,
   },
@@ -760,19 +801,19 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/bullpen:1",
     slotId: "slot/bullpen",
     floorIndex: 1,
-    cols: 7,
-    rows: 5,
+    cols: 13,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 1,
   },
   {
     label: "Situation Room",
     templateId: "room/situation_room:tier_1",
-    roomStateId: "room-state/situation-room:1",
+    roomStateId: getRoomStateId("room/situation_room:tier_1", []),
     slotId: "slot/situation-room",
     floorIndex: 1,
-    cols: 3,
-    rows: 5,
+    cols: 5,
+    rows: 6,
     elevationBandId: "mid-tower",
     tier: 1,
   },
@@ -783,8 +824,8 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/clinic:1",
     slotId: "slot/clinic",
     floorIndex: 2,
-    cols: 4,
-    rows: 5,
+    cols: 6,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 1,
   },
@@ -794,19 +835,19 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/dojo:1",
     slotId: "slot/dojo",
     floorIndex: 2,
-    cols: 4,
-    rows: 5,
+    cols: 6,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 1,
   },
   {
     label: "Crew Lounge",
     templateId: "room/crew_lounge:tier_1",
-    roomStateId: "room-state/crew-lounge:1",
+    roomStateId: getRoomStateId("room/crew_lounge:tier_1", []),
     slotId: "slot/lounge",
     floorIndex: 2,
-    cols: 2,
-    rows: 5,
+    cols: 4,
+    rows: 6,
     elevationBandId: "mid-tower",
     tier: 1,
   },
@@ -814,22 +855,22 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
   {
     label: "Supply Hall",
     templateId: "room/supply_hall:tier_1",
-    roomStateId: "room-state/supply-hall:1",
+    roomStateId: getRoomStateId("room/supply_hall:tier_1", []),
     slotId: "slot/supply-hall",
     floorIndex: 3,
-    cols: 5,
-    rows: 5,
+    cols: 8,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 1,
   },
   {
     label: "Fabrication Bay",
     templateId: "room/fabrication_bay:tier_1",
-    roomStateId: "room-state/fabrication-bay:1",
+    roomStateId: getRoomStateId("room/fabrication_bay:tier_1", []),
     slotId: "slot/fabrication-bay",
     floorIndex: 3,
-    cols: 5,
-    rows: 5,
+    cols: 7,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 1,
   },
@@ -837,22 +878,22 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
   {
     label: "Helipad",
     templateId: "room/rooftop_helipad:tier_1",
-    roomStateId: "room-state/rooftop-helipad:1",
+    roomStateId: getRoomStateId("room/rooftop_helipad:tier_1", []),
     slotId: "slot/helipad",
     floorIndex: 4,
-    cols: 6,
-    rows: 5,
+    cols: 9,
+    rows: 8,
     elevationBandId: "rooftop",
     tier: 1,
   },
   {
     label: "Sky Garden",
     templateId: "room/sky_garden:tier_1",
-    roomStateId: "room-state/sky-garden:1",
+    roomStateId: getRoomStateId("room/sky_garden:tier_1", []),
     slotId: "slot/sky-garden",
     floorIndex: 4,
-    cols: 6,
-    rows: 5,
+    cols: 7,
+    rows: 8,
     elevationBandId: "rooftop",
     tier: 1,
   },
@@ -863,19 +904,19 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
     roomStateId: "room-state/club:1",
     slotId: "slot/club",
     floorIndex: 5,
-    cols: 7,
-    rows: 5,
+    cols: 13,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 2,
   },
   {
     label: "Green Room",
     templateId: "room/green_room:tier_1",
-    roomStateId: "room-state/green-room:1",
+    roomStateId: getRoomStateId("room/green_room:tier_1", []),
     slotId: "slot/green-room",
     floorIndex: 5,
-    cols: 3,
-    rows: 5,
+    cols: 5,
+    rows: 6,
     elevationBandId: "mid-tower",
     tier: 2,
   },
@@ -883,33 +924,33 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
   {
     label: "Drill Floor",
     templateId: "room/drill_floor:tier_1",
-    roomStateId: "room-state/drill-floor:1",
+    roomStateId: getRoomStateId("room/drill_floor:tier_1", []),
     slotId: "slot/drill-floor",
     floorIndex: 6,
-    cols: 4,
-    rows: 5,
+    cols: 6,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 3,
   },
   {
     label: "Recon Course",
     templateId: "room/recon_course:tier_1",
-    roomStateId: "room-state/recon-course:1",
+    roomStateId: getRoomStateId("room/recon_course:tier_1", []),
     slotId: "slot/recon-course",
     floorIndex: 6,
-    cols: 3,
-    rows: 5,
+    cols: 5,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 3,
   },
   {
     label: "Trauma Bay",
     templateId: "room/trauma_bay:tier_1",
-    roomStateId: "room-state/trauma-bay:1",
+    roomStateId: getRoomStateId("room/trauma_bay:tier_1", []),
     slotId: "slot/trauma-bay",
     floorIndex: 6,
-    cols: 3,
-    rows: 5,
+    cols: 5,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 3,
   },
@@ -917,33 +958,33 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
   {
     label: "Executive Office",
     templateId: "room/executive_office:tier_1",
-    roomStateId: "room-state/executive-office:1",
+    roomStateId: getRoomStateId("room/executive_office:tier_1", []),
     slotId: "slot/executive-office",
     floorIndex: 7,
-    cols: 4,
-    rows: 5,
+    cols: 6,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 4,
   },
   {
     label: "Compliance Office",
     templateId: "room/compliance_office:tier_1",
-    roomStateId: "room-state/compliance-office:1",
+    roomStateId: getRoomStateId("room/compliance_office:tier_1", []),
     slotId: "slot/compliance-office",
     floorIndex: 7,
-    cols: 2,
-    rows: 5,
+    cols: 4,
+    rows: 6,
     elevationBandId: "mid-tower",
     tier: 4,
   },
   {
     label: "War Room",
     templateId: "room/war_room:tier_1",
-    roomStateId: "room-state/war-room:1",
+    roomStateId: getRoomStateId("room/war_room:tier_1", []),
     slotId: "slot/war-room",
     floorIndex: 7,
-    cols: 4,
-    rows: 5,
+    cols: 6,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 4,
   },
@@ -951,22 +992,22 @@ const SKYSCRAPER_ROOM_BINDING_MATRIX: readonly SkyscraperRoomBinding[] = [
   {
     label: "Sky Lounge",
     templateId: "room/sky_lounge:tier_1",
-    roomStateId: "room-state/sky-lounge:1",
+    roomStateId: getRoomStateId("room/sky_lounge:tier_1", []),
     slotId: "slot/sky-lounge",
     floorIndex: 8,
-    cols: 7,
-    rows: 5,
+    cols: 13,
+    rows: 8,
     elevationBandId: "mid-tower",
     tier: 5,
   },
   {
     label: "Private Cellar",
     templateId: "room/private_cellar:tier_1",
-    roomStateId: "room-state/private-cellar:1",
+    roomStateId: getRoomStateId("room/private_cellar:tier_1", []),
     slotId: "slot/private-cellar",
     floorIndex: 8,
-    cols: 3,
-    rows: 5,
+    cols: 5,
+    rows: 6,
     elevationBandId: "mid-tower",
     tier: 5,
   },

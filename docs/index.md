@@ -1,53 +1,60 @@
-# Ascension Documentation Index
+# Hazard-Pay Documentation Index
 
-Documentation is intentionally narrow.
+Documentation is intentionally narrow. This folder is the handoff surface for the
+Hazard-Pay: Dungeon Management rewrite, not the shipped Ascension roadmap.
 
 ## Policy
 
 - Code, tests, templates, and assets are the source of truth for implemented behavior.
-- Docs should cover roadmap, future-facing product direction, and research only.
+- Docs cover the new game's world canon, product/content contracts, and actionable implementation plans.
 - Repo workflow and development rules live in [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md), not under `docs/`.
-- Ascension now has two runtime surfaces with different jobs: browser mode for fast development and regression, Tauri desktop mode for shipped-host validation.
 
 ## Status Snapshot
 
-- The shipped baseline now includes the full bodega arc, relocation into Porter's, multi-floor HQ support, runtime-owned incidents and encounter handoff, onboarding, audio, browser and desktop save hosts, and optional local-first AI generation infrastructure.
-- The AI content layer is no longer an active bring-up plan. The shipped baseline already includes settings storage, localhost transport, browser and desktop adapters, runtime request tracking, dev-console hooks, and the first two narrow generation surfaces: `incident-framing` and `operator-identity`.
-- Phase 4 is complete. Contract lock, public pressure, Porter's content remediation, durable crafting, social/incident fallout, and encounter breadth are all shipped.
-- Midgame remediation is complete. The shipped Porter's-era baseline now has stronger browser coverage, deterministic D-rank economy reporting, workshop tuning, and the verified UX fixes needed by that loop.
+- The rewrite is a new web-first game: one skyscraper HQ, browser saves, ECS-owned gameplay state, weapons-only items, and no Tauri/desktop host in initial scope.
+- Active canon is the rewritten world docs, product docs, and numbered `rewrite/*` implementation plans.
+- Current Ascension code and assets are reference material only. Do not copy old systems forward when they conflict with the active product docs, world docs, or numbered plans.
 
 ## Planned Work
 
-- The skyscraper HQ baseline, first C-rank endgame-entry band, floor expansion arc, public-pressure layer, and first named-rival pressure loop are all shipped.
-- The next candidate slices are the remaining Executive-stage consequence wiring (Nightlife recruitment, Specialist Training role training, Penthouse A-rank recruitment) and the first B-rank content packet on top of shipped skyscraper pressure.
-- Continue HQ environment cleanup only where it supports the shipped cross-building runtime contract and skyscraper floor reuse.
-- Active execution should stay split into narrow checked-in slices under `docs/plans/` rather than another umbrella phase doc.
-- Treat future AI work as content breadth and quality on top of shipped infrastructure: stronger grounding, better eval fixtures, wider incident coverage, and later narrow surfaces only when deterministic payloads are already stable.
+- [Plans Index](./plans/index.md) is the source of truth for implementation order and active plan status.
+- Plans are numbered by implementation order, split by ownership scope, and include review gates before completion.
 
 ## Current Docs
 
 ### Core Canon
 
-- [Roadmap](./roadmap.md)
-- [Product Plan Hub](./product-plan.md)
-- [Product Plan Index](./product/index.md)
-- [World Foundation Hub](./world-foundation.md)
-- [World Foundation Index](./world/index.md)
+- [Product Documentation](./product/index.md)
+- [World Foundation Reference](./world/index.md)
 
 ### Execution Plans
 
 - [Plans Index](./plans/index.md)
-  Use this as the source of truth for the active checked-in plan set.
+  Use this as the source of truth for the active numbered rewrite plan set.
+
+### Agent Handoff
+
+- [New Repo Agent Guidance Draft](./new-repo-agent-guidance.md)
+  Use as the source draft for the new repo's `AGENTS.md` and `CLAUDE.md`.
 
 ### Research
 
-- No active research docs or shipped-plan archives are checked in right now. If a future design question needs preserved research context, add it deliberately instead of treating old plan files as standing canon.
+- No active research docs are checked in right now. If a future design question needs preserved research context, add it deliberately instead of treating old Ascension material as standing canon.
+
+### Reference
+
+- [Reference Archive](./reference/index.md)
+  Decision archive only. Consult when active numbered plans or product/world docs are ambiguous or contradictory.
+
+### Roadmap
+
+- [Roadmap](./roadmap.md)
+  Deferred ideas only. Do not execute from this file.
 
 ## How To Use
 
-- Start with [Roadmap](./roadmap.md) to see what is already shipped and what comes next.
-- Keep the browser-versus-desktop split in mind while reading: the web engine stays authoritative, and Tauri owns desktop hosting and file persistence.
-- Use [Product Plan Hub](./product-plan.md) if you want the stable entry point, or jump straight to [Product Plan Index](./product/index.md) for the split docs.
-- Use [World Foundation Hub](./world-foundation.md) if you want the stable entry point, or jump straight to [World Foundation Index](./world/index.md) for the split docs.
-- Use [Plans Index](./plans/index.md) when coordinating concrete skyscraper and endgame-entry slices.
+- Start from [Plans Index](./plans/index.md), then read one numbered plan plus its referenced product/world docs.
+- Use [Product Documentation](./product/index.md) when implementing content, assets, rooms, dungeons, operators, weapons, rivals, guide beats, and UI direction.
+- Use [World Foundation Reference](./world/index.md) when writing player-facing copy, names, narrative beats, or asset briefs.
+- Use [Full Rewrite Source](./reference/fullrewrite-source.md) only as a decision archive when active docs conflict or lack context.
 - Add research docs only when a future design question actually needs outside context and the answer is worth preserving.

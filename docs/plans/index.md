@@ -1,46 +1,46 @@
 # Plans Index
 
-This folder is reserved for active execution plans only. Completed work should be folded back into the roadmap, product docs, and world docs instead of remaining here as reference-only plan files.
+This folder is reserved for Hazard-Pay rewrite implementation plans. The old Ascension/Porter's/skyscraper work queue is not active canon.
 
-## Current State
+## Plan Sources
 
-The Porter's-era gameplay baseline is shipped, and the Porter's HQ package is now grounded in real building-specific assets rather than bodega placeholders. Remaining HQ environment work should stay narrow and contract-driven instead of reopening broad package-grounding plans. The skyscraper HQ baseline, the first C-rank endgame-entry band, the four-step skyscraper floor expansion arc (Nightlife, Specialist Training, Executive, Penthouse), the public-pressure layer, and the first named-rival pressure loop are all shipped and folded back into the roadmap and product docs.
+- [Numbered Rewrite Plans](./rewrite/index.md) — active implementation queue.
+- [Plan Graveyard](./graveyard/index.md) — completed plans after review, kept out of the active context path.
+- [Full Rewrite Source](../reference/fullrewrite-source.md) — decision archive only. Consult when active plans or product/world docs are ambiguous or contradictory.
 
-There are three active checked-in plans right now:
+## Required Plan Lifecycle
 
-- [Persistent Guidance And Rewarded Tutorial Plan](./persistent-guidance-tutorial-plan.md) — replace one-off onboarding with a modern idle-game-style, always-on, rewarded narrative objective system that teaches every major feature through the climb into the repeatable skyscraper endgame
-- [Narrative Event Presenter Remediation](./narrative-event-presenter-remediation.md) — tighten presenter ownership so every narrative beat, including AI-framed incidents, resolves to a domain-correct presenter with presenter-specific voice rules
+Every implementation plan uses exactly one status value at the top:
 
-The HQ UI Cascade Refactor shipped: HQ now uses one right-anchored cascading panel stack for rooms, people, management, teams, inventory, and market. Room slots, staff assignment, visitor recruitment/replace, and the floor switcher all run through the cascade or a floating HQ-world control, so the plan has been retired.
+- `not started`
+- `in progress`
+- `waiting review`
+- `completed`
 
-The skyscraper rival-pressure refactor and rival guild event-content pass shipped: public pressure is the live external-pressure model, Visible Institution is retired, War Room unlocks a named current-rival surface, every runtime-ready rival ships with a narrative profile and authored move templates, and the current rival move loop is save-backed and covered by validation/tests. Future leaderboard, rival history, direct rival battles, and rival HQ work remain product-scope questions under [Rival Guild Creation](../product/rival-guilds.md), not active execution plans.
+Status discipline:
+
+- A plan starts as `not started`.
+- The implementing agent changes it to `in progress` before editing code, content, or assets.
+- When the checklist and verification pass, the implementing agent changes it to `waiting review`.
+- A separate review pass checks the plan against active product docs, world docs, code changes, tests, and the dropped-feature list.
+- Only after review does the plan become `completed`.
+- Completed plans move to `docs/plans/graveyard/` and are removed from the active queue.
+
+There is no separate `blocked` status. If a plan cannot proceed, keep its current lifecycle status and record the blocker in the plan's blocker section.
 
 ## Shared Execution Contract
 
-Before working any plan:
+Before working any active plan:
 
-- Read `docs/roadmap.md`, the relevant product docs, and the relevant world docs.
+- Read the plan's referenced product docs and world docs.
+- Consult [Full Rewrite Source](../reference/fullrewrite-source.md) only if the numbered plan or active docs are ambiguous.
 - Keep gameplay authority in ECS, templates, and systems.
 - Keep UI responsible for presentation and typed intents only.
+- Do not reintroduce dropped Ascension systems: multi-HQ progression, Tauri, file-backed saves, districts/factions/public pressure, crafting, outfits, accessories, consumables, hunger, rank advancement, or mobile support.
 - Run `vp check` after code changes.
-- Run `vp test` and `vp build` when the change touches runtime behavior, saves, or app integration.
+- Run `vp test` and `vp build` when the change touches runtime behavior, saves, systems, templates, app integration, or user-facing workflows.
+- For docs-only changes, review links and cross-doc references relevant to the edit.
 
-## Next Planning Trigger
+## Review Rule
 
-Check in a new plan only when a concrete execution slice is ready to start beyond the current active stack, for example:
-
-- a specific HQ backdrop-package cleanup tied to skyscraper elevation-band reuse
-- a concrete B-rank or A-rank content packet after the C-rank bridge is stable
-- a later narrow AI content-breadth pass on top of the shipped optional runtime layer
-
-Do not add another broad umbrella plan when a narrower active execution slice is enough.
-
-## Sequencing Notes
-
-- Phase 4 midgame breadth is shipped and should now be treated as the baseline under test, not as an open-ended content queue.
-- The retired midgame remediation pass was verification-first work: browser depth, readability fixes, and balance-table tuning rather than new mechanics or broad new content.
-- Use browser automation as the primary fast regression surface for the canonical Porter's loop.
-- Use deterministic reports and focused harnesses where browser coverage is too coarse to prove economy or reward-envelope stability.
-- Treat Porter's follow-on HQ work as targeted room or contract cleanup, not as a still-missing package-grounding phase.
-- Treat the skyscraper as the final headquarters. Later planning should deepen that building's floor expansion, rank ladder, and pressure loops rather than introduce a fourth HQ.
-- Sequence the presenter-remediation plan after the remaining skyscraper expansion-floor consequence slices. It should tighten narrative ownership and AI framing once the current tower content surface is stable enough to audit in one pass.
+Do not mark a plan `completed` in the same pass that implemented it. Move through `waiting review`, then review. This is deliberately slower than ad hoc implementation because the rewrite is trying to prevent incorrect foundational code from blocking later parallel work.

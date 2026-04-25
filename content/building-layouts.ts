@@ -12,11 +12,17 @@ export interface BuildingRoomSlot {
   startingTemplateId?: string;
 }
 
+export interface BuildingShellShape {
+  kind: "chamfered";
+  cut: number;
+}
+
 export interface BuildingShellFootprint {
   col: number;
   row: number;
   cols: number;
   rows: number;
+  shape?: BuildingShellShape;
 }
 
 export interface BuildingFloorLayout {
@@ -39,6 +45,78 @@ export interface BuildingLayoutStage {
 export interface BuildingLayoutDefinition {
   buildingId: string;
   stages: readonly BuildingLayoutStage[];
+}
+
+export interface BuildingShellCell {
+  col: number;
+  row: number;
+}
+
+function normalizeChamferCut(shell: BuildingShellFootprint): number {
+  if (shell.shape?.kind !== "chamfered") {
+    return 0;
+  }
+
+  return Math.max(0, Math.trunc(shell.shape.cut));
+}
+
+export function isCellInsideBuildingShell(
+  shell: BuildingShellFootprint,
+  col: number,
+  row: number,
+): boolean {
+  if (
+    col < shell.col ||
+    row < shell.row ||
+    col >= shell.col + shell.cols ||
+    row >= shell.row + shell.rows
+  ) {
+    return false;
+  }
+
+  const cut = normalizeChamferCut(shell);
+  if (cut <= 0) {
+    return true;
+  }
+
+  const localCol = col - shell.col;
+  const localRow = row - shell.row;
+  const maxCol = shell.cols - 1;
+  const maxRow = shell.rows - 1;
+
+  return (
+    localCol + localRow >= cut &&
+    maxCol - localCol + localRow >= cut &&
+    localCol + (maxRow - localRow) >= cut &&
+    maxCol - localCol + (maxRow - localRow) >= cut
+  );
+}
+
+export function getBuildingShellCells(shell: BuildingShellFootprint): readonly BuildingShellCell[] {
+  const cells: BuildingShellCell[] = [];
+  for (let col = shell.col; col < shell.col + shell.cols; col++) {
+    for (let row = shell.row; row < shell.row + shell.rows; row++) {
+      if (isCellInsideBuildingShell(shell, col, row)) {
+        cells.push({ col, row });
+      }
+    }
+  }
+  return cells;
+}
+
+export function isFootprintInsideBuildingShell(
+  shell: BuildingShellFootprint,
+  footprint: Pick<BuildingRoomSlot, "col" | "row" | "cols" | "rows">,
+): boolean {
+  for (let col = footprint.col; col < footprint.col + footprint.cols; col++) {
+    for (let row = footprint.row; row < footprint.row + footprint.rows; row++) {
+      if (!isCellInsideBuildingShell(shell, col, row)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 const BODEGA_FLOOR_0: BuildingFloorLayout = {
@@ -249,27 +327,34 @@ export const PORTERS_LAYOUT: BuildingLayoutDefinition = {
 // logistics, rooftop) so the move out of Porter's reads as the guild becoming
 // an institution — not as a Porter's with a taller roof.
 
+const SKYSCRAPER_SHELL: BuildingShellFootprint = {
+  col: 0,
+  row: 0,
+  cols: 20,
+  rows: 20,
+};
+
 const SKYSCRAPER_LOBBY: BuildingFloorLayout = {
   floorIndex: 0,
   elevationBandId: "ground-floor",
   stackGroupId: "tower-core",
   stackLayer: 0,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/lobby",
-      col: 1,
-      row: 2,
-      cols: 7,
-      rows: 5,
+      col: 4,
+      row: 6,
+      cols: 12,
+      rows: 8,
       startingTemplateId: "room/lobby:tier_1",
     },
     {
       slotId: "slot/reception",
-      col: 8,
-      row: 2,
-      cols: 3,
-      rows: 3,
+      col: 16,
+      row: 7,
+      cols: 4,
+      rows: 5,
       startingTemplateId: "room/reception:tier_1",
     },
   ],
@@ -280,22 +365,22 @@ const SKYSCRAPER_OPERATIONS: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 1,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/bullpen",
-      col: 1,
-      row: 2,
-      cols: 7,
-      rows: 5,
+      col: 2,
+      row: 6,
+      cols: 13,
+      rows: 8,
       startingTemplateId: "room/bullpen:tier_1",
     },
     {
       slotId: "slot/situation-room",
-      col: 8,
-      row: 2,
-      cols: 3,
-      rows: 5,
+      col: 15,
+      row: 7,
+      cols: 5,
+      rows: 6,
       startingTemplateId: "room/situation_room:tier_1",
     },
   ],
@@ -306,30 +391,30 @@ const SKYSCRAPER_RECOVERY: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 2,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/clinic",
       col: 1,
-      row: 2,
-      cols: 4,
-      rows: 5,
+      row: 6,
+      cols: 6,
+      rows: 8,
       startingTemplateId: "room/clinic:tier_1",
     },
     {
       slotId: "slot/dojo",
-      col: 5,
-      row: 2,
-      cols: 4,
-      rows: 5,
+      col: 7,
+      row: 6,
+      cols: 6,
+      rows: 8,
       startingTemplateId: "room/dojo:tier_1",
     },
     {
       slotId: "slot/lounge",
-      col: 9,
-      row: 2,
-      cols: 2,
-      rows: 5,
+      col: 15,
+      row: 7,
+      cols: 4,
+      rows: 6,
       startingTemplateId: "room/crew_lounge:tier_1",
     },
   ],
@@ -340,22 +425,22 @@ const SKYSCRAPER_LOGISTICS: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 3,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/supply-hall",
-      col: 1,
-      row: 2,
-      cols: 5,
-      rows: 5,
+      col: 3,
+      row: 6,
+      cols: 8,
+      rows: 8,
       startingTemplateId: "room/supply_hall:tier_1",
     },
     {
       slotId: "slot/fabrication-bay",
-      col: 6,
-      row: 2,
-      cols: 5,
-      rows: 5,
+      col: 12,
+      row: 6,
+      cols: 7,
+      rows: 8,
       startingTemplateId: "room/fabrication_bay:tier_1",
     },
   ],
@@ -366,22 +451,22 @@ const SKYSCRAPER_ROOFTOP: BuildingFloorLayout = {
   elevationBandId: "rooftop",
   stackGroupId: "rooftop",
   stackLayer: 0,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/helipad",
-      col: 0,
-      row: 2,
-      cols: 6,
-      rows: 5,
+      col: 2,
+      row: 6,
+      cols: 9,
+      rows: 8,
       startingTemplateId: "room/rooftop_helipad:tier_1",
     },
     {
       slotId: "slot/sky-garden",
-      col: 6,
-      row: 2,
-      cols: 6,
-      rows: 5,
+      col: 12,
+      row: 6,
+      cols: 7,
+      rows: 8,
       startingTemplateId: "room/sky_garden:tier_1",
     },
   ],
@@ -399,22 +484,22 @@ const SKYSCRAPER_NIGHTLIFE: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 4,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/club",
-      col: 1,
-      row: 2,
-      cols: 7,
-      rows: 5,
+      col: 2,
+      row: 6,
+      cols: 13,
+      rows: 8,
       startingTemplateId: "room/club:tier_1",
     },
     {
       slotId: "slot/green-room",
-      col: 8,
-      row: 2,
-      cols: 3,
-      rows: 5,
+      col: 15,
+      row: 7,
+      cols: 5,
+      rows: 6,
       startingTemplateId: "room/green_room:tier_1",
     },
   ],
@@ -425,30 +510,30 @@ const SKYSCRAPER_SPECIALIST_TRAINING: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 5,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/drill-floor",
       col: 1,
-      row: 2,
-      cols: 4,
-      rows: 5,
+      row: 6,
+      cols: 6,
+      rows: 8,
       startingTemplateId: "room/drill_floor:tier_1",
     },
     {
       slotId: "slot/recon-course",
-      col: 5,
-      row: 2,
-      cols: 3,
-      rows: 5,
+      col: 8,
+      row: 6,
+      cols: 5,
+      rows: 8,
       startingTemplateId: "room/recon_course:tier_1",
     },
     {
       slotId: "slot/trauma-bay",
-      col: 8,
-      row: 2,
-      cols: 3,
-      rows: 5,
+      col: 14,
+      row: 6,
+      cols: 5,
+      rows: 8,
       startingTemplateId: "room/trauma_bay:tier_1",
     },
   ],
@@ -459,30 +544,30 @@ const SKYSCRAPER_EXECUTIVE: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 6,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/executive-office",
       col: 1,
-      row: 2,
-      cols: 4,
-      rows: 5,
+      row: 6,
+      cols: 6,
+      rows: 8,
       startingTemplateId: "room/executive_office:tier_1",
     },
     {
       slotId: "slot/compliance-office",
-      col: 5,
-      row: 2,
-      cols: 2,
-      rows: 5,
+      col: 8,
+      row: 7,
+      cols: 4,
+      rows: 6,
       startingTemplateId: "room/compliance_office:tier_1",
     },
     {
       slotId: "slot/war-room",
-      col: 7,
-      row: 2,
-      cols: 4,
-      rows: 5,
+      col: 13,
+      row: 6,
+      cols: 6,
+      rows: 8,
       startingTemplateId: "room/war_room:tier_1",
     },
   ],
@@ -493,22 +578,22 @@ const SKYSCRAPER_PENTHOUSE: BuildingFloorLayout = {
   elevationBandId: "mid-tower",
   stackGroupId: "tower-core",
   stackLayer: 7,
-  shell: { col: 0, row: 0, cols: 12, rows: 8 },
+  shell: SKYSCRAPER_SHELL,
   slots: [
     {
       slotId: "slot/sky-lounge",
-      col: 1,
-      row: 2,
-      cols: 7,
-      rows: 5,
+      col: 2,
+      row: 6,
+      cols: 13,
+      rows: 8,
       startingTemplateId: "room/sky_lounge:tier_1",
     },
     {
       slotId: "slot/private-cellar",
-      col: 8,
-      row: 2,
-      cols: 3,
-      rows: 5,
+      col: 15,
+      row: 7,
+      cols: 5,
+      rows: 6,
       startingTemplateId: "room/private_cellar:tier_1",
     },
   ],
@@ -645,6 +730,10 @@ export function getVisibleBuildingFloors(
 
   if (!activeFloor) {
     return [];
+  }
+
+  if (buildingId === "building/skyscraper") {
+    return [activeFloor];
   }
 
   const activeGroupId = getFloorRenderGroupId(activeFloor);

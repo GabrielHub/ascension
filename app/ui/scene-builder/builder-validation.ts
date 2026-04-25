@@ -2,7 +2,12 @@
  * Scene builder validation — surfaces invalid assets and placements.
  */
 
-import type { BuildingFloorLayout, BuildingRoomSlot } from "content/building-layouts";
+import {
+  isFootprintInsideBuildingShell,
+  type BuildingFloorLayout,
+  type BuildingRoomSlot,
+  type BuildingShellFootprint,
+} from "content/building-layouts";
 import type { EnvPartMeta } from "../environment-parts";
 import type {
   BuilderPlacement,
@@ -126,7 +131,7 @@ export function validatePlacements(
 
 export function placementOverlapsShell(
   placement: Pick<BuilderPlacement, "kind" | "col" | "row" | "footprintCols" | "footprintRows">,
-  shell: Pick<BuilderShell, "col" | "row" | "cols" | "rows"> | null,
+  shell: BuildingShellFootprint | null,
 ): boolean {
   if (!shell || placement.kind !== "decoration") {
     return false;
@@ -135,7 +140,7 @@ export function placementOverlapsShell(
   const footprintCols = Math.max(placement.footprintCols ?? 1, 1);
   const footprintRows = Math.max(placement.footprintRows ?? 1, 1);
 
-  return rectsOverlap(
+  const overlapsRect = rectsOverlap(
     placement.col,
     placement.row,
     footprintCols,
@@ -145,6 +150,17 @@ export function placementOverlapsShell(
     shell.cols,
     shell.rows,
   );
+  if (!overlapsRect) return false;
+
+  for (let col = placement.col; col < placement.col + footprintCols; col++) {
+    for (let row = placement.row; row < placement.row + footprintRows; row++) {
+      if (isFootprintInsideBuildingShell(shell, { col, row, cols: 1, rows: 1 })) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 function rectsOverlap(
@@ -228,12 +244,7 @@ export function validateLayout(
       });
     }
 
-    if (
-      slot.col < shell.col ||
-      slot.row < shell.row ||
-      slot.col + slot.cols > shell.col + shell.cols ||
-      slot.row + slot.rows > shell.row + shell.rows
-    ) {
+    if (!isFootprintInsideBuildingShell(shell, slot)) {
       warnings.push({
         id: `slot-outside-shell-${slot.slotId}`,
         targetType: "slot",

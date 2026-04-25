@@ -196,7 +196,6 @@ The model does not invent arbitrary portrait structure. It must return approved 
 ## Documentation
 
 - [Documentation Index](./docs/index.md)
-- [Roadmap](./docs/roadmap.md)
 - [Product Plan](./docs/product-plan.md)
 - [World Foundation](./docs/world-foundation.md)
 - [Plans Index](./docs/plans/index.md)

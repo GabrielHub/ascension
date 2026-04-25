@@ -11,6 +11,7 @@ import {
 } from "lib/hq-environment-manifest";
 import { BACKDROP_BASE_FILLS } from "lib/hq-time-phase";
 import type { HqTimeOfDayPhase } from "lib/hq-time-phase";
+import { getBuildingShellCells } from "content/building-layouts";
 import { projectIso } from "render/hq-world";
 import type { HqPoint } from "render/types";
 
@@ -91,6 +92,48 @@ function isoRectPath(
   return `M${tl.x},${tl.y} L${tr.x},${tr.y} L${br.x},${br.y} L${bl.x},${bl.y} Z`;
 }
 
+function cellKey(col: number, row: number): string {
+  return `${col},${row}`;
+}
+
+function isoShellTilePaths(shell: BuilderShell, ox: number, oy: number): string[] {
+  if (!shell.shape) {
+    return [isoRectPath(shell.col, shell.row, shell.cols, shell.rows, ox, oy)];
+  }
+
+  return getBuildingShellCells(shell).map((cell) => isoRectPath(cell.col, cell.row, 1, 1, ox, oy));
+}
+
+function isoShellBoundaryLines(
+  shell: BuilderShell,
+  ox: number,
+  oy: number,
+): ReadonlyArray<readonly [HqPoint, HqPoint]> {
+  if (!shell.shape) {
+    return [];
+  }
+
+  const cells = getBuildingShellCells(shell);
+  const set = new Set(cells.map((cell) => cellKey(cell.col, cell.row)));
+  const lines: Array<readonly [HqPoint, HqPoint]> = [];
+  for (const cell of cells) {
+    const points = isoCellPoints(cell.col, cell.row, ox, oy);
+    const edges: Array<readonly [HqPoint, HqPoint, string]> = [
+      [points[0], points[1], cellKey(cell.col, cell.row - 1)],
+      [points[1], points[2], cellKey(cell.col + 1, cell.row)],
+      [points[2], points[3], cellKey(cell.col, cell.row + 1)],
+      [points[3], points[0], cellKey(cell.col - 1, cell.row)],
+    ];
+    for (const [start, end, neighborKey] of edges) {
+      if (!set.has(neighborKey)) {
+        lines.push([start, end]);
+      }
+    }
+  }
+
+  return lines;
+}
+
 function isoCellPoints(
   col: number,
   row: number,
@@ -131,6 +174,7 @@ function getIsoRectBounds(
 const svgCache = new Map<string, string>();
 const svgLoadingSet = new Set<string>();
 const svgListeners = new Map<string, Set<() => void>>();
+const svgLoadRevisions = new Map<string, number>();
 const SVG_ASSETS_CHANGED_EVENT = "ascension:svg-assets-changed";
 
 interface SvgAssetChangedPayload {
@@ -149,6 +193,46 @@ function resolveSvgFetchUrl(url: string, revision: number): string {
   if (!import.meta.env.DEV || revision === 0) return url;
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}svgRev=${revision}`;
+}
+
+function notifySvgListeners(url: string): void {
+  svgListeners.get(url)?.forEach((notify) => notify());
+}
+
+function loadSvgImage(url: string, revision: number): void {
+  if (svgLoadingSet.has(url)) {
+    return;
+  }
+
+  svgLoadingSet.add(url);
+  svgLoadRevisions.set(url, revision);
+
+  fetch(resolveSvgFetchUrl(url, revision))
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load SVG asset: ${url}`);
+      }
+      return response.text();
+    })
+    .then((svgText) => {
+      if (svgLoadRevisions.get(url) !== revision) {
+        return;
+      }
+
+      const blob = new Blob([svgText], { type: "image/svg+xml" });
+      svgCache.set(url, URL.createObjectURL(blob));
+    })
+    .catch(() => {
+      if (svgLoadRevisions.get(url) === revision) {
+        svgCache.set(url, "");
+      }
+    })
+    .finally(() => {
+      if (svgLoadRevisions.get(url) === revision) {
+        svgLoadingSet.delete(url);
+        notifySvgListeners(url);
+      }
+    });
 }
 
 function useSvgImage(url: string): string | null {
@@ -180,27 +264,10 @@ function useSvgImage(url: string): string | null {
     const listener = () => setDataUrl(svgCache.get(url) ?? null);
     listeners.add(listener);
     svgListeners.set(url, listeners);
-    let cancelled = false;
 
-    if (!svgLoadingSet.has(url)) {
-      svgLoadingSet.add(url);
-      fetch(resolveSvgFetchUrl(url, revision))
-        .then((response) => response.text())
-        .then((svgText) => {
-          if (cancelled) return;
-          const blob = new Blob([svgText], { type: "image/svg+xml" });
-          svgCache.set(url, URL.createObjectURL(blob));
-          svgListeners.get(url)?.forEach((notify) => notify());
-        })
-        .catch(() => {
-          if (cancelled) return;
-          svgCache.set(url, "");
-          svgListeners.get(url)?.forEach((notify) => notify());
-        });
-    }
+    loadSvgImage(url, revision);
 
     return () => {
-      cancelled = true;
       listeners.delete(listener);
     };
   }, [revision, url]);
@@ -495,13 +562,12 @@ function ShellOverlay({
   onSelect: () => void;
   onDragStart: (event: React.MouseEvent) => void;
 }) {
+  const tilePaths = isoShellTilePaths(shell, originX, originY);
+  const boundaryLines = isoShellBoundaryLines(shell, originX, originY);
+  const stroke = isSelected ? "rgba(200,168,76,0.8)" : "rgba(200,168,76,0.35)";
+
   return (
-    <path
-      d={isoRectPath(shell.col, shell.row, shell.cols, shell.rows, originX, originY)}
-      fill={isSelected ? "rgba(200,168,76,0.08)" : "rgba(200,168,76,0.03)"}
-      stroke={isSelected ? "rgba(200,168,76,0.8)" : "rgba(200,168,76,0.35)"}
-      strokeWidth={isSelected ? 3 : 2}
-      strokeDasharray="8 4"
+    <g
       style={{ cursor: canDrag ? (isSelected ? "grab" : "pointer") : "default" }}
       onMouseDown={(event) => {
         event.stopPropagation();
@@ -511,7 +577,30 @@ function ShellOverlay({
         }
       }}
       onClick={(event) => event.stopPropagation()}
-    />
+    >
+      {tilePaths.map((path, index) => (
+        <path
+          key={`shell-fill-${index}`}
+          d={path}
+          fill={isSelected ? "rgba(200,168,76,0.08)" : "rgba(200,168,76,0.03)"}
+          stroke={shell.shape ? "none" : stroke}
+          strokeWidth={isSelected ? 3 : 2}
+          strokeDasharray="8 4"
+        />
+      ))}
+      {boundaryLines.map(([start, end], index) => (
+        <line
+          key={`shell-edge-${index}`}
+          x1={start.x}
+          y1={start.y}
+          x2={end.x}
+          y2={end.y}
+          stroke={stroke}
+          strokeWidth={isSelected ? 3 : 2}
+          strokeDasharray="8 4"
+        />
+      ))}
+    </g>
   );
 }
 

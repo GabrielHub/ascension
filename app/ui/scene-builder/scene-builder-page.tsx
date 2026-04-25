@@ -34,6 +34,9 @@ import { AssetBrowser } from "./asset-browser";
 import { LayoutSidebar } from "./layout-sidebar";
 import { LayoutToolsPanel } from "./layout-tools-panel";
 import { RightSidebar } from "./placement-inspector";
+import { SkyscraperPreviewPanel } from "./skyscraper-preview-panel";
+
+const SKYSCRAPER_BUILDING_ID = "building/skyscraper";
 
 const UNSAVED_CHANGES_MESSAGE = "Discard unsaved scene-builder changes?";
 
@@ -234,6 +237,7 @@ function ExportDialog({
 export function SceneBuilderPage() {
   const [state, dispatch] = useReducer(builderReducer, INITIAL_STATE);
   const [showExport, setShowExport] = useState(false);
+  const isSkyscraper = state.buildingId === SKYSCRAPER_BUILDING_ID;
 
   usePrompt({
     message: UNSAVED_CHANGES_MESSAGE,
@@ -414,7 +418,7 @@ export function SceneBuilderPage() {
 
         <div className="h-4 w-px bg-gold/15" />
 
-        {stageOptions.length > 1 && (
+        {!isSkyscraper && stageOptions.length > 1 && (
           <>
             <div className="flex items-center gap-1.5">
               <span className="text-xs uppercase tracking-wider text-gold/50">Stage</span>
@@ -466,65 +470,77 @@ export function SceneBuilderPage() {
           </button>
         </div>
 
-        <div className="h-4 w-px bg-gold/15" />
+        {!isSkyscraper && (
+          <>
+            <div className="h-4 w-px bg-gold/15" />
 
-        {/* Overlay toggles */}
-        <div className="flex items-center gap-1">
-          {(Object.keys(state.overlays) as (keyof BuilderOverlays)[]).map((key) => (
-            <OverlayToggle
-              key={key}
-              label={key}
-              active={state.overlays[key]}
-              onToggle={() => dispatch({ type: "TOGGLE_OVERLAY", overlay: key })}
-            />
-          ))}
-        </div>
+            {/* Overlay toggles */}
+            <div className="flex items-center gap-1">
+              {(Object.keys(state.overlays) as (keyof BuilderOverlays)[]).map((key) => (
+                <OverlayToggle
+                  key={key}
+                  label={key}
+                  active={state.overlays[key]}
+                  onToggle={() => dispatch({ type: "TOGGLE_OVERLAY", overlay: key })}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Status indicators */}
-        {state.isDirty && (
-          <span className="flex items-center gap-1.5 text-xs text-ember/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-ember/60" />
-            Unsaved changes
-          </span>
+        {isSkyscraper && (
+          <span className="text-xs uppercase tracking-wider text-gold/50">Read-only preview</span>
         )}
 
-        <span className="text-xs tabular-nums text-gold/50">
-          {state.placements.length} placements
-        </span>
-        <span className="text-xs tabular-nums text-gold/50">{state.slots.length} slots</span>
+        {!isSkyscraper && (
+          <>
+            {/* Status indicators */}
+            {state.isDirty && (
+              <span className="flex items-center gap-1.5 text-xs text-ember/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-ember/60" />
+                Unsaved changes
+              </span>
+            )}
 
-        {state.warnings.length > 0 && (
-          <span className="text-xs text-ember/50">
-            {state.warnings.length} warning{state.warnings.length !== 1 ? "s" : ""}
-          </span>
-        )}
+            <span className="text-xs tabular-nums text-gold/50">
+              {state.placements.length} placements
+            </span>
+            <span className="text-xs tabular-nums text-gold/50">{state.slots.length} slots</span>
 
-        {/* Export */}
-        <button
-          onClick={() => setShowExport(true)}
-          className="rounded border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold transition-colors hover:bg-gold/20"
-        >
-          Export
-        </button>
+            {state.warnings.length > 0 && (
+              <span className="text-xs text-ember/50">
+                {state.warnings.length} warning{state.warnings.length !== 1 ? "s" : ""}
+              </span>
+            )}
 
-        <div className="flex gap-1">
-          {(["scene", "layout"] as BuilderMode[]).map((mode) => (
+            {/* Export */}
             <button
-              key={mode}
-              onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode })}
-              className={`rounded px-2 py-1 text-xs uppercase tracking-[0.12em] ${
-                state.editorMode === mode
-                  ? "bg-gold/12 text-gold"
-                  : "text-gold/50 hover:bg-gold/5 hover:text-gold/70"
-              }`}
+              onClick={() => setShowExport(true)}
+              className="rounded border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold transition-colors hover:bg-gold/20"
             >
-              {mode}
+              Export
             </button>
-          ))}
-        </div>
+
+            <div className="flex gap-1">
+              {(["scene", "layout"] as BuilderMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode })}
+                  className={`rounded px-2 py-1 text-xs uppercase tracking-[0.12em] ${
+                    state.editorMode === mode
+                      ? "bg-gold/12 text-gold"
+                      : "text-gold/50 hover:bg-gold/5 hover:text-gold/70"
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Tool links */}
         <div className="flex gap-1">
@@ -545,45 +561,71 @@ export function SceneBuilderPage() {
 
       {/* ── Main content area ───────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar: Asset browser */}
-        <aside
-          className={`${glassPanelClass} w-64 flex-shrink-0 border-r border-gold/8 overflow-hidden`}
-        >
-          {state.editorMode === "scene" ? (
-            <AssetBrowser buildingId={state.buildingId} shell={state.shell} dispatch={dispatch} />
-          ) : (
-            <LayoutToolsPanel state={state} dispatch={dispatch} />
-          )}
-        </aside>
+        {isSkyscraper ? (
+          <main className="relative flex-1 overflow-hidden">
+            <SkyscraperPreviewPanel
+              buildingId={state.buildingId}
+              floorIndex={state.floorIndex}
+              buildingTier={state.buildingTier}
+              phase={state.previewPhase}
+            />
 
-        {/* Center: Canvas */}
-        <main className="relative flex-1 overflow-hidden">
-          <BuilderCanvas state={state} dispatch={dispatch} />
+            <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
+              <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/50 backdrop-blur-sm">
+                Preview: {PREVIEW_PHASE_LABELS[state.previewPhase]}
+              </span>
+              <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/40 backdrop-blur-sm">
+                Engine-rendered floor — placement disabled
+              </span>
+            </div>
+          </main>
+        ) : (
+          <>
+            {/* Left sidebar: Asset browser */}
+            <aside
+              className={`${glassPanelClass} w-64 flex-shrink-0 border-r border-gold/8 overflow-hidden`}
+            >
+              {state.editorMode === "scene" ? (
+                <AssetBrowser
+                  buildingId={state.buildingId}
+                  shell={state.shell}
+                  dispatch={dispatch}
+                />
+              ) : (
+                <LayoutToolsPanel state={state} dispatch={dispatch} />
+              )}
+            </aside>
 
-          {/* Canvas HUD overlay */}
-          <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
-            <span className="rounded bg-void/60 px-2 py-1 text-xs tabular-nums text-gold/50 backdrop-blur-sm">
-              Zoom: {(state.camera.zoom * 100).toFixed(0)}%
-            </span>
-            <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/50 backdrop-blur-sm">
-              Preview: {PREVIEW_PHASE_LABELS[state.previewPhase]}
-            </span>
-            <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/40 backdrop-blur-sm">
-              Right-drag to pan | Scroll to zoom at cursor | Click+drag to move
-            </span>
-          </div>
-        </main>
+            {/* Center: Canvas */}
+            <main className="relative flex-1 overflow-hidden">
+              <BuilderCanvas state={state} dispatch={dispatch} />
 
-        {/* Right sidebar: Inspector + Placements */}
-        <aside
-          className={`${glassPanelClass} w-80 min-w-[20rem] flex-shrink-0 border-l border-gold/8 overflow-hidden xl:w-96`}
-        >
-          {state.editorMode === "scene" ? (
-            <RightSidebar state={state} dispatch={dispatch} />
-          ) : (
-            <LayoutSidebar state={state} dispatch={dispatch} />
-          )}
-        </aside>
+              {/* Canvas HUD overlay */}
+              <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
+                <span className="rounded bg-void/60 px-2 py-1 text-xs tabular-nums text-gold/50 backdrop-blur-sm">
+                  Zoom: {(state.camera.zoom * 100).toFixed(0)}%
+                </span>
+                <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/50 backdrop-blur-sm">
+                  Preview: {PREVIEW_PHASE_LABELS[state.previewPhase]}
+                </span>
+                <span className="rounded bg-void/60 px-2 py-1 text-xs text-gold/40 backdrop-blur-sm">
+                  Right-drag to pan | Scroll to zoom at cursor | Click+drag to move
+                </span>
+              </div>
+            </main>
+
+            {/* Right sidebar: Inspector + Placements */}
+            <aside
+              className={`${glassPanelClass} w-80 min-w-[20rem] flex-shrink-0 border-l border-gold/8 overflow-hidden xl:w-96`}
+            >
+              {state.editorMode === "scene" ? (
+                <RightSidebar state={state} dispatch={dispatch} />
+              ) : (
+                <LayoutSidebar state={state} dispatch={dispatch} />
+              )}
+            </aside>
+          </>
+        )}
       </div>
 
       {/* Export dialog */}

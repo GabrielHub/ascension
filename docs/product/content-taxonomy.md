@@ -1,85 +1,93 @@
 # Product Content Taxonomy
 
-This file owns future-facing content IDs, tags, and taxonomy reservations that affect runtime-facing structures.
+This file owns IDs, tags, and naming patterns for content data. Implemented runtime behavior is the source of truth in code; this file owns the conventions that authored content data follows.
 
-## Narrative And Content Direction
+## Content ID Format
 
-- The project uses the world foundation reference as the future-facing content-definition anchor before broad content generation continues.
-- That reference defines the world's narrative structure, how powers and superhuman capability work in-world, the thematic identity of operators, enemies, bosses, factions, gear, rooms, and the related copy and naming rules.
-- Future content generation should treat that reference as the canonical thematic and content-design anchor for authored content across operators, enemies, bosses, factions, gear, rooms, and future progression content.
-- Content-facing architectural questions that affect runtime behavior still need explicit product-plan answers instead of being left to the content reference.
-- Implemented runtime behavior still belongs to code.
-- The world foundation is future-facing content guidance, not a second gameplay source of truth.
-
-## Content Data And Taxonomy
-
-All content should continue using slash-delimited IDs with lowercase kebab-case segments:
+All content uses slash-delimited IDs with lowercase kebab-case segments:
 
 ```
 operator/{name}
-mission/{type}
-site/{name}
+unique-operator/{name}
+contract/{name}
+dungeon/{name}
+unique-dungeon/{name}
 event/{type}
-building/{name}
+guide-event/{slug}
+room/{name}
 room/{name}:tier_{n}
+floor/{name}
 upgrade/{scope}/{target}:{feature}
 resource/{name}
 weapon/{name}
-outfit-overlay/{name}
-accessory/{name}
+unique-weapon/{name}
 loot/{family}/{name}
 enemy/{type}/{variant}
-boss/{dungeon-theme}/{name}
-faction/{name}
-district/{name}
+boss/{dungeon-slug}/{name}
+unique-boss/{name}
+rival/{slug}
+rival-move/{rival-slug}/{move-slug}
+presenter/{slug}
 ```
 
-Site concepts and bosses are paired content families:
+## Dungeon And Boss Pairing
 
-- Every `site/{name}` entry must resolve to exactly one attached `boss/{dungeon-theme}/{name}` via authored data.
-- A raid site is not a valid generated or authored content unit until that boss attachment exists.
-- Content generation and review should treat "site concept + attached boss + enemy family + themed loot + drop tables" as one content packet, even when they live in separate template files.
+Dungeon concepts and bosses are paired content families:
 
-Drop table ID conventions:
+- Every `dungeon/{name}` entry must resolve to exactly one attached `boss/{dungeon-slug}/{name}` via authored data.
+- Every `unique-dungeon/{name}` entry must resolve to exactly one attached `unique-boss/{name}` via authored data.
+- A dungeon is not a valid authored content unit until that boss attachment exists.
+- Content generation and review should treat "dungeon concept + attached boss + enemy family + themed weapons + drop tables" as one content packet, even when they live in separate template files.
 
-- Per-family regular: `drop-table/{family-slug}-regular` (e.g. `drop-table/tunnel-crawlers-regular`)
-- Per-family elite: `drop-table/{family-slug}-elite` (e.g. `drop-table/tunnel-crawlers-elite`)
-- Per-boss: `drop-table/{boss-slug}` (e.g. `drop-table/tunneler-brood-mother`)
-- Generic fallbacks: `drop-table/dungeon-{rank}-regular`, `drop-table/dungeon-{rank}-elite`, `drop-table/dungeon-{rank}-boss`
+## Drop Table Conventions
+
+- Per-dungeon regular encounter fallback: `drop-table/{dungeon-slug}-regular`
+- Per-boss: `drop-table/{boss-slug}` (e.g. `drop-table/the-dispatcher`)
+- Generic fallbacks: `drop-table/dungeon-{rank}-regular`, `drop-table/dungeon-{rank}-boss`
+- Drop tables contain cash and weapons only. No materials, outfits, accessories, monster parts, or sell-only loot.
+
+## Tag Format
 
 Tags use a `prefix:value` format. Current prefixes:
 
 | Prefix         | Domain                      | Examples                                                                           |
 | -------------- | --------------------------- | ---------------------------------------------------------------------------------- |
-| `role:`        | Operator field role         | field_lead, scout, medic                                                           |
+| `role:`        | Operator field role         | field_lead, scout, support                                                         |
 | `focus:`       | Operator specialty emphasis | containment, extraction                                                            |
+| `kit:`         | Combat package sub-flavor   | heal, mitigate, buff, damage, frontline, rally, burst, debuff, hazard              |
 | `threat:`      | Enemy behavior              | clustered, hostile, unstable, hazard, mobile, ambush                               |
-| `mission:`     | Mission type                | stability, retrieval, combat                                                       |
-| `objective:`   | Raid goal                   | hold, escort, clear, loot, explore, intel, hunt, boss                              |
-| `event:`       | Event category              | response, operations, economy, external                                            |
-| `pressure:`    | Pressure source             | reputation, casualty, morale, loyalty, cash, time                                  |
-| `resource:`    | Resource type               | liquid, pressure, knowledge                                                        |
-| `loot:`        | Loot classification         | monster_part, dungeon_drop, sell_only                                              |
-| `boss:`        | Boss encounter modifier     | frontline_shred, recovery_block, speed_drain                                       |
+| `contract:`    | Contract / dungeon loop     | active, completed, forfeited, boss_ready                                           |
+| `objective:`   | Raid goal                   | clear, loot, explore, boss                                                         |
+| `event:`       | Event category              | response, operations, economy, rival, guide                                        |
+| `pressure:`    | Pressure source             | reputation, casualty, morale, loyalty, cash                                        |
+| `resource:`    | Resource type               | cash, reputation                                                                   |
+| `loot:`        | Loot classification         | weapon, unique_weapon                                                              |
+| `boss:`        | Boss encounter modifier     | aoe, single_target                                                                 |
 | `economy:`     | Economy classification      | core                                                                               |
 | `progression:` | Progression role            | external                                                                           |
-| `ops:`         | Operational use             | planning, recruitment                                                              |
-| `room:`        | Room function               | operations, logistics, recovery, training, social, reception                       |
-| `site:`        | Building location           | street, city                                                                       |
-| `tier:`        | Progression tier            | starter, midgame                                                                   |
+| `room:`        | Room function               | recruitment, operations, training, recovery, market, social, narrative             |
+| `tier:`        | Progression tier            | starter, midgame, endgame                                                          |
 | `rank:`        | Content rank                | f, e, d, c, b, a, u                                                                |
-| `concept:`     | Dungeon concept             | abandoned_school, cave_system, infested_aquarium, parking_garage, botanical_garden |
+| `concept:`     | Dungeon concept             | (per authored dungeon, see dungeon-rank requirements)                              |
 | `archetype:`   | Visual assembly language    | bruiser, infiltrator, strategist                                                   |
 
-Use `common`, `uncommon`, and `rare` as gear-part rarity values. For operators, rank replaces rarity.
+## Reservation Rules
 
-Inventory-tracked item families are `weapon/*`, `outfit-overlay/*`, `accessory/*`, and `loot/*`.
-
-Phase 2 defaults all inventory-tracked items to stack by exact item ID. Do not introduce per-copy uniqueness unless the product plan is explicitly updated to require it.
-
-Public-facing sentiment folds into reputation. Do not introduce a separate `pressure:public` axis unless the product plan is explicitly updated.
-
-- `role:` is reserved for operator field roles only.
+- `role:` is reserved for the three operator field roles only: `field_lead`, `scout`, `support`.
 - `room:` is reserved for room-function and room-family semantics only.
 - `focus:` describes operator specialty emphasis.
 - `archetype:` is visual-language only and must not be treated as a gameplay role.
+- `kit:` describes combat package sub-flavor (the within-role kit variation; see `rewrite/combat-package-content-rewrite`).
+
+## Inventory And Stacks
+
+- Inventory-tracked item families: `weapon/*`, `unique-weapon/*`.
+- All inventory items stack by exact item ID.
+- No per-copy uniqueness for non-unique items. Equipping reserves a stack copy; unequipping returns it.
+- Unique weapons are single-copy stacks (quantity caps at 1).
+
+## Rarity And Rank
+
+- Operators use rank (F through U). Rank replaces rarity entirely for operators.
+- Weapons use rank (F through U). Rank replaces rarity for weapons; there is no common / uncommon / rare distinction inside a rank.
+- Reputation is a single tracked resource; there is no separate `pressure:public` axis.

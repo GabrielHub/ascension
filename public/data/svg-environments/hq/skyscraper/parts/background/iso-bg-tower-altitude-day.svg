@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#99c1e8"/>
+      <stop offset="0.55" stop-color="#c5d9ee"/>
+      <stop offset="1" stop-color="#edf4fa"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6082a3" stop-opacity="0.58"/>
+      <stop offset="1" stop-color="#2c4058" stop-opacity="0.44"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="400" fill="url(#sky)"/>
+  <g opacity="0.42" fill="#f7fbff">
+    <ellipse cx="90" cy="112" rx="120" ry="22"/>
+    <ellipse cx="414" cy="78" rx="165" ry="24"/>
+    <ellipse cx="792" cy="104" rx="132" ry="21"/>
+    <ellipse cx="606" cy="206" rx="180" ry="28"/>
+  </g>
+  <g fill="url(#tower)">
+    <path d="M18 400V160h78v240z"/>
+    <path d="M130 400V72h128v328z"/>
+    <path d="M300 400V128h92v272z"/>
+    <path d="M470 400V46h120v354z"/>
+    <path d="M650 400V110h86v290z"/>
+    <path d="M790 400V22h126v378z"/>
+  </g>
+  <g stroke="#ffffff" stroke-opacity="0.18" stroke-width="1">
+    <path d="M0 190h960"/>
+    <path d="M0 258h960"/>
+  </g>
+  <rect y="270" width="960" height="130" fill="#eef6fb" opacity="0.62"/>
+</svg>

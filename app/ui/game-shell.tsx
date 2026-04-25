@@ -2854,6 +2854,7 @@ export function GameShell() {
               focus={focus}
               onFocusChange={handleFocusChange}
               debugOverlays={debugOverlays}
+              cameraMode={hq.building.id === "building/skyscraper" ? "locked" : "interactive"}
             />
           )}
         </div>

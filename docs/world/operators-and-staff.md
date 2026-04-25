@@ -14,11 +14,20 @@ Every operator is a deliberately authored person with:
 - A visual identity assembled from modular parts (head shape, hair, eyes, face details, body silhouette)
 - A rank (F through Unique `U`) reflecting attunement intensity
 - An attunement that shapes how they operate in the field
-- A recognizable field role
+- A field role (Field Lead, Scout, or Support)
 - A personality expressed through preferences and behavioral tendencies
 - Traits that add flavor and influence behavior
 
 Operators should read as authored people first. Their humor comes from personality, voice, and the specific ways they fit or fail to fit inside the guild, not from gimmicks, rarity framing, or interchangeable archetype shells.
+
+### Unique Operator Canon
+
+Unique operators are different in how they exist inside the guild's space:
+
+- They do not train. Their stats are who they already are. Other operators climb toward them; uniques don't climb.
+- They only appear in three places in HQ: the room where they are recruited, the room where their unique weapons are tracked, and the Penthouse. They never wander the rest of the building. The implied tone is that they have somewhere better to be.
+- They do not deploy or recover until the Penthouse exists. The reasoning is in-world: a unique operator will not work for a guild that does not have somewhere appropriate to host them. They will sign on once recruited, but they will not be useful until the player has a space they recognize as worth showing up to.
+- Once the Penthouse is built, uniques use it as their staging and recovery space. When they deploy with non-unique teammates, they stage from the Penthouse while their teammates stage from the regular Team Staging area. The asymmetry is the point.
 
 ### Traits
 
@@ -42,14 +51,14 @@ Staff are non-attuned authored characters who keep the guild's non-combat operat
 
 Each presenter owns a domain of guild operations:
 
-| Function       | Description                                                              |
-| -------------- | ------------------------------------------------------------------------ |
-| Operations     | Operations framing, paperwork, management pressure, fallback guidance    |
-| Hospitality    | Kitchen, food quality, morale-through-comfort                            |
-| Front-of-house | Recruitment reads, public-facing social pressure, nightlife and regulars |
-| Workshop       | Gear readiness, loot triage, fabrication, stock pressure                 |
-| Medical        | Injury, recovery, treatment, infirmary and trauma support                |
-| Compliance     | Policy, regulators, institutional pressure, executive-floor expectations |
+| Function        | Presenter | Description                                                                         |
+| --------------- | --------- | ----------------------------------------------------------------------------------- |
+| Operations      | Mara      | Operations framing, contracts, training readiness, raid records, fallback guidance  |
+| People-care     | Rafi      | HR drama, morale, retention, hosting unique operators                               |
+| Front-of-house  | Sloane    | Recruitment reads, social pressure, nightlife                                       |
+| Workshop        | Vicente   | Weapon market, equip flow, gear readiness                                           |
+| Medical         | June      | Injury, recovery, treatment, memorial framing                                       |
+| Institutional   | Laura     | Executive decisions, rival scouting, institutional rivalry, oversight paperwork     |
 
 Staff are the infrastructure that lets operators focus on the dangerous work. Think of them as the guild's authored support cast — the assistant who reminds you of the next move, the cook who tells you your people need to eat, the compliance officer who tells you which way the city is going to land. They have traits, voices, and opinions, and they will let the player know.
 
@@ -57,13 +66,13 @@ Staff are the infrastructure that lets operators focus on the dangerous work. Th
 
 The authored staff cast surfaces in-game entirely through recurring narrative presenters in interruption modals, guidance beats, and event briefings. Presenter status is a narrative and presentation role, not a separate gameplay-authority layer — the simulation still owns the event, the choices, and the outcomes. Presenters do not mechanically power rooms; they are HQ-visible narrative anchors once unlocked.
 
-**Presenters are feature-domain voices, not building-locked.** Each presenter owns an area of the guild's operation and appears wherever that domain is the right voice — bodega, Porter's, skyscraper, or in-between. They are recurring narrative anchors for long-running guidance, not one-off flavor characters.
+**Presenters are feature-domain voices.** Each presenter owns an area of the guild's operation and appears wherever that domain is the right voice. They are recurring narrative anchors for long-running guidance, not one-off flavor characters.
 
 Every tutorial event, guide event, interruption modal, and incident briefing must name a presenter explicitly or inherit a clear fallback. Never default to anonymous narrator copy. The presenter's current `expression` (`neutral`, `concerned`, `serious`, `amused`) drives both portrait selection and prose register; AI-framed copy honors the presenter's voice brief at that expression.
 
 #### Presenter Roster
 
-Six recurring presenters anchor the game's guidance and narrative interruption surface. Each is a deliberately authored person with specific NYC grounding. Treat them as real employees whose voice must stay consistent across the bodega, Porter's, and skyscraper bands.
+Six recurring presenters anchor the game's guidance and narrative interruption surface. Each is a deliberately authored person with specific NYC grounding. Treat them as real employees whose voice must stay consistent across all of the game.
 
 **Mara Cordero** — `presenter/assistant`
 
@@ -79,13 +88,13 @@ Six recurring presenters anchor the game's guidance and narrative interruption s
 
 **Sloane Becker** — `presenter/bartender`
 
-- Domain: recruitment reads, front-of-house social pressure, nightlife and public-facing / regular-pressure beats.
-- Canon: late 20s front-of-house closer and bartender, ash-blonde with pale mint accents, upscale nightlife polish pushed through Porter's rough edges.
+- Domain: recruitment reads, front-of-house social pressure, nightlife, and regular intake-pressure beats.
+- Canon: late 20s front-of-house closer and bartender, ash-blonde with pale mint accents, upscale nightlife polish with a working-floor edge.
 - Voice: cool, observational, unsentimental. Speaks with economy. Sharp when she wants to be; never raises her voice. Default mode: _"I watched them walk in. Here is what I saw."_
 
 **Vicente Ortega** — `presenter/vicente-ortega`
 
-- Domain: gear readiness, loot triage, inventory flow, stock pressure, workshop and fabrication, practical field-prep beats.
+- Domain: gear readiness, loot triage, inventory flow, market and weapon stock pressure, practical field-prep beats.
 - Canon: 18, Filipino-American, Queens-raised (Woodside). The guild's quartermaster. Specialized-high-school kid who posted viral gear-breakdown videos at 14 and deferred college because an underpaid guild recruiter DM'd him. Genuinely elite gear brain. His mom is not thrilled. His workshop is the cleanest room in the building and also looks like a teenage bedroom.
 - Voice: fast-talking terminally-online teen-prodigy register. Mock-formal that collapses into casual. Absurd metaphors. Sincerity hidden behind ironic distance. Pettiness about broken straps treated as drama. Default mode: _"okay so. okay. look at this."_ **Drops register entirely when operators are injured or in danger — clipped, fast, focused, no bits.** That switch is the character. Describe the register in canon content; do not codify specific current slang (ages in months).
 
@@ -107,50 +116,26 @@ Six recurring presenters anchor the game's guidance and narrative interruption s
 - Every presenter is a recurring authored person, not an anonymous narrator. Copy that reads as generic feature-prompt text is off-voice.
 - Presenter humor comes from personality, workplace friction, and specific voice — not from fourth-wall breaks, genre parody, or one-liner jokes pasted onto mechanical descriptions.
 - Presenter register follows the world's comedy-tragedy axis. Default mode is workplace comedy under supernatural pressure. When an operator is injured, a raid fails, or a character dies, every presenter's humor recedes.
-- Do not lock a presenter to one building. Presenters persist across bodega, Porter's, and skyscraper wherever their feature domain is the right voice.
-- When two domains overlap (Rafi and Sloane both on Porter's morale; Vicente and June both on a bad raid return; Mara and Laura both on paperwork pressure), pick the presenter whose domain _caused_ the beat to surface, not the one nearest in space.
+- When two domains overlap (Rafi and Sloane both on social morale; Vicente and June both on a bad raid return; Mara and Laura both on paperwork pressure), pick the presenter whose domain _caused_ the beat to surface, not the one nearest in space.
 - Vicente's brainrot register and June's clinical deadpan are load-bearing only in comedy mode. In tragedy mode they are simply competent and direct, like the rest of the cast.
 
-#### Presenter Feature Ownership Contract
+#### Presenter Feature Ownership
 
-Use this as the implementation-facing default when binding presenters to tutorial events, guide events, interruption modals, and incident briefings. This is a feature-ownership contract, not a hard ban on overlap. When in doubt, use the presenter whose domain most directly caused the beat to surface.
+Detailed room-level binding (which presenter speaks for events fired in which room, with secondary co-ownership rules) lives in [Presenters Catalog](../product/presenters-catalog.md). High-level domain ownership stays here for canon reference.
 
-**Mara Cordero** owns:
+**Mara Cordero** is the operations voice. Owns operations framing, contracts, training readiness, raid records, and the assistant fallback for any room without a more specific domain presenter.
 
-- contracts, bidding, result review, and general operations framing
-- room basics, upgrades, management pressure, and fallback "what do we do next" guidance
-- room / upgrade explanation when no more specific domain presenter is the better fit
-- relocation handoff framing and broad campaign continuity
+**Rafi Alvarez** is the people-care voice. Owns HR drama, morale, retention beats, recovery-through-comfort beats where the emphasis is care rather than medicine, and hospitality for unique operators in the Penthouse.
 
-**Rafi Alvarez** owns:
+**Sloane Becker** is the front-of-house voice. Owns recruitment reads, social pressure, nightlife, and the high-end recruitment surface for unique operators.
 
-- hospitality and food-quality systems
-- recovery-through-comfort beats where the emphasis is care, morale, meal quality, or service pressure rather than medicine
-- kitchen-adjacent rooms, upgrades, and incidents
+**Vicente Ortega** is the workshop voice. Owns weapon market beats, equip flow teaching, gear readiness, loot triage, and stock-pressure framing.
 
-**Sloane Becker** owns:
+**Dr. June Park** is the medical voice. Owns injuries, recovery, treatment beats, and the memorial framing for operators who died.
 
-- recruitment reads and public-facing intake pressure
-- bar, nightlife, regulars, and front-of-house social pressure
-- social-atmosphere beats where the issue is who walked in, what they want, and how the room reads them
+**Laura Bennett** is the institutional voice. Owns executive spending decisions, rival scouting, institutional rivalry framing, and the oversight-paperwork side of consequence beats.
 
-**Vicente Ortega** owns:
-
-- gear readiness, loadouts, and field-prep explanation
-- loot triage, manual selling, loot-filter teaching, and inventory cleanup
-- stock pressure, supply flow, workshop / fabrication, and recipe-material-readiness beats
-
-**Dr. June Park** owns:
-
-- injuries, recovery, treatment, and medical consequence explanation
-- infirmary / trauma-bay / medical-room unlocks, upgrades, and incidents
-- post-mission "can this roster keep going" beats where the issue is actual bodily cost rather than general comfort
-
-**Laura Bennett** owns:
-
-- compliance, policy, licensing, and regulator-facing paperwork
-- city / faction / institutional pressure when the emphasis is oversight, scrutiny, consequences, and executive-floor expectations
-- skyscraper A-rank institutionalization beats where the guild starts being treated like an organization the city and sponsors can formally judge
+When two presenters could plausibly speak, use the one whose domain most directly caused the beat to surface — not the one nearest in space.
 
 #### Presenter Portrait Style And Generation Process
 

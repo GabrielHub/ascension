@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getBuildingShellCells,
+  isCellInsideBuildingShell,
+  isFootprintInsideBuildingShell,
+  getBuildingLayout,
+} from "content/building-layouts";
+import {
   getHqEnvironmentRenderConfig,
   getHqEnvironmentRenderConfigForBuilding,
 } from "lib/hq-environment-manifest";
+import { getRoomStateId } from "lib/hq-room-state";
 
 import {
   buildPerimeterTiles,
@@ -133,27 +140,27 @@ describe("HQ world navigation", () => {
     expect(skyscraperScene.canonicalViewBox).toEqual(defaultScene.canonicalViewBox);
     expect(skyscraperScene.roomFootprint).toEqual(defaultScene.roomFootprint);
 
-    // slot/compliance-office on floor 7 is 2 cols wide, 5 rows deep — the
-    // narrowest production skyscraper slot and the worst case for centering.
-    const complianceFootprint = { cols: 2, rows: 5 };
+    // slot/compliance-office on floor 7 is now a compact 4x6 rectangle inside
+    // the square tower floor plate.
+    const complianceFootprint = { cols: 4, rows: 6 };
     const geometry = composeHqWorldGeometry(
       [
         createRoomSeed({
           id: "room-instance/register-skyscraper-compliance",
           templateId: "room/compliance_office:tier_1",
-          roomStateId: "room-state/compliance-office:1",
+          roomStateId: getRoomStateId("room/compliance_office:tier_1", []),
           slotId: "slot/compliance-office",
           floorIndex: 7,
           name: "The Compliance Office",
           reservedFootprint: {
-            col: 5,
-            row: 2,
+            col: 8,
+            row: 7,
             cols: complianceFootprint.cols,
             rows: complianceFootprint.rows,
           },
           activeFootprint: {
-            col: 5,
-            row: 2,
+            col: 8,
+            row: 7,
             cols: complianceFootprint.cols,
             rows: complianceFootprint.rows,
           },
@@ -164,7 +171,7 @@ describe("HQ world navigation", () => {
 
     const room = geometry.rooms[0]!;
     const scene = geometry.roomProps[0]!;
-    const sceneViewBox = { minX: -50, minY: 0 };
+    const sceneViewBox = { minX: -70, minY: 0 };
     const sceneOrigin = [200, 100] as const;
     const dc = (complianceFootprint.cols - complianceFootprint.cols) / 2;
     const dr = (complianceFootprint.rows - complianceFootprint.rows) / 2;
@@ -296,17 +303,17 @@ describe("HQ world navigation", () => {
       {
         floorIndex: 0,
         elevationBandId: "ground-floor",
-        rearAsset: "background/iso-bg-ground-floor-plaza",
+        rearAsset: "background/iso-bg-tower-altitude-day.png",
       },
       {
         floorIndex: 1,
         elevationBandId: "mid-tower",
-        rearAsset: "background/iso-bg-mid-tower-neighbors",
+        rearAsset: "background/iso-bg-tower-altitude-day.png",
       },
       {
         floorIndex: 4,
         elevationBandId: "rooftop",
-        rearAsset: "background/iso-bg-rooftop-skyline",
+        rearAsset: "background/iso-bg-tower-altitude-day.png",
       },
     ] as const;
 
@@ -390,6 +397,47 @@ describe("HQ world navigation", () => {
     );
   });
 
+  it("renders only the active skyscraper floor even if callers provide every floor", () => {
+    const lobbyLayout = getBuildingLayout("building/skyscraper", 0, 1)!;
+    const operationsLayout = getBuildingLayout("building/skyscraper", 1, 1)!;
+    const lobbySlot = lobbyLayout.slots.find((slot) => slot.slotId === "slot/lobby")!;
+    const bullpenSlot = operationsLayout.slots.find((slot) => slot.slotId === "slot/bullpen")!;
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/lobby",
+          templateId: "room/lobby:tier_1",
+          slotId: lobbySlot.slotId,
+          floorIndex: 0,
+          reservedFootprint: lobbySlot,
+          activeFootprint: lobbySlot,
+        }),
+        createRoomSeed({
+          id: "room-instance/bullpen",
+          templateId: "room/bullpen:tier_1",
+          slotId: bullpenSlot.slotId,
+          floorIndex: 1,
+          reservedFootprint: bullpenSlot,
+          activeFootprint: bullpenSlot,
+        }),
+      ],
+      {
+        buildingId: "building/skyscraper",
+        buildingTier: 1,
+        floorIndex: 1,
+      },
+    );
+
+    expect(geometry.layout.visibleFloorIndexes).toEqual([1]);
+    expect(geometry.rooms.map((room) => room.id)).toEqual(["room-instance/bullpen"]);
+    expect(new Set(geometry.modular.floorTiles.map((tile) => tile.floorIndex))).toEqual(
+      new Set([1]),
+    );
+    expect(geometry.layout.floorOffsets).toEqual([
+      expect.objectContaining({ floorIndex: 1, stackLayer: 1, offsetY: 0 }),
+    ]);
+  });
+
   it("uses Porter's scene contract for waterfront room scenes", () => {
     const geometry = composeHqWorldGeometry(
       [
@@ -451,6 +499,21 @@ describe("HQ structural palette", () => {
 });
 
 describe("HQ skyscraper structural contract", () => {
+  it("uses one large rectangular shell for the skyscraper floor plate", () => {
+    const shell = getBuildingLayout("building/skyscraper", 0, 1)!.shell;
+    const cells = getBuildingShellCells(shell);
+    const keys = new Set(cells.map((cell) => `${cell.col},${cell.row}`));
+
+    expect(shell.shape).toBeUndefined();
+    expect(isCellInsideBuildingShell(shell, 0, 0)).toBe(true);
+    expect(isCellInsideBuildingShell(shell, 1, 0)).toBe(true);
+    expect(isCellInsideBuildingShell(shell, 3, 0)).toBe(true);
+    expect(shell.cols).toBe(shell.rows);
+    expect(keys.has("19,19")).toBe(true);
+    expect(keys.has("0,19")).toBe(true);
+    expect(keys.has("19,0")).toBe(true);
+  });
+
   it("tints skyscraper corridor tiles with the skyscraper palette", () => {
     const geometry = composeHqWorldGeometry([], {
       buildingId: "building/skyscraper",
@@ -464,7 +527,41 @@ describe("HQ skyscraper structural contract", () => {
     expect(corridors.length).toBeGreaterThan(0);
     for (const tile of corridors) {
       expect(tile.tint).toBe(skyscraperPalette.corridor);
+      expect(
+        isCellInsideBuildingShell(
+          getBuildingLayout("building/skyscraper", 1, 1)!.shell,
+          tile.col,
+          tile.row,
+        ),
+      ).toBe(true);
     }
+  });
+
+  it("keeps room hit-test polygons rectangular on skyscraper floors", () => {
+    const lobbyLayout = getBuildingLayout("building/skyscraper", 0, 1)!;
+    const lobbySlot = lobbyLayout.slots.find((slot) => slot.slotId === "slot/lobby")!;
+    expect(isFootprintInsideBuildingShell(lobbyLayout.shell, lobbySlot)).toBe(true);
+
+    const geometry = composeHqWorldGeometry(
+      [
+        createRoomSeed({
+          id: "room-instance/lobby",
+          templateId: "room/lobby:tier_1",
+          roomStateId: "room-state/lobby:1",
+          slotId: "slot/lobby",
+          floorIndex: 0,
+          name: "The Lobby",
+          reservedFootprint: lobbySlot,
+          activeFootprint: lobbySlot,
+        }),
+      ],
+      { buildingId: "building/skyscraper", buildingTier: 1, floorIndex: 0 },
+    );
+
+    expect(geometry.rooms[0]!.floorPoints).toHaveLength(4);
+    expect(geometry.rooms[0]!.reservedFootprint).toEqual(
+      expect.objectContaining({ col: 4, row: 6, cols: 12, rows: 8 }),
+    );
   });
 
   it("tints skyscraper shell walls with the skyscraper palette", () => {
@@ -490,7 +587,7 @@ describe("HQ skyscraper structural contract", () => {
 describe("HQ perimeter tiles", () => {
   it("emits only void tiles for the skyscraper (no sidewalk/street/alley/pier/water)", () => {
     const tiles = buildPerimeterTiles(
-      [{ col: 0, row: 0, cols: 12, rows: 8 }],
+      [{ col: 0, row: 0, cols: 20, rows: 20 }],
       "building/skyscraper",
     );
 

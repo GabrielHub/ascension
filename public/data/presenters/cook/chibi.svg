@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" fill="none">
+  <!-- Rafi Alvarez — Kitchen Lead chibi token.
+       Broad build, dark henley with apron silhouette, shoulder towel, ember-auburn hair. -->
+
+  <!-- Ground shadow (broad footprint) -->
+  <ellipse cx="16" cy="37" rx="9" ry="2.4" fill="#000" opacity="0.22"/>
+
+  <!-- Body: dark henley shirt (broad silhouette) -->
+  <path d="M8 22 Q8 20 10 19 L22 19 Q24 20 24 22 L24 34 Q24 36 22 36 L10 36 Q8 36 8 34 Z"
+        fill="#1a1a1c" stroke="#0a0a0c" stroke-width="0.8"/>
+
+  <!-- Henley v-neck opening (warm tan skin showing through) -->
+  <path d="M14.5 19 L16 21.4 L17.5 19 Z" fill="#a87858"/>
+
+  <!-- Apron front: matte dark with subtle contrast against the henley -->
+  <path d="M11 22 L21 22 L22 36 L10 36 Z" fill="#26222a" stroke="#0a0a0c" stroke-width="0.4"/>
+
+  <!-- Apron neck strap loop (curves up to suggest the strap behind the neck) -->
+  <path d="M13 21.5 Q16 19.6 19 21.5" stroke="#26222a" stroke-width="1.2" fill="none"/>
+
+  <!-- Apron waist tie -->
+  <rect x="10.5" y="28.5" width="11" height="1.2" fill="#0a0a0c" opacity="0.7"/>
+  <path d="M14 29.6 L13.2 31.4 M18 29.6 L18.8 31.4" stroke="#0a0a0c" stroke-width="0.4"/>
+
+  <!-- Towel slung over left shoulder (warm cream, grounded against the dark fits) -->
+  <path d="M9 19.5 L8 26 L9.6 26 L10.6 20 Z" fill="#c4baa8" stroke="#0a0a0c" stroke-width="0.4"/>
+
+  <!-- Neck (warm tan) -->
+  <rect x="13.5" y="16" width="5" height="4" rx="1.2" fill="#a87858"/>
+
+  <!-- Head circle (broad: r=8) -->
+  <circle cx="16" cy="12" r="8" fill="#a87858" stroke="#0a0a0c" stroke-width="0.8"/>
+
+  <!-- Face shadow (lower half) -->
+  <path d="M10 14 Q16 17.5 22 14 Q20.5 9 16 7 Q11.5 9 10 14" fill="#000" opacity="0.08"/>
+
+  <!-- Stubble suggestion across the jaw -->
+  <ellipse cx="16" cy="15.4" rx="3.4" ry="0.7" fill="#3a2418" opacity="0.4"/>
+
+  <!-- Hair: short ember-auburn with slightly choppy front edge -->
+  <path d="M8.5 10 Q8 4 16 2.8 Q24 4 23.5 10 Q22 6.5 16 6 Q10 6.5 8.5 10"
+        fill="#7a3220" stroke="#0a0a0c" stroke-width="0.6"/>
+
+  <!-- Hair texture: short messy strands -->
+  <path d="M11 6 L12 8 M14 5 L14.5 7 M17 5 L17.5 7 M20 6 L19 8"
+        stroke="#4a1a10" stroke-width="0.5" opacity="0.7" fill="none"/>
+
+  <!-- Brows (grounded, faintly stern) -->
+  <path d="M11.7 10.8 Q13 10.2 14.3 10.8" stroke="#0a0a0c" stroke-width="0.55" fill="none"/>
+  <path d="M17.7 10.8 Q19 10.2 20.3 10.8" stroke="#0a0a0c" stroke-width="0.55" fill="none"/>
+
+  <!-- Eyes -->
+  <circle cx="13" cy="12.7" r="1.1" fill="#0a0a0c"/>
+  <circle cx="19" cy="12.7" r="1.1" fill="#0a0a0c"/>
+  <circle cx="13.4" cy="12.4" r="0.34" fill="#fff" opacity="0.8"/>
+  <circle cx="19.4" cy="12.4" r="0.34" fill="#fff" opacity="0.8"/>
+</svg>

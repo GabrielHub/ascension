@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" fill="none">
+  <!-- Dr. June Park — Physician chibi token.
+       Medium build, navy scrubs under cream lab coat with gold trim, ash-blonde with grown-in dark roots, wire-frame glasses, stethoscope. -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="16" cy="37" rx="7.5" ry="2.2" fill="#000" opacity="0.2"/>
+
+  <!-- Body: navy scrubs (medium silhouette) -->
+  <path d="M9.5 22 Q9.5 20 11 19 L21 19 Q22.5 20 22.5 22 L22.5 34 Q22.5 36 21 36 L11 36 Q9.5 36 9.5 34 Z"
+        fill="#1a2440" stroke="#0a0a0c" stroke-width="0.8"/>
+
+  <!-- Cream lab coat: outer panels (Greek-inspired wrap front) -->
+  <path d="M9.5 22 Q9.5 20 11 19 L13.5 19 L13.5 36 L11 36 Q9.5 36 9.5 34 Z"
+        fill="#d8c8b0" stroke="#0a0a0c" stroke-width="0.4"/>
+  <path d="M22.5 22 Q22.5 20 21 19 L18.5 19 L18.5 36 L21 36 Q22.5 36 22.5 34 Z"
+        fill="#d8c8b0" stroke="#0a0a0c" stroke-width="0.4"/>
+
+  <!-- Restrained gold trim at lab coat lapel -->
+  <rect x="11.2" y="20" width="2" height="0.8" fill="#c8a850"/>
+  <rect x="18.8" y="20" width="2" height="0.8" fill="#c8a850"/>
+
+  <!-- Stethoscope around the neck (dark loop with chest piece) -->
+  <path d="M13.8 17.5 Q11.8 19.5 12.4 21.5 Q12.6 23.5 13.6 24" stroke="#0a0a0c" stroke-width="0.55" fill="none"/>
+  <path d="M18.2 17.5 Q20.2 19.5 19.6 21.5 Q19.4 23.5 18.4 24" stroke="#0a0a0c" stroke-width="0.55" fill="none"/>
+  <circle cx="16" cy="24.5" r="0.85" fill="#0a0a0c"/>
+
+  <!-- ID badge clip -->
+  <rect x="14.5" y="22" width="3" height="1" fill="#aaa9a2" opacity="0.75"/>
+
+  <!-- Neck (light-warm) -->
+  <rect x="14" y="16" width="4" height="4" rx="1.2" fill="#e0c8a8"/>
+
+  <!-- Head circle (medium r=7.5) -->
+  <circle cx="16" cy="12" r="7.5" fill="#e0c8a8" stroke="#0a0a0c" stroke-width="0.8"/>
+
+  <!-- Face shadow -->
+  <path d="M10.5 14 Q16 17.5 21.5 14 Q20 9 16 7 Q12 9 10.5 14" fill="#000" opacity="0.07"/>
+
+  <!-- Hair (lower band): grown-in dark roots -->
+  <path d="M9 10.5 Q8.5 6.5 16 5 Q23.5 6.5 23 10.5 Q22 7.5 16 7 Q10 7.5 9 10.5"
+        fill="#1a1410" stroke="#0a0a0c" stroke-width="0.5"/>
+
+  <!-- Hair (upper band): ash blonde clipped up on top -->
+  <path d="M9.5 7 Q9 3 16 2.2 Q23 3 22.5 7 Q21 4.5 16 4 Q11 4.5 9.5 7"
+        fill="#a8a098" stroke="#0a0a0c" stroke-width="0.5"/>
+
+  <!-- Practical hair clip -->
+  <rect x="9.8" y="6.2" width="1.4" height="0.9" fill="#0a0a0c"/>
+
+  <!-- Wire-frame glasses -->
+  <circle cx="13" cy="12.6" r="1.7" fill="none" stroke="#0a0a0c" stroke-width="0.4"/>
+  <circle cx="19" cy="12.6" r="1.7" fill="none" stroke="#0a0a0c" stroke-width="0.4"/>
+  <line x1="14.7" y1="12.6" x2="17.3" y2="12.6" stroke="#0a0a0c" stroke-width="0.4"/>
+
+  <!-- Eyes inside the glasses -->
+  <circle cx="13" cy="12.7" r="0.85" fill="#0a0a0c"/>
+  <circle cx="19" cy="12.7" r="0.85" fill="#0a0a0c"/>
+  <circle cx="13.3" cy="12.5" r="0.25" fill="#fff" opacity="0.8"/>
+  <circle cx="19.3" cy="12.5" r="0.25" fill="#fff" opacity="0.8"/>
+
+  <!-- Brows (composed, level) -->
+  <path d="M11.5 10.8 L13.5 10.6" stroke="#0a0a0c" stroke-width="0.5"/>
+  <path d="M18.5 10.6 L20.5 10.8" stroke="#0a0a0c" stroke-width="0.5"/>
+</svg>

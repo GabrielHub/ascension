@@ -1,8 +1,11 @@
 import {
+  getBuildingShellCells,
   getBuildingLayoutDefinition,
   getFloorStackLayer,
   getVisibleBuildingFloors,
+  isFootprintInsideBuildingShell,
   type BuildingFloorLayout,
+  type BuildingShellFootprint,
 } from "content/building-layouts";
 import {
   getHqBackdropManifest,
@@ -33,6 +36,7 @@ import type {
   HqPerimeterTile,
   HqPoint,
   HqRoomNode,
+  HqShellCell,
   HqSpritePlacement,
   HqStaticPlacementDef,
   HqSvgPlacementMeta,
@@ -868,16 +872,20 @@ function shiftPoints(points: readonly HqPoint[], dx: number, dy: number): HqPoin
 function buildFloorOffsetMap(
   layouts: readonly BuildingFloorLayout[],
 ): ReadonlyMap<number, HqFloorOffset> {
+  const baseStackLayer =
+    layouts.length > 0 ? Math.min(...layouts.map((layout) => getFloorStackLayer(layout))) : 0;
   return new Map(
     layouts.map((layout) => {
       const stackLayer = getFloorStackLayer(layout);
+      const relativeStackLayer = stackLayer - baseStackLayer;
+      const offsetY = relativeStackLayer === 0 ? 0 : -relativeStackLayer * STACKED_FLOOR_OFFSET_Y;
       return [
         layout.floorIndex,
         {
           floorIndex: layout.floorIndex,
           stackLayer,
           offsetX: 0,
-          offsetY: -stackLayer * STACKED_FLOOR_OFFSET_Y,
+          offsetY,
         },
       ];
     }),
@@ -1121,7 +1129,7 @@ const ZONE_PRIORITY: Record<string, number> = {
 };
 
 export function buildPerimeterTiles(
-  footprints: readonly HqFootprint[],
+  footprints: readonly (HqFootprint | BuildingShellFootprint)[],
   buildingId?: string,
 ): HqPerimeterTile[] {
   if (footprints.length === 0) return [];
@@ -1141,10 +1149,15 @@ export function buildPerimeterTiles(
   // Occupied cells set
   const occupied = new Set<string>();
   for (const fp of footprints) {
-    for (let c = fp.col; c < fp.col + fp.cols; c++) {
-      for (let r = fp.row; r < fp.row + fp.rows; r++) {
-        occupied.add(`${c},${r}`);
+    if ("shape" in fp && fp.shape) {
+      for (const cell of getBuildingShellCells(fp)) {
+        occupied.add(`${cell.col},${cell.row}`);
       }
+      continue;
+    }
+
+    for (let c = fp.col; c < fp.col + fp.cols; c++) {
+      for (let r = fp.row; r < fp.row + fp.rows; r++) occupied.add(`${c},${r}`);
     }
   }
 
@@ -1431,21 +1444,28 @@ function buildCorridorTiles(
     }
   }
   const tiles: HqFloorTile[] = [];
-  const sh = layout.shell;
-  for (let c = sh.col; c < sh.col + sh.cols; c++) {
-    for (let r = sh.row; r < sh.row + sh.rows; r++) {
-      if (!slotCells.has(`${c},${r}`)) {
-        tiles.push({
-          floorIndex: layout.floorIndex,
-          col: c,
-          row: r,
-          tint: palette.corridor,
-          roomId: "corridor",
-        });
-      }
+  for (const cell of getBuildingShellCells(layout.shell)) {
+    if (!slotCells.has(`${cell.col},${cell.row}`)) {
+      tiles.push({
+        floorIndex: layout.floorIndex,
+        col: cell.col,
+        row: cell.row,
+        tint: palette.corridor,
+        roomId: "corridor",
+      });
     }
   }
   return tiles;
+}
+
+function buildShellCells(layouts: readonly BuildingFloorLayout[]): HqShellCell[] {
+  return layouts.flatMap((layout) =>
+    getBuildingShellCells(layout.shell).map((cell) => ({
+      floorIndex: layout.floorIndex,
+      col: cell.col,
+      row: cell.row,
+    })),
+  );
 }
 
 function buildExpansionSlotTiles(
@@ -1472,6 +1492,39 @@ function buildBuildingShellWalls(
   if (!layout) return [];
   const sh = layout.shell;
   const segments: HqWallSegment[] = [];
+
+  if (sh.shape?.kind === "chamfered") {
+    const cellSet = new Set(getBuildingShellCells(sh).map((cell) => `${cell.col},${cell.row}`));
+    for (const cellKey of cellSet) {
+      const [colRaw, rowRaw] = cellKey.split(",");
+      const col = Number(colRaw);
+      const row = Number(rowRaw);
+      if (!cellSet.has(`${col - 1},${row}`)) {
+        segments.push({
+          floorIndex: layout.floorIndex,
+          col,
+          row,
+          side: "left",
+          kind: "solid",
+          tint: palette.wallLeft,
+          roomId: "building-shell",
+        });
+      }
+      if (!cellSet.has(`${col},${row - 1}`)) {
+        segments.push({
+          floorIndex: layout.floorIndex,
+          col,
+          row,
+          side: "right",
+          kind: "solid",
+          tint: palette.wallRight,
+          roomId: "building-shell",
+        });
+      }
+    }
+
+    return segments;
+  }
 
   // Left wall: back-left face along col = sh.col
   for (let r = sh.row; r < sh.row + sh.rows; r++) {
@@ -1625,10 +1678,23 @@ export function composeHqWorldGeometry(
   const visibleFloorLayouts = options.buildingId
     ? getVisibleBuildingFloors(options.buildingId, activeFloorIndex, options.buildingTier ?? 1)
     : [];
+  const visibleFloorIndexes = new Set(visibleFloorLayouts.map((floor) => floor.floorIndex));
+  const visibleRooms =
+    visibleFloorLayouts.length > 0
+      ? rooms.filter((room) => visibleFloorIndexes.has(room.floorIndex))
+      : rooms;
+  const visibleReservedSlots =
+    visibleFloorLayouts.length > 0
+      ? reservedSlots.filter((slot) => visibleFloorIndexes.has(slot.floorIndex))
+      : reservedSlots;
   const floorOffsets = buildFloorOffsetMap(visibleFloorLayouts);
   const baseFloorLayout = visibleFloorLayouts[0];
 
-  if (rooms.length === 0 && reservedSlots.length === 0 && visibleFloorLayouts.length === 0) {
+  if (
+    visibleRooms.length === 0 &&
+    visibleReservedSlots.length === 0 &&
+    visibleFloorLayouts.length === 0
+  ) {
     const layout: HqWorldLayout = {
       tileWidth: HQ_TILE_WIDTH,
       tileHeight: HQ_TILE_HEIGHT,
@@ -1648,7 +1714,7 @@ export function composeHqWorldGeometry(
       layout,
       rooms: [],
       expansionSlots: [],
-      modular: { floorTiles: [], wallSegments: [], perimeterTiles: [] },
+      modular: { floorTiles: [], wallSegments: [], perimeterTiles: [], shellCells: [] },
       roomProps: [],
       scenery: [],
       navGraph: { anchors: [], connectors: [] },
@@ -1657,11 +1723,11 @@ export function composeHqWorldGeometry(
 
   // When a building layout exists, use the full shell for perimeter/bounds
   // so the building size stays fixed regardless of how many rooms are placed.
-  const perimeterFootprints: HqFootprint[] = baseFloorLayout
+  const perimeterFootprints: (HqFootprint | BuildingShellFootprint)[] = baseFloorLayout
     ? [baseFloorLayout.shell]
     : [
-        ...rooms.map((room) => room.reservedFootprint),
-        ...reservedSlots.map((slot) => slot.footprint),
+        ...visibleRooms.map((room) => room.reservedFootprint),
+        ...visibleReservedSlots.map((slot) => slot.footprint),
       ];
   const maxRow = Math.max(...perimeterFootprints.map((fp) => fp.row + fp.rows));
   const originX = (maxRow + 6) * (HQ_TILE_WIDTH / 2);
@@ -1669,10 +1735,20 @@ export function composeHqWorldGeometry(
 
   // Build modular geometry
   const structuralPalette = getHqStructuralPalette(options.buildingId);
+  for (const layout of visibleFloorLayouts) {
+    for (const slot of layout.slots) {
+      if (!isFootprintInsideBuildingShell(layout.shell, slot)) {
+        throw new Error(
+          `Room slot ${slot.slotId} on floor ${layout.floorIndex} extends beyond the building shell`,
+        );
+      }
+    }
+  }
+  const shellCells = buildShellCells(visibleFloorLayouts);
   const floorTiles = [
-    ...buildFloorTiles(rooms),
+    ...buildFloorTiles(visibleRooms),
     ...visibleFloorLayouts.flatMap((layout) => buildCorridorTiles(layout, structuralPalette)),
-    ...buildExpansionSlotTiles(reservedSlots, structuralPalette),
+    ...buildExpansionSlotTiles(visibleReservedSlots, structuralPalette),
   ];
   const wallSegments =
     visibleFloorLayouts.length > 0
@@ -1681,12 +1757,12 @@ export function composeHqWorldGeometry(
   const perimeterTiles = buildPerimeterTiles(perimeterFootprints, options.buildingId);
 
   // Build room nodes (for hit-testing), props, scenery, navGraph
-  const rawRooms = rooms.map((seed) => createRoomNode(seed, originX, originY, floorOffsets));
-  const rawExpansionSlots = reservedSlots.map((slot) =>
+  const rawRooms = visibleRooms.map((seed) => createRoomNode(seed, originX, originY, floorOffsets));
+  const rawExpansionSlots = visibleReservedSlots.map((slot) =>
     createExpansionSlotNode(slot, originX, originY, floorOffsets),
   );
   const roomProps = buildRoomProps(
-    rooms,
+    visibleRooms,
     originX,
     originY,
     floorOffsets,
@@ -1733,7 +1809,7 @@ export function composeHqWorldGeometry(
         height: room.activeBounds.height,
         functionTag: room.functionTag,
         ...(() => {
-          const seed = rooms.find((candidate) => candidate.id === room.id);
+          const seed = visibleRooms.find((candidate) => candidate.id === room.id);
           const opening = seed
             ? getRecipe(seed.templateId, seed.functionTag).openings[0]
             : undefined;
@@ -1772,27 +1848,14 @@ export function composeHqWorldGeometry(
         layout.floorIndex,
         floorOffsets,
       );
-      shellPoints.push(
-        projectIso(layout.shell.col, layout.shell.row, floorOrigin.x, floorOrigin.y),
-        projectIso(
-          layout.shell.col + layout.shell.cols,
-          layout.shell.row,
-          floorOrigin.x,
-          floorOrigin.y,
-        ),
-        projectIso(
-          layout.shell.col + layout.shell.cols,
-          layout.shell.row + layout.shell.rows,
-          floorOrigin.x,
-          floorOrigin.y,
-        ),
-        projectIso(
-          layout.shell.col,
-          layout.shell.row + layout.shell.rows,
-          floorOrigin.x,
-          floorOrigin.y,
-        ),
-      );
+      for (const cell of getBuildingShellCells(layout.shell)) {
+        shellPoints.push(
+          projectIso(cell.col, cell.row, floorOrigin.x, floorOrigin.y),
+          projectIso(cell.col + 1, cell.row, floorOrigin.x, floorOrigin.y),
+          projectIso(cell.col + 1, cell.row + 1, floorOrigin.x, floorOrigin.y),
+          projectIso(cell.col, cell.row + 1, floorOrigin.x, floorOrigin.y),
+        );
+      }
     }
     const sxs = shellPoints.map((p) => p.x);
     const sys = shellPoints.map((p) => p.y);
@@ -1827,7 +1890,7 @@ export function composeHqWorldGeometry(
     layout,
     rooms: shiftedRooms,
     expansionSlots: shiftedExpansionSlots,
-    modular: { floorTiles, wallSegments, perimeterTiles },
+    modular: { floorTiles, wallSegments, perimeterTiles, shellCells },
     roomProps: shiftedProps,
     scenery: shiftedScenery,
     navGraph,

@@ -12,6 +12,11 @@ import type { PresenterTemplate } from "./shared";
 //   5. Canon brief is the short descriptive identity anchor. masterPrompt records the actual
 //      approved prompt used for the current neutral. Preserve list is the hard consistency
 //      checklist across the family.
+//   6. Author the in-world chibi token at /data/presenters/{role}/chibi.svg and wire it through
+//      `chibiUrl`. Every presenter must ship with one — the world view uses the chibi, not the
+//      full portrait. Match the operator marker style (32x40 viewBox, same line weight and
+//      head proportions) and key off one or two unmistakable silhouette cues from the approved
+//      neutral so the presenter reads as themselves at token size.
 export const presenterTemplates = [
   {
     id: "presenter/assistant",
@@ -26,6 +31,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/assistant/serious.png",
       amused: "/data/presenters/assistant/amused.png",
     },
+    chibiUrl: "/data/presenters/assistant/chibi.svg",
     defaultExpression: "serious",
     allowedRoomTemplateIds: [
       "room/register:tier_1",
@@ -72,6 +78,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/cook/serious.png",
       amused: "/data/presenters/cook/amused.png",
     },
+    chibiUrl: "/data/presenters/cook/chibi.svg",
     defaultExpression: "serious",
     allowedRoomTemplateIds: [
       "room/dining_area:tier_1",
@@ -112,6 +119,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/bartender/serious.png",
       amused: "/data/presenters/bartender/amused.png",
     },
+    chibiUrl: "/data/presenters/bartender/chibi.svg",
     defaultExpression: "amused",
     allowedRoomTemplateIds: [
       "room/bar:tier_1",
@@ -161,6 +169,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/quartermaster/serious.png",
       amused: "/data/presenters/quartermaster/amused.png",
     },
+    chibiUrl: "/data/presenters/quartermaster/chibi.svg",
     defaultExpression: "neutral",
     allowedRoomTemplateIds: [
       "room/fabrication_bay:tier_1",
@@ -208,6 +217,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/medical/serious.png",
       amused: "/data/presenters/medical/amused.png",
     },
+    chibiUrl: "/data/presenters/medical/chibi.svg",
     defaultExpression: "serious",
     allowedRoomTemplateIds: [
       "room/infirmary:tier_1",
@@ -253,6 +263,7 @@ export const presenterTemplates = [
       serious: "/data/presenters/compliance/serious.png",
       amused: "/data/presenters/compliance/amused.png",
     },
+    chibiUrl: "/data/presenters/compliance/chibi.svg",
     defaultExpression: "neutral",
     allowedRoomTemplateIds: [
       "room/compliance_office:tier_1",
